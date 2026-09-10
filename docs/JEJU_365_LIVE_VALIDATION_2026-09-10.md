@@ -1,64 +1,84 @@
 # Jeju Route 365 live-transit validation — 2026-09-10
 
-Status: `BLOCKED_AT_AUTHENTICATED_LIVE_CALL`
+Status: `AUTHENTICATED_B551982_JEJU_ROUTE_MASTER_EMPTY`
 
 This report intentionally contains no service key, request URL containing a key, or raw vehicle identifiers from a live capture.
 
-## Verified preflight
+## Verified official metadata
 
-- Public Data Portal resource: `15157601`, nationwide ultra-precision bus realtime information.
-- Official product base URL already used by TAPSO: `https://apis.data.go.kr/B551982/rte`.
-- Contract paths previously inspected from the portal Swagger: `/mst_info`, `/ps_info`, `/rtm_loc_info`.
-- The portal currently describes route master, route-stop, and realtime vehicle-position data in JSON/XML.
-- Development traffic allowance: 5,000 calls/day.
-- Jeju passenger information currently lists Route 365 between Jeju Halla University and Jeju National University via the airport/city-hall corridor.
-- A third-party TAGO-derived index currently labels Jeju Route 365 with ID `6522`, but this is **not accepted as TAPSO's official route ID** until the official `/mst_info` response returns the same value.
+- Public Data Portal resource `15157601` is described by the portal as nationwide ultra-precision realtime bus information.
+- TAPSO's current provider base URL is `https://apis.data.go.kr/B551982/rte`.
+- The inspected contract exposes `/mst_info`, `/ps_info`, and `/rtm_loc_info`.
+- The portal describes route master, route-stop, and realtime vehicle-position data in JSON/XML.
+- Development traffic allowance is 5,000 calls/day.
+- Jeju's official passenger interface currently lists Route 365, so a zero-result route-master response must not be interpreted as proof that Route 365 itself does not exist.
 
-## Credential boundary
+## Authenticated live finding
 
-The operator reports that a newly issued public-data key is configured locally. The execution environment used to prepare this repository change does not receive that local shell environment, and a presence-only check found no `PUBLIC_DATA_SERVICE_KEY` here. The key value was not requested, printed, logged, committed, or uploaded.
+On 2026-09-10 the operator loaded the newly issued service key in a local shell without exposing it and successfully reached the B551982 route-master endpoint through TAPSO's provider. The request did not fail with a credential error. Instead, the provider returned zero route-master records for every tested Jeju-oriented `stdgCd` candidate:
 
-Because an authenticated call cannot be made from this environment, the following must remain unverified in this report:
+| Tested `stdgCd` | `/mst_info` normalized route count | 365 candidate |
+|---|---:|---|
+| `50110` | 0 | none |
+| `5011000000` | 0 | none |
+| `50` | 0 | none |
+| `5000000000` | 0 | none |
+
+Therefore:
+
+- the newly issued key is accepted by resource 15157601;
+- the failure is no longer `BLOCKED_BY_CREDENTIALS`;
+- TAPSO has no evidence that B551982 currently exposes Jeju Route 365 through the tested `stdgCd` forms;
+- the third-party value `6522` remains untrusted for B551982 because `/mst_info` did not confirm it;
+- it would be incorrect to tune runtime tracking thresholds from B551982 before obtaining actual Jeju vehicle observations.
+
+This does **not** prove that resource 15157601 contains no Jeju data under every possible code or internal mapping. It proves only that the official endpoint returned no route-master rows for the four tested Jeju-oriented values, despite valid authentication.
+
+## Fallback source selected for next validation
+
+The next official source to validate is the Ministry of Land, Infrastructure and Transport TAGO bus family:
+
+- resource `15098529`: `국토교통부_(TAGO)_버스노선정보`
+  - service base: `https://apis.data.go.kr/1613000/BusRouteInfoInqireService`
+  - portal describes nationwide, realtime route information and provides a city-code lookup operation;
+  - route numbers and route IDs can be resolved before requesting route details / route stops.
+- resource `15098533`: `국토교통부_(TAGO)_버스위치정보`
+  - service base: `https://apis.data.go.kr/1613000/BusLcInfoInqireService`
+  - `getRouteAcctoBusLcList` returns live bus positions for a `cityCode + routeId` pair;
+  - documented output includes route number, WGS84 coordinates, stop order/name/ID, route type, and vehicle number.
+
+Both TAGO services have a development allowance of 10,000 calls/day according to the current portal pages. They require their own approved API access; possession of a B551982 key permission must not be assumed to grant TAGO permission.
+
+## Remaining questions
 
 | Question | Result |
 |---|---|
-| Newly issued key accepted by resource 15157601 | `UNVERIFIED_IN_THIS_EXECUTION_ENVIRONMENT` |
-| Official `/mst_info` route ID for 365 | `UNVERIFIED` |
-| `stdgCd=50110` accepted by live provider | `UNVERIFIED` |
-| Route 365 stop list returned | `UNVERIFIED` |
-| Realtime vehicles returned | `UNVERIFIED` |
-| Provider refresh cadence | `UNVERIFIED` |
+| Newly issued key accepted by resource 15157601 | `VERIFIED` |
+| B551982 `/mst_info` returns Route 365 for tested Jeju codes | `NO` |
+| Official B551982 route ID for 365 | `UNRESOLVED` |
+| B551982 Jeju stop list / realtime vehicles | `NOT_TESTED_WITH_CONFIRMED_ROUTE_ID` |
+| TAGO Jeju city code | `PENDING_TAGO_ACCESS` |
+| TAGO official Route 365 ID | `PENDING_TAGO_ACCESS` |
+| Realtime provider refresh cadence | `UNVERIFIED` |
 | Vehicle identifier continuity | `UNVERIFIED` |
 | Active vehicle count stability | `UNVERIFIED` |
 | Coordinate continuity | `UNVERIFIED` |
 | Direction / route-variant semantics | `UNVERIFIED` |
 | Realtime stop-sequence availability | `UNVERIFIED` |
-| Event-code behavior | `UNVERIFIED` |
+| Event-code behavior | `UNVERIFIED / TAGO_LOCATION_CONTRACT_DOES_NOT_DOCUMENT_AN_EVENT_CODE` |
 | Temporary disappearance / reappearance | `UNVERIFIED` |
 
-No measured cadence, route ID, or schema conclusion is fabricated from public passenger pages or third-party indexes.
+## Repository implications
 
-## Repository changes made to unblock the authenticated run
+1. Do not continue guessing B551982 `stdgCd` values in production code.
+2. Keep the B551982 provider as a potentially useful nationwide/ultra-precision source, but treat Jeju coverage as empirically unconfirmed.
+3. Add a TAGO provider behind the same transit-provider boundary rather than baking TAGO DTOs into journey-session logic.
+4. Resolve TAGO's official Jeju `cityCode` through its city-code lookup operation, then resolve Route 365 via the official route list. Do not hard-code a third-party route ID.
+5. TAGO's documented bus-location response does not expose a provider collection timestamp comparable to B551982 `gthrDt`; cadence analysis must therefore distinguish polling time from actual snapshot-content changes rather than pretending the polling timestamp is a provider timestamp.
+6. Only after Route 365 produces live snapshots should TAPSO tune cache TTL, missing-vehicle grace, matcher freshness, or proximity radius.
 
-1. `PublicDataUltraPrecisionProvider.routeMasters(stdgCd)` now queries official `/mst_info` without guessing an `rteId`.
-2. `scripts/transit-spike/resolve-route.ts` resolves a displayed route number through the official route-master response.
-3. Route-number resolution requires an exact match and exits on zero or multiple matches, so a direction/variant ambiguity cannot silently select the wrong route.
-4. Deterministic provider tests cover the route-master request shape and normalized route-master fields.
-5. `docs/DATA_VALIDATION.md` now uses official route resolution before the existing repeated Route 365 spike.
+## Exact next action
 
-## Exact authenticated next action
+Approve/add the two TAGO APIs (`15098529` and `15098533`) to the public-data project/key used for TAPSO. Then use the official city-code lookup, route-number lookup, and location endpoint to determine Jeju's TAGO city code and Route 365 ID before running the repeated spike.
 
-Run from a shell where `PUBLIC_DATA_SERVICE_KEY` is already set:
-
-```bash
-ROUTE_ID="$(node --experimental-strip-types scripts/transit-spike/resolve-route.ts 365 50110)"
-
-TRANSIT_SPIKE_SAMPLES=12 \
-TRANSIT_SPIKE_INTERVAL_MS=5000 \
-node --experimental-strip-types scripts/transit-spike/run.ts "$ROUTE_ID" 50110 \
-  > route365-spike.json
-```
-
-If the one-minute probe succeeds, inspect the generated `report` before extending sampling. Do not change cache TTL, matching freshness, missing-vehicle grace, or near-stop radius until measured median/p95 provider cadence and dropout behavior are available.
-
-After the short probe, update this report with only sanitized aggregate findings. Keep raw captures private unless there is a specific reason and permission to retain representative records.
+Raw live captures should remain local. Commit only sanitized aggregate findings and representative fixtures that do not unnecessarily retain vehicle identifiers.
