@@ -4,23 +4,22 @@
 
 | Question | Result |
 |---|---|
-| Official B551982 resource 15157601 provides route, route-stop, and realtime position data by contract | `VERIFIED_FROM_OFFICIAL_METADATA` |
-| B551982 base URL and route/stop/realtime paths | `VERIFIED_FROM_SWAGGER` |
-| B551982 development traffic allowance is 5,000 calls/day | `VERIFIED_FROM_OFFICIAL_METADATA` |
-| API rejects a missing service key | `VERIFIED` |
+| B551982 resource 15157601 contract exposes route, route-stop, and realtime position APIs | `VERIFIED_FROM_OFFICIAL_METADATA` |
 | Newly issued key is accepted by B551982 | `VERIFIED_FROM_AUTHENTICATED_CALL` |
-| B551982 `/mst_info` returns Jeju Route 365 for tested Jeju-oriented codes | `NO`; zero route-master rows for `50110`, `5011000000`, `50`, and `5000000000` |
-| Route 365 is currently listed in the Jeju passenger bus system | `VERIFIED_FROM_PUBLIC_PASSENGER_INTERFACE` |
+| B551982 `/mst_info` returns Jeju Route 365 for tested Jeju-oriented codes | `NO`; zero rows for `50110`, `5011000000`, `50`, `5000000000` |
 | TAGO Jeju city code | `39`; `VERIFIED_FROM_AUTHENTICATED_OFFICIAL_RESPONSE` |
-| TAGO Route 365 official route IDs | `VERIFIED`; six variants returned by official TAGO route lookup |
-| TAGO Route 365 full-length directions | `LIKELY` `JEB405136521` (제주대→한라대) and `JEB405136522` (한라대→제주대); topology/live validation pending |
-| TAGO realtime vehicle positions for Route 365 | `PENDING` |
-| Vehicle ID stable across observations | `UNVERIFIED` |
-| Stop ordering and opposite direction distinguishable | `UNVERIFIED` |
-| TAGO live payload includes usable stop order | `PENDING_LIVE_SCHEMA_CAPTURE` |
-| Branch/variant semantics | `PARTIALLY_VERIFIED`; six route IDs with distinct endpoints |
-| Real polling/snapshot-change cadence and dropout distribution | `UNVERIFIED` |
-| Enough evidence for automatic vehicle matching | `UNVERIFIED` |
+| TAGO Route 365 official route IDs | `VERIFIED`; six variants |
+| TAGO realtime vehicle positions for Route 365 | `VERIFIED` |
+| TAGO live vehicle schema | `VERIFIED`; `gpslati`, `gpslong`, `nodeid`, `nodenm`, `nodeord`, `routenm`, `routetp`, `vehicleno` |
+| Vehicle ID continuity | `VERIFIED_IN_BOUNDED_PROBE`; all 10 full-length vehicles present in `24/24` samples |
+| Active vehicle count stability | `VERIFIED_IN_BOUNDED_PROBE`; 5/5/5 per full-length direction |
+| Live stop order available | `YES`; `nodeord` present on every inspected live record |
+| Direction / variant behavior | `PARTIALLY_VERIFIED`; route ID distinguishes six endpoint variants |
+| Provider observation timestamp | `NO`; TAGO location payload exposes no B551982-style timestamp |
+| Event code | `NO_FIELD_OBSERVED` |
+| Snapshot-content cadence | median `27.52 s`; min `10.01 s`; max observed `83.10 s` / `53.07 s` by direction |
+| Temporary vehicle disappearance/reappearance | none observed in the two-minute bounded probe |
+| Enough evidence for automatic passenger matching | `NO`; real boarding acceptance gate remains |
 
 ## Verified TAGO Route 365 variants
 
@@ -33,34 +32,48 @@ Official TAGO route lookup (`cityCode=39`, `routeNo=365`) returned:
 - `JEB405136525`: 월성마을/선사유적지 → 제주대학교
 - `JEB405136530`: 제주대학교병원 → 제주한라대학교(종점)
 
-All six rows reported `routetp=급행버스`; do not use that field alone as product truth. Preserve `routeid` and endpoint/stop topology for variant identity.
+Do not collapse these IDs into one `365` identifier. Preserve route ID plus endpoint/stop topology. All six TAGO route rows reported `routetp=급행버스`; that field is not authoritative product classification for the Jeju pilot.
 
-## Phase 1 conservative behavior
+## Live cadence evidence
 
-- Route-scoped caching shares successful snapshots across sessions and never caches provider failures.
-- Vehicle cache defaults to 20 seconds and route stops to six hours until live cadence is measured.
-- Vehicle matching can use boarding-stop proximity when realtime payloads lack stop sequence.
-- Session progress uses provider stop sequence only when present and route-valid. Otherwise it estimates a stop only within 120 m of a known route stop and labels that source as an estimate.
-- Once selected, a vehicle is never silently replaced because another candidate becomes more convenient.
-- Backward or duplicate progress is ignored. Temporary disappearance retains last progress only inside a bounded grace window, after which tracking becomes `lost`.
+The two continuously active full-length directions were sampled 24 times each at a five-second target interval:
 
-## Next TAGO live-position probe
+- `JEB405136521`: five vehicles stable across all 24 samples; snapshot-change interval median `27.52 s`, max `83.10 s`.
+- `JEB405136522`: five vehicles stable across all 24 samples; snapshot-change interval median `27.52 s`, max `53.07 s`.
+- Most five-second transitions were unchanged (`94/115` and `90/115`).
+- No vehicle disappearance occurred during the probe, so no dropout distribution can yet be estimated.
 
-Use official TAGO bus location endpoint `BusLcInfoInqireService/getRouteAcctoBusLcList` with `cityCode=39` and each official Route 365 `routeId`. Begin with `JEB405136521` and `JEB405136522`, then confirm the four partial variants. Capture only enough raw local output to determine the live response field names and whether vehicle number, coordinates, stop order/name/ID, and route metadata are present. Do not commit raw vehicle numbers.
+## Phase 1 conservative behavior after live evidence
 
-After schema confirmation, build repeated bounded polling that measures snapshot-content change cadence rather than assuming polling time equals provider update time. TAGO's public location contract does not expose a B551982-style provider observation timestamp such as `gthrDt`.
+- Route-scoped caching still shares successful snapshots and never caches provider failures.
+- Keep the default vehicle cache at **20 seconds**. It is shorter than the measured 27.52-second median content-change interval and avoids wasteful five-second upstream polling.
+- Keep route stops cached for six hours pending change-frequency evidence.
+- Keep the 75-second missing-vehicle grace unchanged because the bounded probe observed no disappearance event.
+- Keep the 120 m near-stop fallback unchanged; TAGO `nodeord` should be preferred whenever it maps to a verified route stop.
+- Keep the 90-second matcher freshness limit unchanged pending actual boarding tests. TAGO `observedAt` represents TAPSO snapshot acquisition time, not a provider-generated timestamp.
+- Once selected, a vehicle is never silently replaced by another candidate.
+- Backward progress remains fail-closed.
 
-## Threshold tuning gate
+## Provider architecture
 
-Do not change these defaults from intuition alone:
+Jeju's verified live path is TAGO, not the unconfirmed B551982 mapping. The runtime therefore supports two adapters behind `TransitProvider`:
 
-- `TRANSIT_VEHICLE_CACHE_TTL_MS` / 20-second vehicle cache
-- 75-second missing-vehicle grace
-- 120 m near-stop estimate radius
-- 90-second matcher freshness limit
+- `TRANSIT_PROVIDER=b551982` — existing nationwide ultra-precision candidate and default for compatibility.
+- `TRANSIT_PROVIDER=tago` — verified Jeju pilot path.
 
-Use measured snapshot-change intervals, observed dropout distribution, duplicate rate, and coordinate/stop-order coverage. A safe cache TTL should avoid needless upstream calls while not concealing meaningful provider updates. Missing grace must be longer than ordinary observed gaps but shorter than a genuinely lost tracking window.
+For TAGO, `RouteRequest.standardRegionCode` currently carries the official TAGO `cityCode` to avoid a breaking domain rename during this pilot. API query parsing also accepts `cityCode` and `regionCode` aliases.
 
-## Acceptance gate for real mode
+TAGO live responses do not expose a provider timestamp. `TagoTransitProvider` therefore stamps the acquisition time and sets `receiveType=TAGO_SNAPSHOT`; cadence analysis must continue to use snapshot-content changes rather than interpreting acquisition time as upstream update time.
 
-Do not enable automatic matching for passengers until at least 30 observed boardings across multiple routes demonstrate a clear candidate margin, no silent direction reversal, and bounded stale-data behavior. Any unknown route variant or unsupported field semantics must fail closed.
+## Next validation gate
+
+Before a real ride:
+
+1. Verify complete route-stop topology from `getRouteAcctoThrghSttnList` for `JEB405136521` and `JEB405136522`.
+2. Confirm every live `nodeord` maps to a valid route stop sequence.
+3. Run the API with `TRANSIT_PROVIDER=tago` and `cityCode=39`.
+4. Perform a controlled Route 365 ride and verify selected-vehicle correctness, monotonic stop progression, arrival detection, and missing/stale behavior.
+
+## Acceptance gate for broad real mode
+
+Do not enable automatic matching for passengers until at least 30 observed boardings across multiple routes demonstrate a clear candidate margin, no silent direction reversal, and bounded stale-data behavior. Unknown route variants or unsupported semantics must fail closed.

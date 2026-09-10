@@ -3,13 +3,18 @@ import { CachedTransitProvider } from "./cachedTransitProvider.ts";
 import { matchVehicle } from "./matching.ts";
 import type { MatchRequest } from "./domain.ts";
 import { PublicDataUltraPrecisionProvider } from "./publicDataProvider.ts";
+import { TagoTransitProvider } from "./tagoProvider.ts";
+import type { TransitProvider } from "./provider.ts";
 import { JourneySessionCoordinator } from "./journeySession.ts";
 import { logEvent } from "./observability.ts";
 
-const upstreamProvider = new PublicDataUltraPrecisionProvider();
+type TransitProviderName = "b551982" | "tago";
+
+const transitProviderName = parseTransitProviderName(process.env.TRANSIT_PROVIDER);
+const upstreamProvider = createTransitProvider(transitProviderName);
 const provider = new CachedTransitProvider(upstreamProvider, {
-  stopTtlMs: envDuration("PUBLIC_DATA_STOP_TTL_MS"),
-  vehicleTtlMs: envDuration("PUBLIC_DATA_VEHICLE_TTL_MS"),
+  stopTtlMs: envDuration("TRANSIT_STOP_TTL_MS") ?? envDuration("PUBLIC_DATA_STOP_TTL_MS"),
+  vehicleTtlMs: envDuration("TRANSIT_VEHICLE_TTL_MS") ?? envDuration("PUBLIC_DATA_VEHICLE_TTL_MS"),
 });
 const sessions = new JourneySessionCoordinator(provider);
 const port = Number(process.env.PORT ?? 8787);
@@ -21,6 +26,7 @@ export const server = createServer(async (request, response) => {
     if (request.method === "GET" && url.pathname === "/health") {
       return json(response, 200, {
         ok: true,
+        transitProvider: transitProviderName,
         liveTransitConfigured: Boolean(process.env.PUBLIC_DATA_SERVICE_KEY),
         routeCache: provider.policy,
         sessionStore: "memory",
@@ -86,6 +92,18 @@ export const server = createServer(async (request, response) => {
   }
 });
 
+function createTransitProvider(name: TransitProviderName): TransitProvider {
+  if (name === "tago") return new TagoTransitProvider();
+  return new PublicDataUltraPrecisionProvider();
+}
+
+function parseTransitProviderName(raw?: string): TransitProviderName {
+  const value = raw?.trim().toLowerCase();
+  if (!value || value === "b551982") return "b551982";
+  if (value === "tago") return "tago";
+  throw new Error(`TRANSIT_PROVIDER must be b551982 or tago; received ${raw}`);
+}
+
 function json(response: ServerResponse, status: number, body: unknown): void {
   response.writeHead(status, { "content-type": "application/json; charset=utf-8" });
   response.end(JSON.stringify(body));
@@ -108,8 +126,14 @@ async function readJSON(request: IncomingMessage): Promise<unknown> {
 
 function parseRouteQuery(url: URL): { routeId: string; standardRegionCode: string } {
   const routeId = url.searchParams.get("routeId")?.trim();
-  const standardRegionCode = url.searchParams.get("stdgCd")?.trim();
-  if (!routeId || !standardRegionCode) throw invalidInput("routeId and stdgCd are required");
+  const standardRegionCode = (
+    url.searchParams.get("regionCode")
+    ?? url.searchParams.get("stdgCd")
+    ?? url.searchParams.get("cityCode")
+  )?.trim();
+  if (!routeId || !standardRegionCode) {
+    throw invalidInput("routeId and one of regionCode/stdgCd/cityCode are required");
+  }
   return { routeId, standardRegionCode };
 }
 
