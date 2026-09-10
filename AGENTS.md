@@ -13,6 +13,7 @@ TAPSO (탑서) is an iPhone-first Jeju bus companion. A rider starts a trip, TAP
 - Require deterministic tests for transit progress, matching ambiguity, stale data, and journey transitions.
 - Keep documentation aligned with behavior and reality labels.
 - Use an ExecPlan following `.agent/PLANS.md` for complex work.
+- Never push directly to `main`. Work on a topic branch, open a pull request, and require green CI before merging. The CI `main-history-policy` job is a detection guardrail until repository branch protection can be enabled by an administrator.
 
 ## Verification
 
@@ -20,10 +21,11 @@ TAPSO (탑서) is an iPhone-first Jeju bus companion. A rider starts a trip, TAP
 swift test --package-path packages/transit-core
 npm --prefix services/api test
 npm --prefix apps/web test
+npm --prefix apps/web run typecheck:vercel
 npm --prefix apps/web run build
 xcodegen generate --spec apps/ios/project.yml --project apps/ios
 xcodebuild -project apps/ios/Tapso.xcodeproj -scheme Tapso \
   -destination 'platform=iOS Simulator,name=iPhone 17' build test
 ```
 
-Run relevant tests and builds before claiming completion. Review \`git diff\`, look for secrets, and resolve easy warnings or failures before handing off.
+Run relevant tests and builds before claiming completion. Review `git diff`, look for secrets, and resolve easy warnings or failures before handing off.
