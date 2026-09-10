@@ -27,10 +27,10 @@ export class PublicDataUltraPrecisionProvider implements TransitProvider {
 
   async stops(request: RouteRequest): Promise<StopOnRoute[]> {
     const items = await this.request("/ps_info", request);
-    return items.map((item, index) => ({
-      stopId: stringField(item, "stopId", "stop_no", "sttnId", "staId") ?? `sequence-${index + 1}`,
-      name: stringField(item, "stopNm", "sttnNm", "staNm") ?? "Unknown stop",
-      sequence: numberField(item, "stopSeq", "sttnSeq", "staOrd") ?? index + 1,
+    return items.map((item) => ({
+      stopId: requiredStringAny(item, "stopId", "stop_no", "sttnId", "staId"),
+      name: requiredStringAny(item, "stopNm", "sttnNm", "staNm"),
+      sequence: requiredNumber(item, "stopSeq", "sttnSeq", "staOrd"),
       directionCode: stringField(item, "drcGbnCd"),
       latitude: numberField(item, "lat", "gpsY"),
       longitude: numberField(item, "lot", "lon", "gpsX"),
@@ -40,7 +40,7 @@ export class PublicDataUltraPrecisionProvider implements TransitProvider {
   async vehicles(request: RouteRequest): Promise<VehicleObservation[]> {
     const items = await this.request("/rtm_loc_info", request);
     return items.map((item) => ({
-      vehicleId: requiredString(item, "vhclNo"),
+      vehicleId: requiredStringAny(item, "vhclNo"),
       routeId: stringField(item, "rteId") ?? request.routeId,
       observedAt: normalizeTimestamp(stringField(item, "gthrDt")),
       stopSequence: numberField(item, "stopSeq", "sttnSeq", "staOrd"),
@@ -48,7 +48,9 @@ export class PublicDataUltraPrecisionProvider implements TransitProvider {
       latitude: numberField(item, "lat"),
       longitude: numberField(item, "lot", "lon"),
       speedKph: numberField(item, "oprSpd"),
+      headingDegrees: numberField(item, "agdr", "heading"),
       eventCode: stringField(item, "evtCd", "evtType"),
+      receiveType: stringField(item, "rcvType"),
     }));
   }
 
@@ -119,9 +121,9 @@ function stringField(item: UnknownRecord, ...keys: string[]): string | undefined
   return undefined;
 }
 
-function requiredString(item: UnknownRecord, key: string): string {
-  const value = stringField(item, key);
-  if (!value) throw new ProviderResponseError(`Missing required field: ${key}`);
+function requiredStringAny(item: UnknownRecord, ...keys: string[]): string {
+  const value = stringField(item, ...keys);
+  if (!value) throw new ProviderResponseError(`Missing required field: ${keys.join("|")}`);
   return value;
 }
 
@@ -130,6 +132,12 @@ function numberField(item: UnknownRecord, ...keys: string[]): number | undefined
   if (raw === undefined) return undefined;
   const value = Number(raw);
   return Number.isFinite(value) ? value : undefined;
+}
+
+function requiredNumber(item: UnknownRecord, ...keys: string[]): number {
+  const value = numberField(item, ...keys);
+  if (value === undefined) throw new ProviderResponseError(`Missing required numeric field: ${keys.join("|")}`);
+  return value;
 }
 
 function normalizeTimestamp(value?: string): string {
