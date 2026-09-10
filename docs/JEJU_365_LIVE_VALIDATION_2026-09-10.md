@@ -1,6 +1,6 @@
 # Jeju Route 365 live-transit validation — 2026-09-10
 
-Status: `TAGO_LIVE_SCHEMA_CADENCE_AND_TOPOLOGY_VERIFIED`
+Status: `TAGO_LIVE_END_TO_END_VERIFIED`
 
 This report intentionally contains no service key, request URL containing a key, or raw vehicle identifiers from a live capture.
 
@@ -107,6 +107,22 @@ A two-minute bounded probe sampled the two active full-length directions 24 time
 - unchanged transitions: `90 / 115`
 - temporary disappearance/reappearance: none observed during this two-minute window
 
+## Verified TAPSO HTTP path
+
+The local API was started with `TRANSIT_PROVIDER=tago` and the service key loaded from macOS Keychain. TAPSO reported `TAPSO API listening on http://127.0.0.1:8787`.
+
+A real HTTP request to:
+
+`GET /v1/stops?routeId=JEB405136521&cityCode=39`
+
+returned the complete 43-stop 521 topology through the TAPSO API layer, preserving stop IDs, names, sequences, and coordinates from sequence `1` (`제주대학교[서]`) through sequence `43` (`제주한라대학교(종점)`).
+
+This verifies the end-to-end route-stop path:
+
+`official TAGO -> TagoTransitProvider -> CachedTransitProvider -> TAPSO HTTP API`
+
+The remaining unverified layer is not data transport; it is passenger-session behavior during an actual ride.
+
 ## Conclusions
 
 - The public-data service key works for the official TAGO services used in the Jeju pilot.
@@ -117,6 +133,7 @@ A two-minute bounded probe sampled the two active full-length directions 24 time
 - Coordinates and `nodeord` both changed over time and are usable for tracking progress.
 - Full-length stop topology is contiguous and coordinate-complete: `43` stops for 521 and `41` stops for 522.
 - Live `nodeord` has a verified direction-specific route-stop sequence space to map against.
+- The TAPSO HTTP route-stop endpoint is verified end-to-end against live TAGO for Route 365 direction 521.
 - No event code was present in the observed TAGO schema.
 - No provider observation timestamp is available; TAPSO must distinguish snapshot acquisition time from actual snapshot-content change time.
 - Five-second upstream polling is wasteful for steady-state product use: most transitions were unchanged and the measured median content-change interval was `27.52 s`.
@@ -140,12 +157,12 @@ The server keeps B551982 as the default provider and enables the verified Jeju p
 
 ## Exact next step toward a real TAPSO ride test
 
-The API-data gate for the two full-length Route 365 directions is now satisfied. The next step is a controlled real ride:
+The API-data and HTTP integration gates for the full-length Route 365 directions are now satisfied. The next step is a controlled real ride:
 
-1. Start the API locally with `TRANSIT_PROVIDER=tago` and the service key loaded from Keychain.
+1. Keep the API running with `TRANSIT_PROVIDER=tago` and the service key loaded from Keychain.
 2. Choose one verified full-length direction and explicit boarding/destination stop sequences from its validated topology.
 3. Create a TAPSO journey session immediately before boarding.
-4. Confirm that the selected `vehicleno` corresponds to the actual boarded bus when ambiguity exists.
-5. During the ride, verify monotonic `nodeord` progress, remaining-stop calculation, stale/duplicate handling, and arrival detection.
+4. Confirm that the selected vehicle corresponds to the actual boarded bus when ambiguity exists.
+5. During the ride, verify monotonic stop progression, remaining-stop calculation, stale/duplicate handling, and arrival detection.
 6. Record only sanitized aggregate outcomes: selected-vehicle correctness, any temporary disappearance, stop-progress monotonicity, arrival timing, and any route-variant anomaly.
 7. Do not enable automatic passenger matching broadly until the existing acceptance gate of at least 30 observed boardings across multiple routes is met.
