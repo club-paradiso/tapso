@@ -9,7 +9,7 @@
 | Development traffic allowance is 5,000 calls/day | `VERIFIED_FROM_OFFICIAL_METADATA` |
 | API rejects a missing service key | `VERIFIED` |
 | Route 365 is currently listed in the Jeju passenger bus system | `VERIFIED_FROM_PUBLIC_PASSENGER_INTERFACE` |
-| Official internal route ID for Route 365 | `UNVERIFIED`; do not substitute third-party IDs |
+| Official internal route ID for Route 365 | `UNVERIFIED`; resolve from `/mst_info`, do not substitute third-party IDs |
 | Jeju standard region code accepted in live calls | `UNVERIFIED` |
 | Jeju routes and stops returned | `BLOCKED_BY_CREDENTIALS` |
 | Vehicle ID stable across observations | `UNVERIFIED` |
@@ -30,22 +30,29 @@
 
 ## Route 365 credentialed spike
 
-The repository now contains a repeated-sampling validator rather than a one-shot payload dump. It records collection time independently from provider observation time and summarizes provider cadence, duplicate observations, out-of-order timestamps, optional-field coverage, and per-vehicle continuity.
+The repository contains a repeated-sampling validator rather than a one-shot payload dump. It records collection time independently from provider observation time and summarizes provider cadence, duplicate observations, out-of-order timestamps, optional-field coverage, and per-vehicle continuity.
 
-1. Obtain an approved key for resource 15157601 and keep it only in the shell/server environment.
-2. Resolve Route 365's official API `rteId` from the official response or portal tooling. Do not copy `JEB...`, `6522`, or another third-party identifier into production code unless the official API itself confirms that value.
-3. Start with a bounded one-minute probe:
+1. Obtain an approved key for resource 15157601 and keep it only in the shell/server environment as `PUBLIC_DATA_SERVICE_KEY`.
+2. Resolve Route 365's official API `rteId` from the official `/mst_info` response. The resolver requires an exact route-number match and fails closed if the official endpoint returns zero or multiple matches:
 
 ```bash
-PUBLIC_DATA_SERVICE_KEY='…' \
+ROUTE_ID="$(node --experimental-strip-types scripts/transit-spike/resolve-route.ts 365 50110)"
+printf 'resolved route id: %s\n' "$ROUTE_ID"
+```
+
+Do not copy `JEB...`, `6522`, or another third-party identifier into production code unless `/mst_info` itself returns that value.
+
+3. Start with a bounded one-minute probe using the resolved official identifier:
+
+```bash
 TRANSIT_SPIKE_SAMPLES=12 \
 TRANSIT_SPIKE_INTERVAL_MS=5000 \
-node --experimental-strip-types scripts/transit-spike/run.ts '<official-route-id>' 50110 \
+node --experimental-strip-types scripts/transit-spike/run.ts "$ROUTE_ID" 50110 \
   > route365-spike.json
 ```
 
 4. Inspect `report.providerUpdateIntervalSeconds`, `duplicateObservationCount`, `outOfOrderObservationCount`, `stopSequenceCoverage`, `directionCoverage`, `eventCodeCoverage`, and `vehicleContinuity` before changing any runtime thresholds.
-5. If the short probe is healthy, extend the same command to cover a complete ride while respecting the 5,000-call development quota. A 5-second interval consumes 720 calls/hour for realtime observations plus the initial stop request.
+5. If the short probe is healthy, extend the same command to cover a complete ride while respecting the 5,000-call development quota. A 5-second interval consumes 720 realtime calls/hour plus the initial route-stop request and route-master lookup.
 6. Record raw collection time separately from provider `gthrDt`; preserve raw output privately and commit only redacted, legally permitted representative fixtures.
 7. Corroborate route order and direction against the official Jeju passenger interface and an actual ride.
 8. Repeat on at least two additional route shapes before treating Route 365 behavior as general Jeju semantics.
