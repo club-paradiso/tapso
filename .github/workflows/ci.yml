@@ -34,6 +34,7 @@ jobs:
           cache-dependency-path: apps/web/package-lock.json
       - run: npm ci
       - run: npm test
+      - run: npm run typecheck:vercel
       - run: npm run build
       - name: Validate Figma Code Connect templates
         run: npx --yes --package=@figma/code-connect@2.0.0 figma connect parse --config figma.config.json --dry-run
