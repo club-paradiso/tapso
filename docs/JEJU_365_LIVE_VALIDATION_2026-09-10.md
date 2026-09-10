@@ -1,6 +1,6 @@
 # Jeju Route 365 live-transit validation — 2026-09-10
 
-Status: `TAGO_LIVE_SCHEMA_AND_CADENCE_VERIFIED`
+Status: `TAGO_LIVE_SCHEMA_CADENCE_AND_TOPOLOGY_VERIFIED`
 
 This report intentionally contains no service key, request URL containing a key, or raw vehicle identifiers from a live capture.
 
@@ -51,7 +51,35 @@ Snapshot at schema-probe time:
 | `JEB405136525` | 월성마을 → 제주대 | 0 |
 | `JEB405136530` | 제주대병원 → 한라대 | 0 |
 
-`nodeord` is present in the live location payload and is usable as provider stop-order evidence. Full route topology still needs the TAGO route-stop endpoint during the actual ride-path validation.
+`nodeord` is present in the live location payload and is usable as provider stop-order evidence.
+
+## Verified full-length stop topology
+
+Authenticated TAGO route-stop calls were then run through `scripts/transit-spike/tago-stop-topology.ts` for the two full-length directions.
+
+### `JEB405136521` — 제주대 → 한라대
+
+- stop count: `43`
+- sequence range: `1..43`
+- sequence continuity: `true`
+- unique sequence count: `43`
+- duplicate sequences: none
+- coordinate coverage: `100%`
+- first stop: `JEB405000208` / `제주대학교[서]`
+- last stop: `JEB405001895` / `제주한라대학교(종점)`
+
+### `JEB405136522` — 한라대 → 제주대
+
+- stop count: `41`
+- sequence range: `1..41`
+- sequence continuity: `true`
+- unique sequence count: `41`
+- duplicate sequences: none
+- coordinate coverage: `100%`
+- first stop: `JEB405000455` / `제주한라대학교[동]`
+- last stop: `JEB405000207` / `제주대학교[남]`
+
+This verifies that the live `nodeord` values can be interpreted against complete, contiguous route-stop topology for both full-length directions. The two directions intentionally have different stop counts and stop IDs; TAPSO must preserve direction-specific topology instead of assuming a mirrored route.
 
 ## Bounded cadence and continuity probe
 
@@ -87,7 +115,8 @@ A two-minute bounded probe sampled the two active full-length directions 24 time
 - `vehicleno` was perfectly continuous across the 24-sample bounded probe for all ten full-length-direction vehicles.
 - Active vehicle count was completely stable at five per full-length direction during the probe.
 - Coordinates and `nodeord` both changed over time and are usable for tracking progress.
-- `nodeord` is available in the live vehicle payload.
+- Full-length stop topology is contiguous and coordinate-complete: `43` stops for 521 and `41` stops for 522.
+- Live `nodeord` has a verified direction-specific route-stop sequence space to map against.
 - No event code was present in the observed TAGO schema.
 - No provider observation timestamp is available; TAPSO must distinguish snapshot acquisition time from actual snapshot-content change time.
 - Five-second upstream polling is wasteful for steady-state product use: most transitions were unchanged and the measured median content-change interval was `27.52 s`.
@@ -111,8 +140,12 @@ The server keeps B551982 as the default provider and enables the verified Jeju p
 
 ## Exact next step toward a real TAPSO ride test
 
-1. Run the TAGO route-stop endpoint for `JEB405136521` and `JEB405136522` and verify complete `nodeord` topology against the live vehicle `nodeord` values.
-2. Start the API locally with `TRANSIT_PROVIDER=tago` and the service key loaded from Keychain.
-3. Perform a controlled ride on one full-length Route 365 direction with an explicitly chosen boarding and destination stop.
-4. Record only sanitized aggregate outcomes: selected vehicle correctness, stop-progress monotonicity, stale/missing behavior, arrival detection, and whether any variant transition occurs.
-5. Do not enable automatic passenger matching broadly until the existing acceptance gate of at least 30 observed boardings across multiple routes is met.
+The API-data gate for the two full-length Route 365 directions is now satisfied. The next step is a controlled real ride:
+
+1. Start the API locally with `TRANSIT_PROVIDER=tago` and the service key loaded from Keychain.
+2. Choose one verified full-length direction and explicit boarding/destination stop sequences from its validated topology.
+3. Create a TAPSO journey session immediately before boarding.
+4. Confirm that the selected `vehicleno` corresponds to the actual boarded bus when ambiguity exists.
+5. During the ride, verify monotonic `nodeord` progress, remaining-stop calculation, stale/duplicate handling, and arrival detection.
+6. Record only sanitized aggregate outcomes: selected-vehicle correctness, any temporary disappearance, stop-progress monotonicity, arrival timing, and any route-variant anomaly.
+7. Do not enable automatic passenger matching broadly until the existing acceptance gate of at least 30 observed boardings across multiple routes is met.
