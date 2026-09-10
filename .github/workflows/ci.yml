@@ -5,6 +5,27 @@ on:
   pull_request:
 
 jobs:
+  main-history-policy:
+    if: github.event_name == 'push' && github.ref == 'refs/heads/main'
+    runs-on: ubuntu-latest
+    permissions:
+      contents: read
+      pull-requests: read
+    steps:
+      - name: Require main updates to come from a merged pull request
+        env:
+          GH_TOKEN: ${{ github.token }}
+          COMMIT_SHA: ${{ github.sha }}
+        run: |
+          merged_count="$(gh api \
+            -H 'Accept: application/vnd.github+json' \
+            "repos/${GITHUB_REPOSITORY}/commits/${COMMIT_SHA}/pulls" \
+            --jq '[.[] | select(.merged_at != null)] | length')"
+          if [ "${merged_count}" -lt 1 ]; then
+            echo "::error::main must be updated through a merged pull request. Direct pushes are policy violations."
+            exit 1
+          fi
+
   transit-core:
     runs-on: macos-15
     steps:
