@@ -3,26 +3,30 @@
 ## Boundaries
 
 ```text
-Official transit API → TypeScript provider adapter → normalized observations
-                                                    ↓
-Ride intent → vehicle matcher → RideSession / progress engine → ContentState
-                                                    ↓
-                               SwiftUI app + ActivityKit local updates
-                                                    ↓
-                              future APNs Live Activity push gateway
+Official transit API → TypeScript provider adapter → route-scoped cache → normalized snapshots
+                                                                  ↓
+Ride intent → vehicle matcher → in-memory pilot RideSession / progress → ContentState
+                                                                  ↓
+                                             SwiftUI app + ActivityKit local updates
+                                                                  ↓
+                                            future APNs Live Activity push gateway
 ```
 
 `TapsoTransit` is framework-independent Swift. It owns route/stop identity, Haversine and bearing helpers, freshness, matching evidence, destination progress, and journey transitions. It imports neither SwiftUI nor ActivityKit.
 
 The iOS app owns presentation, demo scheduling, haptics, and the ActivityKit lifecycle. `TapsoActivityAttributes` is intentionally small and `Sendable`; the app and extension share it.
 
-The API service owns external DTO normalization and secrets. `TransitProvider` prevents government fields from leaking through the product. The current server exposes only `/health`, `/v1/vehicles`, and `/v1/matches`; session persistence is postponed until real cadence and push requirements are measured.
+The API service owns external DTO normalization and secrets. `TransitProvider` prevents government fields from leaking through the product. `CachedTransitProvider` adds route-scoped read-through caching and concurrent-miss coalescing without caching failures. The pilot server exposes `/health`, `/v1/stops`, `/v1/vehicles`, `/v1/matches`, and short-lived `/v1/sessions` create/refresh/confirm endpoints.
 
 ## Runtime strategy
 
-The practical MVP target is shared route polling with short-lived cache and fan-out to active rides. One upstream request per user per second would waste quota and amplify failures. Poll frequency must be based on measured provider cadence; session processing should use the newest cached snapshot, monotonically accept observations, and publish only meaningful state changes.
+The practical MVP target is shared route polling with short-lived cache and fan-out to active rides. One upstream request per user per second would waste quota and amplify failures. Phase 1 implements request-driven shared snapshots: vehicle results default to a 20-second TTL and route stops to six hours, both overrideable after live cadence is measured. No background timer runs when no ride asks for a snapshot.
 
-No database is required for the deterministic slice. A production pilot will likely need a small durable session store and a queue or scheduled worker for APNs, but hosting is intentionally undecided until real-data load and cadence are known.
+The pilot session coordinator is intentionally in-memory. It automatically selects only when the match margin is sufficient; ambiguous candidates require explicit confirmation. After selection, a contradictory or missing snapshot never silently switches to another vehicle. Duplicate or backward progress is ignored, and a bounded grace window retains the last accepted progress before the session becomes `lost`.
+
+Realtime stop sequence is not assumed. If the provider supplies one and it maps to the selected route, it is used. Otherwise a stop is estimated only when the vehicle coordinate is within a conservative 120 m radius of a known route stop; that progress is labeled as an estimate until credentialed live validation proves the semantics.
+
+A production pilot will likely need a small durable session store and a queue or scheduled worker for APNs, but hosting remains intentionally undecided until real-data load and cadence are known.
 
 ## Failure posture
 
@@ -31,7 +35,8 @@ No database is required for the deterministic slice. A production pilot will lik
 - Duplicate or out-of-order update: ignore.
 - Temporarily missing update: retain the last state within a bounded grace period.
 - Stale stream: show degraded state; never issue a confident arrival.
-- Extended disappearance: end tracking with an explicit reason.
+- Extended disappearance: mark tracking lost; never silently rematch.
+- Provider schema missing required route-stop identity: fail closed instead of inventing IDs.
 
 ## Dependency choices
 

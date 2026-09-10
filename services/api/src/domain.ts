@@ -23,12 +23,16 @@ export interface VehicleObservation {
   latitude?: number;
   longitude?: number;
   speedKph?: number;
+  headingDegrees?: number;
   eventCode?: string;
+  receiveType?: string;
 }
 
 export interface MatchRequest {
   routeId: string;
   boardingStopSequence: number;
+  boardingLatitude?: number;
+  boardingLongitude?: number;
   directionCode?: string;
   now: string;
   candidates: VehicleObservation[];
