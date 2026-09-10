@@ -1,21 +1,20 @@
 # Jeju Route 365 live-transit validation — 2026-09-10
 
-Status: `AUTHENTICATED_B551982_JEJU_ROUTE_MASTER_EMPTY`
+Status: `TAGO_ROUTE_VARIANTS_CONFIRMED`
 
 This report intentionally contains no service key, request URL containing a key, or raw vehicle identifiers from a live capture.
 
 ## Verified official metadata
 
 - Public Data Portal resource `15157601` is described by the portal as nationwide ultra-precision realtime bus information.
-- TAPSO's current provider base URL is `https://apis.data.go.kr/B551982/rte`.
-- The inspected contract exposes `/mst_info`, `/ps_info`, and `/rtm_loc_info`.
-- The portal describes route master, route-stop, and realtime vehicle-position data in JSON/XML.
-- Development traffic allowance is 5,000 calls/day.
-- Jeju's official passenger interface currently lists Route 365, so a zero-result route-master response must not be interpreted as proof that Route 365 itself does not exist.
+- TAPSO's current B551982 provider base URL is `https://apis.data.go.kr/B551982/rte`.
+- The inspected B551982 contract exposes `/mst_info`, `/ps_info`, and `/rtm_loc_info`.
+- Jeju's official passenger interface currently lists Route 365.
+- TAGO bus route information (`15098529`) and TAGO bus location information (`15098533`) are the official fallback sources selected for Jeju validation.
 
-## Authenticated live finding
+## Authenticated B551982 finding
 
-On 2026-09-10 the operator loaded the newly issued service key in a local shell without exposing it and successfully reached the B551982 route-master endpoint through TAPSO's provider. The request did not fail with a credential error. Instead, the provider returned zero route-master records for every tested Jeju-oriented `stdgCd` candidate:
+On 2026-09-10 the operator loaded the newly issued service key in a local shell without exposing it and successfully reached the B551982 route-master endpoint through TAPSO's provider. Authentication succeeded, but `/mst_info` returned zero route-master records for every tested Jeju-oriented `stdgCd` candidate:
 
 | Tested `stdgCd` | `/mst_info` normalized route count | 365 candidate |
 |---|---:|---|
@@ -24,61 +23,58 @@ On 2026-09-10 the operator loaded the newly issued service key in a local shell 
 | `50` | 0 | none |
 | `5000000000` | 0 | none |
 
+This does not prove that B551982 contains no Jeju data under every internal mapping. It proves that valid authenticated requests returned no route-master rows for the four tested Jeju-oriented values.
+
+## Authenticated TAGO route discovery finding
+
+The operator then queried the official TAGO bus route service with the same locally protected service key. After an initial transient provider-side `99` session-capacity error, a subsequent request returned `resultCode=00 / NORMAL SERVICE.` for `cityCode=39` and route number `365`.
+
+The official TAGO response returned six Route 365 variants:
+
+| TAGO `routeid` | Route No. | Start | End | Reported `routetp` |
+|---|---:|---|---|---|
+| `JEB405136521` | 365 | 제주대학교 | 제주한라대학교(종점) | 급행버스 |
+| `JEB405136522` | 365 | 제주한라대학교 | 제주대학교 | 급행버스 |
+| `JEB405136523` | 365 | 영주고등학교 | 제주한라대학교(종점) | 급행버스 |
+| `JEB405136524` | 365 | 제주한라대학교 | 영주고등학교 | 급행버스 |
+| `JEB405136525` | 365 | 월성마을/선사유적지 | 제주대학교 | 급행버스 |
+| `JEB405136530` | 365 | 제주대학교병원 | 제주한라대학교(종점) | 급행버스 |
+
 Therefore:
 
-- the newly issued key is accepted by resource 15157601;
-- the failure is no longer `BLOCKED_BY_CREDENTIALS`;
-- TAPSO has no evidence that B551982 currently exposes Jeju Route 365 through the tested `stdgCd` forms;
-- the third-party value `6522` remains untrusted for B551982 because `/mst_info` did not confirm it;
-- it would be incorrect to tune runtime tracking thresholds from B551982 before obtaining actual Jeju vehicle observations.
+- TAGO Jeju `cityCode=39` is now `VERIFIED_FROM_AUTHENTICATED_OFFICIAL_RESPONSE`;
+- the previous third-party 6522-family observation is now corroborated by the official TAGO response, specifically `JEB405136522` for 제주한라대학교 → 제주대학교;
+- Route 365 is not represented by a single route ID in TAGO; TAPSO must model route variants explicitly;
+- the two primary full-length directions appear to be `JEB405136521` (제주대학교 → 제주한라대학교) and `JEB405136522` (제주한라대학교 → 제주대학교), while the remaining IDs are short-turn / partial variants based on their endpoints;
+- the `routetp=급행버스` field should not be used as a product-level truth without corroboration because all six 365 variants received the same label. Route identity and variant selection should rely primarily on `routeid`, route number, and endpoint / stop topology.
 
-This does **not** prove that resource 15157601 contains no Jeju data under every possible code or internal mapping. It proves only that the official endpoint returned no route-master rows for the four tested Jeju-oriented values, despite valid authentication.
-
-## Fallback source selected for next validation
-
-The next official source to validate is the Ministry of Land, Infrastructure and Transport TAGO bus family:
-
-- resource `15098529`: `국토교통부_(TAGO)_버스노선정보`
-  - service base: `https://apis.data.go.kr/1613000/BusRouteInfoInqireService`
-  - portal describes nationwide, realtime route information and provides a city-code lookup operation;
-  - route numbers and route IDs can be resolved before requesting route details / route stops.
-- resource `15098533`: `국토교통부_(TAGO)_버스위치정보`
-  - service base: `https://apis.data.go.kr/1613000/BusLcInfoInqireService`
-  - `getRouteAcctoBusLcList` returns live bus positions for a `cityCode + routeId` pair;
-  - documented output includes route number, WGS84 coordinates, stop order/name/ID, route type, and vehicle number.
-
-Both TAGO services have a development allowance of 10,000 calls/day according to the current portal pages. They require their own approved API access; possession of a B551982 key permission must not be assumed to grant TAGO permission.
-
-## Remaining questions
+## Remaining live validation questions
 
 | Question | Result |
 |---|---|
-| Newly issued key accepted by resource 15157601 | `VERIFIED` |
+| Newly issued key accepted by B551982 resource 15157601 | `VERIFIED` |
 | B551982 `/mst_info` returns Route 365 for tested Jeju codes | `NO` |
-| Official B551982 route ID for 365 | `UNRESOLVED` |
-| B551982 Jeju stop list / realtime vehicles | `NOT_TESTED_WITH_CONFIRMED_ROUTE_ID` |
-| TAGO Jeju city code | `PENDING_TAGO_ACCESS` |
-| TAGO official Route 365 ID | `PENDING_TAGO_ACCESS` |
+| TAGO Jeju city code | `39 — VERIFIED` |
+| TAGO official Route 365 IDs | `6 VARIANTS — VERIFIED` |
+| Primary full-length direction IDs | `LIKELY 6521 / 6522 FROM OFFICIAL ENDPOINTS; LIVE STOP TOPOLOGY STILL TO CONFIRM` |
+| TAGO live vehicle positions | `PENDING` |
 | Realtime provider refresh cadence | `UNVERIFIED` |
 | Vehicle identifier continuity | `UNVERIFIED` |
 | Active vehicle count stability | `UNVERIFIED` |
 | Coordinate continuity | `UNVERIFIED` |
-| Direction / route-variant semantics | `UNVERIFIED` |
-| Realtime stop-sequence availability | `UNVERIFIED` |
-| Event-code behavior | `UNVERIFIED / TAGO_LOCATION_CONTRACT_DOES_NOT_DOCUMENT_AN_EVENT_CODE` |
+| Stop-order availability | `UNVERIFIED` |
 | Temporary disappearance / reappearance | `UNVERIFIED` |
 
 ## Repository implications
 
-1. Do not continue guessing B551982 `stdgCd` values in production code.
-2. Keep the B551982 provider as a potentially useful nationwide/ultra-precision source, but treat Jeju coverage as empirically unconfirmed.
-3. Add a TAGO provider behind the same transit-provider boundary rather than baking TAGO DTOs into journey-session logic.
-4. Resolve TAGO's official Jeju `cityCode` through its city-code lookup operation, then resolve Route 365 via the official route list. Do not hard-code a third-party route ID.
-5. TAGO's documented bus-location response does not expose a provider collection timestamp comparable to B551982 `gthrDt`; cadence analysis must therefore distinguish polling time from actual snapshot-content changes rather than pretending the polling timestamp is a provider timestamp.
-6. Only after Route 365 produces live snapshots should TAPSO tune cache TTL, missing-vehicle grace, matcher freshness, or proximity radius.
+1. Do not continue guessing B551982 `stdgCd` values for Jeju.
+2. Add a TAGO-backed provider behind the same transit-provider boundary rather than leaking TAGO DTOs into journey-session logic.
+3. Treat `routeNumber=365` as a route family, not a unique route key. Preserve the official TAGO `routeid` for each direction / short-turn variant.
+4. Resolve and cache route topology per `routeid` so full-length and short-turn variants cannot be silently mixed.
+5. Do not use the reported `routetp` as the sole classifier for user-facing route type.
+6. TAGO's documented bus-location response does not expose a provider observation timestamp comparable to B551982 `gthrDt`; cadence analysis must distinguish polling time from snapshot-content changes.
+7. Only after repeated live vehicle snapshots should TAPSO tune cache TTL, missing-vehicle grace, matcher freshness, or proximity radius.
 
 ## Exact next action
 
-Approve/add the two TAGO APIs (`15098529` and `15098533`) to the public-data project/key used for TAPSO. Then use the official city-code lookup, route-number lookup, and location endpoint to determine Jeju's TAGO city code and Route 365 ID before running the repeated spike.
-
-Raw live captures should remain local. Commit only sanitized aggregate findings and representative fixtures that do not unnecessarily retain vehicle identifiers.
+Query TAGO `BusLcInfoInqireService/getRouteAcctoBusLcList` for `cityCode=39` across all six official Route 365 IDs. Start with the two apparent full-length directions (`JEB405136521`, `JEB405136522`) and confirm that live vehicle records return coordinates, vehicle identifiers, and stop-order information. Then run bounded repeated polling and measure snapshot-change cadence, continuity, dropout, and active-vehicle-count behavior. Preserve raw vehicle captures locally and commit only sanitized aggregates.
