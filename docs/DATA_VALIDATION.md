@@ -2,7 +2,7 @@
 
 ## Current status
 
-Both TAGO development applications were approved on 2026-09-10. Local credential rotation and live authentication/discovery must be verified separately; portal approval alone does not establish live access. See `docs/exec-plans/TAGO_MIGRATION.md` for current execution evidence.
+Both TAGO development applications were approved on 2026-09-10. On 2026-09-11 at 02:19 KST, the registered Decoding key passed HTTP 200/resultCode 00/NORMAL SERVICE. Official responses confirmed city 39, all six Route 365 variants and their stops; all location queries succeeded with zero vehicles. See [credentialed capture](validation/TAGO_2026-09-11.md). Actual vehicle fields and source freshness were not verified by this overnight capture.
 
 ## Local setup and discovery
 

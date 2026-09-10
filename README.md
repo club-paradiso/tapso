@@ -21,7 +21,7 @@ Public product site: [tapso-nu.vercel.app](https://tapso-nu.vercel.app)
 | Waitlist against live Supabase and Resend | `BLOCKED_BY_CREDENTIALS` | No project, key, or verified sending domain; see `docs/WAITLIST_SUPPORT_SETUP.md` |
 | Support payment | `NOT ENABLED` | Toss Payments adapter, state machine, and webhook reconciliation are implemented and tested; no merchant account exists |
 | Official API contract | `VERIFIED` | TAGO route/location schemas inspected from resources 15098529 and 15098533 |
-| Live Jeju response quality | `BLOCKED_BY_CREDENTIALS` | TAGO applications approved; new key and live Jeju verification pending. No provider timestamp is documented |
+| Live Jeju response quality | `PARTIALLY_VERIFIED` | HTTP 200/00; city 39, six Route 365 variants and real stops verified. Overnight location queries succeed with zero vehicles; source freshness remains unknown. See [capture](docs/validation/TAGO_2026-09-11.md). |
 | Remote APNs updates | `BLOCKED_BY_CREDENTIALS` | Requires Apple team, bundle, and APNs signing credentials |
 | Physical-device validation | `UNVERIFIED` | Requires a signed device build and real Dynamic Island hardware |
 
