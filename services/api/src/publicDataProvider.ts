@@ -7,11 +7,22 @@ import {
 
 type FetchLike = typeof fetch;
 type UnknownRecord = Record<string, unknown>;
+type PublicDataRequest = { standardRegionCode: string; routeId?: string };
 
 export interface PublicDataProviderOptions {
   serviceKey?: string;
   baseURL?: string;
   fetchImplementation?: FetchLike;
+}
+
+export interface RouteMasterRecord {
+  routeId: string;
+  routeNumber: string;
+  routeType?: string;
+  originName?: string;
+  destinationName?: string;
+  firstDepartureTime?: string;
+  lastDepartureTime?: string;
 }
 
 export class PublicDataUltraPrecisionProvider implements TransitProvider {
@@ -23,6 +34,19 @@ export class PublicDataUltraPrecisionProvider implements TransitProvider {
     this.serviceKey = options.serviceKey ?? process.env.PUBLIC_DATA_SERVICE_KEY;
     this.baseURL = options.baseURL ?? process.env.PUBLIC_DATA_BASE_URL ?? "https://apis.data.go.kr/B551982/rte";
     this.fetchImplementation = options.fetchImplementation ?? fetch;
+  }
+
+  async routeMasters(standardRegionCode: string): Promise<RouteMasterRecord[]> {
+    const items = await this.request("/mst_info", { standardRegionCode });
+    return items.map((item) => ({
+      routeId: requiredStringAny(item, "rteId", "routeId"),
+      routeNumber: requiredStringAny(item, "rteNo", "routeNo"),
+      routeType: stringField(item, "rteTp", "rteTpNm", "rteType"),
+      originName: stringField(item, "stStaNm", "orgnStaNm", "startNm"),
+      destinationName: stringField(item, "edStaNm", "dstnStaNm", "endNm"),
+      firstDepartureTime: stringField(item, "fstTm", "firstTm"),
+      lastDepartureTime: stringField(item, "lstTm", "lastTm"),
+    }));
   }
 
   async stops(request: RouteRequest): Promise<StopOnRoute[]> {
@@ -54,7 +78,7 @@ export class PublicDataUltraPrecisionProvider implements TransitProvider {
     }));
   }
 
-  private async request(path: string, request: RouteRequest): Promise<UnknownRecord[]> {
+  private async request(path: string, request: PublicDataRequest): Promise<UnknownRecord[]> {
     if (!this.serviceKey) {
       throw new ProviderConfigurationError("PUBLIC_DATA_SERVICE_KEY is required for live transit calls");
     }
@@ -65,7 +89,7 @@ export class PublicDataUltraPrecisionProvider implements TransitProvider {
     url.searchParams.set("numOfRows", "1000");
     url.searchParams.set("type", "json");
     url.searchParams.set("stdgCd", request.standardRegionCode);
-    url.searchParams.set("rteId", request.routeId);
+    if (request.routeId) url.searchParams.set("rteId", request.routeId);
 
     const response = await this.fetchImplementation(url, {
       headers: { accept: "application/json" },
