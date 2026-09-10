@@ -15,12 +15,13 @@ Public product site: [tapso-nu.vercel.app](https://tapso-nu.vercel.app)
 | Local 8 → 0 demo | `IMPLEMENTED` | 1×, 5×, 10×, and manual stepping use production domain types |
 | Lock Screen / Dynamic Island | `VERIFIED` | iOS 26.3 iPhone 17 Pro Simulator: compact 8/2/1/0, expanded, Lock Screen, request/update/end; 4 iOS tests |
 | TypeScript API scaffold | `VERIFIED` | Native Node tests cover matching and official-schema normalization |
+| Live-transit pilot orchestration | `IMPLEMENTED` | Route-scoped read-through cache, concurrent-miss coalescing, short-lived ride sessions, ambiguity confirmation, monotonic progress, and bounded missing-data handling are covered by deterministic Node tests |
 | Marketing website | `IMPLEMENTED` | React + Vite site under `apps/web`; 제주어 hero, responsive QA, and Vercel deployment workflow |
 | Waitlist backend | `IMPLEMENTED` | Vercel Functions in `apps/web/api`; validation, duplicate protection, rate limiting, and confirmation email covered by 90 Node tests |
 | Waitlist against live Supabase and Resend | `BLOCKED_BY_CREDENTIALS` | No project, key, or verified sending domain; see `docs/WAITLIST_SUPPORT_SETUP.md` |
 | Support payment | `NOT ENABLED` | Toss Payments adapter, state machine, and webhook reconciliation are implemented and tested; no merchant account exists |
 | Official API contract | `VERIFIED` | Swagger paths and fields inspected from data.go.kr resource 15157601 |
-| Live Jeju response quality | `BLOCKED_BY_CREDENTIALS` | No public-data service key was available; no live response is claimed |
+| Live Jeju response quality | `BLOCKED_BY_CREDENTIALS` | No public-data service key was available; no live Jeju response, cadence, identifier continuity, or stop-sequence semantics are claimed |
 | Remote APNs updates | `BLOCKED_BY_CREDENTIALS` | Requires Apple team, bundle, and APNs signing credentials |
 | Physical-device validation | `UNVERIFIED` | Requires a signed device build and real Dynamic Island hardware |
 
@@ -47,6 +48,22 @@ PUBLIC_DATA_SERVICE_KEY='…' node --experimental-strip-types \
 
 Never put the government key in the iOS target or commit `.env`.
 
+To exercise the request-driven pilot API locally, start `services/api` with a server-side public-data key. The pilot exposes cached route snapshots and short-lived in-memory ride sessions; it does not silently rematch a selected vehicle.
+
+```bash
+PUBLIC_DATA_SERVICE_KEY='…' npm start --prefix services/api
+```
+
+Pilot endpoints:
+
+```text
+GET  /v1/stops?routeId=…&stdgCd=…
+GET  /v1/vehicles?routeId=…&stdgCd=…
+POST /v1/sessions
+GET  /v1/sessions/:id
+POST /v1/sessions/:id/confirm
+```
+
 To run the public product website locally:
 
 ```bash
@@ -68,7 +85,7 @@ stored. Copy `apps/web/.env.example` and read
   support serverless endpoints in `apps/web/api` and their schema in
   `apps/web/supabase/migrations`.
 - `packages/transit-core`: UI-independent Swift domain, matching, progress, and state machine.
-- `services/api`: TypeScript normalization, matching endpoint, provider and APNs boundaries.
+- `services/api`: TypeScript official-data normalization, shared route cache, matching, in-memory pilot ride sessions, and future APNs boundary.
 - `fixtures/transit`: explicitly synthetic deterministic data.
 - `scripts/transit-spike`: credential-gated official API probe.
 - `docs`: product, architecture, evidence, risk, device plan, and handoff material.
