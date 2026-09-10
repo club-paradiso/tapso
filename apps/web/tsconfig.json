@@ -16,7 +16,7 @@
     "skipLibCheck": true,
     "noEmit": true
   },
-  "files": [],
+  "include": ["api"],
   "references": [
     {
       "path": "./tsconfig.app.json"
