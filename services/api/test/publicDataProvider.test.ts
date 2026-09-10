@@ -11,7 +11,7 @@ test("requires credentials before making a live request", async () => {
   );
 });
 
-test("normalizes an official-schema realtime item", async () => {
+test("normalizes an official-schema realtime item in the legacy nested envelope", async () => {
   const fakeFetch: typeof fetch = async () => new Response(JSON.stringify({
     response: {
       header: { resultCode: "00", resultMsg: "NORMAL SERVICE." },
@@ -31,14 +31,12 @@ test("normalizes an official-schema realtime item", async () => {
   assert.equal(vehicles[0].observedAt, "2026-08-20T12:00:00+09:00");
 });
 
-test("normalizes route-stop identity and sequence without inventing required fields", async () => {
+test("normalizes route-stop identity and sequence from the live top-level envelope", async () => {
   const fakeFetch: typeof fetch = async () => new Response(JSON.stringify({
-    response: {
-      header: { resultCode: "00" },
-      body: { items: { item: [{
-        sttnId: "STOP-1", sttnNm: "제주버스터미널", sttnSeq: "7", lat: "33.499", lot: "126.531",
-      }] } },
-    },
+    header: { resultCode: "00", resultMsg: "NORMAL SERVICE." },
+    body: { items: { item: [{
+      sttnId: "STOP-1", sttnNm: "제주버스터미널", sttnSeq: "7", lat: "33.499", lot: "126.531",
+    }] } },
   }), { status: 200 });
   const provider = new PublicDataUltraPrecisionProvider({ serviceKey: "test-key", fetchImplementation: fakeFetch });
   const stops = await provider.stops({ routeId: "route-201", standardRegionCode: "50110" });
@@ -50,6 +48,36 @@ test("normalizes route-stop identity and sequence without inventing required fie
     latitude: 33.499,
     longitude: 126.531,
   });
+});
+
+test("treats K3 NODATA_ERROR as an empty provider result", async () => {
+  const fakeFetch: typeof fetch = async () => new Response(JSON.stringify({
+    header: { resultCode: "K3", resultMsg: "NODATA_ERROR" },
+    body: { totalCount: 0, pageNo: 0, numOfRows: 0 },
+  }), { status: 200 });
+  const provider = new PublicDataUltraPrecisionProvider({ serviceKey: "test-key", fetchImplementation: fakeFetch });
+
+  assert.deepEqual(
+    await provider.stops({ routeId: "TEST", standardRegionCode: "50110" }),
+    [],
+  );
+  assert.deepEqual(
+    await provider.vehicles({ routeId: "TEST", standardRegionCode: "50110" }),
+    [],
+  );
+});
+
+test("surfaces top-level provider error codes instead of hiding the gateway response", async () => {
+  const fakeFetch: typeof fetch = async () => new Response(JSON.stringify({
+    header: { resultCode: "30", resultMsg: "SERVICE_KEY_IS_NOT_REGISTERED_ERROR" },
+    body: {},
+  }), { status: 200 });
+  const provider = new PublicDataUltraPrecisionProvider({ serviceKey: "test-key", fetchImplementation: fakeFetch });
+
+  await assert.rejects(
+    provider.vehicles({ routeId: "route-201", standardRegionCode: "50110" }),
+    /Transit provider error 30: SERVICE_KEY_IS_NOT_REGISTERED_ERROR/,
+  );
 });
 
 test("fails closed when a route-stop response omits required identity", async () => {

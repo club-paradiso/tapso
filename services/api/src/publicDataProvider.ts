@@ -76,21 +76,38 @@ export class PublicDataUltraPrecisionProvider implements TransitProvider {
     }
 
     const payload: unknown = await response.json();
-    const resultCode = nestedString(payload, ["response", "header", "resultCode"]);
-    if (resultCode && resultCode !== "00" && resultCode !== "0") {
-      const message = nestedString(payload, ["response", "header", "resultMsg"]) ?? "unknown provider error";
-      throw new ProviderResponseError(`Transit provider error ${resultCode}: ${message}`);
+    const envelope = extractEnvelope(payload);
+    const resultCode = stringField(envelope.header, "resultCode");
+    const resultMessage = stringField(envelope.header, "resultMsg");
+
+    if (resultCode === "K3" && resultMessage === "NODATA_ERROR") {
+      return [];
     }
-    return extractItems(payload);
+    if (resultCode && resultCode !== "00" && resultCode !== "0") {
+      throw new ProviderResponseError(
+        `Transit provider error ${resultCode}: ${resultMessage ?? "unknown provider error"}`,
+      );
+    }
+
+    return extractItems(envelope.body);
   }
 }
 
-function extractItems(payload: unknown): UnknownRecord[] {
+function extractEnvelope(payload: unknown): { header: UnknownRecord; body: UnknownRecord } {
   if (!isRecord(payload)) throw new ProviderResponseError("Provider payload is not an object");
-  const response = payload.response;
-  if (!isRecord(response)) throw new ProviderResponseError("Provider payload has no response object");
-  const body = response.body;
+
+  const nestedResponse = payload.response;
+  const container = isRecord(nestedResponse) ? nestedResponse : payload;
+  const header = container.header;
+  const body = container.body;
+
+  if (!isRecord(header)) throw new ProviderResponseError("Provider payload has no header object");
   if (!isRecord(body)) throw new ProviderResponseError("Provider payload has no body object");
+
+  return { header, body };
+}
+
+function extractItems(body: UnknownRecord): UnknownRecord[] {
   const itemsContainer = body.items;
   if (itemsContainer === "" || itemsContainer == null) return [];
   const value = isRecord(itemsContainer) ? itemsContainer.item : itemsContainer;
@@ -101,15 +118,6 @@ function extractItems(payload: unknown): UnknownRecord[] {
 
 function isRecord(value: unknown): value is UnknownRecord {
   return typeof value === "object" && value !== null && !Array.isArray(value);
-}
-
-function nestedString(value: unknown, path: string[]): string | undefined {
-  let current: unknown = value;
-  for (const key of path) {
-    if (!isRecord(current)) return undefined;
-    current = current[key];
-  }
-  return typeof current === "string" || typeof current === "number" ? String(current) : undefined;
 }
 
 function stringField(item: UnknownRecord, ...keys: string[]): string | undefined {
