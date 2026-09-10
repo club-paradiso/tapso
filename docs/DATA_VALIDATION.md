@@ -1,66 +1,37 @@
-# Transit data validation
+# TAGO transit data validation
 
-## Current evidence
+## Current status
 
-| Question | Result |
-|---|---|
-| Official resource 15157601 provides route, route-stop, and realtime position data | `VERIFIED_FROM_OFFICIAL_METADATA` |
-| Official base URL and route/stop/realtime paths | `VERIFIED_FROM_SWAGGER` |
-| Development traffic allowance is 5,000 calls/day | `VERIFIED_FROM_OFFICIAL_METADATA` |
-| API rejects a missing service key | `VERIFIED` |
-| Route 365 is currently listed in the Jeju passenger bus system | `VERIFIED_FROM_PUBLIC_PASSENGER_INTERFACE` |
-| Official internal route ID for Route 365 | `UNVERIFIED`; do not substitute third-party IDs |
-| Jeju standard region code accepted in live calls | `UNVERIFIED` |
-| Jeju routes and stops returned | `BLOCKED_BY_CREDENTIALS` |
-| Vehicle ID stable across observations | `UNVERIFIED` |
-| Stop ordering and opposite direction distinguishable | `UNVERIFIED` |
-| Realtime payload includes a usable stop sequence | `UNVERIFIED`; public metadata does not promise one |
-| Branch/variant semantics | `UNVERIFIED` |
-| Real polling cadence and dropout distribution | `UNVERIFIED` |
-| Enough evidence for automatic vehicle matching | `UNVERIFIED` |
+Both TAGO development applications were approved on 2026-09-10. Local credential rotation and live authentication/discovery must be verified separately; portal approval alone does not establish live access. See `docs/exec-plans/TAGO_MIGRATION.md` for current execution evidence.
 
-## Phase 1 conservative behavior
+## Local setup and discovery
 
-- Route-scoped caching shares successful snapshots across sessions and never caches provider failures.
-- Vehicle cache defaults to 20 seconds and route stops to six hours until live cadence is measured.
-- Vehicle matching can use boarding-stop proximity when realtime payloads lack stop sequence.
-- Session progress uses provider stop sequence only when present and route-valid. Otherwise it estimates a stop only within 120 m of a known route stop and labels that source as an estimate.
-- Once selected, a vehicle is never silently replaced because another candidate becomes more convenient.
-- Backward or duplicate progress is ignored. Temporary disappearance retains last progress only inside a bounded grace window, after which tracking becomes `lost`.
-
-## Route 365 credentialed spike
-
-The repository now contains a repeated-sampling validator rather than a one-shot payload dump. It records collection time independently from provider observation time and summarizes provider cadence, duplicate observations, out-of-order timestamps, optional-field coverage, and per-vehicle continuity.
-
-1. Obtain an approved key for resource 15157601 and keep it only in the shell/server environment.
-2. Resolve Route 365's official API `rteId` from the official response or portal tooling. Do not copy `JEB...`, `6522`, or another third-party identifier into production code unless the official API itself confirms that value.
-3. Start with a bounded one-minute probe:
+Keep the new **Decoding** key as `PUBLIC_DATA_SERVICE_KEY` in the project `.env.local` (Git-ignored, mode `0600`). Do not put it in shell history or GitHub. Revoke/rotate the previously exposed key through the portal and update any other applications that shared it.
 
 ```bash
-PUBLIC_DATA_SERVICE_KEY='…' \
-TRANSIT_SPIKE_SAMPLES=12 \
-TRANSIT_SPIKE_INTERVAL_MS=5000 \
-node --experimental-strip-types scripts/transit-spike/run.ts '<official-route-id>' 50110 \
-  > route365-spike.json
+python3 scripts/tago/probe.py > work/tago-probe.json
 ```
 
-4. Inspect `report.providerUpdateIntervalSeconds`, `duplicateObservationCount`, `outOfOrderObservationCount`, `stopSequenceCoverage`, `directionCoverage`, `eventCodeCoverage`, and `vehicleContinuity` before changing any runtime thresholds.
-5. If the short probe is healthy, extend the same command to cover a complete ride while respecting the 5,000-call development quota. A 5-second interval consumes 720 calls/hour for realtime observations plus the initial stop request.
-6. Record raw collection time separately from provider `gthrDt`; preserve raw output privately and commit only redacted, legally permitted representative fixtures.
-7. Corroborate route order and direction against the official Jeju passenger interface and an actual ride.
-8. Repeat on at least two additional route shapes before treating Route 365 behavior as general Jeju semantics.
+The Python probe reads `.env.local` before an inherited shell key and uses `urllib.parse.urlencode()`. It calls the official city-code endpoint, requires HTTP 200/resultCode 00, discovers 제주/서귀포 by the returned names, searches routeNo 365, and uses only returned IDs to query stops and vehicles. All route variants returned by the official search remain visible. Output contains no key or request URL. Failures print only controlled messages.
 
-## Threshold tuning gate
+Start the local API from the repository root with the local key file loaded:
 
-Do not change these defaults from intuition alone:
+```bash
+env -u PUBLIC_DATA_SERVICE_KEY node --env-file=.env.local --experimental-strip-types services/api/src/server.ts
+```
 
-- `TRANSIT_VEHICLE_CACHE_TTL_MS` / 20-second vehicle cache
-- 75-second missing-vehicle grace
-- 120 m near-stop estimate radius
-- 90-second matcher freshness limit
+Discovery endpoints are `/v1/cities` and `/v1/routes?cityCode=<official-city-code>&routeNo=365`. `/v1/stops` and `/v1/vehicles` take `cityCode` and `routeId`. Session creation takes `cityCode` in its JSON body. The old `stdgCd`/`standardRegionCode` contract is removed intentionally; B551982 IDs cannot be silently reused.
 
-Use the measured median and p95 provider update intervals, observed dropout distribution, duplicate rate, and coordinate/stop-sequence coverage. A safe cache TTL should avoid needless upstream calls while not concealing meaningful provider updates. Missing grace must be longer than ordinary observed gaps but shorter than a genuinely lost tracking window.
+For bounded repeated sampling, use verified IDs from discovery:
 
-## Acceptance gate for real mode
+```bash
+TRANSIT_SPIKE_SAMPLES=12 TRANSIT_SPIKE_INTERVAL_MS=5000 \
+env -u PUBLIC_DATA_SERVICE_KEY node --env-file=.env.local --experimental-strip-types scripts/transit-spike/run.ts \
+  '<official-route-id>' '<official-city-code>' > work/route365-spike.json
+```
 
-Do not enable automatic matching for passengers until at least 30 observed boardings across multiple routes demonstrate a clear candidate margin, no silent direction reversal, and bounded stale-data behavior. Any unknown event code or route variant must fail closed.
+## Freshness and passenger acceptance gate
+
+TAGO locations provide `nodeord`, but no documented source measurement timestamp. Receipt time is not provider freshness. The adapter records `receivedAt` independently and sets `timestampSource=unavailable`; the existing matcher and session engine reject the unknown-age observation. Provider update cadence cannot be calculated from receipt timestamps. Inspect coordinate/sequence changes and validate against the official passenger interface and actual rides before defining a separate policy.
+
+Keep the existing conservative cache and matching thresholds until measured evidence supports changes. Do not enable automatic passenger matching until at least 30 observed boardings across multiple routes demonstrate a clear candidate margin, no silent direction reversal, and bounded stale-data behavior. Route variants, timestamp absence, and real vehicle coverage remain explicit verification gates even if authentication succeeds.

@@ -35,7 +35,7 @@ export interface JourneyProgressView {
 export interface JourneySessionView {
   id: string;
   routeId: string;
-  standardRegionCode: string;
+  cityCode: string;
   boardingStop: StopOnRoute;
   destinationStop: StopOnRoute;
   directionCode?: string;
@@ -62,7 +62,7 @@ export interface JourneySessionCoordinatorOptions {
 
 type SessionInput = {
   routeId: string;
-  standardRegionCode: string;
+  cityCode: string;
   boardingStopSequence: number;
   destinationStopSequence: number;
   directionCode?: string;
@@ -215,7 +215,7 @@ export class JourneySessionCoordinator {
 
     const observedAtMs = new Date(observation.observedAt).getTime();
     const ageMs = now.getTime() - observedAtMs;
-    if (!Number.isFinite(observedAtMs) || ageMs < -10_000 || ageMs > this.maxObservationAgeMs) {
+    if (observation.timestampSource === "unavailable" || !Number.isFinite(observedAtMs) || ageMs < -10_000 || ageMs > this.maxObservationAgeMs) {
       return this.view(record, { state: "degraded", explanation: "Selected vehicle observation is stale or invalid." });
     }
 
@@ -307,7 +307,7 @@ export class JourneySessionCoordinator {
     return {
       id: record.id,
       routeId: record.routeId,
-      standardRegionCode: record.standardRegionCode,
+      cityCode: record.cityCode,
       boardingStop: { ...record.boardingStop },
       destinationStop: { ...record.destinationStop },
       directionCode: record.directionCode,
@@ -355,11 +355,11 @@ function parseSessionInput(value: unknown): SessionInput {
   if (!value || typeof value !== "object" || Array.isArray(value)) throw new SessionInputError("JSON object required");
   const input = value as Record<string, unknown>;
   const routeId = requiredText(input.routeId, "routeId");
-  const standardRegionCode = requiredText(input.standardRegionCode, "standardRegionCode");
+  const cityCode = requiredText(input.cityCode, "cityCode");
   const boardingStopSequence = positiveInteger(input.boardingStopSequence, "boardingStopSequence");
   const destinationStopSequence = positiveInteger(input.destinationStopSequence, "destinationStopSequence");
   const directionCode = input.directionCode === undefined ? undefined : requiredText(input.directionCode, "directionCode");
-  return { routeId, standardRegionCode, boardingStopSequence, destinationStopSequence, directionCode };
+  return { routeId, cityCode, boardingStopSequence, destinationStopSequence, directionCode };
 }
 
 function parseVehicleConfirmation(value: unknown): string {
@@ -380,7 +380,7 @@ function positiveInteger(value: unknown, field: string): number {
 }
 
 function routeRequest(input: SessionInput): RouteRequest {
-  return { routeId: input.routeId, standardRegionCode: input.standardRegionCode };
+  return { routeId: input.routeId, cityCode: input.cityCode };
 }
 
 function resolveStop(

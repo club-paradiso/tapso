@@ -29,3 +29,7 @@ work/
 outputs/
 *.xcresult
 .vercel
+
+# Python validation tools
+__pycache__/
+*.pyc

@@ -108,7 +108,7 @@ export class CachedTransitProvider implements TransitProvider {
 }
 
 function routeKey(request: RouteRequest): string {
-  return `${request.standardRegionCode}:${request.routeId}`;
+  return `${request.cityCode}:${request.routeId}`;
 }
 
 function normalizeTtl(value: number | undefined, fallback: number): number {
