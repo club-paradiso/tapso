@@ -11,6 +11,34 @@ test("requires credentials before making a live request", async () => {
   );
 });
 
+test("loads route master records without guessing a route id", async () => {
+  const fakeFetch: typeof fetch = async (input) => {
+    const url = new URL(String(input));
+    assert.equal(url.pathname, "/B551982/rte/mst_info");
+    assert.equal(url.searchParams.get("stdgCd"), "50110");
+    assert.equal(url.searchParams.get("rteId"), null);
+    return new Response(JSON.stringify({
+      header: { resultCode: "00", resultMsg: "NORMAL SERVICE." },
+      body: { items: { item: [{
+        rteId: "OFFICIAL-365", rteNo: "365", rteTpNm: "간선",
+        stStaNm: "제주한라대학교", edStaNm: "제주대학교",
+        fstTm: "0600", lstTm: "2200",
+      }] } },
+    }), { status: 200 });
+  };
+
+  const provider = new PublicDataUltraPrecisionProvider({ serviceKey: "test-key", fetchImplementation: fakeFetch });
+  assert.deepEqual(await provider.routeMasters("50110"), [{
+    routeId: "OFFICIAL-365",
+    routeNumber: "365",
+    routeType: "간선",
+    originName: "제주한라대학교",
+    destinationName: "제주대학교",
+    firstDepartureTime: "0600",
+    lastDepartureTime: "2200",
+  }]);
+});
+
 test("normalizes an official-schema realtime item in the legacy nested envelope", async () => {
   const fakeFetch: typeof fetch = async () => new Response(JSON.stringify({
     response: {
