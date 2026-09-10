@@ -8,6 +8,8 @@
 | Official base URL and route/stop/realtime paths | `VERIFIED_FROM_SWAGGER` |
 | Development traffic allowance is 5,000 calls/day | `VERIFIED_FROM_OFFICIAL_METADATA` |
 | API rejects a missing service key | `VERIFIED` |
+| Route 365 is currently listed in the Jeju passenger bus system | `VERIFIED_FROM_PUBLIC_PASSENGER_INTERFACE` |
+| Official internal route ID for Route 365 | `UNVERIFIED`; do not substitute third-party IDs |
 | Jeju standard region code accepted in live calls | `UNVERIFIED` |
 | Jeju routes and stops returned | `BLOCKED_BY_CREDENTIALS` |
 | Vehicle ID stable across observations | `UNVERIFIED` |
@@ -26,15 +28,38 @@
 - Once selected, a vehicle is never silently replaced because another candidate becomes more convenient.
 - Backward or duplicate progress is ignored. Temporary disappearance retains last progress only inside a bounded grace window, after which tracking becomes `lost`.
 
-## Credentialed spike procedure
+## Route 365 credentialed spike
 
-1. Obtain an approved key for resource 15157601 and keep it only in the environment.
-2. Choose at least three Jeju routes: simple bidirectional, high-frequency, and a branch/variant if one exists. Route 365 is the first narrow pilot candidate.
-3. Run `scripts/transit-spike/run.ts` at a deliberately bounded cadence for at least a complete trip while respecting the 5,000-call development quota.
-4. Record raw collection time separately from provider `gthrDt`.
-5. Measure identifier continuity, position monotonicity, stop sequence presence, direction, heading, event codes, receive type, timestamp skew, cadence, duplicates, and missing intervals.
-6. Corroborate route order against the official Jeju passenger interface and an actual ride.
-7. Redact and add only representative, legally permitted fixtures; label provenance accurately.
+The repository now contains a repeated-sampling validator rather than a one-shot payload dump. It records collection time independently from provider observation time and summarizes provider cadence, duplicate observations, out-of-order timestamps, optional-field coverage, and per-vehicle continuity.
+
+1. Obtain an approved key for resource 15157601 and keep it only in the shell/server environment.
+2. Resolve Route 365's official API `rteId` from the official response or portal tooling. Do not copy `JEB...`, `6522`, or another third-party identifier into production code unless the official API itself confirms that value.
+3. Start with a bounded one-minute probe:
+
+```bash
+PUBLIC_DATA_SERVICE_KEY='…' \
+TRANSIT_SPIKE_SAMPLES=12 \
+TRANSIT_SPIKE_INTERVAL_MS=5000 \
+node --experimental-strip-types scripts/transit-spike/run.ts '<official-route-id>' 50110 \
+  > route365-spike.json
+```
+
+4. Inspect `report.providerUpdateIntervalSeconds`, `duplicateObservationCount`, `outOfOrderObservationCount`, `stopSequenceCoverage`, `directionCoverage`, `eventCodeCoverage`, and `vehicleContinuity` before changing any runtime thresholds.
+5. If the short probe is healthy, extend the same command to cover a complete ride while respecting the 5,000-call development quota. A 5-second interval consumes 720 calls/hour for realtime observations plus the initial stop request.
+6. Record raw collection time separately from provider `gthrDt`; preserve raw output privately and commit only redacted, legally permitted representative fixtures.
+7. Corroborate route order and direction against the official Jeju passenger interface and an actual ride.
+8. Repeat on at least two additional route shapes before treating Route 365 behavior as general Jeju semantics.
+
+## Threshold tuning gate
+
+Do not change these defaults from intuition alone:
+
+- `TRANSIT_VEHICLE_CACHE_TTL_MS` / 20-second vehicle cache
+- 75-second missing-vehicle grace
+- 120 m near-stop estimate radius
+- 90-second matcher freshness limit
+
+Use the measured median and p95 provider update intervals, observed dropout distribution, duplicate rate, and coordinate/stop-sequence coverage. A safe cache TTL should avoid needless upstream calls while not concealing meaningful provider updates. Missing grace must be longer than ordinary observed gaps but shorter than a genuinely lost tracking window.
 
 ## Acceptance gate for real mode
 
