@@ -161,8 +161,7 @@ The API-data and HTTP integration gates for the full-length Route 365 directions
 
 1. Keep the API running with the service key loaded from private local environment storage.
 2. Choose one verified full-length direction and explicit boarding/destination stop sequences from its validated topology.
-3. Create a TAPSO journey session immediately before boarding.
-4. Confirm that the selected vehicle corresponds to the actual boarded bus when ambiguity exists.
-5. During the ride, verify monotonic stop progression, remaining-stop calculation, stale/duplicate handling, and arrival detection.
-6. Record only sanitized aggregate outcomes: selected-vehicle correctness, any temporary disappearance, stop-progress monotonicity, arrival timing, and any route-variant anomaly.
-7. Do not enable automatic passenger matching broadly until the existing acceptance gate of at least 30 observed boardings across multiple routes is met.
+3. Capture bounded TAGO snapshots under ignored `work/` storage during the ride and record the boarded vehicle locally; do not commit raw vehicle identifiers.
+4. Compare provider `nodeord` progression, snapshot changes, and gaps against physical stops through arrival.
+5. Use the result to define a source-freshness policy, then add deterministic journey-session tests before enabling tracking.
+6. Do not enable automatic passenger matching broadly until a freshness rule exists and the acceptance gate of at least 30 observed boardings across multiple routes is met.
