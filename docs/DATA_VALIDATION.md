@@ -70,9 +70,9 @@ The API-data and HTTP integration gates are complete for the full-length Route 3
 
 1. Run the API with the private service key and resolve `cityCode` through `/v1/cities`.
 2. Choose explicit boarding and destination stop sequences from the verified direction-specific topology.
-3. During the ride, capture bounded TAGO snapshots only under ignored `work/` storage and record the boarded vehicle locally.
-4. Compare physical vehicle identity, `nodeord` progression, snapshot changes, gaps, and arrival against the local capture.
-5. Define and test a TAGO freshness rule from that evidence before enabling journey-session matching or progress.
+3. During the ride, run `scripts/ride-capture/capture.ts` (see `exec-plans/RIDE_CAPTURE.md`). It stores bounded TAGO snapshots only under ignored `work/rides/`, records the boarded vehicle locally from the `b <vehicleno>` command, and accepts `p <stop-seq>` markers for physically passed stops.
+4. Run `scripts/ride-capture/analyze.ts` on the capture. The sanitized report compares the tracked vehicle's `nodeord` progression, content-change age, gaps, marker lag, and arrival against the rider markers, using per-run pseudonyms instead of vehicle numbers.
+5. Define and test a TAGO freshness rule from `freshnessEvidence` and `tracked.markerComparisons` before enabling journey-session matching or progress.
 
 ## Acceptance gate for broad real mode
 
