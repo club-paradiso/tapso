@@ -119,7 +119,9 @@ test("normalizes the verified Jeju TAGO live-location schema", async () => {
   assert.deepEqual(vehicles, [{
     vehicleId: "70자1234",
     routeId: "JEB405136521",
-    observedAt: "2026-09-10T08:10:00.000Z",
+    observedAt: "1970-01-01T00:00:00.000Z",
+    receivedAt: "2026-09-10T08:10:00.000Z",
+    timestampSource: "unavailable",
     stopId: "JEB405000315",
     stopName: "용문사거리[서]",
     stopSequence: 23,
@@ -143,7 +145,7 @@ test("treats a normal zero-count TAGO response as an empty snapshot", async () =
   );
 });
 
-test("surfaces TAGO session-pool and provider errors", async () => {
+test("redacts TAGO provider messages", async () => {
   const fakeFetch: typeof fetch = async () => new Response(JSON.stringify({
     response: {
       header: { resultCode: "99", resultMsg: "가용한 세션이 존재하지 않습니다. (30/30)" },
@@ -153,6 +155,24 @@ test("surfaces TAGO session-pool and provider errors", async () => {
   const provider = new TagoTransitProvider({ serviceKey: "test-key", fetchImplementation: fakeFetch });
   await assert.rejects(
     provider.vehicles({ routeId: "JEB405136521", cityCode: "39" }),
-    /TAGO provider error 99: 가용한 세션이 존재하지 않습니다/,
+    (error: Error) => {
+      assert.match(error.message, /^TAGO provider error 99$/);
+      assert.doesNotMatch(error.message, /세션/);
+      return true;
+    },
+  );
+});
+
+test("rejects a TAGO response without a result code", async () => {
+  const fakeFetch: typeof fetch = async () => new Response(JSON.stringify({
+    response: {
+      header: { resultMsg: "NORMAL SERVICE." },
+      body: { totalCount: 0, items: "" },
+    },
+  }), { status: 200 });
+  const provider = new TagoTransitProvider({ serviceKey: "test-key", fetchImplementation: fakeFetch });
+  await assert.rejects(
+    provider.vehicles({ routeId: "JEB405136521", cityCode: "39" }),
+    /TAGO resultCode is missing/,
   );
 });

@@ -52,26 +52,23 @@ The two continuously active full-length directions were sampled 24 times each at
 - Keep route stops cached for six hours pending change-frequency evidence.
 - Keep the 75-second missing-vehicle grace unchanged because the bounded probe observed no disappearance event.
 - Keep the 120 m near-stop fallback unchanged; TAGO `nodeord` should be preferred whenever it maps to a verified route stop.
-- Keep the 90-second matcher freshness limit unchanged pending actual boarding tests. TAGO `observedAt` represents TAPSO snapshot acquisition time, not a provider-generated timestamp.
+- TAGO observations set `timestampSource=unavailable`, keep receipt time in `receivedAt`, and use the epoch sentinel in `observedAt`. Matching and journey progress therefore fail closed instead of treating network receipt time as provider freshness.
 - Once selected, a vehicle is never silently replaced by another candidate.
 - Backward progress remains fail-closed.
 
 ## Provider architecture
 
-Jeju's verified live path is TAGO, not the unconfirmed B551982 mapping. The runtime therefore supports two adapters behind `TransitProvider`:
+Jeju's verified live path is TAGO. The server constructs `TagoTransitProvider` directly and exposes `transitProvider=tago` in health output. B551982 is retained only as validation history in documentation.
 
-- `TRANSIT_PROVIDER=b551982` — existing nationwide ultra-precision candidate and default for compatibility.
-- `TRANSIT_PROVIDER=tago` — verified Jeju pilot path.
+`RouteRequest.cityCode` carries the official TAGO identifier. API query parsing accepts only `cityCode`, so former B551982 `stdgCd` values cannot be reused accidentally.
 
-For TAGO, `RouteRequest.standardRegionCode` currently carries the official TAGO `cityCode` to avoid a breaking domain rename during this pilot. API query parsing also accepts `cityCode` and `regionCode` aliases.
-
-TAGO live responses do not expose a provider timestamp. `TagoTransitProvider` therefore stamps the acquisition time and sets `receiveType=TAGO_SNAPSHOT`; cadence analysis must continue to use snapshot-content changes rather than interpreting acquisition time as upstream update time.
+TAGO live responses do not expose a provider timestamp. `TagoTransitProvider` stores TAPSO acquisition time in `receivedAt`, marks `timestampSource=unavailable`, and sets `receiveType=TAGO_SNAPSHOT`; cadence analysis must continue to use snapshot-content changes.
 
 ## Next validation gate
 
 The API-data and HTTP integration gates are complete for the full-length Route 365 directions. The next validation gate is a controlled real ride:
 
-1. Run the API with `TRANSIT_PROVIDER=tago` and `cityCode=39`.
+1. Run the API with the private service key and resolve `cityCode` through `/v1/cities`.
 2. Choose explicit boarding and destination stop sequences from the verified direction-specific topology.
 3. Create a journey session immediately before boarding.
 4. Verify selected-vehicle correctness, monotonic stop progression, remaining-stop calculation, stale/missing behavior, and arrival detection.

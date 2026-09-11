@@ -109,7 +109,7 @@ A two-minute bounded probe sampled the two active full-length directions 24 time
 
 ## Verified TAPSO HTTP path
 
-The local API was started with `TRANSIT_PROVIDER=tago` and the service key loaded from macOS Keychain. TAPSO reported `TAPSO API listening on http://127.0.0.1:8787`.
+The local API was started with the service key loaded from private local environment storage. TAPSO reported `TAPSO API listening on http://127.0.0.1:8787`.
 
 A real HTTP request to:
 
@@ -147,19 +147,19 @@ This branch now adds a `TagoTransitProvider` behind the existing `TransitProvide
 
 - route stops from `getRouteAcctoThrghSttnList`
 - live vehicles from `getRouteAcctoBusLcList`
-- TAGO `cityCode` through the existing `RouteRequest.standardRegionCode` field for compatibility
+- TAGO `cityCode` through `RouteRequest.cityCode`
 - `nodeord` to `VehicleObservation.stopSequence`
 - `gpslati/gpslong` to coordinates
 - `vehicleno` to the internal vehicle identity
-- snapshot acquisition time to `observedAt`, with `receiveType=TAGO_SNAPSHOT` to avoid pretending it is a provider-generated timestamp
+- snapshot acquisition time to `receivedAt`, with `timestampSource=unavailable` and `receiveType=TAGO_SNAPSHOT`
 
-The server keeps B551982 as the default provider and enables the verified Jeju path explicitly with `TRANSIT_PROVIDER=tago`.
+The server uses TAGO directly. B551982 is not selectable at runtime because its authenticated route master returned no Jeju data.
 
 ## Exact next step toward a real TAPSO ride test
 
 The API-data and HTTP integration gates for the full-length Route 365 directions are now satisfied. The next step is a controlled real ride:
 
-1. Keep the API running with `TRANSIT_PROVIDER=tago` and the service key loaded from Keychain.
+1. Keep the API running with the service key loaded from private local environment storage.
 2. Choose one verified full-length direction and explicit boarding/destination stop sequences from its validated topology.
 3. Create a TAPSO journey session immediately before boarding.
 4. Confirm that the selected vehicle corresponds to the actual boarded bus when ambiguity exists.

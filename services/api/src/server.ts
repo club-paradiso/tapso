@@ -2,19 +2,14 @@ import { createServer, type IncomingMessage, type ServerResponse } from "node:ht
 import { CachedTransitProvider } from "./cachedTransitProvider.ts";
 import { matchVehicle } from "./matching.ts";
 import type { MatchRequest } from "./domain.ts";
-import { PublicDataUltraPrecisionProvider } from "./publicDataProvider.ts";
 import { TagoTransitProvider } from "./tagoProvider.ts";
 import { JourneySessionCoordinator } from "./journeySession.ts";
 import { logEvent } from "./observability.ts";
 
-type TransitProviderName = "b551982" | "tago";
-type SelectableTransitProvider = PublicDataUltraPrecisionProvider | TagoTransitProvider;
-
-const transitProviderName = parseTransitProviderName(process.env.TRANSIT_PROVIDER);
-const upstreamProvider = createTransitProvider(transitProviderName);
+const upstreamProvider = new TagoTransitProvider();
 const provider = new CachedTransitProvider(upstreamProvider, {
-  stopTtlMs: envDuration("TRANSIT_STOP_TTL_MS") ?? envDuration("PUBLIC_DATA_STOP_TTL_MS"),
-  vehicleTtlMs: envDuration("TRANSIT_VEHICLE_TTL_MS") ?? envDuration("PUBLIC_DATA_VEHICLE_TTL_MS"),
+  stopTtlMs: envDuration("TRANSIT_STOP_TTL_MS"),
+  vehicleTtlMs: envDuration("TRANSIT_VEHICLE_TTL_MS"),
 });
 const sessions = new JourneySessionCoordinator(provider);
 const port = Number(process.env.PORT ?? 8787);
@@ -26,7 +21,7 @@ export const server = createServer(async (request, response) => {
     if (request.method === "GET" && url.pathname === "/health") {
       return json(response, 200, {
         ok: true,
-        transitProvider: transitProviderName,
+        transitProvider: "tago",
         liveTransitConfigured: Boolean(process.env.PUBLIC_DATA_SERVICE_KEY),
         routeCache: provider.policy,
         sessionStore: "memory",
@@ -48,13 +43,13 @@ export const server = createServer(async (request, response) => {
       return json(response, 200, result);
     }
     if (request.method === "GET" && url.pathname === "/v1/cities") {
-      return json(response, 200, { items: await tagoDiscoveryProvider().cities() });
+      return json(response, 200, { items: await upstreamProvider.cities() });
     }
     if (request.method === "GET" && url.pathname === "/v1/routes") {
       const cityCode = url.searchParams.get("cityCode")?.trim();
       const routeNo = url.searchParams.get("routeNo")?.trim();
       if (!cityCode || !routeNo) throw invalidInput("cityCode and routeNo are required");
-      return json(response, 200, { items: await tagoDiscoveryProvider().routes(cityCode, routeNo) });
+      return json(response, 200, { items: await upstreamProvider.routes(cityCode, routeNo) });
     }
     if (request.method === "GET" && url.pathname === "/v1/stops") {
       const route = parseRouteQuery(url);
@@ -101,23 +96,6 @@ export const server = createServer(async (request, response) => {
   }
 });
 
-function createTransitProvider(name: TransitProviderName): SelectableTransitProvider {
-  if (name === "tago") return new TagoTransitProvider();
-  return new PublicDataUltraPrecisionProvider();
-}
-
-function tagoDiscoveryProvider(): TagoTransitProvider {
-  if (upstreamProvider instanceof TagoTransitProvider) return upstreamProvider;
-  throw invalidInput("city and route discovery require TRANSIT_PROVIDER=tago");
-}
-
-function parseTransitProviderName(raw?: string): TransitProviderName {
-  const value = raw?.trim().toLowerCase();
-  if (!value || value === "b551982") return "b551982";
-  if (value === "tago") return "tago";
-  throw new Error(`TRANSIT_PROVIDER must be b551982 or tago; received ${raw}`);
-}
-
 function json(response: ServerResponse, status: number, body: unknown): void {
   response.writeHead(status, { "content-type": "application/json; charset=utf-8" });
   response.end(JSON.stringify(body));
@@ -140,13 +118,9 @@ async function readJSON(request: IncomingMessage): Promise<unknown> {
 
 function parseRouteQuery(url: URL): { routeId: string; cityCode: string } {
   const routeId = url.searchParams.get("routeId")?.trim();
-  const cityCode = (
-    url.searchParams.get("cityCode")
-    ?? url.searchParams.get("regionCode")
-    ?? url.searchParams.get("stdgCd")
-  )?.trim();
+  const cityCode = url.searchParams.get("cityCode")?.trim();
   if (!routeId || !cityCode) {
-    throw invalidInput("routeId and one of cityCode/regionCode/stdgCd are required");
+    throw invalidInput("routeId and cityCode are required");
   }
   return { routeId, cityCode };
 }
