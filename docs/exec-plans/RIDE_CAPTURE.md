@@ -45,4 +45,4 @@ Stop sequences come from `GET /v1/stops?routeId=…&cityCode=39` or from the sto
 
 ## Progress / next action
 
-Implemented and tested on a topic branch; no credentialed run yet. Next action: ride one full-length Route 365 direction with `.env.local` loaded, keep the capture under `work/rides/`, and paste only the sanitized `.report.json` summary (counts, seconds, pseudonyms) into `docs/DATA_VALIDATION.md`. Then define the TAGO freshness rule from `freshnessEvidence` and `tracked.markerComparisons`.
+Implemented and tested (API 29/29, Swift 38/38, Python 3/3). Opened as [PR #24](https://github.com/club-paradiso/tapso/pull/24) against `main` — CI green (`api`, `transit-core`, `web` all pass); not yet merged, pending user confirmation. No credentialed run yet. Next action: merge PR #24, then ride one full-length Route 365 direction with `.env.local` loaded, keep the capture under `work/rides/`, and paste only the sanitized `.report.json` summary (counts, seconds, pseudonyms) into `docs/DATA_VALIDATION.md`. Then define the TAGO freshness rule from `freshnessEvidence` and `tracked.markerComparisons`.
