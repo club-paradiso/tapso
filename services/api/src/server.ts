@@ -4,11 +4,11 @@ import { matchVehicle } from "./matching.ts";
 import type { MatchRequest } from "./domain.ts";
 import { PublicDataUltraPrecisionProvider } from "./publicDataProvider.ts";
 import { TagoTransitProvider } from "./tagoProvider.ts";
-import type { TransitProvider } from "./provider.ts";
 import { JourneySessionCoordinator } from "./journeySession.ts";
 import { logEvent } from "./observability.ts";
 
 type TransitProviderName = "b551982" | "tago";
+type SelectableTransitProvider = PublicDataUltraPrecisionProvider | TagoTransitProvider;
 
 const transitProviderName = parseTransitProviderName(process.env.TRANSIT_PROVIDER);
 const upstreamProvider = createTransitProvider(transitProviderName);
@@ -48,13 +48,13 @@ export const server = createServer(async (request, response) => {
       return json(response, 200, result);
     }
     if (request.method === "GET" && url.pathname === "/v1/cities") {
-      return json(response, 200, { items: await upstreamProvider.cities() });
+      return json(response, 200, { items: await tagoDiscoveryProvider().cities() });
     }
     if (request.method === "GET" && url.pathname === "/v1/routes") {
       const cityCode = url.searchParams.get("cityCode")?.trim();
       const routeNo = url.searchParams.get("routeNo")?.trim();
       if (!cityCode || !routeNo) throw invalidInput("cityCode and routeNo are required");
-      return json(response, 200, { items: await upstreamProvider.routes(cityCode, routeNo) });
+      return json(response, 200, { items: await tagoDiscoveryProvider().routes(cityCode, routeNo) });
     }
     if (request.method === "GET" && url.pathname === "/v1/stops") {
       const route = parseRouteQuery(url);
@@ -101,9 +101,14 @@ export const server = createServer(async (request, response) => {
   }
 });
 
-function createTransitProvider(name: TransitProviderName): TransitProvider {
+function createTransitProvider(name: TransitProviderName): SelectableTransitProvider {
   if (name === "tago") return new TagoTransitProvider();
   return new PublicDataUltraPrecisionProvider();
+}
+
+function tagoDiscoveryProvider(): TagoTransitProvider {
+  if (upstreamProvider instanceof TagoTransitProvider) return upstreamProvider;
+  throw invalidInput("city and route discovery require TRANSIT_PROVIDER=tago");
 }
 
 function parseTransitProviderName(raw?: string): TransitProviderName {
@@ -135,15 +140,15 @@ async function readJSON(request: IncomingMessage): Promise<unknown> {
 
 function parseRouteQuery(url: URL): { routeId: string; cityCode: string } {
   const routeId = url.searchParams.get("routeId")?.trim();
-  const standardRegionCode = (
-    url.searchParams.get("regionCode")
+  const cityCode = (
+    url.searchParams.get("cityCode")
+    ?? url.searchParams.get("regionCode")
     ?? url.searchParams.get("stdgCd")
-    ?? url.searchParams.get("cityCode")
   )?.trim();
-  if (!routeId || !standardRegionCode) {
-    throw invalidInput("routeId and one of regionCode/stdgCd/cityCode are required");
+  if (!routeId || !cityCode) {
+    throw invalidInput("routeId and one of cityCode/regionCode/stdgCd are required");
   }
-  return { routeId, standardRegionCode };
+  return { routeId, cityCode };
 }
 
 function parseMatchRequest(value: unknown): MatchRequest {
