@@ -34,7 +34,7 @@ Authenticated official responses verified:
 
 TAGO route records reported `routetp=급행버스` for all six 365 variants. Do not use that field alone as authoritative Jeju product classification; preserve route ID and endpoint/stop topology.
 
-## Jeju BIS
+Requests use `serviceKey`, `_type=json`, and where applicable `cityCode`, `routeId`, `pageNo`, `numOfRows`. The city code is a TAGO identifier, not the former B551982 `stdgCd`. Do not infer one from the other. Resolve IDs from official live responses; no production city/route ID is hardcoded.
 
 [Jeju Bus Information System](https://bus.jeju.go.kr/) remains the official passenger-facing corroboration source for route existence, schedule, endpoint, and local classification. No undocumented Jeju BIS endpoint is treated as a supported TAPSO product API.
 

@@ -1,6 +1,6 @@
-# Transit data validation
+# TAGO transit data validation
 
-## Current evidence
+## Current status
 
 | Question | Result |
 |---|---|

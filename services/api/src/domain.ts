@@ -2,7 +2,7 @@ export type Direction = "outbound" | "inbound";
 
 export interface RouteRequest {
   routeId: string;
-  standardRegionCode: string;
+  cityCode: string;
 }
 
 export interface StopOnRoute {
@@ -18,6 +18,10 @@ export interface VehicleObservation {
   vehicleId: string;
   routeId: string;
   observedAt: string;
+  receivedAt?: string;
+  timestampSource?: "provider" | "unavailable";
+  stopId?: string;
+  stopName?: string;
   stopSequence?: number;
   directionCode?: string;
   latitude?: number;

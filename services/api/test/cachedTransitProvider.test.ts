@@ -4,7 +4,7 @@ import { CachedTransitProvider } from "../src/cachedTransitProvider.ts";
 import type { RouteRequest, StopOnRoute, VehicleObservation } from "../src/domain.ts";
 import type { TransitProvider } from "../src/provider.ts";
 
-const request: RouteRequest = { routeId: "route-365", standardRegionCode: "50110" };
+const request: RouteRequest = { routeId: "route-365", cityCode: "999" };
 
 class CountingProvider implements TransitProvider {
   stopCalls = 0;

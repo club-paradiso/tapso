@@ -47,6 +47,15 @@ export const server = createServer(async (request, response) => {
       });
       return json(response, 200, result);
     }
+    if (request.method === "GET" && url.pathname === "/v1/cities") {
+      return json(response, 200, { items: await upstreamProvider.cities() });
+    }
+    if (request.method === "GET" && url.pathname === "/v1/routes") {
+      const cityCode = url.searchParams.get("cityCode")?.trim();
+      const routeNo = url.searchParams.get("routeNo")?.trim();
+      if (!cityCode || !routeNo) throw invalidInput("cityCode and routeNo are required");
+      return json(response, 200, { items: await upstreamProvider.routes(cityCode, routeNo) });
+    }
     if (request.method === "GET" && url.pathname === "/v1/stops") {
       const route = parseRouteQuery(url);
       return json(response, 200, { items: await provider.stops(route) });
@@ -124,7 +133,7 @@ async function readJSON(request: IncomingMessage): Promise<unknown> {
   }
 }
 
-function parseRouteQuery(url: URL): { routeId: string; standardRegionCode: string } {
+function parseRouteQuery(url: URL): { routeId: string; cityCode: string } {
   const routeId = url.searchParams.get("routeId")?.trim();
   const standardRegionCode = (
     url.searchParams.get("regionCode")

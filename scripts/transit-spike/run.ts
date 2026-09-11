@@ -1,28 +1,28 @@
-import { PublicDataUltraPrecisionProvider } from "../../services/api/src/publicDataProvider.ts";
+import { TagoTransitProvider } from "../../services/api/src/publicDataProvider.ts";
 import { analyzeTransitValidation, type TransitValidationSample } from "../../services/api/src/liveValidation.ts";
 
 const routeId = process.argv[2];
-const standardRegionCode = process.argv[3] ?? "50110";
+const cityCode = process.argv[3];
 const sampleCount = positiveInteger(process.env.TRANSIT_SPIKE_SAMPLES, 12);
 const intervalMs = positiveInteger(process.env.TRANSIT_SPIKE_INTERVAL_MS, 5_000);
 
-if (!routeId) {
+if (!routeId || !cityCode) {
   console.error([
-    "Usage: node --experimental-strip-types scripts/transit-spike/run.ts <official-route-id> [stdgCd]",
+    "Usage: node --experimental-strip-types scripts/transit-spike/run.ts <official-route-id> <official-city-code>",
     "Environment: TRANSIT_SPIKE_SAMPLES=12 TRANSIT_SPIKE_INTERVAL_MS=5000",
-    "Example: PUBLIC_DATA_SERVICE_KEY='…' TRANSIT_SPIKE_SAMPLES=60 TRANSIT_SPIKE_INTERVAL_MS=5000 node --experimental-strip-types scripts/transit-spike/run.ts '<official-route-id>' 50110",
+    "Example: TRANSIT_SPIKE_SAMPLES=60 TRANSIT_SPIKE_INTERVAL_MS=5000 env -u PUBLIC_DATA_SERVICE_KEY node --env-file=.env.local --experimental-strip-types scripts/transit-spike/run.ts '<official-route-id>' '<official-city-code>'",
   ].join("\n"));
   process.exit(2);
 }
 
 try {
-  const provider = new PublicDataUltraPrecisionProvider();
-  const stops = await provider.stops({ routeId, standardRegionCode });
+  const provider = new TagoTransitProvider();
+  const stops = await provider.stops({ routeId, cityCode });
   const samples: TransitValidationSample[] = [];
 
   for (let index = 0; index < sampleCount; index += 1) {
     const capturedAt = new Date().toISOString();
-    const vehicles = await provider.vehicles({ routeId, standardRegionCode });
+    const vehicles = await provider.vehicles({ routeId, cityCode });
     samples.push({ capturedAt, vehicles });
     console.error(`sample ${index + 1}/${sampleCount}: ${vehicles.length} vehicles at ${capturedAt}`);
     if (index + 1 < sampleCount) await sleep(intervalMs);
@@ -32,7 +32,7 @@ try {
   console.log(JSON.stringify({
     capturedAt: new Date().toISOString(),
     routeId,
-    standardRegionCode,
+    cityCode,
     configuration: { sampleCount, intervalMs },
     stops,
     samples,

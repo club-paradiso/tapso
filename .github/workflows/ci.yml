@@ -40,6 +40,7 @@ jobs:
         with:
           node-version: 22
       - run: npm test --prefix services/api
+      - run: python3 -m unittest discover -s scripts/tago -p 'test_*.py'
 
   web:
     runs-on: ubuntu-latest

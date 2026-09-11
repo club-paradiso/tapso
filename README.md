@@ -20,8 +20,8 @@ Public product site: [tapso-nu.vercel.app](https://tapso-nu.vercel.app)
 | Waitlist backend | `IMPLEMENTED` | Vercel Functions in `apps/web/api`; validation, duplicate protection, rate limiting, and confirmation email covered by 90 Node tests |
 | Waitlist against live Supabase and Resend | `BLOCKED_BY_CREDENTIALS` | No project, key, or verified sending domain; see `docs/WAITLIST_SUPPORT_SETUP.md` |
 | Support payment | `NOT ENABLED` | Toss Payments adapter, state machine, and webhook reconciliation are implemented and tested; no merchant account exists |
-| Official API contract | `VERIFIED` | Swagger paths and fields inspected from data.go.kr resource 15157601 |
-| Live Jeju response quality | `BLOCKED_BY_CREDENTIALS` | No public-data service key was available; no live Jeju response, cadence, identifier continuity, or stop-sequence semantics are claimed |
+| Official API contract | `VERIFIED` | TAGO route/location schemas inspected from resources 15098529 and 15098533 |
+| Live Jeju response quality | `PARTIALLY_VERIFIED` | HTTP 200/00; city 39, six Route 365 variants and real stops verified. Overnight location queries succeed with zero vehicles; source freshness remains unknown. See [capture](docs/validation/TAGO_2026-09-11.md). |
 | Remote APNs updates | `BLOCKED_BY_CREDENTIALS` | Requires Apple team, bundle, and APNs signing credentials |
 | Physical-device validation | `UNVERIFIED` | Requires a signed device build and real Dynamic Island hardware |
 
@@ -39,30 +39,29 @@ xcodebuild -project apps/ios/Tapso.xcodeproj -scheme Tapso \
 
 Open `apps/ios/Tapso.xcodeproj`, run the `Tapso` scheme, then choose **Start demo ride** and allow Live Activities when iOS asks. The demo begins at eight stops remaining and supports accelerated or manual progression. Press Home to inspect compact mode and touch and hold the Island for the expanded journey surface.
 
-To probe live official data, copy `.env.example` to `.env`, provide the decoded service key only in your local environment, and run:
+To probe official TAGO data, store the new **Decoding** key in ignored `.env.local` as `PUBLIC_DATA_SERVICE_KEY`, with permissions `0600`. Never put it on the command line or in the iOS/web client. See [data validation](docs/DATA_VALIDATION.md).
 
 ```bash
-PUBLIC_DATA_SERVICE_KEY='…' node --experimental-strip-types \
-  scripts/transit-spike/run.ts '<official-route-id>' 50110
+mkdir -p work
+python3 scripts/tago/probe.py > work/tago-probe.json
+env -u PUBLIC_DATA_SERVICE_KEY node --env-file=.env.local --experimental-strip-types services/api/src/server.ts
 ```
 
-Never put the government key in the iOS target or commit `.env`.
-
-To exercise the request-driven pilot API locally, start `services/api` with a server-side public-data key. The pilot exposes cached route snapshots and short-lived in-memory ride sessions; it does not silently rematch a selected vehicle.
-
-```bash
-PUBLIC_DATA_SERVICE_KEY='…' npm start --prefix services/api
-```
+The probe resolves official city and route IDs before fetching stops and locations. The API uses `cityCode`; former `stdgCd` values are not interchangeable. TAGO has no documented measurement timestamp, so automatic matching remains withheld when freshness is unknown.
 
 Pilot endpoints:
 
 ```text
-GET  /v1/stops?routeId=…&stdgCd=…
-GET  /v1/vehicles?routeId=…&stdgCd=…
+GET  /v1/cities
+GET  /v1/routes?cityCode=…&routeNo=365
+GET  /v1/stops?routeId=…&cityCode=…
+GET  /v1/vehicles?routeId=…&cityCode=…
 POST /v1/sessions
 GET  /v1/sessions/:id
 POST /v1/sessions/:id/confirm
 ```
+
+Session creation takes `cityCode` in its JSON body. Sessions remain short-lived and in memory.
 
 To run the public product website locally:
 
