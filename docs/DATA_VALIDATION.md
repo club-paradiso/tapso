@@ -70,9 +70,10 @@ The API-data and HTTP integration gates are complete for the full-length Route 3
 
 1. Run the API with the private service key and resolve `cityCode` through `/v1/cities`.
 2. Choose explicit boarding and destination stop sequences from the verified direction-specific topology.
-3. Create a journey session immediately before boarding.
-4. Verify selected-vehicle correctness, monotonic stop progression, remaining-stop calculation, stale/missing behavior, and arrival detection.
+3. During the ride, capture bounded TAGO snapshots only under ignored `work/` storage and record the boarded vehicle locally.
+4. Compare physical vehicle identity, `nodeord` progression, snapshot changes, gaps, and arrival against the local capture.
+5. Define and test a TAGO freshness rule from that evidence before enabling journey-session matching or progress.
 
 ## Acceptance gate for broad real mode
 
-Do not enable automatic matching for passengers until at least 30 observed boardings across multiple routes demonstrate a clear candidate margin, no silent direction reversal, and bounded stale-data behavior. Unknown route variants or unsupported semantics must fail closed.
+Do not enable automatic matching for passengers until a source-freshness rule exists and at least 30 observed boardings across multiple routes demonstrate a clear candidate margin, no silent direction reversal, and bounded stale-data behavior. Unknown route variants or unsupported semantics must fail closed.
