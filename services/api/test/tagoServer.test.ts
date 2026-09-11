@@ -2,9 +2,10 @@ import test from "node:test";
 import assert from "node:assert/strict";
 import { once } from "node:events";
 
-test("HTTP pilot discovers official IDs, accepts cityCode and rejects legacy region input", async () => {
+test("HTTP pilot discovers official IDs and accepts route-code aliases in TAGO mode", async () => {
   const realFetch = globalThis.fetch;
   process.env.NODE_ENV = "test";
+  process.env.TRANSIT_PROVIDER = "tago";
   process.env.PUBLIC_DATA_SERVICE_KEY = "synthetic-server-key";
   const upstreamRequests: URL[] = [];
   globalThis.fetch = async input => {
@@ -33,7 +34,9 @@ test("HTTP pilot discovers official IDs, accepts cityCode and rejects legacy reg
     assert.equal(stops.status, 200);
     assert.equal((await stops.json()).items[0].stopId, "SYNTHETIC_S");
     const legacy = await realFetch(base + "/v1/stops?stdgCd=999&routeId=SYNTHETIC_R");
-    assert.equal(legacy.status, 400);
+    assert.equal(legacy.status, 200);
+    const regionAlias = await realFetch(base + "/v1/stops?regionCode=999&routeId=SYNTHETIC_R");
+    assert.equal(regionAlias.status, 200);
     const missingRoute = await realFetch(base + "/v1/routes?cityCode=999");
     assert.equal(missingRoute.status, 400);
     assert.equal(upstreamRequests.length, 3);
@@ -43,5 +46,6 @@ test("HTTP pilot discovers official IDs, accepts cityCode and rejects legacy reg
     server.closeAllConnections();
     await new Promise<void>((resolve, reject) => server.close(error => error ? reject(error) : resolve()));
     delete process.env.PUBLIC_DATA_SERVICE_KEY;
+    delete process.env.TRANSIT_PROVIDER;
   }
 });

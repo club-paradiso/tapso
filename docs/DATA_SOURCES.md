@@ -1,28 +1,61 @@
 # Data sources
 
-## Active provider: official TAGO
+## B551982 nationwide ultra-precision bus API
 
-The runtime uses [bus route information, resource 15098529](https://www.data.go.kr/data/15098529/openapi.do) and [bus location information, resource 15098533](https://www.data.go.kr/data/15098533/openapi.do). Official portal schemas were inspected on 2026-09-10. Both development applications were approved that day (expiry 2028-09-10); portal displays 10,000 calls per operation/day.
+Public Data Portal resource `15157601` remains a supported candidate source. Its contract exposes:
 
-All calls use HTTPS at `https://apis.data.go.kr/1613000/`:
+- host `https://apis.data.go.kr/B551982/rte`
+- `GET /mst_info` — route master
+- `GET /ps_info` — route stops
+- `GET /rtm_loc_info` — realtime vehicle locations
 
-| Service | Operation | Purpose |
-|---|---|---|
-| BusRouteInfoInqireService | getCtyCodeList | Discover official citycode/cityname |
-| BusRouteInfoInqireService | getRouteNoList | Search routeNo within cityCode; returns routeid/routeno |
-| BusRouteInfoInqireService | getRouteAcctoThrghSttnList | Route stops with nodeid, nodenm, nodeord, gpslati, gpslong, updowncd |
-| BusLcInfoInqireService | getRouteAcctoBusLcList | Vehicles with vehicleno, gpslati, gpslong, nodeord, nodeid, nodenm |
+The authenticated Jeju validation on 2026-09-10 accepted the newly issued key but returned zero `/mst_info` rows for tested Jeju-oriented `stdgCd` values `50110`, `5011000000`, `50`, and `5000000000`. Do not keep guessing B551982 Jeju mappings in product code.
+
+B551982 remains the runtime default for compatibility until broader provider coverage is decided, but it is **not** the verified Jeju Route 365 source.
+
+## TAGO bus route and location APIs
+
+The verified Jeju pilot source is the Ministry of Land, Infrastructure and Transport TAGO family:
+
+- Route service: `https://apis.data.go.kr/1613000/BusRouteInfoInqireService`
+  - `getRouteNoList` resolves route-number families to official route IDs.
+  - `getRouteAcctoThrghSttnList` provides ordered route stops.
+- Location service: `https://apis.data.go.kr/1613000/BusLcInfoInqireService`
+  - `getRouteAcctoBusLcList` provides route-scoped live vehicle snapshots.
+
+Authenticated official responses verified:
+
+- Jeju `cityCode=39`.
+- Route number `365` maps to six distinct official route IDs.
+- Live location fields for Jeju Route 365 are `gpslati`, `gpslong`, `nodeid`, `nodenm`, `nodeord`, `routenm`, `routetp`, and `vehicleno`.
+- The live location payload does not expose a provider observation timestamp or event-code field.
+- `nodeord` is present and usable as stop-order evidence.
+- All ten vehicles on the two full-length directions retained the same vehicle identity across a 24-sample bounded probe.
+
+TAGO route records reported `routetp=급행버스` for all six 365 variants. Do not use that field alone as authoritative Jeju product classification; preserve route ID and endpoint/stop topology.
 
 Requests use `serviceKey`, `_type=json`, and where applicable `cityCode`, `routeId`, `pageNo`, `numOfRows`. The city code is a TAGO identifier, not the former B551982 `stdgCd`. Do not infer one from the other. Resolve IDs from official live responses; no production city/route ID is hardcoded.
 
-Keep the portal **Decoding** key in the ignored `.env.local` file, permissions `0600`, as `PUBLIC_DATA_SERVICE_KEY`. Python `urllib.parse.urlencode()` and TypeScript `URLSearchParams` encode this original value exactly once. Never use a `VITE_` variable, put credentials on command lines, or commit key files. The adapter rejects Encoding keys and sends credentials only to fixed official HTTPS endpoints, with redirects disabled. It replaces upstream exceptions with safe errors so URLs and response bodies cannot leak the key.
+[Jeju Bus Information System](https://bus.jeju.go.kr/) remains the official passenger-facing corroboration source for route existence, schedule, endpoint, and local classification. No undocumented Jeju BIS endpoint is treated as a supported TAPSO product API.
 
-TAGO's documented vehicle schema does **not** contain a source measurement timestamp, direction code, speed, heading, or arrival/departure event. `receivedAt` records server receipt separately. `timestampSource=unavailable` and an epoch `observedAt` preserve the existing matcher/session fail-closed freshness behavior: returned locations can be inspected, but are not asserted to be fresh enough for automatic matching or journey progress. Do not claim end-to-end live passenger tracking from a successful location query alone.
+## Runtime selection
 
-## Previous provider (historical)
+Government-specific DTOs stop inside provider adapters:
 
-B551982 was previously integrated at resource 15157601. The user has already measured that its route master contains no Jeju data. It is no longer used at runtime; old investigation plans are historical evidence. No B551982 fallback or implicit region-code conversion is implemented.
+- `services/api/src/publicDataProvider.ts` — B551982
+- `services/api/src/tagoProvider.ts` — TAGO
 
-## Jeju BIS and evidence rules
+Select with:
 
-[Jeju Bus Information System](https://bus.jeju.go.kr/) is useful corroboration of public passenger information; undocumented website endpoints are not product APIs. Keep government DTO conversion within the provider. Synthetic tests explicitly label identifiers synthetic. Store credential-free live evidence privately under ignored `work/`; publish only necessary summaries with capture time and provenance, not raw vehicle inventories.
+- `TRANSIT_PROVIDER=b551982` — compatibility default
+- `TRANSIT_PROVIDER=tago` — verified Jeju pilot
+
+For the TAGO pilot, `RouteRequest.standardRegionCode` carries TAGO `cityCode` until a broader domain rename is justified.
+
+## Evidence and retention rules
+
+- Fixture files are synthetic and say so in-band.
+- Never commit service keys.
+- Raw vehicle identifiers from live probes remain local; commit only sanitized aggregates or deliberately minimized representative fixtures.
+- Capture request parameters, collection time, provider identity, and schema assumptions for live validation.
+- TAGO snapshot acquisition time is not the same as provider update time. Measure cadence from content changes.

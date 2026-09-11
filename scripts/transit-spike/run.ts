@@ -1,4 +1,4 @@
-import { TagoTransitProvider } from "../../services/api/src/publicDataProvider.ts";
+import { TagoTransitProvider } from "../../services/api/src/tagoProvider.ts";
 import { analyzeTransitValidation, type TransitValidationSample } from "../../services/api/src/liveValidation.ts";
 
 const routeId = process.argv[2];
