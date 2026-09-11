@@ -39,10 +39,8 @@ export class TagoTransitProvider implements TransitProvider {
   constructor(options: TagoTransitProviderOptions = {}) {
     this.serviceKey = (options.serviceKey ?? process.env.PUBLIC_DATA_SERVICE_KEY ?? "").trim();
     this.routeBaseURL = options.routeBaseURL
-      ?? process.env.TAGO_ROUTE_BASE_URL
       ?? "https://apis.data.go.kr/1613000/BusRouteInfoInqireService";
     this.locationBaseURL = options.locationBaseURL
-      ?? process.env.TAGO_LOCATION_BASE_URL
       ?? "https://apis.data.go.kr/1613000/BusLcInfoInqireService";
     this.fetchImplementation = options.fetchImplementation ?? fetch;
     this.now = options.now ?? (() => new Date());
@@ -85,15 +83,17 @@ export class TagoTransitProvider implements TransitProvider {
   }
 
   async vehicles(request: RouteRequest): Promise<VehicleObservation[]> {
-    const capturedAt = this.now().toISOString();
     const items = await this.request(this.locationBaseURL, "/getRouteAcctoBusLcList", {
       cityCode: request.cityCode,
       routeId: request.routeId,
     });
+    const receivedAt = this.now().toISOString();
     return items.map((item) => ({
       vehicleId: requiredStringAny(item, "vehicleno", "vehicleNo"),
       routeId: request.routeId,
-      observedAt: capturedAt,
+      observedAt: new Date(0).toISOString(),
+      receivedAt,
+      timestampSource: "unavailable",
       stopId: stringField(item, "nodeid", "nodeId"),
       stopName: stringField(item, "nodenm", "nodeNm"),
       stopSequence: numberField(item, "nodeord", "nodeOrd"),
@@ -154,11 +154,10 @@ export class TagoTransitProvider implements TransitProvider {
       }
       const envelope = extractEnvelope(payload);
       const resultCode = stringField(envelope.header, "resultCode");
-      const resultMessage = stringField(envelope.header, "resultMsg");
+      if (!resultCode) throw new ProviderResponseError("TAGO resultCode is missing");
       if (resultCode && resultCode !== "00" && resultCode !== "0") {
-        throw new ProviderResponseError(
-          `TAGO provider error ${resultCode}: ${resultMessage ?? "unknown provider error"}`,
-        );
+        const safeCode = /^\d{1,3}$/.test(resultCode) ? resultCode : "unknown";
+        throw new ProviderResponseError(`TAGO provider error ${safeCode}`);
       }
 
       const items = extractItems(envelope.body);
