@@ -16,6 +16,7 @@ Public product site: [tapso-nu.vercel.app](https://tapso-nu.vercel.app)
 | Lock Screen / Dynamic Island | `VERIFIED` | iOS 26.3 iPhone 17 Pro Simulator: compact 8/2/1/0, expanded, Lock Screen, request/update/end; 4 iOS tests |
 | TypeScript API scaffold | `VERIFIED` | Native Node tests cover matching and official-schema normalization |
 | Live-transit pilot orchestration | `IMPLEMENTED` | Route-scoped read-through cache, concurrent-miss coalescing, short-lived ride sessions, ambiguity confirmation, monotonic progress, and bounded missing-data handling are covered by deterministic Node tests |
+| Controlled ride capture tool | `IMPLEMENTED` | `scripts/ride-capture` polls one TAGO direction during a real ride, keeps raw snapshots under ignored `work/rides/`, and emits a pseudonymised progression/freshness report; 6 Node tests. No real ride captured yet |
 | Marketing website | `IMPLEMENTED` | React + Vite site under `apps/web`; 제주어 hero, responsive QA, and Vercel deployment workflow |
 | Waitlist backend | `IMPLEMENTED` | Vercel Functions in `apps/web/api`; validation, duplicate protection, rate limiting, and confirmation email covered by 90 Node tests |
 | Waitlist against live Supabase and Resend | `BLOCKED_BY_CREDENTIALS` | No project, key, or verified sending domain; see `docs/WAITLIST_SUPPORT_SETUP.md` |
