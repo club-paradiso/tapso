@@ -60,7 +60,7 @@ function rank(candidate: VehicleObservation, request: MatchRequest, now: number)
   }
 
   const ageSeconds = (now - new Date(candidate.observedAt).valueOf()) / 1_000;
-  if (!Number.isFinite(ageSeconds) || ageSeconds < -10 || ageSeconds > MAX_AGE_SECONDS) {
+  if (candidate.timestampSource === "unavailable" || !Number.isFinite(ageSeconds) || ageSeconds < -10 || ageSeconds > MAX_AGE_SECONDS) {
     rejectedReasons.push("stale_or_invalid_timestamp");
   } else {
     score += Math.max(0, 25 - ageSeconds / 6);

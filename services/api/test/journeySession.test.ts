@@ -5,7 +5,7 @@ import type { RouteRequest, StopOnRoute, VehicleObservation } from "../src/domai
 import type { TransitProvider } from "../src/provider.ts";
 
 const routeId = "route-365";
-const standardRegionCode = "50110";
+const cityCode = "999";
 const stops: StopOnRoute[] = [
   { stopId: "S1", name: "Boarding", sequence: 1, latitude: 33.5000, longitude: 126.5000 },
   { stopId: "S2", name: "Second", sequence: 2, latitude: 33.5010, longitude: 126.5000 },
@@ -29,7 +29,7 @@ class MutableProvider implements TransitProvider {
 function sessionInput() {
   return {
     routeId,
-    standardRegionCode,
+    cityCode,
     boardingStopSequence: 1,
     destinationStopSequence: 5,
     directionCode: "1",
@@ -125,4 +125,17 @@ test("rejects a destination that precedes the boarding stop", async () => {
     sessions.create({ ...sessionInput(), boardingStopSequence: 4, destinationStopSequence: 2 }),
     /destination must be after the boarding stop/,
   );
+});
+
+test("unknown TAGO source time cannot become fresh through receipt time", async () => {
+  const provider = new MutableProvider();
+  const now = new Date("2026-09-10T05:00:00Z");
+  provider.vehiclesValue = [{
+    vehicleId: "SYNTHETIC_TAGO_BUS", routeId, observedAt: now.toISOString(),
+    receivedAt: now.toISOString(), timestampSource: "unavailable", directionCode: "1", stopSequence: 1,
+  }];
+  const sessions = new JourneySessionCoordinator(provider, { now: () => now, idFactory: () => "synthetic-tago-session" });
+  const view = await sessions.create(sessionInput());
+  assert.equal(view.selectedVehicleId, undefined);
+  assert.equal(view.progress, undefined);
 });

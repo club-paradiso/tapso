@@ -2,11 +2,11 @@ import { createServer, type IncomingMessage, type ServerResponse } from "node:ht
 import { CachedTransitProvider } from "./cachedTransitProvider.ts";
 import { matchVehicle } from "./matching.ts";
 import type { MatchRequest } from "./domain.ts";
-import { PublicDataUltraPrecisionProvider } from "./publicDataProvider.ts";
+import { TagoTransitProvider } from "./publicDataProvider.ts";
 import { JourneySessionCoordinator } from "./journeySession.ts";
 import { logEvent } from "./observability.ts";
 
-const upstreamProvider = new PublicDataUltraPrecisionProvider();
+const upstreamProvider = new TagoTransitProvider();
 const provider = new CachedTransitProvider(upstreamProvider, {
   stopTtlMs: envDuration("PUBLIC_DATA_STOP_TTL_MS"),
   vehicleTtlMs: envDuration("PUBLIC_DATA_VEHICLE_TTL_MS"),
@@ -40,6 +40,15 @@ export const server = createServer(async (request, response) => {
         selectedVehicleId: result.selectedVehicleId,
       });
       return json(response, 200, result);
+    }
+    if (request.method === "GET" && url.pathname === "/v1/cities") {
+      return json(response, 200, { items: await upstreamProvider.cities() });
+    }
+    if (request.method === "GET" && url.pathname === "/v1/routes") {
+      const cityCode = url.searchParams.get("cityCode")?.trim();
+      const routeNo = url.searchParams.get("routeNo")?.trim();
+      if (!cityCode || !routeNo) throw invalidInput("cityCode and routeNo are required");
+      return json(response, 200, { items: await upstreamProvider.routes(cityCode, routeNo) });
     }
     if (request.method === "GET" && url.pathname === "/v1/stops") {
       const route = parseRouteQuery(url);
@@ -106,11 +115,11 @@ async function readJSON(request: IncomingMessage): Promise<unknown> {
   }
 }
 
-function parseRouteQuery(url: URL): { routeId: string; standardRegionCode: string } {
+function parseRouteQuery(url: URL): { routeId: string; cityCode: string } {
   const routeId = url.searchParams.get("routeId")?.trim();
-  const standardRegionCode = url.searchParams.get("stdgCd")?.trim();
-  if (!routeId || !standardRegionCode) throw invalidInput("routeId and stdgCd are required");
-  return { routeId, standardRegionCode };
+  const cityCode = url.searchParams.get("cityCode")?.trim();
+  if (!routeId || !cityCode) throw invalidInput("routeId and cityCode are required");
+  return { routeId, cityCode };
 }
 
 function parseMatchRequest(value: unknown): MatchRequest {
