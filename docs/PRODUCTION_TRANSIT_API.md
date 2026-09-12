@@ -84,7 +84,7 @@ on every push.
 |---|---|
 | Local | `http://127.0.0.1:8787` |
 | Preview | A per-branch alias (`tapso-api-git-<branch>-club-paradiso.vercel.app`) plus a per-commit URL, both in the pull request's `Vercel – tapso-api` check. Never hard-code either into a client |
-| Production | `https://<tapso-api production alias>` — read it from the Vercel project's Domains tab after the first production deploy |
+| Production | Read the stable alias from the `tapso-api` project's **Domains** tab and record it here. The first production deployment (merge commit `05f40a4`, 2026-09-12) succeeded at the per-deployment URL `https://tapso-543ypuw7k-club-paradiso.vercel.app`, which is **not** the stable alias and must not be given to a client — a per-deployment URL is pinned to one build. The alias is not derivable from the project name: the marketing project `tapso` serves from `tapso-nu.vercel.app`, not `tapso.vercel.app` |
 | Future | `https://api.<custom domain>` once one is registered; paths do not change |
 
 Every endpoint is also reachable at `<base>/api/...` because that is the
@@ -264,18 +264,19 @@ The project is `tapso-api` (`prj_XTimnEWdrhaDMSJfgELHzQAo3Nn2`) in the
 preview deployments of the Task A branch reach `Ready` /
 *Deployment has completed*.
 
-Remaining first-time setup:
+The first production deployment ran on the merge of pull request #25 and
+succeeded. Remaining first-time setup:
 
 1. Settings → Environment Variables: add `PUBLIC_DATA_SERVICE_KEY` (Decoding
    key) for Production. Add it for Preview only if preview deployments must
    reach live data. Until it is set, every TAGO-backed endpoint answers
    `503 BLOCKED_BY_CREDENTIALS` and `/health` reports
-   `liveTransitConfigured: false`.
+   `liveTransitConfigured: false`. `/health` is the authority on whether it is
+   set; nothing else reveals it.
 2. Settings → Deployment Protection: production must be publicly reachable for
    the iOS client. Preview may stay protected.
-3. Merge to `main` for the first production deployment.
-4. Record the production alias from Settings → Domains and put it in the base
-   URL table above.
+3. Record the production alias from Settings → Domains and put it in the base
+   URL table above, then run the smoke script against it.
 
 There is no separate deploy command. Pushing a branch produces a preview and
 merging to `main` is the production deploy.
@@ -311,17 +312,18 @@ converted into a pass. It exits non-zero only on a real failure.
 ## Limitations
 
 - `VERIFIED`: the `tapso-api` project builds and deploys this repository from
-  Root Directory `services/api`. A preview deployment of the Task A branch
-  completed successfully, which proves the functions compile and bundle, the
-  `.ts` import specifiers resolve, and `vercel.json` is accepted.
+  Root Directory `services/api`. Preview deployments and the first **production**
+  deployment (merge commit `05f40a4`) all completed successfully, which proves
+  the functions compile and bundle, the `.ts` import specifiers resolve, and
+  `vercel.json` is accepted.
 - `UNVERIFIED`: **no HTTP response from any deployment has been observed.** The
   authoring session's egress policy denied every `*.vercel.app` host and its
   Vercel authorization could not read this project, so the rewrites, the
   response headers, and the deployed runtime behaviour have never been exercised
-  over the network. Run the smoke script before treating any of that as
-  verified.
-- `UNVERIFIED`: no production deployment exists yet; `main` has not carried this
-  code.
+  over the network. A successful build is not a working endpoint. Run the smoke
+  script before treating any of that as verified.
+- `UNVERIFIED`: the production alias. It could not be read from the project, and
+  it is not derivable from the project name.
 - `IMPLEMENTED`: the Vercel Functions adapter, the rewrites, and the header and
   cache policy are covered by deterministic tests and by an end-to-end run of
   the same handler over real HTTP through the local Node adapter.

@@ -62,13 +62,14 @@ activation, Supabase/Resend setup, framework migration, unrelated refactoring.
    probe tests, a clean typecheck of the deployed surface now wired into CI, and
    an end-to-end HTTP run of all three configurations. DONE.
 7. **Deployment.** PARTIAL. The `tapso-api` project is linked to
-   `club-paradiso/tapso`, its Root Directory resolves to `services/api`, and a
-   preview deployment of this branch reached *Deployment has completed*. The
-   marketing project deployed successfully from the same commit, so the public
-   site is unaffected. Not done: `PUBLIC_DATA_SERVICE_KEY` is unset, no
-   production deployment exists, and **no HTTP response from any deployment has
-   been observed** — the session's egress policy denied every `*.vercel.app`
-   host and its Vercel authorization could not read this project.
+   `club-paradiso/tapso` with Root Directory `services/api`. Pull request #25
+   merged as `05f40a4` on 2026-09-12; preview and the first production
+   deployment both reached *Deployment has completed*, and the marketing
+   project deployed successfully from the same commits, so the public site is
+   unaffected in preview and in production. Not done: `PUBLIC_DATA_SERVICE_KEY`
+   is unset, the production alias is unrecorded, and **no HTTP response from any
+   deployment has been observed** — the session's egress policy denied every
+   `*.vercel.app` host and its Vercel authorization could not read this project.
 
 ## 4. Decisions and alternatives considered
 
@@ -163,15 +164,19 @@ the match result is `unavailable` / `unknown`.
   That is the designed unconfigured state and is what the smoke script will
   report until the key is added.
 
-**Next action.** Smoke the branch preview — expect `BLOCKED_BY_CREDENTIALS` on
-the four TAGO reads and passes everywhere else:
+**Next action**, in order, all on the `tapso-api` Vercel project:
 
-```bash
-node --experimental-strip-types services/api/scripts/smoke.ts \
-  https://tapso-api-git-claude-tapso-production-tran-b6b5e5-club-paradiso.vercel.app
-```
+1. Copy the stable production alias from Settings → Domains into the base URL
+   table in `../PRODUCTION_TRANSIT_API.md`. Task D has no base URL until this
+   exists. Do not substitute a per-deployment URL.
+2. Smoke it. Before the key is set, the expected result is passes everywhere
+   except `BLOCKED_BY_CREDENTIALS` on the four TAGO reads — that outcome proves
+   routing, validation, and the error contract all work in production:
 
-That is the branch alias, stable across pushes to this branch; the per-commit
-URL is in the pull request's `Vercel – tapso-api` check. Then set
-`PUBLIC_DATA_SERVICE_KEY` on the project, merge, smoke the production alias, and
-record it in the base URL table in `../PRODUCTION_TRANSIT_API.md`.
+   ```bash
+   node --experimental-strip-types services/api/scripts/smoke.ts https://<alias>
+   ```
+3. Add `PUBLIC_DATA_SERVICE_KEY` (Decoding key) for Production, redeploy, and
+   smoke again. All thirteen checks should pass.
+4. Confirm Settings → Deployment Protection leaves production publicly
+   reachable, or the iOS client cannot call it.
