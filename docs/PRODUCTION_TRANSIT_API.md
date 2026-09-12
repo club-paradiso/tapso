@@ -83,6 +83,7 @@ on every push.
 | Environment | Base URL |
 |---|---|
 | Local | `http://127.0.0.1:8787` |
+| Preview | Per-commit; read it from the pull request's `Vercel – tapso-api` check. Never hard-code one |
 | Production | `https://<tapso-api production alias>` — read it from the Vercel project's Domains tab after the first production deploy |
 | Future | `https://api.<custom domain>` once one is registered; paths do not change |
 
