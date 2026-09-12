@@ -163,15 +163,15 @@ the match result is `unavailable` / `unknown`.
   That is the designed unconfigured state and is what the smoke script will
   report until the key is added.
 
-**Next action.** Smoke the branch's preview — expect `BLOCKED_BY_CREDENTIALS` on
+**Next action.** Smoke the branch preview — expect `BLOCKED_BY_CREDENTIALS` on
 the four TAGO reads and passes everywhere else:
 
 ```bash
 node --experimental-strip-types services/api/scripts/smoke.ts \
-  https://tapso-6y91gvsef-club-paradiso.vercel.app
+  https://tapso-api-git-claude-tapso-production-tran-b6b5e5-club-paradiso.vercel.app
 ```
 
-Read the current preview URL for any later commit from the pull request's
-`Vercel – tapso-api` check. Then set `PUBLIC_DATA_SERVICE_KEY` on the project,
-merge, smoke the production alias, and record it in the base URL table in
-`../PRODUCTION_TRANSIT_API.md`.
+That is the branch alias, stable across pushes to this branch; the per-commit
+URL is in the pull request's `Vercel – tapso-api` check. Then set
+`PUBLIC_DATA_SERVICE_KEY` on the project, merge, smoke the production alias, and
+record it in the base URL table in `../PRODUCTION_TRANSIT_API.md`.

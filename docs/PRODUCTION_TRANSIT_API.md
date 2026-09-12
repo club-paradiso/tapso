@@ -83,7 +83,7 @@ on every push.
 | Environment | Base URL |
 |---|---|
 | Local | `http://127.0.0.1:8787` |
-| Preview | Per-commit; read it from the pull request's `Vercel – tapso-api` check. Never hard-code one |
+| Preview | A per-branch alias (`tapso-api-git-<branch>-club-paradiso.vercel.app`) plus a per-commit URL, both in the pull request's `Vercel – tapso-api` check. Never hard-code either into a client |
 | Production | `https://<tapso-api production alias>` — read it from the Vercel project's Domains tab after the first production deploy |
 | Future | `https://api.<custom domain>` once one is registered; paths do not change |
 
@@ -260,10 +260,9 @@ builds for commits that do not touch `services/api`.
 
 The project is `tapso-api` (`prj_XTimnEWdrhaDMSJfgELHzQAo3Nn2`) in the
 `club-paradiso` team. `VERIFIED` on 2026-09-12: it is linked to
-`club-paradiso/tapso`, its Root Directory resolves to `services/api` — the
-`ignoreCommand` from `services/api/vercel.json` ran and was evaluated against
-that directory — and a preview deployment of this branch reached
-`success` / *Deployment has completed*.
+`club-paradiso/tapso`, Vercel reports its Root Directory as `services/api`, and
+preview deployments of the Task A branch reach `Ready` /
+*Deployment has completed*.
 
 Remaining first-time setup:
 
