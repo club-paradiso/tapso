@@ -76,6 +76,13 @@ function harness(env: ServerEnv = {}) {
           { routeId: "JEB405244703", routeNumber, startStopName: "도평동", endStopName: "제주버스터미널" },
         ];
       },
+      async allRoutes(_cityCode: string) {
+        return [
+          { routeId: ROUTE, routeNumber: "447", startStopName: "도평동", endStopName: "제주대학교" },
+          { routeId: "JEB405136521", routeNumber: "365", startStopName: "제주대학교", endStopName: "제주한라대학교" },
+          { routeId: "JEB405146501", routeNumber: "465", startStopName: "중앙로", endStopName: "중앙로" },
+        ];
+      },
     },
     provider,
     directProvider: upstream,
@@ -385,4 +392,34 @@ test("a route with nothing running answers with an empty list, not an error", as
   assert.equal(body.meta.count, 0);
   assert.equal(body.meta.receivedAt, undefined, "no observations means no receipt time to report");
   assert.equal(body.meta.snapshotCache, "bypassed");
+});
+
+test("a catalog request lists the city, and a provider that cannot is not pretended into one", async () => {
+  const { handler } = harness();
+  const response = await handler(new Request(`http://api.test/v1/routes?cityCode=${CITY}`));
+  assert.equal(response.status, 200);
+  const body = await response.json();
+  assert.equal(body.meta.catalog, true);
+  assert.equal(body.meta.routeNo, undefined);
+  assert.equal(body.items.length, 3);
+
+  // A deployment whose provider offers no catalog keeps the old contract rather
+  // than inventing a listing: the route number goes back to being required.
+  const config = readTransitApiConfig({ TAGO_SERVICE_KEY: SERVICE_KEY }, { nodeVersion: "v22.0.0" });
+  const withoutCatalog = createTransitApiHandler({
+    config,
+    discovery: {
+      async cities() {
+        return [];
+      },
+      async routes() {
+        return [];
+      },
+    },
+    provider: new CachedTransitProvider(new CountingProvider(), {}),
+    log: () => {},
+  });
+  const refused = await withoutCatalog(new Request(`http://api.test/v1/routes?cityCode=${CITY}`));
+  assert.equal(refused.status, 400);
+  assert.equal((await refused.json()).message, "routeNo is required");
 });

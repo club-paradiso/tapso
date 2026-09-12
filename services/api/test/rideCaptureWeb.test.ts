@@ -6,9 +6,14 @@ import {
   RIDE_PRESETS,
   captureFileStem,
   createCaptureHeader,
+  assessRouteCompatibility,
   createCaptureSession,
+  duplicateStopNames,
   findVehicle,
   forwardStops,
+  historyEntry,
+  reachableDestinations,
+  searchStops,
   labelStops,
   normalizeTopology,
   maskVehicleIds,
@@ -562,4 +567,104 @@ test("the same flow works on every route shape, with no route literal in the pat
     assert.equal(report.stopCount, fixture.stops.length, fixture.name);
     assert.equal(report.tracked.present, true, fixture.name);
   }
+});
+
+/* --------------------------------------------- compatibility and finding ---- */
+
+test("every route gets an explicit verdict with a reason a person can act on", () => {
+  const route = { routeId: "JEB405244701", routeNumber: "447" };
+
+  const fine = assessRouteCompatibility({ route, stops: ROUTE_447_STOPS, vehicleCount: 3 });
+  assert.equal(fine.level, "ok");
+  assert.equal(fine.headline, "실승차 기록 가능");
+  assert.ok(fine.reason.includes("3대"));
+
+  const quiet = assessRouteCompatibility({ route, stops: ROUTE_447_STOPS, vehicleCount: 0 });
+  assert.equal(quiet.level, "warning");
+  assert.ok(quiet.headline.includes("운행 중인 차량이 없"));
+  assert.ok(quiet.reason.includes("기록은 시작할 수 있"), "a quiet route is a warning, not a wall");
+
+  const repeats = assessRouteCompatibility({ route, stops: ROUTE_331_STOPS, topology: REPEATING_META, vehicleCount: 2 });
+  assert.equal(repeats.level, "warning");
+  assert.ok(repeats.headline.includes("두 번 지나는"));
+
+  const empty = assessRouteCompatibility({ route, stops: [], vehicleCount: 2 });
+  assert.equal(empty.level, "unsupported");
+  assert.ok(empty.reason.includes("정류장"));
+
+  const scrambled = assessRouteCompatibility({
+    route,
+    stops: [{ stopId: "a", name: "a", sequence: 3 }, { stopId: "b", name: "b", sequence: 1 }],
+    vehicleCount: 2,
+  });
+  assert.equal(scrambled.level, "unsupported");
+
+  const unidentified = assessRouteCompatibility({
+    route,
+    stops: [{ stopId: "", name: "이름만", sequence: 1 }, { stopId: "b", name: "b", sequence: 2 }],
+    vehicleCount: 2,
+  });
+  assert.equal(unidentified.level, "unsupported");
+
+  const nameless = assessRouteCompatibility({ route: {}, stops: ROUTE_447_STOPS, vehicleCount: 2 });
+  assert.equal(nameless.level, "unsupported", "without an exact routeId there is no identity to record");
+
+  const broken = assessRouteCompatibility({ route, stops: ROUTE_447_STOPS, vehiclesFailed: true });
+  assert.equal(broken.level, "unsupported");
+});
+
+test("route shape can be judged without asking whether a bus is running", () => {
+  const route = { routeId: "JEB405146501", routeNumber: "465" };
+  const staticOnly = assessRouteCompatibility({ route, stops: ROUTE_LOOP_STOPS, topology: LOOP_META });
+  assert.equal(staticOnly.level, "ok", "a route's shape does not depend on the timetable");
+  assert.equal(staticOnly.checks.find((check: { label: string }) => check.label === "실시간 차량").state, "skip");
+  assert.ok(staticOnly.reason.includes("구조 적합"));
+});
+
+test("stop search finds by name and by official id", () => {
+  assert.equal(searchStops(ROUTE_331_STOPS, "노형").length, 2);
+  assert.equal(searchStops(ROUTE_331_STOPS, "공항")[0].name, "제주공항");
+  assert.equal(searchStops(ROUTE_331_STOPS, "JEB331004")[0].sequence, 4);
+  assert.equal(searchStops(ROUTE_331_STOPS, "  ").length, ROUTE_331_STOPS.length);
+  assert.equal(searchStops(ROUTE_331_STOPS, "없는이름").length, 0);
+  assert.equal(searchStops(undefined, "x").length, 0);
+});
+
+test("the destination list only offers stops the bus can still reach", () => {
+  const forward = reachableDestinations(ROUTE_331_STOPS, 3, REPEATING_META);
+  assert.deepEqual(forward.map((stop) => stop.sequence), [4, 5, 6], "a straight route only goes forward");
+
+  // On a closed route everything else is reachable, in the order it is met.
+  const around = reachableDestinations(ROUTE_LOOP_STOPS, 4, LOOP_META);
+  assert.deepEqual(around.map((stop) => stop.sequence), [5, 6, 2, 3]);
+
+  assert.deepEqual(reachableDestinations(ROUTE_331_STOPS, 6, undefined), [], "the last stop leads nowhere");
+});
+
+test("duplicate stop names are identified so a label never stands alone", () => {
+  const duplicates = duplicateStopNames(ROUTE_331_STOPS);
+  assert.deepEqual([...duplicates], ["노형오거리"]);
+  assert.equal(duplicateStopNames(ROUTE_447_STOPS).size, 0);
+  assert.equal(duplicateStopNames(undefined).size, 0);
+});
+
+test("local history remembers the route and forgets the bus", async () => {
+  const { session } = startSession();
+  await session.board("제주79자3696", { at: at(1) });
+  await session.recordSnapshot({ capturedAt: at(2), vehicles: [observation("제주79자3696", 27)] });
+  const capture = await session.finalize({ at: at(60) });
+
+  const entry = historyEntry({
+    captureId: session.captureId,
+    routeNo: "447",
+    capture,
+    report: { evidenceCompleteness: { verdict: "INSUFFICIENT_EVIDENCE" } },
+  });
+  assert.equal(entry.captureId, "capture-under-test", "the key IndexedDB stores under must be present");
+  assert.equal(entry.routeId, "JEB405244701");
+  assert.equal(entry.routeNo, "447");
+  assert.equal(entry.boardingName, "농림축산검역본부[남]");
+  assert.equal(entry.destinationName, "관덕정[남]");
+  assert.equal(entry.verdict, "INSUFFICIENT_EVIDENCE");
+  assert.equal(JSON.stringify(entry).includes("제주79자3696"), false, "history never carries a vehicle number");
 });

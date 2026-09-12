@@ -27,6 +27,8 @@ export interface TagoRoute {
   routeNumber: string;
   startStopName?: string;
   endStopName?: string;
+  /** The provider's own classification. Reported, never interpreted. */
+  routeType?: string;
 }
 
 /** Official Ministry of Land, Infrastructure and Transport TAGO adapter. */
@@ -58,16 +60,33 @@ export class TagoTransitProvider implements TransitProvider {
   }
 
   async routes(cityCode: string, routeNumber: string): Promise<TagoRoute[]> {
-    const items = await this.request(this.routeBaseURL, "/getRouteNoList", {
-      cityCode,
-      routeNo: routeNumber,
+    return this.routeRows(cityCode, { routeNo: routeNumber });
+  }
+
+  /**
+   * Every route the provider lists for a city, with no route number to filter
+   * by. Whether TAGO answers this at all is the provider's decision, not an
+   * assumption made here: the call is made, and whatever comes back — rows or an
+   * error — is the answer. Callers must be able to work without it.
+   */
+  async allRoutes(cityCode: string): Promise<TagoRoute[]> {
+    return this.routeRows(cityCode, {});
+  }
+
+  private async routeRows(cityCode: string, extra: Record<string, string>): Promise<TagoRoute[]> {
+    const items = await this.request(this.routeBaseURL, "/getRouteNoList", { cityCode, ...extra });
+    return items.map((item) => {
+      // Absent stays absent: an explicit `undefined` key would claim the
+      // provider answered the question and said nothing.
+      const routeType = stringField(item, "routetp", "routeTp");
+      return {
+        routeId: requiredStringAny(item, "routeid", "routeId"),
+        routeNumber: requiredStringAny(item, "routeno", "routeNo"),
+        startStopName: stringField(item, "startnodenm", "startNodeNm"),
+        endStopName: stringField(item, "endnodenm", "endNodeNm"),
+        ...(routeType === undefined ? {} : { routeType }),
+      };
     });
-    return items.map((item) => ({
-      routeId: requiredStringAny(item, "routeid", "routeId"),
-      routeNumber: requiredStringAny(item, "routeno", "routeNo"),
-      startStopName: stringField(item, "startnodenm", "startNodeNm"),
-      endStopName: stringField(item, "endnodenm", "endNodeNm"),
-    }));
   }
 
   async stops(request: RouteRequest): Promise<StopOnRoute[]> {

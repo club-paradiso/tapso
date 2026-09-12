@@ -50,8 +50,12 @@ export interface RequestContext {
 
 export interface TransitApiDependencies {
   config: TransitApiConfig;
-  /** Discovery calls (`cities`, `routes`) are not part of `TransitProvider`. */
-  discovery: Pick<TagoTransitProvider, "cities" | "routes">;
+  /**
+   * Discovery calls (`cities`, `routes`) are not part of `TransitProvider`.
+   * `allRoutes` is optional because whether the provider will list a whole city
+   * is the provider's answer to give, not this module's to assume.
+   */
+  discovery: Pick<TagoTransitProvider, "cities" | "routes"> & Partial<Pick<TagoTransitProvider, "allRoutes">>;
   provider: CachedTransitProvider;
   /**
    * The uncached upstream, used only by the operator ride-capture path. Task B
@@ -228,10 +232,16 @@ async function dispatch(
 
   if (resolved.route === "routes") {
     const cityCode = requiredParam(url, "cityCode", CITY_CODE_PATTERN);
-    const routeNumber = requiredParam(url, "routeNo", ROUTE_NUMBER_PATTERN);
+    // `routeNo` is optional: without it this lists every route the provider
+    // will name for the city, which is what a client needs to offer a browsable
+    // catalog instead of demanding the operator already know the number.
+    const routeNumber = optionalParam(url, "routeNo", ROUTE_NUMBER_PATTERN);
+    if (routeNumber === undefined && !discovery.allRoutes) {
+      throw apiError("INVALID_INPUT", "routeNo is required");
+    }
     const result = await support.routeCache.readThrough(
-      `${cityCode}:${routeNumber}`,
-      () => discovery.routes(cityCode, routeNumber),
+      `${cityCode}:${routeNumber ?? "*"}`,
+      () => (routeNumber === undefined ? discovery.allRoutes!(cityCode) : discovery.routes(cityCode, routeNumber)),
     );
     return {
       cache: result.cache,
@@ -241,7 +251,7 @@ async function dispatch(
           meta: {
             provider: config.transitProvider,
             cityCode,
-            routeNo: routeNumber,
+            ...(routeNumber === undefined ? { catalog: true } : { routeNo: routeNumber }),
             count: result.value.length,
             // One route number is several official routes. Collapsing them
             // would destroy direction and endpoint identity.
@@ -458,6 +468,13 @@ function routeRequestFrom(url: URL): { routeId: string; cityCode: string } {
     routeId: requiredParam(url, "routeId", ROUTE_ID_PATTERN),
     cityCode: requiredParam(url, "cityCode", CITY_CODE_PATTERN),
   };
+}
+
+function optionalParam(url: URL, name: string, pattern: RegExp): string | undefined {
+  const value = url.searchParams.get(name)?.trim();
+  if (!value) return undefined;
+  if (!pattern.test(value)) throw apiError("INVALID_INPUT", `${name} is not a valid official identifier`);
+  return value;
 }
 
 function requiredParam(url: URL, name: string, pattern: RegExp): string {
