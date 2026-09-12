@@ -57,6 +57,10 @@ jobs:
       - run: npm ci
       - run: npm test
       - run: npm run typecheck:vercel
+      # The transit API ships no dependencies of its own, so it borrows the one
+      # TypeScript install in the repository to typecheck its deployed surface.
+      - name: Typecheck the transit API deployed surface
+        run: npx tsc --project ../../services/api/tsconfig.json --typeRoots node_modules/@types
       - run: npm run build
       - name: Validate Figma Code Connect templates
         run: npx --yes --package=@figma/code-connect@2.0.0 figma connect parse --config figma.config.json --dry-run

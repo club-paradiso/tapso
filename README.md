@@ -15,7 +15,9 @@ Public product site: [tapso-nu.vercel.app](https://tapso-nu.vercel.app)
 | Local 8 → 0 demo | `IMPLEMENTED` | 1×, 5×, 10×, and manual stepping use production domain types |
 | Lock Screen / Dynamic Island | `VERIFIED` | iOS 26.3 iPhone 17 Pro Simulator: compact 8/2/1/0, expanded, Lock Screen, request/update/end; 4 iOS tests |
 | TypeScript API scaffold | `VERIFIED` | Native Node tests cover matching and official-schema normalization |
-| Live-transit pilot orchestration | `IMPLEMENTED` | Route-scoped read-through cache, concurrent-miss coalescing, short-lived ride sessions, ambiguity confirmation, monotonic progress, and bounded missing-data handling are covered by deterministic Node tests |
+| Live-transit orchestration | `IMPLEMENTED` | Route-scoped read-through cache, concurrent-miss coalescing, short-lived ride sessions, ambiguity confirmation, monotonic progress, and bounded missing-data handling are covered by deterministic Node tests |
+| Production-shaped transit API | `IMPLEMENTED` | One request handler in `services/api/src/apiRouter.ts` with a local Node transport and a Vercel Functions transport; identifier validation, deny-by-default CORS, per-caller burst limits, CDN cache windows, and structured logging; 56 Node tests plus an end-to-end HTTP run of the credentialed, uncredentialed, and serverless-shaped configurations |
+| Transit API deployment | `BUILT_NOT_PROBED` | The `tapso-api` Vercel project is linked and built a successful preview from `services/api`. No HTTP response from it has been observed, and `PUBLIC_DATA_SERVICE_KEY` is not set yet; see [PRODUCTION_TRANSIT_API.md](docs/PRODUCTION_TRANSIT_API.md) |
 | Controlled ride capture tool | `IMPLEMENTED` | `scripts/ride-capture` polls one TAGO direction during a real ride, keeps raw snapshots under ignored `work/rides/`, and emits a pseudonymised progression/freshness report; 6 Node tests. No real ride captured yet |
 | Marketing website | `IMPLEMENTED` | React + Vite site under `apps/web`; 제주어 hero, responsive QA, and Vercel deployment workflow |
 | Waitlist backend | `IMPLEMENTED` | Vercel Functions in `apps/web/api`; validation, duplicate protection, rate limiting, and confirmation email covered by 90 Node tests |
@@ -50,19 +52,25 @@ env -u PUBLIC_DATA_SERVICE_KEY node --env-file=.env.local --experimental-strip-t
 
 The probe resolves official city and route IDs before fetching stops and locations. The API uses `cityCode`; former `stdgCd` values are not interchangeable. TAGO has no documented measurement timestamp, so automatic matching remains withheld when freshness is unknown.
 
-Pilot endpoints:
+Endpoints:
 
 ```text
+GET  /health
 GET  /v1/cities
 GET  /v1/routes?cityCode=…&routeNo=365
 GET  /v1/stops?routeId=…&cityCode=…
 GET  /v1/vehicles?routeId=…&cityCode=…
+POST /v1/matches
 POST /v1/sessions
 GET  /v1/sessions/:id
 POST /v1/sessions/:id/confirm
 ```
 
-Session creation takes `cityCode` in its JSON body. Sessions remain short-lived and in memory.
+The same paths are served locally and in production. Session creation takes `cityCode` in its JSON body; sessions are short-lived and held in one process's memory, so they are disabled by default on serverless deployments and answer `503 SESSIONS_UNAVAILABLE` there. The full contract, configuration, deployment, smoke-test, and rollback procedure is in [PRODUCTION_TRANSIT_API.md](docs/PRODUCTION_TRANSIT_API.md).
+
+```bash
+node --experimental-strip-types services/api/scripts/smoke.ts http://127.0.0.1:8787
+```
 
 To run the public product website locally:
 
@@ -85,7 +93,7 @@ stored. Copy `apps/web/.env.example` and read
   support serverless endpoints in `apps/web/api` and their schema in
   `apps/web/supabase/migrations`.
 - `packages/transit-core`: UI-independent Swift domain, matching, progress, and state machine.
-- `services/api`: TypeScript official-data normalization, shared route cache, matching, in-memory pilot ride sessions, and future APNs boundary.
+- `services/api`: the transit API. Official-data normalization, shared route cache, matching, in-memory ride sessions, and the future APNs boundary, behind one request handler served by a local Node transport and by Vercel Functions in `services/api/api`. Deploys from its own Vercel project rooted at `services/api`.
 - `fixtures/transit`: explicitly synthetic deterministic data.
 - `scripts/transit-spike`: credential-gated official API probe.
 - `docs`: product, architecture, evidence, risk, device plan, and handoff material.

@@ -1,5 +1,7 @@
 # TAGO Jeju provider migration
 
+> Status: **COMPLETE**. Pull requests #20, #21, and #22 are merged; TAGO is the only runtime transit provider on `main`. This plan is kept as migration history. Current provider setup lives in `../DATA_SOURCES.md` and `../DATA_VALIDATION.md`.
+
 ## Outcome and scope
 Replace the B551982 runtime adapter with official TAGO route and location services; discover city and route identifiers through official responses. Keep keys server-side and out of Git, logs, and PRs. Open a feature PR and verify CI; do not merge or deploy.
 
@@ -23,4 +25,4 @@ Keep the existing provider module path, replace its implementation. Do not map o
 ## Progress / next action
 Feature branch `feature/tago-jeju-provider` created from clean main. Official portal schema inspected. Adapter, discovery, cityCode contract, safe errors and synthetic regressions implemented; 22 API tests, 3 Python probe tests and 38 Swift core tests pass. Credentialed Python and TypeScript probes now pass city/route/stop/empty-location validation. See `docs/validation/TAGO_2026-09-11.md` for bounded evidence. The original checkout now holds another task's PR #21; preserved it and resumed PR #20 in the ignored `work/tago-auth` worktree. No merge/deployment requested.
 
-Next action: update PR #20 with the captured evidence and require green CI on its latest commit. Nonempty daytime vehicles and revocation history remain explicit follow-up limits, not claimed completed.
+Outcome: PR #20 merged on 2026-09-11, followed by #21 (route resolution and live validation) and #22 (TAGO as the only live provider). Nonempty daytime vehicles were subsequently verified and recorded in `../DATA_VALIDATION.md`. Key revocation history remains unverified and is not claimed.

@@ -50,6 +50,8 @@ The two continuously active full-length directions were sampled 24 times each at
 - Route-scoped caching still shares successful snapshots and never caches provider failures.
 - Keep the default vehicle cache at **20 seconds**. It is shorter than the measured 27.52-second median content-change interval and avoids wasteful five-second upstream polling.
 - Keep route stops cached for six hours pending change-frequency evidence.
+- City and route-number discovery reads now use the same read-through cache with a six-hour window; they previously reached TAGO on every request.
+- Successful responses also carry a CDN `s-maxage` equal to the in-process TTL, because each serverless instance holds its own memory. No `stale-while-revalidate` window is granted, so a stale snapshot is never served deliberately.
 - Keep the 75-second missing-vehicle grace unchanged because the bounded probe observed no disappearance event.
 - Keep the 120 m near-stop fallback unchanged; TAGO `nodeord` should be preferred whenever it maps to a verified route stop.
 - TAGO observations set `timestampSource=unavailable`, keep receipt time in `receivedAt`, and use the epoch sentinel in `observedAt`. Matching and journey progress therefore fail closed instead of treating network receipt time as provider freshness.
@@ -58,7 +60,9 @@ The two continuously active full-length directions were sampled 24 times each at
 
 ## Provider architecture
 
-Jeju's verified live path is TAGO. The server constructs `TagoTransitProvider` directly and exposes `transitProvider=tago` in health output. B551982 is retained only as validation history in documentation.
+Jeju's verified live path is TAGO. The service constructs `TagoTransitProvider` directly and exposes `transitProvider=tago` in health output. B551982 is retained only as validation history in documentation.
+
+One handler in `services/api/src/apiRouter.ts` serves both the local Node server and the production Vercel Functions, so the freshness rules below hold identically in development and in production. `/v1/vehicles` states them in its response `meta`: `providerObservationTimestamp: "unavailable"`, `freshnessPolicy: "fail_closed"`, `automaticMatching: "withheld_pending_source_freshness_rule"`. See `PRODUCTION_TRANSIT_API.md`.
 
 `RouteRequest.cityCode` carries the official TAGO identifier. API query parsing accepts only `cityCode`, so former B551982 `stdgCd` values cannot be reused accidentally.
 
@@ -68,7 +72,7 @@ TAGO live responses do not expose a provider timestamp. `TagoTransitProvider` st
 
 The API-data and HTTP integration gates are complete for the full-length Route 365 directions. The next validation gate is a controlled real ride:
 
-1. Run the API with the private service key and resolve `cityCode` through `/v1/cities`.
+1. Run the API locally with the private service key and resolve `cityCode` through `/v1/cities`. A deployed API is not required; the capture tool drives `TagoTransitProvider` directly.
 2. Choose explicit boarding and destination stop sequences from the verified direction-specific topology.
 3. During the ride, run `scripts/ride-capture/capture.ts` (see `exec-plans/RIDE_CAPTURE.md`). It stores bounded TAGO snapshots only under ignored `work/rides/`, records the boarded vehicle locally from the `b <vehicleno>` command, and accepts `p <stop-seq>` markers for physically passed stops.
 4. Run `scripts/ride-capture/analyze.ts` on the capture. The sanitized report compares the tracked vehicle's `nodeord` progression, content-change age, gaps, marker lag, and arrival against the rider markers, using per-run pseudonyms instead of vehicle numbers.
