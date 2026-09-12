@@ -286,22 +286,26 @@ Directory as `services/api`, and preview and production deployments reach
 
 `TAGO_SERVICE_KEY` is set on Production with Sensitive visibility.
 
-**A Vercel deployment carries the environment variables that existed when it was
-created.** The credential was added after the `b59e9e6` production deployment
-(2026-09-12T07:57:01Z), so that build may still answer
-`503 BLOCKED_BY_CREDENTIALS`. `/health` settles it: `liveTransitConfigured` and
-`credential.source` describe the running build, not the project settings. If it
-reports `false` / `missing`, redeploy production — dashboard **Redeploy** on the
-latest production deployment, or `vercel redeploy <deployment-url> --target=production`
-— and check again. No code change is involved.
+The credential was added *after* the `b59e9e6` production deployment was created
+(2026-09-12T07:57:01Z), and that same build then reported
+`credential.source: "canonical"` — its `build.commit` is `b59e9e60b863`. So a
+variable added to Production reached an already-running deployment without a
+rebuild. Do not assume the reverse; `/health` is the authority either way,
+because `liveTransitConfigured` and `credential.source` describe the running
+build rather than the project settings. If they ever disagree with the dashboard,
+redeploy production (**Redeploy**, or
+`vercel redeploy <deployment-url> --target=production`) and check again. No code
+change is involved.
 
 The first production deployment ran on the merge of pull request #25 and
-succeeded. Remaining first-time setup:
+succeeded. First-time setup is complete for `tapso-api`; the steps are kept
+because they are what any new environment of this API needs.
 
 1. Settings → Environment Variables: add **`TAGO_SERVICE_KEY`** (Decoding key)
-   for Production, with **Sensitive** visibility. Add it for Preview only if
-   preview deployments must reach live data. Until it is set, every TAGO-backed
-   endpoint answers `503 BLOCKED_BY_CREDENTIALS` and `/health` reports
+   for Production, with **Sensitive** visibility. Done for `tapso-api` on
+   2026-09-12. Add it for Preview only if preview deployments must reach live
+   data. Until it is set, every TAGO-backed endpoint answers
+   `503 BLOCKED_BY_CREDENTIALS` and `/health` reports
    `liveTransitConfigured: false`. `/health` is the authority on whether it is
    set; nothing else reveals it.
 
@@ -314,9 +318,9 @@ succeeded. Remaining first-time setup:
 2. Settings → Deployment Protection: production must be publicly reachable for
    the iOS client. Preview may stay protected.
 3. Confirm `/health` reports `liveTransitConfigured: true` and
-   `credential.source: "canonical"`. If not, redeploy production (see above) —
-   the running build predates the variable.
-4. Run the smoke script against `https://tapso-api.vercel.app`.
+   `credential.source: "canonical"`, then run the smoke script against
+   `https://tapso-api.vercel.app`. Both were done on 2026-09-12; see
+   *Production verification*.
 
 There is no separate deploy command. Pushing a branch produces a preview and
 merging to `main` is the production deploy.
@@ -349,6 +353,28 @@ converted into a pass. It exits non-zero only on a real failure.
 4. To take the API offline without touching the marketing site, pause the API
    project in Vercel.
 
+## Production verification
+
+`VERIFIED` on 2026-09-12 against `https://tapso-api.vercel.app`, running build
+`b59e9e60b863` (`build.environment: production`, `runtime.platform: vercel`).
+
+| Check | Observed |
+|---|---|
+| `GET /health` | `200`; `liveTransitConfigured: true`, `credential.source: "canonical"`, `deprecatedNamePresent: false` |
+| `GET /v1/cities` | `200`; live TAGO response, `cityCode` 39 제주도 present |
+| `GET /v1/routes?cityCode=39&routeNo=365` | `200`; all six official variants — `JEB405136521`, `522`, `523`, `524`, `525`, `530` — with `variantsPreserved: true` |
+| `GET /v1/stops?routeId=JEB405136521&cityCode=39` | `200`; 43 stops, sequence 1 → 43, `provider_node_order`, direction-specific |
+| `GET /v1/vehicles?routeId=JEB405136521&cityCode=39` | `200`; four live vehicles, `observedAt` epoch sentinel, `timestampSource: "unavailable"`, `receivedAt` present |
+| unknown `/v1/*` | `404` `{"error":"NOT_FOUND","message":"no such endpoint"}` — the JSON contract, not the platform's HTML 404 |
+| `GET /v1/sessions/test` | `503 SESSIONS_UNAVAILABLE` — the intended serverless fail-closed behaviour |
+| Runtime logs after 08:10Z | No unexpected production error. The only error group is the `503` from the deliberate session probe |
+
+The freshness posture is unchanged and was confirmed live:
+`providerObservationTimestamp: "unavailable"`, `policy: "fail_closed"`,
+`automaticMatching: "withheld_pending_source_freshness_rule"`. Live vehicles are
+served, and automatic matching stays withheld until Task B and Task C produce a
+source-freshness rule.
+
 ## Limitations
 
 - `VERIFIED`: the `tapso-api` project builds and deploys this repository from
@@ -356,18 +382,9 @@ converted into a pass. It exits non-zero only on a real failure.
   deployment (merge commit `05f40a4`) all completed successfully, which proves
   the functions compile and bundle, the `.ts` import specifiers resolve, and
   `vercel.json` is accepted.
-- `UNVERIFIED`: **no HTTP response from any deployment has been observed from an
-  agent session.** Every agent session so far ran behind an egress policy that
-  denies `*.vercel.app`, with a Vercel authorization that cannot read this
-  project, so the rewrites, the response headers, and the deployed runtime
-  behaviour have never been exercised over the network by the authoring session.
-  A successful build is not a working endpoint. The repository owner reports
-  `GET https://tapso-api.vercel.app/health` returning HTTP 200; that is an
-  operator observation, recorded as such and not independently reproduced here.
-  Run the smoke script before treating the rest as verified.
-- `UNVERIFIED`: live TAGO behaviour through production. No credentialed
-  `/v1/cities`, `/v1/routes`, `/v1/stops`, or `/v1/vehicles` response from
-  `https://tapso-api.vercel.app` has been observed.
+- `VERIFIED` (2026-09-12, production run against
+  `https://tapso-api.vercel.app`): HTTP, credential, and live TAGO behaviour
+  all observed end to end. See *Production verification* above.
 - `IMPLEMENTED`: the Vercel Functions adapter, the rewrites, and the header and
   cache policy are covered by deterministic tests and by an end-to-end run of
   the same handler over real HTTP through the local Node adapter.
