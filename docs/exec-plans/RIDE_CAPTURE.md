@@ -61,8 +61,15 @@ a Route 365 evidence probe, not the preflight for an arbitrary route; use
 3. `DONE` CLI `scripts/ride-capture/capture.ts` and `scripts/ride-capture/analyze.ts`.
 4. `DONE` Deterministic Node tests (`services/api/test/rideCapture.test.ts`, 15 tests) covering tracking, gaps, reversal, marker lag, warnings, validation, runner failure tolerance, arrival stop, limits, quit, command parsing, vehicle resolution, the rider briefing, masked status output, presence and advance distributions, GPS-versus-`nodeord` movement, capture integrity counters, the evidence verdict, and an interrupted capture.
 5. `DONE` Operator readiness (Task B preparation): the rider sees the stop list and both endpoint names before the first poll, boards by the last four characters of the plate with the typed number cross-checked against the live snapshot, and can ask for vehicles or status mid-ride. The report carries p75/p90, presence ratios, advance and marker-lag distributions, integrity counters, and a `SUFFICIENT` / `INSUFFICIENT_EVIDENCE` verdict.
-6. `PENDING` One real ride on a preflighted route and direction — `JEB405136521` or `JEB405136522` recommended — with the sanitized report summarised in `docs/DATA_VALIDATION.md`.
-7. `PENDING` Freshness rule derived from ≥ 1 ride, then journey-session tests before enabling tracking. Task C, not this plan.
+6. `DONE` Mobile Ride Capture Controller at `/ride-capture/` on the transit API
+   project, so a ride can be run from a phone: an authenticated uncached
+   `/operator/snapshot` path that never touches the 20-second public vehicle
+   cache, a stateless `/operator/analyze` that reuses this analyzer, and a
+   client that owns the capture in IndexedDB. `RideCapture` stays at schema
+   version 1 with two optional additive fields, so CLI and controller captures
+   stay interchangeable. See `../RIDE_CAPTURE_CONTROLLER.md`.
+7. `PENDING` One real ride on a preflighted route and direction — `JEB405136521` or `JEB405136522` recommended — with the sanitized report summarised in `docs/DATA_VALIDATION.md`.
+8. `PENDING` Freshness rule derived from ≥ 1 ride, then journey-session tests before enabling tracking. Task C, not this plan.
 
 ## Decisions
 

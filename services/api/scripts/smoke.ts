@@ -41,7 +41,7 @@ async function run(): Promise<void> {
     ? pass(`status 200, provider ${String(health.body?.transitProvider)}, live=${String(health.body?.liveTransitConfigured)}`)
     : fail(`status ${health.status} body ${preview(health.text)}`));
 
-  record("health hides credentials", /serviceKey|TAGO_SERVICE_KEY|PUBLIC_DATA_SERVICE_KEY|"key"/i.test(health.text)
+  record("health hides credentials", /serviceKey|TAGO_SERVICE_KEY|PUBLIC_DATA_SERVICE_KEY|RIDE_CAPTURE_OPERATOR_TOKEN|"key"|"token"/i.test(health.text)
     ? fail("health payload names a credential variable or field")
     : pass("no credential name or value in payload"));
 
@@ -131,6 +131,14 @@ async function run(): Promise<void> {
     destinationStopSequence: 2,
   }));
   record("sessions policy", describeSessionOutcome(session));
+
+  // No token is sent, so a 200 here would mean the operator ride-capture path
+  // is answering the whole internet with uncached upstream reads. That is the
+  // one failure this script can catch without holding any secret at all.
+  const operator = await get(`/operator/snapshot?routeId=${encodeURIComponent(routeId)}&cityCode=${encodeURIComponent(cityCode)}`);
+  record("operator path is closed", operator.status === 401 || operator.status === 503
+    ? pass(`${operator.status} without a token`)
+    : fail(`status ${operator.status} without a token — the ride-capture path must never answer unauthenticated`));
 }
 
 /**

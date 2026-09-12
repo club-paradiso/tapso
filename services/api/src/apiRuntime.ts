@@ -10,6 +10,7 @@ import { readTransitApiConfig, type ServerEnv, type TransitApiConfig } from "./a
 import { createTransitApiHandler, type TransitApiHandler } from "./apiRouter.ts";
 import { CachedTransitProvider } from "./cachedTransitProvider.ts";
 import { JourneySessionCoordinator } from "./journeySession.ts";
+import { resolveOperatorToken } from "./operatorAuth.ts";
 import { createBurstLimiter } from "./rateLimit.ts";
 import { resolveTagoServiceKey, serviceKeyWarning } from "./serviceKey.ts";
 import { TagoTransitProvider } from "./tagoProvider.ts";
@@ -50,6 +51,21 @@ export function createTransitApi(env: ServerEnv = process.env as ServerEnv): Tra
     ? createBurstLimiter(config.rateLimit.limit, config.rateLimit.windowSeconds)
     : undefined;
 
+  const operator = resolveOperatorToken(env);
+  if (operator.problem) {
+    console.warn(JSON.stringify({
+      timestamp: new Date().toISOString(),
+      level: "warn",
+      event: "ride_capture_operator_token",
+      message: operator.problem,
+    }));
+  }
+  // A limit of zero is an explicit operator choice to run unlimited; anything
+  // else gets its own window so a ride and the public API never share a budget.
+  const operatorLimiter = config.operator.rateLimitPerMinute > 0
+    ? createBurstLimiter(config.operator.rateLimitPerMinute, 60)
+    : undefined;
+
   return {
     config,
     upstream,
@@ -58,8 +74,13 @@ export function createTransitApi(env: ServerEnv = process.env as ServerEnv): Tra
       config,
       discovery: upstream,
       provider,
+      // The uncached provider reaches exactly one place: the authenticated
+      // operator snapshot route used to collect ride evidence.
+      directProvider: upstream,
       sessions,
       ...(limiter ? { limiter } : {}),
+      ...(operatorLimiter ? { operatorLimiter } : {}),
+      ...(operator.configured ? { operatorToken: operator.token } : {}),
     }),
   };
 }

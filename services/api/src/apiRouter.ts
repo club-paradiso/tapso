@@ -14,7 +14,10 @@
 
 import type { MatchRequest } from "./domain.ts";
 import { matchVehicle } from "./matching.ts";
+import { analyzeRideCapture, RideCaptureInputError, type RideCapture } from "./rideCapture.ts";
+import { operatorTokenMatches, readBearerToken } from "./operatorAuth.ts";
 import type { CachedTransitProvider } from "./cachedTransitProvider.ts";
+import type { TransitProvider } from "./provider.ts";
 import type { TagoCity, TagoRoute, TagoTransitProvider } from "./tagoProvider.ts";
 import type { JourneySessionCoordinator } from "./journeySession.ts";
 import type { TransitApiConfig } from "./apiConfig.ts";
@@ -24,6 +27,12 @@ import { TtlCache } from "./ttlCache.ts";
 import { logEvent } from "./observability.ts";
 
 export const MAX_BODY_BYTES = 64 * 1_024;
+/**
+ * A completed ride capture is the one legitimately large body this API accepts.
+ * It is analysed and discarded in the same request — never stored, never
+ * logged — so the cap only has to stay inside the platform's own request limit.
+ */
+export const MAX_CAPTURE_BYTES = 4 * 1_024 * 1_024;
 
 /** Official identifiers are narrow on purpose: junk never reaches TAGO. */
 const CITY_CODE_PATTERN = /^[0-9]{1,6}$/;
@@ -44,8 +53,18 @@ export interface TransitApiDependencies {
   /** Discovery calls (`cities`, `routes`) are not part of `TransitProvider`. */
   discovery: Pick<TagoTransitProvider, "cities" | "routes">;
   provider: CachedTransitProvider;
+  /**
+   * The uncached upstream, used only by the operator ride-capture path. Task B
+   * measures how often TAGO's own content changes, so polling the shared
+   * 20-second cache would measure the cache instead of the provider.
+   */
+  directProvider?: Pick<TransitProvider, "vehicles">;
   sessions?: JourneySessionCoordinator;
   limiter?: BurstLimiter;
+  /** Separate budget so a ride never spends the public API's burst allowance. */
+  operatorLimiter?: BurstLimiter;
+  /** The shared operator secret. Deliberately not part of `config`, which `/health` echoes. */
+  operatorToken?: string;
   now?: () => Date;
   log?: (level: LogLevel, event: string, fields: LogFields) => void;
 }
@@ -61,7 +80,9 @@ type Route =
   | "matches"
   | "session_create"
   | "session_read"
-  | "session_confirm";
+  | "session_confirm"
+  | "operator_snapshot"
+  | "operator_analyze";
 
 type Resolved = { route: Route; methods: string[]; sessionId?: string };
 
@@ -94,6 +115,7 @@ export function createTransitApiHandler(dependencies: TransitApiDependencies): T
       }
 
       enforceRateLimit(dependencies, clientAddress(request, context), resolved.route);
+      if (isOperatorRoute(resolved.route)) requireOperator(dependencies, request);
 
       const result = await dispatch(dependencies, { cityCache, routeCache, now }, resolved, request, url);
       cache = result.cache ?? "none";
@@ -141,6 +163,11 @@ function resolve(path: string): Resolved | undefined {
   if (path === "/v1/vehicles") return { route: "vehicles", methods: ["GET"] };
   if (path === "/v1/matches") return { route: "matches", methods: ["POST"] };
   if (path === "/v1/sessions") return { route: "session_create", methods: ["POST"] };
+
+  // Operator-only ride capture. Authenticated, uncached, and never linked from
+  // anything public; see `docs/RIDE_CAPTURE_CONTROLLER.md`.
+  if (path === "/operator/snapshot") return { route: "operator_snapshot", methods: ["GET"] };
+  if (path === "/operator/analyze") return { route: "operator_analyze", methods: ["POST"] };
 
   // Rewrite targets: the session identifier arrives as a query parameter.
   if (path === "/v1/session") return { route: "session_read", methods: ["GET"] };
@@ -305,6 +332,52 @@ async function dispatch(
     return { response: json(result, 200, { "cache-control": "no-store" }) };
   }
 
+  if (resolved.route === "operator_snapshot") {
+    const route = routeRequestFrom(url);
+    const direct = dependencies.directProvider;
+    if (!direct) throw apiError("OPERATOR_DISABLED", "the operator snapshot path is not wired on this deployment");
+    // Straight to the provider: no read-through cache, no CDN window, one
+    // upstream request per successful poll. That is the whole point of the
+    // endpoint, so it is asserted in the payload as `snapshotCache: "bypassed"`.
+    const items = await direct.vehicles(route);
+    return {
+      cache: "bypassed",
+      response: json(
+        {
+          items,
+          meta: {
+            provider: config.transitProvider,
+            cityCode: route.cityCode,
+            routeId: route.routeId,
+            count: items.length,
+            receivedAt: latestReceivedAt(items),
+            providerObservationTimestamp: "unavailable",
+            freshnessPolicy: "fail_closed",
+            automaticMatching: "withheld_pending_source_freshness_rule",
+            snapshotCache: "bypassed",
+            purpose: "controlled_ride_capture",
+          },
+        },
+        200,
+        { "cache-control": "no-store" },
+      ),
+    };
+  }
+
+  if (resolved.route === "operator_analyze") {
+    const body = await readJsonBody(request, MAX_CAPTURE_BYTES);
+    let report: unknown;
+    try {
+      // The capture itself is never stored and never logged: it arrives, it is
+      // analysed, and only the pseudonymised report goes back out.
+      report = analyzeRideCapture(body as RideCapture);
+    } catch (error) {
+      if (error instanceof RideCaptureInputError) throw apiError("INVALID_INPUT", error.message);
+      throw error;
+    }
+    return { response: json(report, 200, { "cache-control": "no-store" }) };
+  }
+
   const sessions = requireSessions(dependencies);
 
   if (resolved.route === "session_create") {
@@ -358,6 +431,8 @@ function healthPayload(config: TransitApiConfig, now: Date): Record<string, unkn
     sessions: config.sessions,
     rateLimit: config.rateLimit,
     cors: { allowedOriginCount: config.cors.allowedOrigins.length },
+    // Presence and policy only. The operator token is never part of `config`.
+    operator: config.operator,
     runtime: config.runtime,
     build: config.build,
     freshness: {
@@ -394,10 +469,11 @@ function sessionIdentifier(resolved: Resolved, url: URL): string {
   return trimmedValue;
 }
 
-async function readJsonBody(request: Request): Promise<unknown> {
+async function readJsonBody(request: Request, maxBytes: number = MAX_BODY_BYTES): Promise<unknown> {
+  const limitText = maxBytes >= 1_024 * 1_024 ? `${Math.round(maxBytes / (1_024 * 1_024))} MiB` : `${Math.round(maxBytes / 1_024)} KiB`;
   const declared = Number(request.headers.get("content-length") ?? "0");
-  if (Number.isFinite(declared) && declared > MAX_BODY_BYTES) {
-    throw apiError("PAYLOAD_TOO_LARGE", "request body exceeds 64 KiB");
+  if (Number.isFinite(declared) && declared > maxBytes) {
+    throw apiError("PAYLOAD_TOO_LARGE", `request body exceeds ${limitText}`);
   }
   // A form-encoded post is never a legitimate call here, and refusing it keeps
   // this API out of reach of a simple cross-site form submission.
@@ -411,8 +487,8 @@ async function readJsonBody(request: Request): Promise<unknown> {
   } catch {
     throw apiError("INVALID_INPUT", "request body could not be read");
   }
-  if (new TextEncoder().encode(text).length > MAX_BODY_BYTES) {
-    throw apiError("PAYLOAD_TOO_LARGE", "request body exceeds 64 KiB");
+  if (new TextEncoder().encode(text).length > maxBytes) {
+    throw apiError("PAYLOAD_TOO_LARGE", `request body exceeds ${limitText}`);
   }
   try {
     return JSON.parse(text) as unknown;
@@ -448,14 +524,43 @@ function parseMatchRequest(value: unknown): MatchRequest {
 
 /* ------------------------------------------------------------------- limits */
 
+function isOperatorRoute(route: Route): boolean {
+  return route === "operator_snapshot" || route === "operator_analyze";
+}
+
 function enforceRateLimit(dependencies: TransitApiDependencies, address: string, route: Route): void {
-  const { limiter, config } = dependencies;
-  if (!limiter || !config.rateLimit.enabled) return;
-  const verdict = limiter.consume(`${address}:${route === "health" ? "health" : "api"}`);
+  const { limiter, operatorLimiter, config } = dependencies;
+  // The operator budget is separate in both directions: a ride cannot exhaust
+  // the public allowance, and public traffic cannot starve a ride in progress.
+  const selected = isOperatorRoute(route) ? operatorLimiter : limiter;
+  if (!selected) return;
+  if (!isOperatorRoute(route) && !config.rateLimit.enabled) return;
+  const verdict = selected.consume(`${address}:${bucketFor(route)}`);
   if (verdict.allowed) return;
   throw Object.assign(apiError("RATE_LIMITED", "too many requests"), {
     retryAfterSeconds: verdict.retryAfterSeconds,
   });
+}
+
+function bucketFor(route: Route): string {
+  if (isOperatorRoute(route)) return "operator";
+  return route === "health" ? "health" : "api";
+}
+
+/**
+ * Rejects before any upstream call. The reply says only that authorisation
+ * failed: whether the token was absent, malformed, or simply wrong is not
+ * something an unauthenticated caller gets to learn.
+ */
+function requireOperator(dependencies: TransitApiDependencies, request: Request): void {
+  const { operatorToken, config } = dependencies;
+  if (!config.operator.enabled || !operatorToken) {
+    throw apiError("OPERATOR_DISABLED", "ride capture endpoints are not enabled on this deployment");
+  }
+  const presented = readBearerToken(request.headers.get("authorization"));
+  if (!operatorTokenMatches(operatorToken, presented)) {
+    throw apiError("UNAUTHORIZED", "operator authorization required");
+  }
 }
 
 function requireSessions(dependencies: TransitApiDependencies): JourneySessionCoordinator {
@@ -489,7 +594,7 @@ function corsHeaders(config: TransitApiConfig, origin: string | null): Record<st
     vary: "Origin",
     "access-control-allow-origin": origin,
     "access-control-allow-methods": "GET, POST, OPTIONS",
-    "access-control-allow-headers": "content-type",
+    "access-control-allow-headers": "content-type, authorization",
     "access-control-max-age": "600",
   };
 }
@@ -584,6 +689,7 @@ export function apiError(code: string, message: string): ApiError {
 
 const STATUS_BY_CODE: Record<string, number> = {
   INVALID_INPUT: 400,
+  UNAUTHORIZED: 401,
   NOT_FOUND: 404,
   SESSION_NOT_FOUND: 404,
   METHOD_NOT_ALLOWED: 405,
@@ -593,6 +699,7 @@ const STATUS_BY_CODE: Record<string, number> = {
   PROVIDER_RESPONSE_INVALID: 502,
   BLOCKED_BY_CREDENTIALS: 503,
   SESSIONS_UNAVAILABLE: 503,
+  OPERATOR_DISABLED: 503,
 };
 
 function errorResponse(

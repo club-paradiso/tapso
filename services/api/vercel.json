@@ -49,6 +49,18 @@
       "destination": "/api/v1/session?sessionId=:id"
     },
     {
+      "source": "/operator/snapshot",
+      "destination": "/api/operator/snapshot"
+    },
+    {
+      "source": "/operator/analyze",
+      "destination": "/api/operator/analyze"
+    },
+    {
+      "source": "/operator/:path*",
+      "destination": "/api/not-found"
+    },
+    {
       "source": "/v1/:path*",
       "destination": "/api/not-found"
     }
@@ -68,6 +80,32 @@
         {
           "key": "strict-transport-security",
           "value": "max-age=63072000; includeSubDomains"
+        }
+      ]
+    },
+    {
+      "source": "/operator/(.*)",
+      "headers": [
+        {
+          "key": "cache-control",
+          "value": "no-store"
+        },
+        {
+          "key": "x-robots-tag",
+          "value": "noindex, nofollow"
+        }
+      ]
+    },
+    {
+      "source": "/ride-capture(.*)",
+      "headers": [
+        {
+          "key": "cache-control",
+          "value": "public, max-age=0, must-revalidate"
+        },
+        {
+          "key": "x-robots-tag",
+          "value": "noindex, nofollow"
         }
       ]
     }

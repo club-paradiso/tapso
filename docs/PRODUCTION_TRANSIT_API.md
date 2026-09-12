@@ -106,6 +106,16 @@ accepts both so local and production paths are identical.
 | GET | `/v1/sessions/:id` | Refresh a ride session |
 | POST | `/v1/sessions/:id/confirm` | Confirm a vehicle explicitly |
 
+Two further paths exist for controlled ride evidence only. They require
+`Authorization: Bearer <RIDE_CAPTURE_OPERATOR_TOKEN>`, answer `no-store`, and
+stay disabled unless that token is configured. They are documented in full in
+[RIDE_CAPTURE_CONTROLLER.md](RIDE_CAPTURE_CONTROLLER.md).
+
+| Method | Path | Purpose |
+|---|---|---|
+| GET | `/operator/snapshot?routeId=&cityCode=` | Live vehicles straight from the provider, bypassing the 20-second cache, because Task B measures how often the provider's own content changes |
+| POST | `/operator/analyze` | A completed ride capture in, the sanitized report out; stateless, never stored, never logged |
+
 ### Rules the contract keeps
 
 - **Route variants are never collapsed.** `routeNo=365` returns six official
@@ -161,6 +171,8 @@ or placed in a URL a client can see.
 | `TRANSIT_RATE_LIMIT_PER_MINUTE` | no | `120` | Per-caller burst limit; `0` disables |
 | `TRANSIT_ALLOWED_ORIGINS` | no | empty | Comma-separated absolute origins allowed by CORS |
 | `TRANSIT_SESSIONS_ENABLED` | no | `false` on Vercel, `true` locally | Opt a single-instance deployment back into ride sessions |
+| `RIDE_CAPTURE_OPERATOR_TOKEN` | no | unset → `/operator/*` disabled | Shared secret for the ride-capture endpoints and the mobile controller. Minimum 24 characters; a shorter value is refused. Store it on Vercel as a **Sensitive** variable |
+| `RIDE_CAPTURE_OPERATOR_RATE_LIMIT_PER_MINUTE` | no | `30` | Per-caller ceiling on the operator budget, kept separate from the public one; `0` disables |
 
 `VERCEL`, `VERCEL_ENV`, `VERCEL_REGION`, and `VERCEL_GIT_COMMIT_SHA` are supplied
 by the platform and are read for the health payload only.

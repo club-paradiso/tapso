@@ -7,12 +7,19 @@
  */
 
 import { DEFAULT_STOP_CACHE_TTL_MS, DEFAULT_VEHICLE_CACHE_TTL_MS } from "./cachedTransitProvider.ts";
+import { resolveOperatorToken } from "./operatorAuth.ts";
 import { resolveTagoServiceKey, type ServiceKeySource } from "./serviceKey.ts";
 
 export type ServerEnv = Record<string, string | undefined>;
 
 export const DEFAULT_DISCOVERY_CACHE_TTL_MS = 6 * 60 * 60 * 1_000;
 export const DEFAULT_RATE_LIMIT_PER_MINUTE = 120;
+/**
+ * A ride polls every 5 s — twelve calls a minute. This leaves headroom for a
+ * retry and a second device while still capping what a leaked token could
+ * spend of the shared TAGO quota.
+ */
+export const DEFAULT_OPERATOR_RATE_LIMIT_PER_MINUTE = 30;
 
 export type RuntimePlatform = "node" | "vercel";
 
@@ -49,6 +56,16 @@ export interface TransitApiConfig {
     /** Empty means no browser origin is allowed; native clients are unaffected. */
     allowedOrigins: string[];
   };
+  /**
+   * The operator-only ride-capture endpoints. Presence of a token only; the
+   * token itself never reaches this object, and so never reaches `/health`.
+   */
+  operator: {
+    enabled: boolean;
+    rateLimitPerMinute: number;
+    /** Why a configured token was refused, when it was. Never the value. */
+    problem?: string;
+  };
   runtime: {
     platform: RuntimePlatform;
     node: string;
@@ -71,6 +88,12 @@ export function readTransitApiConfig(
   const platform: RuntimePlatform = trimmed(env, "VERCEL") ? "vercel" : "node";
   const rateLimitPerMinute = nonNegativeInteger(env, "TRANSIT_RATE_LIMIT_PER_MINUTE", DEFAULT_RATE_LIMIT_PER_MINUTE);
   const credential = resolveTagoServiceKey(env);
+  const operator = resolveOperatorToken(env);
+  const operatorRateLimit = nonNegativeInteger(
+    env,
+    "RIDE_CAPTURE_OPERATOR_RATE_LIMIT_PER_MINUTE",
+    DEFAULT_OPERATOR_RATE_LIMIT_PER_MINUTE,
+  );
 
   return {
     transitProvider: "tago",
@@ -95,6 +118,11 @@ export function readTransitApiConfig(
     },
     cors: {
       allowedOrigins: originList(env, "TRANSIT_ALLOWED_ORIGINS"),
+    },
+    operator: {
+      enabled: operator.configured,
+      rateLimitPerMinute: operatorRateLimit,
+      ...optional("problem", operator.problem),
     },
     runtime: {
       platform,

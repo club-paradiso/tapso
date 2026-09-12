@@ -16,6 +16,31 @@ export const RIDE_CAPTURE_SCHEMA_VERSION = 1;
 
 export type RideMarkerKind = "boarded" | "passed_stop" | "alighted" | "note";
 
+/**
+ * Instrument lifecycle, not rider ground truth. A mobile browser can be
+ * suspended or lose the network mid-ride, and the resulting hole in the
+ * snapshots looks exactly like a provider dropout unless the instrument says
+ * otherwise. These events are how the analysis tells the two apart; they are
+ * never markers, and nothing here is evidence about TAGO.
+ */
+export type RideEventKind =
+  | "hidden"
+  | "visible"
+  | "offline"
+  | "online"
+  | "wake_lock_active"
+  | "wake_lock_unavailable"
+  | "resumed";
+
+export interface RideEvent {
+  at: string;
+  kind: RideEventKind;
+  /** Short operator-safe context. Never a URL, a credential, or a vehicle number. */
+  detail?: string;
+}
+
+export type RideCaptureSource = "cli" | "web-controller";
+
 export interface RideMarker {
   at: string;
   kind: RideMarkerKind;
@@ -45,6 +70,14 @@ export interface RideCapture {
   stops: StopOnRoute[];
   snapshots: RideSnapshot[];
   markers: RideMarker[];
+  /**
+   * Optional and additive at schema version 1: absent in every capture the CLI
+   * writes, present in captures from the mobile controller. Keeping the version
+   * at 1 is deliberate — a bump would make the CLI analyzer reject web captures
+   * and vice versa, and these two fields need no such break.
+   */
+  events?: RideEvent[];
+  source?: RideCaptureSource;
 }
 
 export interface NumberSummary {
@@ -133,6 +166,23 @@ export interface TrackedVehicleReport {
 }
 
 /**
+ * What the recording instrument did during the ride. A gap while the browser
+ * was suspended or offline is the instrument's gap, and reading it as a
+ * provider dropout would corrupt the very cadence Task C is meant to measure.
+ */
+export interface RideCaptureLifecycle {
+  source: RideCaptureSource | "unknown";
+  eventCount: number;
+  hiddenPeriods: number;
+  hiddenSeconds: number;
+  offlinePeriods: number;
+  offlineSeconds: number;
+  /** Captures reopened after a refresh or a crash. */
+  recoveries: number;
+  wakeLockUnavailable: boolean;
+}
+
+/**
  * Whether the capture file itself is trustworthy, independent of what it shows.
  * A non-zero count here is a reason to doubt the run, not a property of TAGO.
  */
@@ -188,6 +238,8 @@ export interface RideCaptureReport {
   stopSequenceContiguous: boolean;
   vehicles: VehicleTimeline[];
   tracked: TrackedVehicleReport;
+  /** Which instrument produced the capture, and what it did to itself. */
+  lifecycle: RideCaptureLifecycle;
   integrity: RideCaptureIntegrity;
   evidenceCompleteness: EvidenceCompleteness;
   /** Aggregate over all vehicles; input for a freshness rule, not the rule. */
@@ -232,7 +284,29 @@ export function validateRideCapture(capture: RideCapture): void {
       throw new RideCaptureInputError("passed_stop markers must name an official stop sequence");
     }
   }
+  if (capture.events !== undefined) {
+    if (!Array.isArray(capture.events)) throw new RideCaptureInputError("events must be an array when present");
+    for (const event of capture.events) {
+      if (!event || typeof event.at !== "string" || Number.isNaN(Date.parse(event.at))) {
+        throw new RideCaptureInputError("every event needs an ISO timestamp");
+      }
+      if (!RIDE_EVENT_KINDS.has(event.kind)) throw new RideCaptureInputError(`unknown ride event: ${String(event.kind)}`);
+    }
+  }
+  if (capture.source !== undefined && capture.source !== "cli" && capture.source !== "web-controller") {
+    throw new RideCaptureInputError("source must be cli or web-controller when present");
+  }
 }
+
+const RIDE_EVENT_KINDS = new Set<string>([
+  "hidden",
+  "visible",
+  "offline",
+  "online",
+  "wake_lock_active",
+  "wake_lock_unavailable",
+  "resumed",
+]);
 
 export function analyzeRideCapture(capture: RideCapture): RideCaptureReport {
   validateRideCapture(capture);
@@ -412,6 +486,7 @@ export function analyzeRideCapture(capture: RideCapture): RideCaptureReport {
 
   const integrity = inspectIntegrity(capture, snapshots, startedAt, endedAt);
   warnings.push(...describeIntegrity(integrity));
+  warnings.push(...describeLifecycle(summarizeLifecycle(capture, endedAt)));
   if (collectionIntervalSeconds.max !== undefined && collectionIntervalSeconds.max > configuredIntervalSeconds * 3) {
     warnings.push(`Polling stalled: longest gap between snapshots was ${collectionIntervalSeconds.max} s against a ${configuredIntervalSeconds} s interval`);
   }
@@ -435,6 +510,7 @@ export function analyzeRideCapture(capture: RideCapture): RideCaptureReport {
     stopSequenceContiguous: sequences.every((sequence, index) => index === 0 || sequence === sequences[index - 1]! + 1),
     vehicles,
     tracked,
+    lifecycle: summarizeLifecycle(capture, endedAt),
     integrity,
     evidenceCompleteness: assessEvidence(successful.length, tracked, allChangeIntervals.length, markerLags.length),
     freshnessEvidence: {
@@ -507,6 +583,63 @@ function inspectIntegrity(
     markersOutsideCaptureWindow,
     foreignRouteObservations,
   };
+}
+
+/**
+ * Pairs `hidden`/`visible` and `offline`/`online` into closed periods. An
+ * unpaired opening period is closed at the end of the capture rather than
+ * dropped, because a capture that ended while suspended is precisely the case
+ * worth seeing.
+ */
+function summarizeLifecycle(capture: RideCapture, endedAt: number): RideCaptureLifecycle {
+  const events = [...(capture.events ?? [])].sort((a, b) => Date.parse(a.at) - Date.parse(b.at));
+  const spans = (open: RideEventKind, close: RideEventKind): { periods: number; seconds: number } => {
+    let periods = 0;
+    let seconds = 0;
+    let openedAt: number | undefined;
+    for (const event of events) {
+      const at = Date.parse(event.at);
+      if (!Number.isFinite(at)) continue;
+      if (event.kind === open && openedAt === undefined) openedAt = at;
+      else if (event.kind === close && openedAt !== undefined) {
+        periods += 1;
+        seconds += Math.max(0, (at - openedAt) / 1_000);
+        openedAt = undefined;
+      }
+    }
+    if (openedAt !== undefined) {
+      periods += 1;
+      seconds += Math.max(0, (endedAt - openedAt) / 1_000);
+    }
+    return { periods, seconds: round(seconds) };
+  };
+
+  const hidden = spans("hidden", "visible");
+  const offline = spans("offline", "online");
+  return {
+    source: capture.source ?? "unknown",
+    eventCount: events.length,
+    hiddenPeriods: hidden.periods,
+    hiddenSeconds: hidden.seconds,
+    offlinePeriods: offline.periods,
+    offlineSeconds: offline.seconds,
+    recoveries: events.filter((event) => event.kind === "resumed").length,
+    wakeLockUnavailable: events.some((event) => event.kind === "wake_lock_unavailable"),
+  };
+}
+
+function describeLifecycle(lifecycle: RideCaptureLifecycle): string[] {
+  const messages: string[] = [];
+  if (lifecycle.hiddenPeriods > 0) {
+    messages.push(`Instrument gap: the capture was backgrounded ${lifecycle.hiddenPeriods} time(s) for ${lifecycle.hiddenSeconds} s in total; those holes are the recorder's, not the provider's`);
+  }
+  if (lifecycle.offlinePeriods > 0) {
+    messages.push(`Instrument gap: the device was offline ${lifecycle.offlinePeriods} time(s) for ${lifecycle.offlineSeconds} s in total; those holes are the recorder's, not the provider's`);
+  }
+  if (lifecycle.recoveries > 0) {
+    messages.push(`The capture was recovered ${lifecycle.recoveries} time(s) after a reload`);
+  }
+  return messages;
 }
 
 function describeIntegrity(integrity: RideCaptureIntegrity): string[] {
