@@ -1,5 +1,7 @@
 # Jeju Route 365 live-transit validation — 2026-09-10
 
+> Historical evidence capture. It records what was observed on 2026-09-10 and is not edited to match later changes. The current provider setup is in `DATA_SOURCES.md`, the current status table in `DATA_VALIDATION.md`, and the current API contract in `PRODUCTION_TRANSIT_API.md`.
+
 Status: `TAGO_LIVE_END_TO_END_VERIFIED`
 
 This report intentionally contains no service key, request URL containing a key, or raw vehicle identifiers from a live capture.

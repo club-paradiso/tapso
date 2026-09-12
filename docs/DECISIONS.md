@@ -20,6 +20,29 @@
 
 **Decision:** Node's HTTP and test modules are enough for the first provider boundary. Choose hosting, persistence, queueing, and a web framework only after measuring the credentialed API and pilot load.
 
+## Transit API on its own Vercel project
+
+**Decision:** the transit API deploys from a Vercel project rooted at
+`services/api`, separate from the marketing site's project rooted at `apps/web`.
+
+This is the revisit the entry below reserved for the moment the iOS client needs
+these endpoints. Everything the functions import already lives under
+`services/api`, so the build depends on no cross-root project setting. The TAGO
+credential, the function budget, the rollback history, and the deploy cadence of
+a public API stay out of the product site's project, and iOS gets a base URL
+that is not the marketing domain.
+
+*Rejected:* co-locating the transit endpoints in `apps/web/api`. It would force
+either cross-root imports or moving the transit domain into the marketing app.
+*Rejected:* a second hosting provider, a database, or a queue. Four cached reads
+justify none of them, and the feature that would need a durable store is
+withheld by the freshness gate.
+
+**Decision:** one request handler, two transports. `src/apiRouter.ts` answers
+every endpoint over Web `Request`/`Response`; `src/server.ts` and
+`services/api/api/**` are transport adapters only. Local and production
+behaviour cannot drift because there is only one implementation of it.
+
 ## No passenger GPS by default
 
 **Decision:** identify the bus from vehicle observations and ride intent. Optional one-shot location may become supporting evidence, never a hidden continuous tracker.
@@ -35,6 +58,10 @@ have meant choosing a host, a runtime, a release process, and a CORS boundary
 for a feature the existing Vercel project can already serve. Revisit this if the
 iOS client ever needs the same endpoints; until then, one deployment is the
 smaller system.
+
+That revisit happened once the iOS client needed the transit endpoints; see
+*Transit API on its own Vercel project* above. The waitlist and support
+endpoints stay where they are.
 
 The handlers use the Web Handler signature (`export async function POST(request:
 Request)`), which gives exact raw-body access for webhook verification and lets

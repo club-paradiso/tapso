@@ -16,17 +16,23 @@ Ride intent → vehicle matcher → in-memory pilot RideSession / progress → C
 
 The iOS app owns presentation, demo scheduling, haptics, and the ActivityKit lifecycle. `TapsoActivityAttributes` is intentionally small and `Sendable`; the app and extension share it.
 
-The API service owns external DTO normalization and secrets. `TransitProvider` prevents government fields from leaking through the product. `CachedTransitProvider` adds route-scoped read-through caching and concurrent-miss coalescing without caching failures. The pilot server exposes `/health`, `/v1/stops`, `/v1/vehicles`, `/v1/matches`, and short-lived `/v1/sessions` create/refresh/confirm endpoints.
+The API service owns external DTO normalization and secrets. `TransitProvider` prevents government fields from leaking through the product. `CachedTransitProvider` adds route-scoped read-through caching and concurrent-miss coalescing without caching failures. The service exposes `/health`, `/v1/cities`, `/v1/routes`, `/v1/stops`, `/v1/vehicles`, `/v1/matches`, and `/v1/sessions` create/refresh/confirm.
+
+`src/apiRouter.ts` holds that surface once, over Web `Request`/`Response`. Two transports bind to it: `src/server.ts` for the local Node process and the Vercel Functions in `services/api/api/` for production. Routing, validation, cache headers, CORS, abuse limits, error shape, and logging therefore cannot drift between them. The API deploys from its own Vercel project rooted at `services/api`, separate from the marketing site's project rooted at `apps/web`. See `PRODUCTION_TRANSIT_API.md`.
 
 ## Runtime strategy
 
 The practical MVP target is shared route polling with short-lived cache and fan-out to active rides. One upstream request per user per second would waste quota and amplify failures. Phase 1 implements request-driven shared snapshots: vehicle results default to a 20-second TTL and route stops to six hours, both overrideable after live cadence is measured. No background timer runs when no ride asks for a snapshot.
 
-The pilot session coordinator is intentionally in-memory. It automatically selects only when the match margin is sufficient; ambiguous candidates require explicit confirmation. After selection, a contradictory or missing snapshot never silently switches to another vehicle. Duplicate or backward progress is ignored, and a bounded grace window retains the last accepted progress before the session becomes `lost`.
+The session coordinator is intentionally in-memory. It automatically selects only when the match margin is sufficient; ambiguous candidates require explicit confirmation. After selection, a contradictory or missing snapshot never silently switches to another vehicle. Duplicate or backward progress is ignored, and a bounded grace window retains the last accepted progress before the session becomes `lost`.
+
+One process's memory is the wrong store for a horizontally scaled runtime, so the session endpoints fail closed there rather than losing state silently: `TRANSIT_SESSIONS_ENABLED` defaults to `false` whenever `VERCEL` is set and the three routes answer `503 SESSIONS_UNAVAILABLE`. The durable store that replaces it is Task C work, because the feature it would unlock — automatic passenger tracking — is already withheld by the freshness gate.
 
 Realtime stop sequence is not assumed. If the provider supplies one and it maps to the selected route, it is used. Otherwise a stop is estimated only when the vehicle coordinate is within a conservative 120 m radius of a known route stop; that progress is labeled as an estimate until credentialed live validation proves the semantics.
 
-A production pilot will likely need a small durable session store and a queue or scheduled worker for APNs, but hosting remains intentionally undecided until real-data load and cadence are known.
+Because each serverless instance holds its own cache, successful reads also carry a CDN `s-maxage` equal to the in-process TTL. That shared layer, not process memory, is what actually bounds upstream fan-out in production. No `stale-while-revalidate` window is granted to vehicle data.
+
+A production ride feature will still need a durable session store and a queue or scheduled worker for APNs. Neither is built yet, and neither is required by the read endpoints iOS needs first.
 
 ## Failure posture
 
