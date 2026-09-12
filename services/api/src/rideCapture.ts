@@ -16,6 +16,31 @@ export const RIDE_CAPTURE_SCHEMA_VERSION = 1;
 
 export type RideMarkerKind = "boarded" | "passed_stop" | "alighted" | "note";
 
+/**
+ * Instrument lifecycle, not rider ground truth. A mobile browser can be
+ * suspended or lose the network mid-ride, and the resulting hole in the
+ * snapshots looks exactly like a provider dropout unless the instrument says
+ * otherwise. These events are how the analysis tells the two apart; they are
+ * never markers, and nothing here is evidence about TAGO.
+ */
+export type RideEventKind =
+  | "hidden"
+  | "visible"
+  | "offline"
+  | "online"
+  | "wake_lock_active"
+  | "wake_lock_unavailable"
+  | "resumed";
+
+export interface RideEvent {
+  at: string;
+  kind: RideEventKind;
+  /** Short operator-safe context. Never a URL, a credential, or a vehicle number. */
+  detail?: string;
+}
+
+export type RideCaptureSource = "cli" | "web-controller";
+
 export interface RideMarker {
   at: string;
   kind: RideMarkerKind;
@@ -45,6 +70,14 @@ export interface RideCapture {
   stops: StopOnRoute[];
   snapshots: RideSnapshot[];
   markers: RideMarker[];
+  /**
+   * Optional and additive at schema version 1: absent in every capture the CLI
+   * writes, present in captures from the mobile controller. Keeping the version
+   * at 1 is deliberate — a bump would make the CLI analyzer reject web captures
+   * and vice versa, and these two fields need no such break.
+   */
+  events?: RideEvent[];
+  source?: RideCaptureSource;
 }
 
 export interface NumberSummary {
@@ -133,6 +166,23 @@ export interface TrackedVehicleReport {
 }
 
 /**
+ * What the recording instrument did during the ride. A gap while the browser
+ * was suspended or offline is the instrument's gap, and reading it as a
+ * provider dropout would corrupt the very cadence Task C is meant to measure.
+ */
+export interface RideCaptureLifecycle {
+  source: RideCaptureSource | "unknown";
+  eventCount: number;
+  hiddenPeriods: number;
+  hiddenSeconds: number;
+  offlinePeriods: number;
+  offlineSeconds: number;
+  /** Captures reopened after a refresh or a crash. */
+  recoveries: number;
+  wakeLockUnavailable: boolean;
+}
+
+/**
  * Whether the capture file itself is trustworthy, independent of what it shows.
  * A non-zero count here is a reason to doubt the run, not a property of TAGO.
  */
@@ -146,6 +196,11 @@ export interface RideCaptureIntegrity {
   markersOutsideCaptureWindow: number;
   /** Observations whose `routeId` is not the captured route. */
   foreignRouteObservations: number;
+  /**
+   * Observations reporting a `nodeord` the captured topology does not contain,
+   * which is what a topology change mid-ride looks like from inside a capture.
+   */
+  offTopologyObservations: number;
 }
 
 /**
@@ -186,8 +241,12 @@ export interface RideCaptureReport {
   uniqueVehicleCount: number;
   stopCount: number;
   stopSequenceContiguous: boolean;
+  /** The route's shape, and whether this particular ride wraps past the end of it. */
+  topology: RouteTopology & { wrapAround: boolean };
   vehicles: VehicleTimeline[];
   tracked: TrackedVehicleReport;
+  /** Which instrument produced the capture, and what it did to itself. */
+  lifecycle: RideCaptureLifecycle;
   integrity: RideCaptureIntegrity;
   evidenceCompleteness: EvidenceCompleteness;
   /** Aggregate over all vehicles; input for a freshness rule, not the rule. */
@@ -201,6 +260,64 @@ export interface RideCaptureReport {
     markerLagSeconds: NumberSummary;
   };
   warnings: string[];
+}
+
+/**
+ * What shape the route's stop list is. This decides whether a journey may wrap
+ * past the end of the list, which is the only question a circular route asks
+ * that a straight one does not.
+ *
+ *  - `linear`    every stop appears once; a journey runs forward and only forward.
+ *  - `loop`      the last entry repeats the first and nothing else repeats, so the
+ *                list closes on itself and wrap-around is well defined.
+ *  - `repeating` some stop appears more than once without closing the list. The
+ *                route really does pass a stop twice, so "which pass" is
+ *                ambiguous and wrap-around is refused rather than guessed.
+ */
+export type TopologyKind = "linear" | "loop" | "repeating";
+
+export interface RouteTopology {
+  kind: TopologyKind;
+  stopCount: number;
+  /** Distinct physical stops in one pass, and the modulus a loop wraps on. */
+  cycleLength: number;
+  sequenceAscending: boolean;
+  duplicateStopIdCount: number;
+  /** Two different stops may legitimately share a name; the UI must show more than the name. */
+  duplicateStopNameCount: number;
+}
+
+export function classifyTopology(stops: StopOnRoute[]): RouteTopology {
+  const list = stops ?? [];
+  const ids = list.map((stop) => stop.stopId);
+  const names = list.map((stop) => stop.name);
+  const duplicateStopIdCount = ids.length - new Set(ids).size;
+  const duplicateStopNameCount = names.length - new Set(names).size;
+  const sequenceAscending = list.every((stop, index) => index === 0 || stop.sequence > list[index - 1]!.sequence);
+  const closes = list.length >= 3 && ids[0] !== undefined && ids[0] === ids.at(-1);
+
+  if (closes && duplicateStopIdCount === 1) {
+    return { kind: "loop", stopCount: list.length, cycleLength: list.length - 1, sequenceAscending, duplicateStopIdCount, duplicateStopNameCount };
+  }
+  const kind: TopologyKind = duplicateStopIdCount === 0 ? "linear" : "repeating";
+  return { kind, stopCount: list.length, cycleLength: list.length, sequenceAscending, duplicateStopIdCount, duplicateStopNameCount };
+}
+
+/** True when the ride runs past the end of the stop list and back round. */
+export function isWrapAroundJourney(capture: Pick<RideCapture, "stops" | "boardingStopSequence" | "destinationStopSequence">): boolean {
+  return capture.boardingStopSequence > capture.destinationStopSequence
+    && classifyTopology(capture.stops).kind === "loop";
+}
+
+/**
+ * Stops still to go. On a straight route that is a subtraction; on a loop it is
+ * the forward arc, because a bus at sequence 38 of 40 heading for sequence 3 has
+ * five stops left, not minus thirty-five.
+ */
+export function forwardStopDistance(from: number, to: number, topology: RouteTopology, wrapAround: boolean): number {
+  if (!wrapAround) return to - from;
+  const modulus = Math.max(1, topology.cycleLength);
+  return (((to - from) % modulus) + modulus) % modulus;
 }
 
 export class RideCaptureInputError extends Error {
@@ -224,19 +341,57 @@ export function validateRideCapture(capture: RideCapture): void {
       throw new RideCaptureInputError(`${name} must be an official stop sequence of the route`);
     }
   }
-  if (capture.boardingStopSequence >= capture.destinationStopSequence) {
+  if (capture.boardingStopSequence === capture.destinationStopSequence) {
     throw new RideCaptureInputError("destinationStopSequence must be after boardingStopSequence");
+  }
+  if (capture.boardingStopSequence > capture.destinationStopSequence) {
+    // Riding past the end of the list and back round is only meaningful when the
+    // list actually closes on itself. Anywhere else it is a reversed direction,
+    // and accepting it would produce markers nobody can interpret afterwards.
+    const topology = classifyTopology(capture.stops);
+    if (topology.kind !== "loop") {
+      throw new RideCaptureInputError(
+        `destinationStopSequence must be after boardingStopSequence on a ${topology.kind} route; wrap-around needs a topology that closes on itself`,
+      );
+    }
   }
   for (const marker of capture.markers) {
     if (marker.kind === "passed_stop" && (!Number.isInteger(marker.stopSequence) || !sequences.has(marker.stopSequence!))) {
       throw new RideCaptureInputError("passed_stop markers must name an official stop sequence");
     }
   }
+  if (capture.events !== undefined) {
+    if (!Array.isArray(capture.events)) throw new RideCaptureInputError("events must be an array when present");
+    for (const event of capture.events) {
+      if (!event || typeof event.at !== "string" || Number.isNaN(Date.parse(event.at))) {
+        throw new RideCaptureInputError("every event needs an ISO timestamp");
+      }
+      if (!RIDE_EVENT_KINDS.has(event.kind)) throw new RideCaptureInputError(`unknown ride event: ${String(event.kind)}`);
+    }
+  }
+  if (capture.source !== undefined && capture.source !== "cli" && capture.source !== "web-controller") {
+    throw new RideCaptureInputError("source must be cli or web-controller when present");
+  }
 }
+
+const RIDE_EVENT_KINDS = new Set<string>([
+  "hidden",
+  "visible",
+  "offline",
+  "online",
+  "wake_lock_active",
+  "wake_lock_unavailable",
+  "resumed",
+]);
 
 export function analyzeRideCapture(capture: RideCapture): RideCaptureReport {
   validateRideCapture(capture);
   const warnings: string[] = [];
+  const topology = classifyTopology(capture.stops);
+  const wrapAround = topology.kind === "loop" && capture.boardingStopSequence > capture.destinationStopSequence;
+  // A bus on a closed route wraps whether or not this rider's journey does, so
+  // the step arithmetic follows the route while remaining-stops follows the ride.
+  const loopArithmetic = topology.kind === "loop";
   const snapshots = [...capture.snapshots].sort((a, b) => Date.parse(a.capturedAt) - Date.parse(b.capturedAt));
   const successful = snapshots.filter((snapshot) => !snapshot.error);
   const boarded = capture.boardedVehicleId?.trim();
@@ -335,7 +490,9 @@ export function analyzeRideCapture(capture: RideCapture): RideCaptureReport {
       const sequence = observation.stopSequence;
       if (sequence !== undefined) {
         if (previousSequence !== undefined) {
-          const delta = sequence - previousSequence;
+          const delta = loopArithmetic
+            ? shortestArc(previousSequence, sequence, topology)
+            : sequence - previousSequence;
           if (delta < 0) {
             decreases += 1;
             largestDecrease = Math.max(largestDecrease, -delta);
@@ -346,7 +503,7 @@ export function analyzeRideCapture(capture: RideCapture): RideCaptureReport {
           largestJump = Math.max(largestJump, Math.abs(delta));
         }
         previousSequence = sequence;
-        if (isTracked) recordTrackedProgress(capture, tracked, snapshot.capturedAt, sequence);
+        if (isTracked) recordTrackedProgress(capture, tracked, snapshot.capturedAt, sequence, topology, wrapAround);
       }
 
       if (hasCoordinates(observation)) coordinateSamples += 1;
@@ -412,6 +569,7 @@ export function analyzeRideCapture(capture: RideCapture): RideCaptureReport {
 
   const integrity = inspectIntegrity(capture, snapshots, startedAt, endedAt);
   warnings.push(...describeIntegrity(integrity));
+  warnings.push(...describeLifecycle(summarizeLifecycle(capture, endedAt)));
   if (collectionIntervalSeconds.max !== undefined && collectionIntervalSeconds.max > configuredIntervalSeconds * 3) {
     warnings.push(`Polling stalled: longest gap between snapshots was ${collectionIntervalSeconds.max} s against a ${configuredIntervalSeconds} s interval`);
   }
@@ -433,8 +591,10 @@ export function analyzeRideCapture(capture: RideCapture): RideCaptureReport {
     uniqueVehicleCount: order.length,
     stopCount: capture.stops.length,
     stopSequenceContiguous: sequences.every((sequence, index) => index === 0 || sequence === sequences[index - 1]! + 1),
+    topology: { ...topology, wrapAround },
     vehicles,
     tracked,
+    lifecycle: summarizeLifecycle(capture, endedAt),
     integrity,
     evidenceCompleteness: assessEvidence(successful.length, tracked, allChangeIntervals.length, markerLags.length),
     freshnessEvidence: {
@@ -475,12 +635,15 @@ function inspectIntegrity(
 
   let duplicateVehicleObservations = 0;
   let foreignRouteObservations = 0;
+  let offTopologyObservations = 0;
+  const knownSequences = new Set(capture.stops.map((stop) => stop.sequence));
   for (const snapshot of sorted) {
     const seen = new Set<string>();
     for (const vehicle of snapshot.vehicles) {
       if (seen.has(vehicle.vehicleId)) duplicateVehicleObservations += 1;
       seen.add(vehicle.vehicleId);
       if (vehicle.routeId && vehicle.routeId !== capture.routeId) foreignRouteObservations += 1;
+      if (vehicle.stopSequence !== undefined && !knownSequences.has(vehicle.stopSequence)) offTopologyObservations += 1;
     }
   }
 
@@ -506,7 +669,65 @@ function inspectIntegrity(
     markersOutOfOrder,
     markersOutsideCaptureWindow,
     foreignRouteObservations,
+    offTopologyObservations,
   };
+}
+
+/**
+ * Pairs `hidden`/`visible` and `offline`/`online` into closed periods. An
+ * unpaired opening period is closed at the end of the capture rather than
+ * dropped, because a capture that ended while suspended is precisely the case
+ * worth seeing.
+ */
+function summarizeLifecycle(capture: RideCapture, endedAt: number): RideCaptureLifecycle {
+  const events = [...(capture.events ?? [])].sort((a, b) => Date.parse(a.at) - Date.parse(b.at));
+  const spans = (open: RideEventKind, close: RideEventKind): { periods: number; seconds: number } => {
+    let periods = 0;
+    let seconds = 0;
+    let openedAt: number | undefined;
+    for (const event of events) {
+      const at = Date.parse(event.at);
+      if (!Number.isFinite(at)) continue;
+      if (event.kind === open && openedAt === undefined) openedAt = at;
+      else if (event.kind === close && openedAt !== undefined) {
+        periods += 1;
+        seconds += Math.max(0, (at - openedAt) / 1_000);
+        openedAt = undefined;
+      }
+    }
+    if (openedAt !== undefined) {
+      periods += 1;
+      seconds += Math.max(0, (endedAt - openedAt) / 1_000);
+    }
+    return { periods, seconds: round(seconds) };
+  };
+
+  const hidden = spans("hidden", "visible");
+  const offline = spans("offline", "online");
+  return {
+    source: capture.source ?? "unknown",
+    eventCount: events.length,
+    hiddenPeriods: hidden.periods,
+    hiddenSeconds: hidden.seconds,
+    offlinePeriods: offline.periods,
+    offlineSeconds: offline.seconds,
+    recoveries: events.filter((event) => event.kind === "resumed").length,
+    wakeLockUnavailable: events.some((event) => event.kind === "wake_lock_unavailable"),
+  };
+}
+
+function describeLifecycle(lifecycle: RideCaptureLifecycle): string[] {
+  const messages: string[] = [];
+  if (lifecycle.hiddenPeriods > 0) {
+    messages.push(`Instrument gap: the capture was backgrounded ${lifecycle.hiddenPeriods} time(s) for ${lifecycle.hiddenSeconds} s in total; those holes are the recorder's, not the provider's`);
+  }
+  if (lifecycle.offlinePeriods > 0) {
+    messages.push(`Instrument gap: the device was offline ${lifecycle.offlinePeriods} time(s) for ${lifecycle.offlineSeconds} s in total; those holes are the recorder's, not the provider's`);
+  }
+  if (lifecycle.recoveries > 0) {
+    messages.push(`The capture was recovered ${lifecycle.recoveries} time(s) after a reload`);
+  }
+  return messages;
 }
 
 function describeIntegrity(integrity: RideCaptureIntegrity): string[] {
@@ -517,6 +738,7 @@ function describeIntegrity(integrity: RideCaptureIntegrity): string[] {
     [integrity.markersOutOfOrder, "marker(s) stored out of chronological order"],
     [integrity.markersOutsideCaptureWindow, "marker(s) fall outside the capture window"],
     [integrity.foreignRouteObservations, "observation(s) belong to another route"],
+    [integrity.offTopologyObservations, "observation(s) report a stop the captured topology does not contain — the route may have changed mid-ride"],
   ];
   return messages.filter(([count]) => count > 0).map(([count, text]) => `Capture integrity: ${count} ${text}`);
 }
@@ -599,15 +821,37 @@ function coordinatesChanged(previous: VehicleObservation, current: VehicleObserv
   return previous.latitude !== current.latitude || previous.longitude !== current.longitude;
 }
 
-function recordTrackedProgress(capture: RideCapture, tracked: TrackedVehicleReport, at: string, sequence: number): void {
-  const remaining = Math.max(0, capture.destinationStopSequence - sequence);
+function recordTrackedProgress(
+  capture: RideCapture,
+  tracked: TrackedVehicleReport,
+  at: string,
+  sequence: number,
+  topology: RouteTopology,
+  wrapAround: boolean,
+): void {
+  const remaining = wrapAround
+    ? forwardStopDistance(sequence, capture.destinationStopSequence, topology, true)
+    : Math.max(0, capture.destinationStopSequence - sequence);
   const last = tracked.remainingStopsTimeline.at(-1);
   if (!last || last.stopSequence !== sequence) {
     tracked.remainingStopsTimeline.push({ at, stopSequence: sequence, remainingStops: remaining });
   }
-  if (!tracked.passedBoardingAt && sequence > capture.boardingStopSequence) tracked.passedBoardingAt = at;
-  if (!tracked.arrivalDetectedAt && sequence >= capture.destinationStopSequence) tracked.arrivalDetectedAt = at;
-  if (sequence > capture.destinationStopSequence) tracked.passedDestination = true;
+  const pastBoarding = wrapAround
+    ? forwardStopDistance(capture.boardingStopSequence, sequence, topology, true) > 0
+    : sequence > capture.boardingStopSequence;
+  if (!tracked.passedBoardingAt && pastBoarding) tracked.passedBoardingAt = at;
+  const arrived = wrapAround ? remaining === 0 : sequence >= capture.destinationStopSequence;
+  if (!tracked.arrivalDetectedAt && arrived) tracked.arrivalDetectedAt = at;
+  // Overshoot on a closed route is indistinguishable from a second lap, so it is
+  // reported only where it can actually be told apart.
+  if (!wrapAround && sequence > capture.destinationStopSequence) tracked.passedDestination = true;
+}
+
+/** Signed shortest step around a closed route: +2 forward, or −1 back over the seam. */
+function shortestArc(from: number, to: number, topology: RouteTopology): number {
+  const modulus = Math.max(1, topology.cycleLength);
+  const forward = forwardStopDistance(from, to, topology, true);
+  return forward * 2 > modulus ? forward - modulus : forward;
 }
 
 function compareMarkers(capture: RideCapture, successful: RideSnapshot[], boarded: string | undefined): MarkerComparison[] {

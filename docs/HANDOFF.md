@@ -60,6 +60,20 @@ Prerequisites:
   or direction is unclear.
 - A phone or laptop that can run Node 22.18+ during the ride.
 
+### Option A — from a phone (no laptop)
+
+Open `https://tapso-api.vercel.app/ride-capture/` in Safari, enter the operator
+token when asked, and follow the screens: preflight, ready, tap the bus you
+boarded, tap the stops where it actually halted, `하차`, `캡처 종료`, then export
+the sanitized report. The whole procedure and its limits are in
+`RIDE_CAPTURE_CONTROLLER.md`. This needs `RIDE_CAPTURE_OPERATOR_TOKEN` set on the
+`tapso-api` Vercel project; without it the operator endpoints stay disabled.
+
+Keep the screen on and the page in front. iOS suspends a backgrounded tab, which
+stops collection — the controller records the gap honestly but cannot prevent it.
+
+### Option B — from a laptop (the reference implementation)
+
 ```bash
 # 1. Preflight against live TAGO before boarding. Production serves the same
 #    data and needs no local key. Substitute your own route number and routeId;

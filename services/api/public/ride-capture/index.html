@@ -1,0 +1,315 @@
+<!doctype html>
+<html lang="ko">
+  <head>
+    <meta charset="utf-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover" />
+    <meta name="robots" content="noindex, nofollow" />
+    <meta name="theme-color" content="#101418" />
+    <meta name="apple-mobile-web-app-capable" content="yes" />
+    <meta name="apple-mobile-web-app-title" content="RIDE CAPTURE" />
+    <title>TAPSO Ride Capture</title>
+    <style>
+      :root {
+        color-scheme: light dark;
+        --bg: #f4f5f7;
+        --panel: #ffffff;
+        --ink: #101418;
+        --muted: #5b6672;
+        --line: #c9d0d8;
+        --accent: #0b5cd5;
+        --accent-ink: #ffffff;
+        --warn: #8a4b00;
+        --warn-bg: #fff2dc;
+        --error: #a11021;
+        --error-bg: #ffe6e9;
+        --ok: #0a6134;
+        --ok-bg: #e2f5ea;
+        --tap: 56px;
+      }
+      @media (prefers-color-scheme: dark) {
+        :root {
+          --bg: #0c0f12;
+          --panel: #171c21;
+          --ink: #f2f5f8;
+          --muted: #9aa7b4;
+          --line: #303a44;
+          --accent: #4c9bff;
+          --accent-ink: #06121f;
+          --warn: #ffc46b;
+          --warn-bg: #362a12;
+          --error: #ff8d9b;
+          --error-bg: #3a1620;
+          --ok: #6fe0a5;
+          --ok-bg: #123024;
+        }
+      }
+
+      * { box-sizing: border-box; }
+      body {
+        margin: 0;
+        background: var(--bg);
+        color: var(--ink);
+        font: 16px/1.45 -apple-system, BlinkMacSystemFont, "Segoe UI", system-ui, sans-serif;
+        -webkit-text-size-adjust: 100%;
+        padding: max(12px, env(safe-area-inset-top)) 12px max(16px, env(safe-area-inset-bottom));
+      }
+      main { max-width: 30rem; margin: 0 auto; }
+      h1 {
+        font-size: 0.8rem;
+        letter-spacing: 0.14em;
+        text-transform: uppercase;
+        color: var(--muted);
+        margin: 0 0 10px;
+      }
+      h2 { font-size: 0.75rem; letter-spacing: 0.1em; text-transform: uppercase; color: var(--muted); margin: 18px 0 8px; }
+      .mono { font-family: ui-monospace, SFMono-Regular, Menlo, monospace; }
+      .muted { color: var(--muted); }
+
+      .panel {
+        background: var(--panel);
+        border: 1px solid var(--line);
+        border-radius: 10px;
+        padding: 12px;
+        margin-bottom: 10px;
+      }
+
+      label { display: block; font-size: 0.8rem; color: var(--muted); margin-bottom: 4px; }
+      input, select, button { font: inherit; font-size: 1rem; }
+      input, select {
+        width: 100%;
+        min-height: var(--tap);
+        padding: 10px 12px;
+        border: 1px solid var(--line);
+        border-radius: 8px;
+        background: var(--bg);
+        color: var(--ink);
+      }
+      .field { margin-bottom: 10px; }
+      .fields-2 { display: grid; grid-template-columns: 1fr 1fr; gap: 10px; }
+
+      button {
+        min-height: var(--tap);
+        border-radius: 8px;
+        border: 1px solid var(--line);
+        background: var(--panel);
+        color: var(--ink);
+        padding: 10px 14px;
+        cursor: pointer;
+        -webkit-tap-highlight-color: transparent;
+      }
+      button:active { transform: translateY(1px); }
+      .primary {
+        width: 100%;
+        background: var(--accent);
+        color: var(--accent-ink);
+        border-color: transparent;
+        font-weight: 700;
+        letter-spacing: 0.02em;
+      }
+      .huge { min-height: 76px; font-size: 1.25rem; }
+      .danger { border-color: var(--error); color: var(--error); }
+      .row-buttons { display: grid; grid-template-columns: 1fr 1fr; gap: 8px; }
+
+      .card {
+        display: flex;
+        flex-direction: column;
+        align-items: flex-start;
+        gap: 2px;
+        width: 100%;
+        text-align: left;
+        margin-bottom: 8px;
+      }
+      .card[data-selected="true"] { border-color: var(--accent); box-shadow: inset 0 0 0 2px var(--accent); }
+      .card strong { font-size: 1.05rem; }
+      .card.vehicle strong { font-size: 1.5rem; letter-spacing: 0.04em; }
+      .card.vehicle { min-height: 78px; }
+      .card.preset { flex-direction: row; align-items: center; font-weight: 600; }
+      .card.stop { flex-direction: row; align-items: center; gap: 10px; min-height: 60px; }
+      .card.stop .seq {
+        min-width: 2.6rem;
+        font-variant-numeric: tabular-nums;
+        font-weight: 700;
+        color: var(--muted);
+      }
+      .card.stop[data-marked="true"] { background: var(--ok-bg); border-color: var(--ok); }
+      .card.stop[data-marked="true"] .seq { color: var(--ok); }
+
+      .stack { display: grid; gap: 8px; }
+      .metrics { display: grid; grid-template-columns: repeat(3, 1fr); gap: 8px; }
+      .metric { background: var(--panel); border: 1px solid var(--line); border-radius: 10px; padding: 8px 10px; }
+      .metric span { display: block; font-size: 0.7rem; letter-spacing: 0.08em; text-transform: uppercase; color: var(--muted); }
+      .metric strong { font-size: 1.35rem; font-variant-numeric: tabular-nums; }
+      .clock { font-size: 2.6rem; font-variant-numeric: tabular-nums; line-height: 1; }
+
+      .row { display: flex; justify-content: space-between; gap: 12px; padding: 7px 0; border-bottom: 1px solid var(--line); }
+      .row:last-child { border-bottom: 0; }
+      .row span { color: var(--muted); }
+
+      .status { margin: 8px 0; font-size: 0.92rem; min-height: 1.2em; }
+      .status[data-tone="warn"] { color: var(--warn); background: var(--warn-bg); padding: 8px 10px; border-radius: 8px; }
+      .status[data-tone="error"] { color: var(--error); background: var(--error-bg); padding: 8px 10px; border-radius: 8px; }
+      .status[data-tone="ok"] { color: var(--ok); background: var(--ok-bg); padding: 8px 10px; border-radius: 8px; }
+      [data-tone="warn"] { color: var(--warn); }
+      [data-tone="error"] { color: var(--error); }
+      [data-tone="ok"] { color: var(--ok); }
+
+      .private {
+        border: 1px solid var(--error);
+        background: var(--error-bg);
+        color: var(--error);
+        border-radius: 8px;
+        padding: 10px;
+        font-size: 0.85rem;
+        margin-top: 10px;
+      }
+      [hidden] { display: none !important; }
+    </style>
+  </head>
+  <body>
+    <main>
+      <h1>TAPSO Ride Capture · 운영자 전용</h1>
+
+      <!-- 1. SETUP / PREFLIGHT -->
+      <section id="screen-setup" hidden>
+        <div class="panel">
+          <h2 style="margin-top: 0">프리셋</h2>
+          <div id="preset-list" class="stack"></div>
+          <p class="muted" style="font-size: 0.82rem; margin: 6px 0 0">
+            프리셋은 기본값일 뿐이다. 실제 노선·정류장은 아래에서 라이브로 다시 확인한다.
+          </p>
+        </div>
+
+        <div class="panel">
+          <h2 style="margin-top: 0">노선 조회</h2>
+          <div class="fields-2">
+            <div class="field">
+              <label for="city-code">도시 코드</label>
+              <input id="city-code" inputmode="numeric" value="39" />
+            </div>
+            <div class="field">
+              <label for="route-no">노선 번호</label>
+              <input id="route-no" inputmode="numeric" placeholder="447" />
+            </div>
+          </div>
+          <button type="button" id="search-routes" class="primary">노선 조회</button>
+        </div>
+
+        <div class="panel" id="variant-block" hidden>
+          <h2 style="margin-top: 0">방향 선택 — 공식 변형 전체</h2>
+          <div id="variant-list"></div>
+        </div>
+
+        <div class="panel" id="stop-block" hidden>
+          <h2 style="margin-top: 0">승하차</h2>
+          <div class="field">
+            <label for="boarding-stop">승차 정류장</label>
+            <select id="boarding-stop"></select>
+          </div>
+          <div class="field">
+            <label for="destination-stop">하차 정류장</label>
+            <select id="destination-stop"></select>
+          </div>
+          <div class="field">
+            <label for="interval">수집 간격 (초)</label>
+            <select id="interval">
+              <option value="5" selected>5초 — CLI 기본값</option>
+              <option value="10">10초 — 호출 절약</option>
+              <option value="3">3초 — 하한</option>
+            </select>
+          </div>
+          <button type="button" id="confirm-selection" class="primary">확인</button>
+        </div>
+
+        <p id="setup-status" class="status"></p>
+        <button type="button" id="set-token">운영자 토큰 재입력</button>
+      </section>
+
+      <!-- 2. READY -->
+      <section id="screen-ready" hidden>
+        <div class="panel">
+          <div style="font-size: 2.4rem; font-weight: 800; line-height: 1"><span id="ready-route-no">—</span></div>
+          <div id="ready-direction" style="font-size: 1.05rem; margin-top: 4px"></div>
+          <div class="row" style="margin-top: 12px"><span>승차</span><strong id="ready-boarding"></strong></div>
+          <div class="row"><span>하차</span><strong id="ready-destination"></strong></div>
+          <div class="row"><span>routeId</span><strong class="mono" id="ready-route-id"></strong></div>
+          <p class="muted" id="ready-meta" style="font-size: 0.85rem"></p>
+        </div>
+        <button type="button" id="start-capture" class="primary huge">캡처 시작</button>
+        <p class="muted" style="font-size: 0.82rem">
+          시작하면 즉시 수집이 돌아간다. 버스에 탄 뒤 차량을 고르면 된다.
+        </p>
+        <button type="button" id="back-to-setup">뒤로</button>
+      </section>
+
+      <!-- 3+4. ACTIVE -->
+      <section id="screen-active" hidden>
+        <div class="panel">
+          <div class="clock" id="clock">00:00</div>
+          <div class="metrics" style="margin-top: 10px">
+            <div class="metric"><span>스냅샷</span><strong id="snapshot-count">0/0</strong></div>
+            <div class="metric"><span>마커</span><strong id="marker-count">0</strong></div>
+            <div class="metric"><span>최근 수집</span><strong id="last-poll">—</strong></div>
+          </div>
+          <div class="row" style="margin-top: 10px"><span>연결</span><strong id="connection">—</strong></div>
+          <div class="row"><span>화면</span><strong id="wake-state">—</strong></div>
+        </div>
+
+        <p id="active-status" class="status"></p>
+        <button type="button" id="resume-poll" class="primary" hidden>수집 재개</button>
+
+        <div id="board-block" hidden>
+          <h2>탑승한 버스를 누르라</h2>
+          <div id="vehicle-list"></div>
+          <p class="muted" style="font-size: 0.82rem">
+            차량번호는 뒤 네 자리만 표시한다. 같은 뒷자리가 둘 이상이면 자동으로 더 길게 보여준다.
+          </p>
+        </div>
+
+        <div id="ride-block" hidden>
+          <div class="panel">
+            <div class="row"><span>추적 차량</span><strong class="mono" id="tracked-id">—</strong></div>
+            <div class="row"><span>상태</span><strong id="tracked-presence">—</strong></div>
+            <div class="row"><span>제공자 위치</span><strong id="tracked-stop">—</strong></div>
+            <div class="row"><span>남은 정류장</span><strong id="tracked-remaining">—</strong></div>
+            <div class="row"><span>최근 마커</span><strong id="last-marker">—</strong></div>
+          </div>
+
+          <h2>정류장 기록 — 실제로 정차하고 문이 열린 곳만</h2>
+          <div id="stop-buttons"></div>
+
+          <div class="row-buttons" style="margin-top: 10px">
+            <button type="button" id="mark-note">특이사항</button>
+            <button type="button" id="mark-alight" class="primary">하차</button>
+          </div>
+          <button type="button" id="finish-capture" class="danger" style="width: 100%; margin-top: 8px">캡처 종료</button>
+        </div>
+      </section>
+
+      <!-- 5. FINISHED -->
+      <section id="screen-finished" hidden>
+        <div class="panel">
+          <h2 style="margin-top: 0">캡처 종료</h2>
+          <p id="finished-summary" class="mono"></p>
+        </div>
+        <p id="finished-status" class="status"></p>
+
+        <div class="panel" id="report-block" hidden>
+          <div class="row"><span>증거 판정</span><strong id="report-verdict">—</strong></div>
+          <div id="report-rows"></div>
+        </div>
+
+        <h2>내보내기</h2>
+        <button type="button" id="export-report" class="primary">SANITIZED REPORT 저장</button>
+        <div class="row-buttons" style="margin-top: 8px">
+          <button type="button" id="copy-report">리포트 복사</button>
+          <button type="button" id="export-raw" class="danger">RAW 저장</button>
+        </div>
+        <p class="private">
+          RAW 캡처는 <strong>비공개</strong>다. 실제 차량번호가 들어 있다. 공유하지 마라.
+          돌려보낼 것은 sanitized report 하나다.
+        </p>
+      </section>
+    </main>
+    <script type="module" src="./app.js"></script>
+  </body>
+</html>
