@@ -84,7 +84,7 @@ on every push.
 |---|---|
 | Local | `http://127.0.0.1:8787` |
 | Preview | A per-branch alias (`tapso-api-git-<branch>-club-paradiso.vercel.app`) plus a per-commit URL, both in the pull request's `Vercel – tapso-api` check. Never hard-code either into a client |
-| Production | Read the stable alias from the `tapso-api` project's **Domains** tab and record it here. The first production deployment (merge commit `05f40a4`, 2026-09-12) succeeded at the per-deployment URL `https://tapso-543ypuw7k-club-paradiso.vercel.app`, which is **not** the stable alias and must not be given to a client — a per-deployment URL is pinned to one build. The alias is not derivable from the project name: the marketing project `tapso` serves from `tapso-nu.vercel.app`, not `tapso.vercel.app` |
+| **Production** | **`https://tapso-api.vercel.app`** — the canonical base URL. This is what Task D points iOS at. Never substitute a per-deployment URL (`tapso-api-<hash>-club-paradiso.vercel.app`): those are pinned to one build |
 | Future | `https://api.<custom domain>` once one is registered; paths do not change |
 
 Every endpoint is also reachable at `<base>/api/...` because that is the
@@ -279,18 +279,33 @@ security headers, silent GitHub comments, and an `ignoreCommand` that skips
 builds for commits that do not touch `services/api`.
 
 The project is `tapso-api` (`prj_XTimnEWdrhaDMSJfgELHzQAo3Nn2`) in the
-`club-paradiso` team. `VERIFIED` on 2026-09-12: it is linked to
-`club-paradiso/tapso`, Vercel reports its Root Directory as `services/api`, and
-preview deployments of the Task A branch reach `Ready` /
-*Deployment has completed*.
+`club-paradiso` team, serving `https://tapso-api.vercel.app`. `VERIFIED` on
+2026-09-12: it is linked to `club-paradiso/tapso`, Vercel reports its Root
+Directory as `services/api`, and preview and production deployments reach
+`Ready` / *Deployment has completed*.
+
+`TAGO_SERVICE_KEY` is set on Production with Sensitive visibility.
+
+The credential was added *after* the `b59e9e6` production deployment was created
+(2026-09-12T07:57:01Z), and that same build then reported
+`credential.source: "canonical"` — its `build.commit` is `b59e9e60b863`. So a
+variable added to Production reached an already-running deployment without a
+rebuild. Do not assume the reverse; `/health` is the authority either way,
+because `liveTransitConfigured` and `credential.source` describe the running
+build rather than the project settings. If they ever disagree with the dashboard,
+redeploy production (**Redeploy**, or
+`vercel redeploy <deployment-url> --target=production`) and check again. No code
+change is involved.
 
 The first production deployment ran on the merge of pull request #25 and
-succeeded. Remaining first-time setup:
+succeeded. First-time setup is complete for `tapso-api`; the steps are kept
+because they are what any new environment of this API needs.
 
 1. Settings → Environment Variables: add **`TAGO_SERVICE_KEY`** (Decoding key)
-   for Production, with **Sensitive** visibility. Add it for Preview only if
-   preview deployments must reach live data. Until it is set, every TAGO-backed
-   endpoint answers `503 BLOCKED_BY_CREDENTIALS` and `/health` reports
+   for Production, with **Sensitive** visibility. Done for `tapso-api` on
+   2026-09-12. Add it for Preview only if preview deployments must reach live
+   data. Until it is set, every TAGO-backed endpoint answers
+   `503 BLOCKED_BY_CREDENTIALS` and `/health` reports
    `liveTransitConfigured: false`. `/health` is the authority on whether it is
    set; nothing else reveals it.
 
@@ -302,8 +317,10 @@ succeeded. Remaining first-time setup:
    `credential: { source: "missing", deprecatedNamePresent: true }` in `/health`.
 2. Settings → Deployment Protection: production must be publicly reachable for
    the iOS client. Preview may stay protected.
-3. Record the production alias from Settings → Domains and put it in the base
-   URL table above, then run the smoke script against it.
+3. Confirm `/health` reports `liveTransitConfigured: true` and
+   `credential.source: "canonical"`, then run the smoke script against
+   `https://tapso-api.vercel.app`. Both were done on 2026-09-12; see
+   *Production verification*.
 
 There is no separate deploy command. Pushing a branch produces a preview and
 merging to `main` is the production deploy.
@@ -336,6 +353,28 @@ converted into a pass. It exits non-zero only on a real failure.
 4. To take the API offline without touching the marketing site, pause the API
    project in Vercel.
 
+## Production verification
+
+`VERIFIED` on 2026-09-12 against `https://tapso-api.vercel.app`, running build
+`b59e9e60b863` (`build.environment: production`, `runtime.platform: vercel`).
+
+| Check | Observed |
+|---|---|
+| `GET /health` | `200`; `liveTransitConfigured: true`, `credential.source: "canonical"`, `deprecatedNamePresent: false` |
+| `GET /v1/cities` | `200`; live TAGO response, `cityCode` 39 제주도 present |
+| `GET /v1/routes?cityCode=39&routeNo=365` | `200`; all six official variants — `JEB405136521`, `522`, `523`, `524`, `525`, `530` — with `variantsPreserved: true` |
+| `GET /v1/stops?routeId=JEB405136521&cityCode=39` | `200`; 43 stops, sequence 1 → 43, `provider_node_order`, direction-specific |
+| `GET /v1/vehicles?routeId=JEB405136521&cityCode=39` | `200`; four live vehicles, `observedAt` epoch sentinel, `timestampSource: "unavailable"`, `receivedAt` present |
+| unknown `/v1/*` | `404` `{"error":"NOT_FOUND","message":"no such endpoint"}` — the JSON contract, not the platform's HTML 404 |
+| `GET /v1/sessions/test` | `503 SESSIONS_UNAVAILABLE` — the intended serverless fail-closed behaviour |
+| Runtime logs after 08:10Z | No unexpected production error. The only error group is the `503` from the deliberate session probe |
+
+The freshness posture is unchanged and was confirmed live:
+`providerObservationTimestamp: "unavailable"`, `policy: "fail_closed"`,
+`automaticMatching: "withheld_pending_source_freshness_rule"`. Live vehicles are
+served, and automatic matching stays withheld until Task B and Task C produce a
+source-freshness rule.
+
 ## Limitations
 
 - `VERIFIED`: the `tapso-api` project builds and deploys this repository from
@@ -343,14 +382,9 @@ converted into a pass. It exits non-zero only on a real failure.
   deployment (merge commit `05f40a4`) all completed successfully, which proves
   the functions compile and bundle, the `.ts` import specifiers resolve, and
   `vercel.json` is accepted.
-- `UNVERIFIED`: **no HTTP response from any deployment has been observed.** The
-  authoring session's egress policy denied every `*.vercel.app` host and its
-  Vercel authorization could not read this project, so the rewrites, the
-  response headers, and the deployed runtime behaviour have never been exercised
-  over the network. A successful build is not a working endpoint. Run the smoke
-  script before treating any of that as verified.
-- `UNVERIFIED`: the production alias. It could not be read from the project, and
-  it is not derivable from the project name.
+- `VERIFIED` (2026-09-12, production run against
+  `https://tapso-api.vercel.app`): HTTP, credential, and live TAGO behaviour
+  all observed end to end. See *Production verification* above.
 - `IMPLEMENTED`: the Vercel Functions adapter, the rewrites, and the header and
   cache policy are covered by deterministic tests and by an end-to-end run of
   the same handler over real HTTP through the local Node adapter.

@@ -63,8 +63,8 @@ progress. See `DATA_VALIDATION.md` and `exec-plans/RIDE_CAPTURE.md`.
 
 ## Other open evidence
 
-1. Finish or delete the `tapso-api` Vercel project and smoke test it; see
-   `PRODUCTION_TRANSIT_API.md`.
+1. ~~Smoke test production.~~ Done 2026-09-12: `https://tapso-api.vercel.app`
+   verified end to end, including live TAGO. See `PRODUCTION_TRANSIT_API.md`.
 2. Add route setup and ambiguity confirmation UI before calling the client MVP complete.
 3. Provision Apple credentials and replace the APNs scaffold.
 4. Execute `DEVICE_TEST_PLAN.md` on signed hardware.
