@@ -99,7 +99,7 @@ export function createTransitApiHandler(dependencies: TransitApiDependencies): T
       cache = result.cache ?? "none";
       response = withHeaders(result.response, cors);
     } catch (error) {
-      response = withHeaders(errorResponse(error), cors);
+      response = withHeaders(errorResponse(error, log), cors);
     }
 
     const status = response.status;
@@ -589,7 +589,10 @@ const STATUS_BY_CODE: Record<string, number> = {
   SESSIONS_UNAVAILABLE: 503,
 };
 
-function errorResponse(error: unknown): Response {
+function errorResponse(
+  error: unknown,
+  log: (level: LogLevel, event: string, fields: LogFields) => void,
+): Response {
   const code = error && typeof error === "object" && "code" in error ? String((error as ApiError).code) : "INTERNAL_ERROR";
   const status = STATUS_BY_CODE[code] ?? 500;
   // Only messages this service wrote are published. An unexpected throw could
@@ -600,7 +603,7 @@ function errorResponse(error: unknown): Response {
       ? error.message
       : "request failed";
   if (status >= 500) {
-    defaultLog("error", "transit_api_unhandled", {
+    log("error", "transit_api_unhandled", {
       code,
       message: error instanceof Error ? error.message : "unknown error",
     });

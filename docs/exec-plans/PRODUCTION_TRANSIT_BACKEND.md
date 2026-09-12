@@ -61,9 +61,14 @@ activation, Supabase/Resend setup, framework migration, unrelated refactoring.
 6. **Verification.** 56 Node tests in `services/api`, 93 in `apps/web`, 3 Python
    probe tests, a clean typecheck of the deployed surface now wired into CI, and
    an end-to-end HTTP run of all three configurations. DONE.
-7. **Deployment.** `BLOCKED_BY_ACCESS`: the API project cannot be linked,
-   configured, deployed, or smoke tested from this session. The exact procedure
-   is in `docs/PRODUCTION_TRANSIT_API.md`.
+7. **Deployment.** PARTIAL. The `tapso-api` project is linked to
+   `club-paradiso/tapso`, its Root Directory resolves to `services/api`, and a
+   preview deployment of this branch reached *Deployment has completed*. The
+   marketing project deployed successfully from the same commit, so the public
+   site is unaffected. Not done: `PUBLIC_DATA_SERVICE_KEY` is unset, no
+   production deployment exists, and **no HTTP response from any deployment has
+   been observed** — the session's egress policy denied every `*.vercel.app`
+   host and its Vercel authorization could not read this project.
 
 ## 4. Decisions and alternatives considered
 
@@ -130,10 +135,14 @@ the match result is `unavailable` / `unknown`.
 **Findings.**
 
 - The Vercel project `tapso-api` (`prj_XTimnEWdrhaDMSJfgELHzQAo3Nn2`) was
-  created in the `club-paradiso` team, but the API returned 404 immediately
-  afterwards when verifying its Git link, so it is **unlinked and
-  unconfigured**. It must be finished by hand or deleted; do not create a second
-  project with that name.
+  created in the `club-paradiso` team. The creating call could not read it back
+  afterwards, and neither could any later call, because this session's Vercel
+  authorization is a fixed single-project allowlist — not because the project
+  was broken. Its GitHub checks later proved it linked and building. Do not
+  create a second project with that name.
+- The first `ignoreCommand` inspected only `HEAD^..HEAD`, so this branch's
+  preview was cancelled: the API change sat under a later docs commit. It now
+  skips on `main` only, which is what let the preview build at all.
 - `scripts/transit-spike/resolve-route.ts` still imports
   `services/api/src/publicDataProvider.ts`, which the TAGO migration removed. The
   script cannot load. It is left in place and recorded in
@@ -143,14 +152,19 @@ the match result is `unavailable` / `unknown`.
 
 **Risks.**
 
-- Every production statement is a procedure, not an observation. The first real
-  deployment must be smoke tested with
-  `services/api/scripts/smoke.ts` before anything is called verified.
-- The rewrites in `services/api/vercel.json` are unexercised by a real Vercel
-  deployment. If one misbehaves, the `/api/...` function paths still work and
-  the router accepts both forms, so the fallback is a base-URL change.
+- The deployment built, but nothing has ever called it. Runtime behaviour,
+  the rewrites, and the response headers are unobserved in production. The
+  smoke script must run against the preview before anything is called verified.
+- If a rewrite misbehaves, the `/api/...` function paths still work and the
+  router accepts both forms, so the fallback is a base-URL change rather than a
+  code change.
+- `PUBLIC_DATA_SERVICE_KEY` is unset on the project, so the deployment
+  currently answers `503 BLOCKED_BY_CREDENTIALS` on every TAGO-backed endpoint.
+  That is the designed unconfigured state and is what the smoke script will
+  report until the key is added.
 
-**Next action.** Finish the API project in Vercel per
-`docs/PRODUCTION_TRANSIT_API.md` §Deploying, run the smoke script against the
-preview and then the production alias, and record the production alias in the
-base URL table.
+**Next action.** Run
+`node --experimental-strip-types services/api/scripts/smoke.ts https://tapso-p3222zyfc-club-paradiso.vercel.app`
+against the existing preview (expect `BLOCKED_BY_CREDENTIALS` on the four TAGO
+reads and passes everywhere else), then add the key, merge, smoke the production
+alias, and record it in the base URL table.

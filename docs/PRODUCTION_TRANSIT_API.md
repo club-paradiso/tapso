@@ -257,23 +257,28 @@ else: static output directory, function bundling, the public path rewrites,
 security headers, silent GitHub comments, and an `ignoreCommand` that skips
 builds for commits that do not touch `services/api`.
 
-First-time setup, once per project:
+The project is `tapso-api` (`prj_XTimnEWdrhaDMSJfgELHzQAo3Nn2`) in the
+`club-paradiso` team. `VERIFIED` on 2026-09-12: it is linked to
+`club-paradiso/tapso`, its Root Directory resolves to `services/api` — the
+`ignoreCommand` from `services/api/vercel.json` ran and was evaluated against
+that directory — and a preview deployment of this branch reached
+`success` / *Deployment has completed*.
 
-1. Create or open the Vercel project (`tapso-api` already exists in the
-   `club-paradiso` team as `prj_XTimnEWdrhaDMSJfgELHzQAo3Nn2`).
-2. Settings → Git: connect `club-paradiso/tapso`.
-3. Settings → Build & Deployment: set **Root Directory** to `services/api`.
-   Leave the framework preset as Other; `vercel.json` overrides the rest.
-4. Settings → Environment Variables: add `PUBLIC_DATA_SERVICE_KEY` (Decoding
+Remaining first-time setup:
+
+1. Settings → Environment Variables: add `PUBLIC_DATA_SERVICE_KEY` (Decoding
    key) for Production. Add it for Preview only if preview deployments must
-   reach live data.
-5. Settings → Deployment Protection: production must be publicly reachable for
+   reach live data. Until it is set, every TAGO-backed endpoint answers
+   `503 BLOCKED_BY_CREDENTIALS` and `/health` reports
+   `liveTransitConfigured: false`.
+2. Settings → Deployment Protection: production must be publicly reachable for
    the iOS client. Preview may stay protected.
-6. Push to a branch for a preview deployment; merge to `main` for production.
-7. Record the production alias from Settings → Domains and put it in the base
+3. Merge to `main` for the first production deployment.
+4. Record the production alias from Settings → Domains and put it in the base
    URL table above.
 
-There is no separate deploy command. Merging to `main` is the production deploy.
+There is no separate deploy command. Pushing a branch produces a preview and
+merging to `main` is the production deploy.
 
 ### Smoke test
 
@@ -305,9 +310,18 @@ converted into a pass. It exits non-zero only on a real failure.
 
 ## Limitations
 
-- `UNVERIFIED`: no deployment of this service has been observed. The session
-  that wrote it could not reach `*.vercel.app` or read the Vercel project, so
-  every production claim here is a procedure, not an observation.
+- `VERIFIED`: the `tapso-api` project builds and deploys this repository from
+  Root Directory `services/api`. A preview deployment of the Task A branch
+  completed successfully, which proves the functions compile and bundle, the
+  `.ts` import specifiers resolve, and `vercel.json` is accepted.
+- `UNVERIFIED`: **no HTTP response from any deployment has been observed.** The
+  authoring session's egress policy denied every `*.vercel.app` host and its
+  Vercel authorization could not read this project, so the rewrites, the
+  response headers, and the deployed runtime behaviour have never been exercised
+  over the network. Run the smoke script before treating any of that as
+  verified.
+- `UNVERIFIED`: no production deployment exists yet; `main` has not carried this
+  code.
 - `IMPLEMENTED`: the Vercel Functions adapter, the rewrites, and the header and
   cache policy are covered by deterministic tests and by an end-to-end run of
   the same handler over real HTTP through the local Node adapter.
