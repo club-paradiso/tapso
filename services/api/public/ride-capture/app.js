@@ -14,18 +14,23 @@ import {
   MIN_INTERVAL_MS,
   assessRouteCompatibility,
   captureFileStem,
+  compareVariants,
   createCaptureHeader,
   createCaptureSession,
   forwardStops,
   duplicateStopNames,
+  groupVariantsByNumber,
   historyEntry,
   maskVehicleIds,
   newCaptureId,
+  normalizeRouteNumber,
   normalizeTopology,
   reachableDestinations,
   resumeCaptureSession,
+  routeChoiceRows,
   searchStops,
   stopsBetween,
+  tierRouteMatches,
   verifyTopology,
 } from "./capture-core.js";
 
@@ -36,13 +41,15 @@ const MAX_ANALYZE_BYTES = 3_500_000;
 const MARK_WINDOW = 5;
 
 const el = (id) => document.getElementById(id);
-const SCREENS = ["home", "directions", "boarding", "destination", "ready", "vehicle", "riding", "finish", "history"];
+const SCREENS = ["home", "directions", "variants", "boarding", "destination", "ready", "vehicle", "riding", "finish", "history"];
 
 const state = {
   cityCode: "39",
   intervalMs: DEFAULT_INTERVAL_MS,
-  routeNo: "",
-  variants: [],
+  tiers: { query: "", family: "", exact: [], related: [], other: [] },
+  group: undefined,
+  /** Stop counts already looked up, keyed by routeId. Facts, so they keep. */
+  stopDetails: new Map(),
   route: undefined,
   stops: [],
   topology: undefined,
@@ -383,23 +390,27 @@ async function ensureUnlocked(reason) {
 /* --------------------------------------------------------------- route search */
 
 async function searchRoutes() {
-  const routeNo = el("route-no").value.trim();
+  // What a person types and what the provider stores differ only in the
+  // writing: spacing, a spoken "번", a dash from a different keyboard.
+  const query = normalizeRouteNumber(el("route-no").value);
   state.cityCode = el("city-code").value.trim() || "39";
-  if (!routeNo) {
+  if (!query) {
     alertBox("home-alert", "버스 번호를 입력하라");
     return;
   }
   alertBox("home-alert", "");
   el("search-routes").disabled = true;
   try {
-    const result = await api.routes(state.cityCode, routeNo);
-    state.routeNo = routeNo;
-    state.variants = result.items ?? [];
-    if (state.variants.length === 0) {
-      alertBox("home-alert", `${routeNo}번으로 등록된 노선이 없다. 번호를 다시 확인하라.`);
+    const result = await api.routes(state.cityCode, query);
+    const variants = result.items ?? [];
+    if (variants.length === 0) {
+      alertBox("home-alert", `${query}번으로 등록된 노선이 없다. 번호를 다시 확인하라.`);
       return;
     }
-    renderDirections(`${routeNo}번`);
+    // The provider answers a number search with the whole family and then some.
+    // Sorting that out is this screen's job, not the operator's.
+    state.tiers = tierRouteMatches(variants, query);
+    renderDirections(`${query}번`);
     show("directions");
   } catch (error) {
     alertBox("home-alert", error.message, "bad");
@@ -419,8 +430,9 @@ async function browseCatalog() {
       return;
     }
     alertBox("home-alert", "");
-    state.variants = items;
-    state.routeNo = "";
+    // No number was asked for, so nothing is more exact than anything else:
+    // the catalog is listed as the provider gave it.
+    state.tiers = tierRouteMatches(items, "");
     renderDirections(`전체 ${items.length}개 노선`);
     show("directions");
   } catch {
@@ -432,58 +444,224 @@ async function browseCatalog() {
   }
 }
 
+/**
+ * The number that was asked for, first and alone; everything the provider sent
+ * along with it, kept and one tap away. Nothing is merged and nothing is
+ * dropped — the operator still ends on one official route.
+ */
 function renderDirections(title) {
   el("dir-title").textContent = title;
   alertBox("dir-alert", "");
+  const tiers = state.tiers;
+  const catalog = tiers.query === "";
+  const primary = catalog ? tiers.other : tiers.exact;
   const list = el("direction-list");
   list.replaceChildren();
 
-  // Several official routes can share a number. They are never collapsed: the
-  // operator picks the exact one, because that is what identity means here.
-  for (const variant of state.variants) {
-    list.append(card("", (button) => {
-      const number = document.createElement("div");
-      number.className = "num";
-      number.textContent = variant.routeNumber;
-      const endpoints = document.createElement("div");
-      endpoints.className = "endpoints";
-      endpoints.append(
-        document.createTextNode(variant.startStopName ?? "기점"),
-        Object.assign(document.createElement("div"), { className: "arrow", textContent: "↓" }),
-        document.createTextNode(variant.endStopName ?? "종점"),
-      );
-      button.append(number, endpoints);
-      if (variant.routeType) {
-        const aside = document.createElement("div");
-        aside.className = "aside";
-        aside.textContent = variant.routeType;
-        button.append(aside);
-      }
-      button.addEventListener("click", () => chooseVariant(variant));
-    }));
+  el("dir-heading").textContent = catalog || primary.length === 0
+    ? "어느 방향인가요?"
+    : `${tiers.query}번 · 어느 방향인가요?`;
+
+  if (primary.length === 0) {
+    const empty = document.createElement("p");
+    empty.className = "tier";
+    empty.textContent = `${tiers.query}번과 정확히 같은 노선은 없다. 아래에서 골라라.`;
+    list.append(empty);
+  } else {
+    appendVariantCards(list, primary);
+  }
+
+  // Collapsed by default: they are real routes, but they are not the one that
+  // was asked for, and mixing them in is what made this screen unreadable.
+  fillTier("dir-related", "관련 노선 보기", catalog ? [] : tiers.related, primary.length === 0);
+  fillTier("dir-other", "그 외 검색 결과", catalog ? [] : tiers.other,
+    primary.length === 0 && tiers.related.length === 0);
+}
+
+function fillTier(sectionId, label, variants, openByDefault) {
+  const section = el(sectionId);
+  const list = section.querySelector("div");
+  section.hidden = variants.length === 0;
+  section.open = openByDefault && variants.length > 0;
+  section.querySelector("summary").textContent = `${label} (${variants.length})`;
+  list.replaceChildren();
+  if (variants.length === 0) return;
+  for (const group of groupVariantsByNumber(variants)) {
+    const heading = document.createElement("p");
+    heading.className = "tier";
+    heading.textContent = `${group.routeNumber}번`;
+    list.append(heading);
+    appendVariantCards(list, group.variants);
   }
 }
 
-async function chooseVariant(variant) {
+/**
+ * Variants laid out so they can be read. Grouping is presentation and nothing
+ * else: a group of one is shown as that one route, so the ordinary two-way
+ * route costs exactly the taps it always did.
+ */
+function appendVariantCards(parent, variants) {
+  for (const row of routeChoiceRows(variants)) {
+    parent.append(row.kind === "group" ? groupCard(row.group) : variantCard(row.variant));
+  }
+}
+
+function variantCard(variant, from = "directions") {
+  return card("", (button) => {
+    const number = document.createElement("div");
+    number.className = "num";
+    number.textContent = variant.routeNumber;
+    const endpoints = document.createElement("div");
+    endpoints.className = "endpoints";
+    endpoints.append(
+      document.createTextNode(variant.startStopName ?? "기점"),
+      Object.assign(document.createElement("div"), { className: "arrow", textContent: "↓" }),
+      document.createTextNode(variant.endStopName ?? "종점"),
+    );
+    button.append(number, endpoints);
+    if (variant.routeType) {
+      const aside = document.createElement("div");
+      aside.className = "aside";
+      aside.textContent = variant.routeType;
+      button.append(aside);
+    }
+    // The official identity, always in view: it is what the evidence will
+    // carry, and it is the only thing that tells two look-alike routes apart.
+    const rid = document.createElement("div");
+    rid.className = "rid";
+    rid.textContent = variant.routeId;
+    button.append(rid);
+    button.addEventListener("click", () => chooseVariant(variant, from));
+  });
+}
+
+function groupCard(group) {
+  return card("group", (button) => {
+    const number = document.createElement("div");
+    number.className = "num";
+    number.textContent = group.variants[0].routeNumber;
+    const endpoints = document.createElement("div");
+    endpoints.className = "endpoints";
+    endpoints.append(
+      document.createTextNode(group.startStopName),
+      Object.assign(document.createElement("div"), { className: "arrow", textContent: "↓" }),
+      document.createTextNode(group.endStopName),
+    );
+    const count = document.createElement("span");
+    count.className = "count";
+    count.textContent = `운행 구간 ${group.variantCount}개 · 눌러서 고르기`;
+    button.append(number, endpoints, count);
+    button.addEventListener("click", () => openGroup(group));
+  });
+}
+
+/* ------------------------------------------------------- one endpoint group */
+
+function openGroup(group) {
+  state.group = group;
+  el("variants-title").textContent = `${group.variants[0].routeNumber}번`;
+  renderVariants();
+  show("variants");
+}
+
+function renderVariants() {
+  const group = state.group;
+  alertBox("variants-alert", "");
+  el("variants-list").replaceChildren();
+  const comparison = compareVariants(group.variants, state.stopDetails);
+  group.variants.forEach((variant, index) => {
+    el("variants-list").append(identityCard(variant, comparison.rows[index]));
+  });
+  // Same two ends, different official routes. Which one is a matter of fact,
+  // so the screen says what is known and lets the operator decide; it never
+  // picks one because the endpoints happen to read the same.
+  el("variants-note").textContent = comparison.distinguishable
+    ? `${group.label} · 운행 내용이 서로 다르다. 탈 노선을 골라라.`
+    : `${group.label} · 같은 구간을 오가는 별개의 공식 노선이다. 하나를 골라야 한다.`;
+  el("compare-variants").hidden = group.variants.every((variant) => state.stopDetails.has(variant.routeId));
+}
+
+/**
+ * One route inside a group. The number and the two ends are the same on every
+ * card here and are already in the heading, so each card leads with what
+ * actually differs — and when nothing has been measured yet, that is the
+ * official id, which is the honest answer rather than a guess.
+ */
+function identityCard(variant, row) {
+  return card("ident", (button) => {
+    const lead = document.createElement("div");
+    lead.className = row.measured ? "lead" : "lead id";
+    lead.textContent = row.measured ? row.parts[0] : variant.routeId;
+    button.append(lead);
+
+    const rest = [...row.parts.slice(1), variant.routeType].filter(Boolean);
+    if (rest.length > 0) {
+      const sub = document.createElement("div");
+      sub.className = "sub";
+      sub.textContent = rest.join(" · ");
+      button.append(sub);
+    }
+    if (row.measured) {
+      const rid = document.createElement("div");
+      rid.className = "rid";
+      rid.textContent = variant.routeId;
+      button.append(rid);
+    }
+    button.addEventListener("click", () => chooseVariant(variant, "variants"));
+  });
+}
+
+/** Stop counts, fetched only when asked for, only for this group. */
+async function compareGroupVariants() {
+  const group = state.group;
+  el("compare-variants").disabled = true;
+  alertBox("variants-alert", "정류장 수를 확인하는 중…");
+  let failed = 0;
+  for (const variant of group.variants) {
+    if (state.stopDetails.has(variant.routeId)) continue;
+    try {
+      const result = await api.stops(variant.routeId, state.cityCode);
+      state.stopDetails.set(variant.routeId, {
+        stopCount: (result.items ?? []).length,
+        topologyKind: result.meta?.topology?.kind,
+      });
+    } catch {
+      // A lookup that did not answer stays blank. An unknown is not a zero.
+      failed += 1;
+    }
+  }
+  el("compare-variants").disabled = false;
+  renderVariants();
+  if (failed > 0) alertBox("variants-alert", `${failed}개 노선의 정류장 수를 확인하지 못했다.`, "warn");
+}
+
+async function chooseVariant(variant, from = "directions") {
+  const alertId = from === "variants" ? "variants-alert" : "dir-alert";
   state.route = variant;
-  alertBox("dir-alert", "정류장 순서를 불러오는 중…");
+  alertBox(alertId, "정류장 순서를 불러오는 중…");
   try {
     const result = await api.stops(variant.routeId, state.cityCode);
     state.stops = result.items ?? [];
     state.topology = result.meta?.topology;
+    state.stopDetails.set(variant.routeId, {
+      stopCount: state.stops.length,
+      topologyKind: state.topology?.kind,
+    });
     state.boarding = undefined;
     state.destination = undefined;
     if (state.stops.length === 0) {
-      alertBox("dir-alert", "이 노선의 정류장 목록이 비어 있다. 다른 방향을 보라.", "bad");
+      alertBox(alertId, "이 노선의 정류장 목록이 비어 있다. 다른 방향을 보라.", "bad");
       return;
     }
-    alertBox("dir-alert", "");
+    alertBox(alertId, "");
+    // Back from here returns to whichever list the route was chosen from.
+    el("screen-boarding").querySelector("[data-back]").dataset.back = from;
     el("boarding-title").textContent = `${variant.routeNumber}번 · 타는 곳`;
     el("boarding-search").value = "";
     renderBoardingList();
     show("boarding");
   } catch (error) {
-    alertBox("dir-alert", error.message, "bad");
+    alertBox(alertId, error.message, "bad");
   }
 }
 
@@ -1115,6 +1293,7 @@ async function recoverIfPossible() {
 
 function wire() {
   el("search-routes").addEventListener("click", searchRoutes);
+  el("compare-variants").addEventListener("click", compareGroupVariants);
   el("route-no").addEventListener("keydown", (event) => {
     if (event.key === "Enter") void searchRoutes();
   });
