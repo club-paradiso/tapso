@@ -74,9 +74,11 @@ The API-data and HTTP integration gates are complete for the full-length Route 3
 
 1. Run the API locally with the private service key and resolve `cityCode` through `/v1/cities`. A deployed API is not required; the capture tool drives `TagoTransitProvider` directly.
 2. Choose explicit boarding and destination stop sequences from the verified direction-specific topology.
-3. During the ride, run `scripts/ride-capture/capture.ts` (see `exec-plans/RIDE_CAPTURE.md`). It stores bounded TAGO snapshots only under ignored `work/rides/`, records the boarded vehicle locally from the `b <vehicleno>` command, and accepts `p <stop-seq>` markers for physically passed stops.
-4. Run `scripts/ride-capture/analyze.ts` on the capture. The sanitized report compares the tracked vehicle's `nodeord` progression, content-change age, gaps, marker lag, and arrival against the rider markers, using per-run pseudonyms instead of vehicle numbers.
-5. Define and test a TAGO freshness rule from `freshnessEvidence` and `tracked.markerComparisons` before enabling journey-session matching or progress.
+3. During the ride, run `scripts/ride-capture/capture.ts` (see `exec-plans/RIDE_CAPTURE.md`). It prints the stop list for the chosen segment before its first poll, stores bounded TAGO snapshots only under ignored `work/rides/`, records the boarded vehicle from the `b` command after cross-checking what was typed against the vehicles the route is currently reporting, and accepts `p <stop-seq>` markers for physically passed stops. Aim for eight to ten `p` markers placed only where the bus certainly stopped.
+4. Run `scripts/ride-capture/analyze.ts` on the capture. The sanitized report compares the tracked vehicle's `nodeord` progression, content-change cadence, coordinate movement, gaps, marker lag, and arrival against the rider markers, using per-run pseudonyms instead of vehicle numbers, and reports `INSUFFICIENT_EVIDENCE` rather than publishing a distribution it does not have the samples for.
+5. Define and test a TAGO freshness rule from `freshnessEvidence` and `tracked.markerComparisons` before enabling journey-session matching or progress. That decision belongs to Task C: the ride produces observed distributions, not a threshold.
+
+Status: `READY_FOR_RIDE` as of 2026-09-12. Steps 1 and 2 are reproducible today; steps 3 to 5 wait on one physical ride. No real ride has been captured, so nothing in this document is real-ride evidence.
 
 ## Acceptance gate for broad real mode
 

@@ -2,8 +2,17 @@ import test from "node:test";
 import assert from "node:assert/strict";
 import type { RouteRequest, StopOnRoute, VehicleObservation } from "../src/domain.ts";
 import { ProviderResponseError } from "../src/provider.ts";
-import { analyzeRideCapture, RIDE_CAPTURE_SCHEMA_VERSION, type RideCapture, type RideSnapshot } from "../src/rideCapture.ts";
-import { applyCommand, startRideCapture } from "../src/rideCaptureRunner.ts";
+import { analyzeRideCapture, RIDE_CAPTURE_SCHEMA_VERSION, summarize, type RideCapture, type RideSnapshot } from "../src/rideCapture.ts";
+import {
+  applyCommand,
+  describeCurrentVehicles,
+  describeRideStart,
+  describeStatus,
+  describeStopWindow,
+  maskVehicleId,
+  resolveVehicleSelection,
+  startRideCapture,
+} from "../src/rideCaptureRunner.ts";
 
 // Synthetic fixture: eight-stop route, ride from stop 3 to stop 7. Vehicle numbers are synthetic.
 const base = Date.parse("2026-09-12T09:00:00+09:00");
@@ -243,4 +252,198 @@ test("rider commands validate stop sequences and record markers", () => {
     ["note", undefined],
   ]);
   assert.equal(log[0], "marker passed_stop @5");
+});
+
+test("summarize reports the quartiles Task C needs, not just the median", () => {
+  const summary = summarize([1, 2, 3, 4, 5, 6, 7, 8, 9, 10]);
+  assert.equal(summary.count, 10);
+  assert.equal(summary.min, 1);
+  assert.equal(summary.median, 5.5);
+  assert.equal(summary.p75, 7.75);
+  assert.equal(summary.p90, 9.1);
+  assert.equal(summary.max, 10);
+  assert.deepEqual(summarize([]), { count: 0 });
+});
+
+test("vehicle selection resolves an exact number, a unique suffix, and refuses an ambiguous one", () => {
+  const present = [observation("제주79자1234", 0, 4), observation("제주79자5234", 0, 9), observation("제주80자7777", 0, 2)];
+  assert.deepEqual(
+    { ...resolveVehicleSelection(present, "제주79자1234"), observation: undefined },
+    { status: "exact", vehicleId: "제주79자1234", observation: undefined },
+  );
+  assert.equal(resolveVehicleSelection(present, "7777").status, "suffix");
+  assert.equal(resolveVehicleSelection(present, "1234").vehicleId, "제주79자1234");
+  // Both 1234 and 5234 end in 234, so the tool must not pick one.
+  const ambiguous = resolveVehicleSelection(present, "234");
+  assert.equal(ambiguous.status, "ambiguous");
+  assert.deepEqual(ambiguous.matches, ["제주79자1234", "제주79자5234"]);
+  assert.equal(resolveVehicleSelection(present, "0000").status, "absent");
+  assert.equal(resolveVehicleSelection([], "1234").status, "absent");
+  assert.equal(maskVehicleId("제주79자1234"), "…1234");
+  assert.equal(maskVehicleId("123"), "123");
+});
+
+test("boarding cross-checks the typed number against the live snapshot", () => {
+  const now = () => new Date(base);
+  const ride = capture([
+    { capturedAt: at(0), vehicles: [observation("제주79자1234", 0, 3), observation("제주79자5234", 0, 6)] },
+  ], { boardedVehicleId: undefined });
+
+  const log: string[] = [];
+  assert.equal(applyCommand(ride, "b 1234", now, (line) => log.push(line)), true);
+  assert.equal(ride.boardedVehicleId, "제주79자1234");
+  assert.ok(log.some((line) => line.includes("…1234") && line.includes("confirm this is the bus")));
+  assert.equal(log.some((line) => line.includes("제주79자1234")), false, "the full plate must not be printed");
+
+  assert.throws(() => applyCommand(ride, "b 234", now, () => {}), /matches 2 vehicles/);
+  assert.equal(ride.boardedVehicleId, "제주79자1234", "an ambiguous entry must not change the selection");
+
+  const warnings: string[] = [];
+  assert.equal(applyCommand(ride, "b 제주99자0001", now, (line) => warnings.push(line)), true);
+  assert.equal(ride.boardedVehicleId, "제주99자0001", "an unmatched number is still honoured verbatim");
+  assert.ok(warnings.some((line) => line.startsWith("WARNING:")));
+  assert.ok(warnings.some((line) => line.includes("replacing the previously recorded vehicle")));
+});
+
+test("the rider briefing names the stops instead of only numbering them", () => {
+  const ride = capture([]);
+  const briefing = describeRideStart(ride, { maxSnapshots: 720, maxDurationMs: 90 * 60_000 });
+  assert.ok(briefing.includes("route SYN-ROUTE · city 999 · 8 stops"));
+  assert.ok(briefing.includes("direction: Synthetic 1 → Synthetic 8"));
+  assert.ok(briefing.includes("boarding      3  Synthetic 3"));
+  assert.ok(briefing.includes("destination   7  Synthetic 7"));
+  assert.ok(briefing.includes("limits: 720 snapshots, 90 minutes"));
+
+  const window = describeStopWindow(ride);
+  assert.deepEqual(window.split("\n").map((line) => line.trim().split(/\s+/)[0]), ["3", "4", "5", "6", "7"]);
+  assert.ok(window.includes("← board here"));
+  assert.ok(window.includes("← get off here"));
+});
+
+test("status and vehicle listings stay readable and masked mid-ride", () => {
+  const ride = capture([
+    { capturedAt: at(0), vehicles: [observation("제주79자9999", 0, 4), observation("제주79자5678", 0, 6)] },
+    { capturedAt: at(5), vehicles: [], error: "TAGO request failed or timed out" },
+  ]);
+  ride.markers.push({ at: at(3), kind: "passed_stop", stopSequence: 4 });
+
+  const vehicles = describeCurrentVehicles(ride);
+  assert.ok(vehicles.includes("…9999"));
+  assert.equal(vehicles.includes("제주79자5678"), false);
+  assert.ok(vehicles.includes("← tracked"), "the boarded vehicle is marked in the list");
+
+  const status = describeStatus(ride, new Date(base + 125_000));
+  assert.ok(status.startsWith("[02:05] snapshots 2 (1 failed)"));
+  assert.ok(status.includes("markers 1"));
+  assert.ok(status.includes("tracked …9999 seq 4/7"));
+  assert.ok(status.includes("last marker passed_stop @4"));
+
+  assert.equal(describeCurrentVehicles(capture([])), "no vehicles reported on this route in the last snapshot");
+});
+
+test("reports presence, advance distribution, and how GPS tracks nodeord", () => {
+  const tracked = "제주79자9999";
+  const report = analyzeRideCapture(capture([
+    { capturedAt: at(0), vehicles: [observation(tracked, 0, 3, 33.5)] },
+    { capturedAt: at(5), vehicles: [observation(tracked, 5, 3, 33.51)] },  // moved, same stop
+    { capturedAt: at(10), vehicles: [observation(tracked, 10, 4, 33.51)] }, // new stop, same point
+    { capturedAt: at(15), vehicles: [] },                                   // absent
+    { capturedAt: at(20), vehicles: [observation(tracked, 20, 6, 33.52)] }, // skipped a stop
+    { capturedAt: at(25), vehicles: [observation(tracked, 25, 7, 33.53)] },
+  ]));
+
+  const timeline = report.vehicles[0]!;
+  assert.equal(timeline.snapshotsSeen, 5);
+  assert.equal(timeline.presenceRatio, 0.83);
+  assert.deepEqual(timeline.sequenceAdvances, { count: 3, min: 1, median: 1, p75: 1.5, p90: 1.8, p95: 1.9, max: 2 });
+  assert.equal(timeline.largestSequenceJump, 2);
+  assert.equal(timeline.largestSequenceDecrease, 0);
+  assert.deepEqual(timeline.gpsEvidence, {
+    coordinateSamples: 5,
+    coordinateChanges: 3,
+    coordinateChangeWithoutSequenceChange: 1,
+    sequenceChangeWithoutCoordinateChange: 1,
+  });
+  assert.equal(report.tracked.presenceRatio, 0.83);
+  assert.equal(report.configuredIntervalSeconds, 5);
+  assert.equal(report.freshnessEvidence.sequenceAdvanceStops.max, 2);
+});
+
+test("counts what makes a capture file itself untrustworthy", () => {
+  const tracked = "제주79자9999";
+  const duplicated = observation(tracked, 10, 4);
+  const report = analyzeRideCapture(capture([
+    { capturedAt: at(10), vehicles: [duplicated, duplicated, { ...observation("제주79자1111", 10, 2), routeId: "OTHER-ROUTE" }] },
+    { capturedAt: at(5), vehicles: [observation(tracked, 5, 3)] },
+    { capturedAt: at(5), vehicles: [observation(tracked, 5, 3)] },
+  ], {
+    markers: [
+      { at: at(30), kind: "passed_stop", stopSequence: 5 },
+      { at: at(20), kind: "passed_stop", stopSequence: 4 },
+      { at: at(900), kind: "note", note: "after the capture ended" },
+    ],
+  }));
+
+  assert.deepEqual(report.integrity, {
+    snapshotsOutOfOrder: 1,
+    duplicateSnapshotTimestamps: 1,
+    duplicateVehicleObservations: 1,
+    markersOutOfOrder: 1,
+    markersOutsideCaptureWindow: 1,
+    foreignRouteObservations: 1,
+  });
+  for (const fragment of ["out of chronological order", "share a capture timestamp", "belong to another route"]) {
+    assert.ok(report.warnings.some((warning) => warning.includes(fragment)), fragment);
+  }
+});
+
+test("says INSUFFICIENT_EVIDENCE instead of inventing a distribution", () => {
+  const thin = analyzeRideCapture(capture([
+    { capturedAt: at(0), vehicles: [observation("제주79자9999", 0, 3)] },
+    { capturedAt: at(5), vehicles: [observation("제주79자9999", 5, 4)] },
+  ]));
+  assert.equal(thin.evidenceCompleteness.verdict, "INSUFFICIENT_EVIDENCE");
+  assert.deepEqual(thin.evidenceCompleteness.unmetRequired, [
+    "successfulSnapshots",
+    "trackedSequenceProgression",
+    "contentChangeSamples",
+    "markerLagSamples",
+  ]);
+  assert.equal(thin.evidenceCompleteness.criteria.find((c) => c.name === "trackedVehiclePresent")!.met, true);
+
+  // Coordinates drift every poll, as they do on a moving bus, so the cadence
+  // distribution has samples even while nodeord sits on one stop.
+  const snapshots: RideSnapshot[] = Array.from({ length: 24 }, (_, index) => ({
+    capturedAt: at(index * 5),
+    vehicles: [observation("제주79자9999", index * 5, Math.min(7, 3 + Math.floor(index / 4)), 33.5 + index * 0.001)],
+  }));
+  const rich = analyzeRideCapture(capture(snapshots, {
+    endedAt: at(24 * 5),
+    markers: [
+      { at: at(10), kind: "boarded", stopSequence: 3 },
+      { at: at(20), kind: "passed_stop", stopSequence: 4 },
+      { at: at(40), kind: "passed_stop", stopSequence: 5 },
+      { at: at(60), kind: "passed_stop", stopSequence: 6 },
+      { at: at(80), kind: "alighted", stopSequence: 7 },
+    ],
+  }));
+  assert.equal(rich.evidenceCompleteness.verdict, "SUFFICIENT");
+  assert.deepEqual(rich.evidenceCompleteness.unmetRequired, []);
+  assert.equal(rich.freshnessEvidence.markerLagSeconds.count, 4);
+  assert.ok(rich.freshnessEvidence.markerLagSeconds.p90 !== undefined);
+});
+
+test("an interrupted capture still analyses, and the boarded number never reaches the report", () => {
+  const interrupted = capture([
+    { capturedAt: at(0), vehicles: [observation("제주79자1111", 0, 4)] },
+    { capturedAt: at(30), vehicles: [observation("제주79자1111", 30, 5)] },
+  ], { endedAt: undefined, boardedVehicleId: "제주79자9999" });
+
+  const report = analyzeRideCapture(interrupted);
+  assert.equal(report.endedAt, undefined);
+  assert.equal(report.durationSeconds, 30, "duration falls back to the last stored snapshot");
+  assert.equal(report.tracked.present, false);
+  assert.equal(JSON.stringify(report).includes("제주79자9999"), false);
+  assert.equal(JSON.stringify(report).includes("제주79자1111"), false);
+  assert.equal(report.evidenceCompleteness.verdict, "INSUFFICIENT_EVIDENCE");
 });
