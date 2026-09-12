@@ -1,0 +1,37 @@
+<!doctype html>
+<html lang="en">
+  <head>
+    <meta charset="utf-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1" />
+    <meta name="robots" content="noindex" />
+    <title>TAPSO Transit API</title>
+    <style>
+      :root { color-scheme: light dark; }
+      body { margin: 0; padding: 2rem 1rem; font: 15px/1.6 ui-sans-serif, system-ui, sans-serif; }
+      main { max-width: 34rem; margin: 0 auto; }
+      code { font-family: ui-monospace, SFMono-Regular, Menlo, monospace; }
+      ul { padding-left: 1.2rem; }
+    </style>
+  </head>
+  <body>
+    <main>
+      <h1>TAPSO Transit API</h1>
+      <p>
+        Server-side boundary between TAPSO clients and the official TAGO bus route and
+        location services. This host serves JSON only; the TAPSO product site lives
+        elsewhere.
+      </p>
+      <ul>
+        <li><code>GET /health</code></li>
+        <li><code>GET /v1/cities</code></li>
+        <li><code>GET /v1/routes?cityCode=&amp;routeNo=</code></li>
+        <li><code>GET /v1/stops?routeId=&amp;cityCode=</code></li>
+        <li><code>GET /v1/vehicles?routeId=&amp;cityCode=</code></li>
+      </ul>
+      <p>
+        Live vehicle snapshots carry no source observation timestamp, so automatic
+        vehicle matching stays withheld and freshness-dependent behavior fails closed.
+      </p>
+    </main>
+  </body>
+</html>

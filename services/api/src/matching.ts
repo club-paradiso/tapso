@@ -22,7 +22,7 @@ export function matchVehicle(request: MatchRequest): MatchResult {
     };
   }
 
-  const best = eligible[0];
+  const best = eligible[0]!;
   const runnerUp = eligible[1];
   if (runnerUp && best.score - runnerUp.score < AMBIGUITY_MARGIN) {
     return {

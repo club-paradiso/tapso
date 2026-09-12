@@ -1,5 +1,6 @@
 import type { RouteRequest, StopOnRoute, VehicleObservation } from "./domain.ts";
 import type { TransitProvider } from "./provider.ts";
+import { TtlCache, type CachedResult } from "./ttlCache.ts";
 
 export const DEFAULT_STOP_CACHE_TTL_MS = 6 * 60 * 60 * 1_000;
 export const DEFAULT_VEHICLE_CACHE_TTL_MS = 20_000;
@@ -10,54 +11,48 @@ export interface CachedTransitProviderOptions {
   now?: () => number;
 }
 
-type CacheEntry<T> = {
-  expiresAt: number;
-  value: T;
-};
-
 /**
  * Shares one successful upstream result per route for a short window and
  * coalesces concurrent misses. Failed upstream calls are never cached.
+ *
+ * In a serverless deployment this cache is per warm instance, so the shared
+ * layer that actually bounds upstream fan-out is the CDN `s-maxage` the API
+ * sets from the same policy. See `docs/PRODUCTION_TRANSIT_API.md`.
  */
 export class CachedTransitProvider implements TransitProvider {
   readonly policy: { stopTtlMs: number; vehicleTtlMs: number };
 
   private readonly upstream: TransitProvider;
-  private readonly now: () => number;
-  private readonly stopCache = new Map<string, CacheEntry<StopOnRoute[]>>();
-  private readonly vehicleCache = new Map<string, CacheEntry<VehicleObservation[]>>();
-  private readonly stopInflight = new Map<string, Promise<StopOnRoute[]>>();
-  private readonly vehicleInflight = new Map<string, Promise<VehicleObservation[]>>();
+  private readonly stopCache: TtlCache<StopOnRoute[]>;
+  private readonly vehicleCache: TtlCache<VehicleObservation[]>;
 
   constructor(upstream: TransitProvider, options: CachedTransitProviderOptions = {}) {
     this.upstream = upstream;
-    this.now = options.now ?? Date.now;
-    this.policy = {
-      stopTtlMs: normalizeTtl(options.stopTtlMs, DEFAULT_STOP_CACHE_TTL_MS),
-      vehicleTtlMs: normalizeTtl(options.vehicleTtlMs, DEFAULT_VEHICLE_CACHE_TTL_MS),
-    };
+    const stopTtlMs = options.stopTtlMs ?? DEFAULT_STOP_CACHE_TTL_MS;
+    const vehicleTtlMs = options.vehicleTtlMs ?? DEFAULT_VEHICLE_CACHE_TTL_MS;
+    this.stopCache = new TtlCache<StopOnRoute[]>({ ttlMs: stopTtlMs, now: options.now });
+    this.vehicleCache = new TtlCache<VehicleObservation[]>({ ttlMs: vehicleTtlMs, now: options.now });
+    this.policy = { stopTtlMs: this.stopCache.ttlMs, vehicleTtlMs: this.vehicleCache.ttlMs };
   }
 
   async stops(request: RouteRequest): Promise<StopOnRoute[]> {
-    const result = await this.readThrough(
-      routeKey(request),
-      this.stopCache,
-      this.stopInflight,
-      this.policy.stopTtlMs,
-      () => this.upstream.stops(request),
-    );
-    return result.map((item) => ({ ...item }));
+    return (await this.stopsResult(request)).value;
   }
 
   async vehicles(request: RouteRequest): Promise<VehicleObservation[]> {
-    const result = await this.readThrough(
-      routeKey(request),
-      this.vehicleCache,
-      this.vehicleInflight,
-      this.policy.vehicleTtlMs,
-      () => this.upstream.vehicles(request),
-    );
-    return result.map((item) => ({ ...item }));
+    return (await this.vehiclesResult(request)).value;
+  }
+
+  /** Same read as `stops`, plus the cache outcome for structured logging. */
+  async stopsResult(request: RouteRequest): Promise<CachedResult<StopOnRoute[]>> {
+    const result = await this.stopCache.readThrough(routeKey(request), () => this.upstream.stops(request));
+    return { value: result.value.map((item) => ({ ...item })), cache: result.cache };
+  }
+
+  /** Same read as `vehicles`, plus the cache outcome for structured logging. */
+  async vehiclesResult(request: RouteRequest): Promise<CachedResult<VehicleObservation[]>> {
+    const result = await this.vehicleCache.readThrough(routeKey(request), () => this.upstream.vehicles(request));
+    return { value: result.value.map((item) => ({ ...item })), cache: result.cache };
   }
 
   clear(request?: RouteRequest): void {
@@ -70,49 +65,8 @@ export class CachedTransitProvider implements TransitProvider {
     this.stopCache.delete(key);
     this.vehicleCache.delete(key);
   }
-
-  private async readThrough<T>(
-    key: string,
-    cache: Map<string, CacheEntry<T>>,
-    inflight: Map<string, Promise<T>>,
-    ttlMs: number,
-    load: () => Promise<T>,
-  ): Promise<T> {
-    const now = this.now();
-    const cached = cache.get(key);
-    if (cached && cached.expiresAt > now) return cached.value;
-
-    const pending = inflight.get(key);
-    if (pending) return pending;
-
-    const promise = load()
-      .then((value) => {
-        cache.set(key, { value, expiresAt: this.now() + ttlMs });
-        this.pruneExpired(cache);
-        return value;
-      })
-      .finally(() => {
-        inflight.delete(key);
-      });
-    inflight.set(key, promise);
-    return promise;
-  }
-
-  private pruneExpired<T>(cache: Map<string, CacheEntry<T>>): void {
-    if (cache.size <= 256) return;
-    const now = this.now();
-    for (const [key, entry] of cache) {
-      if (entry.expiresAt <= now) cache.delete(key);
-    }
-  }
 }
 
 function routeKey(request: RouteRequest): string {
   return `${request.cityCode}:${request.routeId}`;
-}
-
-function normalizeTtl(value: number | undefined, fallback: number): number {
-  if (value === undefined) return fallback;
-  if (!Number.isFinite(value) || value < 0) throw new RangeError("cache TTL must be a non-negative finite number");
-  return value;
 }

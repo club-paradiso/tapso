@@ -1,0 +1,3 @@
+# Neither tests nor local tooling belong in the deployed function bundle.
+test
+scripts
