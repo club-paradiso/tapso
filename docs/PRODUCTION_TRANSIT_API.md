@@ -64,9 +64,11 @@ now needs them, so the decision is revisited here.
 - **Client contract.** iOS gets a base URL that is not the marketing domain, so
   a later move to a custom `api.` host changes one constant instead of a
   deployment topology.
-- **Deploy cadence.** `ignoreCommand` skips builds for commits that do not touch
-  `services/api`, so the API does not redeploy when marketing copy changes, and
-  the marketing site does not redeploy when the API changes.
+- **Deploy cadence.** `ignoreCommand` skips production builds for commits that do
+  not touch `services/api`, so the API does not redeploy when marketing copy
+  changes, and the marketing site does not redeploy when the API changes. It only
+  skips on `main`: a preview must reflect its branch head, and a branch whose API
+  change sits under a later docs commit would otherwise never build.
 
 Rejected: adding a runtime dependency, a database, a queue, or a second hosting
 provider. None of them is needed to answer these reads, and the feature that
