@@ -153,6 +153,10 @@ Other shapes the preflight handles rather than assumes:
 
 - **Several variants on one number** — all are listed with their start and end
   stop names, and the operator picks the exact `routeId`. Nothing is collapsed.
+  Where many variants share both endpoints they are gathered under one heading so
+  the list can be read, but the heading is presentation and nothing else: tapping
+  it opens the official routes behind it, and the choice still ends on a single
+  `routeId`. See *Finding a route without knowing its id*.
 - **Two stops sharing a name** — the picker adds the official stop id to both, so
   the operator chooses the stop and not the word.
 - **Nothing running right now** — the endpoint answered, the route simply has no
@@ -192,8 +196,43 @@ give, not an assumption made here. When it answers, the controller can offer
 by number, which always works. Nothing invents route metadata either way.
 
 Route identity remains `routeId` + `cityCode`, never the number. One number is
-several routes, and the direction cards show each variant's own endpoints so the
-operator picks the exact one.
+several routes, and the direction cards show each variant's own endpoints and its
+`routeId` so the operator picks the exact one.
+
+### What a number search actually answers
+
+The provider matches on the digits. Asking Jeju for `202` comes back with
+thirty-one rows: the eleven official 202s, the branch numbers 202-1 through
+202-4, and routes that merely contain "202". Read as one flat list that is
+unusable, so the screen sorts them into three tiers and says which is which:
+
+| Tier | What it holds | How it is shown |
+| --- | --- | --- |
+| exact | `routeNumber` equal to the query, normalised | first, and alone under the heading |
+| related | the rest of the same family | collapsed, `관련 노선 보기 (N)` |
+| other | everything else the provider sent | collapsed, `그 외 검색 결과 (N)` |
+
+Normalising is only about the writing — spacing, a spoken `번`, a dash from
+another keyboard, letter case. It never alters the number. So `202-1` typed in
+full is an *exact* match for 202-1, not a relative of 202.
+
+A relative has to be reached through an explicit variant token: a dash and a
+number (`202-1`), or a single branch letter after a digit (`202A`). A number that
+merely *begins with* another one is a different route — `2021` is not a branch of
+`202` — and lands in `other`. A prefix test would have folded it into the family,
+which is the mistake the rule exists to prevent.
+
+Within a tier, variants sharing both endpoints are gathered under one heading
+(`제주버스터미널 → 서귀포 · 운행 구간 8개`). A group of one is not a group: it is
+shown as that route, so an ordinary two-way number costs exactly the taps it
+always did. Opening a group lists the official routes inside it, each leading
+with the `routeId` and, once `정류장 수로 비교하기` has been used, its stop count
+and route shape. Those are looked up on request, only for that group — nothing
+is fetched speculatively, and nothing is inferred.
+
+When two routes in a group cannot be told apart by anything measured, the screen
+says so and shows both. Equal endpoints are never grounds for merging two
+`routeId`s, dropping one, or choosing one on the operator's behalf.
 
 ## Every route gets a verdict
 
@@ -233,8 +272,11 @@ it was given; it is not a claim about every route in Jeju.
 1. **어떤 버스를 타나요?** A number, and one button. Recent routes appear
    underneath once there are any; `cityCode` and the poll interval live under
    `고급 · 진단`.
-2. **어느 방향인가요?** Every official variant as a large card — number,
-   origin ↓ destination. The `routeId` is in `세부정보`, not on the card.
+2. **어느 방향인가요?** The number that was asked for, first and alone: every
+   official variant as a large card — number, origin ↓ destination, route type
+   and `routeId`. Branch numbers sit behind `관련 노선 보기`, other search hits
+   behind `그 외 검색 결과`, both collapsed. Variants that share both endpoints
+   are gathered under one heading that opens onto the official routes inside it.
 3. **어디서 타나요? / 어디서 내리나요?** A search field over stop names, filtering
    as you type. Where two stops share a name the official id goes alongside so
    the operator picks the stop and not the word. The destination list offers only

@@ -491,8 +491,7 @@ export function assessRouteCompatibility({ route, stops, topology, vehicleCount,
   const identified = hasStops && list.every((stop) => Boolean(stop.stopId));
   add("정류장 식별자", identified ? "ok" : "fail", identified ? "모두 있음" : "식별자가 없는 정류장이 있다");
 
-  const shapeLabel = shape.kind === "loop" ? "순환" : shape.kind === "repeating" ? "같은 정류장 반복" : "직선";
-  add("노선 구조", shape.kind === "repeating" ? "warn" : "ok", shapeLabel);
+  add("노선 구조", shape.kind === "repeating" ? "warn" : "ok", topologyWord(shape.kind));
 
   // Live vehicles are time-dependent, so a caller that has not looked says so
   // rather than being scored down for it. Static shape is judged on its own.
@@ -534,6 +533,206 @@ export function assessRouteCompatibility({ route, stops, topology, vehicleCount,
     reason: liveChecked ? `${list.length}개 정류장 · ${vehicleCount}대 운행 중` : `${list.length}개 정류장 · 구조 적합`,
     checks,
     shape,
+  };
+}
+
+/* ------------------------------------------------ route number matching ---- */
+
+/** Every dash a keyboard or a data feed might produce, folded to a plain one. */
+const DASHES = /[‐‑‒–—―−－]/g;
+
+/**
+ * A route number in the one shape every comparison here uses. Only the writing
+ * is normalised — spacing, dash characters, letter case, and the spoken "번" a
+ * person types out of habit. The number itself is never altered, so what comes
+ * out still names the same route the provider named.
+ */
+export function normalizeRouteNumber(value) {
+  return String(value ?? "")
+    .normalize("NFKC")
+    .replace(DASHES, "-")
+    .replace(/\s+/g, "")
+    .replace(/번$/, "")
+    .toUpperCase();
+}
+
+/** The token that marks a branch of another number, and nothing else. */
+const VARIANT_SUFFIX = /^-\d{1,3}$/;
+
+/**
+ * A route number's family, and the token that marks it as a branch of that
+ * family. Only an explicit variant token counts: a dash and a number ("202-1"),
+ * or a single branch letter after a digit ("202A").
+ *
+ * A number that merely *begins with* another one is never a relative — "2021"
+ * is its own route, not a branch of "202". That is the whole reason this is a
+ * split rather than a prefix test: a prefix test folds unrelated routes into
+ * the family, and the family is what the screen calls "관련 노선".
+ */
+export function routeNumberFamily(value) {
+  const normalized = normalizeRouteNumber(value);
+  const dash = normalized.lastIndexOf("-");
+  if (dash > 0 && VARIANT_SUFFIX.test(normalized.slice(dash))) {
+    return { family: normalized.slice(0, dash), variantSuffix: normalized.slice(dash) };
+  }
+  const head = normalized.slice(0, -1);
+  if (head.length > 0 && /[A-Z]$/.test(normalized) && /\d$/.test(head)) {
+    return { family: head, variantSuffix: normalized.slice(-1) };
+  }
+  return { family: normalized, variantSuffix: "" };
+}
+
+/** A number and whatever is written after it, which is how a route number reads. */
+function segmentParts(segment) {
+  const [, digits, rest] = /^(\d*)(.*)$/.exec(segment);
+  return { number: digits === "" ? Number.NaN : Number(digits), rest };
+}
+
+/** Route numbers in the order a person expects: 202, 202-1, 202-2, 202-10, 202A. */
+export function compareRouteNumbers(left, right) {
+  const a = normalizeRouteNumber(left).split("-");
+  const b = normalizeRouteNumber(right).split("-");
+  for (let index = 0; index < Math.max(a.length, b.length); index += 1) {
+    if (a[index] === undefined) return -1;
+    if (b[index] === undefined) return 1;
+    const one = segmentParts(a[index]);
+    const two = segmentParts(b[index]);
+    const oneNumbered = Number.isFinite(one.number);
+    const twoNumbered = Number.isFinite(two.number);
+    if (oneNumbered !== twoNumbered) return oneNumbered ? -1 : 1;
+    if (oneNumbered && one.number !== two.number) return one.number - two.number;
+    if (one.rest !== two.rest) return one.rest < two.rest ? -1 : 1;
+  }
+  return 0;
+}
+
+/**
+ * What the provider returned, sorted into what the operator asked for and what
+ * merely came back with it.
+ *
+ *   exact   — the number they typed, normalised. "202" finds 202; "202-1"
+ *             finds 202-1, and 202-1 is exact there, not a relative.
+ *   related — other members of the same family, reached only through an
+ *             explicit variant token (see `routeNumberFamily`).
+ *   other   — everything else the provider chose to send back.
+ *
+ * Nothing is dropped: every variant handed in comes back in exactly one tier,
+ * carrying its own `routeId` untouched.
+ */
+export function tierRouteMatches(variants, query) {
+  const list = Array.isArray(variants) ? variants : [];
+  const wanted = normalizeRouteNumber(query);
+  if (!wanted) return { query: "", family: "", exact: [], related: [], other: [...list] };
+
+  const { family } = routeNumberFamily(wanted);
+  const exact = [];
+  const related = [];
+  const other = [];
+  for (const variant of list) {
+    const number = normalizeRouteNumber(variant?.routeNumber);
+    if (number && number === wanted) exact.push(variant);
+    else if (number && routeNumberFamily(number).family === family) related.push(variant);
+    else other.push(variant);
+  }
+  const byNumber = (one, two) => compareRouteNumbers(one?.routeNumber, two?.routeNumber);
+  return { query: wanted, family, exact, related: related.sort(byNumber), other: other.sort(byNumber) };
+}
+
+/** Variants gathered under the route number they carry, in reading order. */
+export function groupVariantsByNumber(variants) {
+  const groups = new Map();
+  for (const variant of Array.isArray(variants) ? variants : []) {
+    const key = normalizeRouteNumber(variant?.routeNumber);
+    const group = groups.get(key) ?? { routeNumber: variant?.routeNumber ?? key, variants: [] };
+    group.variants.push(variant);
+    groups.set(key, group);
+  }
+  return [...groups.values()].sort((one, two) => compareRouteNumbers(one.routeNumber, two.routeNumber));
+}
+
+/** Endpoint names differ only in how they are written, so compare them that way. */
+function endpointKey(value) {
+  return String(value ?? "").trim().replace(/\s+/g, " ").toLowerCase();
+}
+
+/**
+ * Variants of one number, arranged so a person can read them: the ones running
+ * between the same two places sit together.
+ *
+ * PRESENTATION ONLY. No `routeId` is merged, renamed or dropped — every variant
+ * handed in comes back inside exactly one group, and a group is a heading over
+ * its variants, never a replacement for them. A group of one is not a group at
+ * all: it is that single official route, and the screen shows it directly so
+ * the simple case costs no extra tap.
+ */
+export function groupVariantsByEndpoints(variants) {
+  const groups = new Map();
+  for (const variant of Array.isArray(variants) ? variants : []) {
+    // A JSON pair, so no stop name can ever be written to look like a separator.
+    const key = JSON.stringify([endpointKey(variant?.startStopName), endpointKey(variant?.endStopName)]);
+    const group = groups.get(key) ?? {
+      key,
+      startStopName: variant?.startStopName,
+      endStopName: variant?.endStopName,
+      named: Boolean(endpointKey(variant?.startStopName) && endpointKey(variant?.endStopName)),
+      variants: [],
+    };
+    group.variants.push(variant);
+    groups.set(key, group);
+  }
+  return [...groups.values()].map((group) => ({
+    ...group,
+    label: `${group.startStopName ?? "기점"} → ${group.endStopName ?? "종점"}`,
+    variantCount: group.variants.length,
+  }));
+}
+
+/**
+ * How the choice list should read, row by row. A group of one is that one
+ * route, offered directly — the ordinary two-way route therefore costs exactly
+ * the taps it always did. Only a group genuinely holding several official
+ * routes becomes a heading, and then its routes are one tap behind it.
+ *
+ * Presentation only: every variant handed in appears exactly once, as itself or
+ * inside exactly one group, and its `routeId` is never touched.
+ */
+export function routeChoiceRows(variants) {
+  return groupVariantsByEndpoints(variants).flatMap((group) =>
+    group.variantCount === 1 || !group.named
+      ? group.variants.map((variant) => ({ kind: "route", variant }))
+      : [{ kind: "group", group }]);
+}
+
+/** Plain words for a route shape, used wherever one is shown. */
+export function topologyWord(kind) {
+  if (kind === "loop") return "순환";
+  if (kind === "repeating") return "같은 정류장 반복";
+  return "직선";
+}
+
+/**
+ * What still separates variants that share both endpoints. `details` is
+ * whatever has actually been *looked up* for each `routeId` — stop count, route
+ * shape — and may be empty. Only measured facts count: the route type the
+ * provider labels every one of them with separates nothing.
+ *
+ * Nothing is invented. A variant with nothing measured says nothing, and when
+ * every variant reads alike the answer is that they cannot be told apart. That
+ * is a reason to show all of them, never a licence to choose one.
+ */
+export function compareVariants(variants, details) {
+  const read = (routeId) => (details instanceof Map ? details.get(routeId) : details?.[routeId]);
+  const rows = (Array.isArray(variants) ? variants : []).map((variant) => {
+    const detail = read(variant?.routeId);
+    const parts = [];
+    if (Number.isFinite(detail?.stopCount)) parts.push(`정류장 ${detail.stopCount}개`);
+    if (detail?.topologyKind) parts.push(topologyWord(detail.topologyKind));
+    return { routeId: variant?.routeId, parts, detail: parts.join(" · "), measured: parts.length > 0 };
+  });
+  const distinct = new Set(rows.map((row) => row.detail));
+  return {
+    rows,
+    distinguishable: rows.length > 1 && rows.every((row) => row.measured) && distinct.size === rows.length,
   };
 }
 

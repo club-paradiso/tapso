@@ -5,20 +5,28 @@ import {
   MIN_INTERVAL_MS,
   RIDE_PRESETS,
   captureFileStem,
+  compareRouteNumbers,
+  compareVariants,
   createCaptureHeader,
   assessRouteCompatibility,
   createCaptureSession,
   duplicateStopNames,
   findVehicle,
   forwardStops,
+  groupVariantsByEndpoints,
+  groupVariantsByNumber,
   historyEntry,
   reachableDestinations,
+  routeChoiceRows,
+  routeNumberFamily,
   searchStops,
   labelStops,
+  normalizeRouteNumber,
   normalizeTopology,
   maskVehicleIds,
   resumeCaptureSession,
   stopsBetween,
+  tierRouteMatches,
   verifyPreset,
   verifyTopology,
   // The mobile controller's own logic, exercised here exactly as the phone runs
@@ -667,4 +675,209 @@ test("local history remembers the route and forgets the bus", async () => {
   assert.equal(entry.destinationName, "관덕정[남]");
   assert.equal(entry.verdict, "INSUFFICIENT_EVIDENCE");
   assert.equal(JSON.stringify(entry).includes("제주79자3696"), false, "history never carries a vehicle number");
+});
+
+/* ------------------------------------------------ route number search ------ */
+
+/**
+ * What production actually answers for `routeNo=202` in Jeju: the number that
+ * was asked for, its branch numbers, and a few routes that merely contain the
+ * digits. Thirty-one rows, as observed.
+ */
+function variant(routeNumber: string, index: number, start: string, end: string, routeType?: string) {
+  return {
+    routeId: `JEB${routeNumber.replace("-", "X")}${String(index).padStart(2, "0")}`,
+    routeNumber,
+    startStopName: start,
+    endStopName: end,
+    ...(routeType === undefined ? {} : { routeType }),
+  };
+}
+
+const TERMINAL = "제주버스터미널";
+const SEOGWIPO = "서귀포";
+
+const ROUTE_202_SEARCH = [
+  // Eight official routes running between the same two ends, plus three that
+  // do not. Same number, eleven distinct routeIds.
+  ...Array.from({ length: 8 }, (_, index) => variant("202", index, TERMINAL, SEOGWIPO, "간선")),
+  variant("202", 8, SEOGWIPO, TERMINAL, "간선"),
+  variant("202", 9, "한림환승정류장", SEOGWIPO, "간선"),
+  variant("202", 10, SEOGWIPO, "한림환승정류장", "간선"),
+  ...Array.from({ length: 5 }, (_, index) => variant("202-1", index, TERMINAL, "성산", "지선")),
+  ...Array.from({ length: 5 }, (_, index) => variant("202-2", index, "성산", TERMINAL, "지선")),
+  ...Array.from({ length: 4 }, (_, index) => variant("202-3", index, TERMINAL, "표선", "지선")),
+  ...Array.from({ length: 3 }, (_, index) => variant("202-4", index, "표선", TERMINAL, "지선")),
+  // The provider matches on the digits, so numbers that merely contain "202"
+  // come back too. They are other routes, not branches of 202.
+  variant("2021", 0, "동광환승정류장", "대정", "지선"),
+  variant("2021", 1, "대정", "동광환승정류장", "지선"),
+  variant("1202", 0, "제주공항", "중문", "급행"),
+];
+
+/** The 447 pilot as the provider lists it: one number, two directions. */
+const ROUTE_447_SEARCH = [
+  variant("447", 0, "제주대학교", "관덕정", "지선"),
+  variant("447", 1, "관덕정", "제주대학교", "지선"),
+];
+
+test("a number search shows the number that was asked for, and only it, first", () => {
+  const tiers = tierRouteMatches(ROUTE_202_SEARCH, "202");
+
+  assert.equal(tiers.query, "202");
+  assert.equal(tiers.exact.length, 11, "every official 202 is exact");
+  assert.deepEqual([...new Set(tiers.exact.map((row) => row.routeNumber))], ["202"],
+    "nothing but 202 itself is treated as the answer to 202");
+
+  assert.deepEqual([...new Set(tiers.related.map((row) => row.routeNumber))],
+    ["202-1", "202-2", "202-3", "202-4"], "the branch numbers are kept together, in order");
+  assert.equal(tiers.related.length, 17);
+
+  // A number that merely starts with the query is a different route. Reading a
+  // family off a string prefix is exactly the mistake this rule exists to stop.
+  assert.deepEqual([...new Set(tiers.other.map((row) => row.routeNumber))], ["1202", "2021"]);
+
+  assert.equal(tiers.exact.length + tiers.related.length + tiers.other.length, ROUTE_202_SEARCH.length,
+    "every row the provider sent is still on the screen somewhere");
+});
+
+test("searching a branch number makes that branch the exact match", () => {
+  const tiers = tierRouteMatches(ROUTE_202_SEARCH, "202-1");
+
+  assert.equal(tiers.query, "202-1");
+  assert.equal(tiers.exact.length, 5);
+  assert.deepEqual([...new Set(tiers.exact.map((row) => row.routeNumber))], ["202-1"],
+    "202-1 is the exact answer to 202-1, never a relative of 202");
+
+  assert.deepEqual([...new Set(tiers.related.map((row) => row.routeNumber))],
+    ["202", "202-2", "202-3", "202-4"], "the rest of the family, 202 included");
+  assert.deepEqual([...new Set(tiers.other.map((row) => row.routeNumber))], ["1202", "2021"]);
+});
+
+test("how a number is written never changes which route it is", () => {
+  for (const typed of ["202", " 202 ", "202번", "２０２"]) {
+    assert.equal(tierRouteMatches(ROUTE_202_SEARCH, typed).exact.length, 11, `typed as ${typed}`);
+  }
+  // A dash from another keyboard is the same dash.
+  assert.equal(tierRouteMatches(ROUTE_202_SEARCH, "202‑1").exact.length, 5);
+  assert.equal(normalizeRouteNumber("202－2"), "202-2");
+});
+
+test("a branch letter is a branch; more digits are a different route", () => {
+  assert.deepEqual(routeNumberFamily("202-1"), { family: "202", variantSuffix: "-1" });
+  assert.deepEqual(routeNumberFamily("202A"), { family: "202", variantSuffix: "A" });
+  assert.deepEqual(routeNumberFamily("2021"), { family: "2021", variantSuffix: "" });
+  assert.deepEqual(routeNumberFamily("202"), { family: "202", variantSuffix: "" });
+  assert.deepEqual(routeNumberFamily("급행"), { family: "급행", variantSuffix: "" });
+  assert.deepEqual(routeNumberFamily("-5"), { family: "-5", variantSuffix: "" });
+});
+
+test("an ordinary two-way route is still two plain choices", () => {
+  const tiers = tierRouteMatches(ROUTE_447_SEARCH, "447");
+  assert.equal(tiers.exact.length, 2);
+  assert.deepEqual(tiers.related, [], "447 has no branches, so no second section appears");
+  assert.deepEqual(tiers.other, []);
+
+  // Each direction is its own endpoint pair, so each is offered directly: one
+  // tap to the route, exactly as before this screen learned about grouping.
+  const rows = routeChoiceRows(tiers.exact);
+  assert.deepEqual(rows.map((row) => row.kind), ["route", "route"]);
+  assert.deepEqual(rows.map((row) => row.variant.routeId), ["JEB44700", "JEB44701"]);
+});
+
+test("a route with a single official variant needs no extra step", () => {
+  const rows = routeChoiceRows([variant("365", 0, "제주버스터미널", "제주버스터미널", "순환")]);
+  assert.deepEqual(rows.map((row) => row.kind), ["route"]);
+  assert.equal(rows[0].variant.routeId, "JEB36500");
+});
+
+test("grouping many variants is presentation only and loses no routeId", () => {
+  const exact = tierRouteMatches(ROUTE_202_SEARCH, "202").exact;
+  const groups = groupVariantsByEndpoints(exact);
+
+  assert.equal(groups.length, 4, "four endpoint pairs among the eleven official 202s");
+  const big = groups.find((group) => group.variantCount > 1);
+  assert.equal(big?.label, `${TERMINAL} → ${SEOGWIPO}`);
+  assert.equal(big?.variantCount, 8, "the group says how many official routes are behind it");
+
+  // Nothing merged, nothing dropped, nothing renamed.
+  const grouped = groups.flatMap((group) => group.variants.map((row) => row.routeId));
+  assert.deepEqual([...grouped].sort(), exact.map((row) => row.routeId).sort());
+  assert.equal(new Set(grouped).size, exact.length, "each routeId appears exactly once");
+
+  // The screen shows the group as a heading and the other three as themselves.
+  const rows = routeChoiceRows(exact);
+  assert.deepEqual(rows.map((row) => row.kind), ["group", "route", "route", "route"]);
+  const behind = rows.flatMap((row) => row.kind === "group" ? row.group.variants : [row.variant]);
+  assert.deepEqual(behind.map((row) => row.routeId).sort(), exact.map((row) => row.routeId).sort(),
+    "a choice list still reaches every official route");
+});
+
+test("variants that share both endpoints are shown, never merged or chosen for you", () => {
+  const shared = [
+    variant("202", 0, TERMINAL, SEOGWIPO),
+    variant("202", 1, TERMINAL, SEOGWIPO),
+    variant("202", 2, TERMINAL, SEOGWIPO),
+  ];
+  const [group] = groupVariantsByEndpoints(shared);
+  assert.equal(group.variantCount, 3, "identical endpoints do not make one route");
+  assert.deepEqual(group.variants.map((row) => row.routeId), ["JEB20200", "JEB20201", "JEB20202"]);
+
+  // With nothing looked up there is nothing to tell them apart, and the screen
+  // says so rather than picking the first one.
+  const blind = compareVariants(shared, new Map());
+  assert.equal(blind.distinguishable, false);
+  assert.deepEqual(blind.rows.map((row) => row.detail), ["", "", ""]);
+
+  // Once stop counts are known the difference is real and is shown as it is.
+  const measured = compareVariants(shared, new Map([
+    ["JEB20200", { stopCount: 42, topologyKind: "linear" }],
+    ["JEB20201", { stopCount: 38, topologyKind: "linear" }],
+    ["JEB20202", { stopCount: 51, topologyKind: "loop" }],
+  ]));
+  assert.equal(measured.distinguishable, true);
+  assert.deepEqual(measured.rows.map((row) => row.detail),
+    ["정류장 42개 · 직선", "정류장 38개 · 직선", "정류장 51개 · 순환"]);
+
+  // Same endpoints, same stop count, different shape: still three routes.
+  const alike = compareVariants(shared, new Map([
+    ["JEB20200", { stopCount: 42, topologyKind: "linear" }],
+    ["JEB20201", { stopCount: 42, topologyKind: "linear" }],
+    ["JEB20202", { stopCount: 42, topologyKind: "linear" }],
+  ]));
+  assert.equal(alike.distinguishable, false, "look-alikes are admitted, not resolved");
+  assert.equal(groupVariantsByEndpoints(shared)[0].variants.length, 3);
+});
+
+test("variants with no endpoint names are listed rather than lumped together", () => {
+  const nameless = [
+    { routeId: "JEB-A", routeNumber: "202" },
+    { routeId: "JEB-B", routeNumber: "202" },
+  ];
+  const rows = routeChoiceRows(nameless);
+  assert.deepEqual(rows.map((row) => row.kind), ["route", "route"],
+    "a group needs two endpoint names to be worth showing as one");
+  assert.deepEqual(rows.map((row) => row.variant.routeId), ["JEB-A", "JEB-B"]);
+});
+
+test("an empty query leaves the whole catalog as the provider gave it", () => {
+  const tiers = tierRouteMatches(ROUTE_202_SEARCH, "");
+  assert.deepEqual(tiers.exact, []);
+  assert.deepEqual(tiers.related, []);
+  assert.equal(tiers.other.length, ROUTE_202_SEARCH.length);
+  assert.deepEqual(tiers.other.map((row) => row.routeId), ROUTE_202_SEARCH.map((row) => row.routeId));
+});
+
+test("route numbers read in the order a person expects", () => {
+  const numbers = ["202-10", "202", "202-2", "1202", "202-1", "202A"];
+  assert.deepEqual([...numbers].sort(compareRouteNumbers),
+    ["202", "202-1", "202-2", "202-10", "202A", "1202"]);
+});
+
+test("the related section groups branches under their own numbers", () => {
+  const related = tierRouteMatches(ROUTE_202_SEARCH, "202").related;
+  const groups = groupVariantsByNumber(related);
+  assert.deepEqual(groups.map((group) => group.routeNumber), ["202-1", "202-2", "202-3", "202-4"]);
+  assert.deepEqual(groups.map((group) => group.variants.length), [5, 5, 4, 3]);
+  assert.equal(groups.reduce((total, group) => total + group.variants.length, 0), related.length);
 });
