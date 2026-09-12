@@ -58,18 +58,19 @@ activation, Supabase/Resend setup, framework migration, unrelated refactoring.
    in-process TTL; failures never cached. DONE.
 5. **Session risk.** Memory-only sessions disabled by default on serverless and
    answered with `503 SESSIONS_UNAVAILABLE`; `/health` states the policy. DONE.
-6. **Verification.** 56 Node tests in `services/api`, 93 in `apps/web`, 3 Python
+6. **Verification.** 68 Node tests in `services/api`, 93 in `apps/web`, 5 Python
    probe tests, a clean typecheck of the deployed surface now wired into CI, and
    an end-to-end HTTP run of all three configurations. DONE.
 7. **Deployment.** PARTIAL. The `tapso-api` project is linked to
-   `club-paradiso/tapso` with Root Directory `services/api`. Pull request #25
-   merged as `05f40a4` on 2026-09-12; preview and the first production
-   deployment both reached *Deployment has completed*, and the marketing
-   project deployed successfully from the same commits, so the public site is
-   unaffected in preview and in production. Not done: `TAGO_SERVICE_KEY`
-   is unset, the production alias is unrecorded, and **no HTTP response from any
-   deployment has been observed** — the session's egress policy denied every
-   `*.vercel.app` host and its Vercel authorization could not read this project.
+   `club-paradiso/tapso` with Root Directory `services/api` and serves
+   `https://tapso-api.vercel.app`. Pull requests #25, #26, and #27 are merged;
+   `main` is `b59e9e6` (2026-09-12T07:57:01Z) with CI green and both Vercel
+   projects deployed. `TAGO_SERVICE_KEY` is set on Production with Sensitive
+   visibility. Not done: **no HTTP response from the deployment has been
+   observed from an agent session** — every session so far has run behind an
+   egress policy denying `*.vercel.app`, with a Vercel authorization that
+   cannot read this project or its runtime logs. The production smoke run is
+   the one remaining Task A step, and it has to be executed by the operator.
 
 ## 4. Decisions and alternatives considered
 
@@ -107,11 +108,11 @@ activation, Supabase/Resend setup, framework migration, unrelated refactoring.
 ## 5. Reproduction and evidence
 
 ```bash
-npm --prefix services/api test                     # 56 pass
+npm --prefix services/api test                     # 68 pass
 npm --prefix apps/web ci && npm --prefix apps/web test   # 93 pass
 npm --prefix apps/web run typecheck:vercel          # clean
 npm --prefix apps/web run build                     # clean
-python3 -m unittest discover -s scripts/tago -p 'test_*.py'   # 3 pass
+python3 -m unittest discover -s scripts/tago -p 'test_*.py'   # 5 pass
 cd apps/web && npx tsc --project ../../services/api/tsconfig.json \
   --typeRoots node_modules/@types                   # clean
 swift test --package-path packages/transit-core     # CI only; no Swift toolchain on this host
@@ -166,22 +167,26 @@ the match result is `unavailable` / `unknown`.
   because Vercel will not store a `PUBLIC_`-prefixed variable as a Sensitive
   secret; the retired name is now honoured only outside serverless.
 
-**Next action**, in order, all on the `tapso-api` Vercel project:
+**Next action.** Run the production smoke from a network that can reach Vercel:
 
-1. Copy the stable production alias from Settings → Domains into the base URL
-   table in `../PRODUCTION_TRANSIT_API.md`. Task D has no base URL until this
-   exists. Do not substitute a per-deployment URL.
-2. Smoke it. Before the key is set, the expected result is passes everywhere
-   except `BLOCKED_BY_CREDENTIALS` on the four TAGO reads — that outcome proves
-   routing, validation, and the error contract all work in production:
+```bash
+node --experimental-strip-types services/api/scripts/smoke.ts \
+  https://tapso-api.vercel.app
+```
 
-   ```bash
-   node --experimental-strip-types services/api/scripts/smoke.ts https://<alias>
-   ```
-3. Add **`TAGO_SERVICE_KEY`** (Decoding key) for Production with Sensitive
-   visibility, redeploy, and smoke again. Every check should pass. Do not use
-   the retired `PUBLIC_DATA_SERVICE_KEY`: a serverless deployment ignores it and
-   `/health` will report `credential.deprecatedNamePresent: true` beside
-   `source: "missing"`.
-4. Confirm Settings → Deployment Protection leaves production publicly
-   reachable, or the iOS client cannot call it.
+Read `/health` first. `liveTransitConfigured: true` with
+`credential.source: "canonical"` means the running build has the credential and
+the smoke should pass outright. `false` / `"missing"` with
+`deprecatedNamePresent: false` means the build predates the variable — a Vercel
+deployment carries the environment it was created with — so redeploy production
+(dashboard **Redeploy**, or `vercel redeploy <url> --target=production`) and
+re-run. No code change is involved either way.
+
+Expected on success: every check passes, with live `cityCode` 39, the six
+official Route 365 variants preserved, a strictly increasing stop sequence for
+`JEB405136521`, and vehicles carrying the epoch sentinel with
+`timestampSource: "unavailable"`. An empty vehicle list is not a failure — it
+means no bus is running that direction right now; try `JEB405136522`.
+
+Task A closes when that run is recorded. Nothing in it changes the freshness
+gate: automatic matching stays withheld until Task B/C.

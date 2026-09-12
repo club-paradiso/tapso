@@ -17,7 +17,7 @@ Public product site: [tapso-nu.vercel.app](https://tapso-nu.vercel.app)
 | TypeScript API scaffold | `VERIFIED` | Native Node tests cover matching and official-schema normalization |
 | Live-transit orchestration | `IMPLEMENTED` | Route-scoped read-through cache, concurrent-miss coalescing, short-lived ride sessions, ambiguity confirmation, monotonic progress, and bounded missing-data handling are covered by deterministic Node tests |
 | Production-shaped transit API | `IMPLEMENTED` | One request handler in `services/api/src/apiRouter.ts` with a local Node transport and a Vercel Functions transport; identifier validation, deny-by-default CORS, per-caller burst limits, CDN cache windows, and structured logging; 68 Node tests plus an end-to-end HTTP run of the credentialed, uncredentialed, and serverless-shaped configurations |
-| Transit API deployment | `DEPLOYED_NOT_PROBED` | The `tapso-api` Vercel project deploys `services/api`; preview and the first production deployment both succeeded. No HTTP response from it has been observed, the production alias is unrecorded, and `TAGO_SERVICE_KEY` still needs setting; see [PRODUCTION_TRANSIT_API.md](docs/PRODUCTION_TRANSIT_API.md) |
+| Transit API deployment | `DEPLOYED_NOT_PROBED` | Live at [tapso-api.vercel.app](https://tapso-api.vercel.app) from the `tapso-api` Vercel project; `TAGO_SERVICE_KEY` is set on Production as a Sensitive variable. No HTTP response has been observed from an agent session — every one has run behind an egress policy denying `*.vercel.app` — so live behaviour is not independently verified; see [PRODUCTION_TRANSIT_API.md](docs/PRODUCTION_TRANSIT_API.md) |
 | Controlled ride capture tool | `IMPLEMENTED` | `scripts/ride-capture` polls one TAGO direction during a real ride, keeps raw snapshots under ignored `work/rides/`, and emits a pseudonymised progression/freshness report; 6 Node tests. No real ride captured yet |
 | Marketing website | `IMPLEMENTED` | React + Vite site under `apps/web`; 제주어 hero, responsive QA, and Vercel deployment workflow |
 | Waitlist backend | `IMPLEMENTED` | Vercel Functions in `apps/web/api`; validation, duplicate protection, rate limiting, and confirmation email covered by 90 Node tests |
@@ -68,7 +68,7 @@ GET  /v1/sessions/:id
 POST /v1/sessions/:id/confirm
 ```
 
-The same paths are served locally and in production. Session creation takes `cityCode` in its JSON body; sessions are short-lived and held in one process's memory, so they are disabled by default on serverless deployments and answer `503 SESSIONS_UNAVAILABLE` there. The full contract, configuration, deployment, smoke-test, and rollback procedure is in [PRODUCTION_TRANSIT_API.md](docs/PRODUCTION_TRANSIT_API.md).
+The canonical production base URL is `https://tapso-api.vercel.app`. The same paths are served locally and in production. Session creation takes `cityCode` in its JSON body; sessions are short-lived and held in one process's memory, so they are disabled by default on serverless deployments and answer `503 SESSIONS_UNAVAILABLE` there. The full contract, configuration, deployment, smoke-test, and rollback procedure is in [PRODUCTION_TRANSIT_API.md](docs/PRODUCTION_TRANSIT_API.md).
 
 ```bash
 node --experimental-strip-types services/api/scripts/smoke.ts http://127.0.0.1:8787

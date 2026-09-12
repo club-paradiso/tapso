@@ -63,7 +63,16 @@ progress. See `DATA_VALIDATION.md` and `exec-plans/RIDE_CAPTURE.md`.
 
 ## Other open evidence
 
-1. Finish or delete the `tapso-api` Vercel project and smoke test it; see
+1. Smoke test production. The API is live at `https://tapso-api.vercel.app`
+   with `TAGO_SERVICE_KEY` set, but no agent session has been able to reach it:
+
+   ```bash
+   node --experimental-strip-types services/api/scripts/smoke.ts \
+     https://tapso-api.vercel.app
+   ```
+
+   If `/health` reports `liveTransitConfigured: false`, the running build
+   predates the credential — redeploy production and re-run. See
    `PRODUCTION_TRANSIT_API.md`.
 2. Add route setup and ambiguity confirmation UI before calling the client MVP complete.
 3. Provision Apple credentials and replace the APNs scaffold.
