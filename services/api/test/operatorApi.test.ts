@@ -17,17 +17,21 @@ const EPOCH = new Date(0).toISOString();
 
 class CountingProvider implements TransitProvider {
   vehicleCalls = 0;
+  /** Swapped per test to stand in for a differently shaped route. */
+  stopList: StopOnRoute[] = [
+    { stopId: "JEB405002104", name: "농림축산검역본부[남]", sequence: 27 },
+    { stopId: "S28", name: "중간", sequence: 28 },
+    { stopId: "JEB405000334", name: "관덕정[남]", sequence: 34 },
+  ];
+  emptyVehicles = false;
 
   async stops(_request: RouteRequest): Promise<StopOnRoute[]> {
-    return [
-      { stopId: "JEB405002104", name: "농림축산검역본부[남]", sequence: 27 },
-      { stopId: "S28", name: "중간", sequence: 28 },
-      { stopId: "JEB405000334", name: "관덕정[남]", sequence: 34 },
-    ];
+    return this.stopList;
   }
 
   async vehicles(request: RouteRequest): Promise<VehicleObservation[]> {
     this.vehicleCalls += 1;
+    if (this.emptyVehicles) return [];
     return [
       {
         vehicleId: "제주79자3696",
@@ -64,7 +68,13 @@ function harness(env: ServerEnv = {}) {
         return [{ cityCode: CITY, name: "제주특별자치도" }];
       },
       async routes(_cityCode: string, routeNumber: string) {
-        return [{ routeId: ROUTE, routeNumber }];
+        // One route number, several official routes. Collapsing them would
+        // destroy direction and endpoint identity, so the API never does.
+        return [
+          { routeId: ROUTE, routeNumber, startStopName: "도평동", endStopName: "제주대학교" },
+          { routeId: "JEB405244702", routeNumber, startStopName: "제주대학교", endStopName: "도평동" },
+          { routeId: "JEB405244703", routeNumber, startStopName: "도평동", endStopName: "제주버스터미널" },
+        ];
       },
     },
     provider,
@@ -328,4 +338,51 @@ test("bearer parsing and comparison behave", () => {
   assert.equal(operatorTokenMatches(TOKEN, `${TOKEN} `), false);
   assert.equal(operatorTokenMatches(TOKEN, undefined), false);
   assert.equal(operatorTokenMatches("", ""), false);
+});
+
+test("route discovery keeps every official variant, whatever the number", async () => {
+  const { handler } = harness();
+  const response = await handler(new Request(`http://api.test/v1/routes?cityCode=${CITY}&routeNo=447`));
+  assert.equal(response.status, 200);
+  const body = await response.json();
+  assert.equal(body.items.length, 3);
+  assert.equal(body.meta.variantsPreserved, true);
+  assert.deepEqual(
+    body.items.map((item: { routeId: string }) => item.routeId),
+    [ROUTE, "JEB405244702", "JEB405244703"],
+  );
+  // Direction is readable before any commitment: the operator picks a routeId,
+  // never a route number.
+  assert.equal(body.items[1].startStopName, "제주대학교");
+});
+
+test("the stop list carries its own shape so a client need not guess it", async () => {
+  const { handler, upstream } = harness();
+  const linear = await (await handler(new Request(`http://api.test/v1/stops?routeId=${ROUTE}&cityCode=${CITY}`))).json();
+  assert.equal(linear.meta.topology.kind, "linear");
+  assert.equal(linear.meta.topology.cycleLength, 3);
+  assert.equal(linear.meta.topology.duplicateStopIdCount, 0);
+
+  upstream.stopList = [
+    { stopId: "L1", name: "순환 기점", sequence: 1 },
+    { stopId: "L2", name: "중앙로", sequence: 2 },
+    { stopId: "L3", name: "동문시장", sequence: 3 },
+    { stopId: "L1", name: "순환 기점", sequence: 4 },
+  ];
+  const loop = await (await handler(new Request(`http://api.test/v1/stops?routeId=JEB405244702&cityCode=${CITY}`))).json();
+  assert.equal(loop.meta.topology.kind, "loop");
+  assert.equal(loop.meta.topology.cycleLength, 3);
+  assert.equal(loop.meta.topology.duplicateStopNameCount, 1);
+});
+
+test("a route with nothing running answers with an empty list, not an error", async () => {
+  const { handler, upstream } = harness();
+  upstream.emptyVehicles = true;
+  const response = await snapshot(handler, bearer(TOKEN));
+  assert.equal(response.status, 200);
+  const body = await response.json();
+  assert.deepEqual(body.items, []);
+  assert.equal(body.meta.count, 0);
+  assert.equal(body.meta.receivedAt, undefined, "no observations means no receipt time to report");
+  assert.equal(body.meta.snapshotCache, "bypassed");
 });

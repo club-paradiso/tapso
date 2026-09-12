@@ -14,7 +14,7 @@
 
 import type { MatchRequest } from "./domain.ts";
 import { matchVehicle } from "./matching.ts";
-import { analyzeRideCapture, RideCaptureInputError, type RideCapture } from "./rideCapture.ts";
+import { analyzeRideCapture, classifyTopology, RideCaptureInputError, type RideCapture } from "./rideCapture.ts";
 import { operatorTokenMatches, readBearerToken } from "./operatorAuth.ts";
 import type { CachedTransitProvider } from "./cachedTransitProvider.ts";
 import type { TransitProvider } from "./provider.ts";
@@ -270,6 +270,12 @@ async function dispatch(
             // TAGO route IDs are direction-specific; `sequence` is `nodeord`.
             directionScope: "route_id",
             sequenceSource: "provider_node_order",
+            /**
+             * Classified here so one implementation decides route shape for the
+             * analyzer and for any client. A client that cannot read this field
+             * must assume `linear`, which is the choice that refuses wrap-around.
+             */
+            topology: classifyTopology(result.value),
           },
         },
         200,

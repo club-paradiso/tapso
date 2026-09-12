@@ -73,13 +73,50 @@ function maskTo(id, length) {
 }
 
 /**
+ * Route shape as the server classified it. A client that did not get the field
+ * assumes `linear`, which is the reading that refuses wrap-around — the safe
+ * side of the only question this answers.
+ */
+export function normalizeTopology(topology, stops) {
+  const list = Array.isArray(stops) ? stops : [];
+  if (topology && typeof topology.kind === "string") {
+    return {
+      kind: topology.kind,
+      stopCount: topology.stopCount ?? list.length,
+      cycleLength: topology.cycleLength ?? list.length,
+      duplicateStopIdCount: topology.duplicateStopIdCount ?? 0,
+      duplicateStopNameCount: topology.duplicateStopNameCount ?? 0,
+    };
+  }
+  return {
+    kind: "linear",
+    stopCount: list.length,
+    cycleLength: list.length,
+    duplicateStopIdCount: 0,
+    duplicateStopNameCount: 0,
+  };
+}
+
+/**
+ * Stops still to go. Subtraction on a straight route; the forward arc on a loop,
+ * because a bus at 38 of 40 heading for 3 has five stops left, not minus
+ * thirty-five.
+ */
+export function forwardStops(from, to, topology, wrapAround) {
+  if (!wrapAround) return Math.max(0, to - from);
+  const modulus = Math.max(1, topology.cycleLength);
+  return (((to - from) % modulus) + modulus) % modulus;
+}
+
+/**
  * The preflight gate, expressed once. It answers with every problem it found
  * rather than the first, because the operator is standing at a bus stop and a
  * second round trip costs a departure.
  */
-export function verifyTopology({ stops, boardingSequence, destinationSequence }) {
+export function verifyTopology({ stops, boardingSequence, destinationSequence, topology }) {
   const problems = [];
   const list = Array.isArray(stops) ? stops : [];
+  const shape = normalizeTopology(topology, list);
   if (list.length === 0) problems.push("이 노선의 정류장 목록이 비어 있다");
 
   const sequences = list.map((stop) => stop.sequence);
@@ -89,10 +126,39 @@ export function verifyTopology({ stops, boardingSequence, destinationSequence })
   const known = new Set(sequences);
   if (!known.has(boardingSequence)) problems.push(`승차 순번 ${boardingSequence}이 이 방향에 없다`);
   if (!known.has(destinationSequence)) problems.push(`하차 순번 ${destinationSequence}이 이 방향에 없다`);
-  if (known.has(boardingSequence) && known.has(destinationSequence) && boardingSequence >= destinationSequence) {
-    problems.push("하차 순번이 승차 순번보다 뒤여야 한다 (방향이 반대일 수 있다)");
+
+  let wrapAround = false;
+  if (known.has(boardingSequence) && known.has(destinationSequence)) {
+    if (boardingSequence === destinationSequence) {
+      problems.push("승차와 하차가 같은 정류장이다");
+    } else if (boardingSequence > destinationSequence) {
+      // Only a list that closes on itself can be ridden past its end. A route
+      // that merely passes some stop twice cannot say which pass this is, so it
+      // fails closed rather than producing markers nobody can interpret.
+      if (shape.kind === "loop") {
+        wrapAround = true;
+      } else if (shape.kind === "repeating") {
+        problems.push("AMBIGUOUS_TOPOLOGY: 같은 정류장을 두 번 지나는 노선이라 순환 승차를 판별할 수 없다");
+      } else {
+        problems.push("하차 순번이 승차 순번보다 뒤여야 한다 (방향이 반대일 수 있다)");
+      }
+    }
   }
-  return { ok: problems.length === 0, problems };
+  return { ok: problems.length === 0, problems, wrapAround, topology: shape };
+}
+
+/**
+ * Two stops on one route can share a name. Where that happens the label carries
+ * the official stop id as well, so the operator picks the stop and not the word.
+ */
+export function labelStops(stops) {
+  const list = Array.isArray(stops) ? stops : [];
+  const counts = new Map();
+  for (const stop of list) counts.set(stop.name, (counts.get(stop.name) ?? 0) + 1);
+  return list.map((stop) => ({
+    ...stop,
+    label: counts.get(stop.name) > 1 ? `${stop.sequence}. ${stop.name} · ${stop.stopId}` : `${stop.sequence}. ${stop.name}`,
+  }));
 }
 
 /**
@@ -100,7 +166,7 @@ export function verifyTopology({ stops, boardingSequence, destinationSequence })
  * moved underneath it, the mismatch is reported instead of silently riding the
  * wrong stop, and the operator picks the stops by hand.
  */
-export function verifyPreset(preset, stops) {
+export function verifyPreset(preset, stops, topology) {
   const problems = [];
   const list = Array.isArray(stops) ? stops : [];
   for (const [role, target] of [["승차", preset.boarding], ["하차", preset.destination]]) {
@@ -113,16 +179,32 @@ export function verifyPreset(preset, stops) {
       problems.push(`${role} 순번 ${target.sequence}의 정류장 ID가 프리셋과 다르다 (현재 ${found.stopId})`);
     }
   }
-  const topology = verifyTopology({
+  const verdict = verifyTopology({
     stops: list,
+    topology,
     boardingSequence: preset.boarding.sequence,
     destinationSequence: preset.destination.sequence,
   });
-  return { ok: problems.length === 0 && topology.ok, problems: [...problems, ...topology.problems] };
+  return { ok: problems.length === 0 && verdict.ok, problems: [...problems, ...verdict.problems] };
 }
 
-export function stopsBetween(stops, fromSequence, toSequence) {
-  return (stops ?? []).filter((stop) => stop.sequence >= fromSequence && stop.sequence <= toSequence);
+/**
+ * The stops the rider still has ahead of them, in the order they will meet them.
+ * On a wrap-around journey that list runs off the end of the topology and
+ * continues from its start, which is exactly what the bus does.
+ */
+export function stopsBetween(stops, fromSequence, toSequence, wrapAround = false) {
+  const list = stops ?? [];
+  if (!wrapAround) return list.filter((stop) => stop.sequence >= fromSequence && stop.sequence <= toSequence);
+  const tail = list.filter((stop) => stop.sequence >= fromSequence);
+  const head = list.filter((stop) => stop.sequence <= toSequence);
+  // The seam stop appears at both ends of a closed list; show it once.
+  const seen = new Set();
+  return [...tail, ...head].filter((stop) => {
+    if (seen.has(stop.stopId)) return false;
+    seen.add(stop.stopId);
+    return true;
+  });
 }
 
 export function findVehicle(vehicles, vehicleId) {
@@ -152,14 +234,16 @@ export function createCaptureHeader({
   destinationStopSequence,
   intervalMs = DEFAULT_INTERVAL_MS,
   stops,
+  topology,
 }) {
   if (!routeId || !cityCode) throw new RideCaptureError("routeId and cityCode are required");
-  const topology = verifyTopology({
+  const verdict = verifyTopology({
     stops,
+    topology,
     boardingSequence: boardingStopSequence,
     destinationSequence: destinationStopSequence,
   });
-  if (!topology.ok) throw new RideCaptureError(topology.problems.join(" / "));
+  if (!verdict.ok) throw new RideCaptureError(verdict.problems.join(" / "));
   return {
     captureId,
     schemaVersion: RIDE_CAPTURE_SCHEMA_VERSION,
@@ -173,6 +257,8 @@ export function createCaptureHeader({
     destinationStopSequence,
     intervalMs: Math.max(MIN_INTERVAL_MS, intervalMs),
     stops,
+    topology: verdict.topology,
+    wrapAround: verdict.wrapAround,
   };
 }
 
@@ -217,6 +303,12 @@ export function createCaptureSession({
     get boardedVehicleId() {
       return boardedVehicleId;
     },
+    get wrapAround() {
+      return Boolean(header.wrapAround);
+    },
+    get topology() {
+      return header.topology;
+    },
     snapshots,
     markers,
     events,
@@ -235,19 +327,25 @@ export function createCaptureSession({
      * this at all — the tracked vehicle cannot change by itself.
      */
     async board(vehicleId, { replace = false, at = now().toISOString() } = {}) {
-      const normalized = normalizeVehicleId(vehicleId);
-      if (!normalized) throw new RideCaptureError("차량을 선택해야 한다");
+      const typed = String(vehicleId ?? "").trim();
+      if (!normalizeVehicleId(typed)) throw new RideCaptureError("차량을 선택해야 한다");
       if (boardedVehicleId && !replace) {
         throw new RideCaptureError("이미 차량이 기록되어 있다. 교체하려면 명시적으로 확인해야 한다");
       }
-      const replaced = boardedVehicleId && boardedVehicleId !== normalized ? boardedVehicleId : undefined;
-      boardedVehicleId = normalized;
+      // Store the identifier exactly as the provider publishes it, resolving
+      // through the latest snapshot when it is there. Normalisation is only ever
+      // a comparison aid: storing the normalised form would silently stop
+      // matching the moment a provider used a space or a hyphen.
+      const latest = [...snapshots].reverse().find((snapshot) => !snapshot.error);
+      const resolved = findVehicle(latest?.vehicles, typed)?.vehicleId ?? typed;
+      const replaced = boardedVehicleId && boardedVehicleId !== resolved ? boardedVehicleId : undefined;
+      boardedVehicleId = resolved;
       await persistHeader();
       await append("marker", { at, kind: "boarded", stopSequence: header.boardingStopSequence });
       if (replaced) {
         await append("event", { at, kind: "resumed", detail: "tracked vehicle replaced by the rider" });
       }
-      return normalized;
+      return resolved;
     },
 
     /**
@@ -311,7 +409,7 @@ export function createCaptureSession({
         trackedStopName: tracked?.stopName,
         remainingStops: tracked?.stopSequence === undefined
           ? undefined
-          : Math.max(0, header.destinationStopSequence - tracked.stopSequence),
+          : forwardStops(tracked.stopSequence, header.destinationStopSequence, header.topology ?? { cycleLength: header.stops.length }, Boolean(header.wrapAround)),
         lastMarker: markers.at(-1),
         vehicles: last?.vehicles ?? [],
       };

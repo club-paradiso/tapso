@@ -8,6 +8,9 @@ import {
   createCaptureHeader,
   createCaptureSession,
   findVehicle,
+  forwardStops,
+  labelStops,
+  normalizeTopology,
   maskVehicleIds,
   resumeCaptureSession,
   stopsBetween,
@@ -387,4 +390,176 @@ test("helpers used by the screens do what the screens assume", () => {
     captureFileStem({ routeId: "JEB405244701", startedAt: "2026-09-12T09:00:00.000Z" }),
     "JEB405244701-2026-09-12T09-00-00-000Z",
   );
+});
+
+/* ------------------------------------------------- route shapes, generically */
+
+/** The 365 baseline, kept as a regression fixture and nothing more. */
+const ROUTE_365_STOPS = Array.from({ length: 43 }, (_, index) => ({
+  stopId: `JEB4051365${String(index + 1).padStart(2, "0")}`,
+  name: `365 정류장 ${index + 1}`,
+  sequence: index + 1,
+}));
+
+/** An ordinary Jeju route with two stops that share a name across directions. */
+const ROUTE_331_STOPS = [
+  { stopId: "JEB331001", name: "제주버스터미널", sequence: 1 },
+  { stopId: "JEB331002", name: "한라병원", sequence: 2 },
+  { stopId: "JEB331003", name: "노형오거리", sequence: 3 },
+  { stopId: "JEB331004", name: "정존마을", sequence: 4 },
+  { stopId: "JEB331005", name: "노형오거리", sequence: 5 },
+  { stopId: "JEB331006", name: "제주공항", sequence: 6 },
+];
+
+/** A short-turn branch: fewer stops, same number, different routeId. */
+const ROUTE_BRANCH_STOPS = [
+  { stopId: "JEB460001", name: "동광환승", sequence: 1 },
+  { stopId: "JEB460002", name: "화순", sequence: 2 },
+  { stopId: "JEB460003", name: "안덕", sequence: 3 },
+];
+
+/** A closed circular route: the last entry is the first stop again. */
+const ROUTE_LOOP_STOPS = [
+  { stopId: "JEB465001", name: "순환 기점", sequence: 1 },
+  { stopId: "JEB465002", name: "중앙로", sequence: 2 },
+  { stopId: "JEB465003", name: "동문시장", sequence: 3 },
+  { stopId: "JEB465004", name: "탑동", sequence: 4 },
+  { stopId: "JEB465005", name: "용담", sequence: 5 },
+  { stopId: "JEB465001", name: "순환 기점", sequence: 6 },
+];
+
+const LOOP_META = { kind: "loop", stopCount: 6, cycleLength: 5, duplicateStopIdCount: 1, duplicateStopNameCount: 1 };
+const REPEATING_META = { kind: "repeating", stopCount: 6, cycleLength: 6, duplicateStopIdCount: 0, duplicateStopNameCount: 1 };
+
+test("route shape comes from the server, and an absent classification is read as linear", () => {
+  assert.equal(normalizeTopology(undefined, ROUTE_331_STOPS).kind, "linear");
+  assert.equal(normalizeTopology({}, ROUTE_331_STOPS).kind, "linear");
+  assert.equal(normalizeTopology(LOOP_META, ROUTE_LOOP_STOPS).cycleLength, 5);
+
+  // Fail closed: without a classification, riding past the end is refused.
+  const blind = verifyTopology({ stops: ROUTE_LOOP_STOPS, boardingSequence: 5, destinationSequence: 2 });
+  assert.equal(blind.ok, false);
+  assert.equal(blind.wrapAround, false);
+  assert.ok(blind.problems.some((problem: string) => problem.includes("방향이 반대")));
+});
+
+test("wrap-around is allowed on a closed loop and refused on an ambiguous one", () => {
+  const loop = verifyTopology({
+    stops: ROUTE_LOOP_STOPS,
+    topology: LOOP_META,
+    boardingSequence: 5,
+    destinationSequence: 2,
+  });
+  assert.equal(loop.ok, true);
+  assert.equal(loop.wrapAround, true);
+
+  const forward = verifyTopology({ stops: ROUTE_LOOP_STOPS, topology: LOOP_META, boardingSequence: 2, destinationSequence: 5 });
+  assert.equal(forward.ok, true);
+  assert.equal(forward.wrapAround, false, "a forward ride on a loop route is still a forward ride");
+
+  const ambiguous = verifyTopology({
+    stops: ROUTE_331_STOPS,
+    topology: REPEATING_META,
+    boardingSequence: 5,
+    destinationSequence: 2,
+  });
+  assert.equal(ambiguous.ok, false);
+  assert.ok(ambiguous.problems.some((problem: string) => problem.startsWith("AMBIGUOUS_TOPOLOGY")));
+
+  const sameStop = verifyTopology({ stops: ROUTE_331_STOPS, boardingSequence: 3, destinationSequence: 3 });
+  assert.equal(sameStop.ok, false);
+  assert.ok(sameStop.problems.some((problem: string) => problem.includes("같은 정류장")));
+});
+
+test("stops that share a name are labelled with the official id as well", () => {
+  const labelled = labelStops(ROUTE_331_STOPS);
+  assert.equal(labelled[0]!.label, "1. 제주버스터미널");
+  assert.equal(labelled[2]!.label, "3. 노형오거리 · JEB331003");
+  assert.equal(labelled[4]!.label, "5. 노형오거리 · JEB331005");
+  assert.deepEqual(labelStops([]), []);
+});
+
+test("the stop list ahead follows the bus around a loop", () => {
+  assert.deepEqual(stopsBetween(ROUTE_331_STOPS, 2, 4).map((stop) => stop.sequence), [2, 3, 4]);
+
+  const around = stopsBetween(ROUTE_LOOP_STOPS, 5, 2, true);
+  assert.deepEqual(around.map((stop) => stop.sequence), [5, 6, 2], "the seam stop appears once, in the order it is met");
+
+  assert.equal(forwardStops(5, 2, { cycleLength: 5 }, true), 2);
+  assert.equal(forwardStops(6, 2, { cycleLength: 5 }, true), 1);
+  assert.equal(forwardStops(2, 2, { cycleLength: 5 }, true), 0);
+  assert.equal(forwardStops(2, 5, { cycleLength: 6 }, false), 3);
+  assert.equal(forwardStops(5, 2, { cycleLength: 6 }, false), 0, "a straight route never reports a negative remainder");
+});
+
+test("a loop capture analyses with the seam read as progress", async () => {
+  const store = fakeStore();
+  let clock = BASE;
+  const header = createCaptureHeader({
+    captureId: "loop-capture",
+    startedAt: at(0),
+    routeId: "JEB465000001",
+    cityCode: "39",
+    routeNo: "465",
+    boardingStopSequence: 5,
+    destinationStopSequence: 2,
+    stops: ROUTE_LOOP_STOPS,
+    topology: LOOP_META,
+  });
+  assert.equal(header.wrapAround, true);
+
+  const session = createCaptureSession({ store, header, now: () => new Date(clock) });
+  await session.board("제주79자5500", { at: at(1) });
+  for (const [seconds, sequence] of [[5, 5], [10, 6], [15, 2]] as Array<[number, number]>) {
+    clock = BASE + seconds * 1_000;
+    await session.recordSnapshot({
+      capturedAt: at(seconds),
+      vehicles: [{ vehicleId: "제주79자5500", routeId: "JEB465000001", observedAt: EPOCH, stopSequence: sequence }],
+    });
+  }
+  assert.equal(session.status().remainingStops, 0, "at the destination the count is zero, not minus three");
+
+  const report = analyzeRideCapture((await session.finalize({ at: at(20) })) as never);
+  assert.equal(report.topology.kind, "loop");
+  assert.equal(report.topology.wrapAround, true);
+  assert.equal(report.vehicles[0]!.sequenceDecreaseCount, 0);
+  assert.equal(report.tracked.arrivalDetectedAt, at(15));
+});
+
+test("the same flow works on every route shape, with no route literal in the path", async () => {
+  const fixtures = [
+    { name: "447 pilot", stops: ROUTE_447_STOPS, boarding: 27, destination: 34, topology: undefined },
+    { name: "365 baseline", stops: ROUTE_365_STOPS, boarding: 1, destination: 43, topology: undefined },
+    { name: "331 ordinary", stops: ROUTE_331_STOPS, boarding: 1, destination: 6, topology: REPEATING_META },
+    { name: "460 branch", stops: ROUTE_BRANCH_STOPS, boarding: 1, destination: 3, topology: undefined },
+    { name: "465 loop", stops: ROUTE_LOOP_STOPS, boarding: 5, destination: 2, topology: LOOP_META },
+  ];
+
+  for (const fixture of fixtures) {
+    const store = fakeStore();
+    const header = createCaptureHeader({
+      captureId: `generic-${fixture.name}`,
+      startedAt: at(0),
+      routeId: `ROUTE-${fixture.name}`,
+      cityCode: "39",
+      boardingStopSequence: fixture.boarding,
+      destinationStopSequence: fixture.destination,
+      stops: fixture.stops,
+      topology: fixture.topology,
+    });
+    const session = createCaptureSession({ store, header, now: () => new Date(BASE) });
+    await session.board("bus-under-test", { at: at(1) });
+    await session.recordSnapshot({
+      capturedAt: at(2),
+      vehicles: [{ vehicleId: "bus-under-test", routeId: `ROUTE-${fixture.name}`, observedAt: EPOCH, stopSequence: fixture.boarding }],
+    });
+    await session.passedStop(fixture.destination, { at: at(3) });
+    const capture = session.capture();
+    assert.equal(capture.stops.length, fixture.stops.length, fixture.name);
+    assert.equal(capture.markers.at(-1)!.stopSequence, fixture.destination, fixture.name);
+    // The analyzer accepts every one of them without a route-specific branch.
+    const report = analyzeRideCapture(capture as never);
+    assert.equal(report.stopCount, fixture.stops.length, fixture.name);
+    assert.equal(report.tracked.present, true, fixture.name);
+  }
 });

@@ -117,12 +117,60 @@ the cadence Task C is meant to derive. The report now carries `lifecycle` —
 `hiddenSeconds`, `offlineSeconds`, `recoveries`, `wakeLockUnavailable` — and
 warns that those holes are the recorder's, not the provider's.
 
+## Route shape, and what it decides
+
+The controller works on any Jeju TAGO route that can be pinned down: a confirmed
+`cityCode`, every official variant of the number listed, one exact `routeId` and
+direction chosen from that list, an ordered topology, boarding and destination
+that exist on it, and a live vehicles endpoint that answers. 447 and 365 are a
+preset and a regression fixture; neither appears anywhere in the capture path.
+
+Identity is always `routeId` + `cityCode`. A route number is not identity — one
+number is several routes with different topologies.
+
+`GET /v1/stops` now classifies the stop list it returns, so the analyzer and any
+client read one implementation rather than two guesses:
+
+| Shape | What it means | Wrap-around |
+|---|---|---|
+| `linear` | every stop appears once | refused; a ride runs forward only |
+| `loop` | the last entry repeats the first and nothing else repeats | **allowed** — the list closes, so the arc is well defined |
+| `repeating` | some stop appears twice without closing the list | refused as `AMBIGUOUS_TOPOLOGY` |
+
+A circular route is therefore rideable end-past-start: boarding 38 to destination
+3 on a forty-stop loop is five stops, not minus thirty-five. Crossing the seam
+counts as one step forward rather than a thirty-five-stop reversal, and the
+remaining count and arrival follow the forward arc. Two things are deliberately
+given up there: overshoot cannot be told from a second lap, so `passedDestination`
+stays false on a wrap-around ride, and a single step longer than half the loop is
+read as a short step backwards, which is the least-wrong reading of a circular
+difference.
+
+Anywhere the shape is not one of the two answerable cases, the ride is refused
+before it starts. A wrong refusal costs a bus; wrong evidence costs the task.
+
+Other shapes the preflight handles rather than assumes:
+
+- **Several variants on one number** — all are listed with their start and end
+  stop names, and the operator picks the exact `routeId`. Nothing is collapsed.
+- **Two stops sharing a name** — the picker adds the official stop id to both, so
+  the operator chooses the stop and not the word.
+- **Nothing running right now** — the endpoint answered, the route simply has no
+  bus out. That is legitimate at a terminal before the first departure, so it is
+  a warning with an explicit override rather than a wall.
+- **Topology changed mid-ride** — observations reporting a stop the captured
+  topology does not contain are counted in `integrity.offTopologyObservations`
+  and warned about, instead of being quietly absorbed.
+
 ## Schema
 
 `RideCapture` stays at `schemaVersion: 1` and gains two optional fields:
 
 - `events?: RideEvent[]` — instrument lifecycle, never rider ground truth.
 - `source?: "cli" | "web-controller"` — which instrument produced the capture.
+
+The report gained `topology` (the shape above, plus whether this ride wraps) and
+`integrity.offTopologyObservations`. Both are additive.
 
 Both are absent from every capture the CLI writes and are tolerated by the
 analyzer either way, so CLI captures and controller captures remain

@@ -18,6 +18,7 @@ import {
   createCaptureHeader,
   createCaptureSession,
   findVehicle,
+  labelStops,
   maskVehicleIds,
   newCaptureId,
   resumeCaptureSession,
@@ -39,6 +40,8 @@ const state = {
   variants: [],
   route: undefined,
   stops: [],
+  topology: undefined,
+  wrapAround: false,
   boardingSequence: undefined,
   destinationSequence: undefined,
   intervalMs: DEFAULT_INTERVAL_MS,
@@ -265,28 +268,36 @@ async function selectVariant(variant) {
   try {
     const result = await api.stops(variant.routeId, state.cityCode);
     state.stops = result.items ?? [];
-    const check = verifyTopology({
-      stops: state.stops,
-      boardingSequence: state.stops[0]?.sequence ?? 0,
-      destinationSequence: state.stops.at(-1)?.sequence ?? 0,
-    });
+    state.topology = result.meta?.topology;
     renderStopPickers();
-    setStatus("setup-status", check.ok
-      ? `정류장 ${state.stops.length}개 확인. 승하차를 고르라.`
-      : check.problems.join(" / "), check.ok ? "" : "warn");
+    setStatus("setup-status", `${describeTopology()} 승하차를 고르라.`,
+      state.topology?.kind === "repeating" ? "warn" : "");
   } catch (error) {
     setStatus("setup-status", error.message, "error");
   }
 }
 
+function describeTopology() {
+  const kind = state.topology?.kind ?? "linear";
+  const shape = kind === "loop"
+    ? "순환노선 — 종점에서 기점으로 이어진다."
+    : kind === "repeating"
+      ? "같은 정류장을 두 번 지나는 노선이다. 순번을 보고 정확한 쪽을 고르라."
+      : "";
+  return `정류장 ${state.stops.length}개 확인. ${shape}`.trim();
+}
+
 function renderStopPickers() {
+  // Two stops on one route can share a name, so the label carries the official
+  // stop id wherever that happens.
+  const labelled = labelStops(state.stops);
   for (const [id, key] of [["boarding-stop", "boardingSequence"], ["destination-stop", "destinationSequence"]]) {
     const select = el(id);
     select.replaceChildren();
-    for (const stop of state.stops) {
+    for (const stop of labelled) {
       const option = document.createElement("option");
       option.value = String(stop.sequence);
-      option.textContent = `${stop.sequence}. ${stop.name}`;
+      option.textContent = stop.label;
       select.append(option);
     }
     if (state[key] !== undefined) select.value = String(state[key]);
@@ -312,9 +323,10 @@ async function applyPreset(preset) {
     renderVariants();
     const stops = await api.stops(preset.routeId, preset.cityCode);
     state.stops = stops.items ?? [];
+    state.topology = stops.meta?.topology;
     // The preset names stop ids as well as sequences; a mismatch means the
     // topology moved and the operator picks by hand rather than riding a guess.
-    const check = verifyPreset(preset, state.stops);
+    const check = verifyPreset(preset, state.stops, state.topology);
     state.boardingSequence = preset.boarding.sequence;
     state.destinationSequence = preset.destination.sequence;
     renderStopPickers();
@@ -332,7 +344,12 @@ async function confirmSelection() {
   if (!state.route) return setStatus("setup-status", "노선 방향을 먼저 고르라", "warn");
   const boardingSequence = Number(el("boarding-stop").value);
   const destinationSequence = Number(el("destination-stop").value);
-  const check = verifyTopology({ stops: state.stops, boardingSequence, destinationSequence });
+  const check = verifyTopology({
+    stops: state.stops,
+    topology: state.topology,
+    boardingSequence,
+    destinationSequence,
+  });
   if (!check.ok) return setStatus("setup-status", check.problems.join(" / "), "error");
 
   if (!(await ensureToken("실시간 차량 확인에 운영자 인증이 필요하다."))) {
@@ -342,12 +359,21 @@ async function confirmSelection() {
   try {
     const snapshot = await api.snapshot(state.route.routeId, state.cityCode);
     if (!snapshot.items?.length) {
-      return setStatus("setup-status", "지금 이 방향에 운행 중인 차량이 없다. 시간대를 바꾸거나 반대 방향을 보라.", "warn");
+      // The endpoint answered; the route simply has nothing running right now.
+      // That is legitimate at a terminal before the first departure, so it is a
+      // warning with an explicit override rather than a wall.
+      const proceed = window.confirm(
+        "지금 이 방향에 운행 중인 차량이 없다.\n\n기점에서 첫차를 기다리는 중이라면 그대로 시작해도 된다. 차량은 수집이 돌기 시작하면 나타난다.\n\n그래도 시작하겠나?",
+      );
+      if (!proceed) {
+        return setStatus("setup-status", "차량 0대. 시간대를 바꾸거나 다른 방향을 보라.", "warn");
+      }
     }
     state.boardingSequence = boardingSequence;
     state.destinationSequence = destinationSequence;
+    state.wrapAround = check.wrapAround;
     state.intervalMs = Math.max(MIN_INTERVAL_MS, Number(el("interval").value) * 1_000);
-    renderReady(snapshot.items.length);
+    renderReady(snapshot.items?.length ?? 0);
     show("ready");
   } catch (error) {
     setStatus("setup-status", error.message, "error");
@@ -362,7 +388,10 @@ function renderReady(vehicleCount) {
   el("ready-boarding").textContent = `${boarding.sequence}. ${boarding.name}`;
   el("ready-destination").textContent = `${destination.sequence}. ${destination.name}`;
   el("ready-route-id").textContent = state.route.routeId;
-  el("ready-meta").textContent = `city ${state.cityCode} · ${state.intervalMs / 1_000}초 간격 · 현재 운행 ${vehicleCount}대`;
+  const shape = state.wrapAround
+    ? " · 순환 승차(종점 넘어감)"
+    : state.topology?.kind === "loop" ? " · 순환노선" : "";
+  el("ready-meta").textContent = `city ${state.cityCode} · ${state.intervalMs / 1_000}초 간격 · 현재 운행 ${vehicleCount}대${shape}`;
 }
 
 /* ------------------------------------------------------------------ capture */
@@ -379,6 +408,7 @@ async function startCapture() {
     destinationStopSequence: state.destinationSequence,
     intervalMs: state.intervalMs,
     stops: state.stops,
+    topology: state.topology,
   });
   await state.store.clear();
   await state.store.putHeader(header);
@@ -503,7 +533,9 @@ function renderStopButtons(capture, status) {
   list.replaceChildren();
   // Ground truth only: the operator taps where the bus actually halted, so the
   // list is offered from wherever the ride is, never pre-selected from it.
-  for (const stop of stopsBetween(capture.stops, Math.max(capture.boardingStopSequence, from - 2), capture.destinationStopSequence)) {
+  const wrapAround = Boolean(state.session?.wrapAround);
+  const window_ = wrapAround ? from : Math.max(capture.boardingStopSequence, from - 2);
+  for (const stop of stopsBetween(capture.stops, window_, capture.destinationStopSequence, wrapAround)) {
     const marked = capture.markers.some((marker) => marker.kind === "passed_stop" && marker.stopSequence === stop.sequence);
     const button = document.createElement("button");
     button.type = "button";

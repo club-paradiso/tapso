@@ -2,7 +2,15 @@ import test from "node:test";
 import assert from "node:assert/strict";
 import type { RouteRequest, StopOnRoute, VehicleObservation } from "../src/domain.ts";
 import { ProviderResponseError } from "../src/provider.ts";
-import { analyzeRideCapture, RIDE_CAPTURE_SCHEMA_VERSION, summarize, type RideCapture, type RideSnapshot } from "../src/rideCapture.ts";
+import {
+  analyzeRideCapture,
+  classifyTopology,
+  isWrapAroundJourney,
+  RIDE_CAPTURE_SCHEMA_VERSION,
+  summarize,
+  type RideCapture,
+  type RideSnapshot,
+} from "../src/rideCapture.ts";
 import {
   applyCommand,
   describeCurrentVehicles,
@@ -391,6 +399,7 @@ test("counts what makes a capture file itself untrustworthy", () => {
     markersOutOfOrder: 1,
     markersOutsideCaptureWindow: 1,
     foreignRouteObservations: 1,
+    offTopologyObservations: 0,
   });
   for (const fragment of ["out of chronological order", "share a capture timestamp", "belong to another route"]) {
     assert.ok(report.warnings.some((warning) => warning.includes(fragment)), fragment);
@@ -446,4 +455,124 @@ test("an interrupted capture still analyses, and the boarded number never reache
   assert.equal(JSON.stringify(report).includes("제주79자9999"), false);
   assert.equal(JSON.stringify(report).includes("제주79자1111"), false);
   assert.equal(report.evidenceCompleteness.verdict, "INSUFFICIENT_EVIDENCE");
+});
+
+/* ------------------------------------------------ route shape and wrap-around */
+
+/** Six entries whose last repeats the first: a list that closes on itself. */
+const loopStops: StopOnRoute[] = [1, 2, 3, 4, 5, 6].map((sequence) => ({
+  stopId: sequence === 6 ? "LOOP-1" : `LOOP-${sequence}`,
+  name: sequence === 6 ? "순환 기점" : `순환 ${sequence}`,
+  sequence,
+}));
+
+/** Passes one stop twice without closing: real, and genuinely ambiguous. */
+const repeatingStops: StopOnRoute[] = [
+  { stopId: "R-1", name: "출발", sequence: 1 },
+  { stopId: "R-2", name: "교차로", sequence: 2 },
+  { stopId: "R-3", name: "마을", sequence: 3 },
+  { stopId: "R-2", name: "교차로", sequence: 4 },
+  { stopId: "R-5", name: "종점", sequence: 5 },
+];
+
+function loopCapture(snapshots: RideSnapshot[], overrides: Partial<RideCapture> = {}): RideCapture {
+  return {
+    schemaVersion: RIDE_CAPTURE_SCHEMA_VERSION,
+    startedAt: at(0),
+    endedAt: at(60),
+    routeId: "LOOP-ROUTE",
+    cityCode: "39",
+    boardingStopSequence: 5,
+    destinationStopSequence: 2,
+    boardedVehicleId: "제주79자9999",
+    intervalMs: 5_000,
+    stops: loopStops,
+    snapshots,
+    markers: [],
+    ...overrides,
+  };
+}
+
+test("route shape is classified from the stop list, not assumed", () => {
+  const linear = classifyTopology(stops);
+  assert.equal(linear.kind, "linear");
+  assert.equal(linear.cycleLength, 8);
+  assert.equal(linear.duplicateStopIdCount, 0);
+  assert.equal(linear.sequenceAscending, true);
+
+  const loop = classifyTopology(loopStops);
+  assert.equal(loop.kind, "loop");
+  assert.equal(loop.stopCount, 6);
+  assert.equal(loop.cycleLength, 5, "the repeated seam stop is counted once");
+
+  const repeating = classifyTopology(repeatingStops);
+  assert.equal(repeating.kind, "repeating");
+  assert.equal(repeating.duplicateStopIdCount, 1);
+  assert.equal(repeating.duplicateStopNameCount, 1);
+
+  assert.equal(classifyTopology([]).kind, "linear");
+  assert.equal(classifyTopology([{ stopId: "A", name: "a", sequence: 3 }, { stopId: "B", name: "b", sequence: 1 }]).sequenceAscending, false);
+});
+
+test("a ride may run past the end of the list only where the list closes on itself", () => {
+  // Straight route: still refused, with the message the CLI has always used.
+  assert.throws(() => analyzeRideCapture(capture([], { boardingStopSequence: 7, destinationStopSequence: 3 })), /after boardingStopSequence/);
+  // Passes a stop twice: refused, and the reason names the shape.
+  assert.throws(
+    () => analyzeRideCapture(loopCapture([], { stops: repeatingStops, boardingStopSequence: 4, destinationStopSequence: 2 })),
+    /repeating route/,
+  );
+  // Same stop twice over is never a journey, whatever the shape.
+  assert.throws(() => analyzeRideCapture(loopCapture([], { boardingStopSequence: 3, destinationStopSequence: 3 })), /after boardingStopSequence/);
+
+  const report = analyzeRideCapture(loopCapture([
+    { capturedAt: at(0), vehicles: [observation("제주79자9999", 0, 5)] },
+  ]));
+  assert.equal(report.topology.kind, "loop");
+  assert.equal(report.topology.wrapAround, true);
+  assert.equal(report.topology.cycleLength, 5);
+
+  assert.equal(isWrapAroundJourney({ stops: loopStops, boardingStopSequence: 5, destinationStopSequence: 2 }), true);
+  assert.equal(isWrapAroundJourney({ stops: loopStops, boardingStopSequence: 2, destinationStopSequence: 5 }), false);
+  assert.equal(isWrapAroundJourney({ stops, boardingStopSequence: 5, destinationStopSequence: 2 }), false);
+});
+
+test("crossing the seam of a loop is progress, not a reversal", () => {
+  const tracked = "제주79자9999";
+  const report = analyzeRideCapture(loopCapture([
+    { capturedAt: at(0), vehicles: [observation(tracked, 0, 5)] },
+    { capturedAt: at(10), vehicles: [observation(tracked, 10, 6)] },  // the seam
+    { capturedAt: at(20), vehicles: [observation(tracked, 20, 2)] },  // round to the far side
+  ]));
+
+  const timeline = report.vehicles[0]!;
+  assert.equal(timeline.sequenceDecreaseCount, 0, "6 → 2 across the seam is one step forward, not four back");
+  assert.equal(timeline.largestSequenceJump, 1);
+  assert.deepEqual(timeline.sequenceAdvances, { count: 2, min: 1, median: 1, p75: 1, p90: 1, p95: 1, max: 1 });
+
+  assert.deepEqual(report.tracked.remainingStopsTimeline.map((entry) => entry.remainingStops), [2, 1, 0]);
+  assert.equal(report.tracked.arrivalDetectedAt, at(20));
+  assert.equal(report.tracked.passedBoardingAt, at(10));
+  assert.equal(report.tracked.passedDestination, false, "overshoot cannot be told from a second lap on a closed route");
+  assert.deepEqual(report.warnings.filter((warning) => warning.includes("decreased")), []);
+});
+
+test("a linear ride on a loop route keeps straight arithmetic", () => {
+  const report = analyzeRideCapture(loopCapture([
+    { capturedAt: at(0), vehicles: [observation("제주79자9999", 0, 2)] },
+    { capturedAt: at(10), vehicles: [observation("제주79자9999", 10, 4)] },
+  ], { boardingStopSequence: 2, destinationStopSequence: 5 }));
+  assert.equal(report.topology.wrapAround, false);
+  assert.deepEqual(report.tracked.remainingStopsTimeline.map((entry) => entry.remainingStops), [3, 1]);
+  assert.equal(report.tracked.arrivalDetectedAt, undefined);
+});
+
+test("a stop the topology does not contain is counted, not silently absorbed", () => {
+  const report = analyzeRideCapture(capture([
+    { capturedAt: at(0), vehicles: [observation("제주79자9999", 0, 4)] },
+    // The route gained stops mid-ride: sequence 11 is not in the captured list.
+    { capturedAt: at(5), vehicles: [{ ...observation("제주79자9999", 5, 4), stopSequence: 11 }] },
+  ]));
+  assert.equal(report.integrity.offTopologyObservations, 1);
+  assert.ok(report.warnings.some((warning) => warning.includes("the route may have changed mid-ride")));
 });
