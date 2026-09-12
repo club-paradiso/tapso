@@ -40,4 +40,22 @@ class ProbeTests(unittest.TestCase):
                 probe.call('synthetic-key',probe.ROUTES+'getCtyCodeList')
         self.assertNotIn('secret-in-url',str(error.exception))
 
+    def test_canonical_key_name_is_preferred_and_public_name_is_a_fallback(self):
+        with patch.dict('os.environ', {'TAGO_SERVICE_KEY': 'canonical', 'PUBLIC_DATA_SERVICE_KEY': 'retired'}, clear=True), \
+                patch.object(probe.Path, 'exists', return_value=False):
+            self.assertEqual(probe.read_key(), 'canonical')
+        with patch.dict('os.environ', {'PUBLIC_DATA_SERVICE_KEY': 'retired'}, clear=True), \
+                patch.object(probe.Path, 'exists', return_value=False):
+            self.assertEqual(probe.read_key(), 'retired')
+        with patch.dict('os.environ', {'TAGO_SERVICE_KEY': '  '}, clear=True), \
+                patch.object(probe.Path, 'exists', return_value=False):
+            self.assertEqual(probe.read_key(), '')
+
+    def test_missing_key_names_the_canonical_variable(self):
+        with patch.object(probe, 'read_key', return_value=''):
+            with self.assertRaises(ValueError) as error:
+                probe.main()
+        self.assertIn('TAGO_SERVICE_KEY', str(error.exception))
+        self.assertNotIn('PUBLIC_DATA_SERVICE_KEY', str(error.exception))
+
 if __name__ == '__main__': unittest.main()

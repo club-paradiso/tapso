@@ -59,8 +59,8 @@ now needs them, so the decision is revisited here.
 - **Blast radius.** A transit function fault, a TAGO outage, or an abusive
   caller now consumes the API project's function budget and rollback history,
   not the public product site's.
-- **Credential separation.** `PUBLIC_DATA_SERVICE_KEY` is set on the API
-  project only. The marketing project never holds it.
+- **Credential separation.** `TAGO_SERVICE_KEY` is set on the API project only.
+  The marketing project never holds it.
 - **Client contract.** iOS gets a base URL that is not the marketing domain, so
   a later move to a custom `api.` host changes one constant instead of a
   deployment topology.
@@ -153,7 +153,8 @@ or placed in a URL a client can see.
 
 | Name | Required | Default | Purpose |
 |---|---|---|---|
-| `PUBLIC_DATA_SERVICE_KEY` | yes, for live data | — | Public Data Portal **Decoding** key. Without it every TAGO-backed endpoint answers `503 BLOCKED_BY_CREDENTIALS`. |
+| `TAGO_SERVICE_KEY` | yes, for live data | — | Public Data Portal **Decoding** key. The canonical name, and the only one production reads. Without it every TAGO-backed endpoint answers `503 BLOCKED_BY_CREDENTIALS`. Store it on Vercel as a **Sensitive** variable. |
+| `PUBLIC_DATA_SERVICE_KEY` | no — deprecated | — | The retired name. Honoured **only** when `VERCEL` is unset, so an existing local `.env.local` keeps working. Ignored outright on any Vercel deployment. |
 | `TRANSIT_STOP_TTL_MS` | no | `21600000` (6 h) | Route-stop cache window |
 | `TRANSIT_VEHICLE_TTL_MS` | no | `20000` | Vehicle snapshot cache window |
 | `TRANSIT_DISCOVERY_TTL_MS` | no | `21600000` (6 h) | City and route-number discovery cache window |
@@ -172,6 +173,25 @@ someone needs to exercise preview deployments against live data, for
 **Preview**. Preview deployments do not inherit a production credential by
 default and should not be given one casually: preview URLs are shared more
 widely than production ones.
+
+### Why the name changed
+
+The credential was originally called `PUBLIC_DATA_SERVICE_KEY`, after the Korean
+Public Data Portal it comes from. The name is wrong for a secret: platforms read
+a `PUBLIC_` prefix as "expose this to the browser", and Vercel accordingly
+refuses to store such a variable with Sensitive visibility.
+
+The two ways out were to lower the key's visibility to match the name, or to fix
+the name. Lowering visibility would leave a live government API credential
+sitting at a weaker protection level because of a naming accident, so the name
+changed instead.
+
+`resolveTagoServiceKey` in `services/api/src/serviceKey.ts` is the single place
+that decides this, and both the provider and the health payload go through it —
+they cannot end up disagreeing about whether a credential is configured. The
+retired name resolves only when `VERCEL` is unset. That is what makes "the
+production secret is stored as Sensitive" a property of the deployment rather
+than a convention someone has to remember.
 
 ## Security posture
 
@@ -234,7 +254,7 @@ feature, the session store is the one component that must be replaced first.
 ```bash
 # Store the Decoding key in an ignored .env.local with permissions 0600.
 # `env -u` makes sure an exported shell value cannot shadow the file.
-env -u PUBLIC_DATA_SERVICE_KEY node --env-file=.env.local \
+env -u TAGO_SERVICE_KEY node --env-file=.env.local \
   --experimental-strip-types services/api/src/server.ts
 
 curl -s http://127.0.0.1:8787/health
@@ -267,12 +287,19 @@ preview deployments of the Task A branch reach `Ready` /
 The first production deployment ran on the merge of pull request #25 and
 succeeded. Remaining first-time setup:
 
-1. Settings → Environment Variables: add `PUBLIC_DATA_SERVICE_KEY` (Decoding
-   key) for Production. Add it for Preview only if preview deployments must
-   reach live data. Until it is set, every TAGO-backed endpoint answers
-   `503 BLOCKED_BY_CREDENTIALS` and `/health` reports
+1. Settings → Environment Variables: add **`TAGO_SERVICE_KEY`** (Decoding key)
+   for Production, with **Sensitive** visibility. Add it for Preview only if
+   preview deployments must reach live data. Until it is set, every TAGO-backed
+   endpoint answers `503 BLOCKED_BY_CREDENTIALS` and `/health` reports
    `liveTransitConfigured: false`. `/health` is the authority on whether it is
    set; nothing else reveals it.
+
+   Do **not** use `PUBLIC_DATA_SERVICE_KEY` here. Vercel reads a `PUBLIC_`
+   prefix as a public framework variable and will not store it with Sensitive
+   visibility; the deployment therefore ignores that name on purpose, rather
+   than letting a server credential sit at a lower visibility to match a bad
+   name. A project carrying only the retired name shows
+   `credential: { source: "missing", deprecatedNamePresent: true }` in `/health`.
 2. Settings → Deployment Protection: production must be publicly reachable for
    the iOS client. Preview may stay protected.
 3. Record the production alias from Settings → Domains and put it in the base

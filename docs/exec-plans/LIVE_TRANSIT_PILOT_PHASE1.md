@@ -39,7 +39,7 @@ Non-goals: claiming a real passenger boarding was observed, choosing durable hos
 ```bash
 npm test --prefix services/api
 python3 -m unittest discover -s scripts/tago -p 'test_*.py'
-env -u PUBLIC_DATA_SERVICE_KEY node --env-file=.env.local --experimental-strip-types services/api/src/server.ts
+env -u TAGO_SERVICE_KEY node --env-file=.env.local --experimental-strip-types services/api/src/server.ts
 ```
 
 With the Node API running, pilot endpoints are:

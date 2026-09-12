@@ -35,7 +35,7 @@ Non-goals: defining the freshness rule itself, enabling journey-session matching
 ```bash
 npm --prefix services/api test
 mkdir -p work
-env -u PUBLIC_DATA_SERVICE_KEY node --env-file=.env.local --experimental-strip-types \
+env -u TAGO_SERVICE_KEY node --env-file=.env.local --experimental-strip-types \
   scripts/ride-capture/capture.ts JEB405136521 39 <boarding-seq> <destination-seq>
 # while riding: b <vehicleno> | p <stop-seq> | a | n <note> | q
 node --experimental-strip-types scripts/ride-capture/analyze.ts work/rides/<capture>.json

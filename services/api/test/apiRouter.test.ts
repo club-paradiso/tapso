@@ -56,7 +56,7 @@ type Harness = {
 };
 
 function harness(env: ServerEnv = {}, overrides: { discoveryFailure?: Error } = {}): Harness {
-  const config = readTransitApiConfig({ PUBLIC_DATA_SERVICE_KEY: "synthetic-key", ...env }, { nodeVersion: "v22.0.0" });
+  const config = readTransitApiConfig({ TAGO_SERVICE_KEY: "synthetic-key", ...env }, { nodeVersion: "v22.0.0" });
   const upstream = new StubProvider();
   const provider = new CachedTransitProvider(upstream, {
     stopTtlMs: config.cachePolicy.stopTtlMs,
@@ -126,7 +126,22 @@ test("health reports configuration without revealing the credential", async () =
   assert.equal(body.sessionStore, "memory");
   assert.equal(body.freshness.providerObservationTimestamp, "unavailable");
   assert.equal(body.freshness.automaticMatching, "withheld_pending_source_freshness_rule");
+  assert.equal(body.credential.source, "canonical");
   assert.ok(!JSON.stringify(body).includes("synthetic-key"));
+  // The payload reports a category, never a variable name a scraper could use.
+  const serialized = JSON.stringify(body);
+  assert.ok(!serialized.includes("TAGO_SERVICE_KEY"));
+  assert.ok(!serialized.includes("PUBLIC_DATA_SERVICE_KEY"));
+  assert.ok(!/serviceKey/i.test(serialized));
+});
+
+test("health surfaces a deployment left on the retired credential name", async () => {
+  const { handler } = harness({ VERCEL: "1", TAGO_SERVICE_KEY: "", PUBLIC_DATA_SERVICE_KEY: "legacy" });
+  const body = await (await get(handler, "/health")).json();
+  assert.equal(body.liveTransitConfigured, false);
+  assert.equal(body.credential.source, "missing");
+  assert.equal(body.credential.deprecatedNamePresent, true);
+  assert.ok(!JSON.stringify(body).includes("legacy"));
 });
 
 test("health reports an unconfigured deployment as not live", async () => {
@@ -221,7 +236,7 @@ test("unknown paths and wrong methods are answered without touching upstream", a
 
 test("provider failures map to safe statuses and are never cached as success", async () => {
   const { handler, upstream } = harness();
-  upstream.vehicleFailure = new ProviderConfigurationError("PUBLIC_DATA_SERVICE_KEY is required for TAGO live transit calls");
+  upstream.vehicleFailure = new ProviderConfigurationError("TAGO_SERVICE_KEY is required for TAGO live transit calls");
   const blocked = await get(handler, `/v1/vehicles?routeId=${ROUTE}&cityCode=${CITY}`);
   assert.equal(blocked.status, 503);
   assert.equal((await blocked.json()).error, "BLOCKED_BY_CREDENTIALS");
@@ -404,4 +419,30 @@ test("a burst of requests from one caller is rejected with retry-after", async (
   });
   assert.equal(otherCaller.status, 200);
   assert.equal(upstream.stopCalls, 1, "the route cache absorbed every allowed read");
+});
+
+test("a serverless deployment carrying only the retired name fails closed end to end", async () => {
+  // Exercises the real wiring, not the stub: createTransitApi builds the actual
+  // TAGO provider, which must refuse before it ever reaches the network.
+  const { createTransitApi } = await import("../src/apiRuntime.ts");
+  const api = createTransitApi({ VERCEL: "1", PUBLIC_DATA_SERVICE_KEY: "legacy-name-only" });
+
+  assert.equal(api.config.liveTransitConfigured, false);
+  const vehicles = await api.handler(new Request(`http://api.test/v1/vehicles?routeId=${ROUTE}&cityCode=${CITY}`));
+  assert.equal(vehicles.status, 503);
+  const body = await vehicles.json();
+  assert.equal(body.error, "BLOCKED_BY_CREDENTIALS");
+  assert.match(body.message, /TAGO_SERVICE_KEY/);
+  assert.ok(!JSON.stringify(body).includes("legacy-name-only"));
+});
+
+test("the canonical name reaches the real provider through the wiring", async () => {
+  const { createTransitApi } = await import("../src/apiRuntime.ts");
+  const api = createTransitApi({ VERCEL: "1", TAGO_SERVICE_KEY: "canonical-key" });
+  assert.equal(api.config.liveTransitConfigured, true);
+  assert.equal(api.config.credential.source, "canonical");
+
+  const health = await (await api.handler(new Request("http://api.test/health"))).json();
+  assert.equal(health.liveTransitConfigured, true);
+  assert.ok(!JSON.stringify(health).includes("canonical-key"));
 });

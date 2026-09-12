@@ -2,6 +2,7 @@ import { mkdir, rename, writeFile } from "node:fs/promises";
 import { createInterface } from "node:readline";
 import path from "node:path";
 import { TagoTransitProvider } from "../../services/api/src/tagoProvider.ts";
+import { resolveTagoServiceKey, serviceKeyWarning } from "../../services/api/src/serviceKey.ts";
 import { analyzeRideCapture, type RideCapture } from "../../services/api/src/rideCapture.ts";
 import { describeStops, startRideCapture } from "../../services/api/src/rideCaptureRunner.ts";
 
@@ -13,7 +14,7 @@ if (!routeId || !cityCode || !Number.isInteger(boardingStopSequence) || !Number.
   console.error([
     "Usage: node --experimental-strip-types scripts/ride-capture/capture.ts <official-route-id> <official-city-code> <boarding-seq> <destination-seq>",
     "Environment: RIDE_CAPTURE_INTERVAL_MS=5000 RIDE_CAPTURE_MAX_SNAPSHOTS=720 RIDE_CAPTURE_MAX_MINUTES=90",
-    "Run with: env -u PUBLIC_DATA_SERVICE_KEY node --env-file=.env.local --experimental-strip-types scripts/ride-capture/capture.ts …",
+    "Run with: env -u TAGO_SERVICE_KEY node --env-file=.env.local --experimental-strip-types scripts/ride-capture/capture.ts …",
     "Commands while running: b <vehicleno> | p <stop-seq> | a [stop-seq] | n <note> | q",
     "Output: work/rides/<timestamp>.json (ignored; contains raw vehicle numbers) and a sanitized .report.json",
   ].join("\n"));
@@ -24,7 +25,12 @@ const workDirectory = path.resolve(process.cwd(), "work", "rides");
 const stamp = new Date().toISOString().replace(/[:.]/g, "-");
 const capturePath = path.join(workDirectory, `${routeId}-${stamp}.json`);
 const reportPath = path.join(workDirectory, `${routeId}-${stamp}.report.json`);
-const serviceKey = (process.env.PUBLIC_DATA_SERVICE_KEY ?? "").trim();
+// The same resolver the service uses, so the "never write the credential"
+// guard below still recognises a key supplied under the deprecated local name.
+const resolvedKey = resolveTagoServiceKey(process.env);
+const serviceKey = resolvedKey.key;
+const keyWarning = serviceKeyWarning(resolvedKey);
+if (keyWarning) console.error(`[${new Date().toISOString()}] ${keyWarning}`);
 
 async function persist(capture: RideCapture): Promise<void> {
   await mkdir(workDirectory, { recursive: true, mode: 0o700 });
@@ -75,7 +81,7 @@ try {
     code: code ?? "RIDE_CAPTURE_FAILED",
     message: error instanceof Error ? error.message : String(error),
     hint: code === "BLOCKED_BY_CREDENTIALS"
-      ? "Load PUBLIC_DATA_SERVICE_KEY from ignored .env.local. Never commit the key."
+      ? "Load TAGO_SERVICE_KEY from ignored .env.local. Never commit the key."
       : undefined,
   }));
   process.exit(1);

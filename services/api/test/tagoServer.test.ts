@@ -5,7 +5,7 @@ import { once } from "node:events";
 test("HTTP pilot uses TAGO and requires its official cityCode", async () => {
   const realFetch = globalThis.fetch;
   process.env.NODE_ENV = "test";
-  process.env.PUBLIC_DATA_SERVICE_KEY = "synthetic-server-key";
+  process.env.TAGO_SERVICE_KEY = "synthetic-server-key";
   const upstreamRequests: URL[] = [];
   globalThis.fetch = async input => {
     const url = new URL(String(input));
@@ -47,6 +47,6 @@ test("HTTP pilot uses TAGO and requires its official cityCode", async () => {
   } finally {
     server.closeAllConnections();
     await new Promise<void>((resolve, reject) => server.close(error => error ? reject(error) : resolve()));
-    delete process.env.PUBLIC_DATA_SERVICE_KEY;
+    delete process.env.TAGO_SERVICE_KEY;
   }
 });

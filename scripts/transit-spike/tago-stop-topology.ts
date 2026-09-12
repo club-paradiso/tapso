@@ -67,7 +67,7 @@ try {
     code: code ?? "TAGO_TOPOLOGY_FAILED",
     message: error instanceof Error ? error.message : String(error),
     hint: code === "BLOCKED_BY_CREDENTIALS"
-      ? "Load PUBLIC_DATA_SERVICE_KEY from Keychain into the shell environment. Never print the key."
+      ? "Load TAGO_SERVICE_KEY from Keychain into the shell environment. Never print the key."
       : undefined,
   }));
   process.exit(1);

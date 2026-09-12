@@ -10,7 +10,7 @@ if (!routeId || !cityCode) {
   console.error([
     "Usage: node --experimental-strip-types scripts/transit-spike/run.ts <official-route-id> <official-city-code>",
     "Environment: TRANSIT_SPIKE_SAMPLES=12 TRANSIT_SPIKE_INTERVAL_MS=5000",
-    "Example: TRANSIT_SPIKE_SAMPLES=60 TRANSIT_SPIKE_INTERVAL_MS=5000 env -u PUBLIC_DATA_SERVICE_KEY node --env-file=.env.local --experimental-strip-types scripts/transit-spike/run.ts '<official-route-id>' '<official-city-code>'",
+    "Example: TRANSIT_SPIKE_SAMPLES=60 TRANSIT_SPIKE_INTERVAL_MS=5000 env -u TAGO_SERVICE_KEY node --env-file=.env.local --experimental-strip-types scripts/transit-spike/run.ts '<official-route-id>' '<official-city-code>'",
   ].join("\n"));
   process.exit(2);
 }
@@ -45,7 +45,7 @@ try {
     code: code ?? "SPIKE_FAILED",
     message: error instanceof Error ? error.message : String(error),
     hint: code === "BLOCKED_BY_CREDENTIALS"
-      ? "Set PUBLIC_DATA_SERVICE_KEY in the shell environment. Never commit the key."
+      ? "Set TAGO_SERVICE_KEY in the shell environment. Never commit the key."
       : undefined,
   }));
   process.exit(1);

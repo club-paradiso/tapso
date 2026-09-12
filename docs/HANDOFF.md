@@ -31,7 +31,9 @@ does **not** depend on a deployed API.
 Prerequisites:
 
 - A Public Data Portal **Decoding** key in an ignored `.env.local` with
-  permissions `0600`, as `PUBLIC_DATA_SERVICE_KEY`. The Encoding key is rejected.
+  permissions `0600`, as `TAGO_SERVICE_KEY`. The Encoding key is rejected. The
+  retired `PUBLIC_DATA_SERVICE_KEY` still works for local runs but is ignored on
+  Vercel; rename it.
 - A boarding and destination stop sequence chosen from one verified full-length
   direction: `JEB405136521` (제주대학교 → 제주한라대학교) or `JEB405136522`
   (제주한라대학교 → 제주대학교), `cityCode` 39.
@@ -39,14 +41,14 @@ Prerequisites:
 
 ```bash
 # 1. Confirm the identifiers against live TAGO before boarding.
-env -u PUBLIC_DATA_SERVICE_KEY node --env-file=.env.local \
+env -u TAGO_SERVICE_KEY node --env-file=.env.local \
   --experimental-strip-types services/api/src/server.ts &
 curl -s 'http://127.0.0.1:8787/v1/routes?cityCode=39&routeNo=365'
 curl -s 'http://127.0.0.1:8787/v1/stops?routeId=JEB405136521&cityCode=39'
 
 # 2. Capture the ride. Raw snapshots stay in ignored work/rides/.
 #    Commands while running: b <vehicleno> | p <stop-seq> | a [stop-seq] | n <note> | q
-env -u PUBLIC_DATA_SERVICE_KEY node --env-file=.env.local \
+env -u TAGO_SERVICE_KEY node --env-file=.env.local \
   --experimental-strip-types scripts/ride-capture/capture.ts \
   JEB405136521 39 <boarding-seq> <destination-seq>
 

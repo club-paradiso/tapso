@@ -7,6 +7,7 @@
  */
 
 import { DEFAULT_STOP_CACHE_TTL_MS, DEFAULT_VEHICLE_CACHE_TTL_MS } from "./cachedTransitProvider.ts";
+import { resolveTagoServiceKey, type ServiceKeySource } from "./serviceKey.ts";
 
 export type ServerEnv = Record<string, string | undefined>;
 
@@ -17,8 +18,14 @@ export type RuntimePlatform = "node" | "vercel";
 
 export interface TransitApiConfig {
   transitProvider: "tago";
-  /** True only when a TAGO service key is present. Never exposes the key. */
+  /** True only when a TAGO service key is usable here. Never exposes the key. */
   liveTransitConfigured: boolean;
+  /** Which environment variable supplied the credential, by category only. */
+  credential: {
+    source: ServiceKeySource;
+    /** The deprecated name holds a value, whether or not it was used. */
+    deprecatedNamePresent: boolean;
+  };
   cachePolicy: {
     stopTtlMs: number;
     vehicleTtlMs: number;
@@ -63,10 +70,15 @@ export function readTransitApiConfig(
 ): TransitApiConfig {
   const platform: RuntimePlatform = trimmed(env, "VERCEL") ? "vercel" : "node";
   const rateLimitPerMinute = nonNegativeInteger(env, "TRANSIT_RATE_LIMIT_PER_MINUTE", DEFAULT_RATE_LIMIT_PER_MINUTE);
+  const credential = resolveTagoServiceKey(env);
 
   return {
     transitProvider: "tago",
-    liveTransitConfigured: Boolean(trimmed(env, "PUBLIC_DATA_SERVICE_KEY")),
+    liveTransitConfigured: credential.source !== "missing",
+    credential: {
+      source: credential.source,
+      deprecatedNamePresent: credential.deprecatedNamePresent,
+    },
     cachePolicy: {
       stopTtlMs: duration(env, "TRANSIT_STOP_TTL_MS", DEFAULT_STOP_CACHE_TTL_MS),
       vehicleTtlMs: duration(env, "TRANSIT_VEHICLE_TTL_MS", DEFAULT_VEHICLE_CACHE_TTL_MS),

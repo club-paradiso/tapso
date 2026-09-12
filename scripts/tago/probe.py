@@ -20,16 +20,32 @@ OPENER = build_opener(NoRedirect)
 
 
 
+# TAGO_SERVICE_KEY is canonical. PUBLIC_DATA_SERVICE_KEY is the retired name,
+# kept here only so an existing local .env.local keeps working; Vercel refuses
+# Sensitive visibility for a PUBLIC_ prefix, so production never uses it.
+CANONICAL_KEY_NAME = 'TAGO_SERVICE_KEY'
+DEPRECATED_KEY_NAME = 'PUBLIC_DATA_SERVICE_KEY'
+
+
 def read_key():
-    # The project-local file takes priority over an older inherited shell key.
+    # The project-local file takes priority over an older inherited shell key,
+    # and the canonical name takes priority over the deprecated one in both.
     env_file = Path(__file__).resolve().parents[2] / '.env.local'
+    from_file = {}
     if env_file.exists():
         if env_file.stat().st_mode & 0o077:
             raise ValueError('Local env permissions must be 0600')
         for line in env_file.read_text().splitlines():
-            if line.startswith('PUBLIC_DATA_SERVICE_KEY='):
-                return line.split('=', 1)[1].strip().strip('\"\'')
-    return os.environ.get('PUBLIC_DATA_SERVICE_KEY', '')
+            for name in (CANONICAL_KEY_NAME, DEPRECATED_KEY_NAME):
+                if line.startswith(name + '='):
+                    from_file[name] = line.split('=', 1)[1].strip().strip('\"\'')
+    for name in (CANONICAL_KEY_NAME, DEPRECATED_KEY_NAME):
+        value = (from_file.get(name) or os.environ.get(name, '')).strip()
+        if value:
+            if name == DEPRECATED_KEY_NAME:
+                print(f'{DEPRECATED_KEY_NAME} is deprecated; rename it to {CANONICAL_KEY_NAME}', file=sys.stderr)
+            return value
+    return ''
 
 
 def call(key, operation, params=None, paged=True):
@@ -74,7 +90,7 @@ def call(key, operation, params=None, paged=True):
 def main():
     key = read_key()
     if not key:
-        raise ValueError('PUBLIC_DATA_SERVICE_KEY is required')
+        raise ValueError(f'{CANONICAL_KEY_NAME} is required')
     if '%' in key:
         raise ValueError('Use the Decoding key; urlencode performs encoding once')
     cities = call(key, ROUTES + 'getCtyCodeList', paged=False)
