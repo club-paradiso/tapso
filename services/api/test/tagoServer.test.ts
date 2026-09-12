@@ -39,11 +39,22 @@ test("HTTP pilot uses TAGO and requires its official cityCode", async () => {
     assert.equal(legacy.status, 400);
     const regionAlias = await realFetch(base + "/v1/stops?regionCode=999&routeId=SYNTHETIC_R");
     assert.equal(regionAlias.status, 400);
-    const missingRoute = await realFetch(base + "/v1/routes?cityCode=999");
-    assert.equal(missingRoute.status, 400);
-    assert.equal(upstreamRequests.length, 3);
+    // No route number is a catalog request: the provider is asked to list the
+    // city, and whether it will is the provider's answer, not an assumption.
+    const catalog = await realFetch(base + "/v1/routes?cityCode=999");
+    assert.equal(catalog.status, 200);
+    const catalogBody = await catalog.json();
+    assert.equal(catalogBody.meta.catalog, true);
+    assert.equal(catalogBody.meta.routeNo, undefined);
+    assert.equal(catalogBody.meta.variantsPreserved, true);
+
+    const malformedNumber = await realFetch(base + "/v1/routes?cityCode=999&routeNo=" + encodeURIComponent("../etc"));
+    assert.equal(malformedNumber.status, 400);
+
+    assert.equal(upstreamRequests.length, 4);
     assert.equal(upstreamRequests[2].searchParams.get("cityCode"), "999");
     assert.equal(upstreamRequests[2].searchParams.get("routeId"), "SYNTHETIC_R");
+    assert.equal(upstreamRequests[3].searchParams.get("routeNo"), null, "a catalog request sends no route number upstream");
   } finally {
     server.closeAllConnections();
     await new Promise<void>((resolve, reject) => server.close(error => error ? reject(error) : resolve()));

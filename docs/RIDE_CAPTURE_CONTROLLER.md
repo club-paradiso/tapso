@@ -178,40 +178,103 @@ interchangeable in both directions. A version bump would have broken exactly
 that, which is why there isn't one. Tests cover captures with and without the
 new fields.
 
+## Finding a route without knowing its id
+
+The operator types a bus number. Nothing else is required of them: `cityCode`,
+`routeId`, `nodeord` and topology kind exist in the evidence and in the details
+drawer, not in the interaction.
+
+`GET /v1/routes` takes `routeNo` as an **optional** parameter. With it, the
+number's official variants come back as before. Without it, the provider is
+asked to list the whole city — and whether it will is the provider's answer to
+give, not an assumption made here. When it answers, the controller can offer
+`전체 노선 보기`; when it does not, the button says so and the operator searches
+by number, which always works. Nothing invents route metadata either way.
+
+Route identity remains `routeId` + `cityCode`, never the number. One number is
+several routes, and the direction cards show each variant's own endpoints so the
+operator picks the exact one.
+
+## Every route gets a verdict
+
+`assessRouteCompatibility` answers three ways, in words the person holding the
+phone can act on:
+
+| | meaning |
+|---|---|
+| `실승차 기록 가능` | identity, ordered topology, usable stop ids, known shape, buses running |
+| `지금 운행 중인 차량이 없습니다` | everything checks out; the route is just quiet. Recording may start and vehicles appear when they do |
+| `이 노선은 지금 안전하게 기록할 수 없습니다` | something could not be pinned down, and the check that failed is named |
+
+Live vehicle availability is time-dependent, so a caller that has not looked —
+the coverage audit, for instance — gets `skip` on that check and a verdict based
+on shape alone. Nothing guesses through ambiguity.
+
+## Coverage audit
+
+`scripts/route-coverage/audit.ts` runs the *same* compatibility function the
+phone runs, imported rather than reimplemented, over whatever route variants it
+is given — or over the provider's catalog with `--all`. It caches every stop
+list to disk, paces calls, and stops at a call ceiling, because TAGO's quota is
+shared with the live product.
+
+```bash
+env -u TAGO_SERVICE_KEY node --env-file=.env.local \
+  --experimental-strip-types scripts/route-coverage/audit.ts 447 365 331
+```
+
+It writes `work/route-coverage/jeju-route-compatibility.{json,md}` — `work/` is
+Git-ignored — summarising TOTAL VARIANTS / SUPPORTED / SUPPORTED_WITH_WARNING /
+UNSUPPORTED / UNKNOWN. The report says plainly that it covers only the variants
+it was given; it is not a claim about every route in Jeju.
+
 ## Operator flow
 
-1. **Setup / preflight.** Search a route number, see every official variant,
-   pick one exact `routeId` and direction, pick boarding and destination stops
-   by name, and confirm live vehicles exist right now. Boarding must come before
-   destination on that direction's topology or the screen refuses to continue.
-   A preset fills the fields in; it is still checked against live topology by
-   sequence *and* stop id, and a drifted preset is reported rather than ridden.
-2. **Ready.** Route number, direction, both stop names, the exact `routeId`, and
-   one large start button.
-3. **Active, before boarding.** Fresh snapshots stream in and the current
-   vehicles appear as large cards showing the masked number, the stop the
-   provider reports, and the sequence. Tap the bus you boarded and confirm. No
-   typing. Labels show the last four characters and automatically grow longer if
+1. **어떤 버스를 타나요?** A number, and one button. Recent routes appear
+   underneath once there are any; `cityCode` and the poll interval live under
+   `고급 · 진단`.
+2. **어느 방향인가요?** Every official variant as a large card — number,
+   origin ↓ destination. The `routeId` is in `세부정보`, not on the card.
+3. **어디서 타나요? / 어디서 내리나요?** A search field over stop names, filtering
+   as you type. Where two stops share a name the official id goes alongside so
+   the operator picks the stop and not the word. The destination list offers only
+   what the bus can still reach — forward on a straight route, round the arc on a
+   closed one.
+4. **확인.** Number, direction, both stop names, the distance, and the verdict
+   badge. One large `기록 시작`. Identifiers are folded into `세부정보`.
+5. **지금 탄 버스를 선택하세요.** Fresh snapshots stream in and the current vehicles
+   appear as large cards: masked number, the stop the provider reports. Tap and
+   confirm. No typing. Labels show the last four characters and grow longer if
    two buses would otherwise look identical.
-4. **Riding.** Elapsed time, snapshot counts, tracked-vehicle presence, provider
-   stop and remaining stops, last poll, connection and wake state. The stop list
-   from here to the destination is offered by name; tap the one where the bus
-   actually halted and the doors opened. That tap is the physical marker and is
-   never derived from a provider observation. Missing a marker is better than
-   guessing one.
-5. **Alight and finish.** `하차` records the alighted marker, `캡처 종료`
-   finalises, and the screen offers the sanitized report and, separately and
-   clearly labelled private, the raw capture.
+6. **주행 중.** Route, `N정류장 남음`, tracked vehicle, provider position — and
+   three large actions. `정차 기록` opens a sheet of about five nearby stops;
+   provider position decides only **which stops are offered**, never that a
+   marker exists. Unsure? Close the sheet and record nothing: a missing marker
+   beats a false one. Counts, intervals, wake lock and connection live in the
+   `상태` drawer; warnings that need the operator now appear inline.
+7. **하차 → 기록 종료.** The verdict comes back as
+   `이번 기록은 분석에 사용할 수 있습니다` or `데이터가 더 필요합니다`, with the
+   sanitized report one tap away. The raw capture is under
+   `고급 · 비공개 원본` with its warning. `다른 버스 기록하기` returns to the top,
+   and `기록` lists what has already been ridden — route, stops, time, verdict,
+   never a vehicle number.
+
+Every dialog is an in-app sheet. `window.prompt` and `window.confirm` are
+unstyled, unreadable one-handed, and suppressible on iOS — not something a field
+instrument should depend on.
 
 The tracked vehicle never changes by itself. Replacing it takes an explicit
 confirmation and is recorded as an event.
 
 ## Known limits
 
-- `IMPLEMENTED`, not `VERIFIED`: the browser layer — IndexedDB, the wake lock,
-  the lifecycle listeners, the export sheet — has not been exercised on a real
-  iPhone. The logic underneath it is covered by deterministic tests; the DOM and
-  storage wrappers are not.
+- `IMPLEMENTED`, not `VERIFIED`: the controller has never run on a real iPhone.
+  The whole flow *has* been driven through headless Chromium at 375×667,
+  390×844, 393×852 and 430×932 in light and dark — home, search, direction,
+  both stop pickers, unlock, ready, vehicle pick, riding, the marker sheet, the
+  status drawer, finish and history — with no horizontal overflow, no tap target
+  under 44 px and no page errors. That is a rendered-UI check, not an iPhone.
+  Safari's own wake lock, storage eviction and download sheet remain unverified.
 - iOS Safari suspends background tabs. With the screen locked or the app
   switched away, polling stops. The controller records the gap and warns on
   resume; it cannot prevent it. Keep the screen on and the page in front.

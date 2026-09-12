@@ -98,7 +98,7 @@ accepts both so local and production paths are identical.
 |---|---|---|
 | GET | `/health` | Service, provider, cache policy, session policy, build identifier, freshness posture |
 | GET | `/v1/cities` | Official TAGO city discovery |
-| GET | `/v1/routes?cityCode=&routeNo=` | Every official route ID for a route number |
+| GET | `/v1/routes?cityCode=&routeNo=` | Every official route ID for a route number. `routeNo` is optional: without it the provider is asked to list the whole city, and a provider that will not is reported as such rather than invented |
 | GET | `/v1/stops?routeId=&cityCode=` | Ordered, direction-specific stop topology |
 | GET | `/v1/vehicles?routeId=&cityCode=` | Normalized live vehicle snapshot |
 | POST | `/v1/matches` | Rank caller-supplied candidates; no upstream call |

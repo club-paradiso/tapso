@@ -153,12 +153,18 @@ export function verifyTopology({ stops, boardingSequence, destinationSequence, t
  */
 export function labelStops(stops) {
   const list = Array.isArray(stops) ? stops : [];
-  const counts = new Map();
-  for (const stop of list) counts.set(stop.name, (counts.get(stop.name) ?? 0) + 1);
+  const duplicates = duplicateStopNames(list);
   return list.map((stop) => ({
     ...stop,
-    label: counts.get(stop.name) > 1 ? `${stop.sequence}. ${stop.name} · ${stop.stopId}` : `${stop.sequence}. ${stop.name}`,
+    label: duplicates.has(stop.name) ? `${stop.sequence}. ${stop.name} · ${stop.stopId}` : `${stop.sequence}. ${stop.name}`,
   }));
+}
+
+/** The names that occur more than once, and therefore cannot stand alone. */
+export function duplicateStopNames(stops) {
+  const counts = new Map();
+  for (const stop of stops ?? []) counts.set(stop.name, (counts.get(stop.name) ?? 0) + 1);
+  return new Set([...counts].filter(([, count]) => count > 1).map(([name]) => name));
 }
 
 /**
@@ -309,6 +315,9 @@ export function createCaptureSession({
     get topology() {
       return header.topology;
     },
+    get routeNo() {
+      return header.routeNo;
+    },
     snapshots,
     markers,
     events,
@@ -454,4 +463,141 @@ export function resumeCaptureSession({ store, record, now }) {
 export function captureFileStem(capture) {
   const stamp = capture.startedAt.replace(/[:.]/g, "-");
   return `${capture.routeId}-${stamp}`;
+}
+
+/* ------------------------------------------------- route compatibility ---- */
+
+/**
+ * Can this route be ridden for evidence, and if not, why — in words the person
+ * holding the phone can act on. Nothing here guesses through ambiguity: a route
+ * that cannot be pinned down is refused, and the reason is shown rather than
+ * swallowed.
+ */
+export function assessRouteCompatibility({ route, stops, topology, vehicleCount, vehiclesFailed }) {
+  const list = Array.isArray(stops) ? stops : [];
+  const shape = normalizeTopology(topology, list);
+  const checks = [];
+  const add = (label, state, detail) => checks.push({ label, state, detail });
+
+  const hasRouteId = Boolean(route?.routeId);
+  add("노선 식별", hasRouteId ? "ok" : "fail", hasRouteId ? route.routeId : "정확한 노선 ID를 확인할 수 없다");
+
+  const hasStops = list.length > 0;
+  add("정류장 목록", hasStops ? "ok" : "fail", hasStops ? `${list.length}개` : "제공자가 정류장을 주지 않는다");
+
+  const ordered = list.every((stop, index) => index === 0 || stop.sequence > list[index - 1].sequence);
+  add("정류장 순서", ordered && hasStops ? "ok" : "fail", ordered ? "순서대로 제공됨" : "순서가 뒤섞여 있다");
+
+  const identified = hasStops && list.every((stop) => Boolean(stop.stopId));
+  add("정류장 식별자", identified ? "ok" : "fail", identified ? "모두 있음" : "식별자가 없는 정류장이 있다");
+
+  const shapeLabel = shape.kind === "loop" ? "순환" : shape.kind === "repeating" ? "같은 정류장 반복" : "직선";
+  add("노선 구조", shape.kind === "repeating" ? "warn" : "ok", shapeLabel);
+
+  // Live vehicles are time-dependent, so a caller that has not looked says so
+  // rather than being scored down for it. Static shape is judged on its own.
+  const liveChecked = vehiclesFailed || typeof vehicleCount === "number";
+  if (vehiclesFailed) add("실시간 차량", "fail", "실시간 조회에 실패했다");
+  else if (!liveChecked) add("실시간 차량", "skip", "확인하지 않음");
+  else add("실시간 차량", vehicleCount > 0 ? "ok" : "warn", vehicleCount > 0 ? `${vehicleCount}대 운행 중` : "지금은 운행 중인 차량이 없다");
+
+  if (checks.some((check) => check.state === "fail")) {
+    return {
+      level: "unsupported",
+      headline: "이 노선은 지금 안전하게 기록할 수 없습니다",
+      reason: checks.find((check) => check.state === "fail").detail,
+      checks,
+      shape,
+    };
+  }
+  if (liveChecked && vehicleCount === 0) {
+    return {
+      level: "warning",
+      headline: "지금 운행 중인 차량이 없습니다",
+      reason: "기록은 시작할 수 있습니다. 차량이 나타나면 그때 고르면 됩니다.",
+      checks,
+      shape,
+    };
+  }
+  if (shape.kind === "repeating") {
+    return {
+      level: "warning",
+      headline: "같은 정류장을 두 번 지나는 노선입니다",
+      reason: "타는 곳과 내리는 곳을 순서까지 보고 골라야 합니다.",
+      checks,
+      shape,
+    };
+  }
+  return {
+    level: "ok",
+    headline: "실승차 기록 가능",
+    reason: liveChecked ? `${list.length}개 정류장 · ${vehicleCount}대 운행 중` : `${list.length}개 정류장 · 구조 적합`,
+    checks,
+    shape,
+  };
+}
+
+/* --------------------------------------------------------- stop finding ---- */
+
+/** Substring match over the stop name, with the official id as a fallback key. */
+export function searchStops(stops, query) {
+  const needle = String(query ?? "").trim().toLowerCase();
+  if (!needle) return stops ?? [];
+  return (stops ?? []).filter((stop) =>
+    stop.name.toLowerCase().includes(needle) || String(stop.stopId).toLowerCase().includes(needle));
+}
+
+/**
+ * Where this bus can still take you from here. A straight route only goes
+ * forward; a closed one comes back round, so every other stop is reachable and
+ * they are offered in the order the bus will meet them.
+ */
+export function reachableDestinations(stops, boardingSequence, topology) {
+  const list = Array.isArray(stops) ? stops : [];
+  const shape = normalizeTopology(topology, list);
+  if (shape.kind !== "loop") return list.filter((stop) => stop.sequence > boardingSequence);
+
+  const ordered = list
+    .filter((stop) => stop.sequence !== boardingSequence)
+    .map((stop) => ({ stop, distance: forwardStops(boardingSequence, stop.sequence, shape, true) }))
+    .filter((entry) => entry.distance > 0)
+    // The seam stop appears at both ends of a closed list, so both entries sit
+    // at the same distance. The forward continuation is the one the bus reaches
+    // without wrapping first, which is the entry still ahead in raw order.
+    .sort((a, b) => a.distance - b.distance
+      || Number(a.stop.sequence < boardingSequence) - Number(b.stop.sequence < boardingSequence));
+
+  const seen = new Set();
+  return ordered.filter((entry) => {
+    if (seen.has(entry.stop.stopId)) return false;
+    seen.add(entry.stop.stopId);
+    return true;
+  }).map((entry) => entry.stop);
+}
+
+/* -------------------------------------------------------- local history ---- */
+
+/**
+ * What a finished ride leaves behind so the operator can see which routes they
+ * have already covered. Deliberately thin: no vehicle identifier, no
+ * coordinates, no snapshots — the raw capture stays where it is.
+ */
+export function historyEntry({ captureId, routeNo, capture, report }) {
+  const boarding = capture.stops.find((stop) => stop.sequence === capture.boardingStopSequence);
+  const destination = capture.stops.find((stop) => stop.sequence === capture.destinationStopSequence);
+  return {
+    // `captureId` and `routeNo` live on the capture header, not in the
+    // `RideCapture` the analyzer reads, so they are passed in rather than dug
+    // out of a shape that does not carry them.
+    captureId,
+    finishedAt: capture.endedAt ?? capture.startedAt,
+    routeId: capture.routeId,
+    cityCode: capture.cityCode,
+    routeNo,
+    boardingName: boarding?.name,
+    destinationName: destination?.name,
+    snapshotCount: capture.snapshots.length,
+    markerCount: capture.markers.length,
+    verdict: report?.evidenceCompleteness?.verdict,
+  };
 }
