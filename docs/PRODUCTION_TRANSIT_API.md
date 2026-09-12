@@ -132,7 +132,7 @@ accepts both so local and production paths are identical.
 | Code | Status | Meaning |
 |---|---|---|
 | `INVALID_INPUT` | 400 | Missing or malformed parameter, body, or content type |
-| `NOT_FOUND` | 404 | No such endpoint |
+| `NOT_FOUND` | 404 | No such endpoint. A catch-all rewrite keeps unmatched `/v1/...` paths on the JSON contract instead of the platform's HTML 404; paths outside `/v1` and `/health` are not part of the API |
 | `SESSION_NOT_FOUND` | 404 | Unknown session id |
 | `METHOD_NOT_ALLOWED` | 405 | Wrong method for a known endpoint |
 | `SESSION_EXPIRED` | 410 | Session past its TTL |

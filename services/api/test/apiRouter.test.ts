@@ -207,9 +207,11 @@ test("official identifiers are validated before any upstream call", async () => 
 
 test("unknown paths and wrong methods are answered without touching upstream", async () => {
   const { handler, upstream } = harness();
-  const notFound = await get(handler, "/v1/nope");
-  assert.equal(notFound.status, 404);
-  assert.equal((await notFound.json()).error, "NOT_FOUND");
+  for (const path of ["/v1/nope", "/v1/sessions/a/b/c", "/v1", "/not-found", "/api/not-found"]) {
+    const notFound = await get(handler, path);
+    assert.equal(notFound.status, 404, path);
+    assert.equal((await notFound.json()).error, "NOT_FOUND", path);
+  }
 
   const wrongMethod = await postJson(handler, `/v1/vehicles?routeId=${ROUTE}&cityCode=${CITY}`, {});
   assert.equal(wrongMethod.status, 405);
