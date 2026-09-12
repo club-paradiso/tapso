@@ -7,7 +7,7 @@ if (!routeNumber) {
   console.error([
     "Usage: node --experimental-strip-types scripts/transit-spike/resolve-route.ts <route-number> [stdgCd]",
     "Example: node --experimental-strip-types scripts/transit-spike/resolve-route.ts 365 50110",
-    "Requires PUBLIC_DATA_SERVICE_KEY in the shell environment. The key is never printed.",
+    "Requires TAGO_SERVICE_KEY in the shell environment. The key is never printed.",
   ].join("\n"));
   process.exit(2);
 }
@@ -51,7 +51,7 @@ try {
     code: code ?? "ROUTE_RESOLUTION_FAILED",
     message: error instanceof Error ? error.message : String(error),
     hint: code === "BLOCKED_BY_CREDENTIALS"
-      ? "Set PUBLIC_DATA_SERVICE_KEY in the shell environment. Never commit or echo the key."
+      ? "Set TAGO_SERVICE_KEY in the shell environment. Never commit or echo the key."
       : undefined,
   }));
   process.exit(1);

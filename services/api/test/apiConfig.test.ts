@@ -40,9 +40,26 @@ test("the build identifier is a commit prefix, never anything else", () => {
 });
 
 test("credential presence is reported as a boolean and never echoed", () => {
-  const config = readTransitApiConfig({ PUBLIC_DATA_SERVICE_KEY: "  super-secret  " }, NODE);
+  const config = readTransitApiConfig({ TAGO_SERVICE_KEY: "  super-secret  " }, NODE);
   assert.equal(config.liveTransitConfigured, true);
+  assert.equal(config.credential.source, "canonical");
+  assert.equal(config.credential.deprecatedNamePresent, false);
   assert.ok(!JSON.stringify(config).includes("super-secret"));
+});
+
+test("the deprecated name still configures a local run", () => {
+  const config = readTransitApiConfig({ PUBLIC_DATA_SERVICE_KEY: "local-only" }, NODE);
+  assert.equal(config.liveTransitConfigured, true);
+  assert.equal(config.credential.source, "deprecated_local_fallback");
+  assert.equal(config.credential.deprecatedNamePresent, true);
+});
+
+test("the deprecated name configures nothing on a serverless deployment", () => {
+  const config = readTransitApiConfig({ VERCEL: "1", PUBLIC_DATA_SERVICE_KEY: "not-honoured-here" }, NODE);
+  assert.equal(config.liveTransitConfigured, false, "production must not read a PUBLIC_ variable");
+  assert.equal(config.credential.source, "missing");
+  assert.equal(config.credential.deprecatedNamePresent, true, "the mistake stays visible to the operator");
+  assert.ok(!JSON.stringify(config).includes("not-honoured-here"));
 });
 
 test("misconfiguration fails loudly instead of silently weakening policy", () => {

@@ -66,7 +66,7 @@ activation, Supabase/Resend setup, framework migration, unrelated refactoring.
    merged as `05f40a4` on 2026-09-12; preview and the first production
    deployment both reached *Deployment has completed*, and the marketing
    project deployed successfully from the same commits, so the public site is
-   unaffected in preview and in production. Not done: `PUBLIC_DATA_SERVICE_KEY`
+   unaffected in preview and in production. Not done: `TAGO_SERVICE_KEY`
    is unset, the production alias is unrecorded, and **no HTTP response from any
    deployment has been observed** — the session's egress policy denied every
    `*.vercel.app` host and its Vercel authorization could not read this project.
@@ -159,10 +159,12 @@ the match result is `unavailable` / `unknown`.
 - If a rewrite misbehaves, the `/api/...` function paths still work and the
   router accepts both forms, so the fallback is a base-URL change rather than a
   code change.
-- `PUBLIC_DATA_SERVICE_KEY` is unset on the project, so the deployment
-  currently answers `503 BLOCKED_BY_CREDENTIALS` on every TAGO-backed endpoint.
-  That is the designed unconfigured state and is what the smoke script will
-  report until the key is added.
+- `TAGO_SERVICE_KEY` is unset on the project, so the deployment currently
+  answers `503 BLOCKED_BY_CREDENTIALS` on every TAGO-backed endpoint. That is
+  the designed unconfigured state and is what the smoke script will report until
+  the key is added. The credential was renamed from `PUBLIC_DATA_SERVICE_KEY`
+  because Vercel will not store a `PUBLIC_`-prefixed variable as a Sensitive
+  secret; the retired name is now honoured only outside serverless.
 
 **Next action**, in order, all on the `tapso-api` Vercel project:
 
@@ -176,7 +178,10 @@ the match result is `unavailable` / `unknown`.
    ```bash
    node --experimental-strip-types services/api/scripts/smoke.ts https://<alias>
    ```
-3. Add `PUBLIC_DATA_SERVICE_KEY` (Decoding key) for Production, redeploy, and
-   smoke again. All thirteen checks should pass.
+3. Add **`TAGO_SERVICE_KEY`** (Decoding key) for Production with Sensitive
+   visibility, redeploy, and smoke again. Every check should pass. Do not use
+   the retired `PUBLIC_DATA_SERVICE_KEY`: a serverless deployment ignores it and
+   `/health` will report `credential.deprecatedNamePresent: true` beside
+   `source: "missing"`.
 4. Confirm Settings → Deployment Protection leaves production publicly
    reachable, or the iOS client cannot call it.

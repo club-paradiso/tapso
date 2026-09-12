@@ -4,6 +4,7 @@ import {
   ProviderResponseError,
   type TransitProvider,
 } from "./provider.ts";
+import { CANONICAL_SERVICE_KEY_ENV, resolveTagoServiceKey } from "./serviceKey.ts";
 
 type FetchLike = typeof fetch;
 type UnknownRecord = Record<string, unknown>;
@@ -37,7 +38,9 @@ export class TagoTransitProvider implements TransitProvider {
   private readonly now: () => Date;
 
   constructor(options: TagoTransitProviderOptions = {}) {
-    this.serviceKey = (options.serviceKey ?? process.env.PUBLIC_DATA_SERVICE_KEY ?? "").trim();
+    // Resolved through the shared helper so the provider and the health payload
+    // can never disagree about whether a credential is configured.
+    this.serviceKey = (options.serviceKey ?? resolveTagoServiceKey().key).trim();
     this.routeBaseURL = options.routeBaseURL
       ?? "https://apis.data.go.kr/1613000/BusRouteInfoInqireService";
     this.locationBaseURL = options.locationBaseURL
@@ -110,10 +113,10 @@ export class TagoTransitProvider implements TransitProvider {
     paged = true,
   ): Promise<UnknownRecord[]> {
     if (!this.serviceKey) {
-      throw new ProviderConfigurationError("PUBLIC_DATA_SERVICE_KEY is required for TAGO live transit calls");
+      throw new ProviderConfigurationError(`${CANONICAL_SERVICE_KEY_ENV} is required for TAGO live transit calls`);
     }
     if (/%[0-9a-f]{2}/i.test(this.serviceKey)) {
-      throw new ProviderConfigurationError("PUBLIC_DATA_SERVICE_KEY must contain the Decoding key, not the Encoding key");
+      throw new ProviderConfigurationError(`${CANONICAL_SERVICE_KEY_ENV} must contain the Decoding key, not the Encoding key`);
     }
     for (const [name, value] of Object.entries(params)) {
       if (!value.trim()) throw new ProviderResponseError(`TAGO requires ${name}`);

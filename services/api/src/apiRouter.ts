@@ -343,6 +343,12 @@ function healthPayload(config: TransitApiConfig, now: Date): Record<string, unkn
     transitProvider: config.transitProvider,
     // Presence only. The key itself is never echoed anywhere.
     liveTransitConfigured: config.liveTransitConfigured,
+    /**
+     * Category, not name and never value. `missing` together with
+     * `deprecatedNamePresent` is the signature of the migration mistake: the
+     * retired variable set on a deployment that ignores it.
+     */
+    credential: config.credential,
     routeCache: {
       stopTtlMs: config.cachePolicy.stopTtlMs,
       vehicleTtlMs: config.cachePolicy.vehicleTtlMs,

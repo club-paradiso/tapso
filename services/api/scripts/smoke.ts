@@ -11,7 +11,7 @@
  *     --city 39 --route-no 365 --route-id JEB405136521
  */
 
-type Outcome = "PASS" | "FAIL" | "BLOCKED_BY_CREDENTIALS";
+type Outcome = "PASS" | "WARN" | "FAIL" | "BLOCKED_BY_CREDENTIALS";
 
 type Check = {
   name: string;
@@ -41,9 +41,12 @@ async function run(): Promise<void> {
     ? pass(`status 200, provider ${String(health.body?.transitProvider)}, live=${String(health.body?.liveTransitConfigured)}`)
     : fail(`status ${health.status} body ${preview(health.text)}`));
 
-  record("health hides credentials", /serviceKey|PUBLIC_DATA_SERVICE_KEY|"key"/i.test(health.text)
-    ? fail("health payload mentions a credential field")
-    : pass("no credential field in payload"));
+  record("health hides credentials", /serviceKey|TAGO_SERVICE_KEY|PUBLIC_DATA_SERVICE_KEY|"key"/i.test(health.text)
+    ? fail("health payload names a credential variable or field")
+    : pass("no credential name or value in payload"));
+
+  const credential = (health.body?.credential ?? {}) as Record<string, unknown>;
+  record("credential source", describeCredentialSource(credential));
 
   const credentialed = health.body?.liveTransitConfigured === true;
 
@@ -130,6 +133,26 @@ async function run(): Promise<void> {
   record("sessions policy", describeSessionOutcome(session));
 }
 
+/**
+ * The retired `PUBLIC_` name is ignored on a serverless deployment, so a
+ * deployment carrying only that variable answers 503 everywhere. Naming that
+ * case explicitly turns a confusing outage into a one-line diagnosis.
+ */
+function describeCredentialSource(credential: Record<string, unknown>): Omit<Check, "name"> {
+  const source = credential.source;
+  if (source === "canonical") return pass("TAGO_SERVICE_KEY");
+  if (source === "deprecated_local_fallback") {
+    // Working, and only reachable off-serverless. Worth saying, not worth failing.
+    return { outcome: "WARN", detail: "reading the deprecated PUBLIC_ name; rename it to TAGO_SERVICE_KEY" };
+  }
+  if (source === "missing") {
+    return credential.deprecatedNamePresent === true
+      ? fail("the deprecated PUBLIC_ name is set but ignored here; set TAGO_SERVICE_KEY instead")
+      : { outcome: "BLOCKED_BY_CREDENTIALS", detail: "no TAGO_SERVICE_KEY is configured on this deployment" };
+  }
+  return fail(`unexpected credential source ${JSON.stringify(source)}`);
+}
+
 function describeSessionOutcome(result: Awaited<ReturnType<typeof get>>): Omit<Check, "name"> {
   if (result.status === 503 && result.body?.error === "SESSIONS_UNAVAILABLE") {
     return pass("503 SESSIONS_UNAVAILABLE — memory-only sessions correctly disabled");
@@ -212,6 +235,10 @@ function report(): void {
   }
   const failed = checks.filter((check) => check.outcome === "FAIL").length;
   const blocked = checks.filter((check) => check.outcome === "BLOCKED_BY_CREDENTIALS").length;
-  console.log(`\n${checks.length - failed - blocked} passed, ${blocked} blocked by credentials, ${failed} failed — ${baseUrl}`);
+  const warned = checks.filter((check) => check.outcome === "WARN").length;
+  const passed = checks.length - failed - blocked - warned;
+  console.log(
+    `\n${passed} passed, ${warned} warned, ${blocked} blocked by credentials, ${failed} failed — ${baseUrl}`,
+  );
   process.exit(failed > 0 ? 1 : 0);
 }
