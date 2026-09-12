@@ -73,10 +73,12 @@ TAGO live responses do not expose a provider timestamp. `TagoTransitProvider` st
 The API-data and HTTP integration gates are complete for the full-length Route 365 directions. The next validation gate is a controlled real ride:
 
 1. Run the API locally with the private service key and resolve `cityCode` through `/v1/cities`. A deployed API is not required; the capture tool drives `TagoTransitProvider` directly.
-2. Choose explicit boarding and destination stop sequences from the verified direction-specific topology.
-3. During the ride, run `scripts/ride-capture/capture.ts` (see `exec-plans/RIDE_CAPTURE.md`). It stores bounded TAGO snapshots only under ignored `work/rides/`, records the boarded vehicle locally from the `b <vehicleno>` command, and accepts `p <stop-seq>` markers for physically passed stops.
-4. Run `scripts/ride-capture/analyze.ts` on the capture. The sanitized report compares the tracked vehicle's `nodeord` progression, content-change age, gaps, marker lag, and arrival against the rider markers, using per-run pseudonyms instead of vehicle numbers.
-5. Define and test a TAGO freshness rule from `freshnessEvidence` and `tracked.markerComparisons` before enabling journey-session matching or progress.
+2. Choose one exact `routeId`, one direction, and explicit boarding and destination stop sequences from that direction's topology. The capture tool is route-generic; Route 365's `JEB405136521` and `JEB405136522` are the recommended baseline because their topology and live vehicles are already verified, but any Jeju TAGO route may be used once its cityCode, official variants, ordered topology, chosen sequences, and live vehicles endpoint have all been confirmed against live data. Record identity as the `routeId`, never as the route number, and do not take a first ride on a route whose direction or topology is unclear. Repeating the capture on a second route afterwards is what shows the evidence is not fitted to Route 365.
+3. During the ride, run `scripts/ride-capture/capture.ts` (see `exec-plans/RIDE_CAPTURE.md`). It prints the stop list for the chosen segment before its first poll, stores bounded TAGO snapshots only under ignored `work/rides/`, records the boarded vehicle from the `b` command after cross-checking what was typed against the vehicles the route is currently reporting, and accepts `p <stop-seq>` markers for physically passed stops. Aim for eight to ten `p` markers placed only where the bus certainly stopped.
+4. Run `scripts/ride-capture/analyze.ts` on the capture. The sanitized report compares the tracked vehicle's `nodeord` progression, content-change cadence, coordinate movement, gaps, marker lag, and arrival against the rider markers, using per-run pseudonyms instead of vehicle numbers, and reports `INSUFFICIENT_EVIDENCE` rather than publishing a distribution it does not have the samples for.
+5. Define and test a TAGO freshness rule from `freshnessEvidence` and `tracked.markerComparisons` before enabling journey-session matching or progress. That decision belongs to Task C: the ride produces observed distributions, not a threshold.
+
+Status: `READY_FOR_RIDE` as of 2026-09-12. Steps 1 and 2 are reproducible today; steps 3 to 5 wait on one physical ride. No real ride has been captured, so nothing in this document is real-ride evidence.
 
 ## Acceptance gate for broad real mode
 

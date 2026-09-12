@@ -1,10 +1,10 @@
-import { mkdir, rename, writeFile } from "node:fs/promises";
+import { mkdir, rename, stat, writeFile } from "node:fs/promises";
 import { createInterface } from "node:readline";
 import path from "node:path";
 import { TagoTransitProvider } from "../../services/api/src/tagoProvider.ts";
 import { resolveTagoServiceKey, serviceKeyWarning } from "../../services/api/src/serviceKey.ts";
 import { analyzeRideCapture, type RideCapture } from "../../services/api/src/rideCapture.ts";
-import { describeStops, startRideCapture } from "../../services/api/src/rideCaptureRunner.ts";
+import { RIDE_CAPTURE_COMMANDS, describeStops, startRideCapture } from "../../services/api/src/rideCaptureRunner.ts";
 
 const [routeId, cityCode, boardingRaw, destinationRaw] = process.argv.slice(2);
 const boardingStopSequence = Number(boardingRaw);
@@ -15,7 +15,8 @@ if (!routeId || !cityCode || !Number.isInteger(boardingStopSequence) || !Number.
     "Usage: node --experimental-strip-types scripts/ride-capture/capture.ts <official-route-id> <official-city-code> <boarding-seq> <destination-seq>",
     "Environment: RIDE_CAPTURE_INTERVAL_MS=5000 RIDE_CAPTURE_MAX_SNAPSHOTS=720 RIDE_CAPTURE_MAX_MINUTES=90",
     "Run with: env -u TAGO_SERVICE_KEY node --env-file=.env.local --experimental-strip-types scripts/ride-capture/capture.ts …",
-    "Commands while running: b <vehicleno> | p <stop-seq> | a [stop-seq] | n <note> | q",
+    "  (env -u clears an exported copy of the name so the value in .env.local is the one used)",
+    `Commands while running: ${RIDE_CAPTURE_COMMANDS}`,
     "Output: work/rides/<timestamp>.json (ignored; contains raw vehicle numbers) and a sanitized .report.json",
   ].join("\n"));
   process.exit(2);
@@ -31,6 +32,7 @@ const resolvedKey = resolveTagoServiceKey(process.env);
 const serviceKey = resolvedKey.key;
 const keyWarning = serviceKeyWarning(resolvedKey);
 if (keyWarning) console.error(`[${new Date().toISOString()}] ${keyWarning}`);
+await warnOnLooseEnvPermissions();
 
 async function persist(capture: RideCapture): Promise<void> {
   await mkdir(workDirectory, { recursive: true, mode: 0o700 });
@@ -64,7 +66,10 @@ try {
       console.error(error instanceof Error ? error.message : String(error));
     }
   });
-  process.once("SIGINT", () => controller.command("q"));
+  process.once("SIGINT", () => {
+    console.error("finishing the capture; everything so far is already on disk. Press Ctrl+C again to abort now.");
+    controller.command("q");
+  });
 
   const capture = await controller.done;
   input.close();
@@ -85,6 +90,22 @@ try {
       : undefined,
   }));
   process.exit(1);
+}
+
+/**
+ * The Python probe refuses to read a world-readable `.env.local`. Node's
+ * `--env-file` does not check, so say so rather than letting a loose key pass
+ * unnoticed; this is a warning because refusing here would strand a ride.
+ */
+async function warnOnLooseEnvPermissions(): Promise<void> {
+  try {
+    const info = await stat(path.resolve(process.cwd(), ".env.local"));
+    if (info.mode & 0o077) {
+      console.error(`[${new Date().toISOString()}] .env.local is readable by other users; run: chmod 600 .env.local`);
+    }
+  } catch {
+    // No local env file: the credential came from the shell, or there is none.
+  }
 }
 
 function positiveInteger(raw: string | undefined, fallback: number): number {

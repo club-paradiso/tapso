@@ -51,6 +51,8 @@ export interface NumberSummary {
   count: number;
   min?: number;
   median?: number;
+  p75?: number;
+  p90?: number;
   p95?: number;
   max?: number;
 }
@@ -70,6 +72,20 @@ export interface VehicleGap {
   missedSnapshots: number;
 }
 
+/**
+ * Whether `nodeord` and the published coordinates move together. TAGO exposes
+ * both and neither carries a source timestamp, so Task C needs to know which of
+ * the two actually advances before it can trust either as a progress signal.
+ */
+export interface GpsEvidence {
+  /** Observations carrying both a latitude and a longitude. */
+  coordinateSamples: number;
+  /** Consecutive sightings whose coordinates differ. */
+  coordinateChanges: number;
+  coordinateChangeWithoutSequenceChange: number;
+  sequenceChangeWithoutCoordinateChange: number;
+}
+
 export interface VehicleTimeline {
   /** Per-run pseudonym such as `V1`; `tracked` for the boarded vehicle. */
   label: string;
@@ -77,12 +93,18 @@ export interface VehicleTimeline {
   firstSeenAt: string;
   lastSeenAt: string;
   snapshotsSeen: number;
+  /** `snapshotsSeen` over the successful snapshots taken after this vehicle first appeared. */
+  presenceRatio: number;
   contentChanges: SequenceChange[];
   contentChangeIntervalSeconds: NumberSummary;
   /** Seconds since last content change, sampled at every successful snapshot after the first sighting. */
   contentAgeSeconds: NumberSummary;
   sequenceDecreaseCount: number;
   largestSequenceJump: number;
+  largestSequenceDecrease: number;
+  /** Distribution of forward `nodeord` steps between consecutive sightings. */
+  sequenceAdvances: NumberSummary;
+  gpsEvidence: GpsEvidence;
   gaps: VehicleGap[];
 }
 
@@ -98,6 +120,8 @@ export interface MarkerComparison {
 
 export interface TrackedVehicleReport {
   present: boolean;
+  /** Successful snapshots containing the tracked vehicle, over those taken after it first appeared. */
+  presenceRatio: number;
   firstSeenAt?: string;
   lastSeenAt?: string;
   remainingStopsTimeline: Array<{ at: string; stopSequence: number; remainingStops: number }>;
@@ -106,6 +130,42 @@ export interface TrackedVehicleReport {
   passedDestination: boolean;
   missedSnapshotCount: number;
   markerComparisons: MarkerComparison[];
+}
+
+/**
+ * Whether the capture file itself is trustworthy, independent of what it shows.
+ * A non-zero count here is a reason to doubt the run, not a property of TAGO.
+ */
+export interface RideCaptureIntegrity {
+  /** Snapshots stored out of chronological order. Analysis sorts them; the count stays. */
+  snapshotsOutOfOrder: number;
+  duplicateSnapshotTimestamps: number;
+  /** One snapshot listing the same vehicle twice. */
+  duplicateVehicleObservations: number;
+  markersOutOfOrder: number;
+  markersOutsideCaptureWindow: number;
+  /** Observations whose `routeId` is not the captured route. */
+  foreignRouteObservations: number;
+}
+
+/**
+ * One sample-count precondition for computing a statistic. These are minimum
+ * sample sizes for a distribution to mean anything — never a freshness policy
+ * threshold, which Task C defines from the distributions themselves.
+ */
+export interface EvidenceCriterion {
+  name: string;
+  required: boolean;
+  met: boolean;
+  observed: number;
+  minimum: number;
+  note: string;
+}
+
+export interface EvidenceCompleteness {
+  verdict: "SUFFICIENT" | "INSUFFICIENT_EVIDENCE";
+  criteria: EvidenceCriterion[];
+  unmetRequired: string[];
 }
 
 export interface RideCaptureReport {
@@ -117,6 +177,8 @@ export interface RideCaptureReport {
   startedAt: string;
   endedAt?: string;
   durationSeconds: number;
+  /** Poll interval the runner was configured with, as opposed to what it achieved. */
+  configuredIntervalSeconds: number;
   snapshotCount: number;
   failedSnapshotCount: number;
   emptySnapshotCount: number;
@@ -126,12 +188,17 @@ export interface RideCaptureReport {
   stopSequenceContiguous: boolean;
   vehicles: VehicleTimeline[];
   tracked: TrackedVehicleReport;
+  integrity: RideCaptureIntegrity;
+  evidenceCompleteness: EvidenceCompleteness;
   /** Aggregate over all vehicles; input for a freshness rule, not the rule. */
   freshnessEvidence: {
     contentChangeIntervalSeconds: NumberSummary;
     contentAgeSeconds: NumberSummary;
     longestUnchangedRunSeconds?: number;
     gapSeconds: NumberSummary;
+    sequenceAdvanceStops: NumberSummary;
+    /** Seconds from a physical rider marker to the first snapshot reporting it. */
+    markerLagSeconds: NumberSummary;
   };
   warnings: string[];
 }
@@ -175,6 +242,7 @@ export function analyzeRideCapture(capture: RideCapture): RideCaptureReport {
   const boarded = capture.boardedVehicleId?.trim();
   const tracked: TrackedVehicleReport = {
     present: false,
+    presenceRatio: 0,
     remainingStopsTimeline: [],
     passedDestination: false,
     missedSnapshotCount: 0,
@@ -199,6 +267,7 @@ export function analyzeRideCapture(capture: RideCapture): RideCaptureReport {
   const allChangeIntervals: number[] = [];
   const allContentAges: number[] = [];
   const allGapSeconds: number[] = [];
+  const allAdvances: number[] = [];
   let longestUnchangedRun: number | undefined;
 
   const vehicles = order.map((vehicleId): VehicleTimeline => {
@@ -215,7 +284,15 @@ export function analyzeRideCapture(capture: RideCapture): RideCaptureReport {
     let previousSequence: number | undefined;
     let decreases = 0;
     let largestJump = 0;
+    let largestDecrease = 0;
     let seen = 0;
+    let firstSeenIndex: number | undefined;
+    const advances: number[] = [];
+    let previousObservation: VehicleObservation | undefined;
+    let coordinateSamples = 0;
+    let coordinateChanges = 0;
+    let coordinateChangeWithoutSequenceChange = 0;
+    let sequenceChangeWithoutCoordinateChange = 0;
 
     successful.forEach((snapshot, index) => {
       const observation = snapshot.vehicles.find((vehicle) => vehicle.vehicleId === vehicleId);
@@ -225,7 +302,10 @@ export function analyzeRideCapture(capture: RideCapture): RideCaptureReport {
         return;
       }
       seen += 1;
-      if (!firstSeenAt) firstSeenAt = snapshot.capturedAt;
+      if (!firstSeenAt) {
+        firstSeenAt = snapshot.capturedAt;
+        firstSeenIndex = index;
+      }
       if (lastSeenIndex !== undefined && lastSeenIndex < index - 1) {
         const missingFrom = successful[lastSeenIndex + 1]!.capturedAt;
         const seconds = round((at - Date.parse(lastSeenAt)) / 1_000);
@@ -255,16 +335,41 @@ export function analyzeRideCapture(capture: RideCapture): RideCaptureReport {
       const sequence = observation.stopSequence;
       if (sequence !== undefined) {
         if (previousSequence !== undefined) {
-          if (sequence < previousSequence) decreases += 1;
-          largestJump = Math.max(largestJump, Math.abs(sequence - previousSequence));
+          const delta = sequence - previousSequence;
+          if (delta < 0) {
+            decreases += 1;
+            largestDecrease = Math.max(largestDecrease, -delta);
+          } else if (delta > 0) {
+            advances.push(delta);
+            allAdvances.push(delta);
+          }
+          largestJump = Math.max(largestJump, Math.abs(delta));
         }
         previousSequence = sequence;
         if (isTracked) recordTrackedProgress(capture, tracked, snapshot.capturedAt, sequence);
       }
+
+      if (hasCoordinates(observation)) coordinateSamples += 1;
+      if (previousObservation) {
+        const movedCoordinates = coordinatesChanged(previousObservation, observation);
+        const movedSequence = observation.stopSequence !== previousObservation.stopSequence;
+        if (movedCoordinates) {
+          coordinateChanges += 1;
+          if (!movedSequence) coordinateChangeWithoutSequenceChange += 1;
+        } else if (movedSequence && hasCoordinates(observation) && hasCoordinates(previousObservation)) {
+          sequenceChangeWithoutCoordinateChange += 1;
+        }
+      }
+      previousObservation = observation;
     });
 
+    // Measured from the first sighting, so a vehicle that entered service late is
+    // not scored down for the snapshots taken before it existed on the route.
+    const observableSnapshots = firstSeenIndex === undefined ? 0 : successful.length - firstSeenIndex;
+    const presenceRatio = observableSnapshots > 0 ? round(seen / observableSnapshots) : 0;
     if (isTracked) {
       tracked.present = seen > 0;
+      tracked.presenceRatio = presenceRatio;
       tracked.firstSeenAt = firstSeenAt || undefined;
       tracked.lastSeenAt = lastSeenAt || undefined;
       if (decreases > 0) warnings.push(`Tracked vehicle stop sequence decreased ${decreases} time(s)`);
@@ -275,11 +380,20 @@ export function analyzeRideCapture(capture: RideCapture): RideCaptureReport {
       firstSeenAt,
       lastSeenAt,
       snapshotsSeen: seen,
+      presenceRatio,
       contentChanges,
       contentChangeIntervalSeconds: summarize(contentChanges.map((change) => change.secondsSincePreviousChange!).filter(Number.isFinite)),
       contentAgeSeconds: summarize(ages),
       sequenceDecreaseCount: decreases,
       largestSequenceJump: largestJump,
+      largestSequenceDecrease: largestDecrease,
+      sequenceAdvances: summarize(advances),
+      gpsEvidence: {
+        coordinateSamples,
+        coordinateChanges,
+        coordinateChangeWithoutSequenceChange,
+        sequenceChangeWithoutCoordinateChange,
+      },
       gaps,
     };
   }).sort((a, b) => Number(b.isTracked) - Number(a.isTracked) || b.snapshotsSeen - a.snapshotsSeen || a.label.localeCompare(b.label));
@@ -290,6 +404,18 @@ export function analyzeRideCapture(capture: RideCapture): RideCaptureReport {
   const sequences = capture.stops.map((stop) => stop.sequence).sort((a, b) => a - b);
   const startedAt = Date.parse(capture.startedAt);
   const endedAt = Date.parse(capture.endedAt ?? snapshots.at(-1)?.capturedAt ?? capture.startedAt);
+  const configuredIntervalSeconds = round(capture.intervalMs / 1_000);
+  const collectionIntervalSeconds = summarize(positiveDiffSeconds(snapshots.map((snapshot) => snapshot.capturedAt)));
+  const markerLags = tracked.markerComparisons
+    .map((comparison) => comparison.providerLagSeconds)
+    .filter((value): value is number => Number.isFinite(value));
+
+  const integrity = inspectIntegrity(capture, snapshots, startedAt, endedAt);
+  warnings.push(...describeIntegrity(integrity));
+  if (collectionIntervalSeconds.max !== undefined && collectionIntervalSeconds.max > configuredIntervalSeconds * 3) {
+    warnings.push(`Polling stalled: longest gap between snapshots was ${collectionIntervalSeconds.max} s against a ${configuredIntervalSeconds} s interval`);
+  }
+
   const report: RideCaptureReport = {
     schemaVersion: capture.schemaVersion,
     routeId: capture.routeId,
@@ -299,25 +425,178 @@ export function analyzeRideCapture(capture: RideCapture): RideCaptureReport {
     startedAt: capture.startedAt,
     endedAt: capture.endedAt,
     durationSeconds: round(Math.max(0, endedAt - startedAt) / 1_000),
+    configuredIntervalSeconds,
     snapshotCount: snapshots.length,
     failedSnapshotCount: snapshots.length - successful.length,
     emptySnapshotCount: successful.filter((snapshot) => snapshot.vehicles.length === 0).length,
-    collectionIntervalSeconds: summarize(positiveDiffSeconds(snapshots.map((snapshot) => snapshot.capturedAt))),
+    collectionIntervalSeconds,
     uniqueVehicleCount: order.length,
     stopCount: capture.stops.length,
     stopSequenceContiguous: sequences.every((sequence, index) => index === 0 || sequence === sequences[index - 1]! + 1),
     vehicles,
     tracked,
+    integrity,
+    evidenceCompleteness: assessEvidence(successful.length, tracked, allChangeIntervals.length, markerLags.length),
     freshnessEvidence: {
       contentChangeIntervalSeconds: summarize(allChangeIntervals),
       contentAgeSeconds: summarize(allContentAges),
       longestUnchangedRunSeconds: longestUnchangedRun,
       gapSeconds: summarize(allGapSeconds),
+      sequenceAdvanceStops: summarize(allAdvances),
+      markerLagSeconds: summarize(markerLags),
     },
     warnings,
   };
-  assertNoVehicleIdentifiers(report, order);
+  assertNoVehicleIdentifiers(report, boarded ? [...order, boarded] : order);
   return report;
+}
+
+/**
+ * Counts what would make the capture file itself untrustworthy. Analysis still
+ * runs — a flawed capture with the flaw stated beats a silently repaired one.
+ */
+function inspectIntegrity(
+  capture: RideCapture,
+  sorted: RideSnapshot[],
+  startedAt: number,
+  endedAt: number,
+): RideCaptureIntegrity {
+  let snapshotsOutOfOrder = 0;
+  for (let index = 1; index < capture.snapshots.length; index += 1) {
+    const previous = Date.parse(capture.snapshots[index - 1]!.capturedAt);
+    const current = Date.parse(capture.snapshots[index]!.capturedAt);
+    if (Number.isFinite(previous) && Number.isFinite(current) && current < previous) snapshotsOutOfOrder += 1;
+  }
+
+  let duplicateSnapshotTimestamps = 0;
+  for (let index = 1; index < sorted.length; index += 1) {
+    if (sorted[index]!.capturedAt === sorted[index - 1]!.capturedAt) duplicateSnapshotTimestamps += 1;
+  }
+
+  let duplicateVehicleObservations = 0;
+  let foreignRouteObservations = 0;
+  for (const snapshot of sorted) {
+    const seen = new Set<string>();
+    for (const vehicle of snapshot.vehicles) {
+      if (seen.has(vehicle.vehicleId)) duplicateVehicleObservations += 1;
+      seen.add(vehicle.vehicleId);
+      if (vehicle.routeId && vehicle.routeId !== capture.routeId) foreignRouteObservations += 1;
+    }
+  }
+
+  let markersOutOfOrder = 0;
+  let markersOutsideCaptureWindow = 0;
+  capture.markers.forEach((marker, index) => {
+    const at = Date.parse(marker.at);
+    if (!Number.isFinite(at)) {
+      markersOutsideCaptureWindow += 1;
+      return;
+    }
+    if (index > 0) {
+      const previous = Date.parse(capture.markers[index - 1]!.at);
+      if (Number.isFinite(previous) && at < previous) markersOutOfOrder += 1;
+    }
+    if (at < startedAt || at > endedAt) markersOutsideCaptureWindow += 1;
+  });
+
+  return {
+    snapshotsOutOfOrder,
+    duplicateSnapshotTimestamps,
+    duplicateVehicleObservations,
+    markersOutOfOrder,
+    markersOutsideCaptureWindow,
+    foreignRouteObservations,
+  };
+}
+
+function describeIntegrity(integrity: RideCaptureIntegrity): string[] {
+  const messages: Array<[number, string]> = [
+    [integrity.snapshotsOutOfOrder, "snapshot(s) stored out of chronological order"],
+    [integrity.duplicateSnapshotTimestamps, "snapshot(s) share a capture timestamp"],
+    [integrity.duplicateVehicleObservations, "duplicate vehicle observation(s) inside one snapshot"],
+    [integrity.markersOutOfOrder, "marker(s) stored out of chronological order"],
+    [integrity.markersOutsideCaptureWindow, "marker(s) fall outside the capture window"],
+    [integrity.foreignRouteObservations, "observation(s) belong to another route"],
+  ];
+  return messages.filter(([count]) => count > 0).map(([count, text]) => `Capture integrity: ${count} ${text}`);
+}
+
+/**
+ * Sample-size preconditions only. Each minimum is what a distribution needs to
+ * exist at all; none of them is a freshness threshold, which Task C derives.
+ */
+function assessEvidence(
+  successfulSnapshots: number,
+  tracked: TrackedVehicleReport,
+  contentChangeSamples: number,
+  markerLagSamples: number,
+): EvidenceCompleteness {
+  const distinctSequences = new Set(tracked.remainingStopsTimeline.map((entry) => entry.stopSequence)).size;
+  const criteria: EvidenceCriterion[] = [
+    {
+      name: "trackedVehiclePresent",
+      required: true,
+      observed: tracked.present ? 1 : 0,
+      minimum: 1,
+      met: tracked.present,
+      note: "The boarded vehicle must appear in the snapshots or nothing can be compared",
+    },
+    {
+      name: "successfulSnapshots",
+      required: true,
+      observed: successfulSnapshots,
+      minimum: 20,
+      met: successfulSnapshots >= 20,
+      note: "Snapshots that returned data, the base of every interval measurement",
+    },
+    {
+      name: "trackedSequenceProgression",
+      required: true,
+      observed: distinctSequences,
+      minimum: 3,
+      met: distinctSequences >= 3,
+      note: "Distinct nodeord values reported for the tracked vehicle",
+    },
+    {
+      name: "contentChangeSamples",
+      required: true,
+      observed: contentChangeSamples,
+      minimum: 5,
+      met: contentChangeSamples >= 5,
+      note: "Content-change intervals available for a cadence distribution",
+    },
+    {
+      name: "markerLagSamples",
+      required: true,
+      observed: markerLagSamples,
+      minimum: 3,
+      met: markerLagSamples >= 3,
+      note: "Physical markers the provider was observed to reach, for a lag distribution",
+    },
+    {
+      name: "arrivalObserved",
+      required: false,
+      observed: tracked.arrivalDetectedAt ? 1 : 0,
+      minimum: 1,
+      met: Boolean(tracked.arrivalDetectedAt),
+      note: "Whether the capture ran long enough to see the destination reported",
+    },
+  ];
+  const unmetRequired = criteria.filter((criterion) => criterion.required && !criterion.met).map((criterion) => criterion.name);
+  return {
+    verdict: unmetRequired.length === 0 ? "SUFFICIENT" : "INSUFFICIENT_EVIDENCE",
+    criteria,
+    unmetRequired,
+  };
+}
+
+function hasCoordinates(observation: VehicleObservation): boolean {
+  return Number.isFinite(observation.latitude) && Number.isFinite(observation.longitude);
+}
+
+function coordinatesChanged(previous: VehicleObservation, current: VehicleObservation): boolean {
+  if (!hasCoordinates(previous) || !hasCoordinates(current)) return false;
+  return previous.latitude !== current.latitude || previous.longitude !== current.longitude;
 }
 
 function recordTrackedProgress(capture: RideCapture, tracked: TrackedVehicleReport, at: string, sequence: number): void {
@@ -386,6 +665,8 @@ export function summarize(values: number[]): NumberSummary {
     count: sorted.length,
     min: round(sorted[0]!),
     median: round(percentile(sorted, 0.5)),
+    p75: round(percentile(sorted, 0.75)),
+    p90: round(percentile(sorted, 0.9)),
     p95: round(percentile(sorted, 0.95)),
     max: round(sorted.at(-1)!),
   };
