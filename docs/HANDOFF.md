@@ -23,7 +23,7 @@ xcodebuild -project apps/ios/Tapso.xcodeproj -scheme Tapso \
 
 If the repository is in an iCloud/FileProvider location, choose **Keep Downloaded** and put DerivedData under `/tmp` or another unsynced local directory. Signing can fail when copied resource forks or Finder metadata reach the `.app`; use a content-only copy if necessary.
 
-## Task B: controlled Route 365 ride validation
+## Task B: controlled real-ride validation
 
 This is the next evidence gate. It runs entirely against the local machine and
 does **not** depend on a deployed API. Status: `READY_FOR_RIDE` — the tooling is
@@ -47,17 +47,32 @@ Prerequisites:
   on Vercel; rename it. Keep one copy of the key, not two: a value exported in
   the shell beats `.env.local`, because Node's `--env-file` does not overwrite a
   variable that is already set.
-- A boarding and destination stop sequence chosen from one verified full-length
-  direction: `JEB405136521` (제주대학교 → 제주한라대학교) or `JEB405136522`
-  (제주한라대학교 → 제주대학교), `cityCode` 39.
+- A route, a direction, and a boarding and destination stop sequence. The
+  capture tool is route-generic — it takes any official `routeId` and
+  `cityCode` — so ride whatever is convenient, provided it passes the preflight
+  below.
+
+  Route 365's `JEB405136521` (제주대학교 → 제주한라대학교) and `JEB405136522`
+  (제주한라대학교 → 제주대학교) on `cityCode` 39 are the **recommended
+  baseline**: their ordered topology and live vehicles are already verified
+  against production, so a capture on them reads against a known reference.
+  Recommended, not required. Do not take a first ride on a route whose topology
+  or direction is unclear.
 - A phone or laptop that can run Node 22.18+ during the ride.
 
 ```bash
-# 1. Confirm the identifiers against live TAGO before boarding. Production
-#    serves the same data and needs no local key:
-curl -s 'https://tapso-api.vercel.app/v1/routes?cityCode=39&routeNo=365'
-curl -s 'https://tapso-api.vercel.app/v1/stops?routeId=JEB405136521&cityCode=39'
+# 1. Preflight against live TAGO before boarding. Production serves the same
+#    data and needs no local key. Substitute your own route number and routeId;
+#    Route 365 and JEB405136521 are the recommended baseline.
+curl -s 'https://tapso-api.vercel.app/v1/cities'                                  # confirm the cityCode
+curl -s 'https://tapso-api.vercel.app/v1/routes?cityCode=39&routeNo=365'          # list every official variant
+curl -s 'https://tapso-api.vercel.app/v1/stops?routeId=JEB405136521&cityCode=39'  # ordered topology
 curl -s 'https://tapso-api.vercel.app/v1/vehicles?routeId=JEB405136521&cityCode=39'
+#    All four must answer, the stop sequence must be contiguous, your boarding
+#    and destination sequences must exist on it in that order, and the vehicles
+#    response must be non-empty so the physical bus can be cross-checked. A
+#    route number covers several variants with different topologies: pick one
+#    exact routeId and one direction, and ride that.
 
 # 2. Capture the ride. Raw snapshots stay in ignored work/rides/.
 env -u TAGO_SERVICE_KEY node --env-file=.env.local \
@@ -92,7 +107,12 @@ While riding, five actions are enough:
 
 Never switch the tracked vehicle silently, never `git add` anything under
 `work/`, and send back only the sanitized `.report.json` — never the raw
-capture, which holds real vehicle numbers.
+capture, which holds real vehicle numbers. Identity is the exact `routeId`, which
+the capture and the report both record; a route number alone is not identity.
+
+Once the first ride is analysed, repeat the capture on a different route. That
+is how the tooling and any freshness rule are shown not to be fitted to Route
+365.
 
 Then define and test a TAGO freshness rule from `freshnessEvidence` and
 `tracked.markerComparisons` before anything enables journey-session matching or

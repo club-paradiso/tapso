@@ -1,10 +1,49 @@
-# Controlled Route 365 ride capture
+# Controlled real-ride capture
 
 ## Outcome and non-goals
 
-Give the next validation gate in `docs/DATA_VALIDATION.md` a repeatable tool: during a real Route 365 ride, poll TAGO for the chosen direction, store bounded snapshots only under ignored `work/rides/`, let the rider mark the boarded vehicle and physically passed stops, and produce a sanitized report that compares provider `nodeord` progression, content-change age, gaps, and arrival against those markers.
+Give the next validation gate in `docs/DATA_VALIDATION.md` a repeatable tool: during a real ride on any official TAGO route, poll TAGO for the chosen direction, store bounded snapshots only under ignored `work/rides/`, let the rider mark the boarded vehicle and physically passed stops, and produce a sanitized report that compares provider `nodeord` progression, content-change age, gaps, and arrival against those markers.
 
 Non-goals: defining the freshness rule itself, enabling journey-session matching or progress for passengers, changing `TagoTransitProvider`, or committing raw vehicle numbers, coordinates, or authenticated responses.
+
+## Route scope
+
+The tool is route-generic. `capture.ts` takes `<official-route-id>
+<official-city-code> <boarding-seq> <destination-seq>` and reads the topology
+from the provider, so nothing in the capture path knows about any particular
+route. Keep it that way: a 365-specific shortcut would hide exactly the
+overfitting this evidence is supposed to expose.
+
+Route 365's `JEB405136521` and `JEB405136522` are the **recommended baseline**,
+not a requirement. They are the two directions whose ordered topology and live
+vehicle data have already been verified against production, so a capture on them
+can be read against a known-good reference. A first ride should prefer them for
+that reason alone.
+
+Any other Jeju TAGO route may be used for a controlled ride once it passes the
+same live preflight, which is the real gate:
+
+1. The `cityCode` is confirmed, not assumed.
+2. The route number's official variants are listed, all of them.
+3. One exact `routeId` and one direction are chosen from that list.
+4. The ordered stop topology comes back intact, with contiguous sequences.
+5. The boarding and destination sequences exist on that topology, in that order.
+6. The live vehicles endpoint answers for that `routeId`.
+7. The physical bus can be cross-checked against a vehicle in that response.
+
+Two rules follow. Record identity as the exact `routeId`, never as a route
+number: the capture and its report both carry `routeId`, because a number covers
+several variants with different topologies. And do not take a first ride on a
+route whose topology or direction is unclear — an ambiguous direction produces
+markers that cannot be interpreted afterwards, which is worse than no ride.
+
+After the first ride, repeating the capture on a different route is the point,
+not a luxury: it is how the tooling and the freshness policy are shown not to be
+fitted to Route 365.
+
+Note that `scripts/tago/probe.py` searches route number `365` specifically. It is
+a Route 365 evidence probe, not the preflight for an arbitrary route; use
+`/v1/routes?cityCode=…&routeNo=…` for that.
 
 ## Verified constraints
 
@@ -22,7 +61,7 @@ Non-goals: defining the freshness rule itself, enabling journey-session matching
 3. `DONE` CLI `scripts/ride-capture/capture.ts` and `scripts/ride-capture/analyze.ts`.
 4. `DONE` Deterministic Node tests (`services/api/test/rideCapture.test.ts`, 15 tests) covering tracking, gaps, reversal, marker lag, warnings, validation, runner failure tolerance, arrival stop, limits, quit, command parsing, vehicle resolution, the rider briefing, masked status output, presence and advance distributions, GPS-versus-`nodeord` movement, capture integrity counters, the evidence verdict, and an interrupted capture.
 5. `DONE` Operator readiness (Task B preparation): the rider sees the stop list and both endpoint names before the first poll, boards by the last four characters of the plate with the typed number cross-checked against the live snapshot, and can ask for vehicles or status mid-ride. The report carries p75/p90, presence ratios, advance and marker-lag distributions, integrity counters, and a `SUFFICIENT` / `INSUFFICIENT_EVIDENCE` verdict.
-6. `PENDING` One real ride on `JEB405136521` or `JEB405136522`, sanitized report summarised in `docs/DATA_VALIDATION.md`.
+6. `PENDING` One real ride on a preflighted route and direction — `JEB405136521` or `JEB405136522` recommended — with the sanitized report summarised in `docs/DATA_VALIDATION.md`.
 7. `PENDING` Freshness rule derived from ≥ 1 ride, then journey-session tests before enabling tracking. Task C, not this plan.
 
 ## Decisions
@@ -50,7 +89,9 @@ node --experimental-strip-types scripts/ride-capture/analyze.ts work/rides/<capt
 `.env.local` is the one used: Node's `--env-file` does not overwrite a variable
 that is already set.
 
-Stop sequences come from `GET /v1/stops?routeId=…&cityCode=39`, or from the
+`JEB405136521` above is the recommended baseline, not a fixed argument: any
+`routeId` and `cityCode` that pass the preflight in *Route scope* work the same
+way. Stop sequences come from `GET /v1/stops?routeId=…&cityCode=…`, or from the
 briefing the capture prints before its first poll, which lists every stop from
 boarding to destination with its name.
 
@@ -58,7 +99,8 @@ boarding to destination with its name.
 
 Implemented and tested. [PR #24](https://github.com/club-paradiso/tapso/pull/24) merged into `main` on 2026-09-11 with CI green (`api`, `transit-core`, `web`). The tool is therefore available on `main`; no credentialed run has happened yet.
 
-Next action: ride one full-length Route 365 direction with `.env.local` loaded,
+Next action: ride one preflighted route and direction with `.env.local` loaded —
+a full-length Route 365 direction is the recommended baseline, not an obligation —
 keep the capture under `work/rides/`, and paste only the sanitized
 `.report.json` summary (counts, seconds, pseudonyms) into
 `docs/DATA_VALIDATION.md`. Then define the TAGO freshness rule from
