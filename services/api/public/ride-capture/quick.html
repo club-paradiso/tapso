@@ -9,9 +9,9 @@
     <meta name="apple-mobile-web-app-title" content="빠른 승차 기록" />
     <title>TAPSO 빠른 승차 기록</title>
     <style>
-      :root { color-scheme: dark; --bg:#0b0e11; --panel:#161b21; --ink:#f4f7fa; --muted:#9fabb8; --line:#34404c; --accent:#5aa2ff; --accent-ink:#05101f; --good:#79e5ae; --good-bg:#0f2e20; --warn:#ffc978; --warn-bg:#33280f; --bad:#ff96a4; --bad-bg:#3a151d; --tap:58px; }
+      :root { color-scheme:dark; --bg:#0b0e11; --panel:#161b21; --ink:#f4f7fa; --muted:#9fabb8; --line:#34404c; --accent:#5aa2ff; --accent-ink:#05101f; --good:#79e5ae; --good-bg:#0f2e20; --warn:#ffc978; --warn-bg:#33280f; --bad:#ff96a4; --bad-bg:#3a151d; --tap:58px; }
       * { box-sizing:border-box; }
-      body { margin:0; background:var(--bg); color:var(--ink); font:17px/1.45 -apple-system,BlinkMacSystemFont,"Segoe UI",system-ui,sans-serif; -webkit-text-size-adjust:100%; }
+      body { margin:0; background:var(--bg); color:var(--ink); font:17px/1.45 -apple-system,BlinkMacSystemFont,"Segoe UI",system-ui,sans-serif; -webkit-text-size-adjust:100%; -webkit-tap-highlight-color:transparent; }
       main { max-width:32rem; margin:0 auto; padding:max(14px,env(safe-area-inset-top)) 16px calc(24px + env(safe-area-inset-bottom)); }
       [hidden] { display:none !important; }
       h1 { font-size:1rem; margin:0; }
@@ -25,7 +25,8 @@
       input,button { font:inherit; }
       input { width:100%; min-height:var(--tap); border:1px solid var(--line); border-radius:14px; padding:12px 14px; background:var(--panel); color:var(--ink); }
       input:focus-visible,button:focus-visible { outline:3px solid var(--accent); outline-offset:2px; }
-      button { width:100%; min-height:var(--tap); border:1px solid var(--line); border-radius:14px; padding:12px 16px; background:var(--panel); color:var(--ink); }
+      button { width:100%; min-height:var(--tap); border:1px solid var(--line); border-radius:14px; padding:12px 16px; background:var(--panel); color:var(--ink); cursor:pointer; }
+      button:active { transform:translateY(1px); }
       button.primary { background:var(--accent); color:var(--accent-ink); border-color:transparent; font-weight:800; font-size:1.08rem; }
       button.big { min-height:72px; font-size:1.22rem; }
       button.ghost { background:transparent; }
@@ -61,22 +62,23 @@
           <h1>TAPSO <span class="muted">빠른 승차 기록</span></h1>
           <a href="./">기존 방식</a>
         </div>
-        <h2>버스 번호와 차량번호만</h2>
-        <p class="muted">노선 ID와 운행 구간은 TAPSO가 찾습니다. 실제 승차 정류장과 내릴 곳만 확인하면 됩니다.</p>
+        <h2>버스 번호 + 뒤 4자리</h2>
+        <p class="muted">이 두 가지만 입력하면 TAPSO가 현재 운행 차량에서 정확한 노선 ID를 찾습니다. 이후 실제로 탄 곳과 내릴 곳만 탭하세요.</p>
         <div class="grid2">
-          <label><span class="sr">버스 번호</span><input id="route-no" type="text" inputmode="numeric" placeholder="455" autocomplete="off" /></label>
-          <label><span class="sr">번호판 뒤 4자리</span><input id="plate" type="text" inputmode="numeric" maxlength="4" placeholder="3651" autocomplete="off" /></label>
+          <label><span class="sr">버스 번호</span><input id="route-no" type="text" inputmode="numeric" enterkeyhint="next" placeholder="455" autocomplete="off" /></label>
+          <label><span class="sr">번호판 뒤 4자리</span><input id="plate" type="text" inputmode="numeric" enterkeyhint="search" maxlength="4" placeholder="3651" autocomplete="off" /></label>
         </div>
         <button id="find-bus" type="button" class="primary big" style="margin-top:10px">이 버스 찾기</button>
         <p id="home-alert" class="alert" data-tone="warn"></p>
         <div id="token-block" class="panel" hidden>
           <strong>운영자 잠금 해제</strong>
-          <p class="small muted">토큰은 이 Safari 세션에만 둡니다.</p>
+          <p class="small muted">처음 한 번만 입력합니다. 토큰은 이 Safari 세션에만 둡니다.</p>
           <input id="token" type="password" autocomplete="current-password" placeholder="운영자 토큰" />
-          <button id="save-token" type="button" style="margin-top:8px">잠금 해제</button>
+          <button id="save-token" type="button" style="margin-top:8px">잠금 해제하고 계속</button>
         </div>
         <div id="recent" class="panel" hidden>
           <strong>최근 기록</strong>
+          <p class="small muted">완료 기록은 이 기기에 자동 보관됩니다. 차량번호는 저장 목록에 표시하지 않습니다.</p>
           <div id="recent-list"></div>
         </div>
       </section>
@@ -89,11 +91,11 @@
           <div class="small muted" id="matched-position"></div>
         </div>
         <h2>어디서 탔나요?</h2>
-        <p class="muted">실시간 위치는 몇 정류장 늦을 수 있습니다. 실제로 탄 정류장을 누르세요.</p>
+        <p class="muted">실시간 위치가 조금 늦어도 괜찮습니다. 실제로 탄 정류장을 누르세요.</p>
         <div id="boarding-list"></div>
-        <button id="show-all-boarding" type="button" class="ghost">정류장 직접 찾기</button>
+        <button id="show-all-boarding" type="button" class="ghost">목록에 없어요 · 직접 찾기</button>
         <div id="boarding-search-wrap" hidden>
-          <input id="boarding-search" type="search" placeholder="정류장 이름" autocomplete="off" />
+          <input id="boarding-search" type="search" enterkeyhint="search" placeholder="정류장 이름" autocomplete="off" />
           <div id="boarding-search-list" class="search-results"></div>
         </div>
       </section>
@@ -101,8 +103,9 @@
       <section id="screen-destination" hidden>
         <div class="bar"><button id="back-boarding" type="button" class="ghost" style="width:auto">‹ 뒤로</button><h1>내리는 곳</h1></div>
         <h2>어디서 내리나요?</h2>
-        <input id="destination-search" type="search" placeholder="정류장 이름" autocomplete="off" />
+        <input id="destination-search" type="search" enterkeyhint="search" placeholder="정류장 이름" autocomplete="off" />
         <p id="destination-count" class="small muted"></p>
+        <p id="destination-alert" class="alert" data-tone="warn"></p>
         <div id="destination-list" class="search-results"></div>
       </section>
 
