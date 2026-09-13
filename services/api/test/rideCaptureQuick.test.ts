@@ -5,6 +5,7 @@ import {
   boardingCandidates,
   collectVehicleCandidates,
   exactRouteVariants,
+  hasPassedStopMarker,
   hasValidPlateSuffix,
   matchingVehicles,
   normalizePlateSuffix,
@@ -52,4 +53,15 @@ test("collects route identity together with the matching vehicle", () => {
 test("boarding candidates include a small window behind stale provider position", () => {
   const stops = Array.from({ length: 10 }, (_, index) => ({ sequence: index + 1, name: `S${index + 1}` }));
   assert.deepEqual(boardingCandidates(stops, 7).map((s) => s.sequence), [4, 5, 6, 7, 8]);
+});
+
+test("detects an already stored physical marker for the same stop sequence", () => {
+  const markers = [
+    { kind: "boarded", stopSequence: 18 },
+    { kind: "passed_stop", stopSequence: 20 },
+    { kind: "note", note: "door reopened" },
+  ];
+  assert.equal(hasPassedStopMarker(markers, 20), true);
+  assert.equal(hasPassedStopMarker(markers, 18), false);
+  assert.equal(hasPassedStopMarker(markers, 21), false);
 });

@@ -15,6 +15,7 @@ import {
   boardingCandidates,
   collectVehicleCandidates,
   exactRouteVariants,
+  hasPassedStopMarker,
   hasValidPlateSuffix,
   matchingVehicles,
   normalizePlateSuffix,
@@ -28,8 +29,10 @@ const INTERVAL_MS = DEFAULT_INTERVAL_MS;
 const MAX_VARIANTS_FOR_DIRECT_SCAN = 12;
 const MARK_WINDOW = 8;
 const POST_ALIGHT_OBSERVE_MS = 20_000;
+const MARK_FEEDBACK_MS = 1_800;
 const el = (id) => document.getElementById(id);
 let memoryToken = "";
+let markerFeedbackTimer;
 
 const state = {
   route: undefined,
@@ -471,6 +474,19 @@ function renderRide() {
   el("riding-position").textContent = status.trackedPresent ? (status.trackedStopName || `정류장 ${status.trackedStopSequence}`) : "이번 수집에 없음";
 }
 
+function markerFeedback(stopName, alreadyRecorded = false) {
+  const button = el("mark-stop");
+  const message = alreadyRecorded ? `${stopName}은 이미 기록되어 있습니다.` : `${stopName} 기록 완료`;
+  if (markerFeedbackTimer) clearTimeout(markerFeedbackTimer);
+  button.textContent = alreadyRecorded ? `✓ ${stopName} 이미 기록됨` : `✓ ${stopName} 기록됨`;
+  say("riding-alert", message, "ok");
+  announce(message);
+  try { navigator.vibrate?.(40); } catch { /* vibration is optional and absent on iOS Safari */ }
+  markerFeedbackTimer = setTimeout(() => {
+    if (!state.alighting) button.textContent = "문 열린 정류장 기록";
+  }, MARK_FEEDBACK_MS);
+}
+
 async function markStop() {
   const capture = state.session.capture();
   const status = state.session.status();
@@ -483,8 +499,20 @@ async function markStop() {
     choices,
   );
   if (!picked) return;
+
+  if (hasPassedStopMarker(state.session.markers, picked.sequence)) {
+    markerFeedback(picked.name, true);
+    const again = await confirmAction(
+      "이미 기록한 정류장입니다",
+      `${picked.name}은 이미 기록했습니다. 실제로 문이 다시 열린 경우에만 다시 기록하세요.`,
+      "다시 기록",
+    );
+    if (!again) return;
+    await state.session.note(`${picked.name}: 동일 정류장 재기록을 운영자가 확인함`);
+  }
+
   await state.session.passedStop(picked.sequence);
-  announce(`${picked.name} 기록`);
+  markerFeedback(picked.name);
 }
 
 async function addNote() {
@@ -579,12 +607,15 @@ async function renderRecents() {
 function reset() {
   state.polling = false;
   releaseWakeLock();
+  if (markerFeedbackTimer) clearTimeout(markerFeedbackTimer);
+  markerFeedbackTimer = undefined;
   state.route = state.vehicle = state.boarding = state.destination = state.session = state.report = undefined;
   state.stops = [];
   state.topology = undefined;
   state.wrapAround = false;
   state.alighting = false;
   el("plate").value = "";
+  el("mark-stop").textContent = "문 열린 정류장 기록";
   say("home-alert", "");
   void renderRecents();
   show("home");
