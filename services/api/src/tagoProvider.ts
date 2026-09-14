@@ -9,6 +9,9 @@ import { CANONICAL_SERVICE_KEY_ENV, resolveTagoServiceKey } from "./serviceKey.t
 type FetchLike = typeof fetch;
 type UnknownRecord = Record<string, unknown>;
 
+const TAGO_TRANSIENT_ATTEMPTS = 2;
+const TAGO_RETRY_DELAY_MS = 250;
+
 export interface TagoTransitProviderOptions {
   serviceKey?: string;
   routeBaseURL?: string;
@@ -152,29 +155,7 @@ export class TagoTransitProvider implements TransitProvider {
         url.searchParams.set("numOfRows", "100");
       }
 
-      let response: Response;
-      try {
-        response = await this.fetchImplementation(url, {
-          headers: {
-            accept: "application/json",
-            "user-agent": "TAPSO-live-transit/1.0",
-            connection: "close",
-          },
-          signal: AbortSignal.timeout(8_000),
-          redirect: "error",
-        });
-      } catch {
-        throw new ProviderResponseError("TAGO request failed or timed out");
-      }
-      if (!response.ok) throw new ProviderResponseError(`TAGO provider returned HTTP ${response.status}`);
-
-      let payload: unknown;
-      try {
-        payload = await response.json();
-      } catch {
-        throw new ProviderResponseError("TAGO returned a non-JSON response");
-      }
-      const envelope = extractEnvelope(payload);
+      const envelope = await this.fetchEnvelopeWithTransientRetry(url);
       const resultCode = stringField(envelope.header, "resultCode");
       if (!resultCode) throw new ProviderResponseError("TAGO resultCode is missing");
       if (resultCode && resultCode !== "00" && resultCode !== "0") {
@@ -197,6 +178,75 @@ export class TagoTransitProvider implements TransitProvider {
     }
     throw new ProviderResponseError("TAGO pagination limit exceeded");
   }
+
+  /**
+   * data.go.kr occasionally returns a syntactically valid but incomplete TAGO
+   * envelope for a single request. Treat transport failures, HTTP 5xx, non-JSON
+   * bodies, and malformed envelopes as transient once, then fail closed. Logical
+   * TAGO result codes are handled by the caller and are never retried here.
+   */
+  private async fetchEnvelopeWithTransientRetry(url: URL): Promise<{ header: UnknownRecord; body: UnknownRecord }> {
+    let lastError: ProviderResponseError | undefined;
+    for (let attempt = 1; attempt <= TAGO_TRANSIENT_ATTEMPTS; attempt += 1) {
+      let response: Response;
+      try {
+        response = await this.fetchImplementation(url, {
+          headers: {
+            accept: "application/json",
+            "user-agent": "TAPSO-live-transit/1.0",
+            connection: "close",
+          },
+          signal: AbortSignal.timeout(8_000),
+          redirect: "error",
+        });
+      } catch {
+        lastError = new ProviderResponseError("TAGO request failed or timed out");
+        if (attempt < TAGO_TRANSIENT_ATTEMPTS) {
+          await delay(TAGO_RETRY_DELAY_MS);
+          continue;
+        }
+        throw lastError;
+      }
+
+      if (!response.ok) {
+        lastError = new ProviderResponseError(`TAGO provider returned HTTP ${response.status}`);
+        if (response.status >= 500 && attempt < TAGO_TRANSIENT_ATTEMPTS) {
+          await delay(TAGO_RETRY_DELAY_MS);
+          continue;
+        }
+        throw lastError;
+      }
+
+      let payload: unknown;
+      try {
+        payload = await response.json();
+      } catch {
+        lastError = new ProviderResponseError("TAGO returned a non-JSON response");
+        if (attempt < TAGO_TRANSIENT_ATTEMPTS) {
+          await delay(TAGO_RETRY_DELAY_MS);
+          continue;
+        }
+        throw lastError;
+      }
+
+      try {
+        return extractEnvelope(payload);
+      } catch (error) {
+        if (!(error instanceof ProviderResponseError)) throw error;
+        lastError = error;
+        if (attempt < TAGO_TRANSIENT_ATTEMPTS) {
+          await delay(TAGO_RETRY_DELAY_MS);
+          continue;
+        }
+        throw lastError;
+      }
+    }
+    throw lastError ?? new ProviderResponseError("TAGO request failed or timed out");
+  }
+}
+
+function delay(milliseconds: number): Promise<void> {
+  return new Promise((resolve) => setTimeout(resolve, milliseconds));
 }
 
 function extractEnvelope(payload: unknown): { header: UnknownRecord; body: UnknownRecord } {
