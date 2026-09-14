@@ -9,6 +9,7 @@ import {
   hasValidPlateSuffix,
   matchingVehicles,
   normalizePlateSuffix,
+  postAlightObservationState,
   vehiclePlateSuffix,
 } from "../public/ride-capture/quick-core.js";
 
@@ -64,4 +65,42 @@ test("detects an already stored physical marker for the same stop sequence", () 
   assert.equal(hasPassedStopMarker(markers, 20), true);
   assert.equal(hasPassedStopMarker(markers, 18), false);
   assert.equal(hasPassedStopMarker(markers, 21), false);
+});
+
+test("post-alight gate keeps a capture open while the provider is still behind", () => {
+  assert.deepEqual(postAlightObservationState({
+    remainingStops: 1,
+    alightedAtMs: 1_000,
+    nowMs: 6_000,
+    observeMs: 20_000,
+  }), {
+    destinationObserved: false,
+    elapsedMs: 5_000,
+    remainingMs: 15_000,
+    canFinalize: false,
+  });
+});
+
+test("post-alight gate closes early only after the destination is actually observed", () => {
+  const observed = postAlightObservationState({
+    remainingStops: 0,
+    alightedAtMs: 1_000,
+    nowMs: 2_000,
+    observeMs: 20_000,
+  });
+  assert.equal(observed.destinationObserved, true);
+  assert.equal(observed.canFinalize, true);
+  assert.equal(observed.remainingMs, 0);
+});
+
+test("post-alight gate eventually closes even if the provider never catches up", () => {
+  const expired = postAlightObservationState({
+    remainingStops: 1,
+    alightedAtMs: 1_000,
+    nowMs: 21_000,
+    observeMs: 20_000,
+  });
+  assert.equal(expired.destinationObserved, false);
+  assert.equal(expired.canFinalize, true);
+  assert.equal(expired.remainingMs, 0);
 });
