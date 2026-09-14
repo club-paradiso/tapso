@@ -19,6 +19,7 @@ import {
   hasValidPlateSuffix,
   matchingVehicles,
   normalizePlateSuffix,
+  postAlightObservationState,
 } from "./quick-core.js";
 
 const TOKEN_KEY = "tapso.rideCapture.operatorToken";
@@ -49,6 +50,8 @@ const state = {
   wakeLock: undefined,
   wakeLockUnavailableRecorded: false,
   alighting: false,
+  postAlightStartedAt: undefined,
+  finishPromise: undefined,
 };
 
 function show(name) {
@@ -417,6 +420,8 @@ async function startCapture() {
     state.report = undefined;
     state.wakeLockUnavailableRecorded = false;
     state.alighting = false;
+    state.postAlightStartedAt = undefined;
+    state.finishPromise = undefined;
 
     await state.session.recordSnapshot({ vehicles: live.items || [] });
     await state.session.board(current.vehicleId);
@@ -467,9 +472,19 @@ function renderRide() {
   const status = state.session.status();
   el("riding-title").textContent = `${state.route.routeNumber}번 주행 중`;
   el("riding-route").textContent = `${state.destination.name}까지`;
-  el("remaining").textContent = state.alighting
-    ? "하차 후 추가 관측 중"
-    : status.remainingStops === undefined ? "위치 확인 중" : `${status.remainingStops}정류장 남음`;
+  if (state.alighting) {
+    const gate = postAlightObservationState({
+      remainingStops: status.remainingStops,
+      alightedAtMs: state.postAlightStartedAt,
+      nowMs: Date.now(),
+      observeMs: POST_ALIGHT_OBSERVE_MS,
+    });
+    el("remaining").textContent = gate.destinationObserved
+      ? "목적지 위치 확인됨"
+      : `하차 후 추가 관측 중 · ${Math.max(1, Math.ceil(gate.remainingMs / 1_000))}초`;
+  } else {
+    el("remaining").textContent = status.remainingStops === undefined ? "위치 확인 중" : `${status.remainingStops}정류장 남음`;
+  }
   el("riding-plate").textContent = `…${normalizePlateSuffix(state.vehicle.vehicleId)}`;
   el("riding-position").textContent = status.trackedPresent ? (status.trackedStopName || `정류장 ${status.trackedStopSequence}`) : "이번 수집에 없음";
 }
@@ -526,46 +541,87 @@ async function alight() {
   if (state.alighting) return;
   const ok = await confirmAction("하차", `${state.destination.name}에서 내렸습니까?`, "내렸습니다");
   if (!ok) return;
-  await state.session.alight();
+  const alightedAtMs = Date.now();
+  await state.session.alight(undefined, { at: new Date(alightedAtMs).toISOString() });
   state.alighting = true;
+  state.postAlightStartedAt = alightedAtMs;
+  await state.session.recordEvent("post_alight_observation_started", `windowMs=${POST_ALIGHT_OBSERVE_MS}`);
   el("mark-stop").disabled = true;
   el("note").disabled = true;
   el("alight").disabled = true;
   renderRide();
+  await finishCapture();
+}
 
-  const alreadyArrived = state.session.status().remainingStops === 0;
-  if (!alreadyArrived) {
-    say("riding-alert", "하차는 기록했습니다. 실시간 위치가 목적지까지 따라오는지 20초만 더 확인합니다.", "ok");
-    await sleep(POST_ALIGHT_OBSERVE_MS);
+async function waitForPostAlightObservation() {
+  if (!state.alighting || !state.session) return;
+  const marker = [...state.session.markers].reverse().find((entry) => entry?.kind === "alighted");
+  const fallbackStartedAt = marker?.at ? Date.parse(marker.at) : NaN;
+  const startedAt = Number.isFinite(state.postAlightStartedAt) ? state.postAlightStartedAt : fallbackStartedAt;
+  if (!Number.isFinite(startedAt)) return;
+
+  while (state.session && state.polling) {
+    const status = state.session.status();
+    const gate = postAlightObservationState({
+      remainingStops: status.remainingStops,
+      alightedAtMs: startedAt,
+      nowMs: Date.now(),
+      observeMs: POST_ALIGHT_OBSERVE_MS,
+    });
+    if (gate.canFinalize) {
+      await state.session.recordEvent(
+        "post_alight_observation_completed",
+        gate.destinationObserved ? "destination_observed" : "window_elapsed",
+      );
+      return;
+    }
+    say(
+      "riding-alert",
+      `하차는 기록했습니다. 실시간 위치를 ${Math.max(1, Math.ceil(gate.remainingMs / 1_000))}초 더 확인합니다.`,
+      "ok",
+    );
+    renderRide();
+    await sleep(Math.min(500, gate.remainingMs));
   }
-  if (state.session && state.polling) await finishCapture();
 }
 
 async function finishCapture() {
   if (!state.session) return;
-  state.polling = false;
-  releaseWakeLock();
-  const capture = await state.session.finalize();
-  show("finish");
-  el("finish-head").textContent = `${state.destination?.name || "목적지"}에서 기록을 마쳤습니다`;
-  el("finish-summary").textContent = `${state.route.routeNumber}번 · 수집 ${capture.snapshots.length}회 · 기록 ${capture.markers.length}건`;
-  say("finish-alert", "분석 중…");
+  if (state.finishPromise) return state.finishPromise;
+
+  state.finishPromise = (async () => {
+    await waitForPostAlightObservation();
+    if (!state.session) return;
+    state.polling = false;
+    releaseWakeLock();
+    const capture = await state.session.finalize();
+    show("finish");
+    el("finish-head").textContent = `${state.destination?.name || "목적지"}에서 기록을 마쳤습니다`;
+    el("finish-summary").textContent = `${state.route.routeNumber}번 · 수집 ${capture.snapshots.length}회 · 기록 ${capture.markers.length}건`;
+    say("finish-alert", "분석 중…");
+    try {
+      state.report = await api.analyze(capture);
+      const sufficient = state.report.evidenceCompleteness?.verdict === "SUFFICIENT";
+      const verdict = el("verdict"); verdict.hidden = false;
+      verdict.textContent = sufficient
+        ? "이번 기록은 분석에 사용할 수 있습니다."
+        : `데이터가 더 필요합니다: ${(state.report.evidenceCompleteness?.unmetRequired || []).join(", ")}`;
+      say("finish-alert", "", sufficient ? "ok" : "warn");
+    } catch (error) {
+      state.report = undefined;
+      say("finish-alert", `분석 실패: ${error.message}`, "bad");
+    }
+    await state.store.putHistory({ ...historyEntry({ captureId: state.session.captureId, routeNo: state.session.routeNo, capture, report: state.report }), status: "finished" });
+    el("mark-stop").disabled = false;
+    el("note").disabled = false;
+    el("alight").disabled = false;
+  })();
+
   try {
-    state.report = await api.analyze(capture);
-    const sufficient = state.report.evidenceCompleteness?.verdict === "SUFFICIENT";
-    const verdict = el("verdict"); verdict.hidden = false;
-    verdict.textContent = sufficient
-      ? "이번 기록은 분석에 사용할 수 있습니다."
-      : `데이터가 더 필요합니다: ${(state.report.evidenceCompleteness?.unmetRequired || []).join(", ")}`;
-    say("finish-alert", "", sufficient ? "ok" : "warn");
-  } catch (error) {
-    state.report = undefined;
-    say("finish-alert", `분석 실패: ${error.message}`, "bad");
+    return await state.finishPromise;
+  } finally {
+    state.finishPromise = undefined;
   }
-  await state.store.putHistory({ ...historyEntry({ captureId: state.session.captureId, routeNo: state.session.routeNo, capture, report: state.report }), status: "finished" });
-  el("mark-stop").disabled = false;
-  el("note").disabled = false;
-  el("alight").disabled = false;
 }
 
 function downloadJson(filename, payload) {
@@ -614,6 +670,8 @@ function reset() {
   state.topology = undefined;
   state.wrapAround = false;
   state.alighting = false;
+  state.postAlightStartedAt = undefined;
+  state.finishPromise = undefined;
   el("plate").value = "";
   el("mark-stop").textContent = "문 열린 정류장 기록";
   say("home-alert", "");

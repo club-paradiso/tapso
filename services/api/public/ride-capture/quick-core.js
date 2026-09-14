@@ -50,3 +50,31 @@ export function boardingCandidates(stops, providerSequence, behind = 3, ahead = 
 export function hasPassedStopMarker(markers, sequence) {
   return (markers ?? []).some((marker) => marker?.kind === "passed_stop" && marker?.stopSequence === sequence);
 }
+
+/**
+ * The post-alight gate is deliberately based on elapsed wall time plus the live
+ * provider position. If the provider has not reached the destination, a capture
+ * must remain open for the whole observation window instead of finalizing at the
+ * physical alight marker. This is measurement plumbing, not a freshness policy.
+ */
+export function postAlightObservationState({
+  remainingStops,
+  alightedAtMs,
+  nowMs,
+  observeMs = 20_000,
+}) {
+  const started = Number(alightedAtMs);
+  const current = Number(nowMs);
+  const windowMs = Number.isFinite(Number(observeMs)) ? Math.max(0, Number(observeMs)) : 20_000;
+  const destinationObserved = remainingStops === 0;
+  const elapsedMs = Number.isFinite(started) && Number.isFinite(current)
+    ? Math.max(0, current - started)
+    : 0;
+  const remainingMs = destinationObserved ? 0 : Math.max(0, windowMs - elapsedMs);
+  return {
+    destinationObserved,
+    elapsedMs,
+    remainingMs,
+    canFinalize: destinationObserved || remainingMs === 0,
+  };
+}
