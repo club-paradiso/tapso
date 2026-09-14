@@ -145,13 +145,61 @@ test("treats a normal zero-count TAGO response as an empty snapshot", async () =
   );
 });
 
+test("retries one transient malformed TAGO envelope before failing the request", async () => {
+  let calls = 0;
+  const fakeFetch: typeof fetch = async () => {
+    calls += 1;
+    if (calls === 1) {
+      return new Response(JSON.stringify({
+        response: { header: { resultCode: "00", resultMsg: "NORMAL SERVICE." } },
+      }), { status: 200 });
+    }
+    return new Response(JSON.stringify({
+      response: {
+        header: { resultCode: "00", resultMsg: "NORMAL SERVICE." },
+        body: { totalCount: 0, items: "" },
+      },
+    }), { status: 200 });
+  };
+  const provider = new TagoTransitProvider({ serviceKey: "test-key", fetchImplementation: fakeFetch });
+  assert.deepEqual(
+    await provider.vehicles({ routeId: "JEB405130206", cityCode: "39" }),
+    [],
+  );
+  assert.equal(calls, 2);
+});
+
+test("retries one transient TAGO HTTP 5xx response", async () => {
+  let calls = 0;
+  const fakeFetch: typeof fetch = async () => {
+    calls += 1;
+    if (calls === 1) return new Response("temporary", { status: 502 });
+    return new Response(JSON.stringify({
+      response: {
+        header: { resultCode: "00", resultMsg: "NORMAL SERVICE." },
+        body: { totalCount: 0, items: "" },
+      },
+    }), { status: 200 });
+  };
+  const provider = new TagoTransitProvider({ serviceKey: "test-key", fetchImplementation: fakeFetch });
+  assert.deepEqual(
+    await provider.vehicles({ routeId: "JEB405130206", cityCode: "39" }),
+    [],
+  );
+  assert.equal(calls, 2);
+});
+
 test("redacts TAGO provider messages", async () => {
-  const fakeFetch: typeof fetch = async () => new Response(JSON.stringify({
-    response: {
-      header: { resultCode: "99", resultMsg: "가용한 세션이 존재하지 않습니다. (30/30)" },
-      body: {},
-    },
-  }), { status: 200 });
+  let calls = 0;
+  const fakeFetch: typeof fetch = async () => {
+    calls += 1;
+    return new Response(JSON.stringify({
+      response: {
+        header: { resultCode: "99", resultMsg: "가용한 세션이 존재하지 않습니다. (30/30)" },
+        body: {},
+      },
+    }), { status: 200 });
+  };
   const provider = new TagoTransitProvider({ serviceKey: "test-key", fetchImplementation: fakeFetch });
   await assert.rejects(
     provider.vehicles({ routeId: "JEB405136521", cityCode: "39" }),
@@ -161,6 +209,7 @@ test("redacts TAGO provider messages", async () => {
       return true;
     },
   );
+  assert.equal(calls, 1);
 });
 
 test("rejects a TAGO response without a result code", async () => {
