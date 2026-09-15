@@ -5,6 +5,7 @@ import {
   boardingCandidates,
   collectVehicleCandidates,
   exactRouteVariants,
+  fieldStopChoices,
   hasPassedStopMarker,
   hasValidPlateSuffix,
   matchingVehicles,
@@ -65,6 +66,68 @@ test("detects an already stored physical marker for the same stop sequence", () 
   assert.equal(hasPassedStopMarker(markers, 20), true);
   assert.equal(hasPassedStopMarker(markers, 18), false);
   assert.equal(hasPassedStopMarker(markers, 21), false);
+});
+
+test("field mode starts at the boarding stop and advances only from rider markers", () => {
+  const stops = Array.from({ length: 10 }, (_, index) => ({ sequence: index + 1, name: `S${index + 1}` }));
+  assert.deepEqual(fieldStopChoices({
+    stops,
+    markers: [{ kind: "boarded", stopSequence: 3 }],
+    boardingSequence: 3,
+    destinationSequence: 9,
+    limit: 4,
+  }).map((stop) => stop.sequence), [3, 4, 5, 6]);
+
+  assert.deepEqual(fieldStopChoices({
+    stops,
+    markers: [
+      { kind: "boarded", stopSequence: 3 },
+      { kind: "passed_stop", stopSequence: 5 },
+    ],
+    boardingSequence: 3,
+    destinationSequence: 9,
+    limit: 4,
+  }).map((stop) => stop.sequence), [6, 7, 8, 9]);
+});
+
+test("field mode lets the rider skip stops without inventing physical markers", () => {
+  const stops = Array.from({ length: 12 }, (_, index) => ({ sequence: index + 1, name: `S${index + 1}` }));
+  const markers = [
+    { kind: "boarded", stopSequence: 2 },
+    { kind: "passed_stop", stopSequence: 2 },
+    { kind: "passed_stop", stopSequence: 5 },
+  ];
+  assert.deepEqual(fieldStopChoices({
+    stops,
+    markers,
+    boardingSequence: 2,
+    destinationSequence: 10,
+    limit: 4,
+  }).map((stop) => stop.sequence), [6, 7, 8, 9]);
+});
+
+test("field mode follows the forward arc on a loop", () => {
+  const stops = Array.from({ length: 5 }, (_, index) => ({ sequence: index + 1, name: `S${index + 1}` }));
+  assert.deepEqual(fieldStopChoices({
+    stops,
+    markers: [{ kind: "boarded", stopSequence: 5 }],
+    boardingSequence: 5,
+    destinationSequence: 2,
+    wrapAround: true,
+    limit: 4,
+  }).map((stop) => stop.sequence), [5, 1, 2]);
+
+  assert.deepEqual(fieldStopChoices({
+    stops,
+    markers: [
+      { kind: "boarded", stopSequence: 5 },
+      { kind: "passed_stop", stopSequence: 5 },
+    ],
+    boardingSequence: 5,
+    destinationSequence: 2,
+    wrapAround: true,
+    limit: 4,
+  }).map((stop) => stop.sequence), [1, 2]);
 });
 
 test("post-alight gate keeps a capture open while the provider is still behind", () => {
