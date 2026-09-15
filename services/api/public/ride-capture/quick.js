@@ -15,6 +15,7 @@ import {
   boardingCandidates,
   collectVehicleCandidates,
   exactRouteVariants,
+  fieldStopChoices,
   hasPassedStopMarker,
   hasValidPlateSuffix,
   matchingVehicles,
@@ -467,6 +468,64 @@ async function pollLoop() {
   }
 }
 
+function currentFieldChoices(limit = 4) {
+  if (!state.session || !state.boarding || !state.destination) return [];
+  return fieldStopChoices({
+    stops: state.session.capture().stops,
+    markers: state.session.markers,
+    boardingSequence: state.boarding.sequence,
+    destinationSequence: state.destination.sequence,
+    wrapAround: state.session.wrapAround,
+    limit,
+  });
+}
+
+function quickStopButton(stop) {
+  const button = document.createElement("button");
+  button.type = "button";
+  button.className = "quick-stop";
+  const small = document.createElement("small");
+  small.textContent = `정류장 ${stop.sequence}`;
+  const label = document.createElement("strong");
+  label.textContent = stop.name;
+  button.append(small, label);
+  button.addEventListener("click", () => void recordPhysicalStop(stop));
+  return button;
+}
+
+function renderFieldControls() {
+  const primary = el("mark-stop");
+  const extras = el("quick-stops");
+  const more = el("more-stops");
+  extras.replaceChildren();
+
+  if (!state.session || state.alighting) {
+    primary.disabled = true;
+    more.disabled = true;
+    for (const button of extras.querySelectorAll("button")) button.disabled = true;
+    if (state.alighting) primary.textContent = "하차 후 추가 관측 중";
+    return;
+  }
+
+  const choices = currentFieldChoices(4);
+  more.disabled = false;
+  if (!choices.length) {
+    primary.disabled = true;
+    primary.removeAttribute("data-sequence");
+    primary.textContent = "다음 정류장 기록 완료";
+    return;
+  }
+
+  const [first, ...rest] = choices;
+  primary.disabled = false;
+  primary.dataset.sequence = String(first.sequence);
+  primary.textContent = first.sequence === state.destination.sequence
+    ? `목적지 · ${first.name} 기록`
+    : `${first.name} 기록`;
+  primary.setAttribute("aria-label", `정류장 ${first.sequence} ${first.name} 기록`);
+  for (const stop of rest) extras.append(quickStopButton(stop));
+}
+
 function renderRide() {
   if (!state.session) return;
   const status = state.session.status();
@@ -487,34 +546,23 @@ function renderRide() {
   }
   el("riding-plate").textContent = `…${normalizePlateSuffix(state.vehicle.vehicleId)}`;
   el("riding-position").textContent = status.trackedPresent ? (status.trackedStopName || `정류장 ${status.trackedStopSequence}`) : "이번 수집에 없음";
+  renderFieldControls();
 }
 
 function markerFeedback(stopName, alreadyRecorded = false) {
-  const button = el("mark-stop");
   const message = alreadyRecorded ? `${stopName}은 이미 기록되어 있습니다.` : `${stopName} 기록 완료`;
   if (markerFeedbackTimer) clearTimeout(markerFeedbackTimer);
-  button.textContent = alreadyRecorded ? `✓ ${stopName} 이미 기록됨` : `✓ ${stopName} 기록됨`;
+  el("field-feedback").textContent = alreadyRecorded ? "이미 기록됨" : `✓ ${stopName}`;
   say("riding-alert", message, "ok");
   announce(message);
   try { navigator.vibrate?.(40); } catch { /* vibration is optional and absent on iOS Safari */ }
   markerFeedbackTimer = setTimeout(() => {
-    if (!state.alighting) button.textContent = "문 열린 정류장 기록";
+    el("field-feedback").textContent = "";
   }, MARK_FEEDBACK_MS);
 }
 
-async function markStop() {
-  const capture = state.session.capture();
-  const status = state.session.status();
-  const from = status.trackedStopSequence ?? state.boarding.sequence;
-  const choices = stopsBetween(capture.stops, from, state.destination.sequence, state.session.wrapAround).slice(0, MARK_WINDOW);
-  if (choices.length === 0) return say("riding-alert", "추천할 다음 정류장이 없습니다. 확실하지 않으면 기록하지 마세요.", "warn");
-  const picked = await choose(
-    "방금 문이 열린 정류장",
-    "버스가 섰더라도 문이 열리지 않았거나 그냥 통과한 곳은 기록하지 않습니다.",
-    choices,
-  );
-  if (!picked) return;
-
+async function recordPhysicalStop(picked) {
+  if (!state.session || !picked || state.alighting) return;
   if (hasPassedStopMarker(state.session.markers, picked.sequence)) {
     markerFeedback(picked.name, true);
     const again = await confirmAction(
@@ -528,6 +576,45 @@ async function markStop() {
 
   await state.session.passedStop(picked.sequence);
   markerFeedback(picked.name);
+  renderFieldControls();
+}
+
+async function markSuggestedStop() {
+  if (!state.session || state.alighting) return;
+  const sequence = Number(el("mark-stop").dataset.sequence);
+  const picked = state.stops.find((stop) => stop.sequence === sequence);
+  if (!picked) return choosePhysicalStop();
+  await recordPhysicalStop(picked);
+}
+
+async function choosePhysicalStop() {
+  if (!state.session || state.alighting) return;
+  const future = currentFieldChoices(MARK_WINDOW);
+  const lastPassed = [...state.session.markers].reverse().find((entry) => entry?.kind === "passed_stop");
+  const reopened = lastPassed ? state.stops.find((stop) => stop.sequence === lastPassed.stopSequence) : undefined;
+  let choices = reopened ? [reopened, ...future] : future;
+
+  // A provider-position fallback preserves the old escape hatch if the rider
+  // skipped more stops than the Field Mode window. It still records nothing
+  // until the rider explicitly selects the physical stop.
+  if (!choices.length) {
+    const status = state.session.status();
+    const from = status.trackedStopSequence ?? state.boarding.sequence;
+    choices = stopsBetween(
+      state.session.capture().stops,
+      from,
+      state.destination.sequence,
+      state.session.wrapAround,
+    ).slice(0, MARK_WINDOW);
+  }
+
+  if (!choices.length) return say("riding-alert", "추천할 정류장이 없습니다. 확실하지 않으면 기록하지 마세요.", "warn");
+  const picked = await choose(
+    "방금 문이 열린 정류장",
+    "평소에는 큰 버튼을 한 번만 누르면 됩니다. 건너뛴 정류장이나 재개문처럼 예외일 때만 여기서 직접 고르세요.",
+    choices,
+  );
+  if (picked) await recordPhysicalStop(picked);
 }
 
 async function addNote() {
@@ -546,7 +633,6 @@ async function alight() {
   state.alighting = true;
   state.postAlightStartedAt = alightedAtMs;
   await state.session.recordEvent("post_alight_observation_started", `windowMs=${POST_ALIGHT_OBSERVE_MS}`);
-  el("mark-stop").disabled = true;
   el("note").disabled = true;
   el("alight").disabled = true;
   renderRide();
@@ -613,6 +699,7 @@ async function finishCapture() {
     }
     await state.store.putHistory({ ...historyEntry({ captureId: state.session.captureId, routeNo: state.session.routeNo, capture, report: state.report }), status: "finished" });
     el("mark-stop").disabled = false;
+    el("more-stops").disabled = false;
     el("note").disabled = false;
     el("alight").disabled = false;
   })();
@@ -673,7 +760,10 @@ function reset() {
   state.postAlightStartedAt = undefined;
   state.finishPromise = undefined;
   el("plate").value = "";
-  el("mark-stop").textContent = "문 열린 정류장 기록";
+  el("mark-stop").textContent = "다음 정류장 불러오는 중…";
+  el("mark-stop").removeAttribute("data-sequence");
+  el("quick-stops").replaceChildren();
+  el("field-feedback").textContent = "";
   say("home-alert", "");
   void renderRecents();
   show("home");
@@ -702,7 +792,8 @@ el("back-boarding").addEventListener("click", () => show("boarding"));
 el("destination-search").addEventListener("input", renderDestinations);
 el("back-destination").addEventListener("click", () => show("destination"));
 el("start").addEventListener("click", startCapture);
-el("mark-stop").addEventListener("click", markStop);
+el("mark-stop").addEventListener("click", markSuggestedStop);
+el("more-stops").addEventListener("click", choosePhysicalStop);
 el("note").addEventListener("click", addNote);
 el("alight").addEventListener("click", alight);
 el("status").addEventListener("click", async () => {
