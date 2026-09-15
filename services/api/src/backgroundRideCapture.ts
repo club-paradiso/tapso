@@ -7,7 +7,6 @@ import {
   analyzeRideCapture,
   type RideCapture,
   type RideCaptureReport,
-  type RideMarker,
   type RideSnapshot,
 } from "./rideCapture.ts";
 
@@ -48,12 +47,14 @@ export interface BackgroundCaptureStatus {
   report?: RideCaptureReport;
 }
 
+type BackgroundErrorKind = "invalid_input" | "not_found" | "conflict" | "unavailable";
+
 export class BackgroundRideCaptureError extends Error {
-  constructor(
-    message: string,
-    public readonly kind: "invalid_input" | "not_found" | "conflict" | "unavailable" = "invalid_input",
-  ) {
+  readonly kind: BackgroundErrorKind;
+
+  constructor(message: string, kind: BackgroundErrorKind = "invalid_input") {
     super(message);
+    this.kind = kind;
   }
 }
 
@@ -82,23 +83,27 @@ export interface BackgroundRideCaptureOptions {
 /**
  * Process-owned controlled-ride recorder.
  *
- * The browser only supplies rider ground-truth markers. Provider polling lives
- * here so iOS may suspend the page without creating an instrument gap in TAGO
- * snapshots. State is intentionally memory-only for this first field version:
- * a process restart invalidates the active session rather than pretending the
- * missing interval was observed.
+ * Provider polling lives here rather than in Safari, so iOS may suspend the
+ * page without suspending TAGO collection. The browser still owns physical
+ * truth: this coordinator never invents a stop marker from provider position.
+ *
+ * State is deliberately process-memory only in this first field version. A
+ * process restart invalidates an active session instead of fabricating the
+ * missing interval as observed evidence.
  */
 export class BackgroundRideCaptureCoordinator {
   private readonly sessions = new Map<string, BackgroundSession>();
+  private readonly provider: Pick<TransitProvider, "stops" | "vehicles">;
   private readonly now: () => Date;
   private readonly scheduleFn: Schedule;
   private readonly cancelFn: Cancel;
   private readonly defaultIntervalMs: number;
 
   constructor(
-    private readonly provider: Pick<TransitProvider, "stops" | "vehicles">,
+    provider: Pick<TransitProvider, "stops" | "vehicles">,
     options: BackgroundRideCaptureOptions = {},
   ) {
+    this.provider = provider;
     this.now = options.now ?? (() => new Date());
     this.scheduleFn = options.schedule ?? ((callback, delayMs) => setTimeout(callback, delayMs));
     this.cancelFn = options.cancel ?? ((handle) => clearTimeout(handle));
@@ -127,7 +132,9 @@ export class BackgroundRideCaptureCoordinator {
     const intervalMs = Math.max(3_000, Math.round(input.intervalMs ?? this.defaultIntervalMs));
     const capture: RideCapture = {
       schemaVersion: RIDE_CAPTURE_SCHEMA_VERSION,
-      source: "background-collector",
+      // The web controller starts the capture and supplies all physical markers;
+      // only provider polling moves to this process, so schema v1 stays intact.
+      source: "web-controller",
       startedAt,
       routeId,
       cityCode,
@@ -148,8 +155,8 @@ export class BackgroundRideCaptureCoordinator {
       polling: false,
     };
 
-    // Identity is re-confirmed against an uncached upstream read before the
-    // session is admitted. A suffix match is deliberately not enough here.
+    // Exact identity is re-confirmed on an uncached provider read. A matching
+    // plate suffix is not enough to admit a background session.
     const first = await this.readSnapshot(session);
     if (first.error || !first.vehicles.some((vehicle) => vehicle.vehicleId === boardedVehicleId)) {
       throw new BackgroundRideCaptureError(
@@ -197,8 +204,7 @@ export class BackgroundRideCaptureCoordinator {
 
   alight(sessionId: string, at?: string): BackgroundCaptureStatus {
     const session = this.require(sessionId);
-    if (session.phase === "completed") return this.statusFor(session);
-    if (session.phase === "post_alight") return this.statusFor(session);
+    if (session.phase === "completed" || session.phase === "post_alight") return this.statusFor(session);
 
     const timestamp = this.markerTime(session, at);
     session.capture.markers.push({
@@ -237,7 +243,7 @@ export class BackgroundRideCaptureCoordinator {
     }
 
     await this.poll(session);
-    if (session.phase !== "completed") this.arm(session);
+    this.arm(session);
   }
 
   private async poll(session: BackgroundSession): Promise<void> {
