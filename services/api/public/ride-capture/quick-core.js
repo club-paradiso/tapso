@@ -52,6 +52,49 @@ export function hasPassedStopMarker(markers, sequence) {
 }
 
 /**
+ * Field Mode is driven only by rider-confirmed physical markers. Provider
+ * position is intentionally absent from this helper: a delayed nodeord must not
+ * make the UI suggest that the rider record the wrong physical stop.
+ *
+ * Before the first physical marker, the boarding stop is the first choice so
+ * the rider can record the doors opening there. Afterwards the window advances
+ * from the latest confirmed stop. Choosing a later stop naturally skips stops
+ * where the doors never opened without fabricating markers for them.
+ */
+export function fieldStopChoices({
+  stops,
+  markers,
+  boardingSequence,
+  destinationSequence,
+  wrapAround = false,
+  limit = 4,
+}) {
+  const list = Array.isArray(stops) ? stops : [];
+  if (!list.length || !Number.isInteger(boardingSequence) || !Number.isInteger(destinationSequence)) return [];
+
+  const lastPassed = [...(markers ?? [])].reverse().find(
+    (marker) => marker?.kind === "passed_stop" && Number.isInteger(marker?.stopSequence),
+  );
+  const anchor = lastPassed?.stopSequence ?? boardingSequence;
+  const count = Number.isFinite(Number(limit)) ? Math.max(1, Math.floor(Number(limit))) : 4;
+
+  if (!wrapAround) {
+    const start = lastPassed ? anchor + 1 : anchor;
+    return list
+      .filter((stop) => stop.sequence >= start && stop.sequence <= destinationSequence)
+      .slice(0, count);
+  }
+
+  const anchorIndex = list.findIndex((stop) => stop.sequence === anchor);
+  if (anchorIndex < 0) return [];
+  const rotated = [...list.slice(anchorIndex), ...list.slice(0, anchorIndex)];
+  const ahead = lastPassed ? rotated.slice(1) : rotated;
+  const destinationIndex = ahead.findIndex((stop) => stop.sequence === destinationSequence);
+  if (destinationIndex < 0) return [];
+  return ahead.slice(0, destinationIndex + 1).slice(0, count);
+}
+
+/**
  * The post-alight gate is deliberately based on elapsed wall time plus the live
  * provider position. If the provider has not reached the destination, a capture
  * must remain open for the whole observation window instead of finalizing at the
