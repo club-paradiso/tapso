@@ -73,6 +73,14 @@ a Route 365 evidence probe, not the preflight for an arbitrary route; use
    rollout gate and the journey-session tests exist; see `TASK_C_SOURCE_FRESHNESS.md`.
    The thresholds remain `PROVISIONAL` because no clean ride capture exists yet, and
    automatic matching stays off. Milestone 7 is still what unblocks the rest.
+9. `DONE` Matcher replay (`services/api/src/matchReplay.ts`). The report now
+   carries `matchGate`: what the real matcher would have decided at each
+   captured snapshot, whether its first irreversible commit was the bus the
+   rider actually boarded, the candidate margin wherever a second candidate was
+   eligible, direction reversals on the boarded vehicle, and whether the
+   matcher ever selected on non-fresh cadence. Three of the four broad-real-mode
+   criteria in `../DATA_VALIDATION.md` had no instrument before this; a ride
+   captured without it cannot count toward the thirty.
 
 ## Decisions
 
