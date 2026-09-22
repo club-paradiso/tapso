@@ -40,6 +40,7 @@ export interface RideEvent {
 }
 
 export type RideCaptureSource = "cli" | "web-controller";
+export type RideCaptureEngine = "cli" | "local-device" | "railway-background";
 
 export interface RideMarker {
   at: string;
@@ -78,6 +79,8 @@ export interface RideCapture {
    */
   events?: RideEvent[];
   source?: RideCaptureSource;
+  /** Concrete polling owner. Unlike source, this distinguishes Safari polling from Railway polling. */
+  captureEngine?: RideCaptureEngine;
 }
 
 export interface NumberSummary {
@@ -232,6 +235,8 @@ export interface RideCaptureReport {
   startedAt: string;
   endedAt?: string;
   durationSeconds: number;
+  /** Concrete polling owner, preserved in the sanitized report for acceptance evidence. */
+  captureEngine: RideCaptureEngine | "unknown";
   /** Poll interval the runner was configured with, as opposed to what it achieved. */
   configuredIntervalSeconds: number;
   snapshotCount: number;
@@ -372,7 +377,12 @@ export function validateRideCapture(capture: RideCapture): void {
   if (capture.source !== undefined && capture.source !== "cli" && capture.source !== "web-controller") {
     throw new RideCaptureInputError("source must be cli or web-controller when present");
   }
+  if (capture.captureEngine !== undefined && !CAPTURE_ENGINES.has(capture.captureEngine)) {
+    throw new RideCaptureInputError("captureEngine must be cli, local-device, or railway-background when present");
+  }
 }
+
+const CAPTURE_ENGINES = new Set<string>(["cli", "local-device", "railway-background"]);
 
 const RIDE_EVENT_KINDS = new Set<string>([
   "hidden",
@@ -583,6 +593,7 @@ export function analyzeRideCapture(capture: RideCapture): RideCaptureReport {
     startedAt: capture.startedAt,
     endedAt: capture.endedAt,
     durationSeconds: round(Math.max(0, endedAt - startedAt) / 1_000),
+    captureEngine: capture.captureEngine ?? (capture.source === "cli" ? "cli" : "unknown"),
     configuredIntervalSeconds,
     snapshotCount: snapshots.length,
     failedSnapshotCount: snapshots.length - successful.length,
