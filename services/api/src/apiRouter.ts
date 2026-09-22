@@ -51,11 +51,12 @@ function freshnessPosture(config: TransitApiConfig): Record<string, unknown> {
     /**
      * Why it is withheld, in full, because a one-word status invites the wrong
      * guess. Durable session storage is a real and separate gap; it is not the
-     * reason automatic matching is off.
+     * reason automatic matching is off. The key is absent, rather than empty,
+     * once nothing is being withheld.
      */
-    automaticMatchingWithheldBecause: config.matching.automaticMatchingEnabled
-      ? undefined
-      : config.matching.fieldValidationGate.requirement,
+    ...(config.matching.automaticMatchingEnabled
+      ? {}
+      : { automaticMatchingWithheldBecause: config.matching.fieldValidationGate.requirement }),
     fieldValidationGate: config.matching.fieldValidationGate,
     /**
      * Seconds, and every one of them a conservative operational gate on TAPSO's
