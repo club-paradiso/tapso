@@ -19,13 +19,13 @@
   <body>
     <main>
       <h1>TAPSO 수집 모드 확인 중</h1>
-      <p id="status">이 경로는 Railway background acceptance 전용입니다. 서버가 준비되지 않으면 시작을 차단하며 기기 수집 모드로 자동 전환하지 않습니다.</p>
+      <p id="status">Railway가 준비되면 원탭 Acceptance Mode로 들어갑니다. 버스만 고른 뒤 시작하면 나머지는 서버가 자동으로 처리합니다.</p>
       <p id="blocked" hidden>BACKGROUND ACCEPTANCE BLOCKED · Railway collector 상태를 확인한 뒤 다시 여세요. <a href="./quick-local.html">진단용 local recorder</a>는 acceptance에 사용할 수 없습니다.</p><noscript><p>JavaScript가 꺼져 있어 background acceptance를 시작할 수 없습니다.</p></noscript>
     </main>
     <script type="module">
       import { DEFAULT_COLLECTOR_BASE, collectorHealthReady } from "./background-client-core.js";
 
-      const background = "./background.html";
+      const background = "./acceptance.html";
       const controller = new AbortController();
       const timer = setTimeout(() => controller.abort(), 2500);
       try {
