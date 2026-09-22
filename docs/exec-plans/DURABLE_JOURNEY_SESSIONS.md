@@ -198,18 +198,54 @@ exists to prevent. The branch was restored and all 219 tests pass.
 
 ## Exact next action
 
-Milestone 6, and it cannot be done from the repository. Someone with an Upstash
-account must:
+Milestone 6, and it cannot be done from the repository — it needs a credential.
+`scripts/upstash/verify-session-store.ts` does the store-level half
+unattended; the deployment half is manual.
 
-1. Create a Redis database and copy its REST URL and token.
-2. Set `TRANSIT_SESSION_STORE=redis`, `UPSTASH_REDIS_REST_URL` and
-   `UPSTASH_REDIS_REST_TOKEN` on a **preview** deployment, never production.
-3. Create a session, refresh it, and confirm a vehicle; then confirm the row
-   exists under `tapso:journey-session:<id>` with a `<version>:<json>` value
-   and a TTL, and that a second refresh increments the version prefix.
-4. Record the result here and drop the `UNVERIFIED_AGAINST_LIVE_SERVICE` label
-   from `upstashSessionStore.ts` and `KNOWN_ISSUES.md`.
+### Step 1 — the store, against a real database
 
-Until that is recorded, `TRANSIT_SESSION_STORE=redis` must not be set in
-production. The Lua compare-and-set in particular is the piece most likely to
-behave differently against a real server than against a stub.
+```bash
+# Point UPSTASH_REDIS_REST_URL/TOKEN at a scratch or preview database.
+env -u UPSTASH_REDIS_REST_TOKEN node --env-file=.env.local \
+  --experimental-strip-types scripts/upstash/verify-session-store.ts --yes
+```
+
+Fifteen checks, all of them things the stub tests cannot settle: the Lua
+compare-and-set parsing its `<version>:` prefix against a real interpreter and
+returning the winner's row in a nested table; `SET NX PX` refusing a second
+create and setting a real TTL; a session full of Korean stop names and
+colon-bearing ISO timestamps surviving the REST round trip; and eight
+concurrent writers at one version producing exactly one winner. It writes only
+under a run-unique id, deletes what it wrote even on failure, and never prints
+the token or the host. Exit code is non-zero on any failure.
+
+### Step 2 — the deployment, by hand
+
+1. Set `TRANSIT_SESSION_STORE=redis` plus the two `UPSTASH_*` variables on a
+   **preview** deployment, never production.
+2. `POST /v1/sessions`, `GET` it twice, `POST` its `/confirm`.
+3. Confirm the row exists under `tapso:journey-session:<id>` and that the
+   version prefix advanced across the two refreshes.
+
+### Step 3 — record it
+
+Record both results here, then drop the `UNVERIFIED_AGAINST_LIVE_SERVICE` label
+from `upstashSessionStore.ts` and `KNOWN_ISSUES.md`.
+
+Until that record exists, `TRANSIT_SESSION_STORE=redis` must not be set in
+production. The Lua compare-and-set is the piece most likely to behave
+differently against a real server than against a stub, which is why step 1
+exists and why passing it is not on its own sufficient.
+
+### What the script itself has been verified against
+
+The script was exercised end to end against a throwaway fake of the Upstash
+REST surface, which proves the script rather than Upstash — the fake
+re-implements the compare-and-set semantics instead of running Redis Lua. Four
+runs were recorded: all fifteen checks pass against a correct fake; the three
+refusal paths (no `--yes`, missing credentials, a plaintext URL) each exit
+without touching the network; a fake with compare-and-set deliberately replaced
+by last-write-wins fails four checks, including the concurrent-writer one, and
+exits non-zero; and a `GET` on the run's key after a passing run returns
+`null`, so the cleanup leaves nothing behind. A check that cannot fail would
+verify nothing, which is why the broken-fake run is part of the record.
