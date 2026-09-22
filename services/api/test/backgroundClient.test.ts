@@ -3,6 +3,7 @@ import assert from "node:assert/strict";
 
 import {
   backgroundTopologySupported,
+  backgroundAcceptanceVerdict,
   collectorHealthReady,
   finishedReportFromStatus,
   reportFilename,
@@ -45,4 +46,32 @@ test("report filenames are deterministic and filesystem-safe", () => {
     reportFilename({ routeId: "JEB405136521", startedAt: "2026-09-15T12:34:56.789Z" }),
     "JEB405136521-2026-09-15T12-34-56-789Z.report.json",
   );
+});
+
+
+test("background acceptance fails closed on provenance, browser background, and polling continuity", () => {
+  const base = {
+    captureEngine: "railway-background",
+    configuredIntervalSeconds: 5,
+    snapshotCount: 80,
+    collectionIntervalSeconds: { max: 5.8 },
+    lifecycle: { hiddenPeriods: 2, hiddenSeconds: 125 },
+  };
+  assert.equal(backgroundAcceptanceVerdict(base).verdict, "PASS");
+
+  const local = backgroundAcceptanceVerdict({ ...base, captureEngine: "local-device" });
+  assert.equal(local.verdict, "FAIL");
+  assert.match(local.reasons.join(" "), /captureEngine/);
+
+  const noBackground = backgroundAcceptanceVerdict({
+    ...base,
+    lifecycle: { hiddenPeriods: 0, hiddenSeconds: 0 },
+  });
+  assert.equal(noBackground.verdict, "FAIL");
+
+  const stalled = backgroundAcceptanceVerdict({
+    ...base,
+    collectionIntervalSeconds: { max: 15.01 },
+  });
+  assert.equal(stalled.verdict, "FAIL");
 });

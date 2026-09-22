@@ -7,6 +7,7 @@ import {
   analyzeRideCapture,
   type RideCapture,
   type RideCaptureReport,
+  type RideEventKind,
   type RideSnapshot,
 } from "./rideCapture.ts";
 
@@ -15,6 +16,7 @@ const POST_ALIGHT_OBSERVE_MS = 20_000;
 const MAX_SESSION_MS = 90 * 60 * 1_000;
 const COMPLETED_RETENTION_MS = 2 * 60 * 60 * 1_000;
 const MAX_CLOCK_SKEW_MS = 30_000;
+const BACKGROUND_EVENT_KINDS = new Set<RideEventKind>(["hidden", "visible", "offline", "online", "resumed"]);
 
 export type BackgroundCapturePhase = "active" | "post_alight" | "completed";
 
@@ -45,6 +47,7 @@ export interface BackgroundCaptureStatus {
   destinationObserved: boolean;
   postAlightRemainingSeconds?: number;
   report?: RideCaptureReport;
+  captureEngine: "railway-background";
 }
 
 type BackgroundErrorKind = "invalid_input" | "not_found" | "conflict" | "unavailable";
@@ -135,6 +138,7 @@ export class BackgroundRideCaptureCoordinator {
       // The web controller starts the capture and supplies all physical markers;
       // only provider polling moves to this process, so schema v1 stays intact.
       source: "web-controller",
+      captureEngine: "railway-background",
       startedAt,
       routeId,
       cityCode,
@@ -190,6 +194,25 @@ export class BackgroundRideCaptureCoordinator {
       throw new BackgroundRideCaptureError("this stop already has a physical marker", "conflict");
     }
     session.capture.markers.push({ at: this.markerTime(session, at), kind: "passed_stop", stopSequence });
+    return this.statusFor(session);
+  }
+
+  recordEvent(sessionId: string, kind: string, at?: string, detail?: string): BackgroundCaptureStatus {
+    const session = this.require(sessionId);
+    if (session.phase === "completed") {
+      throw new BackgroundRideCaptureError("lifecycle events are closed after completion", "conflict");
+    }
+    if (!BACKGROUND_EVENT_KINDS.has(kind as RideEventKind)) {
+      throw new BackgroundRideCaptureError("unsupported lifecycle event");
+    }
+    const safeDetail = String(detail ?? "").trim();
+    if (safeDetail.length > 120) throw new BackgroundRideCaptureError("event detail must be at most 120 characters");
+    session.capture.events ??= [];
+    session.capture.events.push({
+      at: this.markerTime(session, at),
+      kind: kind as RideEventKind,
+      ...(safeDetail ? { detail: safeDetail } : {}),
+    });
     return this.statusFor(session);
   }
 
@@ -347,6 +370,7 @@ export class BackgroundRideCaptureCoordinator {
       destinationObserved,
       ...(postAlightRemainingSeconds === undefined ? {} : { postAlightRemainingSeconds }),
       ...(session.report ? { report: session.report } : {}),
+      captureEngine: "railway-background",
     };
   }
 

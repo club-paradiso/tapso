@@ -79,7 +79,7 @@ export const backgroundServer = createServer(async (request, response) => {
       return;
     }
 
-    const match = /^\/capture\/([^/]+)(?:\/(marker|note|alight))?$/.exec(path);
+    const match = /^\/capture\/([^/]+)(?:\/(marker|note|alight|event))?$/.exec(path);
     if (!match) throw httpError(404, "NOT_FOUND", "no such endpoint");
     const sessionId = decodeURIComponent(match[1] ?? "");
     if (!SESSION_ID.test(sessionId)) throw httpError(400, "INVALID_INPUT", "session id is invalid");
@@ -105,6 +105,23 @@ export const backgroundServer = createServer(async (request, response) => {
         sequence as number,
         optionalTimestamp(body.at),
         body.allowDuplicate === true,
+      );
+      status = 200;
+      writeJson(response, status, result, cors);
+      return;
+    }
+
+    if (action === "event") {
+      route = "capture_event";
+      if (typeof body.kind !== "string") throw httpError(400, "INVALID_INPUT", "kind must be a string");
+      if (body.detail !== undefined && typeof body.detail !== "string") {
+        throw httpError(400, "INVALID_INPUT", "detail must be a string when present");
+      }
+      const result = captures.recordEvent(
+        sessionId,
+        body.kind,
+        optionalTimestamp(body.at),
+        typeof body.detail === "string" ? body.detail : undefined,
       );
       status = 200;
       writeJson(response, status, result, cors);

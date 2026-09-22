@@ -88,7 +88,7 @@
         </div>
         <button id="find-bus" type="button" class="primary big" style="margin-top:10px">이 버스 찾기</button>
         <p id="home-alert" class="alert" data-tone="warn"></p>
-        <a id="local-fallback-home" class="fallback" href="./quick-local.html" hidden>기기 수집 모드로 이동</a>
+        <p id="local-fallback-home" class="alert" data-tone="bad" hidden>BACKGROUND ACCEPTANCE BLOCKED · local recorder로 대체하지 않습니다.</p>
         <div id="token-block" class="panel" hidden>
           <strong>운영자 잠금 해제</strong>
           <p class="small muted">처음 한 번만 입력합니다. 토큰은 이 Safari 세션에만 둡니다.</p>
@@ -137,7 +137,7 @@
         </div>
         <p id="ready-alert" class="alert" data-tone="ok"></p>
         <button id="start" type="button" class="primary big">서버 수집 시작</button>
-        <a id="local-fallback-ready" class="fallback" href="./quick-local.html" hidden>이 구간은 기기 수집 모드로 기록</a>
+        <p id="local-fallback-ready" class="alert" data-tone="bad" hidden>BACKGROUND ACCEPTANCE BLOCKED · 이 구간은 현재 acceptance 대상이 아닙니다.</p>
       </section>
 
       <section id="screen-riding" hidden>

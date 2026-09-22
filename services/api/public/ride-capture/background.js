@@ -18,6 +18,7 @@ import {
 import {
   DEFAULT_COLLECTOR_BASE,
   backgroundTopologySupported,
+  backgroundAcceptanceVerdict,
   collectorHealthReady,
   finishedReportFromStatus,
   reportFilename,
@@ -38,6 +39,7 @@ const sleep = (ms) => new Promise((resolve) => setTimeout(resolve, ms));
 let memoryToken = "";
 let markerFeedbackTimer;
 let statusLoopToken = 0;
+let lastLifecycleKind;
 
 const state = {
   route: undefined,
@@ -124,7 +126,7 @@ async function apiRequest(path, { auth = false, method = "GET", body } = {}) {
   return parseResponse(response, "실시간 조회에 실패했습니다.");
 }
 
-async function collectorRequest(path, { auth = true, method = "GET", body } = {}) {
+async function collectorRequest(path, { auth = true, method = "GET", body, keepalive = false } = {}) {
   const headers = {};
   if (auth) {
     const token = plateToken();
@@ -134,7 +136,7 @@ async function collectorRequest(path, { auth = true, method = "GET", body } = {}
   if (body !== undefined) headers["content-type"] = "application/json";
   let response;
   try {
-    response = await fetch(`${COLLECTOR}${path}`, { method, headers, body, cache: "no-store", mode: "cors" });
+    response = await fetch(`${COLLECTOR}${path}`, { method, headers, body, cache: "no-store", mode: "cors", keepalive });
   } catch {
     throw new ApiError("백그라운드 수집 서버에 연결하지 못했습니다.", 0);
   }
@@ -464,6 +466,10 @@ async function startCapture() {
       }),
     });
 
+    if (started.captureEngine !== "railway-background") {
+      throw new ApiError("서버가 Railway background engine을 증명하지 못해 수집을 시작하지 않습니다.", 503);
+    }
+
     state.vehicle = current;
     state.sessionId = started.sessionId;
     state.status = started;
@@ -471,8 +477,9 @@ async function startCapture() {
     state.report = undefined;
     state.alighting = false;
     state.finishing = false;
+    lastLifecycleKind = document.hidden ? "hidden" : "visible";
     show("riding");
-    say("riding-alert", "서버 수집 시작됨 · 다른 앱으로 전환해도 실시간 관측은 계속됩니다.", "ok");
+    say("riding-alert", "RAILWAY BACKGROUND ACTIVE · Safari와 무관하게 서버가 5초 간격으로 수집합니다.", "ok");
     renderRide();
     startStatusLoop();
   } catch (error) {
@@ -588,7 +595,11 @@ function renderRide() {
   el("riding-position").textContent = state.status?.trackedPresent
     ? trackedName || `정류장 ${state.status.trackedStopSequence ?? "?"}`
     : "이번 snapshot에 없음";
-  el("engine-state").textContent = state.status?.phase === "completed" ? "완료" : "Railway 서버에서 5초 간격 수집";
+  el("engine-state").textContent = state.status?.phase === "completed"
+    ? "완료"
+    : state.status?.captureEngine === "railway-background"
+      ? "RAILWAY BACKGROUND ACTIVE · 5초 수집"
+      : "INVALID ENGINE · 수집 중단 필요";
   renderFieldControls();
 }
 
@@ -771,12 +782,17 @@ async function finishWithReport(status, report) {
   el("finish-head").textContent = `${state.destination?.name || "목적지"}에서 기록을 마쳤습니다`;
   el("finish-summary").textContent = `${state.route?.routeNumber || report.routeId}번 · 서버 수집 ${report.snapshotCount}회 · 물리 기록 ${report.tracked?.markerComparisons?.length ?? 0}건`;
   const sufficient = report.evidenceCompleteness?.verdict === "SUFFICIENT";
+  const acceptance = backgroundAcceptanceVerdict(report);
   const verdict = el("verdict");
   verdict.hidden = false;
-  verdict.textContent = sufficient
-    ? "이번 기록은 분석에 사용할 수 있습니다."
-    : `데이터가 더 필요합니다: ${(report.evidenceCompleteness?.unmetRequired || []).join(", ")}`;
-  say("finish-alert", "서버가 만든 sanitized report입니다. 차량번호 원문은 포함하지 않습니다.", sufficient ? "ok" : "warn");
+  verdict.textContent = acceptance.verdict === "PASS"
+    ? "BACKGROUND ACCEPTANCE PASS · Railway 수집이 Safari background 구간에서도 연속성을 유지했습니다."
+    : `BACKGROUND ACCEPTANCE FAIL · ${acceptance.reasons.join(" / ")}`;
+  say(
+    "finish-alert",
+    `captureEngine=${report.captureEngine || "unknown"} · evidence=${sufficient ? "SUFFICIENT" : "INSUFFICIENT"}`,
+    acceptance.verdict === "PASS" && sufficient ? "ok" : "bad",
+  );
   el("note").disabled = false;
   el("alight").disabled = false;
   state.finishing = false;
@@ -821,6 +837,7 @@ function reset() {
   state.report = undefined;
   state.alighting = false;
   state.finishing = false;
+  lastLifecycleKind = undefined;
   el("plate").value = "";
   el("mark-stop").textContent = "다음 정류장 불러오는 중…";
   el("mark-stop").removeAttribute("data-sequence");
@@ -876,11 +893,35 @@ el("save-report").addEventListener("click", saveReport);
 el("copy-report").addEventListener("click", copyReport);
 el("new-ride").addEventListener("click", reset);
 
+async function recordLifecycle(kind) {
+  if (!state.sessionId || state.report || lastLifecycleKind === kind) return;
+  lastLifecycleKind = kind;
+  try {
+    await collectorWithRetry(`/capture/${encodeURIComponent(state.sessionId)}/event`, {
+      method: "POST",
+      body: JSON.stringify({ kind, at: new Date().toISOString() }),
+      keepalive: true,
+    });
+  } catch {
+    // Missing lifecycle evidence makes the final background acceptance fail closed.
+  }
+}
+
 document.addEventListener("visibilitychange", () => {
+  const kind = document.hidden ? "hidden" : "visible";
+  void recordLifecycle(kind);
   if (!document.hidden && state.sessionId && !state.report) void refreshStatus({ quiet: true });
 });
+window.addEventListener("pagehide", () => { void recordLifecycle("hidden"); });
+window.addEventListener("pageshow", () => { void recordLifecycle("visible"); });
 window.addEventListener("online", () => {
-  if (state.sessionId && !state.report) void refreshStatus({ quiet: true });
+  if (state.sessionId && !state.report) {
+    void recordLifecycle("online");
+    void refreshStatus({ quiet: true });
+  }
+});
+window.addEventListener("offline", () => {
+  if (state.sessionId && !state.report) void recordLifecycle("offline");
 });
 
 (async () => {

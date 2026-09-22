@@ -17,6 +17,7 @@
 /** Matches `RIDE_CAPTURE_SCHEMA_VERSION` in services/api/src/rideCapture.ts. */
 export const RIDE_CAPTURE_SCHEMA_VERSION = 1;
 export const CAPTURE_SOURCE = "web-controller";
+export const CAPTURE_ENGINE = "local-device";
 
 /** Mirrors the validated CLI runner defaults. Changing these changes evidence. */
 export const DEFAULT_INTERVAL_MS = 5_000;
@@ -254,6 +255,7 @@ export function createCaptureHeader({
     captureId,
     schemaVersion: RIDE_CAPTURE_SCHEMA_VERSION,
     source: CAPTURE_SOURCE,
+    captureEngine: CAPTURE_ENGINE,
     startedAt,
     routeId,
     cityCode,
@@ -429,6 +431,7 @@ export function createCaptureSession({
       return {
         schemaVersion: header.schemaVersion,
         source: header.source,
+        captureEngine: header.captureEngine,
         startedAt: header.startedAt,
         ...(endedAt ? { endedAt } : {}),
         routeId: header.routeId,

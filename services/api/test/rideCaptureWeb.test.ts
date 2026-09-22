@@ -365,6 +365,7 @@ test("a web capture analyses through the same analyzer, with the vehicle number 
   assert.equal(report.routeId, "JEB405244701");
   assert.equal(report.tracked.present, true);
   assert.equal(report.lifecycle.source, "web-controller");
+  assert.equal(report.captureEngine, "local-device");
   assert.equal(report.lifecycle.hiddenPeriods, 1);
   assert.equal(report.lifecycle.hiddenSeconds, 30);
   assert.equal(report.lifecycle.wakeLockUnavailable, true);
