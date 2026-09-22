@@ -1,0 +1,11 @@
+{
+  "name": "TAPSO Background Acceptance",
+  "short_name": "TAPSO Test",
+  "id": "./acceptance.html",
+  "start_url": "./acceptance.html",
+  "scope": "./",
+  "display": "standalone",
+  "background_color": "#0b0e11",
+  "theme_color": "#0b0e11",
+  "description": "One-tap Railway background ride-capture acceptance test"
+}

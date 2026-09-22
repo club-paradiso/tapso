@@ -39,7 +39,9 @@ jobs:
       - uses: actions/setup-node@v4
         with:
           node-version: 22
+      - run: npm install --prefix services/api --omit=optional --no-audit --no-fund
       - run: npm test --prefix services/api
+      - run: node --check services/api/public/ride-capture/acceptance.js && node --check services/api/public/ride-capture/acceptance-sw.js
       - run: python3 -m unittest discover -s scripts/tago -p 'test_*.py'
 
   web:
@@ -57,8 +59,10 @@ jobs:
       - run: npm ci
       - run: npm test
       - run: npm run typecheck:vercel
-      # The transit API ships no dependencies of its own, so it borrows the one
-      # TypeScript install in the repository to typecheck its deployed surface.
+      # The transit API now has a runtime web-push dependency. Install it before
+      # typechecking the deployed surface, while still borrowing this job's TypeScript binary.
+      - name: Install transit API runtime dependencies
+        run: npm install --prefix ../../services/api --omit=optional --no-audit --no-fund
       - name: Typecheck the transit API deployed surface
         run: npx tsc --project ../../services/api/tsconfig.json --typeRoots node_modules/@types
       - run: npm run build

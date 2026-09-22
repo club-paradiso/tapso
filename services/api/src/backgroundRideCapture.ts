@@ -17,8 +17,20 @@ const MAX_SESSION_MS = 90 * 60 * 1_000;
 const COMPLETED_RETENTION_MS = 2 * 60 * 60 * 1_000;
 const MAX_CLOCK_SKEW_MS = 30_000;
 const BACKGROUND_EVENT_KINDS = new Set<RideEventKind>(["hidden", "visible", "offline", "online", "resumed"]);
+const ACCEPTANCE_MIN_HIDDEN_MS = 60_000;
+const ACCEPTANCE_MIN_SNAPSHOTS = 20;
 
 export type BackgroundCapturePhase = "active" | "post_alight" | "completed";
+export type BackgroundCaptureMode = "field" | "background_acceptance";
+
+export interface WebPushSubscriptionInput {
+  endpoint: string;
+  expirationTime?: number | null;
+  keys: {
+    p256dh: string;
+    auth: string;
+  };
+}
 
 export interface BackgroundCaptureStartInput {
   routeId: string;
@@ -27,6 +39,8 @@ export interface BackgroundCaptureStartInput {
   boardingStopSequence: number;
   destinationStopSequence: number;
   intervalMs?: number;
+  mode?: BackgroundCaptureMode;
+  pushSubscription?: WebPushSubscriptionInput;
 }
 
 export interface BackgroundCaptureStatus {
@@ -48,6 +62,13 @@ export interface BackgroundCaptureStatus {
   postAlightRemainingSeconds?: number;
   report?: RideCaptureReport;
   captureEngine: "railway-background";
+  mode: BackgroundCaptureMode;
+  acceptance?: {
+    hiddenSeconds: number;
+    requiredHiddenSeconds: number;
+    snapshotCount: number;
+    requiredSnapshots: number;
+  };
 }
 
 type BackgroundErrorKind = "invalid_input" | "not_found" | "conflict" | "unavailable";
@@ -65,6 +86,13 @@ type TimerHandle = ReturnType<typeof setTimeout>;
 type Schedule = (callback: () => void, delayMs: number) => TimerHandle;
 type Cancel = (handle: TimerHandle) => void;
 
+export interface BackgroundCaptureCompletion {
+  sessionId: string;
+  mode: BackgroundCaptureMode;
+  report: RideCaptureReport;
+  pushSubscription?: WebPushSubscriptionInput;
+}
+
 type BackgroundSession = {
   id: string;
   capture: RideCapture;
@@ -74,6 +102,9 @@ type BackgroundSession = {
   alightedAtMs?: number;
   completedAtMs?: number;
   report?: RideCaptureReport;
+  mode: BackgroundCaptureMode;
+  pushSubscription?: WebPushSubscriptionInput;
+  completionEmitted: boolean;
 };
 
 export interface BackgroundRideCaptureOptions {
@@ -81,6 +112,7 @@ export interface BackgroundRideCaptureOptions {
   schedule?: Schedule;
   cancel?: Cancel;
   intervalMs?: number;
+  onComplete?: (completion: BackgroundCaptureCompletion) => void | Promise<void>;
 }
 
 /**
@@ -101,6 +133,7 @@ export class BackgroundRideCaptureCoordinator {
   private readonly scheduleFn: Schedule;
   private readonly cancelFn: Cancel;
   private readonly defaultIntervalMs: number;
+  private readonly onComplete?: (completion: BackgroundCaptureCompletion) => void | Promise<void>;
 
   constructor(
     provider: Pick<TransitProvider, "stops" | "vehicles">,
@@ -111,6 +144,7 @@ export class BackgroundRideCaptureCoordinator {
     this.scheduleFn = options.schedule ?? ((callback, delayMs) => setTimeout(callback, delayMs));
     this.cancelFn = options.cancel ?? ((handle) => clearTimeout(handle));
     this.defaultIntervalMs = Math.max(3_000, options.intervalMs ?? DEFAULT_INTERVAL_MS);
+    this.onComplete = options.onComplete;
   }
 
   async start(input: BackgroundCaptureStartInput): Promise<BackgroundCaptureStatus> {
@@ -133,6 +167,7 @@ export class BackgroundRideCaptureCoordinator {
 
     const startedAt = this.now().toISOString();
     const intervalMs = Math.max(3_000, Math.round(input.intervalMs ?? this.defaultIntervalMs));
+    const mode: BackgroundCaptureMode = input.mode === "background_acceptance" ? "background_acceptance" : "field";
     const capture: RideCapture = {
       schemaVersion: RIDE_CAPTURE_SCHEMA_VERSION,
       // The web controller starts the capture and supplies all physical markers;
@@ -148,7 +183,9 @@ export class BackgroundRideCaptureCoordinator {
       intervalMs,
       stops,
       snapshots: [],
-      markers: [{ at: startedAt, kind: "boarded", stopSequence: input.boardingStopSequence }],
+      markers: mode === "field"
+        ? [{ at: startedAt, kind: "boarded", stopSequence: input.boardingStopSequence }]
+        : [],
       events: [],
     };
 
@@ -157,6 +194,9 @@ export class BackgroundRideCaptureCoordinator {
       capture,
       phase: "active",
       polling: false,
+      mode,
+      ...(input.pushSubscription ? { pushSubscription: input.pushSubscription } : {}),
+      completionEmitted: false,
     };
 
     // Exact identity is re-confirmed on an uncached provider read. A matching
@@ -213,6 +253,7 @@ export class BackgroundRideCaptureCoordinator {
       kind: kind as RideEventKind,
       ...(safeDetail ? { detail: safeDetail } : {}),
     });
+    this.maybeCompleteAcceptance(session, this.now());
     return this.statusFor(session);
   }
 
@@ -279,6 +320,8 @@ export class BackgroundRideCaptureCoordinator {
         if (this.destinationObserved(session) || this.postAlightExpired(session, nowMs)) {
           this.complete(session, this.now());
         }
+      } else {
+        this.maybeCompleteAcceptance(session, this.now());
       }
     } finally {
       session.polling = false;
@@ -319,6 +362,15 @@ export class BackgroundRideCaptureCoordinator {
     this.arm(session);
   }
 
+  private maybeCompleteAcceptance(session: BackgroundSession, now: Date): boolean {
+    if (session.mode !== "background_acceptance" || session.phase !== "active") return false;
+    const hiddenSeconds = lifecycleSeconds(session.capture.events ?? [], "hidden", "visible", now.getTime());
+    if (hiddenSeconds * 1_000 < ACCEPTANCE_MIN_HIDDEN_MS) return false;
+    if (session.capture.snapshots.length < ACCEPTANCE_MIN_SNAPSHOTS) return false;
+    this.complete(session, now);
+    return true;
+  }
+
   private complete(session: BackgroundSession, ended: Date): void {
     if (session.phase === "completed") return;
     if (session.timer) {
@@ -329,6 +381,23 @@ export class BackgroundRideCaptureCoordinator {
     session.phase = "completed";
     session.completedAtMs = ended.getTime();
     session.report = analyzeRideCapture(session.capture);
+    if (!session.completionEmitted && this.onComplete) {
+      session.completionEmitted = true;
+      const completion: BackgroundCaptureCompletion = {
+        sessionId: session.id,
+        mode: session.mode,
+        report: session.report,
+        ...(session.pushSubscription ? { pushSubscription: session.pushSubscription } : {}),
+      };
+      void Promise.resolve(this.onComplete(completion)).catch((error) => {
+        console.warn(JSON.stringify({
+          level: "warn",
+          event: "ride_capture_completion_callback_failed",
+          sessionId: session.id,
+          message: safeProviderError(error),
+        }));
+      });
+    }
   }
 
   private destinationObserved(session: BackgroundSession): boolean {
@@ -352,6 +421,10 @@ export class BackgroundRideCaptureCoordinator {
       ? Math.max(0, Math.ceil((POST_ALIGHT_OBSERVE_MS - (this.now().getTime() - session.alightedAtMs)) / 1_000))
       : undefined;
 
+    const acceptanceClockMs = session.capture.endedAt
+      ? Date.parse(session.capture.endedAt)
+      : this.now().getTime();
+
     return {
       sessionId: session.id,
       phase: session.phase,
@@ -371,6 +444,17 @@ export class BackgroundRideCaptureCoordinator {
       ...(postAlightRemainingSeconds === undefined ? {} : { postAlightRemainingSeconds }),
       ...(session.report ? { report: session.report } : {}),
       captureEngine: "railway-background",
+      mode: session.mode,
+      ...(session.mode === "background_acceptance"
+        ? {
+            acceptance: {
+              hiddenSeconds: lifecycleSeconds(session.capture.events ?? [], "hidden", "visible", acceptanceClockMs),
+              requiredHiddenSeconds: ACCEPTANCE_MIN_HIDDEN_MS / 1_000,
+              snapshotCount: session.capture.snapshots.length,
+              requiredSnapshots: ACCEPTANCE_MIN_SNAPSHOTS,
+            },
+          }
+        : {}),
     };
   }
 
@@ -446,4 +530,26 @@ function receiptTime(vehicles: VehicleObservation[], fallback: Date): string {
 function safeProviderError(error: unknown): string {
   const message = error instanceof Error ? error.message : "provider request failed";
   return message.replace(/[\r\n\t]+/g, " ").slice(0, 240);
+}
+
+
+function lifecycleSeconds(
+  events: Array<{ at: string; kind: RideEventKind }>,
+  open: RideEventKind,
+  close: RideEventKind,
+  endedAtMs: number,
+): number {
+  let openedAt: number | undefined;
+  let totalMs = 0;
+  for (const event of [...events].sort((a, b) => Date.parse(a.at) - Date.parse(b.at))) {
+    const at = Date.parse(event.at);
+    if (!Number.isFinite(at)) continue;
+    if (event.kind === open && openedAt === undefined) openedAt = at;
+    else if (event.kind === close && openedAt !== undefined) {
+      totalMs += Math.max(0, at - openedAt);
+      openedAt = undefined;
+    }
+  }
+  if (openedAt !== undefined) totalMs += Math.max(0, endedAtMs - openedAt);
+  return Math.round(totalMs / 10) / 100;
 }

@@ -8,6 +8,7 @@ import {
 import { operatorTokenMatches, readBearerToken, resolveOperatorToken } from "./operatorAuth.ts";
 import { resolveTagoServiceKey, serviceKeyWarning } from "./serviceKey.ts";
 import { TagoTransitProvider } from "./tagoProvider.ts";
+import { backgroundAcceptanceVerdict, createWebPushSender } from "./webPush.ts";
 
 const port = Number(process.env.PORT ?? 8788);
 const host = process.env.HOST?.trim() || "0.0.0.0";
@@ -23,7 +24,32 @@ if (warning) console.warn(JSON.stringify({ level: "warn", event: "transit_creden
 if (operator.problem) console.warn(JSON.stringify({ level: "warn", event: "ride_capture_operator_token", message: operator.problem }));
 
 const provider = new TagoTransitProvider({ serviceKey: credential.key });
-const captures = new BackgroundRideCaptureCoordinator(provider);
+const push = createWebPushSender(process.env);
+const captures = new BackgroundRideCaptureCoordinator(provider, {
+  onComplete: async ({ mode, report, pushSubscription, sessionId }) => {
+    if (mode !== "background_acceptance") return;
+    const verdict = backgroundAcceptanceVerdict(report);
+    try {
+      await push.sendAcceptanceResult(pushSubscription, report, verdict);
+      console.info(JSON.stringify({
+        timestamp: new Date().toISOString(),
+        event: "ride_capture_acceptance_completed",
+        sessionId,
+        verdict,
+        pushAttempted: Boolean(pushSubscription && push.config.configured),
+      }));
+    } catch (error) {
+      console.warn(JSON.stringify({
+        timestamp: new Date().toISOString(),
+        level: "warn",
+        event: "ride_capture_push_failed",
+        sessionId,
+        verdict,
+        message: error instanceof Error ? error.message.slice(0, 240) : "push failed",
+      }));
+    }
+  },
+});
 const allowedOrigins = originList(process.env.TRANSIT_ALLOWED_ORIGINS);
 
 export const backgroundServer = createServer(async (request, response) => {
@@ -60,6 +86,8 @@ export const backgroundServer = createServer(async (request, response) => {
         service: "tapso-ride-collector",
         liveTransitConfigured: credential.source !== "missing",
         operatorEnabled: operator.configured,
+        webPushConfigured: push.config.configured,
+        ...(push.config.publicKey ? { webPushPublicKey: push.config.publicKey } : {}),
         stateStore: "process_memory",
         processRestartLosesActiveCapture: true,
         providerObservationTimestamp: "unavailable",
@@ -192,6 +220,36 @@ function parseStart(input: Partial<BackgroundCaptureStartInput>): BackgroundCapt
     boardingStopSequence: input.boardingStopSequence as number,
     destinationStopSequence: input.destinationStopSequence as number,
     ...(Number.isInteger(input.intervalMs) ? { intervalMs: input.intervalMs } : {}),
+    ...(input.mode === "background_acceptance" ? { mode: "background_acceptance" as const } : {}),
+    ...(input.pushSubscription ? { pushSubscription: parsePushSubscription(input.pushSubscription) } : {}),
+  };
+}
+
+function parsePushSubscription(value: unknown): NonNullable<BackgroundCaptureStartInput["pushSubscription"]> {
+  if (!value || typeof value !== "object") throw httpError(400, "INVALID_INPUT", "pushSubscription is invalid");
+  const row = value as Record<string, unknown>;
+  const endpoint = typeof row.endpoint === "string" ? row.endpoint.trim() : "";
+  let url: URL;
+  try {
+    url = new URL(endpoint);
+  } catch {
+    throw httpError(400, "INVALID_INPUT", "pushSubscription endpoint is invalid");
+  }
+  const applePushHost = url.hostname === "push.apple.com" || url.hostname.endsWith(".push.apple.com");
+  if (url.protocol !== "https:" || !applePushHost) {
+    throw httpError(400, "INVALID_INPUT", "only Apple Web Push subscriptions are accepted");
+  }
+  if (!row.keys || typeof row.keys !== "object") throw httpError(400, "INVALID_INPUT", "pushSubscription keys are required");
+  const keys = row.keys as Record<string, unknown>;
+  const p256dh = typeof keys.p256dh === "string" ? keys.p256dh.trim() : "";
+  const auth = typeof keys.auth === "string" ? keys.auth.trim() : "";
+  if (!p256dh || p256dh.length > 256 || !auth || auth.length > 128) {
+    throw httpError(400, "INVALID_INPUT", "pushSubscription keys are invalid");
+  }
+  return {
+    endpoint,
+    ...(typeof row.expirationTime === "number" ? { expirationTime: row.expirationTime } : {}),
+    keys: { p256dh, auth },
   };
 }
 
