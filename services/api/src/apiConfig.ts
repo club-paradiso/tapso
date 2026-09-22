@@ -37,6 +37,17 @@ export const FIELD_VALIDATION_REQUIREMENT =
  */
 export const AUTOMATIC_MATCHING_WITHHELD_REASON = "field_validation_gate_open";
 
+/**
+ * Where journey sessions live. `memory` is the default everywhere; a durable
+ * store is opted into, never inferred from the presence of a stray variable.
+ */
+export type SessionStoreKind = "memory" | "redis";
+
+export interface UpstashCredentials {
+  restUrl: string;
+  restToken: string;
+}
+
 export type RuntimePlatform = "node" | "vercel";
 
 export interface TransitApiConfig {
@@ -55,13 +66,21 @@ export interface TransitApiConfig {
     discoveryTtlMs: number;
   };
   sessions: {
-    store: "memory";
     /**
-     * Ride sessions live in one process's memory. That is correct for the local
-     * Node server and wrong for a horizontally scaled serverless deployment, so
-     * the serverless default is off and the endpoints fail closed.
+     * `memory` is one process's heap: correct for the local Node server,
+     * wrong for a horizontally scaled serverless deployment. `redis` is an
+     * Upstash database reached over its REST API and survives both.
+     */
+    store: SessionStoreKind;
+    /**
+     * Whether the ride endpoints answer at all. It stays off by default on
+     * serverless *while the store is `memory`*, because that combination
+     * loses rides on scale-out. A deployment that configures a durable store
+     * has removed that reason, and this flag is then the operator's to set.
      */
     enabled: boolean;
+    /** True when `redis` has a usable URL and token. Never the values. */
+    durableStoreConfigured: boolean;
   };
   /**
    * Automatic vehicle selection is a separate rollout axis from sessions.
@@ -146,6 +165,10 @@ export function readTransitApiConfig(
   // has to say so in an environment variable, and the reason it is off by
   // default is recorded next to the flag rather than left to a changelog.
   const automaticMatchingEnabled = boolean(env, "TRANSIT_AUTOMATIC_MATCHING_ENABLED", false);
+  // Reading this validates it: asking for `redis` without usable credentials
+  // throws here rather than booting a deployment that answers every session
+  // request with a store error.
+  const sessionStore = readSessionStoreKind(env);
 
   return {
     transitProvider: "tago",
@@ -160,8 +183,12 @@ export function readTransitApiConfig(
       discoveryTtlMs: duration(env, "TRANSIT_DISCOVERY_TTL_MS", DEFAULT_DISCOVERY_CACHE_TTL_MS),
     },
     sessions: {
-      store: "memory",
-      enabled: boolean(env, "TRANSIT_SESSIONS_ENABLED", platform === "node"),
+      store: sessionStore,
+      // A durable store removes the reason serverless defaults to off. The
+      // operator still has to say yes; what changes is that saying yes is no
+      // longer a decision to lose rides on scale-out.
+      enabled: boolean(env, "TRANSIT_SESSIONS_ENABLED", platform === "node" || sessionStore === "redis"),
+      durableStoreConfigured: sessionStore === "redis",
     },
     matching: {
       automaticMatchingEnabled,
@@ -198,6 +225,46 @@ export function readTransitApiConfig(
       ...optional("environment", trimmed(env, "VERCEL_ENV")),
     },
   };
+}
+
+/**
+ * The store is named explicitly, and naming `redis` without credentials is a
+ * misconfiguration rather than a silent fallback to memory. Falling back would
+ * put a deployment that believed it had durable sessions back on the exact
+ * failure mode it was trying to leave.
+ */
+function readSessionStoreKind(env: ServerEnv): SessionStoreKind {
+  const raw = trimmed(env, "TRANSIT_SESSION_STORE")?.toLowerCase();
+  if (raw === undefined || raw === "memory") return "memory";
+  if (raw !== "redis") throw new RangeError("TRANSIT_SESSION_STORE must be memory or redis");
+  if (!readUpstashCredentials(env)) {
+    throw new RangeError(
+      "TRANSIT_SESSION_STORE=redis requires UPSTASH_REDIS_REST_URL and UPSTASH_REDIS_REST_TOKEN",
+    );
+  }
+  return "redis";
+}
+
+/**
+ * The credentials themselves, for the wiring layer only. They never reach
+ * `TransitApiConfig`, and so never reach `/health` — the same rule the TAGO
+ * service key already follows.
+ */
+export function readUpstashCredentials(env: ServerEnv): UpstashCredentials | undefined {
+  const restUrl = trimmed(env, "UPSTASH_REDIS_REST_URL");
+  const restToken = trimmed(env, "UPSTASH_REDIS_REST_TOKEN");
+  if (!restUrl || !restToken) return undefined;
+  let parsed: URL;
+  try {
+    parsed = new URL(restUrl);
+  } catch {
+    throw new RangeError("UPSTASH_REDIS_REST_URL must be an absolute https origin");
+  }
+  // Plain HTTP would put a bearer token on the wire in clear text.
+  if (parsed.protocol !== "https:") {
+    throw new RangeError("UPSTASH_REDIS_REST_URL must be an absolute https origin");
+  }
+  return { restUrl, restToken };
 }
 
 function trimmed(env: ServerEnv, key: string): string | undefined {

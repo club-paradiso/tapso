@@ -758,12 +758,16 @@ const STATUS_BY_CODE: Record<string, number> = {
   NOT_FOUND: 404,
   SESSION_NOT_FOUND: 404,
   METHOD_NOT_ALLOWED: 405,
+  SESSION_ID_COLLISION: 409,
   SESSION_EXPIRED: 410,
   PAYLOAD_TOO_LARGE: 413,
   RATE_LIMITED: 429,
   PROVIDER_RESPONSE_INVALID: 502,
   BLOCKED_BY_CREDENTIALS: 503,
   SESSIONS_UNAVAILABLE: 503,
+  // The store is reachable or it is not. A session that cannot be read is
+  // never reported as a session that does not exist.
+  SESSION_STORE_UNAVAILABLE: 503,
   OPERATOR_DISABLED: 503,
 };
 

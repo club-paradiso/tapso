@@ -6,14 +6,16 @@
  * they are there for. Nothing here is per-request state.
  */
 
-import { readTransitApiConfig, type ServerEnv, type TransitApiConfig } from "./apiConfig.ts";
+import { readTransitApiConfig, readUpstashCredentials, type ServerEnv, type TransitApiConfig } from "./apiConfig.ts";
 import { createTransitApiHandler, type TransitApiHandler } from "./apiRouter.ts";
 import { CachedTransitProvider } from "./cachedTransitProvider.ts";
 import { JourneySessionCoordinator } from "./journeySession.ts";
 import { resolveOperatorToken } from "./operatorAuth.ts";
 import { createBurstLimiter } from "./rateLimit.ts";
 import { resolveTagoServiceKey, serviceKeyWarning } from "./serviceKey.ts";
+import { MemoryJourneySessionStore, type JourneySessionStore } from "./sessionStore.ts";
 import { TagoTransitProvider } from "./tagoProvider.ts";
+import { UpstashJourneySessionStore } from "./upstashSessionStore.ts";
 
 export interface TransitApi {
   config: TransitApiConfig;
@@ -46,12 +48,18 @@ export function createTransitApi(env: ServerEnv = process.env as ServerEnv): Tra
     stopTtlMs: config.cachePolicy.stopTtlMs,
     vehicleTtlMs: config.cachePolicy.vehicleTtlMs,
   });
+  // `readTransitApiConfig` already refused a `redis` store without usable
+  // credentials, so this re-read should always find them. It is checked again
+  // rather than asserted: wiring that silently produced a store with an empty
+  // token would fail on every request instead of at boot.
+  const sessionStore = createSessionStore(config, env);
   // Journey sessions read the uncached provider on purpose. Server-observed
   // cadence is only evidence if consecutive reads are genuinely consecutive;
   // the shared 20 s snapshot cache would replay one receipt as several and
   // manufacture a liveness signal that never existed.
   const sessions = new JourneySessionCoordinator(upstream, {
     automaticMatchingEnabled: config.matching.automaticMatchingEnabled,
+    store: sessionStore,
   });
   const limiter = config.rateLimit.enabled
     ? createBurstLimiter(config.rateLimit.limit, config.rateLimit.windowSeconds)
@@ -89,6 +97,17 @@ export function createTransitApi(env: ServerEnv = process.env as ServerEnv): Tra
       ...(operator.configured ? { operatorToken: operator.token } : {}),
     }),
   };
+}
+
+function createSessionStore(config: TransitApiConfig, env: ServerEnv): JourneySessionStore {
+  if (config.sessions.store !== "redis") return new MemoryJourneySessionStore();
+  const credentials = readUpstashCredentials(env);
+  if (!credentials) {
+    throw new RangeError(
+      "TRANSIT_SESSION_STORE=redis requires UPSTASH_REDIS_REST_URL and UPSTASH_REDIS_REST_TOKEN",
+    );
+  }
+  return new UpstashJourneySessionStore(credentials);
 }
 
 /** The process-wide instance every entry point serves from. */
