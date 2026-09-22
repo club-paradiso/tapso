@@ -25,6 +25,7 @@ import type { BurstLimiter } from "./rateLimit.ts";
 import { maskClientAddress } from "./rateLimit.ts";
 import { TtlCache } from "./ttlCache.ts";
 import { logEvent } from "./observability.ts";
+import { TAGO_CADENCE_POLICY_V1 } from "./sourceFreshness.ts";
 
 export const MAX_BODY_BYTES = 64 * 1_024;
 /**
@@ -314,8 +315,15 @@ async function dispatch(
              */
             receivedAt: latestReceivedAt(result.value),
             providerObservationTimestamp: "unavailable",
-            freshnessPolicy: "fail_closed",
-            automaticMatching: "withheld_pending_source_freshness_rule",
+            freshnessPolicy: "server_observed_cadence_v1",
+            automaticMatching: "withheld_pending_durable_session_store",
+            cadencePolicy: {
+              historyWindowSeconds: TAGO_CADENCE_POLICY_V1.historyWindowMs / 1_000,
+              minimumSamples: TAGO_CADENCE_POLICY_V1.minimumSamples,
+              minimumSpanSeconds: TAGO_CADENCE_POLICY_V1.minimumSpanMs / 1_000,
+              maximumReceiptAgeSeconds: TAGO_CADENCE_POLICY_V1.maximumReceiptAgeMs / 1_000,
+              maximumReceiptGapSeconds: TAGO_CADENCE_POLICY_V1.maximumReceiptGapMs / 1_000,
+            },
             snapshotCacheTtlSeconds: Math.round(config.cachePolicy.vehicleTtlMs / 1_000),
           },
         },
@@ -453,8 +461,15 @@ function healthPayload(config: TransitApiConfig, now: Date): Record<string, unkn
     build: config.build,
     freshness: {
       providerObservationTimestamp: "unavailable",
-      policy: "fail_closed",
-      automaticMatching: "withheld_pending_source_freshness_rule",
+      policy: "server_observed_cadence_v1",
+      automaticMatching: "withheld_pending_durable_session_store",
+      cadencePolicy: {
+        historyWindowSeconds: TAGO_CADENCE_POLICY_V1.historyWindowMs / 1_000,
+        minimumSamples: TAGO_CADENCE_POLICY_V1.minimumSamples,
+        minimumSpanSeconds: TAGO_CADENCE_POLICY_V1.minimumSpanMs / 1_000,
+        maximumReceiptAgeSeconds: TAGO_CADENCE_POLICY_V1.maximumReceiptAgeMs / 1_000,
+        maximumReceiptGapSeconds: TAGO_CADENCE_POLICY_V1.maximumReceiptGapMs / 1_000,
+      },
     },
   };
 }
