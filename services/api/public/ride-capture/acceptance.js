@@ -40,7 +40,10 @@ function saveToken(value) {
   try { if (value) localStorage.setItem(TOKEN_KEY, value); } catch { /* memoryless is still safe */ }
 }
 function remember(id, value) {
-  try { if (value) localStorage.setItem(id, value); } catch { /* optional */ }
+  try {
+    if (value) localStorage.setItem(id, value);
+    else localStorage.removeItem(id);
+  } catch { /* optional */ }
 }
 function recalled(id) {
   try { return localStorage.getItem(id) || ""; } catch { return ""; }
@@ -237,7 +240,6 @@ async function startAcceptance() {
     el("push-state").textContent = push.state;
     renderActive(started);
     show("active");
-    void recordLifecycle("hidden", false);
     startStatusLoop(started.sessionId);
   } catch (error) {
     say("setup-alert", error.message || "테스트를 시작하지 못했습니다.", "bad");
