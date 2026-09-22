@@ -69,7 +69,10 @@ a Route 365 evidence probe, not the preflight for an arbitrary route; use
    version 1 with two optional additive fields, so CLI and controller captures
    stay interchangeable. See `../RIDE_CAPTURE_CONTROLLER.md`.
 7. `PENDING` One real ride on a preflighted route and direction — `JEB405136521` or `JEB405136522` recommended — with the sanitized report summarised in `docs/DATA_VALIDATION.md`.
-8. `PENDING` Freshness rule derived from ≥ 1 ride, then journey-session tests before enabling tracking. Task C, not this plan.
+8. `PARTIAL` Task C, not this plan. The source-cadence abstraction, the shadow-mode
+   rollout gate and the journey-session tests exist; see `TASK_C_SOURCE_FRESHNESS.md`.
+   The thresholds remain `PROVISIONAL` because no clean ride capture exists yet, and
+   automatic matching stays off. Milestone 7 is still what unblocks the rest.
 
 ## Decisions
 

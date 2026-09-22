@@ -127,9 +127,24 @@ stay disabled unless that token is configured. They are documented in full in
 - **Timestamps are not invented.** TAGO publishes no source observation
   timestamp. Each vehicle therefore carries `timestampSource: "unavailable"`,
   the epoch sentinel in `observedAt`, and TAPSO's read time in `receivedAt`.
-  `meta.providerObservationTimestamp` is `"unavailable"` and
-  `meta.automaticMatching` is `"withheld_pending_source_freshness_rule"`.
-  Receipt time is never presented as freshness.
+  Receipt time is never presented as freshness, and no rule anywhere claims to
+  know when TAGO observed a vehicle.
+- **The freshness posture is one object, published identically by `/health`,
+  `/v1/vehicles` and `/operator/snapshot`.** It separates three claims that are
+  easy to conflate:
+
+  | Field | Value | Means |
+  |---|---|---|
+  | `providerObservationTimestamp` | `"unavailable"` | TAGO publishes none, and none is reconstructed |
+  | `policy` | `"server_observed_cadence_v1"` | TAPSO judges liveness from its own repeated receipts of *changing* provider content |
+  | `automaticMatching` | `"shadow_only_pending_field_validation"` | candidates are ranked and evidence published; the server never selects a bus |
+  | `automaticMatchingWithheldBecause` | the acceptance gate text | the 30-boarding multi-route gate, not durable storage |
+  | `fieldValidationGate` | `{status: "open", requiredBoardings: 30, …}` | a hand-maintained constant, not a live counter |
+  | `cadencePolicy.calibration` | `"provisional"` | every threshold is an operational gate, not a measured value |
+
+  `automaticMatching` reads `"enabled_by_explicit_operator_opt_in"` only where
+  an operator has set `TRANSIT_AUTOMATIC_MATCHING_ENABLED=true`. It is `false`
+  on every platform by default, including the local Node server.
 - **Identifiers are validated before the upstream call.** `cityCode` is
   `[0-9]{1,6}`, `routeId` is `[A-Za-z0-9_-]{1,64}`, `routeNo` is up to 16
   alphanumeric or Hangul characters. The former B551982 `stdgCd` and
@@ -386,6 +401,12 @@ The freshness posture is unchanged and was confirmed live:
 `automaticMatching: "withheld_pending_source_freshness_rule"`. Live vehicles are
 served, and automatic matching stays withheld until Task B and Task C produce a
 source-freshness rule.
+
+> Historical record, retained as observed on that date. Task C replaced those
+> two strings with `policy: "server_observed_cadence_v1"` and
+> `automaticMatching: "shadow_only_pending_field_validation"`. The substance did
+> not change: automatic matching is still withheld. See the freshness-posture
+> table above for what the current fields mean.
 
 ## Limitations
 
