@@ -139,3 +139,77 @@ test("unknown TAGO source time cannot become fresh through receipt time", async 
   assert.equal(view.selectedVehicleId, undefined);
   assert.equal(view.progress, undefined);
 });
+
+
+test("TAGO cadence evidence unlocks automatic matching only after repeated changing snapshots", async () => {
+  const provider = new MutableProvider();
+  let now = new Date("2026-09-22T03:00:00Z");
+  const tago = (receivedAt: Date, stopSequence: number, latitude: number): VehicleObservation => ({
+    vehicleId: "TAGO-A",
+    routeId,
+    observedAt: new Date(0).toISOString(),
+    receivedAt: receivedAt.toISOString(),
+    timestampSource: "unavailable",
+    directionCode: "1",
+    stopSequence,
+    latitude,
+    longitude: 126.5000,
+  });
+
+  provider.vehiclesValue = [tago(now, 1, 33.5000)];
+  const sessions = new JourneySessionCoordinator(provider, {
+    now: () => now,
+    idFactory: () => "tago-cadence-session",
+  });
+
+  const initial = await sessions.create(sessionInput());
+  assert.equal(initial.state, "awaiting_match");
+  assert.equal(initial.selectedVehicleId, undefined);
+
+  now = new Date("2026-09-22T03:00:05Z");
+  provider.vehiclesValue = [tago(now, 1, 33.5000)];
+  const second = await sessions.refresh(initial.id);
+  assert.equal(second.state, "awaiting_match");
+  assert.equal(second.selectedVehicleId, undefined);
+
+  now = new Date("2026-09-22T03:00:10Z");
+  provider.vehiclesValue = [tago(now, 1, 33.5004)];
+  const third = await sessions.refresh(initial.id);
+  assert.equal(third.selectedVehicleId, "TAGO-A");
+  assert.equal(third.selectionMode, "automatic");
+  assert.equal(third.state, "tracking");
+  assert.equal(third.progress?.currentStopSequence, 1);
+  assert.equal(third.progress?.freshnessSource, "server_observed_cadence");
+  assert.equal(third.progress?.evidenceAt, now.toISOString());
+  assert.equal(third.progress?.observedAt, new Date(0).toISOString(), "provider time remains the epoch sentinel");
+});
+
+test("fresh receipt timestamps alone never unlock TAGO automatic matching", async () => {
+  const provider = new MutableProvider();
+  let now = new Date("2026-09-22T04:00:00Z");
+  const unchanged = (): VehicleObservation => ({
+    vehicleId: "TAGO-STATIONARY",
+    routeId,
+    observedAt: new Date(0).toISOString(),
+    receivedAt: now.toISOString(),
+    timestampSource: "unavailable",
+    directionCode: "1",
+    stopSequence: 1,
+    latitude: 33.5000,
+    longitude: 126.5000,
+  });
+  provider.vehiclesValue = [unchanged()];
+  const sessions = new JourneySessionCoordinator(provider, {
+    now: () => now,
+    idFactory: () => "tago-unchanged-session",
+  });
+  const initial = await sessions.create(sessionInput());
+
+  for (const seconds of [5, 10, 15, 20]) {
+    now = new Date(Date.parse("2026-09-22T04:00:00Z") + seconds * 1_000);
+    provider.vehiclesValue = [unchanged()];
+    const view = await sessions.refresh(initial.id);
+    assert.equal(view.selectedVehicleId, undefined);
+    assert.equal(view.state, "awaiting_match");
+  }
+});
