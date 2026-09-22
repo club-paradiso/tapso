@@ -81,7 +81,9 @@ function rank(
 
   const ageSeconds = (now - new Date(candidate.observedAt).valueOf()) / 1_000;
   if (candidate.timestampSource === "unavailable") {
-    if (trustedFreshness?.state === "fresh") {
+    if (trustedFreshness === undefined) {
+      rejectedReasons.push("stale_or_invalid_timestamp");
+    } else if (trustedFreshness.state === "fresh") {
       score += 25;
       evidence.push("fresh_source_cadence");
     } else {
