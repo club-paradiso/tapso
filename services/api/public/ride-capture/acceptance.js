@@ -288,11 +288,11 @@ function finish(report) {
   remember(SESSION_KEY, "");
   const acceptance = backgroundAcceptanceVerdict(report);
   show("finished");
-  el("finish-hero").textContent = acceptance.verdict === "PASS" ? "테스트 통과 ✓" : "테스트 확인 필요";
+  el("finish-hero").textContent = acceptance.verdict === "PASS" ? "백그라운드 검증 완료 ✓" : "백그라운드 검증 확인 필요";
   say(
     "finish-alert",
     acceptance.verdict === "PASS"
-      ? "Railway 백그라운드 수집 검증이 완료됐습니다."
+      ? "필요한 백그라운드 수집 증거를 확보했습니다. 아직 버스에 타고 있어도 정상이며, 이 검증 세션만 자동 종료된 것입니다."
       : `BACKGROUND ACCEPTANCE FAIL · ${acceptance.reasons.join(" / ")}`,
     acceptance.verdict === "PASS" ? "ok" : "bad",
   );

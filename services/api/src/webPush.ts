@@ -35,9 +35,9 @@ export function createWebPushSender(env: NodeJS.ProcessEnv): Sender {
       if (!configured || !subscription) return;
       const payload = JSON.stringify({
         type: "tapso-background-acceptance",
-        title: verdict === "PASS" ? "TAPSO 테스트 완료 ✅" : "TAPSO 테스트 확인 필요 ⚠️",
+        title: verdict === "PASS" ? "TAPSO 백그라운드 검증 완료 ✅" : "TAPSO 백그라운드 검증 확인 필요 ⚠️",
         body: verdict === "PASS"
-          ? "Railway 백그라운드 수집 검증에 성공했습니다. 앱을 다시 열 필요 없습니다."
+          ? "필요한 백그라운드 수집 증거를 확보했습니다. 아직 버스에 타고 있어도 정상입니다."
           : "백그라운드 수집 검증이 기준을 충족하지 못했습니다. TAPSO에서 리포트를 확인하세요.",
         verdict,
         routeId: report.routeId,

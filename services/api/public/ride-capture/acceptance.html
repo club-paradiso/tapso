@@ -8,7 +8,7 @@
     <meta name="apple-mobile-web-app-capable" content="yes" />
     <meta name="apple-mobile-web-app-title" content="TAPSO 테스트" />
     <link rel="manifest" href="./acceptance.webmanifest" />
-    <title>TAPSO 원탭 백그라운드 테스트</title>
+    <title>TAPSO 백그라운드 검증</title>
     <style>
       :root { color-scheme:dark; --bg:#0b0e11; --panel:#161b21; --ink:#f4f7fa; --muted:#9fabb8; --line:#34404c; --accent:#5aa2ff; --accent-ink:#05101f; --good:#79e5ae; --good-bg:#0f2e20; --warn:#ffc978; --warn-bg:#33280f; --bad:#ff96a4; --bad-bg:#3a151d; }
       * { box-sizing:border-box; }
@@ -35,13 +35,13 @@
   <body>
     <main>
       <div class="bar">
-        <h1>TAPSO <span class="muted">원탭 Acceptance</span></h1>
+        <h1>TAPSO <span class="muted">백그라운드 검증</span></h1>
         <a href="./background.html">연구 모드</a>
       </div>
 
       <section id="setup">
         <div class="hero">버스만 고르고<br />폰은 넣어두세요.</div>
-        <p class="muted">현재 차량 위치를 시작점으로 잡고 Railway가 5초마다 수집합니다. 60초 이상 앱을 벗어나 있고 snapshot이 충분하면 자동 종료합니다.</p>
+        <p class="muted">현재 차량 위치를 시작점으로 Railway 수집만 검증합니다. 60초 이상 앱을 벗어나 있고 snapshot이 충분하면 검증은 자동 종료됩니다. 실제 하차 여부와는 무관합니다.</p>
         <div class="grid panel">
           <input id="route-no" inputmode="numeric" autocomplete="off" placeholder="버스 번호 · 455" aria-label="버스 번호" />
           <input id="plate" inputmode="numeric" autocomplete="off" maxlength="4" placeholder="번호판 뒤 4자리" aria-label="번호판 뒤 4자리" />
@@ -64,11 +64,11 @@
           <div class="metric"><span>background</span><strong id="hidden-time">—</strong></div>
           <div class="metric"><span>알림</span><strong id="push-state">—</strong></div>
         </div>
-        <p id="active-alert" class="alert" data-tone="ok">서버가 알아서 종료합니다. 정류장 버튼도 하차 버튼도 없습니다.</p>
+        <p id="active-alert" class="alert" data-tone="ok">서버가 검증 조건을 채우면 자동 종료합니다. 아직 버스에 타고 있어도 정상입니다.</p>
       </section>
 
       <section id="finished" hidden>
-        <div id="finish-hero" class="hero">테스트 완료</div>
+        <div id="finish-hero" class="hero">백그라운드 검증 완료</div>
         <p id="finish-alert" class="alert" data-tone="ok"></p>
         <div class="panel">
           <div class="metric"><span>captureEngine</span><strong id="finish-engine">—</strong></div>
@@ -76,7 +76,7 @@
           <div class="metric"><span>background</span><strong id="finish-hidden">—</strong></div>
           <div class="metric"><span>최대 polling gap</span><strong id="finish-gap">—</strong></div>
         </div>
-        <button id="again" type="button">새 테스트</button>
+        <button id="again" type="button">다른 검증 시작</button>
       </section>
     </main>
     <script type="module" src="./acceptance.js"></script>
