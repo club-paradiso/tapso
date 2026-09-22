@@ -16,6 +16,7 @@ const CITY_CODE = "39";
 const INTERVAL_MS = 5_000;
 const MAX_VARIANTS_FOR_DIRECT_SCAN = 12;
 const TOKEN_KEY = "tapso.acceptance.operatorToken";
+const LEGACY_TOKEN_KEY = "tapso.rideCapture.operatorToken";
 const SESSION_KEY = "tapso.acceptance.activeSession";
 const LAST_ROUTE_KEY = "tapso.acceptance.routeNo";
 const LAST_PLATE_KEY = "tapso.acceptance.plate";
@@ -34,7 +35,11 @@ class ApiError extends Error {
 }
 
 function token() {
-  try { return localStorage.getItem(TOKEN_KEY) || ""; } catch { return ""; }
+  try {
+    return localStorage.getItem(TOKEN_KEY)
+      || sessionStorage.getItem(LEGACY_TOKEN_KEY)
+      || "";
+  } catch { return ""; }
 }
 function saveToken(value) {
   try { if (value) localStorage.setItem(TOKEN_KEY, value); } catch { /* memoryless is still safe */ }
@@ -324,7 +329,12 @@ el("again").addEventListener("click", () => {
 });
 el("route-no").value = recalled(LAST_ROUTE_KEY);
 el("plate").value = recalled(LAST_PLATE_KEY);
-el("token-wrap").hidden = Boolean(token());
+const migratedToken = token();
+if (migratedToken) saveToken(migratedToken);
+el("token-wrap").hidden = Boolean(migratedToken);
+if (!isStandalone()) {
+  say("setup-alert", "잠금화면 완료 알림을 받으려면 Safari 공유 메뉴 → 홈 화면에 추가 후 TAPSO 아이콘에서 실행하세요. 테스트 자체는 Safari에서도 가능합니다.", "warn");
+}
 void registerServiceWorker();
 
 const existing = recalled(SESSION_KEY);
