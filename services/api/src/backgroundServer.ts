@@ -235,7 +235,8 @@ function parsePushSubscription(value: unknown): NonNullable<BackgroundCaptureSta
   } catch {
     throw httpError(400, "INVALID_INPUT", "pushSubscription endpoint is invalid");
   }
-  if (url.protocol !== "https:" || url.hostname !== "web.push.apple.com") {
+  const applePushHost = url.hostname === "push.apple.com" || url.hostname.endsWith(".push.apple.com");
+  if (url.protocol !== "https:" || !applePushHost) {
     throw httpError(400, "INVALID_INPUT", "only Apple Web Push subscriptions are accepted");
   }
   if (!row.keys || typeof row.keys !== "object") throw httpError(400, "INVALID_INPUT", "pushSubscription keys are required");
