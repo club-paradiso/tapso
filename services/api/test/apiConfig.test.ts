@@ -133,3 +133,89 @@ test("client addresses are masked before they reach a log line", () => {
   assert.equal(maskClientAddress("unknown"), "unknown");
   assert.equal(maskClientAddress("garbage"), "unknown");
 });
+
+/* --------------------------------------------------- durable session store */
+
+const UPSTASH = {
+  UPSTASH_REDIS_REST_URL: "https://synthetic.upstash.io",
+  UPSTASH_REDIS_REST_TOKEN: "synthetic-upstash-token",
+};
+
+test("sessions stay in memory unless a store is named", () => {
+  const config = readTransitApiConfig({}, NODE);
+  assert.equal(config.sessions.store, "memory");
+  assert.equal(config.sessions.durableStoreConfigured, false);
+});
+
+test("stray Upstash variables do not silently switch the store", () => {
+  // Presence of a credential is not a decision to use it. Inferring the store
+  // from a leftover variable is how a deployment changes behaviour by accident.
+  const config = readTransitApiConfig({ VERCEL: "1", ...UPSTASH }, NODE);
+  assert.equal(config.sessions.store, "memory");
+  assert.equal(config.sessions.enabled, false);
+});
+
+test("a durable store lets a serverless deployment hold sessions honestly", () => {
+  const config = readTransitApiConfig(
+    { VERCEL: "1", TRANSIT_SESSION_STORE: "redis", ...UPSTASH },
+    NODE,
+  );
+  assert.equal(config.sessions.store, "redis");
+  assert.equal(config.sessions.durableStoreConfigured, true);
+  assert.equal(config.sessions.enabled, true);
+  // Durable storage is a different axis from letting the server pick a bus.
+  assert.equal(config.matching.automaticMatchingEnabled, false);
+  assert.equal(config.matching.mode, "shadow");
+});
+
+test("an operator can still keep sessions off with a durable store configured", () => {
+  const config = readTransitApiConfig(
+    { VERCEL: "1", TRANSIT_SESSION_STORE: "redis", TRANSIT_SESSIONS_ENABLED: "false", ...UPSTASH },
+    NODE,
+  );
+  assert.equal(config.sessions.store, "redis");
+  assert.equal(config.sessions.enabled, false);
+});
+
+test("asking for redis without credentials fails loudly instead of falling back to memory", () => {
+  // A silent fallback would leave a deployment that believes it has durable
+  // sessions running on the exact failure mode it was trying to leave.
+  assert.throws(
+    () => readTransitApiConfig({ TRANSIT_SESSION_STORE: "redis" }, NODE),
+    /requires UPSTASH_REDIS_REST_URL and UPSTASH_REDIS_REST_TOKEN/,
+  );
+  assert.throws(
+    () => readTransitApiConfig({ TRANSIT_SESSION_STORE: "redis", UPSTASH_REDIS_REST_URL: UPSTASH.UPSTASH_REDIS_REST_URL }, NODE),
+    /requires UPSTASH_REDIS_REST_URL and UPSTASH_REDIS_REST_TOKEN/,
+  );
+});
+
+test("an unknown store name is a misconfiguration, not a default", () => {
+  assert.throws(
+    () => readTransitApiConfig({ TRANSIT_SESSION_STORE: "postgres" }, NODE),
+    /TRANSIT_SESSION_STORE must be memory or redis/,
+  );
+});
+
+test("a plaintext store URL is refused so a bearer token never crosses http", () => {
+  assert.throws(
+    () => readTransitApiConfig({
+      TRANSIT_SESSION_STORE: "redis",
+      UPSTASH_REDIS_REST_URL: "http://synthetic.upstash.io",
+      UPSTASH_REDIS_REST_TOKEN: "synthetic-upstash-token",
+    }, NODE),
+    /must be an absolute https origin/,
+  );
+});
+
+test("store credentials never reach the config object", () => {
+  const config = readTransitApiConfig(
+    { TRANSIT_SESSION_STORE: "redis", ...UPSTASH },
+    NODE,
+  );
+  const serialized = JSON.stringify(config);
+  assert.ok(!serialized.includes("synthetic-upstash-token"), "the token is never part of config");
+  assert.ok(!serialized.includes("synthetic.upstash.io"), "nor is the host it authenticates against");
+  // A category is all a reader gets, the same rule the TAGO key follows.
+  assert.equal(config.sessions.store, "redis");
+});

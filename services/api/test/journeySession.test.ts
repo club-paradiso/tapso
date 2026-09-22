@@ -3,6 +3,11 @@ import assert from "node:assert/strict";
 import { JourneySessionCoordinator } from "../src/journeySession.ts";
 import type { RouteRequest, StopOnRoute, VehicleObservation } from "../src/domain.ts";
 import type { TransitProvider } from "../src/provider.ts";
+import {
+  MemoryJourneySessionStore,
+  SessionStoreError,
+  type JourneySessionStore,
+} from "../src/sessionStore.ts";
 
 const routeId = "route-365";
 const cityCode = "999";
@@ -481,4 +486,186 @@ test("nothing in a TAGO session view reads as a provider observation time", asyn
   assert.equal(progress.evidenceAtIs, "tapso_server_receipt");
   assert.equal(progress.evidenceAt, now.toISOString());
   assert.notEqual(progress.evidenceAtIs, "provider_observation_timestamp");
+});
+
+/* ------------------------------------------------- durable session store */
+
+/**
+ * A provider that parks inside `vehicles()` until the test lets it go, so two
+ * coordinators can be held in the overlap that a scaled-out deployment
+ * produces by accident.
+ */
+class BarrierProvider implements TransitProvider {
+  snapshots: VehicleObservation[][] = [];
+  gated = false;
+  private readonly waiting: Array<() => void> = [];
+
+  async stops(_request: RouteRequest): Promise<StopOnRoute[]> {
+    return stops.map((stop) => ({ ...stop }));
+  }
+
+  async vehicles(_request: RouteRequest): Promise<VehicleObservation[]> {
+    const snapshot = this.snapshots.shift() ?? [];
+    if (this.gated) await new Promise<void>((resolve) => this.waiting.push(resolve));
+    return snapshot.map((vehicle) => ({ ...vehicle }));
+  }
+
+  releaseNext(): void {
+    this.waiting.shift()?.();
+  }
+}
+
+function tick(): Promise<void> {
+  return new Promise((resolve) => setImmediate(resolve));
+}
+
+test("a session outlives the coordinator that created it", async () => {
+  const store = new MemoryJourneySessionStore();
+  const provider = new MutableProvider();
+  const now = new Date("2026-09-22T13:00:00Z");
+  provider.vehiclesValue = [
+    { vehicleId: "BUS-A", routeId, observedAt: now.toISOString(), directionCode: "1", stopSequence: 2 },
+  ];
+  const options = { now: () => now, store, automaticMatchingEnabled: true };
+
+  const created = await new JourneySessionCoordinator(provider, { ...options, idFactory: () => "durable-1" })
+    .create(sessionInput());
+  assert.equal(created.progress?.currentStopSequence, 2);
+
+  // A different process entirely — which is what a second serverless instance
+  // or a cold start after a deploy actually is.
+  const elsewhere = new JourneySessionCoordinator(provider, options);
+  const resumed = await elsewhere.refresh("durable-1");
+
+  assert.equal(resumed.id, "durable-1");
+  assert.equal(resumed.selectedVehicleId, "BUS-A");
+  assert.equal(resumed.progress?.currentStopSequence, 2);
+});
+
+test("a concurrent writer cannot move a rider backward along the route", async () => {
+  const store = new MemoryJourneySessionStore();
+  const provider = new BarrierProvider();
+  let now = new Date("2026-09-22T14:00:00Z");
+  const bus = (at: Date, stopSequence: number): VehicleObservation => ({
+    vehicleId: "BUS-A",
+    routeId,
+    observedAt: at.toISOString(),
+    directionCode: "1",
+    stopSequence,
+  });
+  const options = { now: () => now, store, automaticMatchingEnabled: true };
+
+  provider.snapshots = [[bus(now, 3)]];
+  const first = new JourneySessionCoordinator(provider, { ...options, idFactory: () => "race-1" });
+  const created = await first.create(sessionInput());
+  assert.equal(created.progress?.currentStopSequence, 3);
+
+  // Two instances, each about to answer a refresh for the same ride.
+  now = new Date("2026-09-22T14:00:20Z");
+  provider.gated = true;
+  provider.snapshots = [
+    [bus(now, 4)], // the instance that wins: the bus has moved on
+    [bus(now, 3)], // the instance that loses: a snapshot still showing stop 3
+  ];
+  const ahead = new JourneySessionCoordinator(provider, options);
+  const behind = new JourneySessionCoordinator(provider, options);
+
+  const aheadCall = ahead.refresh("race-1");
+  await tick();
+  const behindCall = behind.refresh("race-1");
+  await tick();
+
+  // Both have now loaded the same version. Let them finish in order.
+  provider.releaseNext();
+  const aheadView = await aheadCall;
+  provider.releaseNext();
+  const behindView = await behindCall;
+
+  assert.equal(aheadView.progress?.currentStopSequence, 4, "the first writer advances the ride");
+
+  // Without compare-and-set the second writer would persist stop 3 over stop
+  // 4 and the rider would watch their bus reverse. Its own backward guard
+  // cannot catch it: it is comparing against the copy it loaded, which still
+  // said stop 3.
+  assert.equal(behindView.progress?.currentStopSequence, 4, "the loser reports the winner's state, not its own");
+  assert.match(behindView.explanation, /concurrent update/);
+
+  const persisted = await store.load("race-1");
+  assert.equal(persisted?.session.lastProgress?.currentStopSequence, 4);
+  assert.equal(persisted?.version, 2, "exactly one write landed");
+});
+
+test("a store that cannot be read fails the request instead of losing the session", async () => {
+  const provider = new MutableProvider();
+  const now = new Date("2026-09-22T15:00:00Z");
+  provider.vehiclesValue = [
+    { vehicleId: "BUS-A", routeId, observedAt: now.toISOString(), directionCode: "1", stopSequence: 2 },
+  ];
+  const store = new MemoryJourneySessionStore();
+  const created = await new JourneySessionCoordinator(provider, {
+    now: () => now,
+    store,
+    idFactory: () => "store-down",
+    automaticMatchingEnabled: true,
+  }).create(sessionInput());
+
+  const brokenStore: JourneySessionStore = {
+    async load() { throw new SessionStoreError("the session store could not be reached"); },
+    async create() { throw new SessionStoreError("the session store could not be reached"); },
+    async save() { throw new SessionStoreError("the session store could not be reached"); },
+    async delete() { throw new SessionStoreError("the session store could not be reached"); },
+  };
+  const coordinator = new JourneySessionCoordinator(provider, { now: () => now, store: brokenStore });
+
+  // A store outage must not read as "no such session": answering 404 would
+  // tell a rider mid-journey that their ride never existed.
+  await assert.rejects(coordinator.refresh(created.id), (error: unknown) => {
+    assert.ok(error instanceof SessionStoreError);
+    assert.equal(error.code, "SESSION_STORE_UNAVAILABLE");
+    return true;
+  });
+});
+
+test("an expired session still reports as expired rather than as a wrong id", async () => {
+  const provider = new MutableProvider();
+  let now = new Date("2026-09-22T16:00:00Z");
+  provider.vehiclesValue = [
+    { vehicleId: "BUS-A", routeId, observedAt: now.toISOString(), directionCode: "1", stopSequence: 2 },
+  ];
+  const store = new MemoryJourneySessionStore({ now: () => now });
+  const sessions = new JourneySessionCoordinator(provider, {
+    now: () => now,
+    store,
+    idFactory: () => "expiring",
+    sessionTtlMs: 60_000,
+    automaticMatchingEnabled: true,
+  });
+  await sessions.create(sessionInput());
+
+  now = new Date("2026-09-22T16:02:00Z");
+  await assert.rejects(sessions.refresh("expiring"), (error: unknown) => {
+    assert.equal((error as { code?: string }).code, "SESSION_EXPIRED");
+    return true;
+  });
+  // And the row is cleared, so a replay of the same id is an honest 404.
+  await assert.rejects(sessions.refresh("expiring"), (error: unknown) => {
+    assert.equal((error as { code?: string }).code, "SESSION_NOT_FOUND");
+    return true;
+  });
+});
+
+test("a generated id that already exists is refused, never overwritten", async () => {
+  const provider = new MutableProvider();
+  const now = new Date("2026-09-22T17:00:00Z");
+  provider.vehiclesValue = [
+    { vehicleId: "BUS-A", routeId, observedAt: now.toISOString(), directionCode: "1", stopSequence: 2 },
+  ];
+  const store = new MemoryJourneySessionStore();
+  const options = { now: () => now, store, idFactory: () => "collide", automaticMatchingEnabled: true };
+  await new JourneySessionCoordinator(provider, options).create(sessionInput());
+
+  await assert.rejects(
+    new JourneySessionCoordinator(provider, options).create(sessionInput()),
+    /generated session id already exists/,
+  );
 });

@@ -9,6 +9,13 @@ import {
   type SourceFreshnessEvidence,
 } from "./sourceFreshness.ts";
 import type { TransitProvider } from "./provider.ts";
+import {
+  JOURNEY_SESSION_SCHEMA_VERSION,
+  MemoryJourneySessionStore,
+  type JourneySessionStore,
+  type StoredJourneySession,
+  type VersionedJourneySession,
+} from "./sessionStore.ts";
 
 const DEFAULT_SESSION_TTL_MS = 4 * 60 * 60 * 1_000;
 const DEFAULT_MAX_OBSERVATION_AGE_MS = 90_000;
@@ -132,6 +139,8 @@ export interface JourneySessionCoordinatorOptions {
   automaticMatchingEnabled?: boolean;
   /** How many consecutive failed provider reads a session tolerates. */
   maxConsecutiveProviderFailures?: number;
+  /** Defaults to an in-process store. See `sessionStore.ts`. */
+  store?: JourneySessionStore;
 }
 
 type SessionInput = {
@@ -141,6 +150,13 @@ type SessionInput = {
   destinationStopSequence: number;
   directionCode?: string;
 };
+
+/**
+ * A session loaded into memory for the length of one request, together with
+ * the store version it was read at. The version travels with it so the save at
+ * the end of the request can prove nothing else wrote in between.
+ */
+type LoadedSession = { record: SessionRecord; version: number };
 
 type SessionRecord = SessionInput & {
   id: string;
@@ -170,10 +186,15 @@ export class JourneySessionCoordinator {
   private readonly nearStopRadiusMeters: number;
   private readonly automaticMatchingEnabled: boolean;
   private readonly maxConsecutiveProviderFailures: number;
-  private readonly sessions = new Map<string, SessionRecord>();
+  private readonly store: JourneySessionStore;
 
   constructor(provider: TransitProvider, options: JourneySessionCoordinatorOptions = {}) {
     this.provider = provider;
+    // Memory by default, which is what the local Node server wants and what
+    // every test gets for free. A deployment that needs sessions to outlive
+    // one process passes a durable store instead; the coordinator cannot tell
+    // the difference, because both honour the same compare-and-set contract.
+    this.store = options.store ?? new MemoryJourneySessionStore({ now: options.now });
     this.now = options.now ?? (() => new Date());
     this.idFactory = options.idFactory ?? randomUUID;
     this.sessionTtlMs = positiveDuration(options.sessionTtlMs, DEFAULT_SESSION_TTL_MS, "sessionTtlMs");
@@ -228,28 +249,38 @@ export class JourneySessionCoordinator {
       cadenceHistory: new Map(),
       consecutiveProviderFailures: 0,
     };
-    this.sessions.set(record.id, record);
-    this.pruneExpired(now);
     // A create with no snapshot has nothing to degrade to, so a provider
     // failure here propagates rather than inventing an empty healthy session.
+    // Reading before persisting also means a failed create leaves no row
+    // behind for a TTL to clean up later.
     const vehicles = await this.readVehicles(record);
-    return this.evaluateSnapshot(record, vehicles, this.now());
+    const view = this.evaluateSnapshot(record, vehicles, this.now());
+    const outcome = await this.store.create(toStored(record));
+    // Only reachable if `idFactory` collides. Refusing is the point: the
+    // alternative is overwriting a stranger's ride in progress.
+    if (outcome.outcome === "conflict") throw new SessionIdCollisionError();
+    return view;
   }
 
   async refresh(id: string): Promise<JourneySessionView> {
-    const record = this.requireSession(id);
+    const { record, version } = await this.requireSession(id);
     const now = this.now();
     let vehicles: VehicleObservation[];
     try {
       vehicles = await this.readVehicles(record);
     } catch (error) {
-      return this.absorbProviderFailure(record, now, error);
+      // `absorbProviderFailure` throws past the bounded run. Nothing is saved
+      // on that path, so the stored failure count stays at its ceiling and
+      // every later read throws too — persistent failure keeps surfacing.
+      const view = this.absorbProviderFailure(record, now, error);
+      return this.commit(record, version, view);
     }
-    return this.evaluateSnapshot(record, vehicles, now);
+    const view = this.evaluateSnapshot(record, vehicles, now);
+    return this.commit(record, version, view);
   }
 
   async confirm(id: string, value: unknown): Promise<JourneySessionView> {
-    const record = this.requireSession(id);
+    const { record, version } = await this.requireSession(id);
     const vehicleId = parseVehicleConfirmation(value);
     const now = this.now();
     // A confirmation is a rider acting on what they can see out of the window.
@@ -266,7 +297,45 @@ export class JourneySessionCoordinator {
     // the provider is still reporting that vehicle usefully, so the cadence
     // gate below runs unchanged and an unconfirmed-by-evidence ride degrades.
     record.matchConfidence = "low";
-    return this.evaluateSelectedObservation(record, observation, now, this.sourceFreshness(record, vehicles, now));
+    const view = this.evaluateSelectedObservation(record, observation, now, this.sourceFreshness(record, vehicles, now));
+    return this.commit(record, version, view);
+  }
+
+  /**
+   * Persist the work of one request, or yield to whoever beat us to it.
+   *
+   * A lost compare-and-set is not retried. A retry would re-read TAGO and
+   * re-derive progress from a snapshot the winner has already consumed, which
+   * is how a duplicate poll turns into a contradictory answer. The winner's
+   * stored state is by construction at least as advanced as ours, so it is
+   * what the rider gets.
+   */
+  private async commit(
+    record: SessionRecord,
+    version: number,
+    view: JourneySessionView,
+  ): Promise<JourneySessionView> {
+    const outcome = await this.store.save(toStored(record), version);
+    if (outcome.outcome === "saved") return view;
+    // The row vanished between the load and the save: it expired, or an
+    // operator deleted it. Either way this session no longer exists.
+    if (!outcome.stored) throw new SessionExpiredError();
+    return this.concurrentWriteView(outcome.stored);
+  }
+
+  /** Renders the winner's persisted state without touching the provider. */
+  private concurrentWriteView(stored: VersionedJourneySession): JourneySessionView {
+    const record = toRecord(stored.session);
+    const state: JourneySessionState = record.lastProgress
+      ? stateFromProgress(record.lastProgress)
+      : record.selectedVehicleId ? "degraded" : "awaiting_match";
+    return this.view(record, {
+      state,
+      progress: retainedProgress(record.lastProgress),
+      explanation:
+        "A concurrent update to this session was accepted first. Its stored state is returned "
+        + "unchanged rather than overwritten.",
+    });
   }
 
   /** The one place a provider read happens; success is what clears the counter. */
@@ -521,14 +590,19 @@ export class JourneySessionCoordinator {
     });
   }
 
-  private requireSession(id: string): SessionRecord {
-    const record = this.sessions.get(id);
-    if (!record) throw new SessionNotFoundError();
-    if (record.expiresAtMs <= this.now().getTime()) {
-      this.sessions.delete(id);
+  /**
+   * Expiry is decided here, not in the store, so a rider who comes back after
+   * the window gets `410 SESSION_EXPIRED` rather than a `404` they cannot tell
+   * apart from a mistyped id.
+   */
+  private async requireSession(id: string): Promise<LoadedSession> {
+    const stored = await this.store.load(id);
+    if (!stored) throw new SessionNotFoundError();
+    if (stored.session.expiresAtMs <= this.now().getTime()) {
+      await this.store.delete(id);
       throw new SessionExpiredError();
     }
-    return record;
+    return { record: toRecord(stored.session), version: stored.version };
   }
 
   private view(
@@ -569,11 +643,61 @@ export class JourneySessionCoordinator {
     };
   }
 
-  private pruneExpired(nowMs: number): void {
-    for (const [id, record] of this.sessions) {
-      if (record.expiresAtMs <= nowMs) this.sessions.delete(id);
-    }
-  }
+}
+
+/**
+ * The persisted shape and the working shape differ in exactly one place:
+ * `cadenceHistory` is a `Map` in memory and an entry array on disk.
+ * `JSON.stringify` silently turns a `Map` into `{}`, so both directions are
+ * written out by hand rather than trusted to a serializer.
+ */
+function toStored(record: SessionRecord): StoredJourneySession {
+  return {
+    schemaVersion: JOURNEY_SESSION_SCHEMA_VERSION,
+    id: record.id,
+    routeId: record.routeId,
+    cityCode: record.cityCode,
+    boardingStopSequence: record.boardingStopSequence,
+    destinationStopSequence: record.destinationStopSequence,
+    ...(record.directionCode === undefined ? {} : { directionCode: record.directionCode }),
+    stops: record.stops,
+    boardingStop: record.boardingStop,
+    destinationStop: record.destinationStop,
+    ...(record.selectedVehicleId === undefined ? {} : { selectedVehicleId: record.selectedVehicleId }),
+    ...(record.selectionMode === undefined ? {} : { selectionMode: record.selectionMode }),
+    matchConfidence: record.matchConfidence,
+    createdAtMs: record.createdAtMs,
+    updatedAtMs: record.updatedAtMs,
+    expiresAtMs: record.expiresAtMs,
+    ...(record.lastObservation === undefined ? {} : { lastObservation: record.lastObservation }),
+    ...(record.lastProgress === undefined ? {} : { lastProgress: record.lastProgress }),
+    cadenceHistory: [...record.cadenceHistory],
+    consecutiveProviderFailures: record.consecutiveProviderFailures,
+  };
+}
+
+function toRecord(session: StoredJourneySession): SessionRecord {
+  return {
+    id: session.id,
+    routeId: session.routeId,
+    cityCode: session.cityCode,
+    boardingStopSequence: session.boardingStopSequence,
+    destinationStopSequence: session.destinationStopSequence,
+    ...(session.directionCode === undefined ? {} : { directionCode: session.directionCode }),
+    stops: session.stops,
+    boardingStop: session.boardingStop,
+    destinationStop: session.destinationStop,
+    ...(session.selectedVehicleId === undefined ? {} : { selectedVehicleId: session.selectedVehicleId }),
+    ...(session.selectionMode === undefined ? {} : { selectionMode: session.selectionMode }),
+    matchConfidence: session.matchConfidence,
+    createdAtMs: session.createdAtMs,
+    updatedAtMs: session.updatedAtMs,
+    expiresAtMs: session.expiresAtMs,
+    ...(session.lastObservation === undefined ? {} : { lastObservation: session.lastObservation }),
+    ...(session.lastProgress === undefined ? {} : { lastProgress: session.lastProgress }),
+    cadenceHistory: new Map(session.cadenceHistory),
+    consecutiveProviderFailures: session.consecutiveProviderFailures,
+  };
 }
 
 export class SessionInputError extends Error {
@@ -593,6 +717,15 @@ export class SessionExpiredError extends Error {
 
   constructor() {
     super("journey session expired");
+  }
+}
+
+/** A generated session id already existed. Never expected; never overwritten. */
+export class SessionIdCollisionError extends Error {
+  readonly code = "SESSION_ID_COLLISION";
+
+  constructor() {
+    super("generated session id already exists");
   }
 }
 

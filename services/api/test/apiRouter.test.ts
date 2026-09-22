@@ -586,3 +586,25 @@ test("the same evidence does select once an operator opts into automatic matchin
   const body = await health.json();
   assert.equal(body.freshness.automaticMatching, "enabled_by_explicit_operator_opt_in");
 });
+
+test("health reports the session store by category and never its credentials", async () => {
+  const { handler } = harness({
+    TRANSIT_SESSION_STORE: "redis",
+    UPSTASH_REDIS_REST_URL: "https://synthetic.upstash.io",
+    UPSTASH_REDIS_REST_TOKEN: "synthetic-upstash-token",
+  });
+  const response = await get(handler, "/health");
+  const body = await response.json();
+
+  assert.equal(body.sessionStore, "redis");
+  assert.equal(body.sessions.store, "redis");
+  assert.equal(body.sessions.durableStoreConfigured, true);
+
+  const serialized = JSON.stringify(body);
+  assert.ok(!serialized.includes("synthetic-upstash-token"));
+  assert.ok(!serialized.includes("synthetic.upstash.io"));
+  // Durable storage changes where sessions live. It does not change who is
+  // allowed to pick a rider's bus.
+  assert.equal(body.freshness.automaticMatching, "shadow_only_pending_field_validation");
+  assert.equal(body.matching.automaticMatchingEnabled, false);
+});

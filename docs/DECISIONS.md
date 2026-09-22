@@ -32,6 +32,19 @@ credential, the function budget, the rollback history, and the deploy cadence of
 a public API stay out of the product site's project, and iOS gets a base URL
 that is not the marketing domain.
 
+**Decision:** journey sessions persist to Upstash Redis over its REST API, through a hand-written `fetch` client rather than a package.
+
+The entry below rejected "a second hosting provider, a database, or a queue" when four cached reads justified none of them. What justifies one now is narrower: a ride session is per-rider mutable state that must outlive one serverless invocation, which no amount of caching provides. The scope stays small — one key per session, a TTL Redis enforces itself, and no schema to migrate.
+
+The client is roughly sixty lines of `fetch` because Upstash's REST endpoint is an HTTPS POST carrying a JSON command array and a bearer token. `services/api` carries one runtime dependency on purpose; adding a package to build a request body `fetch` already builds would spend supply-chain surface on nothing, and the stub-`fetch` tests are the same either way.
+
+Saves are compare-and-set, executed as a Lua script in one round trip. A plain `SET` would let two instances lose each other's updates and walk a rider backward along the route, which is the failure the coordinator refuses to make locally.
+
+*Rejected:* `@vercel/kv` — the same Upstash underneath, plus Vercel coupling in a service this file deliberately keeps portable.
+*Rejected:* `ioredis`/`node-redis` — TCP connection pooling is the wrong shape for serverless invocations.
+*Rejected:* a per-session distributed lock. It would also dedupe the duplicate upstream poll, which compare-and-set does not, but it adds a failure mode compare-and-set lacks: a holder that dies blocks the ride until its lease expires. Revisit it with the shared fleet collector, where the duplicate poll is the actual problem being solved.
+*Rejected:* last-write-wins. It is the bug.
+
 *Rejected:* co-locating the transit endpoints in `apps/web/api`. It would force
 either cross-root imports or moving the transit domain into the marketing app.
 *Rejected:* a second hosting provider, a database, or a queue. Four cached reads
