@@ -196,3 +196,64 @@ test("server-owned capture records browser hidden time without moving polling ow
   assert.equal(completed.report?.lifecycle.hiddenPeriods, 1);
   assert.equal(completed.report?.lifecycle.hiddenSeconds, 65);
 });
+
+
+test("background acceptance auto-completes after real hidden time and enough server snapshots", async () => {
+  const provider = new FakeProvider();
+  let nowMs = Date.parse("2026-09-15T10:00:00.000Z");
+  let completion;
+  const coordinator = new BackgroundRideCaptureCoordinator(provider, {
+    now: () => new Date(nowMs),
+    schedule: () => ({} as ReturnType<typeof setTimeout>),
+    cancel: () => {},
+    onComplete: (value) => { completion = value; },
+  });
+
+  const started = await coordinator.start({
+    routeId: ROUTE,
+    cityCode: CITY,
+    boardedVehicleId: VEHICLE,
+    boardingStopSequence: 27,
+    destinationStopSequence: 39,
+    mode: "background_acceptance",
+  });
+  assert.equal(started.mode, "background_acceptance");
+  assert.equal(started.markerCount, 0, "acceptance mode must not invent a physical boarded marker");
+
+  nowMs += 1_000;
+  coordinator.recordEvent(started.sessionId, "hidden", new Date(nowMs).toISOString());
+
+  for (let index = 0; index < 19; index += 1) {
+    nowMs += 5_000;
+    await coordinator.pollNow(started.sessionId);
+  }
+
+  const completed = coordinator.status(started.sessionId);
+  assert.equal(completed.phase, "completed");
+  assert.equal(completed.snapshotCount, 20);
+  assert.equal(completed.captureEngine, "railway-background");
+  assert.equal(completed.report?.lifecycle.hiddenPeriods, 1);
+  assert.ok((completed.report?.lifecycle.hiddenSeconds ?? 0) >= 60);
+  assert.equal(completion?.mode, "background_acceptance");
+  assert.equal(completion?.report.captureEngine, "railway-background");
+});
+
+test("background acceptance does not finish while the page never backgrounds", async () => {
+  const h = harness();
+  const started = await h.coordinator.start({
+    routeId: ROUTE,
+    cityCode: CITY,
+    boardedVehicleId: VEHICLE,
+    boardingStopSequence: 27,
+    destinationStopSequence: 39,
+    mode: "background_acceptance",
+  });
+  for (let index = 0; index < 25; index += 1) {
+    h.advance(5_000);
+    await h.coordinator.pollNow(started.sessionId);
+  }
+  const status = h.coordinator.status(started.sessionId);
+  assert.equal(status.phase, "active");
+  assert.equal(status.acceptance?.hiddenSeconds, 0);
+  assert.ok((status.acceptance?.snapshotCount ?? 0) >= 20);
+});
