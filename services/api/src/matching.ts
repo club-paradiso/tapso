@@ -1,5 +1,6 @@
 import type { MatchRequest, MatchResult, RankedCandidate, VehicleObservation } from "./domain.ts";
 import { distanceMeters } from "./geo.ts";
+import type { SourceFreshnessEvidence } from "./sourceFreshness.ts";
 
 const MAX_AGE_SECONDS = 90;
 const AMBIGUITY_MARGIN = 12;
@@ -7,9 +8,23 @@ const BOARDING_STOP_RADIUS_METERS = 120;
 const BOARDING_NEAR_RADIUS_METERS = 500;
 
 export function matchVehicle(request: MatchRequest): MatchResult {
+  return matchVehicleInternal(request);
+}
+
+export function matchVehicleWithSourceFreshness(
+  request: MatchRequest,
+  trustedFreshness: ReadonlyMap<string, SourceFreshnessEvidence>,
+): MatchResult {
+  return matchVehicleInternal(request, trustedFreshness);
+}
+
+function matchVehicleInternal(
+  request: MatchRequest,
+  trustedFreshness?: ReadonlyMap<string, SourceFreshnessEvidence>,
+): MatchResult {
   const now = new Date(request.now).valueOf();
   const ranked = request.candidates
-    .map((candidate) => rank(candidate, request, now))
+    .map((candidate) => rank(candidate, request, now, trustedFreshness?.get(candidate.vehicleId)))
     .sort((left, right) => right.score - left.score || left.vehicleId.localeCompare(right.vehicleId));
   const eligible = ranked.filter((candidate) => candidate.rejectedReasons.length === 0);
 
@@ -42,7 +57,12 @@ export function matchVehicle(request: MatchRequest): MatchResult {
   };
 }
 
-function rank(candidate: VehicleObservation, request: MatchRequest, now: number): RankedCandidate {
+function rank(
+  candidate: VehicleObservation,
+  request: MatchRequest,
+  now: number,
+  trustedFreshness?: SourceFreshnessEvidence,
+): RankedCandidate {
   let score = 0;
   const evidence: string[] = [];
   const rejectedReasons: string[] = [];
@@ -60,7 +80,14 @@ function rank(candidate: VehicleObservation, request: MatchRequest, now: number)
   }
 
   const ageSeconds = (now - new Date(candidate.observedAt).valueOf()) / 1_000;
-  if (candidate.timestampSource === "unavailable" || !Number.isFinite(ageSeconds) || ageSeconds < -10 || ageSeconds > MAX_AGE_SECONDS) {
+  if (candidate.timestampSource === "unavailable") {
+    if (trustedFreshness?.state === "fresh") {
+      score += 25;
+      evidence.push("fresh_source_cadence");
+    } else {
+      rejectedReasons.push("source_cadence_not_fresh");
+    }
+  } else if (!Number.isFinite(ageSeconds) || ageSeconds < -10 || ageSeconds > MAX_AGE_SECONDS) {
     rejectedReasons.push("stale_or_invalid_timestamp");
   } else {
     score += Math.max(0, 25 - ageSeconds / 6);
