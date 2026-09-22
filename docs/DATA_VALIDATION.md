@@ -191,8 +191,48 @@ in this document is clean real-ride evidence.
 
 Do not enable automatic matching for passengers until a source-freshness rule exists and at least 30 observed boardings across multiple routes demonstrate a clear candidate margin, no silent direction reversal, and bounded stale-data behavior. Unknown route variants or unsupported semantics must fail closed.
 
-**Status: `OPEN`.** Zero of the 30 boardings have been observed. The gate is
-enforced in code rather than left to discipline:
+**Status: `OPEN`.** Zero of the 30 boardings have been observed.
+
+### How each criterion is measured
+
+Until 2026-09-22 nothing measured three of the four criteria. `analyzeRideCapture`
+compared the one vehicle the rider typed in against their stop markers and never
+ran the matcher at all, so thirty rides would have produced thirty captures that
+could not close this gate. `services/api/src/matchReplay.ts` now replays the real
+`matchVehicleWithSourceFreshness` and `classifyTagoCadenceFreshness` over every
+captured snapshot, and `report.matchGate` carries the result.
+
+| Criterion | Field | Passing value |
+|---|---|---|
+| Picked the bus the rider boarded | `matchGate.selectionVerdict` | `correct`; `wrong` fails the ride outright |
+| Clear candidate margin | `matchGate.candidateMargin` over `matchGate.contestedDecisions` | a distribution clear of the 12-point `AMBIGUITY_MARGIN`, measured only where a second candidate was eligible |
+| No silent direction reversal | `matchGate.directionReversal.boardedDirectionChanges` | `0` |
+| Bounded stale-data behaviour | `matchGate.staleData.selectionsWhileNotFresh` | `0`; any other value is a fail-closed bug, not a threshold to tune |
+| Ride counts toward the 30 at all | `matchGate.usableForGate` | `true` |
+
+`selectionVerdict` distinguishes three non-failures that are not interchangeable:
+`correct` (the matcher would have helped), `never_committed` (it withheld all
+ride — safe, and no help either), and `no_boarded_vehicle` (nothing to score).
+Only `wrong` is a product failure. A campaign of thirty `never_committed` rides
+proves the matcher is safe and proves nothing about whether it works.
+
+`usableForGate` is `false` for a capture with no boarded vehicle, no successful
+snapshots, or observations carrying provider timestamps — the last because TAGO
+never publishes one, so such a capture exercises a code path production does not
+have.
+
+### One hypothesis this instrument exists to test
+
+A bus a rider is boarding is, at that instant, stationary at their stop. The
+cadence surrogate calls unchanged provider content `aging`, and `aging` never
+unlocks matching. Whether a dwelling bus still reads `fresh` from the movement
+in its preceding 90-second window is an empirical question that no synthetic
+fixture settles. `matchGate.staleData.boardedCadenceStates` records the boarded
+vehicle's cadence state at every decision point, so real rides answer it.
+
+### Enforcement
+
+The gate is enforced in code rather than left to discipline:
 
 | Control | Where | Default |
 |---|---|---|

@@ -1,4 +1,6 @@
 import type { StopOnRoute, VehicleObservation } from "./domain.ts";
+import { replayMatching, type MatchGateEvidence } from "./matchReplay.ts";
+import { round, summarize, type NumberSummary } from "./stats.ts";
 
 /**
  * Controlled real-ride capture and analysis.
@@ -11,6 +13,9 @@ import type { StopOnRoute, VehicleObservation } from "./domain.ts";
  * since the snapshot content for a vehicle last changed, measured with TAPSO
  * receipt time. That is evidence for defining a freshness rule, not the rule itself.
  */
+
+/** Re-exported so existing importers of this module keep working. */
+export { summarize, type NumberSummary };
 
 export const RIDE_CAPTURE_SCHEMA_VERSION = 1;
 
@@ -81,16 +86,6 @@ export interface RideCapture {
   source?: RideCaptureSource;
   /** Concrete polling owner. Unlike source, this distinguishes Safari polling from Railway polling. */
   captureEngine?: RideCaptureEngine;
-}
-
-export interface NumberSummary {
-  count: number;
-  min?: number;
-  median?: number;
-  p75?: number;
-  p90?: number;
-  p95?: number;
-  max?: number;
 }
 
 export interface SequenceChange {
@@ -254,6 +249,16 @@ export interface RideCaptureReport {
   lifecycle: RideCaptureLifecycle;
   integrity: RideCaptureIntegrity;
   evidenceCompleteness: EvidenceCompleteness;
+  /**
+   * What the real matcher would have done, replayed over these snapshots.
+   *
+   * This is the only part of the report that answers the broad-real-mode gate
+   * in `docs/DATA_VALIDATION.md`: whether the matcher would have picked the bus
+   * the rider actually boarded, by what margin, and whether it stayed closed on
+   * stale data. Everything else here describes the ride; this describes the
+   * decision the product would have made during it.
+   */
+  matchGate: MatchGateEvidence;
   /** Aggregate over all vehicles; input for a freshness rule, not the rule. */
   freshnessEvidence: {
     contentChangeIntervalSeconds: NumberSummary;
@@ -608,6 +613,9 @@ export function analyzeRideCapture(capture: RideCapture): RideCaptureReport {
     lifecycle: summarizeLifecycle(capture, endedAt),
     integrity,
     evidenceCompleteness: assessEvidence(successful.length, tracked, allChangeIntervals.length, markerLags.length),
+    // Replayed with the same pseudonyms the rest of the report uses, so the
+    // identifier guard below covers it without a special case.
+    matchGate: replayMatching(capture, { labels, ...(boarded ? { boardedVehicleId: boarded } : {}) }),
     freshnessEvidence: {
       contentChangeIntervalSeconds: summarize(allChangeIntervals),
       contentAgeSeconds: summarize(allContentAges),
@@ -911,32 +919,4 @@ function positiveDiffSeconds(timestamps: string[]): number[] {
     if (delta > 0) result.push(delta);
   }
   return result;
-}
-
-export function summarize(values: number[]): NumberSummary {
-  const sorted = values.filter(Number.isFinite).sort((a, b) => a - b);
-  if (sorted.length === 0) return { count: 0 };
-  return {
-    count: sorted.length,
-    min: round(sorted[0]!),
-    median: round(percentile(sorted, 0.5)),
-    p75: round(percentile(sorted, 0.75)),
-    p90: round(percentile(sorted, 0.9)),
-    p95: round(percentile(sorted, 0.95)),
-    max: round(sorted.at(-1)!),
-  };
-}
-
-function percentile(sorted: number[], quantile: number): number {
-  if (sorted.length === 1) return sorted[0]!;
-  const position = (sorted.length - 1) * quantile;
-  const lower = Math.floor(position);
-  const upper = Math.ceil(position);
-  if (lower === upper) return sorted[lower]!;
-  const weight = position - lower;
-  return sorted[lower]! * (1 - weight) + sorted[upper]! * weight;
-}
-
-function round(value: number): number {
-  return Math.round(value * 100) / 100;
 }
