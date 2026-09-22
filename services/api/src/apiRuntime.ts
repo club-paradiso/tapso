@@ -46,7 +46,7 @@ export function createTransitApi(env: ServerEnv = process.env as ServerEnv): Tra
     stopTtlMs: config.cachePolicy.stopTtlMs,
     vehicleTtlMs: config.cachePolicy.vehicleTtlMs,
   });
-  const sessions = new JourneySessionCoordinator(provider);
+  // Journey sessions need uncached consecutive provider reads so Task C can\n  // establish source freshness from server-observed cadence rather than from the public 20 s cache.\n  const sessions = new JourneySessionCoordinator(upstream);
   const limiter = config.rateLimit.enabled
     ? createBurstLimiter(config.rateLimit.limit, config.rateLimit.windowSeconds)
     : undefined;
