@@ -125,7 +125,10 @@ test("health reports configuration without revealing the credential", async () =
   assert.equal(body.liveTransitConfigured, true);
   assert.equal(body.sessionStore, "memory");
   assert.equal(body.freshness.providerObservationTimestamp, "unavailable");
-  assert.equal(body.freshness.automaticMatching, "withheld_pending_source_freshness_rule");
+  assert.equal(body.freshness.policy, "server_observed_cadence_v1");
+  assert.equal(body.freshness.automaticMatching, "withheld_pending_durable_session_store");
+  assert.equal(body.freshness.cadencePolicy.historyWindowSeconds, 90);
+  assert.equal(body.freshness.cadencePolicy.minimumSamples, 3);
   assert.equal(body.credential.source, "canonical");
   assert.ok(!JSON.stringify(body).includes("synthetic-key"));
   // The payload reports a category, never a variable name a scraper could use.
@@ -191,8 +194,9 @@ test("vehicles never claim a provider observation timestamp", async () => {
   assert.equal(response.headers.get("cache-control"), "public, max-age=0, s-maxage=20, must-revalidate");
   const body = await response.json();
   assert.equal(body.meta.providerObservationTimestamp, "unavailable");
-  assert.equal(body.meta.freshnessPolicy, "fail_closed");
-  assert.equal(body.meta.automaticMatching, "withheld_pending_source_freshness_rule");
+  assert.equal(body.meta.freshnessPolicy, "server_observed_cadence_v1");
+  assert.equal(body.meta.automaticMatching, "withheld_pending_durable_session_store");
+  assert.equal(body.meta.cadencePolicy.maximumReceiptGapSeconds, 30);
   assert.equal(body.meta.receivedAt, "2026-09-12T00:00:00.000Z");
   assert.equal(body.items[0].observedAt, EPOCH);
   assert.equal(body.items[0].timestampSource, "unavailable");
