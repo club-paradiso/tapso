@@ -1,7 +1,13 @@
 import { randomUUID } from "node:crypto";
 import type { RankedCandidate, RouteRequest, StopOnRoute, VehicleObservation } from "./domain.ts";
 import { distanceMeters } from "./geo.ts";
-import { matchVehicle } from "./matching.ts";
+import { matchVehicleWithSourceFreshness } from "./matching.ts";
+import {
+  appendCadenceObservation,
+  classifyTagoCadenceFreshness,
+  evidenceTimeMs,
+  type SourceFreshnessEvidence,
+} from "./sourceFreshness.ts";
 import type { TransitProvider } from "./provider.ts";
 
 const DEFAULT_SESSION_TTL_MS = 4 * 60 * 60 * 1_000;
@@ -30,6 +36,9 @@ export interface JourneyProgressView {
   phase: JourneyProgressPhase;
   source: JourneyProgressSource;
   observedAt: string;
+  /** Time TAPSO used to order evidence. For TAGO cadence mode this is receivedAt, not provider time. */
+  evidenceAt?: string;
+  freshnessSource?: "provider_timestamp" | "server_observed_cadence";
 }
 
 export interface JourneySessionView {
@@ -81,6 +90,7 @@ type SessionRecord = SessionInput & {
   expiresAtMs: number;
   lastObservation?: VehicleObservation;
   lastProgress?: JourneyProgressView;
+  cadenceHistory: Map<string, VehicleObservation[]>;
 };
 
 export class JourneySessionCoordinator {
@@ -134,6 +144,7 @@ export class JourneySessionCoordinator {
       createdAtMs: now,
       updatedAtMs: now,
       expiresAtMs: now + this.sessionTtlMs,
+      cadenceHistory: new Map(),
     };
     this.sessions.set(record.id, record);
     this.pruneExpired(now);
@@ -150,6 +161,7 @@ export class JourneySessionCoordinator {
     const vehicleId = parseVehicleConfirmation(value);
     const now = this.now();
     const vehicles = await this.provider.vehicles(routeRequest(record));
+    this.recordCadenceSnapshot(record, vehicles, now);
     const observation = vehicles.find((candidate) => candidate.vehicleId === vehicleId);
     if (!observation) throw new SessionInputError("vehicleId is not present in the current route snapshot");
 
@@ -162,9 +174,11 @@ export class JourneySessionCoordinator {
   private async refreshRecord(record: SessionRecord): Promise<JourneySessionView> {
     const now = this.now();
     const vehicles = await this.provider.vehicles(routeRequest(record));
+    this.recordCadenceSnapshot(record, vehicles, now);
 
     if (!record.selectedVehicleId) {
-      const result = matchVehicle({
+      const sourceFreshness = this.sourceFreshness(record, vehicles, now);
+      const result = matchVehicleWithSourceFreshness({
         routeId: record.routeId,
         boardingStopSequence: record.boardingStop.sequence,
         boardingLatitude: record.boardingStop.latitude,
@@ -172,7 +186,7 @@ export class JourneySessionCoordinator {
         directionCode: record.directionCode,
         now: now.toISOString(),
         candidates: vehicles,
-      });
+      }, sourceFreshness);
       record.matchConfidence = result.confidence;
       record.updatedAtMs = now.getTime();
 
@@ -213,14 +227,37 @@ export class JourneySessionCoordinator {
       return this.view(record, { state: "degraded", explanation: "Selected vehicle direction conflicts with the ride plan; no rematch was attempted." });
     }
 
-    const observedAtMs = new Date(observation.observedAt).getTime();
-    const ageMs = now.getTime() - observedAtMs;
-    if (observation.timestampSource === "unavailable" || !Number.isFinite(observedAtMs) || ageMs < -10_000 || ageMs > this.maxObservationAgeMs) {
-      return this.view(record, { state: "degraded", explanation: "Selected vehicle observation is stale or invalid." });
+    let freshnessSource: "provider_timestamp" | "server_observed_cadence";
+    let evidenceAtMs: number | undefined;
+    if (observation.timestampSource === "unavailable") {
+      const cadence = classifyTagoCadenceFreshness(
+        record.cadenceHistory.get(observation.vehicleId) ?? [],
+        now,
+      );
+      if (cadence.state !== "fresh") {
+        return this.view(record, {
+          state: "degraded",
+          progress: retainedProgress(record.lastProgress),
+          explanation: `Selected TAGO vehicle lacks fresh server-observed cadence evidence: ${cadence.reason}`,
+        });
+      }
+      freshnessSource = "server_observed_cadence";
+      evidenceAtMs = evidenceTimeMs(observation);
+    } else {
+      freshnessSource = "provider_timestamp";
+      const observedAtMs = new Date(observation.observedAt).getTime();
+      const ageMs = now.getTime() - observedAtMs;
+      if (!Number.isFinite(observedAtMs) || ageMs < -10_000 || ageMs > this.maxObservationAgeMs) {
+        return this.view(record, { state: "degraded", explanation: "Selected vehicle observation is stale or invalid." });
+      }
+      evidenceAtMs = observedAtMs;
     }
 
-    const previousObservedAt = record.lastObservation ? new Date(record.lastObservation.observedAt).getTime() : undefined;
-    if (previousObservedAt !== undefined && observedAtMs <= previousObservedAt) {
+    if (evidenceAtMs === undefined) {
+      return this.view(record, { state: "degraded", explanation: "Selected vehicle has no usable evidence timestamp." });
+    }
+    const previousEvidenceAt = record.lastObservation ? evidenceTimeMs(record.lastObservation) : undefined;
+    if (previousEvidenceAt !== undefined && evidenceAtMs <= previousEvidenceAt) {
       return this.view(record, {
         state: record.lastProgress ? stateFromProgress(record.lastProgress) : "degraded",
         progress: retainedProgress(record.lastProgress),
@@ -254,6 +291,8 @@ export class JourneySessionCoordinator {
       phase: progressPhase(delta),
       source: resolved.source,
       observedAt: observation.observedAt,
+      evidenceAt: new Date(evidenceAtMs).toISOString(),
+      freshnessSource,
     };
     record.lastProgress = progress;
     return this.view(record, {
@@ -265,13 +304,44 @@ export class JourneySessionCoordinator {
     });
   }
 
+  private recordCadenceSnapshot(
+    record: SessionRecord,
+    vehicles: VehicleObservation[],
+    now: Date,
+  ): void {
+    for (const observation of vehicles) {
+      if (observation.timestampSource !== "unavailable") continue;
+      const current = record.cadenceHistory.get(observation.vehicleId) ?? [];
+      record.cadenceHistory.set(
+        observation.vehicleId,
+        appendCadenceObservation(current, observation, now),
+      );
+    }
+  }
+
+  private sourceFreshness(
+    record: SessionRecord,
+    vehicles: VehicleObservation[],
+    now: Date,
+  ): ReadonlyMap<string, SourceFreshnessEvidence> {
+    const result = new Map<string, SourceFreshnessEvidence>();
+    for (const observation of vehicles) {
+      if (observation.timestampSource !== "unavailable") continue;
+      result.set(
+        observation.vehicleId,
+        classifyTagoCadenceFreshness(record.cadenceHistory.get(observation.vehicleId) ?? [], now),
+      );
+    }
+    return result;
+  }
+
   private handleMissingObservation(record: SessionRecord, now: Date): JourneySessionView {
     record.updatedAtMs = now.getTime();
     if (!record.lastObservation) {
       return this.view(record, { state: "degraded", explanation: "Selected vehicle is absent from the current route snapshot." });
     }
-    const lastSeen = new Date(record.lastObservation.observedAt).getTime();
-    if (Number.isFinite(lastSeen) && now.getTime() - lastSeen <= this.missingGraceMs) {
+    const lastSeen = evidenceTimeMs(record.lastObservation);
+    if (lastSeen !== undefined && Number.isFinite(lastSeen) && now.getTime() - lastSeen <= this.missingGraceMs) {
       return this.view(record, {
         state: "degraded",
         progress: retainedProgress(record.lastProgress),
