@@ -14,6 +14,15 @@ const DEFAULT_SESSION_TTL_MS = 4 * 60 * 60 * 1_000;
 const DEFAULT_MAX_OBSERVATION_AGE_MS = 90_000;
 const DEFAULT_MISSING_GRACE_MS = 75_000;
 const DEFAULT_NEAR_STOP_RADIUS_METERS = 120;
+/**
+ * A single failed TAGO read is an ordinary event — the provider intermittently
+ * answers without a `body` object, and `/operator/snapshot` has returned 502 in
+ * production because of it. A session absorbs a bounded run of them as
+ * `degraded` while keeping its last accepted progress, and then stops
+ * absorbing: past this count the failure is reported to the caller rather than
+ * dressed up as a healthy session. Persistent failure is never success.
+ */
+const DEFAULT_MAX_CONSECUTIVE_PROVIDER_FAILURES = 3;
 
 type MatchConfidence = "high" | "medium" | "low" | "unknown";
 
@@ -29,16 +38,49 @@ export type JourneySessionState =
 export type JourneyProgressPhase = "active" | "approaching" | "next_stop" | "arrived" | "passed_destination";
 export type JourneyProgressSource = "provider_stop_sequence" | "near_stop_estimate" | "retained_last_known";
 
+/**
+ * What the `evidenceAt` instant actually is.
+ *
+ * `tapso_server_receipt` means the value is `receivedAt`: the moment TAPSO's
+ * own server finished reading the provider snapshot. It is not, and must never
+ * be presented as, the moment the provider observed the vehicle. TAGO publishes
+ * no provider observation time at all, so every TAGO session reports this
+ * value.
+ */
+export type EvidenceTimeKind = "provider_observation_timestamp" | "tapso_server_receipt";
+
 export interface JourneyProgressView {
   currentStopSequence: number;
   currentStopId?: string;
   remainingStops: number;
   phase: JourneyProgressPhase;
   source: JourneyProgressSource;
+  /**
+   * Echoed straight from the provider record. For TAGO this is the epoch
+   * sentinel `1970-01-01T00:00:00.000Z`, because TAGO exposes no observation
+   * time. Read `evidenceAtIs` before attributing any meaning to a time here.
+   */
   observedAt: string;
-  /** Time TAPSO used to order evidence. For TAGO cadence mode this is receivedAt, not provider time. */
+  /** The instant TAPSO ordered this evidence by. See `evidenceAtIs`. */
   evidenceAt?: string;
-  freshnessSource?: "provider_timestamp" | "server_observed_cadence";
+  evidenceAtIs?: EvidenceTimeKind;
+}
+
+/**
+ * The ranking the matcher would have acted on, published without acting on it.
+ *
+ * `shadow` is the default and the production posture: candidates are ranked and
+ * cadence evidence is published, but `selectedVehicleId` is only ever set by an
+ * explicit rider confirmation. See `docs/DATA_VALIDATION.md` for the
+ * field-validation gate that keeps it that way.
+ */
+export interface ShadowSelectionView {
+  /** What the matcher concluded, had it been allowed to select. */
+  status: "matched" | "ambiguous" | "unavailable";
+  /** The vehicle automatic mode would have chosen. Never acted on in shadow. */
+  wouldSelectVehicleId?: string;
+  confidence: MatchConfidence;
+  explanation: string;
 }
 
 export interface JourneySessionView {
@@ -55,6 +97,22 @@ export interface JourneySessionView {
   progress?: JourneyProgressView;
   candidates?: RankedCandidate[];
   explanation: string;
+  /** `shadow` until the field-validation gate closes and an operator opts in. */
+  matchingMode: "shadow" | "automatic";
+  /** Present in shadow mode whenever a ranking was computed but not acted on. */
+  shadowSelection?: ShadowSelectionView;
+  /**
+   * Per-candidate server-observed cadence evidence, keyed by vehicle id. This
+   * is a liveness surrogate built from repeated TAPSO receipts of changing
+   * provider content. It carries no claim about provider observation time.
+   */
+  sourceFreshness?: Record<string, SourceFreshnessEvidence>;
+  /**
+   * Set when the most recent provider read failed. The session keeps its last
+   * accepted progress and its cadence history; nothing is inferred from the
+   * failure itself.
+   */
+  providerRead?: { state: "failed"; consecutiveFailures: number };
   createdAt: string;
   updatedAt: string;
   expiresAt: string;
@@ -67,6 +125,13 @@ export interface JourneySessionCoordinatorOptions {
   maxObservationAgeMs?: number;
   missingGraceMs?: number;
   nearStopRadiusMeters?: number;
+  /**
+   * Defaults to false. Omitting it is a request for shadow mode, so a caller
+   * that forgets the flag gets the safe behaviour rather than the fast one.
+   */
+  automaticMatchingEnabled?: boolean;
+  /** How many consecutive failed provider reads a session tolerates. */
+  maxConsecutiveProviderFailures?: number;
 }
 
 type SessionInput = {
@@ -91,6 +156,8 @@ type SessionRecord = SessionInput & {
   lastObservation?: VehicleObservation;
   lastProgress?: JourneyProgressView;
   cadenceHistory: Map<string, VehicleObservation[]>;
+  /** Reset to zero by every successful provider read. */
+  consecutiveProviderFailures: number;
 };
 
 export class JourneySessionCoordinator {
@@ -101,6 +168,8 @@ export class JourneySessionCoordinator {
   private readonly maxObservationAgeMs: number;
   private readonly missingGraceMs: number;
   private readonly nearStopRadiusMeters: number;
+  private readonly automaticMatchingEnabled: boolean;
+  private readonly maxConsecutiveProviderFailures: number;
   private readonly sessions = new Map<string, SessionRecord>();
 
   constructor(provider: TransitProvider, options: JourneySessionCoordinatorOptions = {}) {
@@ -119,6 +188,18 @@ export class JourneySessionCoordinator {
       DEFAULT_NEAR_STOP_RADIUS_METERS,
       "nearStopRadiusMeters",
     );
+    // Fail closed: only an explicit `true` turns automatic selection on.
+    this.automaticMatchingEnabled = options.automaticMatchingEnabled === true;
+    this.maxConsecutiveProviderFailures = positiveDuration(
+      options.maxConsecutiveProviderFailures,
+      DEFAULT_MAX_CONSECUTIVE_PROVIDER_FAILURES,
+      "maxConsecutiveProviderFailures",
+    );
+  }
+
+  /** Shadow mode ranks and publishes; it never assigns `selectedVehicleId`. */
+  get matchingMode(): "shadow" | "automatic" {
+    return this.automaticMatchingEnabled ? "automatic" : "shadow";
   }
 
   async create(value: unknown): Promise<JourneySessionView> {
@@ -145,39 +226,86 @@ export class JourneySessionCoordinator {
       updatedAtMs: now,
       expiresAtMs: now + this.sessionTtlMs,
       cadenceHistory: new Map(),
+      consecutiveProviderFailures: 0,
     };
     this.sessions.set(record.id, record);
     this.pruneExpired(now);
-    return this.refreshRecord(record);
+    // A create with no snapshot has nothing to degrade to, so a provider
+    // failure here propagates rather than inventing an empty healthy session.
+    const vehicles = await this.readVehicles(record);
+    return this.evaluateSnapshot(record, vehicles, this.now());
   }
 
   async refresh(id: string): Promise<JourneySessionView> {
     const record = this.requireSession(id);
-    return this.refreshRecord(record);
+    const now = this.now();
+    let vehicles: VehicleObservation[];
+    try {
+      vehicles = await this.readVehicles(record);
+    } catch (error) {
+      return this.absorbProviderFailure(record, now, error);
+    }
+    return this.evaluateSnapshot(record, vehicles, now);
   }
 
   async confirm(id: string, value: unknown): Promise<JourneySessionView> {
     const record = this.requireSession(id);
     const vehicleId = parseVehicleConfirmation(value);
     const now = this.now();
-    const vehicles = await this.provider.vehicles(routeRequest(record));
+    // A confirmation is a rider acting on what they can see out of the window.
+    // It must be answered against a snapshot that actually arrived, so a
+    // provider failure here propagates instead of degrading quietly.
+    const vehicles = await this.readVehicles(record);
     this.recordCadenceSnapshot(record, vehicles, now);
     const observation = vehicles.find((candidate) => candidate.vehicleId === vehicleId);
     if (!observation) throw new SessionInputError("vehicleId is not present in the current route snapshot");
 
     record.selectedVehicleId = vehicleId;
     record.selectionMode = "explicit";
+    // Confirming a vehicle says who to follow. It says nothing about whether
+    // the provider is still reporting that vehicle usefully, so the cadence
+    // gate below runs unchanged and an unconfirmed-by-evidence ride degrades.
     record.matchConfidence = "low";
-    return this.evaluateSelectedObservation(record, observation, now);
+    return this.evaluateSelectedObservation(record, observation, now, this.sourceFreshness(record, vehicles, now));
   }
 
-  private async refreshRecord(record: SessionRecord): Promise<JourneySessionView> {
-    const now = this.now();
+  /** The one place a provider read happens; success is what clears the counter. */
+  private async readVehicles(record: SessionRecord): Promise<VehicleObservation[]> {
     const vehicles = await this.provider.vehicles(routeRequest(record));
+    record.consecutiveProviderFailures = 0;
+    return vehicles;
+  }
+
+  /**
+   * A failed read is not evidence of anything. Cadence history, the selected
+   * vehicle and the last accepted progress are all left untouched, so a
+   * transient failure can neither age the cadence surrogate forward nor move
+   * the rider backward. Past the bounded run the error is handed to the caller:
+   * a provider that is genuinely down must not read as a healthy session.
+   */
+  private absorbProviderFailure(record: SessionRecord, now: Date, error: unknown): JourneySessionView {
+    record.consecutiveProviderFailures += 1;
+    record.updatedAtMs = now.getTime();
+    if (record.consecutiveProviderFailures > this.maxConsecutiveProviderFailures) throw error;
+    return this.view(record, {
+      state: "degraded",
+      progress: retainedProgress(record.lastProgress),
+      explanation:
+        "The provider read failed. The last accepted progress is retained, no freshness was inferred, "
+        + "and no vehicle was rematched.",
+      providerRead: { state: "failed", consecutiveFailures: record.consecutiveProviderFailures },
+    });
+  }
+
+  private evaluateSnapshot(
+    record: SessionRecord,
+    vehicles: VehicleObservation[],
+    now: Date,
+  ): JourneySessionView {
     this.recordCadenceSnapshot(record, vehicles, now);
+    const sourceFreshness = this.sourceFreshness(record, vehicles, now);
 
     if (!record.selectedVehicleId) {
-      const sourceFreshness = this.sourceFreshness(record, vehicles, now);
       const result = matchVehicleWithSourceFreshness({
         routeId: record.routeId,
         boardingStopSequence: record.boardingStop.sequence,
@@ -189,12 +317,36 @@ export class JourneySessionCoordinator {
       }, sourceFreshness);
       record.matchConfidence = result.confidence;
       record.updatedAtMs = now.getTime();
+      const eligible = result.ranked.filter((candidate) => candidate.rejectedReasons.length === 0);
+
+      // Shadow mode: the ranking is computed and published, and then not acted
+      // on. `selectedVehicleId` stays unset until a rider confirms, whatever
+      // the matcher concluded, because the field-validation gate in
+      // `docs/DATA_VALIDATION.md` has not been closed.
+      if (!this.automaticMatchingEnabled) {
+        return this.view(record, {
+          state: eligible.length > 0 ? "confirmation_required" : "awaiting_match",
+          candidates: eligible.length > 0 ? eligible : result.ranked,
+          explanation: eligible.length > 0
+            ? "Automatic selection is withheld pending field validation. Ranked candidates and "
+              + "server-observed cadence evidence are published for explicit confirmation only."
+            : result.explanation,
+          shadowSelection: {
+            status: result.status,
+            ...(result.selectedVehicleId ? { wouldSelectVehicleId: result.selectedVehicleId } : {}),
+            confidence: result.confidence,
+            explanation: result.explanation,
+          },
+          sourceFreshness,
+        });
+      }
 
       if (result.status === "ambiguous") {
         return this.view(record, {
           state: "confirmation_required",
-          candidates: result.ranked.filter((candidate) => candidate.rejectedReasons.length === 0),
+          candidates: eligible,
           explanation: result.explanation,
+          sourceFreshness,
         });
       }
       if (result.status === "unavailable" || !result.selectedVehicleId) {
@@ -202,6 +354,7 @@ export class JourneySessionCoordinator {
           state: "awaiting_match",
           candidates: result.ranked,
           explanation: result.explanation,
+          sourceFreshness,
         });
       }
       record.selectedVehicleId = result.selectedVehicleId;
@@ -210,55 +363,62 @@ export class JourneySessionCoordinator {
 
     const observation = vehicles.find((candidate) => candidate.vehicleId === record.selectedVehicleId);
     if (!observation) return this.handleMissingObservation(record, now);
-    return this.evaluateSelectedObservation(record, observation, now);
+    return this.evaluateSelectedObservation(record, observation, now, sourceFreshness);
   }
 
   private evaluateSelectedObservation(
     record: SessionRecord,
     observation: VehicleObservation,
     now: Date,
+    sourceFreshness?: ReadonlyMap<string, SourceFreshnessEvidence>,
   ): JourneySessionView {
     record.updatedAtMs = now.getTime();
+    const evidence = sourceFreshness ? { sourceFreshness } : {};
 
     if (observation.routeId !== record.routeId) {
-      return this.view(record, { state: "degraded", explanation: "Selected vehicle reported the wrong route; no rematch was attempted." });
+      return this.view(record, { ...evidence, state: "degraded", explanation: "Selected vehicle reported the wrong route; no rematch was attempted." });
     }
     if (record.directionCode && observation.directionCode && observation.directionCode !== record.directionCode) {
-      return this.view(record, { state: "degraded", explanation: "Selected vehicle direction conflicts with the ride plan; no rematch was attempted." });
+      return this.view(record, { ...evidence, state: "degraded", explanation: "Selected vehicle direction conflicts with the ride plan; no rematch was attempted." });
     }
 
-    let freshnessSource: "provider_timestamp" | "server_observed_cadence";
+    let evidenceAtIs: EvidenceTimeKind;
     let evidenceAtMs: number | undefined;
     if (observation.timestampSource === "unavailable") {
+      // No provider observation time exists for this record, so the only thing
+      // available is the server-observed cadence surrogate. It has to be fresh
+      // on its own terms before the receipt time may order anything.
       const cadence = classifyTagoCadenceFreshness(
         record.cadenceHistory.get(observation.vehicleId) ?? [],
         now,
       );
       if (cadence.state !== "fresh") {
         return this.view(record, {
+          ...evidence,
           state: "degraded",
           progress: retainedProgress(record.lastProgress),
           explanation: `Selected TAGO vehicle lacks fresh server-observed cadence evidence: ${cadence.reason}`,
         });
       }
-      freshnessSource = "server_observed_cadence";
+      evidenceAtIs = "tapso_server_receipt";
       evidenceAtMs = evidenceTimeMs(observation);
     } else {
-      freshnessSource = "provider_timestamp";
+      evidenceAtIs = "provider_observation_timestamp";
       const observedAtMs = new Date(observation.observedAt).getTime();
       const ageMs = now.getTime() - observedAtMs;
       if (!Number.isFinite(observedAtMs) || ageMs < -10_000 || ageMs > this.maxObservationAgeMs) {
-        return this.view(record, { state: "degraded", explanation: "Selected vehicle observation is stale or invalid." });
+        return this.view(record, { ...evidence, state: "degraded", explanation: "Selected vehicle observation is stale or invalid." });
       }
       evidenceAtMs = observedAtMs;
     }
 
     if (evidenceAtMs === undefined) {
-      return this.view(record, { state: "degraded", explanation: "Selected vehicle has no usable evidence timestamp." });
+      return this.view(record, { ...evidence, state: "degraded", explanation: "Selected vehicle has no usable evidence timestamp." });
     }
     const previousEvidenceAt = record.lastObservation ? evidenceTimeMs(record.lastObservation) : undefined;
     if (previousEvidenceAt !== undefined && evidenceAtMs <= previousEvidenceAt) {
       return this.view(record, {
+        ...evidence,
         state: record.lastProgress ? stateFromProgress(record.lastProgress) : "degraded",
         progress: retainedProgress(record.lastProgress),
         explanation: "Duplicate or out-of-order observation ignored; last accepted progress retained.",
@@ -269,6 +429,7 @@ export class JourneySessionCoordinator {
     record.lastObservation = { ...observation };
     if (!resolved) {
       return this.view(record, {
+        ...evidence,
         state: "degraded",
         progress: retainedProgress(record.lastProgress),
         explanation: "Vehicle identity is fresh, but no conservative stop position can be resolved yet.",
@@ -277,6 +438,7 @@ export class JourneySessionCoordinator {
 
     if (record.lastProgress && resolved.stop.sequence < record.lastProgress.currentStopSequence) {
       return this.view(record, {
+        ...evidence,
         state: "degraded",
         progress: retainedProgress(record.lastProgress),
         explanation: "Backward stop movement was ignored; last accepted progress retained.",
@@ -292,10 +454,11 @@ export class JourneySessionCoordinator {
       source: resolved.source,
       observedAt: observation.observedAt,
       evidenceAt: new Date(evidenceAtMs).toISOString(),
-      freshnessSource,
+      evidenceAtIs,
     };
     record.lastProgress = progress;
     return this.view(record, {
+      ...evidence,
       state: stateFromProgress(progress),
       progress,
       explanation: resolved.source === "provider_stop_sequence"
@@ -348,6 +511,9 @@ export class JourneySessionCoordinator {
         explanation: "Selected vehicle is temporarily missing; last accepted progress retained within the grace window.",
       });
     }
+    // Terminal by design: a lost session never picks a replacement vehicle,
+    // in either matching mode. Choosing the wrong bus is the one mistake a
+    // ride cannot repair afterwards.
     return this.view(record, {
       state: "lost",
       progress: retainedProgress(record.lastProgress),
@@ -372,6 +538,9 @@ export class JourneySessionCoordinator {
       explanation: string;
       progress?: JourneyProgressView;
       candidates?: RankedCandidate[];
+      shadowSelection?: ShadowSelectionView;
+      sourceFreshness?: ReadonlyMap<string, SourceFreshnessEvidence>;
+      providerRead?: { state: "failed"; consecutiveFailures: number };
     },
   ): JourneySessionView {
     return {
@@ -388,6 +557,12 @@ export class JourneySessionCoordinator {
       progress: state.progress,
       candidates: state.candidates,
       explanation: state.explanation,
+      matchingMode: this.matchingMode,
+      ...(state.shadowSelection ? { shadowSelection: state.shadowSelection } : {}),
+      ...(state.sourceFreshness && state.sourceFreshness.size > 0
+        ? { sourceFreshness: Object.fromEntries(state.sourceFreshness) }
+        : {}),
+      ...(state.providerRead ? { providerRead: state.providerRead } : {}),
       createdAt: new Date(record.createdAtMs).toISOString(),
       updatedAt: new Date(record.updatedAtMs).toISOString(),
       expiresAt: new Date(record.expiresAtMs).toISOString(),

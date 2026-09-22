@@ -1,5 +1,34 @@
+/**
+ * A conservative liveness surrogate for a provider that publishes no
+ * observation time.
+ *
+ * TAGO's realtime position feed carries no timestamp of any kind. Nothing in
+ * this module recovers one, and nothing here may be read as knowing when TAGO
+ * observed a vehicle. What it measures is narrower and entirely about TAPSO's
+ * own behaviour: did this server keep receiving snapshots, close together, in
+ * which the vehicle's reported content actually changed and never moved
+ * backwards?
+ *
+ * That is weaker than a provider timestamp, and it is weaker on purpose. A
+ * `fresh` verdict means "the provider is answering and this vehicle's row is
+ * moving", not "this position is N seconds old".
+ *
+ * Every threshold below is an operational gate on TAPSO receipts. None is
+ * derived from real boardings; see `docs/DATA_VALIDATION.md`.
+ */
+
 import type { VehicleObservation } from "./domain.ts";
 
+/**
+ * - `fresh` — receipts are continuous *and* the vehicle's provider content
+ *   changed inside the window. The only state that may unlock matching.
+ * - `aging` — receipts are continuous but the content has not changed. A
+ *   stationary bus at a light produces this, so it is deliberately not
+ *   `stale`: absence of movement is not absence of data.
+ * - `stale` — the receipt chain itself is broken, late, or the vehicle moved
+ *   backwards in stop sequence. Fails closed.
+ * - `unknown` — not enough bounded history to say anything. Fails closed.
+ */
 export type SourceFreshnessState = "fresh" | "aging" | "stale" | "unknown";
 
 export interface SourceFreshnessEvidence {
@@ -21,13 +50,50 @@ export interface TagoCadencePolicy {
   maximumReceiptGapMs: number;
 }
 
+/**
+ * Version 1, and provisional in every number.
+ *
+ * The only quantitative input is the bounded 2026-09-11 TAGO probe
+ * (`docs/validation/TAGO_2026-09-11.md`): 24 samples per direction at a 5 s
+ * target interval, snapshot-content change median 27.52 s, max observed
+ * 83.10 s. That probe measured how often TAGO's *content* changes. It did not
+ * measure provider observation lag, which is unmeasurable without a provider
+ * timestamp, and it involved no boardings.
+ *
+ * So these are not calibrated thresholds. They are conservative operational
+ * gates chosen so that the failure mode is refusing a real bus, never
+ * accepting a wrong one. Revisit them only with ride evidence that separates
+ * the two; until then, prefer the tighter value.
+ */
 export const TAGO_CADENCE_POLICY_V1: TagoCadencePolicy = {
-  // Field evidence observed provider content changes as late as ~83 s.
-  // Ninety seconds is therefore an evidence window, not a provider timestamp claim.
+  /**
+   * PROVISIONAL. Bounds how far back evidence may be drawn from. Set above the
+   * 83.10 s worst observed content-change interval so a slow-but-live vehicle
+   * is not discarded for being slow. Not a claim that data is valid for 90 s.
+   */
   historyWindowMs: 90_000,
+  /**
+   * PROVISIONAL. Three receipts give two intervals: the minimum needed to see
+   * a gap at all rather than a single point. No evidence supports fewer.
+   */
   minimumSamples: 3,
+  /**
+   * PROVISIONAL. Three receipts arriving inside one second prove nothing about
+   * cadence. Ten seconds is two polling intervals at the configured 5 s rate.
+   */
   minimumSpanMs: 10_000,
+  /**
+   * PROVISIONAL. How stale the newest receipt may be. At a 5 s polling target,
+   * 30 s means six consecutive polls were lost before evidence is refused.
+   */
   maximumReceiptAgeMs: 30_000,
+  /**
+   * PROVISIONAL. The largest hole tolerated inside the window. The clean
+   * 2026-09-22 Railway background run held its maximum gap to 7.94 s, so 30 s
+   * is roughly four times the observed worst case on a healthy collector —
+   * loose enough not to fire on jitter, tight enough that a suspended or
+   * failing collector cannot pass.
+   */
   maximumReceiptGapMs: 30_000,
 };
 
@@ -91,6 +157,10 @@ export function classifyTagoCadenceFreshness(
   if (rows.length < policy.minimumSamples || spanMs < policy.minimumSpanMs) {
     return { state: "unknown", ...base, reason: "More server-observed TAGO samples are required before freshness can be inferred." };
   }
+  // Deliberately `aging`, not `stale`. A bus held at a light reports the same
+  // row for minutes; refusing to distinguish that from a dead feed would make
+  // every red light look like a provider outage. Unchanged content is simply
+  // never enough to unlock matching.
   if (contentChangeCount === 0) {
     return { state: "aging", ...base, reason: "The vehicle is continuously present but its provider content has not changed inside the evidence window." };
   }
@@ -112,6 +182,11 @@ export function appendCadenceObservation(
     .slice(-24);
 }
 
+/**
+ * The instant TAPSO orders evidence by — receipt time when the provider gives
+ * no observation time, the provider's own time when it does. Ordering by it is
+ * legitimate; presenting it as an observation time is not.
+ */
 export function evidenceTimeMs(observation: VehicleObservation): number | undefined {
   if (observation.timestampSource === "unavailable") return receiptMs(observation);
   const value = Date.parse(observation.observedAt);

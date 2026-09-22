@@ -32,6 +32,40 @@ test("an operator can opt a single-instance deployment back into sessions", () =
   assert.equal(config.sessions.enabled, true);
 });
 
+test("automatic matching is off by default on every platform", () => {
+  for (const env of [{}, { VERCEL: "1" }, { VERCEL: "1", VERCEL_ENV: "production" }]) {
+    const config = readTransitApiConfig(env, NODE);
+    assert.equal(config.matching.automaticMatchingEnabled, false);
+    assert.equal(config.matching.mode, "shadow");
+    assert.equal(config.matching.withheldReason, "field_validation_gate_open");
+    assert.equal(config.matching.fieldValidationGate.status, "open");
+    assert.equal(config.matching.fieldValidationGate.requiredBoardings, 30);
+  }
+});
+
+test("enabling sessions is not enough to enable automatic matching", () => {
+  // The two flags are separate rollout axes on purpose. Sessions make the
+  // endpoints reachable; only the matching flag lets the server pick a bus.
+  const config = readTransitApiConfig({ TRANSIT_SESSIONS_ENABLED: "true" }, NODE);
+  assert.equal(config.sessions.enabled, true);
+  assert.equal(config.matching.automaticMatchingEnabled, false);
+  assert.equal(config.matching.mode, "shadow");
+});
+
+test("automatic matching turns on only through its own explicit flag", () => {
+  const config = readTransitApiConfig({ TRANSIT_AUTOMATIC_MATCHING_ENABLED: "true" }, NODE);
+  assert.equal(config.matching.automaticMatchingEnabled, true);
+  assert.equal(config.matching.mode, "automatic");
+  assert.equal(config.matching.withheldReason, undefined);
+});
+
+test("an unparseable automatic-matching flag fails loudly rather than defaulting open", () => {
+  assert.throws(
+    () => readTransitApiConfig({ TRANSIT_AUTOMATIC_MATCHING_ENABLED: "yes" }, NODE),
+    /TRANSIT_AUTOMATIC_MATCHING_ENABLED must be true or false/,
+  );
+});
+
 test("the build identifier is a commit prefix, never anything else", () => {
   const good = readTransitApiConfig({ VERCEL_GIT_COMMIT_SHA: "8e07285d43d2853d4bc42ba54fc5303652c0402a" }, NODE);
   assert.equal(good.build.commit, "8e07285d43d2");

@@ -43,7 +43,11 @@ test("automatically matches the fresh vehicle closest to the boarding stop", asy
     { vehicleId: "BUS-A", routeId, observedAt: now.toISOString(), directionCode: "1", latitude: 33.5001, longitude: 126.5000 },
     { vehicleId: "BUS-B", routeId, observedAt: now.toISOString(), directionCode: "1", latitude: 33.5200, longitude: 126.5000 },
   ];
-  const sessions = new JourneySessionCoordinator(provider, { now: () => now, idFactory: () => "session-1" });
+  const sessions = new JourneySessionCoordinator(provider, {
+    now: () => now,
+    idFactory: () => "session-1",
+    automaticMatchingEnabled: true,
+  });
   const view = await sessions.create(sessionInput());
 
   assert.equal(view.selectedVehicleId, "BUS-A");
@@ -61,7 +65,13 @@ test("withholds automatic selection when candidates are too close and accepts ex
     { vehicleId: "BUS-A", routeId, observedAt: now.toISOString(), directionCode: "1", latitude: 33.5001, longitude: 126.5000 },
     { vehicleId: "BUS-B", routeId, observedAt: now.toISOString(), directionCode: "1", latitude: 33.5002, longitude: 126.5000 },
   ];
-  const sessions = new JourneySessionCoordinator(provider, { now: () => now, idFactory: () => "session-2" });
+  const sessions = new JourneySessionCoordinator(provider, {
+    now: () => now,
+    idFactory: () => "session-2",
+    // Automatic mode on purpose: this test is about the matcher refusing a
+    // close call, not about the rollout gate refusing everything.
+    automaticMatchingEnabled: true,
+  });
   const initial = await sessions.create(sessionInput());
   assert.equal(initial.state, "confirmation_required");
   assert.equal(initial.selectedVehicleId, undefined);
@@ -79,7 +89,11 @@ test("never silently switches vehicles and retains monotonic stop progress", asy
   provider.vehiclesValue = [
     { vehicleId: "BUS-A", routeId, observedAt: now.toISOString(), directionCode: "1", stopSequence: 3 },
   ];
-  const sessions = new JourneySessionCoordinator(provider, { now: () => now, idFactory: () => "session-3" });
+  const sessions = new JourneySessionCoordinator(provider, {
+    now: () => now,
+    idFactory: () => "session-3",
+    automaticMatchingEnabled: true,
+  });
   const initial = await sessions.create(sessionInput());
   assert.equal(initial.progress?.currentStopSequence, 3);
   assert.equal(initial.progress?.remainingStops, 2);
@@ -102,7 +116,11 @@ test("retains a missing selected vehicle briefly, then marks the session lost", 
   provider.vehiclesValue = [
     { vehicleId: "BUS-A", routeId, observedAt: now.toISOString(), directionCode: "1", stopSequence: 2 },
   ];
-  const sessions = new JourneySessionCoordinator(provider, { now: () => now, idFactory: () => "session-4" });
+  const sessions = new JourneySessionCoordinator(provider, {
+    now: () => now,
+    idFactory: () => "session-4",
+    automaticMatchingEnabled: true,
+  });
   const initial = await sessions.create(sessionInput());
   assert.equal(initial.state, "tracking");
 
@@ -160,6 +178,7 @@ test("TAGO cadence evidence unlocks automatic matching only after repeated chang
   const sessions = new JourneySessionCoordinator(provider, {
     now: () => now,
     idFactory: () => "tago-cadence-session",
+    automaticMatchingEnabled: true,
   });
 
   const initial = await sessions.create(sessionInput());
@@ -179,7 +198,9 @@ test("TAGO cadence evidence unlocks automatic matching only after repeated chang
   assert.equal(third.selectionMode, "automatic");
   assert.equal(third.state, "tracking");
   assert.equal(third.progress?.currentStopSequence, 1);
-  assert.equal(third.progress?.freshnessSource, "server_observed_cadence");
+  // The ordering instant is TAPSO's own receipt, and the field says so in its
+  // own name rather than leaving a reader to assume a provider time.
+  assert.equal(third.progress?.evidenceAtIs, "tapso_server_receipt");
   assert.equal(third.progress?.evidenceAt, now.toISOString());
   assert.equal(third.progress?.observedAt, new Date(0).toISOString(), "provider time remains the epoch sentinel");
 });
@@ -212,4 +233,252 @@ test("fresh receipt timestamps alone never unlock TAGO automatic matching", asyn
     assert.equal(view.selectedVehicleId, undefined);
     assert.equal(view.state, "awaiting_match");
   }
+});
+
+/* ------------------------------------------------- automatic-matching gate */
+
+/**
+ * Helper for the gate tests: a TAGO row, which is the only shape production
+ * ever sees. `observedAt` is the epoch sentinel because TAGO publishes no
+ * observation time; `receivedAt` is TAPSO's own receipt and nothing more.
+ */
+function tagoRow(
+  vehicleId: string,
+  receivedAt: Date,
+  stopSequence: number,
+  latitude: number,
+): VehicleObservation {
+  return {
+    vehicleId,
+    routeId,
+    observedAt: new Date(0).toISOString(),
+    receivedAt: receivedAt.toISOString(),
+    timestampSource: "unavailable",
+    directionCode: "1",
+    stopSequence,
+    latitude,
+    longitude: 126.5000,
+  };
+}
+
+test("automatic matching is off unless a caller opts in", async () => {
+  const provider = new MutableProvider();
+  const now = new Date("2026-09-22T05:00:00Z");
+  // One unambiguous winner with a provider timestamp: the easiest possible
+  // match. The default coordinator still refuses to make it.
+  provider.vehiclesValue = [
+    { vehicleId: "BUS-A", routeId, observedAt: now.toISOString(), directionCode: "1", latitude: 33.5001, longitude: 126.5000 },
+  ];
+  const sessions = new JourneySessionCoordinator(provider, { now: () => now, idFactory: () => "gate-default" });
+
+  assert.equal(sessions.matchingMode, "shadow");
+  const view = await sessions.create(sessionInput());
+  assert.equal(view.matchingMode, "shadow");
+  assert.equal(view.selectedVehicleId, undefined);
+  assert.equal(view.selectionMode, undefined);
+  assert.equal(view.progress, undefined);
+  assert.equal(view.state, "confirmation_required");
+});
+
+test("shadow mode publishes the ranking and the cadence evidence it refused to act on", async () => {
+  const provider = new MutableProvider();
+  let now = new Date("2026-09-22T06:00:00Z");
+  provider.vehiclesValue = [tagoRow("TAGO-A", now, 1, 33.5000)];
+  const sessions = new JourneySessionCoordinator(provider, { now: () => now, idFactory: () => "shadow-evidence" });
+
+  const first = await sessions.create(sessionInput());
+  // Not enough samples yet, so the cadence surrogate is `unknown` and the
+  // candidate is rejected — shadow or not.
+  assert.equal(first.sourceFreshness?.["TAGO-A"]?.state, "unknown");
+  assert.equal(first.shadowSelection?.status, "unavailable");
+
+  now = new Date("2026-09-22T06:00:05Z");
+  provider.vehiclesValue = [tagoRow("TAGO-A", now, 1, 33.5000)];
+  await sessions.refresh(first.id);
+
+  now = new Date("2026-09-22T06:00:10Z");
+  provider.vehiclesValue = [tagoRow("TAGO-A", now, 1, 33.5004)];
+  const third = await sessions.refresh(first.id);
+
+  // The cadence surrogate is now satisfied and the matcher would have picked
+  // this vehicle. Shadow mode says so out loud and still does not select.
+  assert.equal(third.sourceFreshness?.["TAGO-A"]?.state, "fresh");
+  assert.ok((third.sourceFreshness?.["TAGO-A"]?.contentChangeCount ?? 0) > 0);
+  assert.equal(third.shadowSelection?.status, "matched");
+  assert.equal(third.shadowSelection?.wouldSelectVehicleId, "TAGO-A");
+  assert.equal(third.selectedVehicleId, undefined, "shadow mode never assigns a vehicle");
+  assert.equal(third.selectionMode, undefined);
+  assert.equal(third.state, "confirmation_required");
+  assert.ok((third.candidates?.length ?? 0) > 0, "candidates are still published for the rider");
+});
+
+test("explicit confirmation in shadow mode tracks, but invents no source freshness", async () => {
+  const provider = new MutableProvider();
+  let now = new Date("2026-09-22T07:00:00Z");
+  provider.vehiclesValue = [tagoRow("TAGO-A", now, 1, 33.5000)];
+  const sessions = new JourneySessionCoordinator(provider, { now: () => now, idFactory: () => "shadow-confirm" });
+  const created = await sessions.create(sessionInput());
+
+  // Confirming with only one receipt on file must not manufacture cadence.
+  const early = await sessions.confirm(created.id, { vehicleId: "TAGO-A" });
+  assert.equal(early.selectedVehicleId, "TAGO-A");
+  assert.equal(early.selectionMode, "explicit");
+  assert.equal(early.state, "degraded");
+  assert.equal(early.progress, undefined, "a confirmation is not evidence of freshness");
+  assert.match(early.explanation, /cadence evidence/);
+
+  // Once real changing receipts exist, the same confirmed vehicle tracks.
+  now = new Date("2026-09-22T07:00:05Z");
+  provider.vehiclesValue = [tagoRow("TAGO-A", now, 1, 33.5000)];
+  await sessions.refresh(created.id);
+  now = new Date("2026-09-22T07:00:10Z");
+  provider.vehiclesValue = [tagoRow("TAGO-A", now, 2, 33.5010)];
+  const tracking = await sessions.refresh(created.id);
+
+  assert.equal(tracking.state, "tracking");
+  assert.equal(tracking.selectionMode, "explicit", "confirmation never becomes an automatic selection");
+  assert.equal(tracking.matchingMode, "shadow");
+  assert.equal(tracking.progress?.observedAt, new Date(0).toISOString());
+  assert.equal(tracking.progress?.evidenceAtIs, "tapso_server_receipt");
+});
+
+/* ------------------------------------------ transient provider degradation */
+
+class FlakyProvider implements TransitProvider {
+  vehiclesValue: VehicleObservation[] = [];
+  failuresRemaining = 0;
+  vehicleCalls = 0;
+
+  async stops(_request: RouteRequest): Promise<StopOnRoute[]> {
+    return stops.map((stop) => ({ ...stop }));
+  }
+
+  async vehicles(_request: RouteRequest): Promise<VehicleObservation[]> {
+    this.vehicleCalls += 1;
+    if (this.failuresRemaining > 0) {
+      this.failuresRemaining -= 1;
+      // The exact shape production has been returning 502 on.
+      throw new Error("TAGO payload has no body object");
+    }
+    return this.vehiclesValue.map((vehicle) => ({ ...vehicle }));
+  }
+}
+
+test("a transient provider failure degrades without corrupting cadence or progress", async () => {
+  const provider = new FlakyProvider();
+  let now = new Date("2026-09-22T08:00:00Z");
+  provider.vehiclesValue = [tagoRow("TAGO-A", now, 2, 33.5010)];
+  const sessions = new JourneySessionCoordinator(provider, { now: () => now, idFactory: () => "flaky-session" });
+  const created = await sessions.create(sessionInput());
+  await sessions.confirm(created.id, { vehicleId: "TAGO-A" });
+
+  now = new Date("2026-09-22T08:00:05Z");
+  provider.vehiclesValue = [tagoRow("TAGO-A", now, 2, 33.5010)];
+  await sessions.refresh(created.id);
+  now = new Date("2026-09-22T08:00:10Z");
+  provider.vehiclesValue = [tagoRow("TAGO-A", now, 3, 33.5020)];
+  const tracking = await sessions.refresh(created.id);
+  assert.equal(tracking.state, "tracking");
+  assert.equal(tracking.progress?.currentStopSequence, 3);
+
+  // One failed read.
+  now = new Date("2026-09-22T08:00:15Z");
+  provider.failuresRemaining = 1;
+  const degraded = await sessions.refresh(created.id);
+  assert.equal(degraded.state, "degraded");
+  assert.equal(degraded.providerRead?.state, "failed");
+  assert.equal(degraded.providerRead?.consecutiveFailures, 1);
+  assert.equal(degraded.selectedVehicleId, "TAGO-A", "a failed read never rematches");
+  assert.equal(degraded.progress?.currentStopSequence, 3, "progress never moves backward on a failure");
+  assert.equal(degraded.progress?.source, "retained_last_known");
+  assert.equal(degraded.sourceFreshness, undefined, "a failure produces no freshness evidence");
+  assert.equal(degraded.progress?.observedAt, new Date(0).toISOString(), "no provider timestamp is manufactured");
+
+  // The next successful read resumes from the retained state with its cadence
+  // history intact: one failure did not erase the receipts before it.
+  now = new Date("2026-09-22T08:00:20Z");
+  provider.vehiclesValue = [tagoRow("TAGO-A", now, 4, 33.5030)];
+  const resumed = await sessions.refresh(created.id);
+  assert.equal(resumed.state, "tracking");
+  assert.equal(resumed.progress?.currentStopSequence, 4);
+  assert.ok((resumed.sourceFreshness?.["TAGO-A"]?.sampleCount ?? 0) >= 3, "pre-failure receipts survived");
+  assert.equal(resumed.sourceFreshness?.["TAGO-A"]?.state, "fresh");
+});
+
+test("a persistent provider failure is reported, not absorbed forever", async () => {
+  const provider = new FlakyProvider();
+  const now = new Date("2026-09-22T09:00:00Z");
+  provider.vehiclesValue = [tagoRow("TAGO-A", now, 2, 33.5010)];
+  const sessions = new JourneySessionCoordinator(provider, {
+    now: () => now,
+    idFactory: () => "dead-provider",
+    maxConsecutiveProviderFailures: 2,
+  });
+  const created = await sessions.create(sessionInput());
+
+  provider.failuresRemaining = 10;
+  assert.equal((await sessions.refresh(created.id)).providerRead?.consecutiveFailures, 1);
+  assert.equal((await sessions.refresh(created.id)).providerRead?.consecutiveFailures, 2);
+  await assert.rejects(sessions.refresh(created.id), /TAGO payload has no body object/);
+});
+
+test("a provider failure during create is never answered as an empty healthy session", async () => {
+  const provider = new FlakyProvider();
+  provider.failuresRemaining = 1;
+  const sessions = new JourneySessionCoordinator(provider, { idFactory: () => "create-failure" });
+  await assert.rejects(sessions.create(sessionInput()), /TAGO payload has no body object/);
+});
+
+test("a confirmation is never answered against a snapshot that failed to arrive", async () => {
+  const provider = new FlakyProvider();
+  const now = new Date("2026-09-22T10:00:00Z");
+  provider.vehiclesValue = [tagoRow("TAGO-A", now, 2, 33.5010)];
+  const sessions = new JourneySessionCoordinator(provider, { now: () => now, idFactory: () => "confirm-failure" });
+  const created = await sessions.create(sessionInput());
+
+  provider.failuresRemaining = 1;
+  await assert.rejects(
+    sessions.confirm(created.id, { vehicleId: "TAGO-A" }),
+    /TAGO payload has no body object/,
+  );
+});
+
+test("nothing in a TAGO session view reads as a provider observation time", async () => {
+  const provider = new MutableProvider();
+  let now = new Date("2026-09-22T12:00:00Z");
+  provider.vehiclesValue = [tagoRow("TAGO-A", now, 1, 33.5000)];
+  const sessions = new JourneySessionCoordinator(provider, {
+    now: () => now,
+    idFactory: () => "naming-contract",
+    automaticMatchingEnabled: true,
+  });
+  const created = await sessions.create(sessionInput());
+  now = new Date("2026-09-22T12:00:05Z");
+  provider.vehiclesValue = [tagoRow("TAGO-A", now, 1, 33.5000)];
+  await sessions.refresh(created.id);
+  now = new Date("2026-09-22T12:00:10Z");
+  provider.vehiclesValue = [tagoRow("TAGO-A", now, 2, 33.5010)];
+  const tracking = await sessions.refresh(created.id);
+
+  assert.equal(tracking.state, "tracking");
+  const progress = tracking.progress!;
+  // The exact published shape. A new field — especially a time-like one — has
+  // to be named and reviewed here rather than appearing beside `observedAt`
+  // and being read as a provider timestamp by whoever consumes it next.
+  assert.deepEqual(Object.keys(progress).sort(), [
+    "currentStopId",
+    "currentStopSequence",
+    "evidenceAt",
+    "evidenceAtIs",
+    "observedAt",
+    "phase",
+    "remainingStops",
+    "source",
+  ]);
+  // The only provider-sourced instant is the sentinel, and the only real
+  // instant is labelled a server receipt.
+  assert.equal(progress.observedAt, new Date(0).toISOString());
+  assert.equal(progress.evidenceAtIs, "tapso_server_receipt");
+  assert.equal(progress.evidenceAt, now.toISOString());
+  assert.notEqual(progress.evidenceAtIs, "provider_observation_timestamp");
 });

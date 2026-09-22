@@ -21,6 +21,22 @@ export const DEFAULT_RATE_LIMIT_PER_MINUTE = 120;
  */
 export const DEFAULT_OPERATOR_RATE_LIMIT_PER_MINUTE = 30;
 
+/**
+ * The acceptance gate `docs/DATA_VALIDATION.md` states for broad real mode. It
+ * is quoted here so `/health` cannot drift away from the document that owns it.
+ */
+export const REQUIRED_FIELD_BOARDINGS = 30;
+export const FIELD_VALIDATION_REQUIREMENT =
+  "at least 30 observed real boardings across multiple routes, with a clear candidate margin, "
+  + "no silent direction reversal, and bounded stale-data behaviour";
+/**
+ * Durable session storage is a real and separate gap, but it is not why
+ * automatic matching is off. It is off because the field-validation campaign
+ * above has not been run. Saying anything else would overstate how close the
+ * feature is.
+ */
+export const AUTOMATIC_MATCHING_WITHHELD_REASON = "field_validation_gate_open";
+
 export type RuntimePlatform = "node" | "vercel";
 
 export interface TransitApiConfig {
@@ -46,6 +62,38 @@ export interface TransitApiConfig {
      * the serverless default is off and the endpoints fail closed.
      */
     enabled: boolean;
+  };
+  /**
+   * Automatic vehicle selection is a separate rollout axis from sessions.
+   * Turning sessions on only makes the endpoints reachable; it must never be
+   * enough to let the server pick a rider's bus for them.
+   */
+  matching: {
+    /**
+     * False on every deployment unless an operator sets
+     * `TRANSIT_AUTOMATIC_MATCHING_ENABLED=true` on purpose. The local Node
+     * server gets no exemption: the blocker is field evidence, not topology.
+     */
+    automaticMatchingEnabled: boolean;
+    /**
+     * `shadow` ranks candidates and publishes cadence evidence but never
+     * assigns `selectedVehicleId` on its own. `automatic` additionally allows
+     * the coordinator to select. Explicit rider confirmation works in both.
+     */
+    mode: "shadow" | "automatic";
+    /** Why automatic selection is withheld. Absent when it is not withheld. */
+    withheldReason?: string;
+    /**
+     * The documented broad-real-mode acceptance gate from
+     * `docs/DATA_VALIDATION.md`. This is a hand-maintained constant, not a
+     * live counter: nothing in the server observes boardings yet, so it stays
+     * `open` until a human edits it after the field campaign.
+     */
+    fieldValidationGate: {
+      status: "open";
+      requiredBoardings: number;
+      requirement: string;
+    };
   };
   rateLimit: {
     enabled: boolean;
@@ -94,6 +142,10 @@ export function readTransitApiConfig(
     "RIDE_CAPTURE_OPERATOR_RATE_LIMIT_PER_MINUTE",
     DEFAULT_OPERATOR_RATE_LIMIT_PER_MINUTE,
   );
+  // Default false on every platform. An operator who wants automatic selection
+  // has to say so in an environment variable, and the reason it is off by
+  // default is recorded next to the flag rather than left to a changelog.
+  const automaticMatchingEnabled = boolean(env, "TRANSIT_AUTOMATIC_MATCHING_ENABLED", false);
 
   return {
     transitProvider: "tago",
@@ -110,6 +162,18 @@ export function readTransitApiConfig(
     sessions: {
       store: "memory",
       enabled: boolean(env, "TRANSIT_SESSIONS_ENABLED", platform === "node"),
+    },
+    matching: {
+      automaticMatchingEnabled,
+      mode: automaticMatchingEnabled ? "automatic" : "shadow",
+      ...(automaticMatchingEnabled
+        ? {}
+        : { withheldReason: AUTOMATIC_MATCHING_WITHHELD_REASON }),
+      fieldValidationGate: {
+        status: "open",
+        requiredBoardings: REQUIRED_FIELD_BOARDINGS,
+        requirement: FIELD_VALIDATION_REQUIREMENT,
+      },
     },
     rateLimit: {
       enabled: rateLimitPerMinute > 0,
