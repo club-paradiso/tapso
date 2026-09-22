@@ -431,6 +431,7 @@ export function createCaptureSession({
       return {
         schemaVersion: header.schemaVersion,
         source: header.source,
+        captureEngine: header.captureEngine,
         startedAt: header.startedAt,
         ...(endedAt ? { endedAt } : {}),
         routeId: header.routeId,
