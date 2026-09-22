@@ -421,6 +421,10 @@ export class BackgroundRideCaptureCoordinator {
       ? Math.max(0, Math.ceil((POST_ALIGHT_OBSERVE_MS - (this.now().getTime() - session.alightedAtMs)) / 1_000))
       : undefined;
 
+    const acceptanceClockMs = session.capture.endedAt
+      ? Date.parse(session.capture.endedAt)
+      : this.now().getTime();
+
     return {
       sessionId: session.id,
       phase: session.phase,
@@ -444,7 +448,7 @@ export class BackgroundRideCaptureCoordinator {
       ...(session.mode === "background_acceptance"
         ? {
             acceptance: {
-              hiddenSeconds: lifecycleSeconds(session.capture.events ?? [], "hidden", "visible", this.now().getTime()),
+              hiddenSeconds: lifecycleSeconds(session.capture.events ?? [], "hidden", "visible", acceptanceClockMs),
               requiredHiddenSeconds: ACCEPTANCE_MIN_HIDDEN_MS / 1_000,
               snapshotCount: session.capture.snapshots.length,
               requiredSnapshots: ACCEPTANCE_MIN_SNAPSHOTS,
