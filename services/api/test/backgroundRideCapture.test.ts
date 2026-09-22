@@ -145,6 +145,8 @@ test("alight waits for provider arrival and returns only a sanitized report", as
   assert.equal(encoded.includes(VEHICLE), false, "status/report must never echo the raw vehicle identifier");
   assert.equal(completed.report?.tracked.present, true);
   assert.equal(completed.report?.tracked.arrivalDetectedAt !== undefined, true);
+  assert.equal(completed.captureEngine, "railway-background");
+  assert.equal(completed.report?.captureEngine, "railway-background");
 });
 
 test("post-alight capture closes after twenty seconds even if TAGO stays behind", async () => {
@@ -171,4 +173,26 @@ test("start refuses a vehicle that is not in the uncached live snapshot", async 
     start(h),
     (error: unknown) => error instanceof BackgroundRideCaptureError && error.kind === "conflict",
   );
+});
+
+
+test("server-owned capture records browser hidden time without moving polling ownership", async () => {
+  const h = harness();
+  const started = await start(h);
+
+  h.advance(1_000);
+  h.coordinator.recordEvent(started.sessionId, "hidden", "2026-09-15T10:00:01.000Z");
+  h.advance(65_000);
+  await h.coordinator.pollNow(started.sessionId);
+  h.coordinator.recordEvent(started.sessionId, "visible", "2026-09-15T10:01:06.000Z");
+
+  h.advance(1_000);
+  h.coordinator.alight(started.sessionId);
+  h.advance(20_000);
+  const completed = await h.coordinator.pollNow(started.sessionId);
+
+  assert.equal(completed.phase, "completed");
+  assert.equal(completed.report?.captureEngine, "railway-background");
+  assert.equal(completed.report?.lifecycle.hiddenPeriods, 1);
+  assert.equal(completed.report?.lifecycle.hiddenSeconds, 65);
 });
