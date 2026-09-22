@@ -130,8 +130,14 @@ is how the tooling and any freshness rule are shown not to be fitted to Route
 
 Then define and test a TAGO freshness rule from `freshnessEvidence` and
 `tracked.markerComparisons` before anything enables journey-session matching or
-progress. That is Task C. See `DATA_VALIDATION.md` and
-`exec-plans/RIDE_CAPTURE.md`.
+progress. That is Task C. See `DATA_VALIDATION.md`,
+`exec-plans/TASK_C_SOURCE_FRESHNESS.md` and `exec-plans/RIDE_CAPTURE.md`.
+
+Task C has shipped the mechanism — a server-observed cadence surrogate, a
+shadow-mode rollout gate, and tests — but not the evidence. Its thresholds are
+`PROVISIONAL` and automatic matching is off by default everywhere
+(`TRANSIT_AUTOMATIC_MATCHING_ENABLED=false`). A clean ride capture is still the
+thing that moves it forward.
 
 ## Other open evidence
 

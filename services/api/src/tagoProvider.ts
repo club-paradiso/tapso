@@ -112,10 +112,19 @@ export class TagoTransitProvider implements TransitProvider {
       cityCode: request.cityCode,
       routeId: request.routeId,
     });
+    // TAPSO server receipt time — when this process finished reading the
+    // snapshot. It is not when TAGO observed the vehicle, and TAGO does not
+    // say when that was. Never rename, serialise or describe this as a
+    // provider or observation timestamp.
     const receivedAt = this.now().toISOString();
     return items.map((item) => ({
       vehicleId: requiredStringAny(item, "vehicleno", "vehicleNo"),
       routeId: request.routeId,
+      // The epoch sentinel, deliberately. `getRouteAcctoBusLcList` carries no
+      // observation time in any field, so there is nothing truthful to put
+      // here. Paired with `timestampSource: "unavailable"` it makes every
+      // consumer that compares ages fail closed instead of silently treating
+      // network receipt time as provider freshness.
       observedAt: new Date(0).toISOString(),
       receivedAt,
       timestampSource: "unavailable",

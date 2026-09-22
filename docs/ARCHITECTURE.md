@@ -26,7 +26,11 @@ The practical MVP target is shared route polling with short-lived cache and fan-
 
 The session coordinator is intentionally in-memory. It automatically selects only when the match margin is sufficient; ambiguous candidates require explicit confirmation. After selection, a contradictory or missing snapshot never silently switches to another vehicle. Duplicate or backward progress is ignored, and a bounded grace window retains the last accepted progress before the session becomes `lost`.
 
-One process's memory is the wrong store for a horizontally scaled runtime, so the session endpoints fail closed there rather than losing state silently: `TRANSIT_SESSIONS_ENABLED` defaults to `false` whenever `VERCEL` is set and the three routes answer `503 SESSIONS_UNAVAILABLE`. The durable store that replaces it is Task C work, because the feature it would unlock — automatic passenger tracking — is already withheld by the freshness gate.
+One process's memory is the wrong store for a horizontally scaled runtime, so the session endpoints fail closed there rather than losing state silently: `TRANSIT_SESSIONS_ENABLED` defaults to `false` whenever `VERCEL` is set and the three routes answer `503 SESSIONS_UNAVAILABLE`.
+
+Reachability and authority are separate axes, and each has its own flag. `TRANSIT_SESSIONS_ENABLED` decides whether the ride endpoints answer. `TRANSIT_AUTOMATIC_MATCHING_ENABLED` — `false` by default on every platform, including the local Node server — decides whether the server may select a passenger's vehicle at all. With it false the coordinator runs in shadow mode: it ranks candidates and publishes server-observed cadence evidence, and assigns `selectedVehicleId` only when a rider explicitly confirms. Enabling sessions therefore cannot enable automatic matching, which is asserted end to end in `services/api/test/apiRouter.test.ts`.
+
+The durable store that replaces in-memory sessions is the next architecture task. It is not what withholds automatic passenger tracking; the open field-validation gate in `DATA_VALIDATION.md` is.
 
 Realtime stop sequence is not assumed. If the provider supplies one and it maps to the selected route, it is used. Otherwise a stop is estimated only when the vehicle coordinate is within a conservative 120 m radius of a known route stop; that progress is labeled as an estimate until credentialed live validation proves the semantics.
 

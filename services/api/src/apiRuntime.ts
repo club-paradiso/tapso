@@ -46,7 +46,13 @@ export function createTransitApi(env: ServerEnv = process.env as ServerEnv): Tra
     stopTtlMs: config.cachePolicy.stopTtlMs,
     vehicleTtlMs: config.cachePolicy.vehicleTtlMs,
   });
-  const sessions = new JourneySessionCoordinator(provider);
+  // Journey sessions read the uncached provider on purpose. Server-observed
+  // cadence is only evidence if consecutive reads are genuinely consecutive;
+  // the shared 20 s snapshot cache would replay one receipt as several and
+  // manufacture a liveness signal that never existed.
+  const sessions = new JourneySessionCoordinator(upstream, {
+    automaticMatchingEnabled: config.matching.automaticMatchingEnabled,
+  });
   const limiter = config.rateLimit.enabled
     ? createBurstLimiter(config.rateLimit.limit, config.rateLimit.windowSeconds)
     : undefined;

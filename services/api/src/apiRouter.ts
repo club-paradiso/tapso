@@ -25,6 +25,55 @@ import type { BurstLimiter } from "./rateLimit.ts";
 import { maskClientAddress } from "./rateLimit.ts";
 import { TtlCache } from "./ttlCache.ts";
 import { logEvent } from "./observability.ts";
+import { TAGO_CADENCE_POLICY_V1 } from "./sourceFreshness.ts";
+
+/**
+ * The single source of the freshness posture every surface publishes.
+ *
+ * Three separate claims live here and must stay separable:
+ *
+ * 1. `providerObservationTimestamp` — TAGO exposes none. `observedAt` on a TAGO
+ *    record is the epoch sentinel and `timestampSource` is `unavailable`.
+ * 2. `policy` — what TAPSO does instead: a conservative liveness surrogate
+ *    built from repeated server receipts of *changing* provider content. It
+ *    never claims to know when TAGO observed the vehicle.
+ * 3. `automaticMatching` — whether the server may pick a rider's bus. It is a
+ *    product-safety decision gated on field evidence, not on either of the
+ *    above being solved.
+ */
+function freshnessPosture(config: TransitApiConfig): Record<string, unknown> {
+  return {
+    providerObservationTimestamp: "unavailable",
+    policy: "server_observed_cadence_v1",
+    automaticMatching: config.matching.automaticMatchingEnabled
+      ? "enabled_by_explicit_operator_opt_in"
+      : "shadow_only_pending_field_validation",
+    /**
+     * Why it is withheld, in full, because a one-word status invites the wrong
+     * guess. Durable session storage is a real and separate gap; it is not the
+     * reason automatic matching is off. The key is absent, rather than empty,
+     * once nothing is being withheld.
+     */
+    ...(config.matching.automaticMatchingEnabled
+      ? {}
+      : { automaticMatchingWithheldBecause: config.matching.fieldValidationGate.requirement }),
+    fieldValidationGate: config.matching.fieldValidationGate,
+    /**
+     * Seconds, and every one of them a conservative operational gate on TAPSO's
+     * own receipts. None of these is a provider timestamp threshold, and none
+     * is calibrated against real boardings yet.
+     */
+    cadencePolicy: {
+      historyWindowSeconds: TAGO_CADENCE_POLICY_V1.historyWindowMs / 1_000,
+      minimumSamples: TAGO_CADENCE_POLICY_V1.minimumSamples,
+      minimumSpanSeconds: TAGO_CADENCE_POLICY_V1.minimumSpanMs / 1_000,
+      maximumReceiptAgeSeconds: TAGO_CADENCE_POLICY_V1.maximumReceiptAgeMs / 1_000,
+      maximumReceiptGapSeconds: TAGO_CADENCE_POLICY_V1.maximumReceiptGapMs / 1_000,
+      requiresProviderContentChange: true,
+      calibration: "provisional",
+    },
+  };
+}
 
 export const MAX_BODY_BYTES = 64 * 1_024;
 /**
@@ -313,9 +362,7 @@ async function dispatch(
              * sentinel and nothing downstream may treat receipt as freshness.
              */
             receivedAt: latestReceivedAt(result.value),
-            providerObservationTimestamp: "unavailable",
-            freshnessPolicy: "fail_closed",
-            automaticMatching: "withheld_pending_source_freshness_rule",
+            freshness: freshnessPosture(config),
             snapshotCacheTtlSeconds: Math.round(config.cachePolicy.vehicleTtlMs / 1_000),
           },
         },
@@ -367,9 +414,7 @@ async function dispatch(
             routeId: route.routeId,
             count: items.length,
             receivedAt: latestReceivedAt(items),
-            providerObservationTimestamp: "unavailable",
-            freshnessPolicy: "fail_closed",
-            automaticMatching: "withheld_pending_source_freshness_rule",
+            freshness: freshnessPosture(config),
             snapshotCache: "bypassed",
             purpose: "controlled_ride_capture",
           },
@@ -451,11 +496,8 @@ function healthPayload(config: TransitApiConfig, now: Date): Record<string, unkn
     operator: config.operator,
     runtime: config.runtime,
     build: config.build,
-    freshness: {
-      providerObservationTimestamp: "unavailable",
-      policy: "fail_closed",
-      automaticMatching: "withheld_pending_source_freshness_rule",
-    },
+    matching: config.matching,
+    freshness: freshnessPosture(config),
   };
 }
 
