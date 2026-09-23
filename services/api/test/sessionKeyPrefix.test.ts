@@ -341,3 +341,17 @@ test("the verification script addresses keys only through its own namespace and 
   assert.match(source, /--yes/);
   assert.ok(!source.includes("SESSION_KEY_PREFIX}"), "no key is built from a global prefix");
 });
+
+test("the preview verification script never enumerates, flushes or writes, and refuses non-preview targets", async () => {
+  const { readFile } = await import("node:fs/promises");
+  const source = await readFile(new URL("../../../scripts/upstash/verify-preview-sessions.ts", import.meta.url), "utf8");
+  for (const forbidden of ['"SCAN"', '"KEYS"', '"FLUSHDB"', '"FLUSHALL"', '"UNLINK"', '"SET"', '"EVAL"']) {
+    assert.ok(!source.includes(forbidden), `the script must never send ${forbidden}`);
+  }
+  // Redis is reached only through an allow-list of exact-key reads, a count,
+  // and the delete of the one session the run created.
+  assert.match(source, /ALLOWED_COMMANDS = new Set\(\["GET", "PTTL", "EXISTS", "DBSIZE", "DEL"\]\)/);
+  assert.match(source, /posture\.build\?\.environment === "preview"/);
+  assert.match(source, /posture\.matching\?\.automaticMatchingEnabled === false/);
+  assert.match(source, /--yes/);
+});

@@ -247,6 +247,36 @@ prints the token or the host. Exit code is non-zero on any failure.
 3. Confirm the row exists under `tapso:preview:journey-session:<id>` and that the
    version prefix advanced across the two refreshes.
 
+Step 2 is scripted so it cannot drift from the list above:
+
+```bash
+env -u UPSTASH_REDIS_REST_TOKEN node --env-file=.env.local \
+  --experimental-strip-types scripts/upstash/verify-preview-sessions.ts \
+  --base-url=https://<tapso-api preview host> \
+  --route=<routeId> --board=<seq> --dest=<later seq> --yes
+```
+
+It refuses to write unless `/health` reports `build.environment=preview`,
+`sessions.store=redis`, sessions enabled and automatic matching off. After
+each request it reads the session's row by exact key and checks the version
+prefix went 1 → 2 → 3 → 4. It checks with `EXISTS` that the id is under no
+other namespace, and with `DBSIZE` (a count, not an enumeration) that exactly
+one key was added. At the end it deletes that one key. It never sends SCAN,
+KEYS, FLUSH, SET or EVAL. Step 3 needs a bus running on the chosen route,
+because the service only confirms against a live TAGO snapshot. Deployment
+Protection is passed with `VERCEL_AUTOMATION_BYPASS_SECRET`, and that value is
+never printed.
+
+### Results
+
+| Half | Status | Evidence |
+|---|---|---|
+| Store, against the real shared Upstash database | `PASS` 15/15 | Run by the operator on 2026-09-23 against commit `c89452131c` (PR #48), under `tapso:verify:journey-session:verify-<uuid>`. Real `SET NX PX`, `GET`, `PTTL`, Lua compare-and-set, stale-writer rejection, 8-way concurrent CAS, expired-session storage and `DEL` all passed. |
+| Preview deployment | `PENDING` | `verify-preview-sessions.ts` has been exercised end to end, 12/12, only against the real API handler backed by a fake Upstash and a synthetic provider. That proves the script, not the deployment. No live preview run is recorded yet. |
+
+The `UNVERIFIED_AGAINST_LIVE_SERVICE` label stays until the preview row reads
+`PASS`.
+
 ### Step 3 — record it
 
 Record both results here, then drop the `UNVERIFIED_AGAINST_LIVE_SERVICE` label
