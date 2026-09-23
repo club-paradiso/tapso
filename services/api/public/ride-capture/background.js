@@ -26,6 +26,8 @@ import {
   rawExportDeadline,
   reportFilename,
   shouldWarnBeforeLeaving,
+  submissionView,
+  submitFailureView,
   stopNameForSequence,
 } from "./background-client-core.js";
 
@@ -66,6 +68,10 @@ const state = {
   // The raw capture, fetched as soon as the ride completes and held only in
   // page memory. Never rendered: it holds vehicle numbers and coordinates.
   raw: undefined,
+  // Set once the server accepted this ride into durable storage.
+  submitted: false,
+  receipt: undefined,
+  submitting: false,
 };
 
 class ApiError extends Error {
@@ -809,9 +815,64 @@ async function finishWithReport(status, report) {
   state.rawRequested = false;
   state.reportRequested = false;
   state.raw = undefined;
+  state.submitted = false;
+  state.receipt = undefined;
+  state.submitting = false;
+  el("submit-ride").hidden = false;
+  el("submit-ride").disabled = false;
+  el("submit-ride").textContent = "검증 데이터 제출";
+  el("submit-result").hidden = true;
+  el("backup-exports").open = false;
   renderExportState();
   state.finishing = false;
+  // Kept as the manual rescue path: if submission fails, the raw can still be
+  // saved by hand even after the collector prunes it.
   void prefetchRaw();
+}
+
+/**
+ * The primary action: the server replays this ride's own raw capture under the
+ * current matcher, stores raw + report durably, and answers with the campaign
+ * count. Nothing from this page is sent as evidence; there is no body.
+ */
+async function submitRide() {
+  if (!state.sessionId || !state.report || state.submitting) return;
+  state.submitting = true;
+  const button = el("submit-ride");
+  button.disabled = true;
+  button.textContent = "제출 중…";
+  try {
+    const receipt = await collectorWithRetry(`/capture/${encodeURIComponent(state.sessionId)}/submit`, { method: "POST" });
+    state.submitted = true;
+    state.receipt = receipt;
+    renderSubmission(submissionView(receipt));
+    button.hidden = true;
+    say("finish-alert", receipt.duplicate ? "이미 저장된 기록입니다. 카운트는 바뀌지 않았습니다." : "서버에 안전하게 저장했습니다.", "ok");
+  } catch (error) {
+    const view = submitFailureView(error, rawExportDeadline(state.status));
+    renderSubmission({ headline: view.headline, title: error.message || "", lines: view.lines, alerts: [] });
+    el("backup-exports").open = true;
+    button.hidden = !view.retry;
+    button.disabled = false;
+    button.textContent = "다시 제출";
+    say("finish-alert", "제출 실패 · 원본은 서버에서 아직 보관 중입니다.", "bad");
+  } finally {
+    state.submitting = false;
+    renderExportState();
+  }
+}
+
+function renderSubmission(view) {
+  el("submit-result").hidden = false;
+  el("submit-headline").textContent = view.headline;
+  el("submit-title").textContent = view.title ?? "";
+  const list = el("submit-lines");
+  list.replaceChildren(...view.lines.map((line) => {
+    const item = document.createElement("li");
+    item.textContent = line;
+    return item;
+  }));
+  el("submit-alerts").textContent = (view.alerts ?? []).join(" / ");
 }
 
 /**
@@ -840,9 +901,11 @@ function renderExportState() {
   report.textContent = checklist.report;
   report.dataset.tone = state.reportRequested ? "ok" : "warn";
   const deadline = rawExportDeadline(state.status);
-  el("export-deadline").textContent = deadline
-    ? `서버는 원본을 ${deadline.toLocaleTimeString()}까지만 보관합니다. 그 뒤에는 복구할 수 없습니다.`
-    : "서버는 원본을 완료 후 2시간만 보관합니다.";
+  el("export-deadline").textContent = state.submitted
+    ? "제출됨 · 원본과 리포트는 검증 저장소에 보관됩니다."
+    : deadline
+      ? `제출 전까지 서버는 원본을 ${deadline.toLocaleTimeString()}까지만 보관합니다. 그 뒤에는 복구할 수 없습니다.`
+      : "제출 전까지 서버는 원본을 완료 후 2시간만 보관합니다.";
 }
 
 /**
@@ -875,9 +938,9 @@ async function saveRaw() {
 async function startNewRide() {
   if (state.report && shouldWarnBeforeLeaving(state)) {
     const leave = await confirmAction(
-      "원본을 저장하지 않았습니다",
-      "원본(RAW) 없이 넘어가면 이 탑승은 30회 검증에 절대 포함되지 않습니다. 서버 보관 시간이 지나면 되살릴 수 없습니다.",
-      "저장하지 않고 넘어가기",
+      "검증 데이터를 제출하지 않았습니다",
+      "제출하거나 원본(RAW)을 저장하지 않고 넘어가면 이 탑승은 30회 검증에 절대 포함되지 않습니다. 서버 보관 시간이 지나면 되살릴 수 없습니다.",
+      "제출하지 않고 넘어가기",
     );
     if (!leave) return;
   }
@@ -928,6 +991,9 @@ function reset() {
   state.rawRequested = false;
   state.reportRequested = false;
   state.raw = undefined;
+  state.submitted = false;
+  state.receipt = undefined;
+  state.submitting = false;
   lastLifecycleKind = undefined;
   el("plate").value = "";
   el("mark-stop").textContent = "다음 정류장 불러오는 중…";
@@ -980,6 +1046,7 @@ el("status").addEventListener("click", async () => {
     [{ name: "확인", sequence: 1 }],
   );
 });
+el("submit-ride").addEventListener("click", () => void submitRide());
 el("save-raw").addEventListener("click", () => void saveRaw());
 el("save-report").addEventListener("click", saveReport);
 el("copy-report").addEventListener("click", copyReport);

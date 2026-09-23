@@ -16,6 +16,7 @@
  */
 
 import { DEFAULT_SESSION_KEY_PREFIX, validateSessionKeyPrefix } from "./sessionKeyPrefix.ts";
+import { upstashCommand } from "./upstashRest.ts";
 import {
   SessionStoreError,
   type JourneySessionStore,
@@ -154,42 +155,12 @@ export class UpstashJourneySessionStore implements JourneySessionStore {
    * legitimate `404`. Every transport and protocol failure throws instead.
    */
   private async command(command: string[]): Promise<unknown> {
-    let response: Response;
-    try {
-      response = await this.fetchImpl(this.restUrl, {
-        method: "POST",
-        headers: {
-          authorization: `Bearer ${this.restToken}`,
-          "content-type": "application/json",
-        },
-        body: JSON.stringify(command),
-      });
-    } catch {
-      // The message is ours, never the thrown one: a transport error can carry
-      // the request URL, and the URL carries the credential's host.
-      throw new SessionStoreError("the session store could not be reached");
-    }
-
-    if (!response.ok) {
-      throw new SessionStoreError(`the session store rejected a command with status ${response.status}`);
-    }
-
-    let payload: unknown;
-    try {
-      payload = await response.json();
-    } catch {
-      throw new SessionStoreError("the session store returned a malformed response");
-    }
-    if (!payload || typeof payload !== "object") {
-      throw new SessionStoreError("the session store returned a malformed response");
-    }
-    if ("error" in payload) {
-      throw new SessionStoreError("the session store reported a command error");
-    }
-    if (!("result" in payload)) {
-      throw new SessionStoreError("the session store returned a response with no result");
-    }
-    return (payload as { result: unknown }).result;
+    return upstashCommand(
+      { restUrl: this.restUrl, restToken: this.restToken, fetchImpl: this.fetchImpl },
+      command,
+      "the session store",
+      (message) => new SessionStoreError(message),
+    );
   }
 
   /**

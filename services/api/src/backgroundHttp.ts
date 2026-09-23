@@ -13,12 +13,40 @@ import {
   type BackgroundCaptureStartInput,
   type BackgroundRideCaptureCoordinator,
 } from "./backgroundRideCapture.ts";
+import {
+  campaignFor,
+  FIELD_VALIDATION_CAMPAIGN_ID,
+  FieldValidationError,
+  submitCompletedCapture,
+  type FieldValidationStore,
+} from "./fieldValidation.ts";
 import { operatorTokenMatches, readBearerToken, type OperatorCredential } from "./operatorAuth.ts";
 
 const MAX_BODY_BYTES = 16 * 1_024;
 const SESSION_ID = /^[A-Za-z0-9_-]{1,64}$/;
 const ROUTE_ID = /^[A-Za-z0-9_-]{1,64}$/;
 const CITY_CODE = /^[0-9]{1,6}$/;
+
+/**
+ * What a request is allowed to do. Every route names exactly one.
+ *
+ * Today only the operator token exists and it holds all of them. The seam is
+ * here so a field-tester credential can later be granted `capture:start`,
+ * `capture:write`, `capture:read` and `capture:submit` for its own sessions,
+ * without `capture:raw` or `campaign:read`, and without ever seeing the
+ * operator token. That credential is not implemented; see
+ * docs/exec-plans/FIELD_VALIDATION_SUBMISSION.md.
+ */
+export type CollectorCapability =
+  | "capture:start"
+  | "capture:read"
+  | "capture:write"
+  | "capture:raw"
+  | "capture:submit"
+  | "campaign:read";
+
+/** Throws a 401/503 `httpError` when the request may not exercise `capability`. */
+export type CollectorAuthorizer = (request: IncomingMessage, capability: CollectorCapability) => void;
 
 export interface BackgroundHttpDependencies {
   captures: Pick<
@@ -31,6 +59,10 @@ export interface BackgroundHttpDependencies {
   health: () => Record<string, unknown>;
   /** One JSON line per request: route, method, status, duration. Never a body. */
   log?: (line: string) => void;
+  /** Durable submission storage. Absent means submit answers 503 and manual export remains. */
+  fieldValidation?: { store: FieldValidationStore; campaignId?: string };
+  /** Overrides operator-only auth. Tests and a future tester credential use this. */
+  authorize?: CollectorAuthorizer;
 }
 
 export type BackgroundRequestHandler = (request: IncomingMessage, response: ServerResponse) => Promise<void>;
@@ -43,6 +75,8 @@ export function createBackgroundRequestHandler(deps: BackgroundHttpDependencies)
     if (!origin || !allowedOrigins.includes(origin)) return { vary: "Origin" };
     return { vary: "Origin", "access-control-allow-origin": origin };
   }
+
+  const authorize: CollectorAuthorizer = deps.authorize ?? ((request) => requireOperator(request));
 
   function requireOperator(request: IncomingMessage): void {
     if (!operator.configured || !operator.token) {
@@ -90,7 +124,17 @@ export function createBackgroundRequestHandler(deps: BackgroundHttpDependencies)
         return;
       }
 
-      requireOperator(request);
+      authorize(request, capabilityFor(request.method, path));
+
+      if (request.method === "GET" && path === "/field-validation/campaign") {
+        route = "campaign_status";
+        const store = deps.fieldValidation?.store;
+        if (!store) throw httpError(503, "FIELD_VALIDATION_UNAVAILABLE", "field-validation storage is not configured on this collector");
+        const summary = await campaignFor(store, deps.fieldValidation?.campaignId ?? FIELD_VALIDATION_CAMPAIGN_ID);
+        status = 200;
+        writeJson(response, status, summary, cors);
+        return;
+      }
 
       if (request.method === "POST" && path === "/capture/start") {
         route = "capture_start";
@@ -102,7 +146,7 @@ export function createBackgroundRequestHandler(deps: BackgroundHttpDependencies)
         return;
       }
 
-      const match = /^\/capture\/([^/]+)(?:\/(marker|note|alight|event|raw))?$/.exec(path);
+      const match = /^\/capture\/([^/]+)(?:\/(marker|note|alight|event|raw|submit))?$/.exec(path);
       if (!match) throw httpError(404, "NOT_FOUND", "no such endpoint");
       const sessionId = decodeURIComponent(match[1] ?? "");
       if (!SESSION_ID.test(sessionId)) throw httpError(400, "INVALID_INPUT", "session id is invalid");
@@ -129,6 +173,26 @@ export function createBackgroundRequestHandler(deps: BackgroundHttpDependencies)
           pragma: "no-cache",
           "content-disposition": "attachment",
         });
+        return;
+      }
+
+      if (request.method === "POST" && action === "submit") {
+        route = "capture_submit";
+        // No request body is read: the server never accepts a client report.
+        // The only input is this session's own completed raw capture.
+        const store = deps.fieldValidation?.store;
+        if (!store) {
+          throw httpError(503, "FIELD_VALIDATION_UNAVAILABLE",
+            "field-validation storage is not configured; export the raw capture manually");
+        }
+        const raw = captures.completedCapture(sessionId);
+        const rideTimeReport = captures.status(sessionId).report;
+        const receipt = await submitCompletedCapture(raw, rideTimeReport, {
+          store,
+          campaignId: deps.fieldValidation?.campaignId ?? FIELD_VALIDATION_CAMPAIGN_ID,
+        });
+        status = receipt.duplicate ? 200 : 201;
+        writeJson(response, status, receipt, cors);
         return;
       }
 
@@ -307,7 +371,27 @@ function httpError(status: number, code: string, message: string): HttpError {
   return Object.assign(new Error(message), { status, code });
 }
 
+function capabilityFor(method: string | undefined, path: string): CollectorCapability {
+  if (path === "/field-validation/campaign") return "campaign:read";
+  if (path === "/capture/start") return "capture:start";
+  if (/^\/capture\/[^/]+\/raw$/.test(path)) return "capture:raw";
+  if (/^\/capture\/[^/]+\/submit$/.test(path)) return "capture:submit";
+  if (method === "GET") return "capture:read";
+  return "capture:write";
+}
+
 function mapError(error: unknown): { status: number; code: string; message: string } {
+  if (error instanceof FieldValidationError) {
+    // The session is untouched by a failed submit, so the message says what
+    // still works rather than implying the ride is gone.
+    return error.kind === "invalid"
+      ? { status: 400, code: "SUBMISSION_INVALID", message: error.message }
+      : {
+        status: 503,
+        code: "SUBMISSION_FAILED",
+        message: "the submission did not complete; the collector still holds the raw capture, so retry or export it manually",
+      };
+  }
   if (error instanceof BackgroundRideCaptureError) {
     const status = error.kind === "not_found" ? 404
       : error.kind === "conflict" ? 409

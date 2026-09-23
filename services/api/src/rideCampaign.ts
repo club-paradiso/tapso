@@ -270,6 +270,15 @@ export function buildCampaign(files: CampaignInputFile[]): CampaignReport {
   return campaign;
 }
 
+/**
+ * One ride's bucket, from the report `analyzeRideCapture` produced from its raw
+ * capture. The same rules `buildCampaign` applies to a folder, exported so the
+ * collector's submission pipeline classifies a ride exactly the same way.
+ */
+export function classifyReplayedRide(stem: string, report: RideCaptureReport): CampaignRide {
+  return rideFromRaw(stem, report);
+}
+
 function rideFromRaw(stem: string, report: RideCaptureReport): CampaignRide {
   const gate = report.matchGate;
   const ride: CampaignRide = {

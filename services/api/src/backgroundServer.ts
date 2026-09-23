@@ -1,7 +1,9 @@
 import { createServer } from "node:http";
 
+import { readUpstashCredentials } from "./apiConfig.ts";
 import { createBackgroundRequestHandler } from "./backgroundHttp.ts";
 import { BackgroundRideCaptureCoordinator } from "./backgroundRideCapture.ts";
+import { UpstashFieldValidationStore } from "./fieldValidation.ts";
 import { resolveOperatorToken } from "./operatorAuth.ts";
 import { resolveTagoServiceKey, serviceKeyWarning } from "./serviceKey.ts";
 import { TagoTransitProvider } from "./tagoProvider.ts";
@@ -45,10 +47,17 @@ const captures = new BackgroundRideCaptureCoordinator(provider, {
 });
 const allowedOrigins = originList(process.env.TRANSIT_ALLOWED_ORIGINS);
 
+// Durable field-validation submissions need Upstash. Without both variables the
+// submit endpoint answers 503 and the finish screen falls back to manual export;
+// nothing pretends a ride was stored.
+const upstash = readUpstashCredentials(process.env);
+const fieldValidationStore = upstash ? new UpstashFieldValidationStore(upstash) : undefined;
+
 export const backgroundServer = createServer(createBackgroundRequestHandler({
   captures,
   operator,
   allowedOrigins,
+  ...(fieldValidationStore ? { fieldValidation: { store: fieldValidationStore } } : {}),
   health: () => ({
     ok: true,
     service: "tapso-ride-collector",
@@ -59,6 +68,7 @@ export const backgroundServer = createServer(createBackgroundRequestHandler({
     stateStore: "process_memory",
     processRestartLosesActiveCapture: true,
     providerObservationTimestamp: "unavailable",
+    fieldValidationStorage: fieldValidationStore ? "upstash" : "unconfigured",
   }),
 }));
 

@@ -30,6 +30,7 @@ Move controlled-ride provider polling off mobile Safari and onto the dedicated R
     - It sends `cache-control: no-store, private` and is never logged beyond route and status.
     - The finish screen puts **① 원본(RAW) 저장** first, then **② 요약 리포트 저장**, both under the stem `<routeId>-<startedAt>`. It shows each as "requested", never "saved", because a page cannot see a download land.
     - It shows the two-hour deadline and warns before a new ride if the raw was not requested.
+11. One-tap submission (2026-09-23). **검증 데이터 제출** is now the primary action. The RAW/REPORT buttons move under "개발자 / 백업 내보내기". See `FIELD_VALIDATION_SUBMISSION.md`.
 
 ## Verification
 
