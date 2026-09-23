@@ -13,6 +13,7 @@ import { JourneySessionCoordinator } from "./journeySession.ts";
 import { resolveOperatorToken } from "./operatorAuth.ts";
 import { createBurstLimiter } from "./rateLimit.ts";
 import { resolveTagoServiceKey, serviceKeyWarning } from "./serviceKey.ts";
+import { readSessionKeyPrefix } from "./sessionKeyPrefix.ts";
 import { MemoryJourneySessionStore, type JourneySessionStore } from "./sessionStore.ts";
 import { TagoTransitProvider } from "./tagoProvider.ts";
 import { UpstashJourneySessionStore } from "./upstashSessionStore.ts";
@@ -107,7 +108,7 @@ function createSessionStore(config: TransitApiConfig, env: ServerEnv): JourneySe
       "TRANSIT_SESSION_STORE=redis requires UPSTASH_REDIS_REST_URL and UPSTASH_REDIS_REST_TOKEN",
     );
   }
-  return new UpstashJourneySessionStore(credentials);
+  return new UpstashJourneySessionStore({ ...credentials, keyPrefix: readSessionKeyPrefix(env) });
 }
 
 /** The process-wide instance every entry point serves from. */

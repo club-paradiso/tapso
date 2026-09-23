@@ -7,12 +7,15 @@
  * package to build a request body `fetch` already builds would spend
  * supply-chain surface on nothing.
  *
- * `UNVERIFIED_AGAINST_LIVE_SERVICE`. Every path below is covered by tests
- * driving a stub `fetch`, which proves this module's behaviour but not
- * Upstash's. Nothing here may be called production-ready until a live round
- * trip is recorded in `docs/exec-plans/DURABLE_JOURNEY_SESSIONS.md`.
+ * Verified against the live service on 2026-09-23, in two halves recorded in
+ * `docs/exec-plans/DURABLE_JOURNEY_SESSIONS.md`: this store alone against the
+ * real Upstash database (15/15), and a preview deployment of the whole API
+ * against the same database (12/12). The stub-`fetch` tests remain the
+ * regression net; the live scripts in `scripts/upstash/` are how to re-check.
+ * Verified is not deployed: production still runs the memory store.
  */
 
+import { DEFAULT_SESSION_KEY_PREFIX, validateSessionKeyPrefix } from "./sessionKeyPrefix.ts";
 import {
   SessionStoreError,
   type JourneySessionStore,
@@ -31,9 +34,6 @@ import {
  * except letting the coordinator give the accurate answer.
  */
 export const DEFAULT_EXPIRY_GRACE_MS = 5 * 60 * 1_000;
-
-/** Prefix so a shared database keeps journey sessions distinguishable. */
-export const SESSION_KEY_PREFIX = "tapso:journey-session:";
 
 /**
  * Compare-and-set in one round trip.
@@ -60,11 +60,19 @@ export interface UpstashSessionStoreOptions {
   restToken: string;
   now?: () => Date;
   expiryGraceMs?: number;
+  /**
+   * The namespace every key this store touches lives under. Defaults to
+   * `DEFAULT_SESSION_KEY_PREFIX`, the format existing rows already use.
+   * Injected by the wiring layer from `TRANSIT_SESSION_KEY_PREFIX`; the store
+   * never reads the environment itself. See `sessionKeyPrefix.ts`.
+   */
+  keyPrefix?: string;
   /** Injected in tests. Defaults to the global `fetch`. */
   fetchImpl?: typeof fetch;
 }
 
 export class UpstashJourneySessionStore implements JourneySessionStore {
+  readonly keyPrefix: string;
   private readonly restUrl: string;
   private readonly restToken: string;
   private readonly now: () => Date;
@@ -77,10 +85,18 @@ export class UpstashJourneySessionStore implements JourneySessionStore {
     this.now = options.now ?? (() => new Date());
     this.expiryGraceMs = options.expiryGraceMs ?? DEFAULT_EXPIRY_GRACE_MS;
     this.fetchImpl = options.fetchImpl ?? globalThis.fetch;
+    // Validated here too, not only at boot: a store built by a script or a
+    // test must not be able to reach outside a safe namespace either.
+    this.keyPrefix = validateSessionKeyPrefix(options.keyPrefix ?? DEFAULT_SESSION_KEY_PREFIX);
+  }
+
+  /** The Redis key a session id maps to. Every command goes through this. */
+  keyFor(id: string): string {
+    return `${this.keyPrefix}${id}`;
   }
 
   async load(id: string): Promise<VersionedJourneySession | undefined> {
-    const result = await this.command(["GET", key(id)]);
+    const result = await this.command(["GET", this.keyFor(id)]);
     if (result === null || result === undefined) return undefined;
     return decode(expectString(result, "GET"));
   }
@@ -90,7 +106,7 @@ export class UpstashJourneySessionStore implements JourneySessionStore {
     // id loses instead of overwriting a ride already in progress.
     const result = await this.command([
       "SET",
-      key(session.id),
+      this.keyFor(session.id),
       encode(session, 1),
       "NX",
       "PX",
@@ -109,7 +125,7 @@ export class UpstashJourneySessionStore implements JourneySessionStore {
       "EVAL",
       CAS_SCRIPT,
       "1",
-      key(session.id),
+      this.keyFor(session.id),
       String(expectedVersion),
       encode(session, version),
       String(this.ttlMs(session)),
@@ -127,7 +143,7 @@ export class UpstashJourneySessionStore implements JourneySessionStore {
   }
 
   async delete(id: string): Promise<void> {
-    await this.command(["DEL", key(id)]);
+    await this.command(["DEL", this.keyFor(id)]);
   }
 
   /**
@@ -187,10 +203,6 @@ export class UpstashJourneySessionStore implements JourneySessionStore {
     const remaining = session.expiresAtMs - this.now().getTime() + this.expiryGraceMs;
     return Math.max(1_000, Math.round(remaining));
   }
-}
-
-function key(id: string): string {
-  return `${SESSION_KEY_PREFIX}${id}`;
 }
 
 function encode(session: StoredJourneySession, version: number): string {
