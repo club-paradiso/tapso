@@ -191,7 +191,8 @@ in this document is clean real-ride evidence.
 
 Do not enable automatic matching for passengers until a source-freshness rule exists and at least 30 observed boardings across multiple routes demonstrate a clear candidate margin, no silent direction reversal, and bounded stale-data behavior. Unknown route variants or unsupported semantics must fail closed.
 
-**Status: `OPEN`.** Zero of the 30 boardings have been observed.
+**Status: `OPEN`.** Zero of the 30 boardings have been observed (re-counted
+2026-09-23; see "Counting the campaign" below).
 
 ### How each criterion is measured
 
@@ -220,6 +221,47 @@ proves the matcher is safe and proves nothing about whether it works.
 snapshots, or observations carrying provider timestamps — the last because TAGO
 never publishes one, so such a capture exercises a code path production does not
 have.
+
+### Counting the campaign
+
+`scripts/ride-capture/batch-analyze.ts` counts a whole directory of phone
+exports the same way every time. It reads the directory without writing to it,
+re-runs `analyzeRideCapture` on every raw capture, pairs each `*.report.json`
+with its raw by exact file stem (then by `routeId` and `startedAt` for a renamed
+raw), drops byte-identical duplicates, and writes a sanitized
+`campaign-report.{json,md}` under ignored `work/field-validation/`:
+
+```bash
+node --experimental-strip-types scripts/ride-capture/batch-analyze.ts <export-dir>
+```
+
+Each ride lands in one bucket. The rules are the ones above, plus one that is
+deliberately left open:
+
+| Bucket | When |
+|---|---|
+| `CLEAN_GATE_CANDIDATE` | Replayed from a raw `railway-background` capture, `usableForGate`, and every criterion clean. The only bucket that counts toward the 30 |
+| `EXCLUDED` | `usableForGate=false`, or a criterion failed (`wrong`, a direction change, a selection on non-fresh cadence). Failures are listed as `GATE_FAILURE`, never hidden |
+| `HISTORICAL_CONFOUNDED` | A browser capture that was hidden or offline, so its polling gaps cannot be attributed to TAGO |
+| `HISTORICAL_MATCHER_EVIDENCE` | A usable replay from `local-device`, `cli` or an engine-less capture with no suspension. Marked `UNRESOLVED`: nothing here decides whether such a ride may count, and the tool does not decide it either |
+| `REPORT_ONLY_NO_RAW` | A report without its raw capture. The matcher cannot be replayed from a report, which has no per-snapshot candidates, coordinates or direction codes. A modern report carrying a ride-time `matchGate` shows that gate but is marked `UNRESOLVED` |
+
+**Open decision.** The Railway background controller, the only engine that can
+produce a `CLEAN_GATE_CANDIDATE`, exports only the server-side report. The raw
+capture stays in the collector's memory for two hours and cannot be downloaded.
+So today no Railway ride can reach the clean bucket. Before the campaign
+continues, one of two things has to happen: the controller gains a raw export,
+or someone decides that a Railway report's ride-time `matchGate` may count
+without a raw to replay.
+
+`remainingToThirty` counts `CLEAN_GATE_CANDIDATE` rides only. Reaching 30 does
+not close the gate on its own: every criterion above must also hold.
+
+**Audit, 2026-09-23.** The operator's exported rides were 13 `*.report.json`
+files from the browser recorder, across 10 `routeId`s, all written before
+`captureEngine` and `matchGate` existed. No raw capture was found for any of
+them, so all 13 are `REPORT_ONLY_NO_RAW`. Clean observed boardings: `0`.
+Remaining: `30`.
 
 ### One hypothesis this instrument exists to test
 

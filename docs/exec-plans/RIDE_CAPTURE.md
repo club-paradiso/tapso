@@ -101,6 +101,8 @@ env -u TAGO_SERVICE_KEY node --env-file=.env.local --experimental-strip-types \
   scripts/ride-capture/capture.ts JEB405136521 39 <boarding-seq> <destination-seq>
 # while riding: b <vehicle|last4> · p <seq> · a [seq] · n <note> · v · s · ? · q
 node --experimental-strip-types scripts/ride-capture/analyze.ts work/rides/<capture>.json
+# a whole folder of exports, counted toward the 30-boarding gate:
+node --experimental-strip-types scripts/ride-capture/batch-analyze.ts <export-dir>
 ```
 
 `env -u TAGO_SERVICE_KEY` clears an exported copy of the name so the value in
