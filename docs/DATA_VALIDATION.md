@@ -264,6 +264,23 @@ background finish screen saves it as `<routeId>-<startedAt>.json` next to
   (`COMPLETED_RETENTION_MS`). Save the raw before that, or the ride is lost as
   evidence. The finish screen shows the deadline.
 
+**Canonical workflow (2026-09-23).** Ordinary field rides no longer move JSON by
+hand:
+
+```text
+start ride → Railway collects → complete → 검증 데이터 제출
+  → the server replays the raw under the current analyzeRideCapture
+  → duplicate check (rawSha256) → classifyReplayedRide (the rules above)
+  → raw + report + sanitized record stored in Upstash → count returned to the phone
+```
+
+`GET /field-validation/campaign` on the collector is the live count. It is
+recomputed from the stored records, so a duplicate or a retry cannot inflate
+it. `scripts/field-validation/pull-campaign.ts` pulls every stored raw back
+into `work/` for a replay under a later matcher. Manual RAW/REPORT download and
+`batch-analyze.ts` over a folder remain for backup and debugging only. Details
+are in `exec-plans/FIELD_VALIDATION_SUBMISSION.md`.
+
 `remainingToThirty` counts `CLEAN_GATE_CANDIDATE` rides only. Reaching 30 does
 not close the gate on its own: every criterion above must also hold.
 

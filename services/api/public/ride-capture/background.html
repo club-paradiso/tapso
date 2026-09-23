@@ -172,16 +172,30 @@
         <p id="finish-summary" class="muted"></p>
         <p id="finish-alert" class="alert" data-tone="warn"></p>
         <div id="verdict" class="panel" hidden></div>
-        <div id="export-panel" class="panel">
-          <p><strong>검증 기록 저장</strong> · 두 파일 모두 저장하세요. 이름이 같아야 나중에 짝이 맞습니다.</p>
-          <p id="export-raw-state" class="alert" data-tone="bad"></p>
-          <p id="export-report-state" class="alert" data-tone="warn"></p>
+        <div id="submit-panel" class="panel">
+          <p><strong>검증 데이터</strong></p>
+          <p class="muted">✓ 원본 수집 완료 · ✓ 분석 완료</p>
+          <button id="submit-ride" type="button" class="primary big">검증 데이터 제출</button>
+          <div id="submit-result" hidden>
+            <h2 id="submit-headline"></h2>
+            <p id="submit-title" class="muted"></p>
+            <ul id="submit-lines"></ul>
+            <p id="submit-alerts" class="alert" data-tone="bad"></p>
+          </div>
           <p id="export-deadline" class="muted"></p>
         </div>
+        <details id="backup-exports" class="panel">
+          <summary>개발자 / 백업 내보내기</summary>
+          <p class="muted">제출이 안 될 때만 쓰세요. 두 파일 이름이 같아야 나중에 짝이 맞습니다.</p>
+          <p id="export-raw-state" class="alert" data-tone="warn"></p>
+          <p id="export-report-state" class="alert" data-tone="warn"></p>
+          <div class="actions">
+            <button id="save-raw" type="button">① 원본(RAW) 저장</button>
+            <button id="save-report" type="button">② 요약 리포트 저장</button>
+            <button id="copy-report" type="button">리포트 복사</button>
+          </div>
+        </details>
         <div class="actions">
-          <button id="save-raw" type="button" class="primary big">① 원본(RAW) 저장 · 검증 필수</button>
-          <button id="save-report" type="button" class="big">② 요약 리포트 저장</button>
-          <button id="copy-report" type="button">리포트 복사</button>
           <button id="new-ride" type="button" class="ghost">다른 버스 기록하기</button>
         </div>
       </section>
