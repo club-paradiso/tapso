@@ -6,9 +6,9 @@ import {
   SessionStoreError,
   type StoredJourneySession,
 } from "../src/sessionStore.ts";
+import { DEFAULT_SESSION_KEY_PREFIX } from "../src/sessionKeyPrefix.ts";
 import {
   DEFAULT_EXPIRY_GRACE_MS,
-  SESSION_KEY_PREFIX,
   UpstashJourneySessionStore,
 } from "../src/upstashSessionStore.ts";
 
@@ -162,7 +162,9 @@ test("a create uses SET NX with a TTL past the session's own expiry", async () =
   assert.deepEqual(result, { outcome: "saved", version: 1 });
   const command = body(calls[0]!);
   assert.equal(command[0], "SET");
-  assert.equal(command[1], `${SESSION_KEY_PREFIX}session-1`);
+  // Literal on purpose: this is the format every existing row already uses.
+  assert.equal(command[1], "tapso:journey-session:session-1");
+  assert.equal(DEFAULT_SESSION_KEY_PREFIX, "tapso:journey-session:");
   assert.equal(command[3], "NX", "a colliding id must lose, not overwrite a ride in progress");
   assert.equal(command[4], "PX");
   // 60 s of session left plus the grace, so the row outlives the boundary the

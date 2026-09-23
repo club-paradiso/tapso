@@ -19,13 +19,21 @@
  *  - concurrent writers at one version produce exactly one winner, which is
  *    the invariant the whole compare-and-set design exists for.
  *
- * Safety. It writes only under a run-unique id, deletes what it wrote even on
- * failure, and never prints the token or the database host. Run it against a
- * scratch or preview database, never the one a live ride depends on.
+ * Safety. It writes only under its own namespace, `tapso:verify:journey-session:`
+ * by default, and there only under a run-unique id. It never enumerates keys
+ * (no SCAN, no KEYS), never flushes, deletes only the keys it wrote — even on
+ * failure — and never prints the token or the database host. The namespace is
+ * what makes a shared database safe: the runtime namespaces
+ * (`TRANSIT_SESSION_KEY_PREFIX`, default `tapso:journey-session:`) and every
+ * unrelated key in the database are unreachable from here by construction.
  *
  * Usage:
  *   env -u UPSTASH_REDIS_REST_TOKEN node --env-file=.env.local \
  *     --experimental-strip-types scripts/upstash/verify-session-store.ts --yes
+ *
+ *   Add `--prefix=tapso:<name>:journey-session:` to verify under a different
+ *   namespace. It is validated exactly like `TRANSIT_SESSION_KEY_PREFIX` and
+ *   refused if it equals any runtime namespace.
  *
  *   (`env -u` clears an exported copy of the name so the value in .env.local is
  *   the one used, matching `scripts/ride-capture/capture.ts`.)
@@ -39,12 +47,12 @@ import {
   JOURNEY_SESSION_SCHEMA_VERSION,
   type StoredJourneySession,
 } from "../../services/api/src/sessionStore.ts";
-import {
-  SESSION_KEY_PREFIX,
-  UpstashJourneySessionStore,
-} from "../../services/api/src/upstashSessionStore.ts";
+import { resolveVerificationKeyPrefix } from "../../services/api/src/sessionKeyPrefix.ts";
+import { UpstashJourneySessionStore } from "../../services/api/src/upstashSessionStore.ts";
 
 const CONFIRMED = process.argv.includes("--yes");
+const PREFIX_FLAG = "--prefix=";
+const explicitPrefix = process.argv.find((arg) => arg.startsWith(PREFIX_FLAG))?.slice(PREFIX_FLAG.length);
 const SESSION_TTL_MS = 60_000;
 const CONCURRENT_WRITERS = 8;
 
@@ -52,9 +60,10 @@ if (!CONFIRMED) {
   console.error([
     "Usage: node --experimental-strip-types scripts/upstash/verify-session-store.ts --yes",
     "",
-    "Writes and deletes one run-unique key in the Upstash database named by",
-    "UPSTASH_REDIS_REST_URL. Point it at a scratch or preview database, never at",
-    "one a live ride depends on. --yes is required so this cannot run by accident.",
+    "Writes and deletes two run-unique keys under tapso:verify:journey-session:",
+    "in the Upstash database named by UPSTASH_REDIS_REST_URL. It never lists,",
+    "scans, flushes, or touches any other key. --yes is required so this cannot",
+    "run by accident. --prefix=<namespace> overrides the verification namespace.",
     "",
     "Run with: env -u UPSTASH_REDIS_REST_TOKEN node --env-file=.env.local \\",
     "  --experimental-strip-types scripts/upstash/verify-session-store.ts --yes",
@@ -63,6 +72,15 @@ if (!CONFIRMED) {
 }
 
 await warnOnLooseEnvPermissions();
+
+// Resolved before credentials, so a bad namespace fails without a network call.
+let keyPrefix: string;
+try {
+  keyPrefix = resolveVerificationKeyPrefix(explicitPrefix, process.env);
+} catch (error) {
+  console.error(`FAIL  ${error instanceof Error ? error.message : "the verification key prefix is not usable"}`);
+  process.exit(1);
+}
 
 // The same resolver the service uses, so a URL this script accepts is a URL the
 // deployment would accept — including the https-only refusal.
@@ -80,9 +98,14 @@ if (!credentials) {
 
 // Narrowed once, so nothing below needs a non-null assertion to reach it.
 const resolved = credentials;
-const store = new UpstashJourneySessionStore(resolved);
+const store = new UpstashJourneySessionStore({ ...resolved, keyPrefix });
 const sessionId = `verify-${randomUUID()}`;
-const key = `${SESSION_KEY_PREFIX}${sessionId}`;
+// The only two keys this run may ever address. Both sit under the verification
+// namespace and carry this run's UUID, so nothing another run or environment
+// wrote can match either.
+const key = store.keyFor(sessionId);
+const expiredId = `${sessionId}-expired`;
+const expiredKey = store.keyFor(expiredId);
 
 let failures = 0;
 let checks = 0;
@@ -250,7 +273,6 @@ try {
   /* 9 ------------------------------------------ an already expired session */
   // PX must stay positive or the server rejects the write, and a session that
   // cannot be written reads as 404 instead of the 410 it deserves.
-  const expiredId = `${sessionId}-expired`;
   const expired = await store.create(sampleSession({ id: expiredId, expiresAtMs: Date.now() - 600_000 }));
   check("an already expired session is still storable",
     expired.outcome === "saved",
@@ -271,11 +293,13 @@ try {
   console.error(`FAIL  the verification threw: ${error instanceof Error ? error.message : "unknown error"}`);
 } finally {
   // Leave nothing behind, including after a thrown check.
+  // Only the two keys named above, by exact name. Never a pattern.
   await store.delete(sessionId).catch(() => {});
-  await store.delete(`${sessionId}-expired`).catch(() => {});
+  await store.delete(expiredId).catch(() => {});
   // The orphan CAS above cannot create a key, but a partially applied run might
   // have, so this is unconditional rather than conditional on which step failed.
   await raw(["DEL", key]).catch(() => {});
+  await raw(["DEL", expiredKey]).catch(() => {});
 }
 
 console.log(`\n${checks - failures}/${checks} checks passed`);
@@ -295,9 +319,11 @@ console.log([
   "The store behaves correctly against this database.",
   "",
   "Milestone 6 is not closed by this alone. Still to do, on a PREVIEW deployment:",
-  "  1. Set TRANSIT_SESSION_STORE=redis plus the two UPSTASH_* variables there.",
+  "  1. Set TRANSIT_SESSION_STORE=redis, TRANSIT_SESSION_KEY_PREFIX=",
+  "     tapso:preview:journey-session: and the two UPSTASH_* variables there.",
   "  2. POST /v1/sessions, GET it twice, POST its /confirm.",
-  "  3. Confirm the row exists under tapso:journey-session:<id> and that the",
+  "  3. Confirm the row exists under <TRANSIT_SESSION_KEY_PREFIX><id>",
+  "     (tapso:preview:journey-session:<id> on preview) and that the",
   "     version prefix advanced across the two refreshes.",
   "Then record the result in docs/exec-plans/DURABLE_JOURNEY_SESSIONS.md and drop",
   "the UNVERIFIED_AGAINST_LIVE_SERVICE label from the module and KNOWN_ISSUES.md.",

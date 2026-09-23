@@ -99,6 +99,22 @@ without usable credentials is a misconfiguration that throws at wiring time,
 matching how `apiConfig.ts` already treats an unparseable flag. Sessions on
 serverless stay off unless both a store and the existing flag say otherwise.
 
+**Decision: every environment writes under its own validated key namespace.**
+One physical Upstash database is shared — the plan allows no second one — with
+unrelated data and with more than one TAPSO environment. Keys are
+`<TRANSIT_SESSION_KEY_PREFIX><id>`. Unset means `tapso:journey-session:`, the
+format existing rows already use; preview uses
+`tapso:preview:journey-session:`, and `tapso:prod:journey-session:` is reserved
+for production once it moves off memory. `sessionKeyPrefix.ts` accepts only
+`tapso:(<segment>:){0,3}journey-session:` with lowercase `[a-z0-9_-]`
+segments, at most 96 characters, and no middle segment named
+`journey-session`. That rules out empty, global, wildcard, whitespace and
+control-character namespaces, and makes the accepted set prefix-free, so two
+environments can never produce the same key. A set-but-invalid value — empty
+included — throws at boot on every store; it never falls back to the default.
+The store is handed the prefix and never reads the environment, and the prefix
+stays out of `/health`.
+
 **Decision: credentials never reach `/health`.**
 `sessionStore` reports a category (`memory` / `redis`) and configured-ness,
 never a URL or token — the same rule `credential` already follows for the TAGO
@@ -205,7 +221,8 @@ unattended; the deployment half is manual.
 ### Step 1 — the store, against a real database
 
 ```bash
-# Point UPSTASH_REDIS_REST_URL/TOKEN at a scratch or preview database.
+# Writes only under tapso:verify:journey-session:<run-unique id>, never scans,
+# never flushes, so it is safe on a database shared with other data.
 env -u UPSTASH_REDIS_REST_TOKEN node --env-file=.env.local \
   --experimental-strip-types scripts/upstash/verify-session-store.ts --yes
 ```
@@ -216,15 +233,18 @@ returning the winner's row in a nested table; `SET NX PX` refusing a second
 create and setting a real TTL; a session full of Korean stop names and
 colon-bearing ISO timestamps surviving the REST round trip; and eight
 concurrent writers at one version producing exactly one winner. It writes only
-under a run-unique id, deletes what it wrote even on failure, and never prints
-the token or the host. Exit code is non-zero on any failure.
+under its own namespace (`tapso:verify:journey-session:` unless `--prefix=`
+names another valid one that is not a runtime namespace) and a run-unique id
+beneath it, deletes exactly the two keys it wrote even on failure, and never
+prints the token or the host. Exit code is non-zero on any failure.
 
 ### Step 2 — the deployment, by hand
 
-1. Set `TRANSIT_SESSION_STORE=redis` plus the two `UPSTASH_*` variables on a
-   **preview** deployment, never production.
+1. Set `TRANSIT_SESSION_STORE=redis`,
+   `TRANSIT_SESSION_KEY_PREFIX=tapso:preview:journey-session:` and the two
+   `UPSTASH_*` variables on a **preview** deployment, never production.
 2. `POST /v1/sessions`, `GET` it twice, `POST` its `/confirm`.
-3. Confirm the row exists under `tapso:journey-session:<id>` and that the
+3. Confirm the row exists under `tapso:preview:journey-session:<id>` and that the
    version prefix advanced across the two refreshes.
 
 ### Step 3 — record it

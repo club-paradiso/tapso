@@ -8,6 +8,7 @@
 
 import { DEFAULT_STOP_CACHE_TTL_MS, DEFAULT_VEHICLE_CACHE_TTL_MS } from "./cachedTransitProvider.ts";
 import { resolveOperatorToken } from "./operatorAuth.ts";
+import { readSessionKeyPrefix } from "./sessionKeyPrefix.ts";
 import { resolveTagoServiceKey, type ServiceKeySource } from "./serviceKey.ts";
 
 export type ServerEnv = Record<string, string | undefined>;
@@ -169,6 +170,11 @@ export function readTransitApiConfig(
   // throws here rather than booting a deployment that answers every session
   // request with a store error.
   const sessionStore = readSessionStoreKind(env);
+  // Validated at boot on every store, not only `redis`: a malformed namespace
+  // left dormant on a memory deployment would otherwise surface on the day the
+  // store is switched. The value stays out of `TransitApiConfig`, which
+  // `/health` serializes; the key layout is nobody's business but the wiring's.
+  readSessionKeyPrefix(env);
 
   return {
     transitProvider: "tago",
