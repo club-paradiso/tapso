@@ -23,7 +23,13 @@ Move controlled-ride provider polling off mobile Safari and onto the dedicated R
 6. Send physical stop, note, and alight timestamps to the collector. A marker is added to the UI only after the server acknowledges it.
 7. Preserve duplicate-stop protection. A genuine door reopen requires explicit confirmation and records an explanatory note before the duplicate marker.
 8. After alight, wait for the collector to observe the destination or for its 20-second post-alight gate to close. Use only the collector's sanitized report as evidence output.
-9. Store only sanitized recent-history metadata on the phone. Raw vehicle identifiers remain server-memory-only for the active session and never appear in the report.
+9. Store only sanitized recent-history metadata on the phone. Raw vehicle identifiers never appear in the report or in the status response.
+10. Export the raw capture for replay (2026-09-23). `GET /capture/:sessionId/raw` returns the complete `RideCapture` of one exact, completed session:
+    - It requires the operator bearer token, like every other collector route.
+    - It answers only a completed session (`409` while active, `404` once pruned or after a restart). There is no listing and no lookup by route or time.
+    - It sends `cache-control: no-store, private` and is never logged beyond route and status.
+    - The finish screen puts **① 원본(RAW) 저장** first, then **② 요약 리포트 저장**, both under the stem `<routeId>-<startedAt>`. It shows each as "requested", never "saved", because a page cannot see a download land.
+    - It shows the two-hour deadline and warns before a new ride if the raw was not requested.
 
 ## Verification
 

@@ -368,10 +368,10 @@ function classify(ride: CampaignRide): void {
 
 /**
  * A report without its raw. It never counts, because the current matcher
- * cannot be replayed from it. A modern report that carries a ride-time
- * `matchGate` is still marked `UNRESOLVED`: the Railway background controller
- * exports only that report, so whether such a report may count without a raw
- * is a decision nothing in the repository has made.
+ * cannot be replayed from it. That includes a modern Railway report carrying a
+ * ride-time `matchGate`: decided 2026-09-23 in favour of exporting the raw
+ * capture instead (`GET /capture/:id/raw`), so replayability is never traded
+ * for convenience. The ride-time gate is shown for reference only.
  */
 function reportOnlyRide(stem: string, report: Record<string, unknown>, rawRecovery: RawRecovery): CampaignRide {
   const lifecycle = (report.lifecycle ?? {}) as Record<string, number>;
@@ -393,10 +393,10 @@ function reportOnlyRide(stem: string, report: Record<string, unknown>, rawRecove
         ? "more than one raw capture matches this report; none was chosen"
         : "no raw capture, so the current matcher cannot be replayed",
       ...(gate
-        ? ["carries a ride-time matchGate; whether a report without its raw may count is not decided"]
+        ? ["carries a ride-time matchGate, shown for reference; a report without its raw never counts"]
         : ["report predates matchGate"]),
     ],
-    policy: gate ? "UNRESOLVED" : "DECIDED",
+    policy: "DECIDED",
     routeId: String(report.routeId ?? "unknown"),
     ...(typeof report.startedAt === "string" ? { startedAt: report.startedAt } : {}),
     captureEngine: typeof report.captureEngine === "string" ? report.captureEngine as RideCaptureEngine : "unknown",

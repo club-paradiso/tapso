@@ -72,8 +72,53 @@ export function backgroundAcceptanceVerdict(report) {
   };
 }
 
+/**
+ * One stem for both halves of a ride, `<routeId>-<startedAt>`, so the campaign
+ * analyzer (`scripts/ride-capture/batch-analyze.ts`) pairs the raw capture and
+ * its report by exact name. The raw capture and the report carry the same
+ * `routeId` and `startedAt`, so either can name the pair.
+ */
+export function captureFileStem(ride) {
+  const routeId = String(ride?.routeId ?? "ride").replace(/[^A-Za-z0-9_-]/g, "_");
+  const startedAt = String(ride?.startedAt ?? new Date().toISOString()).replace(/[:.]/g, "-");
+  return `${routeId}-${startedAt}`;
+}
+
 export function reportFilename(report) {
-  const routeId = String(report?.routeId ?? "ride").replace(/[^A-Za-z0-9_-]/g, "_");
-  const startedAt = String(report?.startedAt ?? new Date().toISOString()).replace(/[:.]/g, "-");
-  return `${routeId}-${startedAt}.report.json`;
+  return `${captureFileStem(report)}.report.json`;
+}
+
+/** The raw `RideCapture`. Replayable evidence; holds vehicle numbers and coordinates. */
+export function rawCaptureFilename(ride) {
+  return `${captureFileStem(ride)}.json`;
+}
+
+/** Matches `COMPLETED_RETENTION_MS` in `backgroundRideCapture.ts`. */
+export const RAW_RETENTION_MS = 2 * 60 * 60 * 1_000;
+
+/**
+ * The last moment the collector still holds the raw capture, or undefined when
+ * the completion time is unknown. Shown so the operator knows the deadline.
+ */
+export function rawExportDeadline(status) {
+  const ended = Date.parse(status?.endedAt ?? "");
+  return Number.isFinite(ended) ? new Date(ended + RAW_RETENTION_MS) : undefined;
+}
+
+/**
+ * What the finish screen says about each export. A browser gives the page no
+ * signal that a download actually landed, so the strongest honest state is
+ * "requested", never "saved".
+ */
+export function exportChecklist({ rawRequested = false, reportRequested = false } = {}) {
+  return {
+    raw: rawRequested ? "RAW 저장 요청됨 · 파일 앱에서 확인하세요" : "RAW 저장 안 함 · 검증에 필요합니다",
+    report: reportRequested ? "REPORT 저장 요청됨" : "REPORT 저장 안 함",
+    rawMissing: !rawRequested,
+  };
+}
+
+/** Leaving the finish screen without requesting the raw loses the ride as evidence. */
+export function shouldWarnBeforeLeaving({ rawRequested = false } = {}) {
+  return !rawRequested;
 }

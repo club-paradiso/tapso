@@ -172,8 +172,15 @@
         <p id="finish-summary" class="muted"></p>
         <p id="finish-alert" class="alert" data-tone="warn"></p>
         <div id="verdict" class="panel" hidden></div>
+        <div id="export-panel" class="panel">
+          <p><strong>검증 기록 저장</strong> · 두 파일 모두 저장하세요. 이름이 같아야 나중에 짝이 맞습니다.</p>
+          <p id="export-raw-state" class="alert" data-tone="bad"></p>
+          <p id="export-report-state" class="alert" data-tone="warn"></p>
+          <p id="export-deadline" class="muted"></p>
+        </div>
         <div class="actions">
-          <button id="save-report" type="button" class="primary big">리포트 저장</button>
+          <button id="save-raw" type="button" class="primary big">① 원본(RAW) 저장 · 검증 필수</button>
+          <button id="save-report" type="button" class="big">② 요약 리포트 저장</button>
           <button id="copy-report" type="button">리포트 복사</button>
           <button id="new-ride" type="button" class="ghost">다른 버스 기록하기</button>
         </div>
