@@ -140,10 +140,9 @@ key.
    Observable: a test asserts no credential substring appears in `/health`.
 5. `DONE` Docs: `ARCHITECTURE.md`, `DECISIONS.md`, `KNOWN_ISSUES.md`,
    and this plan updated with results.
-6. `BLOCKED` Live verification against a real Upstash database. Cannot be
-   completed from the repository; needs a credential. Until it is done, the
-   Upstash client is `UNVERIFIED_AGAINST_LIVE_SERVICE` and this plan must say
-   so.
+6. `DONE` Live verification against a real Upstash database, 2026-09-23.
+   Store half 15/15, preview deployment half 12/12; see Results below.
+   Production was not changed.
 
 ## Reproduction commands
 
@@ -209,14 +208,16 @@ exists to prevent. The branch was restored and all 219 tests pass.
   A silent behaviour change there would weaken Task C's guarantees without
   failing a test. Mitigation: the existing suite must pass unmodified except
   where the store contract genuinely changes a signature.
-- Risk: milestone 6 cannot be closed here. Nothing in this plan may be reported
-  as production-ready until a live Upstash round trip is recorded.
+- Resolved (2026-09-23): milestone 6 is closed. Live Upstash round trips are
+  recorded below for the store (15/15) and a preview deployment (12/12).
+  Verified is not the same as deployed: production still runs the memory store.
 
 ## Exact next action
 
-Milestone 6, and it cannot be done from the repository — it needs a credential.
-`scripts/upstash/verify-session-store.ts` does the store-level half
-unattended; the deployment half is manual.
+None for this plan. Moving production to `redis` would be a separate decision
+under `TRANSIT_SESSION_KEY_PREFIX=tapso:prod:journey-session:`. Automatic
+matching stays behind its own field-validation gate. The live checks below
+remain the way to re-verify after any change to the store.
 
 ### Step 1 — the store, against a real database
 
@@ -272,20 +273,23 @@ never printed.
 | Half | Status | Evidence |
 |---|---|---|
 | Store, against the real shared Upstash database | `PASS` 15/15 | Run by the operator on 2026-09-23 against commit `c89452131c` (PR #48), under `tapso:verify:journey-session:verify-<uuid>`. Real `SET NX PX`, `GET`, `PTTL`, Lua compare-and-set, stale-writer rejection, 8-way concurrent CAS, expired-session storage and `DEL` all passed. |
-| Preview deployment | `PENDING` | `verify-preview-sessions.ts` has been exercised end to end, 12/12, only against the real API handler backed by a fake Upstash and a synthetic provider. That proves the script, not the deployment. No live preview run is recorded yet. |
+| Preview deployment | `PASS` 12/12 | Run by the operator on 2026-09-23 with `verify-preview-sessions.ts` against the `tapso-api` Vercel **preview** deployment of commit `8d3dbd4dad73` (PR #48) and the same real shared Upstash database. `/health` reported `build.environment=preview`, `sessions.store=redis`, `sessions.enabled=true`, `durableStoreConfigured=true`, `liveTransitConfigured=true`, `automaticMatchingEnabled=false`. `POST /v1/sessions` created a session whose row appeared under `tapso:preview:journey-session:<id>` at version 1 with a real TTL. Two `GET` refreshes returned 200. `POST /confirm` against a live TAGO vehicle returned 200 with an explicit selection, and the stored row carried that vehicle. The version prefix advanced exactly 1 → 2 → 3 → 4. The id existed under no other namespace. `DBSIZE` rose by exactly one, and the run deleted its own key. |
 
-The `UNVERIFIED_AGAINST_LIVE_SERVICE` label stays until the preview row reads
-`PASS`.
+Production was not changed during either run. It keeps the memory store and has
+no `TRANSIT_SESSION_STORE`, `TRANSIT_SESSION_KEY_PREFIX` or Upstash variables.
+Automatic matching stayed off throughout. It remains withheld by the separate
+field-validation gate (at least 30 observed real boardings across multiple
+routes), which this milestone does not touch.
 
 ### Step 3 — record it
 
-Record both results here, then drop the `UNVERIFIED_AGAINST_LIVE_SERVICE` label
-from `upstashSessionStore.ts` and `KNOWN_ISSUES.md`.
+`DONE`. Both results are recorded above, and the
+`UNVERIFIED_AGAINST_LIVE_SERVICE` label has been removed from
+`upstashSessionStore.ts` and `KNOWN_ISSUES.md`.
 
-Until that record exists, `TRANSIT_SESSION_STORE=redis` must not be set in
-production. The Lua compare-and-set is the piece most likely to behave
-differently against a real server than against a stub, which is why step 1
-exists and why passing it is not on its own sufficient.
+Verification does not switch production. `TRANSIT_SESSION_STORE=redis` in
+production is a separate, deliberate change, and it would use
+`TRANSIT_SESSION_KEY_PREFIX=tapso:prod:journey-session:`.
 
 ### What the script itself has been verified against
 

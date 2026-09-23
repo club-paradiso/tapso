@@ -7,10 +7,12 @@
  * package to build a request body `fetch` already builds would spend
  * supply-chain surface on nothing.
  *
- * `UNVERIFIED_AGAINST_LIVE_SERVICE`. Every path below is covered by tests
- * driving a stub `fetch`, which proves this module's behaviour but not
- * Upstash's. Nothing here may be called production-ready until a live round
- * trip is recorded in `docs/exec-plans/DURABLE_JOURNEY_SESSIONS.md`.
+ * Verified against the live service on 2026-09-23, in two halves recorded in
+ * `docs/exec-plans/DURABLE_JOURNEY_SESSIONS.md`: this store alone against the
+ * real Upstash database (15/15), and a preview deployment of the whole API
+ * against the same database (12/12). The stub-`fetch` tests remain the
+ * regression net; the live scripts in `scripts/upstash/` are how to re-check.
+ * Verified is not deployed: production still runs the memory store.
  */
 
 import { DEFAULT_SESSION_KEY_PREFIX, validateSessionKeyPrefix } from "./sessionKeyPrefix.ts";

@@ -1,11 +1,11 @@
 /**
  * Live verification for `UpstashJourneySessionStore`.
  *
- * `services/api/src/upstashSessionStore.ts` is labelled
- * `UNVERIFIED_AGAINST_LIVE_SERVICE`: every path is covered by tests driving a
- * stub `fetch`, which proves that client's behaviour and not Upstash's. This
- * script closes milestone 6 of `docs/exec-plans/DURABLE_JOURNEY_SESSIONS.md` by
- * running the same store against a real database.
+ * Every path of `services/api/src/upstashSessionStore.ts` is covered by tests
+ * driving a stub `fetch`, which proves that client's behaviour and not
+ * Upstash's. This script runs the same store against a real database. It was
+ * the store half of milestone 6 in `docs/exec-plans/DURABLE_JOURNEY_SESSIONS.md`
+ * (passed 15/15 on 2026-09-23). Re-run it after any change to the store.
  *
  * It deliberately checks only what a stub cannot settle:
  *
@@ -307,9 +307,9 @@ console.log(`\n${checks - failures}/${checks} checks passed`);
 if (failures > 0) {
   console.error([
     "",
-    "The store is NOT verified against this database. Leave",
-    "UNVERIFIED_AGAINST_LIVE_SERVICE in place in services/api/src/upstashSessionStore.ts",
-    "and docs/KNOWN_ISSUES.md, and do not set TRANSIT_SESSION_STORE=redis anywhere.",
+    "The store does NOT behave correctly against this database. Do not set",
+    "TRANSIT_SESSION_STORE=redis anywhere until this passes, and record the",
+    "failure in docs/exec-plans/DURABLE_JOURNEY_SESSIONS.md.",
   ].join("\n"));
   process.exit(1);
 }
@@ -318,17 +318,9 @@ console.log([
   "",
   "The store behaves correctly against this database.",
   "",
-  "Milestone 6 is not closed by this alone. Still to do, on a PREVIEW deployment:",
-  "  1. Set TRANSIT_SESSION_STORE=redis, TRANSIT_SESSION_KEY_PREFIX=",
-  "     tapso:preview:journey-session: and the two UPSTASH_* variables there.",
-  "  2. POST /v1/sessions, GET it twice, POST its /confirm.",
-  "  3. Confirm the row exists under <TRANSIT_SESSION_KEY_PREFIX><id>",
-  "     (tapso:preview:journey-session:<id> on preview) and that the",
-  "     version prefix advanced across the two refreshes.",
-  "Then record the result in docs/exec-plans/DURABLE_JOURNEY_SESSIONS.md and drop",
-  "the UNVERIFIED_AGAINST_LIVE_SERVICE label from the module and KNOWN_ISSUES.md.",
-  "",
-  "Production stays on the memory store until that record exists.",
+  "This is the store half only. The deployment half is",
+  "scripts/upstash/verify-preview-sessions.ts, run against a PREVIEW deployment.",
+  "Neither script changes production.",
 ].join("\n"));
 
 async function warnOnLooseEnvPermissions(): Promise<void> {
