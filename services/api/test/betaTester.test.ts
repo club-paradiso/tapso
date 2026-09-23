@@ -384,7 +384,7 @@ test("the collector submits a completed beta ride even when the tester never com
   });
 });
 
-test("a collector restart marks the ride lost, hands the ride slot back, and allows a new ride", async () => {
+test("without a durable journal, a collector restart marks the ride lost, hands the ride slot back, and allows a new ride", async () => {
   const betaStore = new MemoryBetaTesterStore();
   const fieldValidation = new MemoryFieldValidationStore();
   let credential = "";
@@ -392,7 +392,7 @@ test("a collector restart marks the ride lost, hands the ride slot back, and all
   await withHarness(async (h) => {
     ({ credential } = await h.tester());
     id = (await h.startRide(credential)).json.sessionId;
-  }, { betaStore, fieldValidation });
+  }, { betaStore, fieldValidation, journal: null });
   await withHarness(async (h) => {
     const view = await h.call("GET", `/beta/rides/${id}`, { token: credential });
     assert.equal(view.json.state, "lost");
@@ -400,7 +400,7 @@ test("a collector restart marks the ride lost, hands the ride slot back, and all
     assert.equal(me.json.ridesUsed, 0);
     assert.equal(me.json.canStart, true);
     assert.equal((await h.startRide(credential)).status, 201);
-  }, { betaStore, fieldValidation });
+  }, { betaStore, fieldValidation, journal: null });
 });
 
 test("one open ride at a time, and the ride budget is enforced", async () => {

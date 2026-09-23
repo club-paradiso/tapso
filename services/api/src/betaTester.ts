@@ -175,6 +175,9 @@ export interface BetaTesterStore {
   /** SET NX with expiry: one start at a time per tester. */
   acquireStartLock(testerId: string, ttlSeconds: number): Promise<boolean>;
   releaseStartLock(testerId: string): Promise<void>;
+  /** SET NX with expiry: one submission attempt per ride at a time, across collectors. */
+  acquireSubmitLock(sessionId: string, ttlSeconds: number): Promise<boolean>;
+  releaseSubmitLock(sessionId: string): Promise<void>;
 }
 
 /** Process memory. Tests only; never used by the deployed collector. */
@@ -252,6 +255,15 @@ export class MemoryBetaTesterStore implements BetaTesterStore {
   async releaseStartLock(testerId: string) {
     this.values.delete(`tester:${testerId}:start-lock`);
   }
+  async acquireSubmitLock(sessionId: string) {
+    const key = `capture:${sessionId}:submit-lock`;
+    if (this.values.has(key)) return false;
+    this.values.set(key, "1");
+    return true;
+  }
+  async releaseSubmitLock(sessionId: string) {
+    this.values.delete(`capture:${sessionId}:submit-lock`);
+  }
 
   private set(key: string): Set<string> {
     let set = this.sets.get(key);
@@ -279,8 +291,10 @@ export class MemoryBetaTesterStore implements BetaTesterStore {
  *   tester:<testerId>:active         session id of the tester's open capture
  *   tester:<testerId>:rides          set of session ids started (ride budget)
  *   tester:<testerId>:start-lock     "1", 30 s expiry
+ *   capture:<sessionId>:submit-lock  "1", 60 s expiry
+ *   journal:<sessionId>:*            the in-progress ride's durable evidence (captureJournal.ts)
  *
- * Only the start lock expires. Invites and ownership are small audit records;
+ * Only the locks and journal leases expire. Invites and ownership are small audit records;
  * like the field-validation store, this database must not evict keys.
  */
 export class UpstashBetaTesterStore implements BetaTesterStore {
@@ -363,6 +377,12 @@ export class UpstashBetaTesterStore implements BetaTesterStore {
   }
   async releaseStartLock(testerId: string) {
     await this.command(["DEL", this.key(`tester:${testerId}:start-lock`)]);
+  }
+  async acquireSubmitLock(sessionId: string, ttlSeconds: number) {
+    return await this.command(["SET", this.key(`capture:${sessionId}:submit-lock`), "1", "NX", "EX", String(ttlSeconds)]) === "OK";
+  }
+  async releaseSubmitLock(sessionId: string) {
+    await this.command(["DEL", this.key(`capture:${sessionId}:submit-lock`)]);
   }
 
   private async json<T>(suffix: string): Promise<T | undefined> {

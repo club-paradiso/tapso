@@ -22,7 +22,7 @@ import {
   submitCompletedCapture,
   type FieldValidationStore,
 } from "./fieldValidation.ts";
-import { createBetaLimits, routeBeta, type BetaLimits } from "./betaHttp.ts";
+import { createBetaLimits, routeBeta, type BetaLimits, type BetaTesterMode } from "./betaHttp.ts";
 import type { BetaService } from "./betaService.ts";
 import { BetaTesterError } from "./betaTester.ts";
 import { operatorTokenMatches, readBearerToken, type OperatorCredential } from "./operatorAuth.ts";
@@ -69,8 +69,16 @@ export interface BackgroundHttpDependencies {
   fieldValidation?: { store: FieldValidationStore; campaignId?: string };
   /** Overrides operator-only auth for the operator routes. Tests use this. */
   authorize?: CollectorAuthorizer;
-  /** Beta-tester invites and rides. Absent means every `/beta/*` route answers 503. */
+  /** Beta-tester invites and rides. Used only when `betaMode` is `enabled`. */
   beta?: BetaService;
+  /** `disabled` when absent: every `/beta/*` route answers 503 BETA_DISABLED. */
+  betaMode?: BetaTesterMode;
+  /**
+   * Whether a session belongs to a beta tester, available whenever beta
+   * records exist in storage, even with beta disabled, so an operator can
+   * never count a beta ride in v1.
+   */
+  isBetaCapture?: (sessionId: string) => Promise<boolean>;
   betaLimits?: BetaLimits;
 }
 
@@ -136,6 +144,7 @@ export function createBackgroundRequestHandler(deps: BackgroundHttpDependencies)
 
       const betaRoute = await routeBeta(request, path, {
         beta: deps.beta,
+        mode: deps.betaMode ?? "disabled",
         authorize,
         allowedOrigins,
         readJson,
@@ -213,7 +222,8 @@ export function createBackgroundRequestHandler(deps: BackgroundHttpDependencies)
         }
         // A beta ride is submitted automatically into the beta campaign, and
         // only there; it must never be counted in v1 as well.
-        if (deps.beta && await deps.beta.isBetaCapture(sessionId)) {
+        const isBeta = deps.isBetaCapture ?? (deps.beta ? (id: string) => deps.beta!.isBetaCapture(id) : undefined);
+        if (isBeta && await isBeta(sessionId)) {
           throw httpError(409, "BETA_CAPTURE", "this is a beta-tester ride; it is submitted to the beta campaign automatically");
         }
         const raw = captures.completedCapture(sessionId);

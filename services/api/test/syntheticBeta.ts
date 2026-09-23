@@ -11,7 +11,9 @@ import { createServer, type Server } from "node:http";
 import { createBackgroundRequestHandler } from "../src/backgroundHttp.ts";
 import { BackgroundRideCaptureCoordinator } from "../src/backgroundRideCapture.ts";
 import { BetaService } from "../src/betaService.ts";
+import type { BetaTesterMode } from "../src/betaHttp.ts";
 import { MemoryBetaTesterStore } from "../src/betaTester.ts";
+import { MemoryCaptureJournal } from "../src/captureJournal.ts";
 import type { RouteRequest, StopOnRoute, VehicleObservation } from "../src/domain.ts";
 import { MemoryFieldValidationStore, type FieldValidationStore } from "../src/fieldValidation.ts";
 
@@ -77,16 +79,33 @@ export function syntheticProvider(now: () => Date, kind: () => BetaRideKind) {
   };
 }
 
+/** One wall clock shared by every simulated collector process in a test. */
+export function syntheticClock(start = "2026-09-23T09:00:00.000Z") {
+  let nowMs = Date.parse(start);
+  return {
+    now: () => new Date(nowMs),
+    ms: () => nowMs,
+    advance(ms: number) { nowMs += ms; },
+  };
+}
+
 export interface BetaHarnessOptions {
   fieldValidation?: FieldValidationStore;
   betaStore?: MemoryBetaTesterStore;
   allowedOrigins?: string[];
+  /** Defaults to `enabled`; the flag tests pass `disabled` or `unconfigured`. */
+  betaMode?: BetaTesterMode;
+  /** Shared across two harnesses to simulate a restart. `null` runs without durability. */
+  journal?: MemoryCaptureJournal | null;
+  clock?: ReturnType<typeof syntheticClock>;
+  instanceId?: string;
 }
 
 export async function betaHarness(options: BetaHarnessOptions = {}) {
-  let nowMs = Date.parse("2026-09-23T09:00:00.000Z");
+  const clock = options.clock ?? syntheticClock();
   let rideKind: BetaRideKind = "clean";
-  const now = () => new Date(nowMs);
+  const now = clock.now;
+  const journal = options.journal === null ? undefined : options.journal ?? new MemoryCaptureJournal(clock.ms);
   const provider = syntheticProvider(now, () => rideKind);
   const fieldValidation = options.fieldValidation ?? new MemoryFieldValidationStore();
   const betaStore = options.betaStore ?? new MemoryBetaTesterStore();
@@ -96,11 +115,18 @@ export async function betaHarness(options: BetaHarnessOptions = {}) {
     now,
     schedule: () => ({}) as ReturnType<typeof setTimeout>,
     cancel: () => {},
+    ...(journal ? { journal } : {}),
+    ...(options.instanceId ? { instanceId: options.instanceId } : {}),
+    log: () => {},
     onComplete: async ({ sessionId, mode }) => {
       if (mode === "field") await beta?.onCaptureComplete(sessionId);
     },
   });
-  beta = new BetaService({ store: betaStore, fieldValidation, captures: coordinator, provider, now, log: (line) => logs.push(line) });
+  beta = new BetaService({
+    store: betaStore, fieldValidation, captures: coordinator, provider, now, log: (line) => logs.push(line),
+    ...(journal ? { journal } : {}),
+  });
+  const betaMode = options.betaMode ?? "enabled";
 
   const server: Server = createServer(createBackgroundRequestHandler({
     captures: coordinator,
@@ -109,7 +135,9 @@ export async function betaHarness(options: BetaHarnessOptions = {}) {
     health: () => ({ ok: true }),
     log: (line) => logs.push(line),
     fieldValidation: { store: fieldValidation },
-    beta,
+    ...(betaMode === "enabled" ? { beta } : {}),
+    betaMode,
+    isBetaCapture: async (id) => Boolean(await betaStore.getCapture(id)),
   }));
   server.listen(0, "127.0.0.1");
   await once(server, "listening");
@@ -170,7 +198,7 @@ export async function betaHarness(options: BetaHarnessOptions = {}) {
   /** The collector's own polling, driven by hand. */
   async function poll(sessionId: string, times: number) {
     for (let index = 0; index < times; index += 1) {
-      nowMs += 5_000;
+      clock.advance(5_000);
       await coordinator.pollNow(sessionId);
     }
   }
@@ -187,8 +215,10 @@ export async function betaHarness(options: BetaHarnessOptions = {}) {
     betaStore,
     fieldValidation,
     provider,
+    journal,
+    clock,
     logs,
-    advance(ms: number) { nowMs += ms; },
+    advance(ms: number) { clock.advance(ms); },
     setKind(kind: BetaRideKind) { rideKind = kind; },
     close: () => new Promise<void>((resolve) => server.close(() => resolve())),
   };

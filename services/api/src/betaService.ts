@@ -51,6 +51,7 @@ import {
   type BetaInvite,
   type BetaTesterStore,
 } from "./betaTester.ts";
+import type { CaptureJournal } from "./captureJournal.ts";
 import type { VehicleObservation } from "./domain.ts";
 import { FieldValidationError, submitCompletedCapture, type FieldValidationStore } from "./fieldValidation.ts";
 import type { TransitProvider } from "./provider.ts";
@@ -61,6 +62,7 @@ const SESSION_ID = /^[A-Za-z0-9_-]{1,64}$/;
 const START_LOCK_SECONDS = 30;
 const DAY_MS = 24 * 60 * 60 * 1_000;
 const BETA_INTERVAL_MS = 5_000;
+const SUBMIT_LOCK_SECONDS = 60;
 
 export interface BetaPrincipal {
   testerId: string;
@@ -115,8 +117,14 @@ export interface BetaStartInput {
 export interface BetaServiceOptions {
   store: BetaTesterStore;
   fieldValidation: FieldValidationStore;
-  captures: Pick<BackgroundRideCaptureCoordinator, "start" | "status" | "completedCapture" | "alight">;
+  captures: Pick<BackgroundRideCaptureCoordinator, "start" | "status" | "completedCapture" | "alight" | "restore" | "flush">;
   provider: Pick<TransitProvider, "stops" | "vehicles">;
+  /**
+   * Durable evidence for beta rides. With it, a ride survives a collector
+   * restart; without it (tests of the in-memory path only), a restart loses
+   * the ride and says so.
+   */
+  journal?: CaptureJournal;
   now?: () => Date;
   log?: (line: string) => void;
 }
@@ -128,6 +136,7 @@ export class BetaService {
   private readonly provider: BetaServiceOptions["provider"];
   private readonly now: () => Date;
   private readonly log: (line: string) => void;
+  private readonly journal?: CaptureJournal;
   private readonly submitting = new Map<string, Promise<BetaCaptureOwnership>>();
 
   constructor(options: BetaServiceOptions) {
@@ -137,6 +146,7 @@ export class BetaService {
     this.provider = options.provider;
     this.now = options.now ?? (() => new Date());
     this.log = options.log ?? ((line) => console.info(line));
+    this.journal = options.journal;
   }
 
   /* ------------------------------------------------------------ operator */
@@ -343,6 +353,7 @@ export class BetaService {
         destinationStopSequence: destination?.sequence ?? lastSequence,
         destinationKnown: Boolean(destination),
         intervalMs: BETA_INTERVAL_MS,
+        durable: Boolean(this.journal),
       };
       let started: BackgroundCaptureStatus;
       try {
@@ -379,18 +390,58 @@ export class BetaService {
     let own = await this.owned(principal, sessionId);
     if (TERMINAL_CAPTURE_STATES.has(own.state)) return this.view(own);
     if (own.state === "starting") throw new BetaTesterError(409, "BETA_NOT_STARTED", "the ride has not started yet");
+    // The request is recorded first, so it is honoured wherever the ride runs:
+    // here, or by the collector that still holds it after a restart.
+    const requestedAt = own.finishRequestedAt ?? this.now().toISOString();
+    if (!own.finishRequestedAt) own = await this.save(own, { finishRequestedAt: requestedAt });
+    if (!await this.ensureLocal(own)) {
+      return this.view(own.state === "recording" ? await this.save(own, { state: "finishing" }) : own);
+    }
     try {
-      this.captures.alight(sessionId);
+      this.captures.alight(sessionId, requestedAt);
+      // The alight marker and phase are durable before we answer.
+      await this.captures.flush(sessionId);
     } catch (error) {
       if (!(error instanceof BackgroundRideCaptureError && error.kind === "not_found")) throw error;
     }
-    if (!own.finishRequestedAt) {
-      own = await this.save(own, {
-        finishRequestedAt: this.now().toISOString(),
-        ...(own.state === "recording" ? { state: "finishing" as const } : {}),
-      });
-    }
+    if (own.state === "recording") own = await this.save(own, { state: "finishing" });
     return this.view(await this.advance(own));
+  }
+
+  /**
+   * Pick up every journaled beta ride this process does not run yet. Called at
+   * startup and periodically; safe to call any number of times. A ride whose
+   * lease another live collector holds is left to that collector.
+   */
+  async recoverAll(): Promise<{ restored: number; skipped: number; closed: number }> {
+    const result = { restored: 0, skipped: 0, closed: 0 };
+    if (!this.journal) return result;
+    for (const sessionId of await this.journal.listOpen()) {
+      try {
+        const own = await this.store.getCapture(sessionId);
+        if (!own || TERMINAL_CAPTURE_STATES.has(own.state)) {
+          // Nothing left to collect. Keep the evidence unless it was stored.
+          await this.journal.close(sessionId, { keepEvidence: own?.state !== "submitted" });
+          result.closed += 1;
+          continue;
+        }
+        if (await this.ensureLocal(own)) {
+          result.restored += 1;
+          await this.advance(own);
+        } else {
+          result.skipped += 1;
+        }
+      } catch (error) {
+        result.skipped += 1;
+        this.log(JSON.stringify({
+          timestamp: this.now().toISOString(),
+          level: "warn",
+          event: "beta_recovery_failed",
+          message: error instanceof Error ? error.message.slice(0, 200) : "unknown",
+        }));
+      }
+    }
+    return result;
   }
 
   /** Called by the coordinator when any capture completes. Submits beta rides nobody is waiting on. */
@@ -435,17 +486,58 @@ export class BetaService {
       status = this.captures.status(own.sessionId);
     } catch (error) {
       if (error instanceof BackgroundRideCaptureError && error.kind === "not_found") {
-        // Restart or retention: the raw is gone, so there is nothing to submit.
-        // The ride slot is handed back; the tester did nothing wrong.
+        const journaled = this.journal ? await this.journal.load(own.sessionId) : undefined;
+        if (journaled) {
+          // A restart, not a loss: the evidence is durable. Take the ride
+          // over, or leave it to the collector that already holds it.
+          try {
+            await this.captures.restore(journaled);
+          } catch (restoreError) {
+            if (restoreError instanceof BackgroundRideCaptureError && restoreError.kind === "conflict") return own;
+            throw restoreError;
+          }
+          return this.advance(own);
+        }
+        // No journal: the raw is gone, so there is nothing to submit. The
+        // ride slot is handed back; the tester did nothing wrong.
         await this.store.clearActive(own.testerId);
         await this.store.removeRide(own.testerId, own.sessionId);
         return this.save(own, { state: "lost" });
       }
       throw error;
     }
+    if (status.phase === "active" && own.finishRequestedAt) {
+      // 하차 완료 reached another collector first (a restart overlap): apply it here.
+      try {
+        this.captures.alight(own.sessionId, own.finishRequestedAt);
+      } catch {
+        this.captures.alight(own.sessionId);
+      }
+      await this.captures.flush(own.sessionId);
+      return this.advance(own);
+    }
     if (status.phase === "active") return own.state === "recording" ? own : this.save(own, { state: "recording" });
     if (status.phase === "post_alight") return own.state === "finishing" ? own : this.save(own, { state: "finishing" });
     return this.submit(own);
+  }
+
+  /** Whether this process runs the ride, restoring it from the journal when it can. */
+  private async ensureLocal(own: BetaCaptureOwnership): Promise<boolean> {
+    try {
+      this.captures.status(own.sessionId);
+      return true;
+    } catch (error) {
+      if (!(error instanceof BackgroundRideCaptureError && error.kind === "not_found")) throw error;
+    }
+    const journaled = this.journal ? await this.journal.load(own.sessionId) : undefined;
+    if (!journaled) return false;
+    try {
+      await this.captures.restore(journaled);
+      return true;
+    } catch (error) {
+      if (error instanceof BackgroundRideCaptureError && error.kind === "conflict") return false;
+      throw error;
+    }
   }
 
   private submit(own: BetaCaptureOwnership): Promise<BetaCaptureOwnership> {
@@ -460,9 +552,15 @@ export class BetaService {
     const invite = await this.store.getInvite(own.inviteId);
     if (!invite || invite.revokedAt) {
       // Revoked before the ride was stored: keep it out of the campaign and
-      // leave the raw with the collector, where the operator can still look.
+      // leave the raw with the collector (and its journal), where the operator can still look.
       await this.store.clearActive(own.testerId);
+      await this.journal?.close(own.sessionId, { keepEvidence: true });
       return this.save(own, { state: "held_revoked" });
+    }
+    // Across collectors, one submission attempt at a time. The raw-hash claim
+    // already makes a second attempt a duplicate; this keeps it from racing.
+    if (!await this.store.acquireSubmitLock(own.sessionId, SUBMIT_LOCK_SECONDS)) {
+      return (await this.store.getCapture(own.sessionId)) ?? own;
     }
     try {
       const raw = this.captures.completedCapture(own.sessionId);
@@ -480,6 +578,8 @@ export class BetaService {
         ...(receipt.matcherCampaign ? { bucket: receipt.matcherCampaign.bucket } : {}),
       });
       if (await this.store.getActive(own.testerId) === own.sessionId) await this.store.clearActive(own.testerId);
+      // Stored with its raw in the field-validation store; the journal copy is no longer needed.
+      await this.journal?.close(own.sessionId).catch(() => undefined);
       return saved;
     } catch (error) {
       if (error instanceof BackgroundRideCaptureError && error.kind === "not_found") {
@@ -495,6 +595,8 @@ export class BetaService {
       }));
       // The collector still holds the completed raw, so the next read retries.
       return this.save(own, { state: "submit_failed" }).catch(() => ({ ...own, state: "submit_failed" as const }));
+    } finally {
+      await this.store.releaseSubmitLock(own.sessionId).catch(() => undefined);
     }
   }
 

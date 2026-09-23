@@ -30,6 +30,88 @@ deployment as `background.html`). Invite links look like
 - The operator page keeps every control (unlock, markers, raw/report export,
   explicit submit). It gains one collapsible "베타테스터 초대" panel.
 
+## Feature flag: `BETA_TESTERS_ENABLED` (Railway collector only)
+
+| `BETA_TESTERS_ENABLED` | Upstash configured | `/health.betaTesters` | Behaviour |
+|---|---|---|---|
+| absent, empty, `false`, `0`, or malformed | any | `disabled` | every `/beta/*` route (tester and operator) answers `503 BETA_DISABLED` before reading any credential or store; no journal, no recovery loop |
+| `true` / `1` | no | `unconfigured` | every `/beta/*` route answers `503 BETA_UNCONFIGURED` |
+| `true` / `1` | yes | `enabled` | beta routes live; beta rides are journaled; recovery runs at startup and every 15 s |
+
+- Upstash alone never enables beta testing. A malformed value is `disabled`
+  (with a startup warning), never a crash.
+- The operator ride-capture flow is identical in all three states (tested).
+- Even when disabled, the collector keeps a read-only beta-ownership lookup
+  whenever Upstash is configured, so `POST /capture/:id/submit` still refuses a
+  beta ride (`409 BETA_CAPTURE`) and v1 can never absorb one.
+- The beta page shows "지금은 베타 테스트를 진행하지 않아요" on `BETA_DISABLED` /
+  `BETA_UNCONFIGURED` and keeps the tester's credential. The operator panel
+  shows the server's message naming the variable.
+- Vercel needs nothing: the static page is harmless when the collector says no.
+- `/health.betaRestartRecovery` is `durable_journal` when enabled, else
+  `not_applicable`.
+
+Enable: set `BETA_TESTERS_ENABLED=true` on the Railway collector service,
+redeploy, confirm `/health` → `betaTesters: "enabled"`. Disable: remove it (or
+`false`) and redeploy; in-progress beta rides then stay journaled but
+unattended until re-enabled (their evidence is not deleted).
+
+## Restart durability
+
+The coordinator stays process-memory for operator rides. A beta ride is started
+`durable`: every piece of evidence is also written to a capture journal in
+Upstash (`src/captureJournal.ts`, keys `tapso:beta-tester:v1:journal:<sessionId>:*`
+and the set `journals:open`):
+
+- header (the capture without its lists) and the first snapshot are written
+  before polling starts; if that fails, the ride does not start (`503`, no ride
+  slot used);
+- each snapshot, marker and lifecycle event is appended in collection order;
+- the phase (`active` / `post_alight` + alight time / `completed` + endedAt) is
+  written on every change; 하차 완료 waits for its marker and phase to be durable
+  before answering.
+
+**Single owner.** A lease key holds the owning process's random instance id with
+a 30 s TTL. Every journal write runs in one Lua `EVAL` that renews the lease and
+writes, and refuses (writes nothing) if a *different* collector holds the lease.
+A process whose write is refused stops polling that ride and forgets it
+(`detach`). A lapsed lease that nobody took (a long poll gap) is re-taken by its
+writer.
+
+**Recovery.** At startup and every 15 s, and lazily on any tester read or
+finish, a process loads each open journal whose ride is not terminal and calls
+`coordinator.restore`: it takes the lease (refused while another live collector
+holds it — the tester then honestly still sees `recording`), rebuilds the exact
+capture, appends a `resumed` lifecycle event, and resumes polling. The downtime
+is simply missing snapshots; nothing is fabricated, and the cadence surrogate
+fails closed across the gap. A ride already past its 90-minute cap or its
+post-alight window is completed at recovery without a provider read. A journal
+whose phase is `completed` is restored byte-for-byte (no `resumed` event), so a
+resubmission deduplicates on the same raw hash.
+
+**Submission.** One attempt at a time per ride across collectors
+(`capture:<id>:submit-lock`, 60 s), on top of the raw-hash `SET NX` dedupe. The
+journal is deleted after the ride is stored; a revoked tester's journal is kept
+(removed from the open set) for the operator.
+
+**Verified by** `test/betaRestart.test.ts` with two simulated processes sharing
+the stores and one clock: active ride → restart → the owner resumes via
+`/beta/me` with all 13 pre-restart snapshots → collection continues in B →
+finish twice → one submission, no duplicate snapshots, one `resumed` event,
+`MATCHER_FIELD_CLEAN`, journal closed; zombie fencing (A's late poll writes
+nothing and A detaches); restart after 하차 완료; restart after completion but
+before storage (byte-identical raw, one record); restart past the 90-minute cap;
+journal outage at start; cross-tester 404 after recovery.
+
+**Not verified live:** the Lua script runs against the in-memory model and a
+command-shape test only. The session store's `EVAL` is already verified against
+live Upstash, but this script has not been. Before inviting testers, run one
+ride and restart the Railway service mid-ride (see Production setup).
+
+A ride is still lost (tester sees 저장되지 못했어요, slot returned) only when no
+journal exists for it — which, with the flag enabled, means its journal was
+deleted by hand.
+
 ## Why marker lag does not gate beta rides (finding, verified in code)
 
 `markerLagSamples` exists in `assessEvidence` (`services/api/src/rideCapture.ts`)
@@ -175,17 +257,26 @@ Tester routes are limited to 60 requests/min per tester (per process).
 
 ## Production setup
 
-No new environment variables. Beta is enabled exactly when the collector already
-has `UPSTASH_REDIS_REST_URL` and `UPSTASH_REDIS_REST_TOKEN` (Railway), which
-production has. Required:
+One new variable, Railway collector only:
 
-1. Merge, then redeploy the Railway collector and let Vercel deploy the static page.
-2. Confirm collector `/health` shows `betaTesters: "enabled"`.
+| Name | Where | Secret | Default | Deploy |
+|---|---|---|---|---|
+| `BETA_TESTERS_ENABLED` | Railway collector | no | absent = disabled | redeploy after changing |
+
+It also needs the existing `UPSTASH_REDIS_REST_URL` / `UPSTASH_REDIS_REST_TOKEN`.
+Vercel needs nothing new. Required:
+
+1. Merge, then redeploy the Railway collector and let Vercel deploy the static
+   page. `/health` shows `betaTesters: "disabled"` — beta stays off.
+2. When ready, set `BETA_TESTERS_ENABLED=true` on Railway, redeploy, and confirm
+   `/health` shows `betaTesters: "enabled"` and `betaRestartRecovery: "durable_journal"`.
 3. `TRANSIT_ALLOWED_ORIGINS` on Railway must include the Vercel origin serving
    `beta.html` (it already must, for `background.html`).
 4. Upstash eviction must stay off (already confirmed for the field-validation data).
 5. Create an invite from the operator page and complete one practice ride on a
-   real iPhone before inviting anyone.
+   real iPhone before inviting anyone. During it, restart the Railway service
+   once mid-ride and confirm the page still shows the ride, `/beta/campaign`
+   ends with one submission, and the stored raw has one `resumed` event.
 
 ## Status
 
@@ -194,8 +285,12 @@ production has. Required:
   `betaClient`), a 390 px Chromium walkthrough with mocked network.
 - `OPEN` real-iPhone Safari walkthrough; first real beta ride; human review of
   the v2 criteria before any beta count is cited.
-- Known limitations: collector state is process memory, so a Railway restart
-  loses an in-progress ride (`lost`, slot returned); rate limits are per process;
+- `DONE` `BETA_TESTERS_ENABLED` flag (default off) and restart durability via
+  the fenced capture journal (`betaFlag`, `betaRestart` tests).
+- Known limitations: the journal's Lua script is not yet exercised against live
+  Upstash; snapshots during the restart downtime are missing (not invented);
+  if a journal write fails transiently the evidence stays in memory and a later
+  restart would lose only what was not journaled; rate limits are per process;
   a revoked tester's in-progress capture keeps polling until the collector's
   90-minute cap; an invite whose redemption response was lost is burned and must
   be reissued; there is no delete/export tool for a tester's own data.

@@ -26,9 +26,35 @@ import { readBearerToken } from "./operatorAuth.ts";
 import { createBurstLimiter, type BurstLimiter } from "./rateLimit.ts";
 
 export const BETA_PAGE_PATH = "/ride-capture/beta.html";
+export const BETA_TESTERS_ENABLED_ENV = "BETA_TESTERS_ENABLED";
+
+/**
+ * `enabled` only when the operator set `BETA_TESTERS_ENABLED=true` (or `1`)
+ * on the collector AND durable storage is configured. Upstash alone never
+ * enables beta testing. Anything else, including a malformed value, is
+ * `disabled`: this flag fails closed rather than crashing the collector.
+ */
+export type BetaTesterMode = "enabled" | "disabled" | "unconfigured";
+
+export function resolveBetaTesterMode(
+  env: Record<string, string | undefined>,
+  storageConfigured: boolean,
+): { mode: BetaTesterMode; problem?: string } {
+  const raw = env[BETA_TESTERS_ENABLED_ENV]?.trim().toLowerCase();
+  if (raw === undefined || raw === "" || raw === "false" || raw === "0") return { mode: "disabled" };
+  if (raw !== "true" && raw !== "1") {
+    return { mode: "disabled", problem: `${BETA_TESTERS_ENABLED_ENV} must be true or false; beta testing stays disabled` };
+  }
+  if (!storageConfigured) {
+    return { mode: "unconfigured", problem: `${BETA_TESTERS_ENABLED_ENV}=true needs UPSTASH_REDIS_REST_URL and UPSTASH_REDIS_REST_TOKEN` };
+  }
+  return { mode: "enabled" };
+}
 
 export interface BetaRouteContext {
+  /** Present only when the mode is `enabled`. */
   beta: BetaService | undefined;
+  mode: BetaTesterMode;
   authorize: (request: IncomingMessage, capability: CollectorCapability) => void;
   allowedOrigins: string[];
   readJson: (request: IncomingMessage) => Promise<unknown>;
@@ -59,6 +85,14 @@ export async function routeBeta(
   if (path !== "/beta" && !path.startsWith("/beta/")) return undefined;
   const method = request.method ?? "GET";
   const { respond } = context;
+
+  // Off means off: every beta route, tester and operator alike, answers the
+  // same way before any credential is read or any store is touched.
+  if (context.mode !== "enabled" || !context.beta) {
+    throw context.mode === "unconfigured"
+      ? new BetaTesterError(503, "BETA_UNCONFIGURED", "beta testing is enabled but storage is not configured on this collector")
+      : new BetaTesterError(503, "BETA_DISABLED", "beta testing is disabled on this collector (BETA_TESTERS_ENABLED)");
+  }
 
   // Operator routes: the existing authorization seam, operator token by default.
   if (path === "/beta/invites" || path.startsWith("/beta/invites/") || path === "/beta/campaign") {

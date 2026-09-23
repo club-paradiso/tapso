@@ -72,6 +72,8 @@ export function messageForError(error) {
     case "BUS_NOT_FOUND": return "지금 이 버스를 확인하지 못했어요. 버스 번호와 차량번호 뒤 4자리를 다시 확인해 주세요.";
     case "BUS_AMBIGUOUS": return "같은 뒤 4자리 버스가 여러 대 보여요. 잠시 뒤 다시 시도해 주세요.";
     case "RATE_LIMITED": return "요청이 너무 잦아요. 잠시 뒤 다시 시도해 주세요.";
+    case "BETA_DISABLED":
+    case "BETA_UNCONFIGURED": return "지금은 베타 테스트를 진행하지 않아요. 초대한 사람에게 알려 주세요.";
     default: break;
   }
   if (status === 0) return "인터넷 연결을 확인한 뒤 다시 시도해 주세요.";

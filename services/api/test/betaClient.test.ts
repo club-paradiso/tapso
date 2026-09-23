@@ -51,7 +51,7 @@ test("server state decides every screen", () => {
 
 test("error messages are friendly Korean with no codes, numbers or internals", () => {
   const codes = ["INVITE_USED", "INVITE_EXPIRED", "INVITE_REVOKED", "BETA_REVOKED", "INVITE_INVALID", "BETA_EXPIRED",
-    "BETA_RIDE_LIMIT", "BETA_RIDE_IN_PROGRESS", "BETA_BUSY", "BUS_NOT_FOUND", "BUS_AMBIGUOUS", "RATE_LIMITED", "WHATEVER"];
+    "BETA_RIDE_LIMIT", "BETA_RIDE_IN_PROGRESS", "BETA_BUSY", "BUS_NOT_FOUND", "BUS_AMBIGUOUS", "RATE_LIMITED", "BETA_DISABLED", "BETA_UNCONFIGURED", "WHATEVER"];
   for (const code of codes) {
     for (const status of [0, 400, 401, 404, 409, 500, 503]) {
       const message = messageForError({ code, status });
@@ -59,6 +59,8 @@ test("error messages are friendly Korean with no codes, numbers or internals", (
       assert.ok(!/[A-Z_]{4,}|\d{3}|RAW|JSON|Redis|matcher|token/i.test(message), `${code}/${status}: ${message}`);
     }
   }
+  assert.match(messageForError({ code: "BETA_DISABLED", status: 503 }), /진행하지 않아요/);
+  assert.equal(credentialIsDead({ status: 503, code: "BETA_DISABLED" }), false, "a disabled beta never erases the tester's credential");
   assert.equal(credentialIsDead({ status: 401 }), true);
   assert.equal(credentialIsDead({ status: 503 }), false);
 });
