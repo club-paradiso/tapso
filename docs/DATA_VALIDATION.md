@@ -244,15 +244,25 @@ deliberately left open:
 | `EXCLUDED` | `usableForGate=false`, or a criterion failed (`wrong`, a direction change, a selection on non-fresh cadence). Failures are listed as `GATE_FAILURE`, never hidden |
 | `HISTORICAL_CONFOUNDED` | A browser capture that was hidden or offline, so its polling gaps cannot be attributed to TAGO |
 | `HISTORICAL_MATCHER_EVIDENCE` | A usable replay from `local-device`, `cli` or an engine-less capture with no suspension. Marked `UNRESOLVED`: nothing here decides whether such a ride may count, and the tool does not decide it either |
-| `REPORT_ONLY_NO_RAW` | A report without its raw capture. The matcher cannot be replayed from a report, which has no per-snapshot candidates, coordinates or direction codes. A modern report carrying a ride-time `matchGate` shows that gate but is marked `UNRESOLVED` |
+| `REPORT_ONLY_NO_RAW` | A report without its raw capture. The matcher cannot be replayed from a report, which has no per-snapshot candidates, coordinates or direction codes. Never counts, including a modern Railway report carrying a ride-time `matchGate`, which is shown for reference only |
 
-**Open decision.** The Railway background controller, the only engine that can
-produce a `CLEAN_GATE_CANDIDATE`, exports only the server-side report. The raw
-capture stays in the collector's memory for two hours and cannot be downloaded.
-So today no Railway ride can reach the clean bucket. Before the campaign
-continues, one of two things has to happen: the controller gains a raw export,
-or someone decides that a Railway report's ride-time `matchGate` may count
-without a raw to replay.
+**Decided 2026-09-23: every counted ride must keep its raw capture.** The
+Railway collector now exports the raw `RideCapture` of a completed session
+through the operator-authenticated `GET /capture/:sessionId/raw`, and the
+background finish screen saves it as `<routeId>-<startedAt>.json` next to
+`<routeId>-<startedAt>.report.json`. The rules that follow from that:
+
+- A future Railway ride counts only if its raw capture was saved. The report
+  alone does not count, even though it carries `matchGate`, because the current
+  matcher must always be replayable from raw evidence.
+- The 13 report-only historical rides stay `REPORT_ONLY_NO_RAW`. Nothing makes
+  them valid retroactively; the count stays 0 of 30.
+- The raw capture holds raw vehicle numbers and precise coordinates. Keep it
+  out of Git, under ignored `work/` or on the phone. Only the sanitized report,
+  or `campaign-report.*`, may be quoted in documentation.
+- The collector keeps a completed session for two hours
+  (`COMPLETED_RETENTION_MS`). Save the raw before that, or the ride is lost as
+  evidence. The finish screen shows the deadline.
 
 `remainingToThirty` counts `CLEAN_GATE_CANDIDATE` rides only. Reaching 30 does
 not close the gate on its own: every criterion above must also hold.

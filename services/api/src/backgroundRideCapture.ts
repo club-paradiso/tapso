@@ -14,7 +14,12 @@ import {
 const DEFAULT_INTERVAL_MS = 5_000;
 const POST_ALIGHT_OBSERVE_MS = 20_000;
 const MAX_SESSION_MS = 90 * 60 * 1_000;
-const COMPLETED_RETENTION_MS = 2 * 60 * 60 * 1_000;
+/**
+ * How long a completed session, raw capture included, stays in process memory.
+ * The operator must export the raw capture inside this window: after it the
+ * session is pruned and the raw evidence is gone for good.
+ */
+export const COMPLETED_RETENTION_MS = 2 * 60 * 60 * 1_000;
 const MAX_CLOCK_SKEW_MS = 30_000;
 const BACKGROUND_EVENT_KINDS = new Set<RideEventKind>(["hidden", "visible", "offline", "online", "resumed"]);
 const ACCEPTANCE_MIN_HIDDEN_MS = 60_000;
@@ -217,6 +222,26 @@ export class BackgroundRideCaptureCoordinator {
   status(sessionId: string): BackgroundCaptureStatus {
     this.prune();
     return this.statusFor(this.require(sessionId));
+  }
+
+  /**
+   * The complete raw `RideCapture` of one finished session, for replay later.
+   *
+   * Only a completed session qualifies: before completion there is no
+   * `endedAt`, and a partial capture exported as if final would be evidence of
+   * a ride that did not happen that way. The capture is cloned so a caller
+   * cannot reach back into the session, and it is never part of
+   * `BackgroundCaptureStatus`, which stays sanitized.
+   *
+   * It holds raw vehicle identifiers and coordinates. The only caller is the
+   * operator-authenticated `GET /capture/:id/raw`.
+   */
+  completedCapture(sessionId: string): RideCapture {
+    const session = this.require(sessionId);
+    if (session.phase !== "completed" || !session.capture.endedAt) {
+      throw new BackgroundRideCaptureError("the raw capture is exported only after the capture completes", "conflict");
+    }
+    return structuredClone(session.capture);
   }
 
   recordPassedStop(sessionId: string, stopSequence: number, at?: string, allowDuplicate = false): BackgroundCaptureStatus {

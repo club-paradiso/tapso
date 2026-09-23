@@ -75,3 +75,44 @@ test("background acceptance fails closed on provenance, browser background, and 
   });
   assert.equal(stalled.verdict, "FAIL");
 });
+
+test("raw capture and report share one exact stem so the campaign can pair them", async () => {
+  const { captureFileStem, rawCaptureFilename } = await import("../public/ride-capture/background-client-core.js");
+  const ride = { routeId: "JEB405136521", startedAt: "2026-09-15T12:34:56.789Z" };
+  assert.equal(captureFileStem(ride), "JEB405136521-2026-09-15T12-34-56-789Z");
+  assert.equal(rawCaptureFilename(ride), "JEB405136521-2026-09-15T12-34-56-789Z.json");
+  assert.equal(reportFilename(ride), "JEB405136521-2026-09-15T12-34-56-789Z.report.json");
+  assert.equal(
+    rawCaptureFilename(ride).replace(/\.json$/, ""),
+    reportFilename(ride).replace(/\.report\.json$/, ""),
+  );
+  // A route id is sanitized the same way on both halves.
+  assert.equal(captureFileStem({ routeId: "a/b c", startedAt: ride.startedAt }), "a_b_c-2026-09-15T12-34-56-789Z");
+});
+
+test("the finish screen never claims a download landed, and flags a missing raw", async () => {
+  const { exportChecklist, shouldWarnBeforeLeaving } = await import("../public/ride-capture/background-client-core.js");
+  const nothing = exportChecklist({});
+  assert.equal(nothing.rawMissing, true);
+  assert.match(nothing.raw, /저장 안 함/);
+  const both = exportChecklist({ rawRequested: true, reportRequested: true });
+  assert.equal(both.rawMissing, false);
+  assert.match(both.raw, /요청됨/);
+  assert.match(both.report, /요청됨/);
+  for (const text of [nothing.raw, nothing.report, both.raw, both.report]) {
+    assert.ok(!/저장됨|완료/.test(text), `must not claim success: ${text}`);
+  }
+  assert.equal(shouldWarnBeforeLeaving({ rawRequested: false }), true);
+  assert.equal(shouldWarnBeforeLeaving({ rawRequested: true }), false);
+});
+
+test("the raw export deadline is completion plus the collector's retention", async () => {
+  const { rawExportDeadline, RAW_RETENTION_MS } = await import("../public/ride-capture/background-client-core.js");
+  const { COMPLETED_RETENTION_MS } = await import("../src/backgroundRideCapture.ts");
+  assert.equal(RAW_RETENTION_MS, COMPLETED_RETENTION_MS, "client and server agree on the window");
+  assert.equal(
+    rawExportDeadline({ endedAt: "2026-09-23T09:00:00.000Z" })?.toISOString(),
+    "2026-09-23T11:00:00.000Z",
+  );
+  assert.equal(rawExportDeadline({}), undefined);
+});

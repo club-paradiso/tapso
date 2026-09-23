@@ -20,8 +20,12 @@ import {
   backgroundTopologySupported,
   backgroundAcceptanceVerdict,
   collectorHealthReady,
+  exportChecklist,
   finishedReportFromStatus,
+  rawCaptureFilename,
+  rawExportDeadline,
   reportFilename,
+  shouldWarnBeforeLeaving,
   stopNameForSequence,
 } from "./background-client-core.js";
 
@@ -55,6 +59,13 @@ const state = {
   report: undefined,
   alighting: false,
   finishing: false,
+  // Whether this page asked the browser to download each file. A request is
+  // all the page can know; iOS gives no signal that the file actually landed.
+  rawRequested: false,
+  reportRequested: false,
+  // The raw capture, fetched as soon as the ride completes and held only in
+  // page memory. Never rendered: it holds vehicle numbers and coordinates.
+  raw: undefined,
 };
 
 class ApiError extends Error {
@@ -795,7 +806,82 @@ async function finishWithReport(status, report) {
   );
   el("note").disabled = false;
   el("alight").disabled = false;
+  state.rawRequested = false;
+  state.reportRequested = false;
+  state.raw = undefined;
+  renderExportState();
   state.finishing = false;
+  void prefetchRaw();
+}
+
+/**
+ * Fetch the raw capture the moment the ride completes. Two reasons: the save
+ * button can then download inside the tap itself, which iOS Safari requires for
+ * a reliable download, and the capture survives in this page even if the
+ * collector later prunes or restarts.
+ */
+async function prefetchRaw() {
+  if (!state.sessionId || state.raw) return;
+  const sessionId = state.sessionId;
+  try {
+    const capture = await collectorWithRetry(`/capture/${encodeURIComponent(sessionId)}/raw`);
+    if (state.sessionId === sessionId) state.raw = capture;
+  } catch {
+    // The save button fetches again and reports the failure where it can be acted on.
+  }
+}
+
+function renderExportState() {
+  const checklist = exportChecklist(state);
+  const raw = el("export-raw-state");
+  raw.textContent = checklist.raw;
+  raw.dataset.tone = checklist.rawMissing ? "bad" : "ok";
+  const report = el("export-report-state");
+  report.textContent = checklist.report;
+  report.dataset.tone = state.reportRequested ? "ok" : "warn";
+  const deadline = rawExportDeadline(state.status);
+  el("export-deadline").textContent = deadline
+    ? `서버는 원본을 ${deadline.toLocaleTimeString()}까지만 보관합니다. 그 뒤에는 복구할 수 없습니다.`
+    : "서버는 원본을 완료 후 2시간만 보관합니다.";
+}
+
+/**
+ * Fetch this session's raw capture from the authenticated collector and save
+ * it under the same stem as the report. The capture is never rendered on the
+ * page: it holds vehicle numbers and coordinates.
+ */
+async function saveRaw() {
+  if (!state.sessionId || !state.report) return say("finish-alert", "저장할 원본이 없습니다.", "bad");
+  const button = el("save-raw");
+  button.disabled = true;
+  try {
+    const capture = state.raw
+      ?? await collectorWithRetry(`/capture/${encodeURIComponent(state.sessionId)}/raw`);
+    state.raw = capture;
+    downloadJson(rawCaptureFilename(capture), capture);
+    state.rawRequested = true;
+    renderExportState();
+    say("finish-alert", "원본 저장을 요청했습니다. 파일 앱에서 .json 파일이 생겼는지 확인한 뒤 리포트도 저장하세요.", "ok");
+  } catch (error) {
+    const message = error.status === 404
+      ? "서버 보관 기간이 지났거나 서버가 재시작되어 원본이 없습니다. 이 기록은 검증에 쓸 수 없습니다."
+      : `원본 저장 실패: ${error.message}`;
+    say("finish-alert", message, "bad");
+  } finally {
+    button.disabled = false;
+  }
+}
+
+async function startNewRide() {
+  if (state.report && shouldWarnBeforeLeaving(state)) {
+    const leave = await confirmAction(
+      "원본을 저장하지 않았습니다",
+      "원본(RAW) 없이 넘어가면 이 탑승은 30회 검증에 절대 포함되지 않습니다. 서버 보관 시간이 지나면 되살릴 수 없습니다.",
+      "저장하지 않고 넘어가기",
+    );
+    if (!leave) return;
+  }
+  reset();
 }
 
 function downloadJson(filename, payload) {
@@ -811,6 +897,8 @@ function downloadJson(filename, payload) {
 function saveReport() {
   if (!state.report) return say("finish-alert", "저장할 분석 리포트가 없습니다.", "bad");
   downloadJson(reportFilename(state.report), state.report);
+  state.reportRequested = true;
+  renderExportState();
 }
 
 async function copyReport() {
@@ -837,6 +925,9 @@ function reset() {
   state.report = undefined;
   state.alighting = false;
   state.finishing = false;
+  state.rawRequested = false;
+  state.reportRequested = false;
+  state.raw = undefined;
   lastLifecycleKind = undefined;
   el("plate").value = "";
   el("mark-stop").textContent = "다음 정류장 불러오는 중…";
@@ -889,9 +980,10 @@ el("status").addEventListener("click", async () => {
     [{ name: "확인", sequence: 1 }],
   );
 });
+el("save-raw").addEventListener("click", () => void saveRaw());
 el("save-report").addEventListener("click", saveReport);
 el("copy-report").addEventListener("click", copyReport);
-el("new-ride").addEventListener("click", reset);
+el("new-ride").addEventListener("click", () => void startNewRide());
 
 async function recordLifecycle(kind) {
   if (!state.sessionId || state.report || lastLifecycleKind === kind) return;
