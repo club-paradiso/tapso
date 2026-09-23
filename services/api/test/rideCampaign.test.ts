@@ -182,6 +182,21 @@ test("a report with no raw partner cannot be replayed and never counts", () => {
   assert.equal(campaign.counter.remainingToThirty, 30);
 });
 
+test("a modern report without its raw shows its ride-time gate but stays UNRESOLVED", () => {
+  // What the Railway background controller exports today: the server-side
+  // report, with matchGate, and no raw capture.
+  const report = analyzeRideCapture(capture());
+  const campaign = buildCampaign([file("SYN-ROUTE-A-1.report.json", report)]);
+  const [ride] = campaign.rides;
+
+  assert.equal(ride!.bucket, "REPORT_ONLY_NO_RAW");
+  assert.equal(ride!.policy, "UNRESOLVED");
+  assert.equal(ride!.captureEngine, "railway-background");
+  assert.equal(ride!.reportOnly?.rideTimeMatchGate?.selectionVerdict, "correct");
+  assert.equal(campaign.counter.cleanObservedBoardings, 0, "not counted until someone decides it may be");
+  assert.equal(campaign.unresolvedPolicyRides, 1);
+});
+
 test("reports pair with raws by exact stem, then by route and start time", () => {
   const exact = capture();
   const renamed = capture({ startedAt: at(100) });

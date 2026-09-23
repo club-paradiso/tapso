@@ -244,7 +244,15 @@ deliberately left open:
 | `EXCLUDED` | `usableForGate=false`, or a criterion failed (`wrong`, a direction change, a selection on non-fresh cadence). Failures are listed as `GATE_FAILURE`, never hidden |
 | `HISTORICAL_CONFOUNDED` | A browser capture that was hidden or offline, so its polling gaps cannot be attributed to TAGO |
 | `HISTORICAL_MATCHER_EVIDENCE` | A usable replay from `local-device`, `cli` or an engine-less capture with no suspension. Marked `UNRESOLVED`: nothing here decides whether such a ride may count, and the tool does not decide it either |
-| `REPORT_ONLY_NO_RAW` | A report without its raw capture. The matcher cannot be replayed from a report, which has no per-snapshot candidates, coordinates or direction codes |
+| `REPORT_ONLY_NO_RAW` | A report without its raw capture. The matcher cannot be replayed from a report, which has no per-snapshot candidates, coordinates or direction codes. A modern report carrying a ride-time `matchGate` shows that gate but is marked `UNRESOLVED` |
+
+**Open decision.** The Railway background controller, the only engine that can
+produce a `CLEAN_GATE_CANDIDATE`, exports only the server-side report. The raw
+capture stays in the collector's memory for two hours and cannot be downloaded.
+So today no Railway ride can reach the clean bucket. Before the campaign
+continues, one of two things has to happen: the controller gains a raw export,
+or someone decides that a Railway report's ride-time `matchGate` may count
+without a raw to replay.
 
 `remainingToThirty` counts `CLEAN_GATE_CANDIDATE` rides only. Reaching 30 does
 not close the gate on its own: every criterion above must also hold.

@@ -87,6 +87,18 @@ export interface CampaignRide {
     hasMatchGate: boolean;
     hasCaptureEngine: boolean;
     uniqueVehicleCount?: number;
+    /**
+     * The `matchGate` the deployed analyzer computed when the ride ended. It
+     * cannot be replayed under the current matcher without the raw capture.
+     * Copied so a human can see it; never counted.
+     */
+    rideTimeMatchGate?: {
+      usableForGate?: boolean;
+      selectionVerdict?: string;
+      contestedDecisions?: number;
+      boardedDirectionChanges?: number;
+      selectionsWhileNotFresh?: number;
+    };
   };
   warnings: string[];
 }
@@ -354,9 +366,23 @@ function classify(ride: CampaignRide): void {
   );
 }
 
+/**
+ * A report without its raw. It never counts, because the current matcher
+ * cannot be replayed from it. A modern report that carries a ride-time
+ * `matchGate` is still marked `UNRESOLVED`: the Railway background controller
+ * exports only that report, so whether such a report may count without a raw
+ * is a decision nothing in the repository has made.
+ */
 function reportOnlyRide(stem: string, report: Record<string, unknown>, rawRecovery: RawRecovery): CampaignRide {
   const lifecycle = (report.lifecycle ?? {}) as Record<string, number>;
   const evidence = (report.evidenceCompleteness ?? {}) as { verdict?: string };
+  const gate = report.matchGate as undefined | {
+    usableForGate?: boolean;
+    selectionVerdict?: string;
+    contestedDecisions?: number;
+    directionReversal?: { boardedDirectionChanges?: number };
+    staleData?: { selectionsWhileNotFresh?: number };
+  };
   return {
     stem,
     source: "report_only",
@@ -366,9 +392,11 @@ function reportOnlyRide(stem: string, report: Record<string, unknown>, rawRecove
       rawRecovery === "AMBIGUOUS_RAW_MATCH"
         ? "more than one raw capture matches this report; none was chosen"
         : "no raw capture, so the current matcher cannot be replayed",
-      ...("matchGate" in report ? [] : ["report predates matchGate"]),
+      ...(gate
+        ? ["carries a ride-time matchGate; whether a report without its raw may count is not decided"]
+        : ["report predates matchGate"]),
     ],
-    policy: "DECIDED",
+    policy: gate ? "UNRESOLVED" : "DECIDED",
     routeId: String(report.routeId ?? "unknown"),
     ...(typeof report.startedAt === "string" ? { startedAt: report.startedAt } : {}),
     captureEngine: typeof report.captureEngine === "string" ? report.captureEngine as RideCaptureEngine : "unknown",
@@ -381,6 +409,21 @@ function reportOnlyRide(stem: string, report: Record<string, unknown>, rawRecove
       hasMatchGate: "matchGate" in report,
       hasCaptureEngine: "captureEngine" in report,
       ...(typeof report.uniqueVehicleCount === "number" ? { uniqueVehicleCount: report.uniqueVehicleCount } : {}),
+      ...(gate
+        ? {
+          rideTimeMatchGate: {
+            ...(typeof gate.usableForGate === "boolean" ? { usableForGate: gate.usableForGate } : {}),
+            ...(typeof gate.selectionVerdict === "string" ? { selectionVerdict: gate.selectionVerdict } : {}),
+            ...(typeof gate.contestedDecisions === "number" ? { contestedDecisions: gate.contestedDecisions } : {}),
+            ...(typeof gate.directionReversal?.boardedDirectionChanges === "number"
+              ? { boardedDirectionChanges: gate.directionReversal.boardedDirectionChanges }
+              : {}),
+            ...(typeof gate.staleData?.selectionsWhileNotFresh === "number"
+              ? { selectionsWhileNotFresh: gate.staleData.selectionsWhileNotFresh }
+              : {}),
+          },
+        }
+        : {}),
     },
     warnings: [],
   };
@@ -573,7 +616,7 @@ export function renderCampaignMarkdown(campaign: CampaignReport): string {
     "| Ride | Bucket | Policy | Engine | Snapshots | Hidden | Verdict | Reason |",
     "|---|---|---|---|---|---|---|---|",
     ...campaign.rides.map((ride) =>
-      `| ${ride.stem} | ${ride.bucket} | ${ride.policy} | ${ride.captureEngine} | ${ride.snapshotCount ?? "—"} | ${ride.hiddenPeriods ?? "—"} | ${ride.matchGate?.selectionVerdict ?? "—"} | ${ride.reasons.join("; ")} |`),
+      `| ${ride.stem} | ${ride.bucket} | ${ride.policy} | ${ride.captureEngine} | ${ride.snapshotCount ?? "—"} | ${ride.hiddenPeriods ?? "—"} | ${ride.matchGate?.selectionVerdict ?? (ride.reportOnly?.rideTimeMatchGate?.selectionVerdict ? `ride-time ${ride.reportOnly.rideTimeMatchGate.selectionVerdict}` : "—")} | ${ride.reasons.join("; ")} |`),
     "",
   ];
   return lines.join("\n");
