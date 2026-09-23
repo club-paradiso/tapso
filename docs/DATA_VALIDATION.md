@@ -290,6 +290,27 @@ files from the browser recorder, across 10 `routeId`s, all written before
 them, so all 13 are `REPORT_ONLY_NO_RAW`. Clean observed boardings: `0`.
 Remaining: `30`.
 
+### Two questions, two campaigns (2026-09-23)
+
+The gate above needs two different kinds of evidence, and they are now
+collected separately:
+
+| | Operator field validation (v1) | Beta matcher validation (v2) |
+|---|---|---|
+| Page | `/ride-capture/background.html` (operator token) | `/ride-capture/beta.html` (invite link) |
+| Rider does | identify bus, tap physical stops, finish, submit | enter bus + plate last 4, pick boarding stop, 탑승 시작, 하차 완료 |
+| Answers | provider/cadence calibration (marker lag, receipt cadence) **and** matcher replay | matcher replay only |
+| Campaign | `broad-real-mode-30-boardings-v1`, rules unchanged | `beta-matcher-30-boardings-v2`, policy `beta-matcher-v2` |
+| Counts when | `CLEAN_GATE_CANDIDATE` (above) | `MATCHER_FIELD_CLEAN`: v1 criteria + `selectionVerdict=correct` + the analyzer's snapshot, progression and content-change minimums; marker lag not required |
+
+`markerLagSamples` is a precondition for the provider lag distribution, not for
+matcher correctness: the matcher replay never reads markers, and the v1 bucket
+never read `evidenceCompleteness`. Beta rides have no markers, so they say
+nothing about provider lag. Thirty clean beta rides fill the matcher field sample
+and nothing else: provider/cadence calibration remains a separate requirement,
+`gateClosed` stays `false`, and automatic matching stays off. Details:
+`exec-plans/BETA_FIELD_TESTER.md`.
+
 ### One hypothesis this instrument exists to test
 
 A bus a rider is boarding is, at that instant, stationary at their stop. The

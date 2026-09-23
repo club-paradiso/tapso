@@ -3,7 +3,9 @@
  * against an injected coordinator. `backgroundServer.ts` builds the real
  * dependencies from the environment and listens; this file only routes.
  *
- * Everything but `/health` requires the operator bearer token.
+ * Everything but `/health` requires the operator bearer token, except the
+ * `/beta/*` tester routes, which take a scoped beta-tester credential instead
+ * (see `betaHttp.ts`).
  */
 
 import type { IncomingMessage, ServerResponse } from "node:http";
@@ -20,6 +22,9 @@ import {
   submitCompletedCapture,
   type FieldValidationStore,
 } from "./fieldValidation.ts";
+import { createBetaLimits, routeBeta, type BetaLimits } from "./betaHttp.ts";
+import type { BetaService } from "./betaService.ts";
+import { BetaTesterError } from "./betaTester.ts";
 import { operatorTokenMatches, readBearerToken, type OperatorCredential } from "./operatorAuth.ts";
 
 const MAX_BODY_BYTES = 16 * 1_024;
@@ -28,14 +33,14 @@ const ROUTE_ID = /^[A-Za-z0-9_-]{1,64}$/;
 const CITY_CODE = /^[0-9]{1,6}$/;
 
 /**
- * What a request is allowed to do. Every route names exactly one.
+ * What an operator-side request is allowed to do. Every route names exactly one,
+ * and the operator token holds all of them.
  *
- * Today only the operator token exists and it holds all of them. The seam is
- * here so a field-tester credential can later be granted `capture:start`,
- * `capture:write`, `capture:read` and `capture:submit` for its own sessions,
- * without `capture:raw` or `campaign:read`, and without ever seeing the
- * operator token. That credential is not implemented; see
- * docs/exec-plans/FIELD_VALIDATION_SUBMISSION.md.
+ * Beta testers never pass through this seam. Their credential is checked by
+ * `BetaService.authenticate` on the `/beta/*` tester routes only, which act on
+ * the tester's own rides; it holds none of these capabilities, so it can never
+ * read a raw capture, a campaign, or administer invites. See
+ * docs/exec-plans/BETA_FIELD_TESTER.md.
  */
 export type CollectorCapability =
   | "capture:start"
@@ -43,7 +48,8 @@ export type CollectorCapability =
   | "capture:write"
   | "capture:raw"
   | "capture:submit"
-  | "campaign:read";
+  | "campaign:read"
+  | "beta:admin";
 
 /** Throws a 401/503 `httpError` when the request may not exercise `capability`. */
 export type CollectorAuthorizer = (request: IncomingMessage, capability: CollectorCapability) => void;
@@ -61,8 +67,11 @@ export interface BackgroundHttpDependencies {
   log?: (line: string) => void;
   /** Durable submission storage. Absent means submit answers 503 and manual export remains. */
   fieldValidation?: { store: FieldValidationStore; campaignId?: string };
-  /** Overrides operator-only auth. Tests and a future tester credential use this. */
+  /** Overrides operator-only auth for the operator routes. Tests use this. */
   authorize?: CollectorAuthorizer;
+  /** Beta-tester invites and rides. Absent means every `/beta/*` route answers 503. */
+  beta?: BetaService;
+  betaLimits?: BetaLimits;
 }
 
 export type BackgroundRequestHandler = (request: IncomingMessage, response: ServerResponse) => Promise<void>;
@@ -77,6 +86,7 @@ export function createBackgroundRequestHandler(deps: BackgroundHttpDependencies)
   }
 
   const authorize: CollectorAuthorizer = deps.authorize ?? ((request) => requireOperator(request));
+  const betaLimits = deps.betaLimits ?? createBetaLimits();
 
   function requireOperator(request: IncomingMessage): void {
     if (!operator.configured || !operator.token) {
@@ -121,6 +131,22 @@ export function createBackgroundRequestHandler(deps: BackgroundHttpDependencies)
         route = "health";
         status = 200;
         writeJson(response, 200, health(), cors);
+        return;
+      }
+
+      const betaRoute = await routeBeta(request, path, {
+        beta: deps.beta,
+        authorize,
+        allowedOrigins,
+        readJson,
+        respond: (code, body) => {
+          status = code;
+          writeJson(response, code, body, cors);
+        },
+        limits: betaLimits,
+      });
+      if (betaRoute) {
+        route = betaRoute;
         return;
       }
 
@@ -184,6 +210,11 @@ export function createBackgroundRequestHandler(deps: BackgroundHttpDependencies)
         if (!store) {
           throw httpError(503, "FIELD_VALIDATION_UNAVAILABLE",
             "field-validation storage is not configured; export the raw capture manually");
+        }
+        // A beta ride is submitted automatically into the beta campaign, and
+        // only there; it must never be counted in v1 as well.
+        if (deps.beta && await deps.beta.isBetaCapture(sessionId)) {
+          throw httpError(409, "BETA_CAPTURE", "this is a beta-tester ride; it is submitted to the beta campaign automatically");
         }
         const raw = captures.completedCapture(sessionId);
         const rideTimeReport = captures.status(sessionId).report;
@@ -381,6 +412,7 @@ function capabilityFor(method: string | undefined, path: string): CollectorCapab
 }
 
 function mapError(error: unknown): { status: number; code: string; message: string } {
+  if (error instanceof BetaTesterError) return { status: error.status, code: error.code, message: error.message };
   if (error instanceof FieldValidationError) {
     // The session is untouched by a failed submit, so the message says what
     // still works rather than implying the ride is gone.

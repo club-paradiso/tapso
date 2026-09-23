@@ -3,6 +3,8 @@ import { createServer } from "node:http";
 import { readUpstashCredentials } from "./apiConfig.ts";
 import { createBackgroundRequestHandler } from "./backgroundHttp.ts";
 import { BackgroundRideCaptureCoordinator } from "./backgroundRideCapture.ts";
+import { BetaService } from "./betaService.ts";
+import { UpstashBetaTesterStore } from "./betaTester.ts";
 import { UpstashFieldValidationStore } from "./fieldValidation.ts";
 import { resolveOperatorToken } from "./operatorAuth.ts";
 import { resolveTagoServiceKey, serviceKeyWarning } from "./serviceKey.ts";
@@ -20,8 +22,16 @@ if (operator.problem) console.warn(JSON.stringify({ level: "warn", event: "ride_
 
 const provider = new TagoTransitProvider({ serviceKey: credential.key });
 const push = createWebPushSender(process.env);
+// Bound after construction: the beta service needs the coordinator, and the
+// coordinator reports completions to the beta service.
+let beta: BetaService | undefined;
 const captures = new BackgroundRideCaptureCoordinator(provider, {
   onComplete: async ({ mode, report, pushSubscription, sessionId }) => {
+    if (mode === "field") {
+      // Beta rides submit themselves when they complete; operator rides are ignored.
+      await beta?.onCaptureComplete(sessionId);
+      return;
+    }
     if (mode !== "background_acceptance") return;
     const verdict = backgroundAcceptanceVerdict(report);
     try {
@@ -52,12 +62,18 @@ const allowedOrigins = originList(process.env.TRANSIT_ALLOWED_ORIGINS);
 // nothing pretends a ride was stored.
 const upstash = readUpstashCredentials(process.env);
 const fieldValidationStore = upstash ? new UpstashFieldValidationStore(upstash) : undefined;
+// Beta testers need the same database: their rides are stored exactly like
+// operator submissions, and their invites live beside them in their own namespace.
+beta = upstash && fieldValidationStore
+  ? new BetaService({ store: new UpstashBetaTesterStore(upstash), fieldValidation: fieldValidationStore, captures, provider })
+  : undefined;
 
 export const backgroundServer = createServer(createBackgroundRequestHandler({
   captures,
   operator,
   allowedOrigins,
   ...(fieldValidationStore ? { fieldValidation: { store: fieldValidationStore } } : {}),
+  ...(beta ? { beta } : {}),
   health: () => ({
     ok: true,
     service: "tapso-ride-collector",
@@ -69,6 +85,7 @@ export const backgroundServer = createServer(createBackgroundRequestHandler({
     processRestartLosesActiveCapture: true,
     providerObservationTimestamp: "unavailable",
     fieldValidationStorage: fieldValidationStore ? "upstash" : "unconfigured",
+    betaTesters: beta ? "enabled" : "unconfigured",
   }),
 }));
 

@@ -42,6 +42,7 @@ jobs:
       - run: npm install --prefix services/api --omit=optional --no-audit --no-fund
       - run: npm test --prefix services/api
       - run: node --check services/api/public/ride-capture/acceptance.js && node --check services/api/public/ride-capture/acceptance-sw.js
+      - run: for f in beta.js beta-client-core.js beta-admin.js beta-admin-core.js background.js; do node --check services/api/public/ride-capture/$f || exit 1; done
       - run: python3 -m unittest discover -s scripts/tago -p 'test_*.py'
 
   web:

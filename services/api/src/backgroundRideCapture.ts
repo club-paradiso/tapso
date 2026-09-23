@@ -24,6 +24,9 @@ const MAX_CLOCK_SKEW_MS = 30_000;
 const BACKGROUND_EVENT_KINDS = new Set<RideEventKind>(["hidden", "visible", "offline", "online", "resumed"]);
 const ACCEPTANCE_MIN_HIDDEN_MS = 60_000;
 const ACCEPTANCE_MIN_SNAPSHOTS = 20;
+export const DESTINATION_UNKNOWN_NOTE =
+  "destination not provided by the rider; destinationStopSequence is the route's last stop, used only as a collection bound";
+export const ALIGHT_STOP_UNKNOWN_NOTE = "rider finished the ride; alighting stop not recorded";
 
 export type BackgroundCapturePhase = "active" | "post_alight" | "completed";
 export type BackgroundCaptureMode = "field" | "background_acceptance";
@@ -46,6 +49,19 @@ export interface BackgroundCaptureStartInput {
   intervalMs?: number;
   mode?: BackgroundCaptureMode;
   pushSubscription?: WebPushSubscriptionInput;
+  /**
+   * Server-side callers only; never parsed from an HTTP body. The beta flow
+   * pre-allocates the id so ownership is recorded before polling starts.
+   */
+  sessionId?: string;
+  /**
+   * `false` when the rider did not name where they would get off, so
+   * `destinationStopSequence` is only the route's last stop, used as a
+   * collection bound. The capture then says so in a note, and finishing
+   * records a note instead of an `alighted` marker that would claim a stop
+   * nobody observed. Defaults to `true`.
+   */
+  destinationKnown?: boolean;
 }
 
 export interface BackgroundCaptureStatus {
@@ -110,6 +126,7 @@ type BackgroundSession = {
   mode: BackgroundCaptureMode;
   pushSubscription?: WebPushSubscriptionInput;
   completionEmitted: boolean;
+  destinationKnown: boolean;
 };
 
 export interface BackgroundRideCaptureOptions {
@@ -170,6 +187,12 @@ export class BackgroundRideCaptureCoordinator {
     const stops = await this.provider.stops({ routeId, cityCode });
     validateStops(stops, input.boardingStopSequence, input.destinationStopSequence);
 
+    const requestedId = input.sessionId === undefined ? undefined : String(input.sessionId).trim();
+    if (requestedId !== undefined && (!/^[A-Za-z0-9_-]{1,64}$/.test(requestedId) || this.sessions.has(requestedId))) {
+      throw new BackgroundRideCaptureError("sessionId is invalid or already in use", "conflict");
+    }
+    const destinationKnown = input.destinationKnown !== false;
+
     const startedAt = this.now().toISOString();
     const intervalMs = Math.max(3_000, Math.round(input.intervalMs ?? this.defaultIntervalMs));
     const mode: BackgroundCaptureMode = input.mode === "background_acceptance" ? "background_acceptance" : "field";
@@ -189,19 +212,23 @@ export class BackgroundRideCaptureCoordinator {
       stops,
       snapshots: [],
       markers: mode === "field"
-        ? [{ at: startedAt, kind: "boarded", stopSequence: input.boardingStopSequence }]
+        ? [
+          { at: startedAt, kind: "boarded", stopSequence: input.boardingStopSequence },
+          ...(destinationKnown ? [] : [{ at: startedAt, kind: "note" as const, note: DESTINATION_UNKNOWN_NOTE }]),
+        ]
         : [],
       events: [],
     };
 
     const session: BackgroundSession = {
-      id: randomUUID(),
+      id: requestedId ?? randomUUID(),
       capture,
       phase: "active",
       polling: false,
       mode,
       ...(input.pushSubscription ? { pushSubscription: input.pushSubscription } : {}),
       completionEmitted: false,
+      destinationKnown,
     };
 
     // Exact identity is re-confirmed on an uncached provider read. A matching
@@ -296,11 +323,11 @@ export class BackgroundRideCaptureCoordinator {
     if (session.phase === "completed" || session.phase === "post_alight") return this.statusFor(session);
 
     const timestamp = this.markerTime(session, at);
-    session.capture.markers.push({
-      at: timestamp,
-      kind: "alighted",
-      stopSequence: session.capture.destinationStopSequence,
-    });
+    session.capture.markers.push(session.destinationKnown
+      ? { at: timestamp, kind: "alighted", stopSequence: session.capture.destinationStopSequence }
+      // The analyzer reads every `alighted` marker as the destination stop, so
+      // without a named stop the finish is a note, not a physical claim.
+      : { at: timestamp, kind: "note", note: ALIGHT_STOP_UNKNOWN_NOTE });
     session.phase = "post_alight";
     session.alightedAtMs = Date.parse(timestamp);
 
