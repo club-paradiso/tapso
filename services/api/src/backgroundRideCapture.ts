@@ -1,11 +1,13 @@
 import { randomUUID } from "node:crypto";
 
+import type { CaptureJournal, JournalList, JournalRecord, JournalState } from "./captureJournal.ts";
 import type { StopOnRoute, VehicleObservation } from "./domain.ts";
 import type { TransitProvider } from "./provider.ts";
 import {
   RIDE_CAPTURE_SCHEMA_VERSION,
   analyzeRideCapture,
   type RideCapture,
+  type RideMarker,
   type RideCaptureReport,
   type RideEventKind,
   type RideSnapshot,
@@ -24,6 +26,9 @@ const MAX_CLOCK_SKEW_MS = 30_000;
 const BACKGROUND_EVENT_KINDS = new Set<RideEventKind>(["hidden", "visible", "offline", "online", "resumed"]);
 const ACCEPTANCE_MIN_HIDDEN_MS = 60_000;
 const ACCEPTANCE_MIN_SNAPSHOTS = 20;
+export const DESTINATION_UNKNOWN_NOTE =
+  "destination not provided by the rider; destinationStopSequence is the route's last stop, used only as a collection bound";
+export const ALIGHT_STOP_UNKNOWN_NOTE = "rider finished the ride; alighting stop not recorded";
 
 export type BackgroundCapturePhase = "active" | "post_alight" | "completed";
 export type BackgroundCaptureMode = "field" | "background_acceptance";
@@ -46,6 +51,25 @@ export interface BackgroundCaptureStartInput {
   intervalMs?: number;
   mode?: BackgroundCaptureMode;
   pushSubscription?: WebPushSubscriptionInput;
+  /**
+   * Server-side callers only; never parsed from an HTTP body. The beta flow
+   * pre-allocates the id so ownership is recorded before polling starts.
+   */
+  sessionId?: string;
+  /**
+   * `false` when the rider did not name where they would get off, so
+   * `destinationStopSequence` is only the route's last stop, used as a
+   * collection bound. The capture then says so in a note, and finishing
+   * records a note instead of an `alighted` marker that would claim a stop
+   * nobody observed. Defaults to `true`.
+   */
+  destinationKnown?: boolean;
+  /**
+   * Server-side callers only. Journal every piece of evidence to the durable
+   * `CaptureJournal`, so the ride survives a collector restart (`restore`).
+   * Refused when the coordinator has no journal.
+   */
+  durable?: boolean;
 }
 
 export interface BackgroundCaptureStatus {
@@ -110,6 +134,11 @@ type BackgroundSession = {
   mode: BackgroundCaptureMode;
   pushSubscription?: WebPushSubscriptionInput;
   completionEmitted: boolean;
+  destinationKnown: boolean;
+  durable: boolean;
+  /** Journal writes run strictly in collection order. */
+  journalChain: Promise<boolean>;
+  journalFailures: number;
 };
 
 export interface BackgroundRideCaptureOptions {
@@ -118,6 +147,11 @@ export interface BackgroundRideCaptureOptions {
   cancel?: Cancel;
   intervalMs?: number;
   onComplete?: (completion: BackgroundCaptureCompletion) => void | Promise<void>;
+  /** Durable evidence for `durable` sessions. Operator sessions never use it. */
+  journal?: CaptureJournal;
+  /** This process's lease identity. Random per process by default. */
+  instanceId?: string;
+  log?: (line: string) => void;
 }
 
 /**
@@ -139,6 +173,9 @@ export class BackgroundRideCaptureCoordinator {
   private readonly cancelFn: Cancel;
   private readonly defaultIntervalMs: number;
   private readonly onComplete?: (completion: BackgroundCaptureCompletion) => void | Promise<void>;
+  private readonly journal?: CaptureJournal;
+  readonly instanceId: string;
+  private readonly log: (line: string) => void;
 
   constructor(
     provider: Pick<TransitProvider, "stops" | "vehicles">,
@@ -150,6 +187,9 @@ export class BackgroundRideCaptureCoordinator {
     this.cancelFn = options.cancel ?? ((handle) => clearTimeout(handle));
     this.defaultIntervalMs = Math.max(3_000, options.intervalMs ?? DEFAULT_INTERVAL_MS);
     this.onComplete = options.onComplete;
+    this.journal = options.journal;
+    this.instanceId = options.instanceId ?? `collector-${randomUUID()}`;
+    this.log = options.log ?? ((line) => console.warn(line));
   }
 
   async start(input: BackgroundCaptureStartInput): Promise<BackgroundCaptureStatus> {
@@ -170,6 +210,16 @@ export class BackgroundRideCaptureCoordinator {
     const stops = await this.provider.stops({ routeId, cityCode });
     validateStops(stops, input.boardingStopSequence, input.destinationStopSequence);
 
+    const requestedId = input.sessionId === undefined ? undefined : String(input.sessionId).trim();
+    if (requestedId !== undefined && (!/^[A-Za-z0-9_-]{1,64}$/.test(requestedId) || this.sessions.has(requestedId))) {
+      throw new BackgroundRideCaptureError("sessionId is invalid or already in use", "conflict");
+    }
+    const destinationKnown = input.destinationKnown !== false;
+    const durable = input.durable === true;
+    if (durable && !this.journal) {
+      throw new BackgroundRideCaptureError("durable capture requires a journal", "unavailable");
+    }
+
     const startedAt = this.now().toISOString();
     const intervalMs = Math.max(3_000, Math.round(input.intervalMs ?? this.defaultIntervalMs));
     const mode: BackgroundCaptureMode = input.mode === "background_acceptance" ? "background_acceptance" : "field";
@@ -189,19 +239,26 @@ export class BackgroundRideCaptureCoordinator {
       stops,
       snapshots: [],
       markers: mode === "field"
-        ? [{ at: startedAt, kind: "boarded", stopSequence: input.boardingStopSequence }]
+        ? [
+          { at: startedAt, kind: "boarded", stopSequence: input.boardingStopSequence },
+          ...(destinationKnown ? [] : [{ at: startedAt, kind: "note" as const, note: DESTINATION_UNKNOWN_NOTE }]),
+        ]
         : [],
       events: [],
     };
 
     const session: BackgroundSession = {
-      id: randomUUID(),
+      id: requestedId ?? randomUUID(),
       capture,
       phase: "active",
       polling: false,
       mode,
       ...(input.pushSubscription ? { pushSubscription: input.pushSubscription } : {}),
       completionEmitted: false,
+      destinationKnown,
+      durable,
+      journalChain: Promise.resolve(true),
+      journalFailures: 0,
     };
 
     // Exact identity is re-confirmed on an uncached provider read. A matching
@@ -214,9 +271,88 @@ export class BackgroundRideCaptureCoordinator {
       );
     }
     capture.snapshots.push(first);
+    if (durable) {
+      // The ride exists durably before polling starts, or it does not start.
+      const { snapshots, markers, events, ...header } = capture;
+      try {
+        await this.journal!.begin(session.id, this.instanceId, { capture: header, mode, destinationKnown }, {
+          state: { phase: "active" },
+          snapshots,
+          markers,
+          events: events ?? [],
+        });
+      } catch {
+        throw new BackgroundRideCaptureError("the capture journal is unavailable", "unavailable");
+      }
+    }
     this.sessions.set(session.id, session);
     this.arm(session);
     return this.statusFor(session);
+  }
+
+  /**
+   * Take over a journaled ride after a restart. Rebuilds the exact capture
+   * from the journal and resumes polling. Nothing is invented for the time
+   * the collector was down; a `resumed` event records the restart.
+   *
+   * Refused (`conflict`) while another live collector holds the ride's lease.
+   */
+  async restore(record: JournalRecord): Promise<BackgroundCaptureStatus> {
+    this.prune();
+    const existing = this.sessions.get(record.sessionId);
+    if (existing) return this.statusFor(existing);
+    if (!this.journal) throw new BackgroundRideCaptureError("no journal to restore from", "unavailable");
+    if (!await this.journal.acquire(record.sessionId, this.instanceId)) {
+      throw new BackgroundRideCaptureError("another collector still owns this capture", "conflict");
+    }
+    const capture: RideCapture = {
+      ...record.header.capture,
+      snapshots: record.snapshots,
+      markers: record.markers,
+      events: record.events,
+      ...(record.state.endedAt ? { endedAt: record.state.endedAt } : {}),
+    };
+    const session: BackgroundSession = {
+      id: record.sessionId,
+      capture,
+      phase: record.state.phase,
+      polling: false,
+      mode: record.header.mode,
+      completionEmitted: record.state.phase === "completed",
+      destinationKnown: record.header.destinationKnown,
+      durable: true,
+      journalChain: Promise.resolve(true),
+      journalFailures: 0,
+      ...(record.state.alightedAtMs !== undefined ? { alightedAtMs: record.state.alightedAtMs } : {}),
+    };
+    this.sessions.set(session.id, session);
+    if (session.phase === "completed") {
+      // Byte-for-byte the capture the previous collector finished, so a
+      // resubmission deduplicates on the same raw hash.
+      session.completedAtMs = this.now().getTime();
+      session.report = analyzeRideCapture(capture);
+      return this.statusFor(session);
+    }
+    this.pushEvent(session, { at: this.now().toISOString(), kind: "resumed", detail: "collector restarted; polling resumed from the durable journal" });
+    const nowMs = this.now().getTime();
+    if (nowMs - Date.parse(capture.startedAt) >= MAX_SESSION_MS
+      || (session.phase === "post_alight" && this.postAlightExpired(session, nowMs))) {
+      this.complete(session, this.now());
+    } else {
+      this.arm(session);
+    }
+    return this.statusFor(session);
+  }
+
+  /** Resolves once every journal write queued for this session has settled. */
+  async flush(sessionId: string): Promise<void> {
+    const session = this.sessions.get(String(sessionId ?? "").trim());
+    if (session) await session.journalChain;
+  }
+
+  /** Whether this process currently runs the session. */
+  owns(sessionId: string): boolean {
+    return this.sessions.has(sessionId);
   }
 
   status(sessionId: string): BackgroundCaptureStatus {
@@ -258,7 +394,7 @@ export class BackgroundRideCaptureCoordinator {
     if (duplicate && !allowDuplicate) {
       throw new BackgroundRideCaptureError("this stop already has a physical marker", "conflict");
     }
-    session.capture.markers.push({ at: this.markerTime(session, at), kind: "passed_stop", stopSequence });
+    this.pushMarker(session, { at: this.markerTime(session, at), kind: "passed_stop", stopSequence });
     return this.statusFor(session);
   }
 
@@ -272,8 +408,7 @@ export class BackgroundRideCaptureCoordinator {
     }
     const safeDetail = String(detail ?? "").trim();
     if (safeDetail.length > 120) throw new BackgroundRideCaptureError("event detail must be at most 120 characters");
-    session.capture.events ??= [];
-    session.capture.events.push({
+    this.pushEvent(session, {
       at: this.markerTime(session, at),
       kind: kind as RideEventKind,
       ...(safeDetail ? { detail: safeDetail } : {}),
@@ -287,7 +422,7 @@ export class BackgroundRideCaptureCoordinator {
     const text = String(note ?? "").trim();
     if (!text) throw new BackgroundRideCaptureError("note must not be empty");
     if (text.length > 300) throw new BackgroundRideCaptureError("note must be at most 300 characters");
-    session.capture.markers.push({ at: this.markerTime(session, at), kind: "note", note: text });
+    this.pushMarker(session, { at: this.markerTime(session, at), kind: "note", note: text });
     return this.statusFor(session);
   }
 
@@ -296,13 +431,14 @@ export class BackgroundRideCaptureCoordinator {
     if (session.phase === "completed" || session.phase === "post_alight") return this.statusFor(session);
 
     const timestamp = this.markerTime(session, at);
-    session.capture.markers.push({
-      at: timestamp,
-      kind: "alighted",
-      stopSequence: session.capture.destinationStopSequence,
-    });
+    this.pushMarker(session, session.destinationKnown
+      ? { at: timestamp, kind: "alighted", stopSequence: session.capture.destinationStopSequence }
+      // The analyzer reads every `alighted` marker as the destination stop, so
+      // without a named stop the finish is a note, not a physical claim.
+      : { at: timestamp, kind: "note", note: ALIGHT_STOP_UNKNOWN_NOTE });
     session.phase = "post_alight";
     session.alightedAtMs = Date.parse(timestamp);
+    this.journalState(session, { phase: "post_alight", alightedAtMs: session.alightedAtMs });
 
     if (this.destinationObserved(session)) this.complete(session, this.now());
     else this.rearmForPostAlight(session);
@@ -339,7 +475,13 @@ export class BackgroundRideCaptureCoordinator {
     if (session.polling || session.phase === "completed") return;
     session.polling = true;
     try {
-      session.capture.snapshots.push(await this.readSnapshot(session));
+      const snapshot = await this.readSnapshot(session);
+      if (session.durable) {
+        // Fenced: a collector that lost the ride's lease writes nothing and
+        // stops, so two processes never append to one ride.
+        if (!await this.journalWrite(session, "snapshots", snapshot)) return;
+      }
+      session.capture.snapshots.push(snapshot);
       if (session.phase === "post_alight") {
         const nowMs = this.now().getTime();
         if (this.destinationObserved(session) || this.postAlightExpired(session, nowMs)) {
@@ -371,6 +513,7 @@ export class BackgroundRideCaptureCoordinator {
 
   private arm(session: BackgroundSession): void {
     if (session.phase === "completed" || session.timer) return;
+    if (this.sessions.get(session.id) !== session) return; // detached
     let delay = session.capture.intervalMs;
     if (session.phase === "post_alight" && session.alightedAtMs !== undefined) {
       const remaining = POST_ALIGHT_OBSERVE_MS - (this.now().getTime() - session.alightedAtMs);
@@ -405,6 +548,7 @@ export class BackgroundRideCaptureCoordinator {
     session.capture.endedAt = ended.toISOString();
     session.phase = "completed";
     session.completedAtMs = ended.getTime();
+    this.journalState(session, { phase: "completed", endedAt: session.capture.endedAt });
     session.report = analyzeRideCapture(session.capture);
     if (!session.completionEmitted && this.onComplete) {
       session.completionEmitted = true;
@@ -423,6 +567,54 @@ export class BackgroundRideCaptureCoordinator {
         }));
       });
     }
+  }
+
+  private pushMarker(session: BackgroundSession, marker: RideMarker): void {
+    session.capture.markers.push(marker);
+    if (session.durable) void this.journalWrite(session, "markers", marker);
+  }
+
+  private pushEvent(session: BackgroundSession, event: NonNullable<RideCapture["events"]>[number]): void {
+    session.capture.events ??= [];
+    session.capture.events.push(event);
+    if (session.durable) void this.journalWrite(session, "events", event);
+  }
+
+  private journalState(session: BackgroundSession, state: JournalState): void {
+    if (!session.durable) return;
+    const write = () => this.journal!.setState(session.id, this.instanceId, state);
+    void this.enqueue(session, write);
+  }
+
+  /** False only when the lease is gone; a transport error keeps the evidence in memory and is counted. */
+  private journalWrite(session: BackgroundSession, list: JournalList, value: unknown): Promise<boolean> {
+    return this.enqueue(session, () => this.journal!.append(session.id, this.instanceId, list, value));
+  }
+
+  private enqueue(session: BackgroundSession, write: () => Promise<boolean>): Promise<boolean> {
+    const next = session.journalChain.then(write).then(
+      (written) => {
+        if (!written) this.detach(session);
+        return written;
+      },
+      () => {
+        session.journalFailures += 1;
+        this.log(JSON.stringify({ level: "warn", event: "capture_journal_write_failed", failures: session.journalFailures }));
+        return true;
+      },
+    );
+    session.journalChain = next.then(() => true, () => true);
+    return next;
+  }
+
+  /** Another collector owns this ride now. Stop polling it here and forget it. */
+  private detach(session: BackgroundSession): void {
+    if (session.timer) {
+      this.cancelFn(session.timer);
+      session.timer = undefined;
+    }
+    if (this.sessions.get(session.id) === session) this.sessions.delete(session.id);
+    this.log(JSON.stringify({ level: "warn", event: "capture_journal_lease_lost" }));
   }
 
   private destinationObserved(session: BackgroundSession): boolean {

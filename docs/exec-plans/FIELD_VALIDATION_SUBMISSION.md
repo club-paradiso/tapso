@@ -101,6 +101,10 @@ No vehicle number is rendered anywhere.
 
 ## Authorization and friend testers
 
+**Superseded by `BETA_FIELD_TESTER.md`** (scoped tester credentials, ownership,
+automatic submission into `beta-matcher-30-boardings-v2`). The text below is the
+original deferral, kept for history.
+
 **Deferred.** Every route still requires `RIDE_CAPTURE_OPERATOR_TOKEN`, so the
 flow is operator-only. Nothing in this PR hands that token to anyone.
 
@@ -149,4 +153,5 @@ against its recorded hash.
   script, and deterministic tests (`test/fieldValidation.test.ts`).
 - `OPEN` One-time production setup above, then one practice ride to confirm the
   receipt on a real phone.
-- `DEFERRED` Friend-tester credentials.
+- `DONE` Friend-tester credentials, as a separate beta flow with its own
+  versioned campaign: `BETA_FIELD_TESTER.md`.

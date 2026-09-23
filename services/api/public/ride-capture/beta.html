@@ -1,0 +1,160 @@
+<!doctype html>
+<html lang="ko">
+  <head>
+    <meta charset="utf-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover" />
+    <meta name="robots" content="noindex, nofollow" />
+    <meta name="referrer" content="no-referrer" />
+    <meta http-equiv="Content-Security-Policy" content="default-src 'none'; script-src 'self'; style-src 'self'; img-src 'self' data:; connect-src 'self' https://collector-production-af2c.up.railway.app; base-uri 'none'; form-action 'none'" />
+    <meta name="theme-color" content="#f6f7f9" media="(prefers-color-scheme: light)" />
+    <meta name="theme-color" content="#0f1114" media="(prefers-color-scheme: dark)" />
+    <meta name="apple-mobile-web-app-title" content="TAPSO Beta" />
+    <title>TAPSO Beta Ride</title>
+    <link rel="stylesheet" href="./beta.css" />
+  </head>
+  <body>
+    <main>
+      <header class="brand">
+        <strong>TAPSO</strong> <span>Beta Ride</span>
+      </header>
+
+      <section id="screen-loading" class="screen" aria-busy="true">
+        <p class="lead">잠시만요…</p>
+      </section>
+
+      <section id="screen-need-invite" class="screen" hidden>
+        <h1>테스트 초대 링크가 필요해요</h1>
+        <p id="need-invite-message" class="muted">받은 초대 링크를 이 휴대폰의 Safari에서 열어 주세요.</p>
+      </section>
+
+      <section id="screen-bus" class="screen" hidden>
+        <h1>버스 탑승 기록을 도와주세요.</h1>
+        <p class="muted">테스트용 링크로 접속했습니다.</p>
+        <form id="bus-form" novalidate>
+          <label class="field">
+            <span>버스 번호</span>
+            <input id="route-no" type="text" inputmode="numeric" autocomplete="off" enterkeyhint="next" placeholder="예: 365" maxlength="8" required />
+          </label>
+          <label class="field">
+            <span>차량번호 뒤 4자리</span>
+            <input id="plate" type="text" inputmode="numeric" autocomplete="off" enterkeyhint="search" placeholder="예: 1234" required />
+          </label>
+          <p id="bus-alert" class="alert" role="alert"></p>
+          <button id="find-bus" type="submit" class="primary">이 버스 찾기</button>
+        </form>
+        <p id="rides-left" class="small muted"></p>
+        <details class="privacy">
+          <summary>이 테스트에서 저장하는 정보</summary>
+          <ul>
+            <li>입력한 버스 번호와 차량번호 뒤 4자리로 확인한 버스, 고른 탑승 정류장(목적지는 선택)</li>
+            <li>탑승 시작부터 하차 완료까지, 그 노선 버스들의 공개 실시간 위치 정보(공공데이터 TAGO)</li>
+            <li>기록을 시작하고 마친 시각</li>
+          </ul>
+          <p>자동 승차 감지 기능이 맞는 버스를 고르는지 검증하는 데만 씁니다.</p>
+          <p>휴대폰의 GPS 위치, 이름, 연락처는 수집하지 않습니다.</p>
+          <p>이 휴대폰에는 테스트 접속 정보만 저장됩니다. 서버에 저장된 기록은 자동으로 삭제되지 않습니다. 궁금한 점은 초대한 사람에게 물어봐 주세요.</p>
+        </details>
+      </section>
+
+      <section id="screen-pick-direction" class="screen" hidden>
+        <h1>어느 방향 버스인가요?</h1>
+        <p class="muted">버스 앞 행선지를 보고 골라 주세요.</p>
+        <div id="direction-list" class="stack"></div>
+        <button id="direction-back" type="button" class="ghost">다시 입력하기</button>
+      </section>
+
+      <section id="screen-confirm" class="screen" hidden>
+        <h1>이 버스가 맞나요?</h1>
+        <div class="card">
+          <div id="confirm-route" class="big"></div>
+          <div id="confirm-plate" class="plate"></div>
+          <div id="confirm-direction" class="muted"></div>
+        </div>
+        <label class="field">
+          <span>실제 탑승 정류장</span>
+          <select id="boarding" required></select>
+        </label>
+        <label class="field">
+          <span>목적지 <em>(선택)</em></span>
+          <select id="destination" disabled></select>
+        </label>
+        <p id="confirm-alert" class="alert" role="alert"></p>
+        <div class="actions sticky">
+          <button id="start" type="button" class="primary" disabled>탑승 시작</button>
+          <button id="confirm-back" type="button" class="ghost">다른 버스 찾기</button>
+        </div>
+      </section>
+
+      <section id="screen-resume" class="screen" hidden>
+        <h1>탑승 기록이 진행 중입니다</h1>
+        <div class="card">
+          <div id="resume-title" class="big"></div>
+          <div id="resume-subtitle" class="muted"></div>
+        </div>
+        <button id="resume" type="button" class="primary">기록 계속하기</button>
+      </section>
+
+      <section id="screen-riding" class="screen" hidden>
+        <p class="status"><span class="dot" aria-hidden="true"></span> 기록 중</p>
+        <div class="card">
+          <div id="riding-title" class="big"></div>
+          <div id="riding-subtitle" class="muted"></div>
+        </div>
+        <p class="lead">서버에서 자동으로 기록하고 있어요.<br />휴대폰은 넣어두셔도 됩니다.</p>
+        <p class="small muted">내릴 때 이 화면을 다시 열고 아래 버튼을 눌러 주세요.</p>
+        <p id="riding-alert" class="alert" role="alert"></p>
+        <div class="actions sticky">
+          <button id="alight" type="button" class="primary">하차 완료</button>
+          <div id="alight-confirm" class="confirm" hidden>
+            <p><strong>지금 버스에서 내리셨나요?</strong></p>
+            <button id="alight-yes" type="button" class="primary">네, 내렸어요</button>
+            <button id="alight-no" type="button" class="ghost">아직 타고 있어요</button>
+          </div>
+        </div>
+      </section>
+
+      <section id="screen-saving" class="screen" hidden aria-busy="true">
+        <h1>기록을 마무리하고 있어요…</h1>
+        <p class="muted">잠시만 기다려 주세요. 화면을 닫아도 기록은 서버에서 저장됩니다.</p>
+      </section>
+
+      <section id="screen-done" class="screen" hidden>
+        <h1 class="done">기록 완료 ✓</h1>
+        <p class="lead">테스트 참여 감사합니다.<br />기록이 안전하게 저장됐어요.</p>
+        <p id="done-note" class="small muted" hidden>탑승 시간이 길어 서버가 자동으로 기록을 마쳤어요.</p>
+        <button id="done-close" type="button" class="primary">닫기</button>
+      </section>
+
+      <section id="screen-closed" class="screen" hidden>
+        <h1>이 창은 닫아도 돼요</h1>
+        <p class="muted">다음에 버스를 탈 때 같은 링크를 다시 열어 주세요.</p>
+        <button id="next-ride" type="button" class="ghost">지금 다른 버스 기록하기</button>
+      </section>
+
+      <section id="screen-retry" class="screen" hidden>
+        <h1>기록 저장을 마무리하지 못했어요.</h1>
+        <p class="lead">데이터는 아직 안전하게 보관 중입니다.</p>
+        <p id="retry-alert" class="alert" role="alert"></p>
+        <button id="retry" type="button" class="primary">다시 시도</button>
+      </section>
+
+      <section id="screen-lost" class="screen" hidden>
+        <h1>이번 기록은 저장되지 못했어요</h1>
+        <p class="muted">서버 문제로 이번 기록을 이어가지 못했어요. 이 기록은 횟수에 포함되지 않아요.</p>
+        <button id="lost-restart" type="button" class="primary">처음으로</button>
+      </section>
+
+      <section id="screen-expired" class="screen" hidden>
+        <h1>테스트 기간이 끝났어요</h1>
+        <p class="muted">참여해 주셔서 감사합니다.</p>
+      </section>
+
+      <section id="screen-limit" class="screen" hidden>
+        <h1>기록 가능 횟수를 모두 썼어요</h1>
+        <p class="muted">많이 도와주셔서 감사합니다!</p>
+      </section>
+    </main>
+    <p id="live" class="sr" role="status" aria-live="polite"></p>
+    <script type="module" src="./beta.js"></script>
+  </body>
+</html>

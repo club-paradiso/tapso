@@ -22,6 +22,11 @@
 import { createHash, randomUUID } from "node:crypto";
 import { gunzipSync, gzipSync } from "node:zlib";
 
+import {
+  BETA_MATCHER_CAMPAIGN_ID,
+  classifyBetaMatcherRide,
+  type BetaMatcherClassification,
+} from "./betaCampaign.ts";
 import type { SelectionVerdict } from "./matchReplay.ts";
 import { classifyReplayedRide, GATE_BOARDINGS_REQUIRED, type EvidenceBucket } from "./rideCampaign.ts";
 import { analyzeRideCapture, type RideCapture, type RideCaptureReport } from "./rideCapture.ts";
@@ -74,6 +79,12 @@ export interface FieldRideSubmission {
   sameRideAs?: string;
   analyzerSchemaVersion: number;
   submittedAt: string;
+  /**
+   * Present only on beta-tester rides, which live in their own campaign set.
+   * `bucket` above is still what v1's rules say about the same replay, kept
+   * for comparison; the beta campaign counts `matcherCampaign.bucket`.
+   */
+  matcherCampaign?: BetaMatcherClassification & { testerId: string };
 }
 
 export interface FieldValidationStore {
@@ -185,6 +196,8 @@ export interface SubmissionReceipt {
   /** 1-based position of this ride among the campaign's submissions, in submission order. */
   fieldRideNumber: number;
   campaign: FieldCampaignSummary;
+  /** The beta policy's verdict, on beta rides only. Operator-facing; never shown to a tester. */
+  matcherCampaign?: FieldRideSubmission["matcherCampaign"];
 }
 
 export interface SubmitOptions {
@@ -192,6 +205,11 @@ export interface SubmitOptions {
   campaignId?: string;
   now?: () => Date;
   newId?: () => string;
+  /**
+   * A beta-tester ride. It must go to the beta campaign and only there, and it
+   * is additionally classified under the versioned beta matcher policy.
+   */
+  betaMatcher?: { testerId: string };
 }
 
 /**
@@ -218,10 +236,19 @@ export async function submitCompletedCapture(
   const report = analyzeRideCapture(raw);
   const ride = classifyReplayedRide(`${raw.routeId}-${raw.startedAt}`, report);
   const gate = ride.matchGate!;
+  // The two campaigns never mix: a beta ride cannot enter v1, nor v1 the beta set.
+  if (Boolean(options.betaMatcher) !== (campaignId === BETA_MATCHER_CAMPAIGN_ID)) {
+    throw new FieldValidationError("beta rides belong to the beta campaign and only there", "invalid");
+  }
 
   const claim = await store.claimRawHash(rawSha256, (options.newId ?? randomUUID)());
   const existing = await store.getSubmission(claim.submissionId);
-  if (existing) return receipt(existing, true, await campaignFor(store, campaignId));
+  if (existing) {
+    if (existing.campaignId !== campaignId) {
+      throw new FieldValidationError("this capture was already submitted to another campaign", "invalid");
+    }
+    return receipt(existing, true, await campaignFor(store, campaignId));
+  }
 
   const submissionId = claim.submissionId;
   const rideKey = sha256(`${raw.routeId}|${raw.startedAt}|${raw.captureEngine ?? "unknown"}`);
@@ -265,6 +292,9 @@ export async function submitCompletedCapture(
     ...(!rideClaim.claimed && rideClaim.submissionId !== submissionId ? { sameRideAs: rideClaim.submissionId } : {}),
     analyzerSchemaVersion: report.schemaVersion,
     submittedAt: now().toISOString(),
+    ...(options.betaMatcher
+      ? { matcherCampaign: { ...classifyBetaMatcherRide(report), testerId: options.betaMatcher.testerId } }
+      : {}),
   };
   assertSanitized(record, raw);
   await store.putSubmission(record);
@@ -301,6 +331,7 @@ function receipt(record: FieldRideSubmission, duplicate: boolean, campaign: Fiel
     startedAt: record.startedAt,
     fieldRideNumber: campaign.order.indexOf(record.id) + 1,
     campaign,
+    ...(record.matcherCampaign ? { matcherCampaign: record.matcherCampaign } : {}),
   };
 }
 
