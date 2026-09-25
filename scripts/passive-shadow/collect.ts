@@ -24,7 +24,7 @@ import { resolveTagoServiceKey } from "../../services/api/src/serviceKey.ts";
 import { TagoTransitProvider } from "../../services/api/src/tagoProvider.ts";
 import { TapsoPublicApiProvider } from "../../services/api/src/tapsoPublicApiProvider.ts";
 import { collectPassiveStreams, preflightRoutes, type RouteDiscovery } from "../../services/api/src/passiveShadowCollector.ts";
-import { PASSIVE_SHADOW_POLICY_VERSION, streamSha256, type PassiveObservationStream } from "../../services/api/src/passiveShadow.ts";
+import { PASSIVE_SHADOW_POLICY_VERSION, streamSha256, type PassiveObservationStream, type PassiveProviderPath } from "../../services/api/src/passiveShadow.ts";
 
 const args = new Map(process.argv.slice(2).map((arg) => {
   const [key, ...rest] = arg.replace(/^--/, "").split("=");
@@ -45,7 +45,9 @@ const intervalMs = integer("interval-ms", providerPath === "tago-direct" ? 5_000
 const minutes = integer("minutes", 30, 1, 90);
 // The one documented TAGO budget: a 90-minute 5 s ride is ≤ 1 080 location
 // calls (docs/exec-plans/RIDE_CAPTURE.md). A direct run may not exceed it.
-const maxCalls = integer("max-calls", 1_080, 1, providerPath === "tago-direct" ? 1_080 : 5_000);
+// Through the public API every read is a TAPSO request; TAGO itself is reached
+// at most once per 20 s cache window per route.
+const maxCalls = integer("max-calls", providerPath === "tago-direct" ? 1_080 : 2_400, 1, providerPath === "tago-direct" ? 1_080 : 5_000);
 const outRoot = path.resolve(process.cwd(), args.get("out") ?? "work/passive-shadow");
 
 const serviceKey = providerPath === "tago-direct" ? resolveTagoServiceKey(process.env).key : "";
@@ -54,6 +56,17 @@ if (providerPath === "tago-direct" && !serviceKey) {
   process.exit(3);
 }
 
+// The live label has to be earned. `tago-direct` always talks to the official
+// TAGO endpoint (the CLI cannot redirect it); the public-API path counts as live
+// only against the production TAPSO origin. Any other base — a local stand-in,
+// a preview — is recorded as synthetic, whatever it returns.
+const PRODUCTION_API_ORIGIN = "https://tapso-api.vercel.app";
+const apiBase = args.get("api-base") ?? PRODUCTION_API_ORIGIN;
+const recordedPath: PassiveProviderPath = providerPath === "tapso-public-api" && new URL(apiBase).origin !== PRODUCTION_API_ORIGIN
+  ? "synthetic"
+  : providerPath;
+if (recordedPath === "synthetic") log(`--api-base is not ${PRODUCTION_API_ORIGIN}; streams are labelled SYNTHETIC_OR_PERTURBED`);
+
 let provider: TransitProvider;
 let discovery: RouteDiscovery | undefined;
 if (providerPath === "tago-direct") {
@@ -61,7 +74,7 @@ if (providerPath === "tago-direct") {
   provider = tago;
   discovery = { routes: (city, number) => tago.routes(city, number) };
 } else {
-  const api = new TapsoPublicApiProvider({ baseUrl: args.get("api-base") ?? "https://tapso-api.vercel.app" });
+  const api = new TapsoPublicApiProvider({ baseUrl: apiBase });
   provider = api;
   discovery = api;
 }
@@ -85,7 +98,7 @@ process.once("SIGTERM", () => { stopRequested = true; });
 
 const result = await collectPassiveStreams({
   provider,
-  providerPath,
+  providerPath: recordedPath,
   collectorEngine: process.env.GITHUB_ACTIONS === "true" ? "github-actions" : "local-cli",
   collectionId,
   routes: preflight.selected,
@@ -115,7 +128,8 @@ async function writeManifest(value: {
   await writeAtomic(path.join(directory, "manifest.json"), JSON.stringify({
     policyVersion: PASSIVE_SHADOW_POLICY_VERSION,
     collectionId,
-    providerPath,
+    providerPath: recordedPath,
+    requestedProviderPath: providerPath,
     cityCode,
     createdAt: new Date().toISOString(),
     stopReason: value.stopReason,
