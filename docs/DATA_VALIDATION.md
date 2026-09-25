@@ -311,6 +311,22 @@ and nothing else: provider/cadence calibration remains a separate requirement,
 `gateClosed` stays `false`, and automatic matching stays off. Details:
 `exec-plans/BETA_FIELD_TESTER.md`.
 
+### A third, passive evidence stream (2026-09-25)
+
+`passive-shadow-validation-v3` gathers matcher evidence with no rider. A bounded
+collector observes real routes. Real trajectories become pseudo-boarding cases
+whose ground truth is the first-arrival model: a rider waiting at stop S from
+T0 boards the first bus to reach S. The answer is held back from the replay.
+It is a separate campaign: it changes no v1 or v2 rule or count, and its cases
+never count toward the 30 boardings above.
+
+First live result (1 h, 5 route IDs, `tapso-public-api` path, re-evaluated
+offline at the PR head): **268 wrong commits** in 5 461 evaluable waiting-rider
+cases (142 of 739 boarding events; 15 of 29 trajectories). Every one is a bus
+that had already left the rider's stop (finding F1). In all 268 it was the only eligible candidate. On non-trivial cases, precision is 0.62–0.76; the 1.0 on trivial one-candidate cases is not counted as validation. Status: `NOT_READY`.
+Details: `validation/PASSIVE_SHADOW_VALIDATION_V3_RESULTS.md`; method:
+`exec-plans/PASSIVE_SHADOW_VALIDATION_V3.md`.
+
 ### One hypothesis this instrument exists to test
 
 A bus a rider is boarding is, at that instant, stationary at their stop. The

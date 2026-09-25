@@ -1,0 +1,147 @@
+# Passive Shadow Validation v3 — one bounded, rider-free live collection and
+# its blind evaluation. See docs/exec-plans/PASSIVE_SHADOW_VALIDATION_V3.md.
+#
+# Read-only provider access. No journey session, no Upstash write, no
+# production configuration. Raw streams (raw vehicle numbers) stay in a private
+# short-retention artifact; only the pseudonymised summary is printed.
+name: Passive Shadow v3 collection
+
+on:
+  workflow_dispatch:
+  push:
+    branches: ["claude/**passive-shadow**"]
+    paths: ["ops/passive-shadow-v3/collection-request.json"]
+
+concurrency:
+  group: passive-shadow-v3
+  cancel-in-progress: false
+
+permissions:
+  contents: read
+  # Re-evaluation reads a previous run's raw artifact.
+  actions: read
+
+jobs:
+  collect-and-evaluate:
+    runs-on: ubuntu-latest
+    timeout-minutes: 100
+    env:
+      # Belt and braces: nothing in this job reads it, and it must never be true.
+      TRANSIT_AUTOMATIC_MATCHING_ENABLED: "false"
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-node@v4
+        with:
+          node-version: 22
+      - name: Read the collection request
+        id: request
+        run: |
+          node -e '
+            const r = require("./ops/passive-shadow-v3/collection-request.json");
+            const out = [];
+            for (const k of ["requestId","provider","cityCode","routes","routeNumbers","directMinutes","publicMinutes","directMaxRoutes","publicMaxRoutes","reevaluateRunId"]) out.push(`${k}=${r[k] ?? ""}`);
+            require("fs").appendFileSync(process.env.GITHUB_OUTPUT, out.join("\n") + "\n");
+            console.log(out.join("\n"));'
+      - name: Collect (bounded, read-only)
+        if: steps.request.outputs.reevaluateRunId == ''
+        env:
+          TAGO_SERVICE_KEY: ${{ secrets.TAGO_SERVICE_KEY }}
+          REQ_PROVIDER: ${{ steps.request.outputs.provider }}
+          REQ_CITY: ${{ steps.request.outputs.cityCode }}
+          REQ_ROUTES: ${{ steps.request.outputs.routes }}
+          REQ_NUMBERS: ${{ steps.request.outputs.routeNumbers }}
+          REQ_DIRECT_MIN: ${{ steps.request.outputs.directMinutes }}
+          REQ_PUBLIC_MIN: ${{ steps.request.outputs.publicMinutes }}
+          REQ_DIRECT_ROUTES: ${{ steps.request.outputs.directMaxRoutes }}
+          REQ_PUBLIC_ROUTES: ${{ steps.request.outputs.publicMaxRoutes }}
+        run: |
+          set -u
+          collect() {
+            node --experimental-strip-types scripts/passive-shadow/collect.ts --yes --provider="$1" \
+              --city="$REQ_CITY" --routes="$REQ_ROUTES" --route-numbers="$REQ_NUMBERS" \
+              --max-routes="$3" --minutes="$2" --out=work/passive-shadow
+          }
+          provider="$REQ_PROVIDER"
+          if [ "$provider" = "auto" ]; then
+            if [ -n "${TAGO_SERVICE_KEY:-}" ]; then provider=tago-direct; else provider=tapso-public-api; fi
+          fi
+          echo "provider path: $provider (TAGO key present: $([ -n "${TAGO_SERVICE_KEY:-}" ] && echo yes || echo no))"
+          status=0
+          if [ "$provider" = "tago-direct" ]; then
+            collect tago-direct "$REQ_DIRECT_MIN" "$REQ_DIRECT_ROUTES" > collection-dir.txt || status=$?
+            if [ "$status" -ne 0 ] && [ "$REQ_PROVIDER" = "auto" ]; then
+              echo "tago-direct collection failed with exit $status; falling back to tapso-public-api"
+              status=0; provider=tapso-public-api
+            fi
+          fi
+          if [ "$provider" = "tapso-public-api" ]; then
+            collect tapso-public-api "$REQ_PUBLIC_MIN" "$REQ_PUBLIC_ROUTES" > collection-dir.txt || status=$?
+          fi
+          echo "collection exit: $status"
+          test -s collection-dir.txt
+          cat "$(cat collection-dir.txt)/manifest.json" | node -e '
+            const m = JSON.parse(require("fs").readFileSync(0, "utf8"));
+            console.log(JSON.stringify({ collectionId: m.collectionId, providerPath: m.providerPath, stopReason: m.stopReason,
+              providerCalls: m.providerCalls, failedCalls: m.failedCalls, incidents: m.incidents, preflight: m.preflight,
+              streams: m.streams }, null, 2));'
+          exit $status
+      - name: Fetch an earlier collection for re-evaluation (no provider calls)
+        if: steps.request.outputs.reevaluateRunId != ''
+        uses: actions/download-artifact@v4
+        with:
+          name: passive-shadow-v3-raw
+          path: work/passive-shadow
+          run-id: ${{ steps.request.outputs.reevaluateRunId }}
+          github-token: ${{ github.token }}
+      - name: Locate the re-evaluated collection
+        if: steps.request.outputs.reevaluateRunId != ''
+        run: |
+          ls -d work/passive-shadow/pv3-* | head -1 > collection-dir.txt
+          test -s collection-dir.txt
+          echo "re-evaluating $(cat collection-dir.txt) from run ${{ steps.request.outputs.reevaluateRunId }}"
+      - name: Verify the downloaded raw evidence (before evaluation)
+        if: steps.request.outputs.reevaluateRunId != ''
+        run: |
+          dir="$(cat collection-dir.txt)"
+          echo "----- RAW FILES (sha256) -----"
+          (cd "$dir" && find . -type f | sort | xargs sha256sum)
+          echo "----- MANIFEST (as collected; providerPath is authoritative) -----"
+          node -e 'const m=require(process.argv[1]); console.log(JSON.stringify(m))' "$(pwd)/$dir/manifest.json"
+          echo "----- END MANIFEST -----"
+      - name: Blind evaluation (offline, network-guarded, raw read-only)
+        env:
+          COLLECTION_RUN_ID: ${{ steps.request.outputs.reevaluateRunId || github.run_id }}
+        run: |
+          node --experimental-strip-types scripts/passive-shadow/evaluate.ts "$(cat collection-dir.txt)" \
+            --summary=work/passive-shadow/passive-shadow-validation-v3-summary.json \
+            --sensitive-out=work/passive-shadow-evaluation
+      - name: Print the sanitized summary
+        run: |
+          f=work/passive-shadow/passive-shadow-validation-v3-summary.json
+          echo "summary sha256: $(sha256sum "$f" | cut -d' ' -f1)"
+          # Compact, fixed-width chunks so the whole summary fits in a log
+          # reader's window and can be reassembled byte-for-byte.
+          echo "----- BEGIN PASSIVE SHADOW V3 SUMMARY (base64 chunks) -----"
+          base64 -w 3000 "$f" | awk '{ printf "B64 %04d %s\n", NR, $0 }'
+          echo "----- END PASSIVE SHADOW V3 SUMMARY -----"
+          l=work/passive-shadow/passive-shadow-validation-v3-wrong-commits.json
+          echo "ledger sha256: $(sha256sum "$l" | cut -d' ' -f1)"
+          echo "----- BEGIN PASSIVE SHADOW V3 WRONG-COMMIT LEDGER (base64 chunks) -----"
+          base64 -w 3000 "$l" | awk '{ printf "L64 %04d %s\n", NR, $0 }'
+          echo "----- END PASSIVE SHADOW V3 WRONG-COMMIT LEDGER -----"
+      - name: Upload sanitized summary
+        uses: actions/upload-artifact@v4
+        with:
+          name: passive-shadow-v3-summary
+          path: |
+            work/passive-shadow/passive-shadow-validation-v3-summary.json
+            work/passive-shadow/passive-shadow-validation-v3-wrong-commits.json
+          retention-days: 30
+      - name: Upload raw collection (private, raw vehicle numbers)
+        if: always() && steps.request.outputs.reevaluateRunId == ''
+        uses: actions/upload-artifact@v4
+        with:
+          name: passive-shadow-v3-raw
+          path: work/passive-shadow/pv3-*
+          retention-days: 14
+          if-no-files-found: ignore
