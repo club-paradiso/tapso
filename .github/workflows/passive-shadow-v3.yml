@@ -99,10 +99,13 @@ jobs:
           ls -d work/passive-shadow/pv3-* | head -1 > collection-dir.txt
           test -s collection-dir.txt
           echo "re-evaluating $(cat collection-dir.txt) from run ${{ steps.request.outputs.reevaluateRunId }}"
-      - name: Blind evaluation (offline)
+      - name: Blind evaluation (offline, network-guarded, raw read-only)
+        env:
+          COLLECTION_RUN_ID: ${{ steps.request.outputs.reevaluateRunId || github.run_id }}
         run: |
           node --experimental-strip-types scripts/passive-shadow/evaluate.ts "$(cat collection-dir.txt)" \
-            --summary=work/passive-shadow/passive-shadow-validation-v3-summary.json
+            --summary=work/passive-shadow/passive-shadow-validation-v3-summary.json \
+            --sensitive-out=work/passive-shadow-evaluation
       - name: Print the sanitized summary
         run: |
           f=work/passive-shadow/passive-shadow-validation-v3-summary.json
