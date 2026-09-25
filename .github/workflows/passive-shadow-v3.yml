@@ -99,6 +99,15 @@ jobs:
           ls -d work/passive-shadow/pv3-* | head -1 > collection-dir.txt
           test -s collection-dir.txt
           echo "re-evaluating $(cat collection-dir.txt) from run ${{ steps.request.outputs.reevaluateRunId }}"
+      - name: Verify the downloaded raw evidence (before evaluation)
+        if: steps.request.outputs.reevaluateRunId != ''
+        run: |
+          dir="$(cat collection-dir.txt)"
+          echo "----- RAW FILES (sha256) -----"
+          (cd "$dir" && find . -type f | sort | xargs sha256sum)
+          echo "----- MANIFEST (as collected; providerPath is authoritative) -----"
+          node -e 'const m=require(process.argv[1]); console.log(JSON.stringify(m))' "$(pwd)/$dir/manifest.json"
+          echo "----- END MANIFEST -----"
       - name: Blind evaluation (offline, network-guarded, raw read-only)
         env:
           COLLECTION_RUN_ID: ${{ steps.request.outputs.reevaluateRunId || github.run_id }}
@@ -110,8 +119,10 @@ jobs:
         run: |
           f=work/passive-shadow/passive-shadow-validation-v3-summary.json
           echo "summary sha256: $(sha256sum "$f" | cut -d' ' -f1)"
-          echo "----- BEGIN PASSIVE SHADOW V3 SUMMARY -----"
-          cat "$f"
+          # Compact, fixed-width chunks so the whole summary fits in a log
+          # reader's window and can be reassembled byte-for-byte.
+          echo "----- BEGIN PASSIVE SHADOW V3 SUMMARY (base64 chunks) -----"
+          base64 -w 3000 "$f" | awk '{ printf "B64 %04d %s\n", NR, $0 }'
           echo "----- END PASSIVE SHADOW V3 SUMMARY -----"
       - name: Upload sanitized summary
         uses: actions/upload-artifact@v4
