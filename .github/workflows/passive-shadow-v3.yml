@@ -18,6 +18,8 @@ concurrency:
 
 permissions:
   contents: read
+  # Re-evaluation reads a previous run's raw artifact.
+  actions: read
 
 jobs:
   collect-and-evaluate:
@@ -37,10 +39,11 @@ jobs:
           node -e '
             const r = require("./ops/passive-shadow-v3/collection-request.json");
             const out = [];
-            for (const k of ["requestId","provider","cityCode","routes","routeNumbers","directMinutes","publicMinutes","directMaxRoutes","publicMaxRoutes"]) out.push(`${k}=${r[k]}`);
+            for (const k of ["requestId","provider","cityCode","routes","routeNumbers","directMinutes","publicMinutes","directMaxRoutes","publicMaxRoutes","reevaluateRunId"]) out.push(`${k}=${r[k] ?? ""}`);
             require("fs").appendFileSync(process.env.GITHUB_OUTPUT, out.join("\n") + "\n");
             console.log(out.join("\n"));'
       - name: Collect (bounded, read-only)
+        if: steps.request.outputs.reevaluateRunId == ''
         env:
           TAGO_SERVICE_KEY: ${{ secrets.TAGO_SERVICE_KEY }}
           REQ_PROVIDER: ${{ steps.request.outputs.provider }}
@@ -82,6 +85,20 @@ jobs:
               providerCalls: m.providerCalls, failedCalls: m.failedCalls, incidents: m.incidents, preflight: m.preflight,
               streams: m.streams }, null, 2));'
           exit $status
+      - name: Fetch an earlier collection for re-evaluation (no provider calls)
+        if: steps.request.outputs.reevaluateRunId != ''
+        uses: actions/download-artifact@v4
+        with:
+          name: passive-shadow-v3-raw
+          path: work/passive-shadow
+          run-id: ${{ steps.request.outputs.reevaluateRunId }}
+          github-token: ${{ github.token }}
+      - name: Locate the re-evaluated collection
+        if: steps.request.outputs.reevaluateRunId != ''
+        run: |
+          ls -d work/passive-shadow/pv3-* | head -1 > collection-dir.txt
+          test -s collection-dir.txt
+          echo "re-evaluating $(cat collection-dir.txt) from run ${{ steps.request.outputs.reevaluateRunId }}"
       - name: Blind evaluation (offline)
         run: |
           node --experimental-strip-types scripts/passive-shadow/evaluate.ts "$(cat collection-dir.txt)" \
@@ -100,7 +117,7 @@ jobs:
           path: work/passive-shadow/passive-shadow-validation-v3-summary.json
           retention-days: 30
       - name: Upload raw collection (private, raw vehicle numbers)
-        if: always()
+        if: always() && steps.request.outputs.reevaluateRunId == ''
         uses: actions/upload-artifact@v4
         with:
           name: passive-shadow-v3-raw

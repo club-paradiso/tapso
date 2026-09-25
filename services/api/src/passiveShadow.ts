@@ -259,6 +259,7 @@ export type GeneratorRejection =
   | "GT_BRACKET_TOO_WIDE"
   | "GT_JUMP_TOO_LARGE"
   | "GT_IDENTITY_UNCERTAIN"
+  | "GT_VEHICLE_AT_STOP_AT_START"
   | "STREAM_TRUNCATED"
   | "NO_SUCCESSFUL_SNAPSHOT"
   | "DUPLICATE_CASE";
@@ -379,6 +380,13 @@ export function firstArrivalAfter(
   if (crossings.some((crossing) => crossing.prevAt < startAt && crossing.nextAt > startAt)) {
     return { ok: false, reason: "GT_BRACKET_STRADDLES_START" };
   }
+  // A bus reporting the boarding stop itself when the rider arrives may be
+  // dwelling there — or, if TAGO's `nodeord` means the next stop rather than
+  // the last one (unverified), still approaching it. Either way the rider might
+  // board it, and the first-arrival model cannot say. Refuse.
+  if (trajectories.some((trajectory) => atStopWhen(trajectory, stopSequence, startAt))) {
+    return { ok: false, reason: "GT_VEHICLE_AT_STOP_AT_START" };
+  }
   const after = crossings
     .filter((crossing) => crossing.prevAt >= startAt)
     .sort((left, right) => left.nextAt - right.nextAt || left.prevAt - right.prevAt);
@@ -386,6 +394,17 @@ export function firstArrivalAfter(
   if (!first) return { ok: false, reason: "NO_ARRIVAL_OBSERVED" };
   if (first.nextAt - startAt > policy.maxWaitMs) return { ok: false, reason: "NO_ARRIVAL_WITHIN_MAX_WAIT" };
   return qualify(trajectories, after, first, stopSequence, startAt, policy);
+}
+
+const AT_STOP_LOOKBACK_MS = 60_000;
+
+function atStopWhen(trajectory: Trajectory, stopSequence: number, at: number): boolean {
+  let latest: Sighting | undefined;
+  for (const sighting of trajectory.sightings) {
+    if (sighting.at > at) break;
+    if (sighting.stopSequence !== undefined) latest = sighting;
+  }
+  return latest !== undefined && at - latest.at <= AT_STOP_LOOKBACK_MS && latest.stopSequence === stopSequence;
 }
 
 function qualify(
@@ -577,6 +596,7 @@ export function emptyRejections(): Record<GeneratorRejection, number> {
     GT_BRACKET_TOO_WIDE: 0,
     GT_JUMP_TOO_LARGE: 0,
     GT_IDENTITY_UNCERTAIN: 0,
+    GT_VEHICLE_AT_STOP_AT_START: 0,
     STREAM_TRUNCATED: 0,
     NO_SUCCESSFUL_SNAPSHOT: 0,
     DUPLICATE_CASE: 0,

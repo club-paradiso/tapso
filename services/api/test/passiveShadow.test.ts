@@ -259,6 +259,20 @@ test("a bus that appears already past the stop makes the first arrival unknowabl
   assert.ok(generated.rejections.GT_IDENTITY_UNCERTAIN > 0);
 });
 
+test("a bus sitting at the boarding stop when the rider arrives makes the first arrival unknowable", () => {
+  const stream = syntheticStream({
+    buses: [
+      // At stop 10 from −10 s to +50 s: the rider arriving at T0 might board it.
+      { id: DECOY, startSequence: 10, msPerStop: 60_000, offsetMs: -10_000 },
+      { id: TRUTH, startSequence: 6, msPerStop: 30_000 },
+    ],
+    durationMs: 700_000,
+  });
+  const generated = generatePassiveCases([stream], { scenarios: ["WAIT_AT_STOP"] });
+  assert.equal(generated.cases.some((item) => item.meta.boardingSequence === 10 && Date.parse(item.meta.sessionStartAt) === T0), false);
+  assert.ok(generated.rejections.GT_VEHICLE_AT_STOP_AT_START > 0);
+});
+
 test("duplicate starts that resolve to the same window are deduplicated", () => {
   const stream = departedDecoyStream();
   // A 2 s grid on a 5 s poll: several starts share their first snapshot.
