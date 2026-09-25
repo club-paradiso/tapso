@@ -175,6 +175,6 @@ try {
   console.log(`${cleanupOk ? "PASS" : "FAIL"} cleanup removed all synthetic verification data`);
 }
 
-const allPassed = cleanupOk && checks.length === 14 && checks.every((entry) => entry.ok);
-console.log(allPassed ? "RESULT PASS 14/14" : `RESULT FAIL ${checks.filter((entry) => entry.ok).length}/14`);
+const allPassed = cleanupOk && checks.length === 16 && checks.every((entry) => entry.ok);
+console.log(allPassed ? "RESULT PASS 16/16" : `RESULT FAIL ${checks.filter((entry) => entry.ok).length}/16`);
 process.exit(allPassed ? 0 : 1);
