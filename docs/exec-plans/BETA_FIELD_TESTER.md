@@ -103,10 +103,26 @@ nothing and A detaches); restart after 하차 완료; restart after completion b
 before storage (byte-identical raw, one record); restart past the 90-minute cap;
 journal outage at start; cross-tester 404 after recovery.
 
-**Not verified live:** the Lua script runs against the in-memory model and a
-command-shape test only. The session store's `EVAL` is already verified against
-live Upstash, but this script has not been. Before inviting testers, run one
-ride and restart the Railway service mid-ride (see Production setup).
+**Live Upstash verification: DONE (2026-09-25).** The exact
+`UpstashCaptureJournal` implementation was exercised against the production
+collector's existing Upstash database through a run-unique
+`tapso:verify:capture-journal:<uuid>:` namespace. The verifier passed all 16
+invariants: begin/load round-trip, same-owner fenced append/state writes,
+foreign-owner acquire/append/state refusal, unchanged evidence after a refused
+writer, same-owner lease renewal, a real positive Redis lease TTL, lease
+deletion followed by re-take through the production Lua `EVAL` path, restored
+owner identity, close semantics, and exact-key cleanup. The Railway deployment
+used the fail-closed start command
+`verifyCaptureJournalLive.ts --yes && backgroundServer.ts`; deployment
+`78ab4598-febe-4670-8cb2-897f3850b1c9` reached `SUCCESS` and passed
+`/health`, which is possible only if the verifier exits 0 after all checks and
+cleanup. The service start command was then restored and the one-off hook
+removed.
+
+This closes the live-Redis/Lua uncertainty without a bus ride. It does **not**
+prove the full real-iPhone → active beta ride → Railway restart → recovered ride
+E2E path; that remains a release-evidence item before broad automatic matching
+is enabled.
 
 A ride is still lost (tester sees 저장되지 못했어요, slot returned) only when no
 journal exists for it — which, with the flag enabled, means its journal was
@@ -169,6 +185,26 @@ Beta records live only in the beta campaign set. `submitCompletedCapture`
 refuses a beta ride into v1 and a non-beta ride into beta, refuses the same raw
 bytes in a second campaign, and `POST /capture/:id/submit` refuses a
 beta-owned session (`409 BETA_CAPTURE`).
+
+## Historical ride-report audit (2026-09-25)
+
+The user's retained library contains **13 historical real-ride reports across 10
+route IDs**, but no matching raw captures. Twelve of the thirteen reports meet
+the beta v2 analyzer's reusable minimum sample-size criteria
+(`successfulSnapshots >= 20`, `trackedSequenceProgression >= 3`,
+`contentChangeSamples >= 5`). Across the set there are 2,081 successful
+snapshots; the median ride has 149 snapshots, 8 distinct tracked sequence
+positions and 63 content changes. One short/weak ride has only two sequence
+positions and correctly fails the minimum.
+
+This is useful threshold sanity evidence: the v2 20/3/5 minimums are not
+obviously unrealistic for the historical field data. It is **not matcher
+correctness evidence**. All retained files are old `web-controller` reports
+with no replayable raw snapshots and no current `matchGate` block, so they
+cannot be re-run under the current matcher and must not be counted toward
+`beta-matcher-30-boardings-v2`. Four of the thirteen reports also contain
+browser-hidden/background gaps, another reason not to promote them into the
+Railway beta campaign.
 
 ## Threat model and auth
 
@@ -283,14 +319,16 @@ Vercel needs nothing new. Required:
 - `DONE` invites, credentials, ownership, beta page, auto finish + submit, v2
   policy, operator panel, deterministic tests (`betaTester`, `betaCampaign`,
   `betaClient`), a 390 px Chromium walkthrough with mocked network.
-- `OPEN` real-iPhone Safari walkthrough; first real beta ride; human review of
-  the v2 criteria before any beta count is cited.
-- `DONE` `BETA_TESTERS_ENABLED` flag (default off) and restart durability via
-  the fenced capture journal (`betaFlag`, `betaRestart` tests).
-- Known limitations: the journal's Lua script is not yet exercised against live
-  Upstash; snapshots during the restart downtime are missing (not invented);
-  if a journal write fails transiently the evidence stays in memory and a later
-  restart would lose only what was not journaled; rate limits are per process;
-  a revoked tester's in-progress capture keeps polling until the collector's
-  90-minute cap; an invite whose redemption response was lost is burned and must
-  be reissued; there is no delete/export tool for a tester's own data.
+- `OPEN` full real-iPhone Safari beta restart E2E and human review of the v2
+  criteria before any beta matcher count is cited as release evidence.
+- `DONE` `BETA_TESTERS_ENABLED` flag (enabled on the Railway collector as of
+  2026-09-25), deterministic restart durability (`betaFlag`, `betaRestart`
+  tests), and the capture journal's production Lua `EVAL` path against live
+  Upstash (16/16 plus cleanup).
+- Known limitations: snapshots during actual restart downtime are missing (not
+  invented); if a journal write fails transiently the evidence stays in memory
+  and a later restart would lose only what was not journaled; rate limits are
+  per process; a revoked tester's in-progress capture keeps polling until the
+  collector's 90-minute cap; an invite whose redemption response was lost is
+  burned and must be reissued; there is no delete/export tool for a tester's own
+  data.
