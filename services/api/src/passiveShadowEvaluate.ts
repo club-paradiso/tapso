@@ -98,6 +98,14 @@ export interface PassiveCaseResult {
   staleRejections: number;
   directionRejections: number;
   committedDirectionInconsistency: boolean;
+  /** Committed vehicle's stop sequence minus the boarding stop, at the commit. Positive = already past the stop. */
+  committedStopOffset?: number;
+  /**
+   * The ground-truth vehicle never reached `fresh` cadence at any decision.
+   * With no commit, this attributes the abstention to the cadence gate
+   * (fail-closed on freshness) rather than to ambiguity or position.
+   */
+  groundTruthNeverFresh: boolean;
   /** Decision timeline in pseudonyms. Kept for failed and ambiguous cases only. */
   timeline?: ReplayDecision[];
   groundTruthLabel: string;
@@ -198,6 +206,10 @@ export function classifyPassiveCase(
   let bucket: PassiveBucket;
   let reason: string;
   let wrongKind: WrongKind | undefined;
+  const committedPosition = committedVehicleId !== undefined && commitAt !== undefined
+    ? positionAt(input, committedVehicleId, Date.parse(commitAt))
+    : undefined;
+  const committedStopOffset = committedPosition === undefined ? undefined : committedPosition - meta.boardingSequence;
   if (committedVehicleId !== undefined && committedVehicleId !== truth.vehicleId) {
     bucket = "PASSIVE_WRONG";
     wrongKind = classifyWrong(input, committedVehicleId, truth.vehicleId, meta.boardingSequence, Date.parse(commitAt!));
@@ -240,6 +252,8 @@ export function classifyPassiveCase(
     ...(committedVehicleId !== undefined ? { committedVehicleId } : {}),
     ...(commitAt ? { commitAt, commitRelativeToBoardingSeconds: Math.round((Date.parse(commitAt) - boardingAt) / 100) / 10 } : {}),
     ...(wrongKind ? { wrongKind } : {}),
+    ...(committedStopOffset === undefined ? {} : { committedStopOffset }),
+    groundTruthNeverFresh: groundTruthCadence.fresh === 0,
     difficulty,
     candidateCount,
     maxNearbyCandidates: maxNearby,

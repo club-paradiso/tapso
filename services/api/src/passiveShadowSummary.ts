@@ -116,6 +116,24 @@ export interface LiveSection {
     byTrajectory: { total: number; withWrongCommit: number; withCorrectCommitOnly: number; neverCommitted: number };
     byBoardingEvent: { total: number; withWrongCommit: number; withCorrectCommitOnly: number; neverCommitted: number };
   };
+  /** Every wrong commit, profiled — not only the capped diagnostics. */
+  wrongCommitProfile: {
+    total: number;
+    byWrongKind: Record<string, number>;
+    /** Committed vehicle's stop offset from the boarding stop at the commit. */
+    byCommittedStopOffset: Record<string, number>;
+    byScenario: Record<string, number>;
+    byRoute: Record<string, number>;
+    /** Negative = the commit came before the modelled boarding. */
+    commitRelativeToBoardingSeconds: NumberSummary;
+  };
+  commitTiming: {
+    correctCommitsBeforeBoarding: number;
+    correctCommitsAtOrAfterBoarding: number;
+    correctCommitRelativeToBoardingSeconds: NumberSummary;
+  };
+  /** Abstentions (no commit) in which the ground-truth bus never had fresh cadence. */
+  abstentionsWithTruthNeverFresh: number;
   wrongCommits: CaseDiagnostic[];
   staleSelections: number;
   /** Vehicles that appeared in more than one route's stream: real route-variant / direction identity changes. */
@@ -132,8 +150,12 @@ export interface AdversarialVariantSummary {
   correct: number;
   wrong: number;
   abstained: number;
-  casesWithStaleRejection: number;
-  casesWithDirectionRejection: number;
+  /** Cases with any cadence-based rejection at any decision (includes the unavoidable start-up `unknown`). */
+  casesWithAnyCadenceRejection: number;
+  /** No commit, and the ground-truth vehicle never reached `fresh`: abstention attributable to the freshness gate. */
+  staleRejection: number;
+  /** Cases in which some candidate was rejected on route or direction. */
+  directionRejection: number;
   /** Baseline (unperturbed) bucket → perturbed bucket, only where it changed. */
   flips: Record<string, number>;
 }
@@ -269,12 +291,49 @@ export function summarizeLive(
       byTrajectory: groupOutcome(results, (result) => result.meta.trajectoryId),
       byBoardingEvent: groupOutcome(results, (result) => result.meta.boardingEventId),
     },
+    wrongCommitProfile: wrongProfile(results),
+    commitTiming: commitTiming(results),
+    abstentionsWithTruthNeverFresh: results.filter(
+      (result) => !COMMITTED_BUCKETS.has(result.bucket) && result.groundTruthNeverFresh,
+    ).length,
     wrongCommits: results
       .filter((result) => result.bucket === "PASSIVE_WRONG")
       .slice(0, maxDiagnostics)
       .map((result) => diagnostic(result, pseudonym)),
     staleSelections: results.reduce((sum, result) => sum + result.selectionsWhileNotFresh, 0),
     crossRouteVehicles: [...vehicleRoutes.values()].filter((routes) => routes.size > 1).length,
+  };
+}
+
+function tally(values: string[]): Record<string, number> {
+  const counts: Record<string, number> = {};
+  for (const value of values) counts[value] = (counts[value] ?? 0) + 1;
+  return counts;
+}
+
+function wrongProfile(results: PassiveCaseResult[]): LiveSection["wrongCommitProfile"] {
+  const wrong = results.filter((result) => result.bucket === "PASSIVE_WRONG");
+  return {
+    total: wrong.length,
+    byWrongKind: tally(wrong.map((result) => result.wrongKind ?? "UNKNOWN")),
+    byCommittedStopOffset: tally(wrong.map((result) => result.committedStopOffset === undefined ? "unknown" : String(result.committedStopOffset))),
+    byScenario: tally(wrong.map((result) => result.meta.scenario)),
+    byRoute: tally(wrong.map((result) => result.meta.routeId)),
+    commitRelativeToBoardingSeconds: summarize(
+      wrong.map((result) => result.commitRelativeToBoardingSeconds).filter((value): value is number => value !== undefined),
+    ),
+  };
+}
+
+function commitTiming(results: PassiveCaseResult[]): LiveSection["commitTiming"] {
+  const correct = results
+    .filter((result) => result.bucket === "PASSIVE_CORRECT")
+    .map((result) => result.commitRelativeToBoardingSeconds)
+    .filter((value): value is number => value !== undefined);
+  return {
+    correctCommitsBeforeBoarding: correct.filter((value) => value < 0).length,
+    correctCommitsAtOrAfterBoarding: correct.filter((value) => value >= 0).length,
+    correctCommitRelativeToBoardingSeconds: summarize(correct),
   };
 }
 
@@ -314,8 +373,9 @@ export function summarizeAdversarial(
         correct: 0,
         wrong: 0,
         abstained: 0,
-        casesWithStaleRejection: 0,
-        casesWithDirectionRejection: 0,
+        casesWithAnyCadenceRejection: 0,
+        staleRejection: 0,
+        directionRejection: 0,
         flips: {},
       };
       if (!entry.result) {
@@ -328,8 +388,9 @@ export function summarizeAdversarial(
         if (result.bucket === "PASSIVE_CORRECT") summary.correct += 1;
         else if (result.bucket === "PASSIVE_WRONG") summary.wrong += 1;
         else if (!COMMITTED_BUCKETS.has(result.bucket)) summary.abstained += 1;
-        if (result.staleRejections > 0) summary.casesWithStaleRejection += 1;
-        if (result.directionRejections > 0) summary.casesWithDirectionRejection += 1;
+        if (result.staleRejections > 0) summary.casesWithAnyCadenceRejection += 1;
+        if (!COMMITTED_BUCKETS.has(result.bucket) && result.groundTruthNeverFresh) summary.staleRejection += 1;
+        if (result.directionRejections > 0) summary.directionRejection += 1;
         if (result.bucket !== baseline.bucket) {
           const flip = `${baseline.bucket}→${result.bucket}`;
           summary.flips[flip] = (summary.flips[flip] ?? 0) + 1;

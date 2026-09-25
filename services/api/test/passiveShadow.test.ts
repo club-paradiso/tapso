@@ -16,7 +16,7 @@ import {
 } from "../src/passiveShadow.ts";
 import { blindLabels, evaluatePassiveCase, type ReplayFunction } from "../src/passiveShadowEvaluate.ts";
 import { evaluatePerturbations, PERTURBATIONS } from "../src/passiveShadowPerturb.ts";
-import { rateMetrics, summarizeLive } from "../src/passiveShadowSummary.ts";
+import { rateMetrics, summarizeAdversarial, summarizeLive } from "../src/passiveShadowSummary.ts";
 import { runPassiveShadowPipeline } from "../src/passiveShadowPipeline.ts";
 import { SYN_ROUTE, T0, syntheticStream } from "./syntheticPassive.ts";
 
@@ -396,4 +396,50 @@ test("the summary exposes no raw vehicle number", () => {
   assert.equal(output.summary.automaticMatching, "disabled");
   assert.equal(output.summary.gateClosed, false);
   assert.equal(SYN_ROUTE, stream.routeId);
+});
+
+test("an abstention is attributed to the freshness gate only when the true bus was never fresh", () => {
+  const { cases, vault } = generatePassiveCases([departedDecoyStream()]);
+  const passiveCase = caseAt(cases, 10);
+  // Every row frozen: no candidate can ever be fresh, so nothing may commit.
+  const frozenAll: PassiveCase = {
+    ...passiveCase,
+    input: {
+      ...passiveCase.input,
+      snapshots: passiveCase.input.snapshots.map((snapshot) => ({
+        ...snapshot,
+        vehicles: passiveCase.input.snapshots[0]!.vehicles.map((vehicle) => ({ ...vehicle, receivedAt: snapshot.capturedAt })),
+      })),
+    },
+  };
+  const frozen = evaluatePassiveCase(frozenAll, vault);
+  assert.equal(frozen.committedVehicleId, undefined);
+  assert.equal(frozen.groundTruthNeverFresh, true);
+  const live = evaluatePassiveCase(passiveCase, vault);
+  assert.equal(live.groundTruthNeverFresh, false);
+  const adversarial = summarizeAdversarial([{
+    baseline: live,
+    variants: [{ perturbation: PERTURBATIONS[0]!, result: { ...frozen, sourceClass: "SYNTHETIC_OR_PERTURBED" } }],
+  }]);
+  assert.equal(adversarial.variants[0]!.staleRejection, 1);
+  // A wrong commit is never counted as a freshness rejection, whatever its cadence history.
+  const wrongAdversarial = summarizeAdversarial([{
+    baseline: live,
+    variants: [{ perturbation: PERTURBATIONS[0]!, result: { ...live, groundTruthNeverFresh: true, sourceClass: "SYNTHETIC_OR_PERTURBED" } }],
+  }]);
+  assert.equal(wrongAdversarial.variants[0]!.staleRejection, 0);
+});
+
+test("the wrong-commit profile covers every wrong commit and records how far past the stop it was", () => {
+  const output = runPassiveShadowPipeline([departedDecoyStream()], { createdAt: "2026-09-25T00:00:00.000Z" });
+  const wrong = output.results.filter((result) => result.bucket === "PASSIVE_WRONG");
+  assert.ok(wrong.length > 0);
+  for (const result of wrong) assert.ok(result.committedStopOffset !== undefined);
+  const decoy = wrong.find((result) => result.meta.boardingSequence === 10 && Date.parse(result.meta.sessionStartAt) === T0)!;
+  assert.ok(decoy.committedStopOffset! > 0, "a departed decoy is past the boarding stop");
+  // summarizeLive refuses synthetic results, so the profile is checked through a relabelled copy that never leaves this test.
+  const relabelled = wrong.map((result) => ({ ...result, sourceClass: "LIVE_PASSIVE" as const }));
+  const profile = summarizeLive([], output.generated, relabelled, (id) => id).wrongCommitProfile;
+  assert.equal(profile.total, wrong.length);
+  assert.equal(Object.values(profile.byWrongKind).reduce((sum, value) => sum + value, 0), wrong.length);
 });
