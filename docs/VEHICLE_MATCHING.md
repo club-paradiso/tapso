@@ -21,3 +21,5 @@ A `RideSession` accepts only monotonically newer observations for the selected v
 ## Known validation gap
 
 Weights are engineering priors exercised by synthetic tests. They are not presented as calibrated probabilities. Real Jeju observation history is required to tune thresholds and determine which official event and direction fields are trustworthy.
+
+Passive Shadow Validation v3 (2026-09-25) measured this gap live. With symmetric stop-distance scoring, a bus that has already passed the boarding stop is often the only eligible candidate, and the matcher commits to it. That happened in 268 of 5 461 evaluable waiting-rider cases. See `validation/PASSIVE_SHADOW_VALIDATION_V3_RESULTS.md`.

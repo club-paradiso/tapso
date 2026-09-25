@@ -331,3 +331,129 @@ the boarding stop and the next bus five stops away, the production matcher
 commits to the departed bus (test "the real matcher commits to a departed
 decoy"). This demonstrates F1 is reachable by the real matcher; whether it
 happens in real traffic is for Phase 7 to observe.
+
+Later Phase 6 additions: `GT_VEHICLE_AT_STOP_AT_START` (a bus reporting the
+boarding stop when the rider arrives makes the first arrival unknowable; its
+negative control fails 1 test), a wrong-commit profile and an abstention
+attribution (`groundTruthNeverFresh`; its negative control fails 1 test).
+`evaluate.ts` now replaces `fetch` and outbound sockets, hashes the raw tree
+before and after, and writes outputs outside the raw directory. Negative
+controls: an injected `fetch`, an injected socket connect and a raw-file write
+each abort the evaluation with no summary written. Final suite: 386 / 386.
+
+---
+
+## Phase 7 — live passive collection (`VERIFIED_LIVE`)
+
+Executor: the `Passive Shadow v3 collection` GitHub Actions job, because this
+container cannot reach the provider. The job is bounded and read-only; it
+writes nothing to Upstash and touches no production configuration.
+
+| Item | Value |
+|---|---|
+| Run | `36098610702`, commit `0ec57f9`, 05:27:12 → 06:27:52 UTC |
+| Provider path (from the manifest) | `tapso-public-api` (requested and recorded) |
+| Calls | 1 815 TAPSO public-API requests, 5 failed, 0 incidents, `DURATION_REACHED` |
+| Routes selected by preflight (most active vehicles) | `JEB405136521`, `JEB405136001`, `JEB405136002`, `JEB405320111`, `JEB405320112` |
+| Raw artifact | `passive-shadow-v3-raw` id `10849693394`, sha256 `3b644dbc…9de995`, 14-day private retention |
+
+That run's own evaluation used pre-fix generator code and is **audit history
+only**.
+
+### Re-evaluation (the evidence)
+
+The request file was set to `reevaluateRunId: "36098610702"`. The job skips
+collection (0 provider calls; the collect step is `skipped` in the job record),
+downloads the raw artifact, prints every raw file's sha256 and the manifest,
+then runs `evaluate.ts` under the network guard.
+
+| Run | Commit | Summary sha256 | Result |
+|---|---|---|---|
+| `36103115258` | `7211a7b` | `b187c21c…ac013` | all checks pass; 6 377 cases |
+| `36103361789` | `4f84177` | `e4b50f2a…580c66` | all checks pass; classifications identical to the run above; adds the full wrong-commit profile. **This is the evidence of record** (`artifacts/passive-shadow-validation-v3-summary.json`). |
+
+Both runs recorded raw tree `bce8b504…c82fb` unchanged, 5/5 stream checksums
+matching, and 0 network attempts.
+
+## Phase 8 — evidence analysis
+
+See `docs/validation/PASSIVE_SHADOW_VALIDATION_V3_RESULTS.md`. Headline, live
+only: 6 377 cases / 739 boarding events / 29 trajectories / 27 vehicles /
+5 routes / 1 h. The matcher made **268 wrong commits**, all of them
+`DEPARTED_VEHICLE`, all in `WAIT_AT_STOP`: committed-selection precision
+0.9461 and wrong-commit rate 0.0434 of evaluable cases. 15 of 29 trajectories
+contain at least one wrong commit. There were 0 stale selections and 0 direction
+failures. `ON_BOARD_START`: 429 commits, 0 wrong.
+
+Initial hypothesis (Phase 2) vs outcome: F1 was hypothesised to produce wrong
+commits on frequent routes with a departed decoy. It did. The departed-decoy
+cases have a 0.3656 wrong-commit rate; the single-candidate cases have 0.
+
+Threshold recommendation: none. The failure is structural, not a threshold
+question. Proposing a numeric release threshold before the matcher handles
+departed buses would legitimise a known failure.
+
+## Phase 9 — finalisation
+
+### What has been verified
+
+- The v3 pipeline's anti-leakage, bucket and evidence-separation properties,
+  by 32 deterministic tests (24 + 8) plus the negative controls above.
+- One hour of real, rider-free observations of 5 Jeju route IDs through TAPSO's
+  production public API, with checksums end to end.
+- On those observations, the current production matcher, replayed blind,
+  commits to a bus that has already left the rider's stop in 268 cases.
+- Re-evaluation of the raw evidence makes no network call and does not change
+  the raw evidence.
+
+### What has only been simulated
+
+- All adversarial families (dropout, delay, stale repetition, disappearance,
+  competitor pressure, direction ambiguity).
+- The deterministic departed-decoy test.
+
+### What has been inferred
+
+- That a 5 s uncached session would not commit to departed buses less often
+  (the departed bus is moving and fresh either way).
+- That the first-arrival model approximates which bus a waiting rider boards.
+
+### What remains unverified
+
+- Behaviour on the direct TAGO path at session cadence (no `TAGO_SERVICE_KEY`
+  secret was used by the job; the provider path was `tapso-public-api`).
+- Other days, hours, weather and routes.
+- Which bus real riders board; physical stop timing; passenger confirmation UI;
+  iPhone Safari; Railway restart during a real ride.
+- The Swift `VehicleMatchingEngine`.
+
+### Final evidence status
+
+**`NOT_READY`.** `TRANSIT_AUTOMATIC_MATCHING_ENABLED=false` throughout; no
+production configuration was modified.
+
+### Exact next actions
+
+1. Decide and implement a matcher rule for candidates at or past the boarding
+   stop, then re-run
+   `reevaluateRunId: "36098610702"` to measure it on these exact raw streams.
+2. Add a `TAGO_SERVICE_KEY` repository secret, if the owner accepts that, so a
+   collection can use `tago-direct` at the session's 5 s cadence within the
+   1 080-call budget. Then collect on more days and hours.
+3. Keep the v1/v2 human campaigns for interaction, timing and device evidence.
+
+### Reproduce
+
+```bash
+# Collect (needs network to the provider; bounded; raw output under work/)
+node --experimental-strip-types scripts/passive-shadow/collect.ts --yes \
+  --provider=tapso-public-api --routes=JEB405136521,JEB405136522 --minutes=60
+# Evaluate offline (no network; raw read-only)
+node --experimental-strip-types scripts/passive-shadow/evaluate.ts work/passive-shadow/<collectionId> \
+  --summary=artifacts/passive-shadow-validation-v3-summary.json
+```
+
+In CI, edit `ops/passive-shadow-v3/collection-request.json` on a
+`claude/**passive-shadow**` branch. Clear `reevaluateRunId` to collect, or set it
+to a previous run id to re-evaluate that run's raw artifact within its
+retention window.
