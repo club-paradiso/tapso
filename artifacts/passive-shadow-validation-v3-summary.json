@@ -2,7 +2,7 @@
   "schemaVersion": 1,
   "policyVersion": "passive-shadow-validation-v3",
   "campaignId": "passive-shadow-validation-v3",
-  "createdAt": "2026-09-25T06:33:27.968Z",
+  "createdAt": "2026-09-25T07:35:15.398Z",
   "automaticMatching": "disabled",
   "gateClosed": false,
   "groundTruthModel": "passive_first_arrival_model",
@@ -701,6 +701,177 @@
         "p90": 174.73,
         "p95": 227.3,
         "max": 298.6
+      }
+    },
+    "difficultyProfile": {
+      "nearbyCandidateDistribution": {
+        "1": 6188,
+        "2": 189
+      },
+      "maxEligibleDistribution": {
+        "0": 1406,
+        "1": 4925,
+        "2+": 46
+      },
+      "oneOrNoNearbyCandidate": {
+        "cases": 6188,
+        "buckets": {
+          "PASSIVE_CORRECT": 4558,
+          "PASSIVE_WRONG": 222,
+          "PASSIVE_ABSTAINED": 1209,
+          "PASSIVE_AMBIGUOUS": 3,
+          "PASSIVE_STALE_FAILURE": 0,
+          "PASSIVE_DIRECTION_FAILURE": 0,
+          "PASSIVE_INSUFFICIENT_EVIDENCE": 0,
+          "PASSIVE_PROVIDER_FAILURE": 196
+        },
+        "metrics": {
+          "cases": 6188,
+          "evaluable": 5992,
+          "committed": 4780,
+          "committedSelectionPrecision": 0.9536,
+          "coverage": 0.7977,
+          "wrongCommitRate": 0.037,
+          "abstentionRate": 0.2023
+        }
+      },
+      "twoPlusNearbyCandidates": {
+        "cases": 189,
+        "buckets": {
+          "PASSIVE_CORRECT": 142,
+          "PASSIVE_WRONG": 46,
+          "PASSIVE_ABSTAINED": 1,
+          "PASSIVE_AMBIGUOUS": 0,
+          "PASSIVE_STALE_FAILURE": 0,
+          "PASSIVE_DIRECTION_FAILURE": 0,
+          "PASSIVE_INSUFFICIENT_EVIDENCE": 0,
+          "PASSIVE_PROVIDER_FAILURE": 0
+        },
+        "metrics": {
+          "cases": 189,
+          "evaluable": 189,
+          "committed": 188,
+          "committedSelectionPrecision": 0.7553,
+          "coverage": 0.9947,
+          "wrongCommitRate": 0.2434,
+          "abstentionRate": 0.0053
+        }
+      },
+      "departedDecoy": {
+        "cases": 785,
+        "buckets": {
+          "PASSIVE_CORRECT": 444,
+          "PASSIVE_WRONG": 268,
+          "PASSIVE_ABSTAINED": 21,
+          "PASSIVE_AMBIGUOUS": 0,
+          "PASSIVE_STALE_FAILURE": 0,
+          "PASSIVE_DIRECTION_FAILURE": 0,
+          "PASSIVE_INSUFFICIENT_EVIDENCE": 0,
+          "PASSIVE_PROVIDER_FAILURE": 52
+        },
+        "metrics": {
+          "cases": 785,
+          "evaluable": 733,
+          "committed": 712,
+          "committedSelectionPrecision": 0.6236,
+          "coverage": 0.9714,
+          "wrongCommitRate": 0.3656,
+          "abstentionRate": 0.0286
+        }
+      },
+      "approachingVsDeparted": {
+        "cases": 185,
+        "buckets": {
+          "PASSIVE_CORRECT": 139,
+          "PASSIVE_WRONG": 46,
+          "PASSIVE_ABSTAINED": 0,
+          "PASSIVE_AMBIGUOUS": 0,
+          "PASSIVE_STALE_FAILURE": 0,
+          "PASSIVE_DIRECTION_FAILURE": 0,
+          "PASSIVE_INSUFFICIENT_EVIDENCE": 0,
+          "PASSIVE_PROVIDER_FAILURE": 0
+        },
+        "metrics": {
+          "cases": 185,
+          "evaluable": 185,
+          "committed": 185,
+          "committedSelectionPrecision": 0.7514,
+          "coverage": 1,
+          "wrongCommitRate": 0.2486,
+          "abstentionRate": 0
+        }
+      },
+      "followingCompetitorPressure": {
+        "cases": 0,
+        "buckets": {
+          "PASSIVE_CORRECT": 0,
+          "PASSIVE_WRONG": 0,
+          "PASSIVE_ABSTAINED": 0,
+          "PASSIVE_AMBIGUOUS": 0,
+          "PASSIVE_STALE_FAILURE": 0,
+          "PASSIVE_DIRECTION_FAILURE": 0,
+          "PASSIVE_INSUFFICIENT_EVIDENCE": 0,
+          "PASSIVE_PROVIDER_FAILURE": 0
+        },
+        "metrics": {
+          "cases": 0,
+          "evaluable": 0,
+          "committed": 0,
+          "committedSelectionPrecision": null,
+          "coverage": null,
+          "wrongCommitRate": null,
+          "abstentionRate": null
+        }
+      },
+      "contested": {
+        "cases": 46,
+        "buckets": {
+          "PASSIVE_CORRECT": 29,
+          "PASSIVE_WRONG": 14,
+          "PASSIVE_ABSTAINED": 0,
+          "PASSIVE_AMBIGUOUS": 3,
+          "PASSIVE_STALE_FAILURE": 0,
+          "PASSIVE_DIRECTION_FAILURE": 0,
+          "PASSIVE_INSUFFICIENT_EVIDENCE": 0,
+          "PASSIVE_PROVIDER_FAILURE": 0
+        },
+        "metrics": {
+          "cases": 46,
+          "evaluable": 46,
+          "committed": 43,
+          "committedSelectionPrecision": 0.6744,
+          "coverage": 0.9348,
+          "wrongCommitRate": 0.3043,
+          "abstentionRate": 0.0652
+        }
+      },
+      "anyAmbiguousDecision": {
+        "cases": 46,
+        "buckets": {
+          "PASSIVE_CORRECT": 29,
+          "PASSIVE_WRONG": 14,
+          "PASSIVE_ABSTAINED": 0,
+          "PASSIVE_AMBIGUOUS": 3,
+          "PASSIVE_STALE_FAILURE": 0,
+          "PASSIVE_DIRECTION_FAILURE": 0,
+          "PASSIVE_INSUFFICIENT_EVIDENCE": 0,
+          "PASSIVE_PROVIDER_FAILURE": 0
+        },
+        "metrics": {
+          "cases": 46,
+          "evaluable": 46,
+          "committed": 43,
+          "committedSelectionPrecision": 0.6744,
+          "coverage": 0.9348,
+          "wrongCommitRate": 0.3043,
+          "abstentionRate": 0.0652
+        }
+      },
+      "abstentionCounterfactual": {
+        "nonCommitted": 1409,
+        "wouldBeWrong": 0,
+        "wouldBeCorrect": 3,
+        "neverEligible": 1406
       }
     },
     "abstentionsWithTruthNeverFresh": 970,
@@ -21016,8 +21187,8 @@
     "collectionFailedCalls": 5,
     "collectionStopReason": "DURATION_REACHED",
     "collectionRunId": "36098610702",
-    "evaluatedAtCommit": "4f841773c8cba67009496637f3b8da1738241263",
-    "evaluationRunId": "36103361789",
+    "evaluatedAtCommit": "db51667f9d715c701be7d8df36a83b2c8521ff62",
+    "evaluationRunId": "36108364969",
     "rawTreeSha256": "bce8b504e5b287d9f86eb79345f7e50bdce4537625247c0dee164c2afb8c82fb",
     "rawFiles": [
       {

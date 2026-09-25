@@ -323,7 +323,7 @@ never count toward the 30 boardings above.
 First live result (1 h, 5 route IDs, `tapso-public-api` path, re-evaluated
 offline at the PR head): **268 wrong commits** in 5 461 evaluable waiting-rider
 cases (142 of 739 boarding events; 15 of 29 trajectories). Every one is a bus
-that had already left the rider's stop (finding F1). Status: `NOT_READY`.
+that had already left the rider's stop (finding F1). In all 268 it was the only eligible candidate. On non-trivial cases, precision is 0.62–0.76; the 1.0 on trivial one-candidate cases is not counted as validation. Status: `NOT_READY`.
 Details: `validation/PASSIVE_SHADOW_VALIDATION_V3_RESULTS.md`; method:
 `exec-plans/PASSIVE_SHADOW_VALIDATION_V3.md`.
 

@@ -370,10 +370,14 @@ then runs `evaluate.ts` under the network guard.
 | Run | Commit | Summary sha256 | Result |
 |---|---|---|---|
 | `36103115258` | `7211a7b` | `b187c21c…ac013` | all checks pass; 6 377 cases |
-| `36103361789` | `4f84177` | `e4b50f2a…580c66` | all checks pass; classifications identical to the run above; adds the full wrong-commit profile. **This is the evidence of record** (`artifacts/passive-shadow-validation-v3-summary.json`). |
+| `36103361789` | `4f84177` | `e4b50f2a…580c66` | all checks pass; classifications identical to the run above; adds the full wrong-commit profile |
+| `36108364969` | `db51667` | `0422f291…5069` (ledger `a960d428…8773`) | all checks pass; every live field and the adversarial section identical to both runs above; adds the difficulty profile and the per-case wrong-commit ledger. **This is the evidence of record** (`artifacts/passive-shadow-validation-v3-summary.json`, `artifacts/passive-shadow-validation-v3-wrong-commits.json`) |
 
-Both runs recorded raw tree `bce8b504…c82fb` unchanged, 5/5 stream checksums
-matching, and 0 network attempts.
+All three runs recorded raw tree `bce8b504…c82fb` unchanged, 5/5 stream
+checksums matching, the same pre-evaluation `sha256sum` of every raw file, 0
+network attempts, 0 provider calls (collect step `skipped`) and no raw
+re-upload. The job's token is `contents: read` / `actions: read` and carries no
+Upstash or deployment credential, so it cannot write to production.
 
 ## Phase 8 — evidence analysis
 
@@ -389,6 +393,22 @@ Initial hypothesis (Phase 2) vs outcome: F1 was hypothesised to produce wrong
 commits on frequent routes with a departed decoy. It did. The departed-decoy
 cases have a 0.3656 wrong-commit rate; the single-candidate cases have 0.
 
+Difficulty (run `36108364969`): 5 592 of 6 377 cases are trivial (only the
+true bus ever nearby), and those show precision 1.0. That number is **not**
+validation. On the non-trivial classes precision is 0.62–0.76: departed decoy
+785 cases, precision 0.6236; approaching-vs-departed 185, precision 0.7514;
+two or more nearby 189, precision 0.7553. Contested (≥ 2 eligible) cases: 46.
+Same-route follower pressure: 0 observed. Abstention counterfactual: of 1 409
+non-committed cases, 1 406 never had an eligible candidate, 3 would have been
+correct if forced, and 0 would have been wrong.
+
+Every wrong commit was inspected individually
+(`docs/validation/PASSIVE_SHADOW_VALIDATION_V3_WRONG_COMMITS.md`, from the
+ledger). All 268 had exactly one eligible candidate at the commit: a fresh bus
+1–4 stops *past* the stop. The true bus was either fresh but 5–14 stops before
+the stop and rejected as implausible (200), or not in the feed (68). There
+were 0 stale selections and 0 direction events.
+
 Threshold recommendation: none. The failure is structural, not a threshold
 question. Proposing a numeric release threshold before the matcher handles
 departed buses would legitimise a known failure.
@@ -397,8 +417,11 @@ departed buses would legitimise a known failure.
 
 ### What has been verified
 
-- The v3 pipeline's anti-leakage, bucket and evidence-separation properties,
-  by 32 deterministic tests (24 + 8) plus the negative controls above.
+- The v3 pipeline's anti-leakage, bucket, evidence-separation, ledger and
+  difficulty properties, by 34 deterministic tests (26 + 8) plus the negative
+  controls above. Two more controls were added with the ledger: the inverted
+  counterfactual fails 1 test, and a ledger that admits synthetic results
+  fails 1 test.
 - One hour of real, rider-free observations of 5 Jeju route IDs through TAPSO's
   production public API, with checksums end to end.
 - On those observations, the current production matcher, replayed blind,
