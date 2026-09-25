@@ -115,12 +115,36 @@ export interface MatchGateEvidence {
    */
   usableForGate: boolean;
   warnings: string[];
+  /**
+   * Every decision in order, present only when `recordDecisions` was asked
+   * for. Additive and opt-in: nothing above depends on it, and the existing
+   * v1/v2 reports never request it.
+   */
+  decisions?: ReplayDecision[];
+}
+
+/** One replayed matcher decision, by pseudonym only. */
+export interface ReplayDecision {
+  at: string;
+  status: "matched" | "ambiguous" | "unavailable";
+  selectedLabel?: string;
+  eligibleCount: number;
+  margin?: number;
+  candidates: Array<{
+    label: string;
+    score: number;
+    rejectedReasons: string[];
+    stopSequence?: number;
+    cadence?: SourceFreshnessState;
+  }>;
 }
 
 export interface ReplayOptions {
   /** Pseudonyms by raw vehicle id, so this never emits a vehicle number. */
   labels: ReadonlyMap<string, string>;
   boardedVehicleId?: string;
+  /** Opt in to `MatchGateEvidence.decisions`. Changes no other output. */
+  recordDecisions?: boolean;
 }
 
 export function replayMatching(capture: RideCapture, options: ReplayOptions): MatchGateEvidence {
@@ -155,6 +179,7 @@ export function replayMatching(capture: RideCapture, options: ReplayOptions): Ma
   let selectionsWhileNotFresh = 0;
   let firstCommit: FirstCommit | undefined;
   let evaluated = 0;
+  const decisions: ReplayDecision[] | undefined = options.recordDecisions ? [] : undefined;
 
   // The cadence surrogate is stateful: it only means anything when it is built
   // from the same consecutive receipts a live session would have accumulated.
@@ -207,6 +232,28 @@ export function replayMatching(capture: RideCapture, options: ReplayOptions): Ma
         boardedCadenceStates[state] += 1;
         if (state !== "fresh") boardedNotFreshDecisions += 1;
       }
+    }
+
+    if (decisions) {
+      const positions = new Map(snapshot.vehicles.map((vehicle) => [vehicle.vehicleId, vehicle.stopSequence]));
+      decisions.push({
+        at: snapshot.capturedAt,
+        status: result.status,
+        ...(result.selectedVehicleId ? { selectedLabel: labels.get(result.selectedVehicleId) ?? "unlabelled" } : {}),
+        eligibleCount: eligible.length,
+        ...(margin === undefined ? {} : { margin }),
+        candidates: result.ranked.map((candidate) => {
+          const stopSequence = positions.get(candidate.vehicleId);
+          const cadence = freshness.get(candidate.vehicleId)?.state;
+          return {
+            label: labels.get(candidate.vehicleId) ?? "unlabelled",
+            score: candidate.score,
+            rejectedReasons: [...candidate.rejectedReasons],
+            ...(stopSequence === undefined ? {} : { stopSequence }),
+            ...(cadence === undefined ? {} : { cadence }),
+          };
+        }),
+      });
     }
 
     const outcome = classify(result.status, result.selectedVehicleId, boarded);
@@ -267,6 +314,7 @@ export function replayMatching(capture: RideCapture, options: ReplayOptions): Ma
     },
     usableForGate: Boolean(boarded) && evaluated > 0 && sawTagoObservation && selectionVerdict !== "no_boarded_vehicle",
     warnings,
+    ...(decisions ? { decisions } : {}),
   };
 }
 
