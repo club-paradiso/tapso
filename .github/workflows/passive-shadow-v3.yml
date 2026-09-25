@@ -124,11 +124,18 @@ jobs:
           echo "----- BEGIN PASSIVE SHADOW V3 SUMMARY (base64 chunks) -----"
           base64 -w 3000 "$f" | awk '{ printf "B64 %04d %s\n", NR, $0 }'
           echo "----- END PASSIVE SHADOW V3 SUMMARY -----"
+          l=work/passive-shadow/passive-shadow-validation-v3-wrong-commits.json
+          echo "ledger sha256: $(sha256sum "$l" | cut -d' ' -f1)"
+          echo "----- BEGIN PASSIVE SHADOW V3 WRONG-COMMIT LEDGER (base64 chunks) -----"
+          base64 -w 3000 "$l" | awk '{ printf "L64 %04d %s\n", NR, $0 }'
+          echo "----- END PASSIVE SHADOW V3 WRONG-COMMIT LEDGER -----"
       - name: Upload sanitized summary
         uses: actions/upload-artifact@v4
         with:
           name: passive-shadow-v3-summary
-          path: work/passive-shadow/passive-shadow-validation-v3-summary.json
+          path: |
+            work/passive-shadow/passive-shadow-validation-v3-summary.json
+            work/passive-shadow/passive-shadow-validation-v3-wrong-commits.json
           retention-days: 30
       - name: Upload raw collection (private, raw vehicle numbers)
         if: always() && steps.request.outputs.reevaluateRunId == ''

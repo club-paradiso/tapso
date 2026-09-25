@@ -3,7 +3,7 @@
  *
  *   node --experimental-strip-types scripts/passive-shadow/evaluate.ts <collection-dir> \
  *     [--summary=artifacts/passive-shadow-validation-v3-summary.json] \
- *     [--sensitive-out=<dir>] [--max-perturbation-cases=300]
+ *     [--wrong-ledger=<path>] [--sensitive-out=<dir>] [--max-perturbation-cases=300]
  *
  * Reads the streams a collector wrote, verifies each against the manifest's
  * sha256, and runs the v3 pipeline under the current code. Two guarantees are
@@ -18,6 +18,8 @@
  *
  * Outputs:
  *   - the sanitized summary (pseudonyms only) to --summary,
+ *   - the sanitized wrong-commit ledger (every live wrong commit) to
+ *     --wrong-ledger (default: next to the summary),
  *   - the sensitive bundle (ground-truth vault, per-case results with raw
  *     vehicle numbers) to --sensitive-out (default `<collection-dir>.evaluation/`),
  *     which must stay in ignored `work/` storage.
@@ -127,6 +129,8 @@ const summary = {
 const summaryPath = path.resolve(options.get("summary") || path.join(sensitive, "summary.json"));
 await mkdir(path.dirname(summaryPath), { recursive: true });
 await writeFile(summaryPath, `${JSON.stringify(summary, null, 2)}\n`);
+const ledgerPath = path.resolve(options.get("wrong-ledger") || path.join(path.dirname(summaryPath), "passive-shadow-validation-v3-wrong-commits.json"));
+await writeFile(ledgerPath, `${JSON.stringify({ ...output.wrongCommitLedger, provenance: { collectionId: manifest.collectionId, evaluatedAtCommit: summary.provenance.evaluatedAtCommit, rawTreeSha256: before.sha256 } }, null, 1)}\n`);
 await mkdir(sensitive, { recursive: true, mode: 0o700 });
 await writeFile(path.join(sensitive, "ground-truth-vault.json"), JSON.stringify(output.generated.vault.export()), { mode: 0o600 });
 await writeFile(path.join(sensitive, "case-results.json"), JSON.stringify(output.results), { mode: 0o600 });

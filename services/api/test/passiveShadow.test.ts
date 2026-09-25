@@ -16,7 +16,7 @@ import {
 } from "../src/passiveShadow.ts";
 import { blindLabels, evaluatePassiveCase, type ReplayFunction } from "../src/passiveShadowEvaluate.ts";
 import { evaluatePerturbations, PERTURBATIONS } from "../src/passiveShadowPerturb.ts";
-import { rateMetrics, summarizeAdversarial, summarizeLive } from "../src/passiveShadowSummary.ts";
+import { buildWrongCommitLedger, difficultyProfile, rateMetrics, summarizeAdversarial, summarizeLive } from "../src/passiveShadowSummary.ts";
 import { runPassiveShadowPipeline } from "../src/passiveShadowPipeline.ts";
 import { SYN_ROUTE, T0, syntheticStream } from "./syntheticPassive.ts";
 
@@ -442,4 +442,57 @@ test("the wrong-commit profile covers every wrong commit and records how far pas
   const profile = summarizeLive([], output.generated, relabelled, (id) => id).wrongCommitProfile;
   assert.equal(profile.total, wrong.length);
   assert.equal(Object.values(profile.byWrongKind).reduce((sum, value) => sum + value, 0), wrong.length);
+});
+
+test("every live wrong commit gets its own ledger record with the mechanism read off the commit decision", () => {
+  const stream = syntheticStream({
+    buses: [
+      { id: "제주70자1234", startSequence: 11, msPerStop: 30_000, offsetMs: -15_000 },
+      { id: "제주70자5678", startSequence: 4, msPerStop: 30_000, offsetMs: -10_000 },
+    ],
+    durationMs: 700_000,
+  });
+  const output = runPassiveShadowPipeline([stream], { createdAt: "2026-09-25T00:00:00.000Z" });
+  // Synthetic results never enter the live ledger.
+  assert.equal(output.wrongCommitLedger.total, 0);
+  const wrong = output.results.filter((result) => result.bucket === "PASSIVE_WRONG");
+  assert.ok(wrong.length > 0);
+  // Relabelled copies that never leave this test, to exercise the live path.
+  const ledger = buildWrongCommitLedger([stream], wrong.map((result) => ({ ...result, sourceClass: "LIVE_PASSIVE" as const })));
+  assert.equal(ledger.total, wrong.length);
+  assert.equal(ledger.records.length, wrong.length);
+  const encoded = JSON.stringify(ledger);
+  assert.equal(encoded.includes("1234"), false);
+  assert.equal(encoded.includes("5678"), false);
+  const record = ledger.records.find((item) => item.boardingSequence === 10 && Date.parse(item.sessionStartAt) === T0)!;
+  assert.equal(record.mechanism, "SOLE_ELIGIBLE_DEPARTED__TRUTH_BEYOND_4_STOPS");
+  assert.equal(record.commitDecision!.eligibleCount, 1);
+  assert.ok(record.commitDecision!.candidates.some((candidate) => candidate.role === "SELECTED" && candidate.stopOffset! > 0));
+  assert.ok(record.truthAtCommit.inFeed);
+  assert.ok(record.truthAtCommit.rejected!.includes("implausible_boarding_position"));
+  assert.ok(record.timeline.some((decision) => decision.status === "matched" && decision.selected === "SELECTED"));
+});
+
+test("the difficulty profile separates trivial cases and counts abstentions that were safer than committing", () => {
+  const { cases, vault } = generatePassiveCases([departedDecoyStream()]);
+  const passiveCase = caseAt(cases, 10);
+  const abstained = evaluatePassiveCase(passiveCase, vault, { replay: committingReplay(undefined) });
+  // The departed decoy was the first eligible candidate: forcing a commit would have picked it.
+  assert.equal(abstained.forcedTopWouldBeWrong, true);
+  assert.ok(abstained.approachingVsDepartedDecisions > 0);
+  const single = syntheticStream({
+    buses: [{ id: TRUTH, startSequence: 8, msPerStop: 30_000, offsetMs: -5_000 }],
+    durationMs: 600_000,
+  });
+  const singleCases = generatePassiveCases([single]);
+  const correct = evaluatePassiveCase(caseAt(singleCases.cases, 10), singleCases.vault);
+  assert.equal(correct.bucket, "PASSIVE_CORRECT");
+  assert.ok(correct.maxNearbyCandidates <= 1);
+  assert.equal(correct.forcedTopWouldBeWrong, undefined);
+  const profile = difficultyProfile([abstained, correct]);
+  assert.equal(profile.oneOrNoNearbyCandidate.cases, 1);
+  assert.equal(profile.twoPlusNearbyCandidates.cases, 1);
+  assert.equal(profile.abstentionCounterfactual.nonCommitted, 1);
+  assert.equal(profile.abstentionCounterfactual.wouldBeWrong, 1);
+  assert.equal(profile.departedDecoy.cases, 1);
 });

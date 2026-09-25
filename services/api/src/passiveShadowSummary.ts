@@ -134,10 +134,45 @@ export interface LiveSection {
   };
   /** Abstentions (no commit) in which the ground-truth bus never had fresh cadence. */
   abstentionsWithTruthNeverFresh: number;
+  /**
+   * How hard the live cases actually were. High accuracy on one-candidate
+   * cases is not matcher validation; this section keeps them apart.
+   */
+  difficultyProfile: DifficultyProfile;
   wrongCommits: CaseDiagnostic[];
   staleSelections: number;
   /** Vehicles that appeared in more than one route's stream: real route-variant / direction identity changes. */
   crossRouteVehicles: number;
+}
+
+export interface DifficultyClass {
+  cases: number;
+  buckets: BucketCounts;
+  metrics: RateMetrics;
+}
+
+export interface DifficultyProfile {
+  /** Most vehicles within ±4 stops of the boarding stop at any pre-boarding decision. */
+  nearbyCandidateDistribution: Record<string, number>;
+  /** Most candidates eligible at any one decision. */
+  maxEligibleDistribution: Record<string, number>;
+  oneOrNoNearbyCandidate: DifficultyClass;
+  twoPlusNearbyCandidates: DifficultyClass;
+  departedDecoy: DifficultyClass;
+  /** A bus within 4 stops before the stop and another within 4 stops at/after it, at the same decision. */
+  approachingVsDeparted: DifficultyClass;
+  /** Another same-route bus within 4 stops of the stop, behind the true bus. */
+  followingCompetitorPressure: DifficultyClass;
+  /** Two or more eligible candidates at some decision. */
+  contested: DifficultyClass;
+  /** At least one `ambiguous` decision (commit or not). */
+  anyAmbiguousDecision: DifficultyClass;
+  /**
+   * Cases with no commit, split by what a forced commit to the top eligible
+   * candidate at the first opportunity would have done. `wouldBeWrong` counts
+   * abstentions that were safer than committing.
+   */
+  abstentionCounterfactual: { nonCommitted: number; wouldBeWrong: number; wouldBeCorrect: number; neverEligible: number };
 }
 
 export interface AdversarialVariantSummary {
@@ -293,6 +328,7 @@ export function summarizeLive(
     },
     wrongCommitProfile: wrongProfile(results),
     commitTiming: commitTiming(results),
+    difficultyProfile: difficultyProfile(results),
     abstentionsWithTruthNeverFresh: results.filter(
       (result) => !COMMITTED_BUCKETS.has(result.bucket) && result.groundTruthNeverFresh,
     ).length,
@@ -334,6 +370,183 @@ function commitTiming(results: PassiveCaseResult[]): LiveSection["commitTiming"]
     correctCommitsBeforeBoarding: correct.filter((value) => value < 0).length,
     correctCommitsAtOrAfterBoarding: correct.filter((value) => value >= 0).length,
     correctCommitRelativeToBoardingSeconds: summarize(correct),
+  };
+}
+
+function difficultyClass(results: PassiveCaseResult[]): DifficultyClass {
+  return { cases: results.length, buckets: countBuckets(results), metrics: rateMetrics(results) };
+}
+
+export function difficultyProfile(results: PassiveCaseResult[]): DifficultyProfile {
+  const bucketOf = (value: number, top: number) => (value >= top ? `${top}+` : String(value));
+  const nonCommitted = results.filter((result) => !COMMITTED_BUCKETS.has(result.bucket));
+  return {
+    nearbyCandidateDistribution: tally(results.map((result) => bucketOf(result.maxNearbyCandidates, 3))),
+    maxEligibleDistribution: tally(results.map((result) => bucketOf(result.maxEligibleCandidates, 2))),
+    oneOrNoNearbyCandidate: difficultyClass(results.filter((result) => result.maxNearbyCandidates <= 1)),
+    twoPlusNearbyCandidates: difficultyClass(results.filter((result) => result.maxNearbyCandidates >= 2)),
+    departedDecoy: difficultyClass(results.filter((result) => result.difficulty === "DEPARTED_DECOY")),
+    approachingVsDeparted: difficultyClass(results.filter((result) => result.approachingVsDepartedDecisions > 0)),
+    followingCompetitorPressure: difficultyClass(results.filter((result) => result.followingCompetitorPressure)),
+    contested: difficultyClass(results.filter((result) => result.contestedDecisions > 0)),
+    anyAmbiguousDecision: difficultyClass(results.filter((result) => result.ambiguousDecisions > 0)),
+    abstentionCounterfactual: {
+      nonCommitted: nonCommitted.length,
+      wouldBeWrong: nonCommitted.filter((result) => result.forcedTopWouldBeWrong === true).length,
+      wouldBeCorrect: nonCommitted.filter((result) => result.forcedTopWouldBeWrong === false).length,
+      neverEligible: nonCommitted.filter((result) => result.forcedTopWouldBeWrong === undefined).length,
+    },
+  };
+}
+
+/* ------------------------------------------------------ wrong-commit ledger */
+
+export type WrongCommitMechanism =
+  | "SOLE_ELIGIBLE_DEPARTED__TRUTH_BEYOND_4_STOPS"
+  | "SOLE_ELIGIBLE_DEPARTED__TRUTH_NOT_FRESH"
+  | "SOLE_ELIGIBLE_DEPARTED__TRUTH_NOT_IN_FEED"
+  | "DEPARTED_OUTSCORED_ELIGIBLE_TRUTH"
+  | "OTHER";
+
+export interface WrongCommitRecord {
+  caseId: string;
+  scenario: PassiveScenario;
+  routeId: string;
+  boardingSequence: number;
+  sessionStartAt: string;
+  trajectoryId: string;
+  boardingEventId: string;
+  groundTruth: string;
+  selected: string;
+  committedStopOffset?: number;
+  commitAt?: string;
+  commitRelativeToBoardingSeconds?: number;
+  candidateSet: { distinctVehiclesBeforeBoarding: number; maxNearby: number; maxEligible: number; difficulty: Difficulty };
+  commitDecision?: {
+    eligibleCount: number;
+    margin?: number;
+    candidates: Array<{ role: "TRUTH" | "SELECTED" | "OTHER"; stopSequence?: number; stopOffset?: number; score: number; cadence?: string; rejected: string[] }>;
+  };
+  truthAtCommit: { inFeed: boolean; stopSequence?: number; cadence?: string; rejected?: string[] };
+  freshness: { truthCadenceAcrossDecisions: Record<string, number>; selectionsWhileNotFresh: number };
+  direction: { committedDirectionInconsistency: boolean; directionRejections: number };
+  /** Status changes only (every change, uncapped), by role. */
+  timeline: Array<{ at: string; status: string; selected?: "TRUTH" | "SELECTED" | "OTHER"; eligibleCount: number; margin?: number }>;
+  mechanism: WrongCommitMechanism;
+}
+
+export interface WrongCommitLedger {
+  schemaVersion: typeof PASSIVE_SHADOW_SCHEMA_VERSION;
+  policyVersion: typeof PASSIVE_SHADOW_POLICY_VERSION;
+  sourceClass: "LIVE_PASSIVE";
+  total: number;
+  mechanisms: Record<string, number>;
+  records: WrongCommitRecord[];
+}
+
+/**
+ * Every live wrong commit, one record each, in pseudonyms and roles. Built for
+ * individual inspection: nothing is capped, and the mechanism is read off the
+ * decision at which the matcher committed.
+ */
+export function buildWrongCommitLedger(
+  streams: PassiveObservationStream[],
+  results: PassiveCaseResult[],
+): WrongCommitLedger {
+  const { pseudonym, allVehicleIds } = vehiclePseudonyms(streams);
+  const records = results
+    .filter((result) => result.sourceClass === "LIVE_PASSIVE" && result.perturbation === undefined && result.bucket === "PASSIVE_WRONG")
+    .map((result) => wrongRecord(result, pseudonym));
+  const ledger: WrongCommitLedger = {
+    schemaVersion: PASSIVE_SHADOW_SCHEMA_VERSION,
+    policyVersion: PASSIVE_SHADOW_POLICY_VERSION,
+    sourceClass: "LIVE_PASSIVE",
+    total: records.length,
+    mechanisms: tally(records.map((record) => record.mechanism)),
+    records,
+  };
+  assertNoRawVehicleIds(ledger, allVehicleIds);
+  return ledger;
+}
+
+function wrongRecord(result: PassiveCaseResult, pseudonym: (vehicleId: string) => string): WrongCommitRecord {
+  const timeline = result.timeline ?? [];
+  const truthLabel = result.groundTruthLabel;
+  const selectedLabel = timeline.find((decision) => decision.at === result.commitAt)?.selectedLabel;
+  const role = (label: string | undefined): "TRUTH" | "SELECTED" | "OTHER" =>
+    label === truthLabel ? "TRUTH" : label !== undefined && label === selectedLabel ? "SELECTED" : "OTHER";
+  const commit = timeline.find((decision) => decision.at === result.commitAt);
+  const truthRow = commit?.candidates.find((candidate) => candidate.label === truthLabel);
+  let mechanism: WrongCommitMechanism = "OTHER";
+  if (commit && (result.committedStopOffset ?? 0) > 0) {
+    if (commit.eligibleCount === 1) {
+      if (!truthRow) mechanism = "SOLE_ELIGIBLE_DEPARTED__TRUTH_NOT_IN_FEED";
+      else if (truthRow.rejectedReasons.includes("implausible_boarding_position")) mechanism = "SOLE_ELIGIBLE_DEPARTED__TRUTH_BEYOND_4_STOPS";
+      else if (truthRow.rejectedReasons.length > 0) mechanism = "SOLE_ELIGIBLE_DEPARTED__TRUTH_NOT_FRESH";
+    } else if (truthRow && truthRow.rejectedReasons.length === 0) {
+      mechanism = "DEPARTED_OUTSCORED_ELIGIBLE_TRUTH";
+    }
+  }
+  return {
+    caseId: result.caseId,
+    scenario: result.meta.scenario,
+    routeId: result.meta.routeId,
+    boardingSequence: result.meta.boardingSequence,
+    sessionStartAt: result.meta.sessionStartAt,
+    trajectoryId: result.meta.trajectoryId,
+    boardingEventId: result.meta.boardingEventId,
+    groundTruth: pseudonym(result.groundTruthVehicleId),
+    selected: result.committedVehicleId === undefined ? "none" : pseudonym(result.committedVehicleId),
+    ...(result.committedStopOffset === undefined ? {} : { committedStopOffset: result.committedStopOffset }),
+    ...(result.commitAt ? { commitAt: result.commitAt } : {}),
+    ...(result.commitRelativeToBoardingSeconds === undefined ? {} : { commitRelativeToBoardingSeconds: result.commitRelativeToBoardingSeconds }),
+    candidateSet: {
+      distinctVehiclesBeforeBoarding: result.candidateCount,
+      maxNearby: result.maxNearbyCandidates,
+      maxEligible: result.maxEligibleCandidates,
+      difficulty: result.difficulty,
+    },
+    ...(commit ? {
+      commitDecision: {
+        eligibleCount: commit.eligibleCount,
+        ...(commit.margin === undefined ? {} : { margin: commit.margin }),
+        candidates: commit.candidates.map((candidate) => ({
+          role: role(candidate.label),
+          ...(candidate.stopSequence === undefined ? {} : {
+            stopSequence: candidate.stopSequence,
+            stopOffset: candidate.stopSequence - result.meta.boardingSequence,
+          }),
+          score: candidate.score,
+          ...(candidate.cadence === undefined ? {} : { cadence: candidate.cadence }),
+          rejected: candidate.rejectedReasons,
+        })),
+      },
+    } : {}),
+    truthAtCommit: truthRow
+      ? {
+        inFeed: true,
+        ...(truthRow.stopSequence === undefined ? {} : { stopSequence: truthRow.stopSequence }),
+        ...(truthRow.cadence === undefined ? {} : { cadence: truthRow.cadence }),
+        rejected: truthRow.rejectedReasons,
+      }
+      : { inFeed: false },
+    freshness: { truthCadenceAcrossDecisions: result.groundTruthCadence, selectionsWhileNotFresh: result.selectionsWhileNotFresh },
+    direction: {
+      committedDirectionInconsistency: result.committedDirectionInconsistency,
+      directionRejections: result.directionRejections,
+    },
+    timeline: timeline
+      .filter((decision, index, list) => index === 0
+        || decision.status !== list[index - 1]!.status
+        || decision.selectedLabel !== list[index - 1]!.selectedLabel)
+      .map((decision) => ({
+        at: decision.at,
+        status: decision.status,
+        ...(decision.selectedLabel ? { selected: role(decision.selectedLabel) } : {}),
+        eligibleCount: decision.eligibleCount,
+        ...(decision.margin === undefined ? {} : { margin: decision.margin }),
+      })),
+    mechanism,
   };
 }
 
@@ -408,20 +621,33 @@ export function summarizeAdversarial(
   };
 }
 
-export function buildPassiveShadowSummary(input: SummaryInput): PassiveShadowSummary {
+/**
+ * Run-level pseudonyms (`veh-01`, …) by first appearance across the streams.
+ * Deterministic from the evidence alone, and shared by the summary and the
+ * wrong-commit ledger so the two documents name the same bus the same way.
+ */
+export function vehiclePseudonyms(streams: PassiveObservationStream[]): {
+  pseudonym: (vehicleId: string) => string;
+  allVehicleIds: string[];
+} {
   const pseudonyms = new Map<string, string>();
-  const allVehicleIds = new Set<string>();
-  for (const stream of input.streams) {
+  for (const stream of streams) {
     for (const snapshot of sortedSnapshots(stream)) {
       for (const vehicle of snapshot.vehicles) {
-        allVehicleIds.add(vehicle.vehicleId);
         if (!pseudonyms.has(vehicle.vehicleId)) {
           pseudonyms.set(vehicle.vehicleId, `veh-${String(pseudonyms.size + 1).padStart(2, "0")}`);
         }
       }
     }
   }
-  const pseudonym = (vehicleId: string) => pseudonyms.get(vehicleId) ?? (vehicleId.startsWith("SYNTHETIC-") ? vehicleId : "veh-unknown");
+  return {
+    pseudonym: (vehicleId: string) => pseudonyms.get(vehicleId) ?? (vehicleId.startsWith("SYNTHETIC-") ? vehicleId : "veh-unknown"),
+    allVehicleIds: [...pseudonyms.keys()],
+  };
+}
+
+export function buildPassiveShadowSummary(input: SummaryInput): PassiveShadowSummary {
+  const { pseudonym, allVehicleIds } = vehiclePseudonyms(input.streams);
   const live = summarizeLive(
     input.streams,
     input.generated,
@@ -456,7 +682,7 @@ export function buildPassiveShadowSummary(input: SummaryInput): PassiveShadowSum
       "Passive data cannot measure provider lag against a physical stop, user interaction, iPhone/Safari behaviour or restart UX.",
     ],
   };
-  assertNoRawVehicleIds(summary, [...allVehicleIds]);
+  assertNoRawVehicleIds(summary, allVehicleIds);
   return summary;
 }
 

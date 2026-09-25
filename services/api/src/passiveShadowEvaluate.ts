@@ -106,6 +106,25 @@ export interface PassiveCaseResult {
    * (fail-closed on freshness) rather than to ambiguity or position.
    */
   groundTruthNeverFresh: boolean;
+  /** Most candidates eligible (no rejection) at any single decision. */
+  maxEligibleCandidates: number;
+  /** Decisions with two or more eligible candidates (from `replayMatching`). */
+  contestedDecisions: number;
+  /**
+   * Pre-boarding decisions with a bus within 4 stops *before* the boarding stop
+   * and another at or within 4 stops *after* it: the geometry in which a
+   * symmetric stop-distance score cannot tell approaching from departed.
+   */
+  approachingVsDepartedDecisions: number;
+  /** A same-route bus was within 4 stops of the boarding stop, behind the true bus, before boarding. */
+  followingCompetitorPressure: boolean;
+  /**
+   * Counterfactual for cases with no commit: had a policy forced a commit to
+   * the top eligible candidate at the first decision that had one, would it
+   * have been the wrong bus? Absent when no candidate was ever eligible.
+   * Measures whether abstaining was the safer outcome; it changes nothing.
+   */
+  forcedTopWouldBeWrong?: boolean;
   /** Decision timeline in pseudonyms. Kept for failed and ambiguous cases only. */
   timeline?: ReplayDecision[];
   groundTruthLabel: string;
@@ -188,6 +207,30 @@ export function classifyPassiveCase(
   }
   const difficulty: Difficulty = departedDecoy ? "DEPARTED_DECOY" : maxNearby >= 2 ? "CONTESTED" : "SINGLE_CANDIDATE";
 
+  let approachingVsDepartedDecisions = 0;
+  let followingCompetitorPressure = false;
+  for (const decision of preBoarding) {
+    const positions = decision.candidates.filter((candidate) => candidate.stopSequence !== undefined);
+    const approaching = positions.some((candidate) => candidate.stopSequence! < meta.boardingSequence
+      && candidate.stopSequence! >= meta.boardingSequence - NEARBY_STOPS);
+    const departed = positions.some((candidate) => candidate.stopSequence! >= meta.boardingSequence
+      && candidate.stopSequence! <= meta.boardingSequence + NEARBY_STOPS);
+    if (approaching && departed) approachingVsDepartedDecisions += 1;
+    const truthRow = positions.find((candidate) => candidate.label === truthLabel);
+    if (truthRow && positions.some((candidate) => candidate.label !== truthLabel
+      && candidate.stopSequence! < truthRow.stopSequence!
+      && Math.abs(candidate.stopSequence! - meta.boardingSequence) <= NEARBY_STOPS)) {
+      followingCompetitorPressure = true;
+    }
+  }
+  const maxEligibleCandidates = Math.max(0, ...decisions.map((decision) => decision.eligibleCount));
+  let forcedTopWouldBeWrong: boolean | undefined;
+  if (committedVehicleId === undefined) {
+    const firstEligible = decisions.find((decision) => decision.eligibleCount > 0);
+    const top = firstEligible?.candidates.find((candidate) => candidate.rejectedReasons.length === 0);
+    if (top) forcedTopWouldBeWrong = top.label !== truthLabel;
+  }
+
   const groundTruthCadence: Record<SourceFreshnessState, number> = { fresh: 0, aging: 0, stale: 0, unknown: 0 };
   let staleRejections = 0;
   let directionRejections = 0;
@@ -254,6 +297,11 @@ export function classifyPassiveCase(
     ...(wrongKind ? { wrongKind } : {}),
     ...(committedStopOffset === undefined ? {} : { committedStopOffset }),
     groundTruthNeverFresh: groundTruthCadence.fresh === 0,
+    maxEligibleCandidates,
+    contestedDecisions: evidence.contestedDecisions,
+    approachingVsDepartedDecisions,
+    followingCompetitorPressure,
+    ...(forcedTopWouldBeWrong === undefined ? {} : { forcedTopWouldBeWrong }),
     difficulty,
     candidateCount,
     maxNearbyCandidates: maxNearby,

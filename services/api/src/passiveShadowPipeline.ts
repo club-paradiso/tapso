@@ -10,7 +10,7 @@
 import { validatePassiveStream, generatePassiveCases, type GeneratedCases, type PassiveCase, type PassiveCaseGeneratorPolicy, type PassiveObservationStream } from "./passiveShadow.ts";
 import { evaluatePassiveCase, type PassiveCaseResult, type ReplayFunction } from "./passiveShadowEvaluate.ts";
 import { evaluatePerturbations, type Perturbation, type PerturbedResult } from "./passiveShadowPerturb.ts";
-import { buildPassiveShadowSummary, type PassiveShadowSummary } from "./passiveShadowSummary.ts";
+import { buildPassiveShadowSummary, buildWrongCommitLedger, type PassiveShadowSummary, type WrongCommitLedger } from "./passiveShadowSummary.ts";
 
 export interface PipelineOptions {
   policy?: PassiveCaseGeneratorPolicy;
@@ -26,6 +26,8 @@ export interface PipelineOutput {
   results: PassiveCaseResult[];
   perturbed: Array<{ baseline: PassiveCaseResult; variants: PerturbedResult[] }>;
   summary: PassiveShadowSummary;
+  /** Every live wrong commit, one sanitized record each. */
+  wrongCommitLedger: WrongCommitLedger;
 }
 
 export function runPassiveShadowPipeline(streams: PassiveObservationStream[], options: PipelineOptions = {}): PipelineOutput {
@@ -51,7 +53,7 @@ export function runPassiveShadowPipeline(streams: PassiveObservationStream[], op
     createdAt: options.createdAt ?? new Date().toISOString(),
     ...(options.policy ? { policy: options.policy } : {}),
   });
-  return { generated, results, perturbed, summary };
+  return { generated, results, perturbed, summary, wrongCommitLedger: buildWrongCommitLedger(streams, results) };
 }
 
 /**
