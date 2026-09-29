@@ -210,7 +210,8 @@ jobs:
             collect "$FALLBACK_ROUTES" "" > collection-dir.txt || status=$?
           fi
           test -s collection-dir.txt
-          node -e 'const m=require(process.argv[1]); console.log(JSON.stringify({collectionId:m.collectionId, providerPath:m.providerPath, stopReason:m.stopReason, providerCalls:m.providerCalls, failedCalls:m.failedCalls, incidents:m.incidents, preflight:m.preflight, streams:m.streams}, null, 2))' "$(pwd)/$(cat collection-dir.txt)/manifest.json"
+          # collect.ts prints the collection directory as an absolute path.
+          node -e 'const m=require(process.argv[1]); console.log(JSON.stringify({collectionId:m.collectionId, providerPath:m.providerPath, stopReason:m.stopReason, providerCalls:m.providerCalls, failedCalls:m.failedCalls, incidents:m.incidents, preflight:m.preflight, streams:m.streams}, null, 2))' "$(cat collection-dir.txt)/manifest.json"
           exit $status
       - name: Blind evaluation, migration and counterfactuals (offline)
         run: |
@@ -268,12 +269,13 @@ jobs:
 
   gate-evidence:
     # Everything the live criteria of release gate matcher-passive-safety-v4
-    # read, recomputed offline from every raw collection still retained (this
-    # run's, earlier runs' artifacts, the vault): distinct vehicles are counted
-    # by raw id in memory and only counts leave the job. Informational: raising
-    # the readiness the code claims is a reviewed change, never this job.
-    # Runtime grows with the number of retained windows (roughly 6 minutes each,
-    # computed twice for determinism); shard it before it nears the job limit.
+    # read, recomputed offline from every raw collection main has produced and
+    # still retains (this run's, earlier runs' artifacts, the vault): distinct
+    # vehicles are counted by raw id in memory and only counts leave the job.
+    # It never raises readiness: that is a reviewed change that commits these
+    # files. It does fail when fresh evidence awards less than the code claims.
+    # Runtime grows with the number of retained windows (each evaluated twice,
+    # in two processes, for determinism); shard it before it nears the limit.
     needs: [plan, replay, collect]
     if: always() && (needs.replay.result == 'success' || needs.collect.result == 'success')
     runs-on: ubuntu-latest
@@ -295,8 +297,11 @@ jobs:
           GH_TOKEN: ${{ github.token }}
         run: |
           set -eu
-          mkdir -p work/collections/earlier work/collections/vault
+          mkdir -p work/collections/earlier work/collections/vault work/gate
           : > work/artifact-list.txt
+          # Every retained artifact that cannot be fetched or verified is named
+          # here; the gate does not count a replay with any of them as complete.
+          : > work/gate/omitted-artifacts.txt
           repo_id="$(gh api "repos/${{ github.repository }}" --jq .id)"
           # Only raw collections this repository's own main branch produced: a
           # run on another branch, or a fork's pull-request run, can upload an
@@ -310,14 +315,17 @@ jobs:
           sort -u work/artifact-list.txt | while read -r id digest; do
             [ -n "$id" ] || continue
             # Without a digest recorded at upload the bytes cannot be checked.
-            if [ -z "$digest" ]; then echo "artifact $id has no recorded digest; skipped"; continue; fi
-            # An artifact that expired since the listing, or cannot be read, is
-            # left out and named; leaving evidence out can only lower a count.
-            if ! gh api "repos/${{ github.repository }}/actions/artifacts/$id/zip" > "work/$id.zip"; then echo "artifact $id could not be downloaded; skipped"; continue; fi
+            if [ -z "$digest" ]; then echo "artifact $id has no recorded digest; omitted"; echo "$id" >> work/gate/omitted-artifacts.txt; continue; fi
+            if ! gh api "repos/${{ github.repository }}/actions/artifacts/$id/zip" > "work/$id.zip"; then
+              echo "artifact $id could not be downloaded; omitted"; echo "$id" >> work/gate/omitted-artifacts.txt; continue
+            fi
             actual="sha256:$(sha256sum "work/$id.zip" | cut -d' ' -f1)"
-            if [ "$actual" != "$digest" ]; then echo "artifact $id does not match its upload digest; skipped"; continue; fi
+            if [ "$actual" != "$digest" ]; then echo "artifact $id does not match its upload digest; omitted"; echo "$id" >> work/gate/omitted-artifacts.txt; continue; fi
             mkdir -p "work/collections/earlier/$id"
-            if ! unzip -q "work/$id.zip" -d "work/collections/earlier/$id"; then echo "artifact $id is not a readable zip; skipped"; rm -rf "work/collections/earlier/$id"; continue; fi
+            if ! unzip -q "work/$id.zip" -d "work/collections/earlier/$id"; then
+              echo "artifact $id is not a readable zip; omitted"; echo "$id" >> work/gate/omitted-artifacts.txt
+              rm -rf "work/collections/earlier/$id"; continue
+            fi
           done
           # The vault is a draft release; a token that cannot see it leaves the artifacts to carry the evidence.
           if gh release download passive-evidence-vault --pattern 'pv3-*.zip' --pattern 'pv3-*.zip.sha256' --dir work/vault-zips 2>/dev/null; then
@@ -336,12 +344,25 @@ jobs:
           recordId="${record%%,*}"
           dirs="$(find work/collections -mindepth 2 -maxdepth 4 -type d -name 'pv3-*' | sort)"
           test -n "$dirs"
-          flags=""
+          flags="--no-counterfactuals"
           if printf '%s\n' $dirs | grep -q "/$recordId\$"; then flags="--record=$record --counterfactual-on=$recordId"; fi
-          node --experimental-strip-types scripts/matcher-evidence/live-evidence.ts $dirs $flags --skip-incomplete \
-            --out-live=work/gate/live-replay-evidence.json --out-counterfactual=work/gate/counterfactual-live-evidence.json
-          node --experimental-strip-types scripts/matcher-evidence/gate.ts \
-            --live-replay=work/gate/live-replay-evidence.json --counterfactual-live=work/gate/counterfactual-live-evidence.json \
+          # The failures of every window recorded before outlive its raw.
+          if [ -f artifacts/matcher-directed-v1/live-replay-evidence.json ]; then flags="$flags --previous=artifacts/matcher-directed-v1/live-replay-evidence.json"; fi
+          omitted="$(paste -sd, work/gate/omitted-artifacts.txt)"
+          if [ -n "$omitted" ]; then flags="$flags --omitted=$omitted"; fi
+          # Twice, in two processes: the outputs must be byte-identical, which
+          # covers every case-level decision through each collection's digest.
+          for n in 1 2; do
+            node --experimental-strip-types scripts/matcher-evidence/live-evidence.ts $dirs $flags --skip-incomplete \
+              --out-live=work/gate/run-$n/live-replay-evidence.json --out-counterfactual=work/gate/run-$n/counterfactual-live-evidence.json
+          done
+          cmp work/gate/run-1/live-replay-evidence.json work/gate/run-2/live-replay-evidence.json
+          if [ -f work/gate/run-1/counterfactual-live-evidence.json ]; then
+            cmp work/gate/run-1/counterfactual-live-evidence.json work/gate/run-2/counterfactual-live-evidence.json
+          fi
+          # Fresh evidence that no longer supports the readiness the code claims turns this run red.
+          node --experimental-strip-types scripts/matcher-evidence/gate.ts --fail-below-claim \
+            --live-replay=work/gate/run-1/live-replay-evidence.json --counterfactual-live=work/gate/run-1/counterfactual-live-evidence.json \
             --out=work/gate/gate-result.json
       - uses: actions/upload-artifact@v4
         if: always()
@@ -388,6 +409,11 @@ jobs:
           gh release view passive-evidence-vault >/dev/null 2>&1 || gh release create passive-evidence-vault --draft \
             --title "Passive evidence vault (private raw streams)" \
             --notes "Raw passive collections (raw vehicle numbers). Private draft, never published. Checksums alongside each asset. See docs/exec-plans/HUMAN_LABOR_ELIMINATION.md."
+          # A published vault would show raw vehicle numbers to every reader.
+          if [ "$(gh release view passive-evidence-vault --json isDraft --jq .isDraft)" != "true" ]; then
+            echo "the vault release is not a draft; refusing to upload raw evidence to it"
+            exit 1
+          fi
           # Immutable: an asset already in the vault is never replaced, even
           # by a byte-different zip of the same collection.
           existing="$(gh release view passive-evidence-vault --json assets --jq '.assets[].name')"
