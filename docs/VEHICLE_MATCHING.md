@@ -69,24 +69,33 @@ S + 1, and a bus reporting S may already have left. So:
   stop a bus is on.
 - **Memory.** A vehicle missing from one poll is remembered for the evidence
   window. It is never selected, and it competes from anywhere it could have
-  reached since it was last seen (one stop plus one per 15 s).
+  reached since it was last seen (one stop plus one per 15 s). Past the window
+  it is not forgotten: it keeps blocking and competing from session memory,
+  its reach growing with the time since (finding F15).
 - **Session memory** (`PassageMemory`, finding F4). Once any bus has been seen
   at the boarding stop, seen crossing it (in the poll or only remembered,
-  finding F10), or lost from memory while it could have reached it, during a
-  waiting session, the rider may already be aboard it, and no bus is ever
-  selected automatically for the rest of that session. The same holds when the
-  session's first look comes late and a bus now past the stop could have been
-  at it when the rider started waiting (F12), and for a stored session whose
-  memory predates this policy (F11). An on-board rider's bus must have been in
-  the feed when they said they were aboard, and a bus leaving the on-board
-  window withholds for good.
+  finding F10), or lost from sight while it could, by now, have reached it
+  (F15), during a waiting session, the rider may already be aboard it, and no
+  bus is ever selected automatically for the rest of that session. The same
+  holds when a bus seen for the first time is already past the stop and could
+  have been at it since the rider started waiting, at the session's first look
+  (F12) or any later one (F16); when a bus whose route progress was unknown
+  leaves the feed (F15); and for a stored session whose memory predates this
+  policy (F11). Memory offsets are directed: on a loop, the shorter way round,
+  so a crossing next to the seam is still one (F17). An on-board rider's bus
+  must have been in the feed when they said they were aboard: a bus missing
+  then is never selected, but it still competes, because the feed may have
+  missed theirs (F16); a bus leaving the on-board window withholds for good.
 - **Receipts only move forward** (F13). A late, older receipt or a second row
   for one vehicle in one snapshot is not new evidence and never counts toward
   freshness.
-- **Topology.** Without the route's stops, or when the boarding stop's id or
-  name appears twice on the route, selection is withheld. On a loop, a bus may
-  block or compete across the seam but is never selected across it.
-- **Identity.** One vehicle reported at two positions that matter withholds.
+- **Topology.** Without the route's stops, when the boarding stop's id or name
+  appears twice on the route, or when two different stops are listed under one
+  sequence, selection is withheld. On a loop, a bus may block or compete across
+  the seam but is never selected across it, and the lap is measured in
+  sequences, never by counting rows (F18).
+- **Identity.** One vehicle reported at two positions that matter withholds,
+  and so does one also reported under another route (F19).
   After a selection, a session never switches vehicles: a lost vehicle ends as
   `lost`, never rematched.
 

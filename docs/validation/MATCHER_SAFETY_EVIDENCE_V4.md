@@ -22,10 +22,10 @@ matcher result.
 | Departed bus (≥ +2) | selectable up to +4 | never selectable, never a competitor |
 | Non-fresh competitor | ignored | competes |
 | Margin | 12 position points among eligible buses in the ±4 window | three stops over every vehicle heading for the stop, wherever it is (F9) |
-| Vehicle missing from one poll | forgotten | remembered 90 s, competing from wherever it could have reached; a crossing it showed is not forgotten (F10) |
-| A bus reached the stop during the session | irrelevant | withholds for the rest of the session (F4), also before the first look (F12) and for a session stored without memory (F11) |
-| Rider already aboard | same rule as waiting | separate rule: +1…+4, only one vehicle, present at declaration |
-| Missing topology / repeated stop name | not checked | withholds |
+| Vehicle missing from one poll | forgotten | remembered 90 s, competing from wherever it could have reached; a crossing it showed is not forgotten (F10); past 90 s still competing from session memory, its reach growing with the time since (F15) |
+| A bus reached the stop during the session | irrelevant | withholds for the rest of the session (F4), also when first seen already past it at any look (F12, F16), when lost while it could by now have reached it (F15), across a loop's seam (F17), and for a session stored without memory (F11) |
+| Rider already aboard | same rule as waiting | separate rule: +1…+4, only one vehicle; a bus missing from the first snapshot never selected, still competing (F16) |
+| Missing topology / repeated stop name / two stops under one sequence | not checked | withholds (F18) |
 | Invariant | none | `assertDirectedInvariant` on every result |
 
 ## 2. All 268 former wrong commits
@@ -62,6 +62,11 @@ wrong commit or any correct→wrong regression.
 | F12 | Audit of session creation | A slow or failed first read hid a crossing before the first look | Late first look withholds when a bus past the stop could have been at it |
 | F13 | Audit of the cadence surrogate | A late older receipt, or a second row in one snapshot, could manufacture a sample or a content change | Receipts only move forward |
 | F14 | Audit of the blind-input guard | A per-vehicle or per-stop truth field would have reached the matcher | Every vehicle row and stop checked against the observation fields |
+| F15 | Adversarial review, synthetic probes; property P3-forgotten, seed 10446; counterfactual `lost_leader` (`SIMULATED`) | A bus out of sight past the 90 s memory window was forgotten: a lost leader stopped counting against the bus behind it, a lost bus stopped competing for an on-board window, a bus of unknown progress left no memory | Out-of-sight vehicles block and compete at an uncapped reach; unknown progress out of sight withholds |
+| F16 | Review, probes; property P3-empty-look, seed 10099 | A bus first seen past the stop was judged only at the session's first decision; on board, a bus missing from the first snapshot stopped competing | Every first sighting judged; unproven on-board buses compete |
+| F17 | Review, probes; property P3-crossing, seed 10099 | On a loop, memory compared plain offsets: a crossing at the seam, or a bus lost past the stop, went unnoticed | Directed offsets |
+| F18 | Review, probes | A loop's lap was counted in stop rows; a missing or repeated row moved the seam | Lap in sequences; conflicting rows withhold |
+| F19 | Review, probes; property P13-routes, seed 10018 | The invariant read another route's row with the selected id (HTTP 500, order-dependent) | Two-route id withholds; invariant reads the request's route |
 
 Every failing seed is replayed first on every run
 (`services/api/test/fixtures/matcher-property-regressions.json`).
