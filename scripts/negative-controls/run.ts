@@ -445,6 +445,9 @@ function parseReporterOutput(stdout: string, apiDir: string): TestRecord[] {
     }
     const absolute = parsed.file ?? "";
     const file = absolute ? toPosix(path.relative(apiDir, absolute)) : "<unknown>";
+    if (file === ".." || file.startsWith("../")) {
+      throw new Error(`a test reported its file outside the copy it ran in (${absolute} against ${apiDir}): the runner cannot match tests to files`);
+    }
     const stack = stacks.get(file) ?? [];
     stacks.set(file, stack);
     if (parsed.event === "test:start") {
@@ -778,7 +781,10 @@ async function main(): Promise<number> {
   }
 
   const started = Date.now();
-  const workspace = await mkdtemp(path.join(os.tmpdir(), "tapso-negative-controls-"));
+  // Resolved once: node:test reports a test file by its real path, so a
+  // temporary directory reached through a symlink (macOS's /var/folders) would
+  // otherwise put every test outside the copy it runs in (finding R55).
+  const workspace = await realpath(await mkdtemp(path.join(os.tmpdir(), "tapso-negative-controls-")));
   const reporter = path.join(workspace, "reporter.mjs");
   const snapshotRoot = path.join(workspace, "snapshot");
   const snapshotApi = path.join(snapshotRoot, "services", "api");
