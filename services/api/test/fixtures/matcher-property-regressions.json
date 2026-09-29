@@ -1,0 +1,59 @@
+{
+  "//": "Seeds that once broke a matcher property. Each is replayed before any fresh seed, for ever. Add, never remove. Generators live in test/propertyKit.ts; every case is synthetic.",
+  "seeds": [
+    {
+      "property": "P2",
+      "seed": 10156,
+      "foundAt": "2026-09-29",
+      "note": "A candidate reported at stop sequence 16 on a 13-stop loop was folded modulo the lap into an 'approaching across the seam' competitor. Fixed in src/matching.ts: a stop sequence the route does not have is unknown route progress and blocks. The property now also forbids moving a bus beyond the route's last stop."
+    },
+    {
+      "property": "P3",
+      "seed": 10165,
+      "foundAt": "2026-09-29",
+      "note": "A vehicle reported at two positions in one snapshot was dropped but only one of its rows was remembered, so a stale in-window position vanished and an on-board selection appeared. The dropout model now remembers every row, as the cadence history does. Also added: remembered vehicles with unknown progress block, like current ones."
+    },
+    {
+      "property": "P12",
+      "seed": 10099,
+      "foundAt": "2026-09-29",
+      "note": "Property mis-specified: a third bus three or more stops ahead of a close pair legitimately leads. The property now removes every other in-window vehicle before adding the pair."
+    },
+    {
+      "property": "P6",
+      "seed": 10008,
+      "foundAt": "2026-09-29",
+      "note": "Trajectory generator bug: a frozen bus could compute stop sequence 0. The generator now skips positions before the first stop."
+    },
+    {
+      "property": "P7",
+      "seed": 10008,
+      "foundAt": "2026-09-29",
+      "note": "Same generator bug as P6 seed 10008."
+    },
+    {
+      "property": "P10",
+      "seed": 10008,
+      "foundAt": "2026-09-29",
+      "note": "Same generator bug as P6 seed 10008."
+    },
+    {
+      "property": "P3",
+      "seed": 14526,
+      "foundAt": "2026-09-29",
+      "note": "Deep run (20 000 seeds). A vehicle reported at two positions, both irrelevant to an on-board rider (6 and 4 stops before the stop), withheld the decision; dropping that vehicle released it. Fixed in src/matching.ts: a two-position conflict withholds only when one of its positions is selectable, competing or blocking."
+    },
+    {
+      "property": "P7",
+      "seed": 12091,
+      "foundAt": "2026-09-29",
+      "note": "Deep run (20 000 seeds). Failed polls hid a competitor's advance to the leader's stop; memory placed it where it was last seen, behind the leader, and the leader was committed. Fixed in src/matching.ts: a remembered vehicle may have moved on by one stop plus one per 15 s since its sighting, blocks or competes from any of those positions, and a waiting session is withheld for good once a vehicle that could have reached the stop leaves memory unobserved. Property reformulated to its defensible form: a failed poll counts exactly as a poll never made; a competitor that only ever appeared in failed polls cannot be defended against and is recorded as a limitation."
+    },
+    {
+      "property": "P3",
+      "seed": 16661,
+      "foundAt": "2026-09-29",
+      "note": "20 000-seed run: a remembered vehicle whose last sighting shows it crossed the stop (memory min <= -1, sighting >= 0) was forgotten when its row dropped out, releasing the bus behind it. Fixed: remembered sightings are judged against passage memory like current rows (waiting: crossing; on board: leaving the window)."
+    }
+  ]
+}
