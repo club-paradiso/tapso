@@ -18,7 +18,7 @@
  * the same way the rest of this service does.
  */
 
-import type { StopOnRoute, VehicleObservation } from "./domain.ts";
+import type { PassageMemory, StopOnRoute, VehicleObservation } from "./domain.ts";
 import type { JourneyProgressView } from "./journeySession.ts";
 
 /** Bumped when the persisted shape changes in a way an old row cannot satisfy. */
@@ -41,6 +41,8 @@ export interface StoredJourneySession {
   boardingStopSequence: number;
   destinationStopSequence: number;
   directionCode?: string;
+  /** Absent on rows written before rider states existed; read as `waiting_at_stop`. */
+  riderState?: "waiting_at_stop" | "on_board";
   stops: StopOnRoute[];
   boardingStop: StopOnRoute;
   destinationStop: StopOnRoute;
@@ -55,6 +57,8 @@ export interface StoredJourneySession {
   /** The `Map` flattened to entries, in insertion order. */
   cadenceHistory: Array<[string, VehicleObservation[]]>;
   consecutiveProviderFailures: number;
+  /** Matcher memory of passages past the boarding stop. Absent on older rows: an empty memory. */
+  passage?: PassageMemory;
 }
 
 /**

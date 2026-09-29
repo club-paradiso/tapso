@@ -1,11 +1,12 @@
 import { randomUUID } from "node:crypto";
-import type { RankedCandidate, RouteRequest, StopOnRoute, VehicleObservation } from "./domain.ts";
+import type { PassageMemory, RankedCandidate, RiderState, RouteRequest, StopOnRoute, VehicleObservation } from "./domain.ts";
 import { distanceMeters } from "./geo.ts";
 import { matchVehicleWithSourceFreshness } from "./matching.ts";
 import {
   appendCadenceObservation,
   classifyTagoCadenceFreshness,
   evidenceTimeMs,
+  recentlySeenVehicles,
   type SourceFreshnessEvidence,
 } from "./sourceFreshness.ts";
 import type { TransitProvider } from "./provider.ts";
@@ -78,8 +79,9 @@ export interface JourneyProgressView {
  *
  * `shadow` is the default and the production posture: candidates are ranked and
  * cadence evidence is published, but `selectedVehicleId` is only ever set by an
- * explicit rider confirmation. See `docs/DATA_VALIDATION.md` for the
- * field-validation gate that keeps it that way.
+ * explicit rider confirmation. Release gate `matcher-passive-safety-v4`
+ * (`docs/validation/MATCHER_SAFETY_EVIDENCE_V4.md`) keeps it that way: the
+ * configuration refuses automatic matching below `READY_FOR_BOUNDED_AUTOMATION`.
  */
 export interface ShadowSelectionView {
   /** What the matcher concluded, had it been allowed to select. */
@@ -97,6 +99,8 @@ export interface JourneySessionView {
   boardingStop: StopOnRoute;
   destinationStop: StopOnRoute;
   directionCode?: string;
+  /** What the rider declared at session start; `waiting_at_stop` when they did not say. */
+  riderState: RiderState;
   selectedVehicleId?: string;
   selectionMode?: "automatic" | "explicit";
   matchConfidence: MatchConfidence;
@@ -149,6 +153,8 @@ type SessionInput = {
   boardingStopSequence: number;
   destinationStopSequence: number;
   directionCode?: string;
+  /** Absent means `waiting_at_stop`, the rule whose failure mode is abstaining. */
+  riderState?: RiderState;
 };
 
 /**
@@ -174,6 +180,8 @@ type SessionRecord = SessionInput & {
   cadenceHistory: Map<string, VehicleObservation[]>;
   /** Reset to zero by every successful provider read. */
   consecutiveProviderFailures: number;
+  /** What the matcher has seen pass the boarding stop during this session. */
+  passage?: PassageMemory;
 };
 
 export class JourneySessionCoordinator {
@@ -383,22 +391,34 @@ export class JourneySessionCoordinator {
         directionCode: record.directionCode,
         now: now.toISOString(),
         candidates: vehicles,
+        riderState: record.riderState ?? "waiting_at_stop",
+        stops: record.stops,
+        // A bus that drops out of one poll has not been shown to be gone. It
+        // keeps competing from the cadence history until the window expires.
+        recentlySeen: recentlySeenVehicles(record.cadenceHistory, vehicles, now),
+        ...(record.passage ? { passage: record.passage } : {}),
+        declaredAt: new Date(record.createdAtMs).toISOString(),
       }, sourceFreshness);
+      if (result.passage) record.passage = result.passage;
       record.matchConfidence = result.confidence;
       record.updatedAtMs = now.getTime();
-      const eligible = result.ranked.filter((candidate) => candidate.rejectedReasons.length === 0);
+      // What the rider is asked to confirm from: every bus of the route they
+      // could be boarding or riding, closest to the stop first — including a
+      // bus at the stop, which the matcher never selects on its own but which
+      // is exactly the one a rider at the stop is most likely stepping onto.
+      const plausible = confirmationCandidates(result.ranked, record.riderState ?? "waiting_at_stop");
 
       // Shadow mode: the ranking is computed and published, and then not acted
       // on. `selectedVehicleId` stays unset until a rider confirms, whatever
-      // the matcher concluded, because the field-validation gate in
-      // `docs/DATA_VALIDATION.md` has not been closed.
+      // the matcher concluded, because the demonstrated matching readiness is
+      // below what automatic selection needs (`matchingReadiness.ts`).
       if (!this.automaticMatchingEnabled) {
         return this.view(record, {
-          state: eligible.length > 0 ? "confirmation_required" : "awaiting_match",
-          candidates: eligible.length > 0 ? eligible : result.ranked,
-          explanation: eligible.length > 0
-            ? "Automatic selection is withheld pending field validation. Ranked candidates and "
-              + "server-observed cadence evidence are published for explicit confirmation only."
+          state: plausible.length > 0 ? "confirmation_required" : "awaiting_match",
+          candidates: plausible.length > 0 ? plausible : result.ranked,
+          explanation: plausible.length > 0
+            ? "Automatic selection is withheld until the matcher's demonstrated readiness permits it. "
+              + "Ranked candidates and server-observed cadence evidence are published for explicit confirmation only."
             : result.explanation,
           shadowSelection: {
             status: result.status,
@@ -413,15 +433,15 @@ export class JourneySessionCoordinator {
       if (result.status === "ambiguous") {
         return this.view(record, {
           state: "confirmation_required",
-          candidates: eligible,
+          candidates: plausible.length > 0 ? plausible : result.ranked,
           explanation: result.explanation,
           sourceFreshness,
         });
       }
       if (result.status === "unavailable" || !result.selectedVehicleId) {
         return this.view(record, {
-          state: "awaiting_match",
-          candidates: result.ranked,
+          state: plausible.length > 0 ? "confirmation_required" : "awaiting_match",
+          candidates: plausible.length > 0 ? plausible : result.ranked,
           explanation: result.explanation,
           sourceFreshness,
         });
@@ -624,6 +644,7 @@ export class JourneySessionCoordinator {
       boardingStop: { ...record.boardingStop },
       destinationStop: { ...record.destinationStop },
       directionCode: record.directionCode,
+      riderState: record.riderState ?? "waiting_at_stop",
       selectedVehicleId: record.selectedVehicleId,
       selectionMode: record.selectionMode,
       matchConfidence: record.matchConfidence,
@@ -660,6 +681,7 @@ function toStored(record: SessionRecord): StoredJourneySession {
     boardingStopSequence: record.boardingStopSequence,
     destinationStopSequence: record.destinationStopSequence,
     ...(record.directionCode === undefined ? {} : { directionCode: record.directionCode }),
+    ...(record.riderState === undefined ? {} : { riderState: record.riderState }),
     stops: record.stops,
     boardingStop: record.boardingStop,
     destinationStop: record.destinationStop,
@@ -673,6 +695,7 @@ function toStored(record: SessionRecord): StoredJourneySession {
     ...(record.lastProgress === undefined ? {} : { lastProgress: record.lastProgress }),
     cadenceHistory: [...record.cadenceHistory],
     consecutiveProviderFailures: record.consecutiveProviderFailures,
+    ...(record.passage === undefined ? {} : { passage: record.passage }),
   };
 }
 
@@ -684,6 +707,7 @@ function toRecord(session: StoredJourneySession): SessionRecord {
     boardingStopSequence: session.boardingStopSequence,
     destinationStopSequence: session.destinationStopSequence,
     ...(session.directionCode === undefined ? {} : { directionCode: session.directionCode }),
+    ...(session.riderState === undefined ? {} : { riderState: session.riderState }),
     stops: session.stops,
     boardingStop: session.boardingStop,
     destinationStop: session.destinationStop,
@@ -697,6 +721,16 @@ function toRecord(session: StoredJourneySession): SessionRecord {
     ...(session.lastProgress === undefined ? {} : { lastProgress: session.lastProgress }),
     cadenceHistory: new Map(session.cadenceHistory),
     consecutiveProviderFailures: session.consecutiveProviderFailures,
+    ...(session.passage !== undefined
+      ? { passage: session.passage }
+      // Every decision since the directed matcher stores its memory, so a row
+      // that has been polled (it has cadence history) but carries none was
+      // written before it existed. Starting an empty memory would forget any
+      // bus that reached the stop earlier in the session, so the session is
+      // withheld for good instead.
+      : session.cadenceHistory.length > 0
+        ? { passage: { offsets: {}, withheld: { reason: "passage_memory_unavailable", at: new Date(session.updatedAtMs).toISOString() } } }
+        : {}),
   };
 }
 
@@ -737,7 +771,21 @@ function parseSessionInput(value: unknown): SessionInput {
   const boardingStopSequence = positiveInteger(input.boardingStopSequence, "boardingStopSequence");
   const destinationStopSequence = positiveInteger(input.destinationStopSequence, "destinationStopSequence");
   const directionCode = input.directionCode === undefined ? undefined : requiredText(input.directionCode, "directionCode");
-  return { routeId, cityCode, boardingStopSequence, destinationStopSequence, directionCode };
+  const riderState = parseRiderState(input.riderState);
+  return {
+    routeId,
+    cityCode,
+    boardingStopSequence,
+    destinationStopSequence,
+    directionCode,
+    ...(riderState === undefined ? {} : { riderState }),
+  };
+}
+
+function parseRiderState(value: unknown): RiderState | undefined {
+  if (value === undefined) return undefined;
+  if (value === "waiting_at_stop" || value === "on_board") return value;
+  throw new SessionInputError("riderState must be waiting_at_stop or on_board");
 }
 
 function parseVehicleConfirmation(value: unknown): string {
@@ -783,6 +831,27 @@ function resolveStop(
   }
   if (!nearest || nearest.meters > radiusMeters) return undefined;
   return { stop: nearest.stop, source: "near_stop_estimate" };
+}
+
+const CONFIRMATION_ZONES: Record<RiderState, ReadonlySet<string>> = {
+  waiting_at_stop: new Set(["boarding_stop_unresolved", "approaching", "approaching_across_loop_seam", "route_progress_unknown"]),
+  on_board: new Set(["boarding_stop_unresolved", "departed_within_on_board_window", "route_progress_unknown"]),
+};
+
+/**
+ * The buses a rider could be boarding (waiting) or riding (on board), nearest
+ * to the boarding stop first; a bus whose stop is unknown goes last. Whether
+ * the matcher would have selected one is irrelevant here: the rider decides.
+ */
+export function confirmationCandidates(ranked: RankedCandidate[], riderState: RiderState): RankedCandidate[] {
+  const zones = CONFIRMATION_ZONES[riderState];
+  return ranked
+    .filter((candidate) => !candidate.rejectedReasons.includes("wrong_route") && candidate.zone !== undefined && zones.has(candidate.zone))
+    .sort((left, right) => {
+      const a = left.stopOffset === undefined ? Number.POSITIVE_INFINITY : Math.abs(left.stopOffset);
+      const b = right.stopOffset === undefined ? Number.POSITIVE_INFINITY : Math.abs(right.stopOffset);
+      return a - b || left.vehicleId.localeCompare(right.vehicleId);
+    });
 }
 
 function progressPhase(delta: number): JourneyProgressPhase {

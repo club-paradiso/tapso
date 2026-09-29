@@ -1,14 +1,21 @@
 import test from "node:test";
 import assert from "node:assert/strict";
-import { JourneySessionCoordinator } from "../src/journeySession.ts";
+import { confirmationCandidates, JourneySessionCoordinator, SessionInputError } from "../src/journeySession.ts";
 import type { RouteRequest, StopOnRoute, VehicleObservation } from "../src/domain.ts";
 import type { TransitProvider } from "../src/provider.ts";
 import {
+  JOURNEY_SESSION_SCHEMA_VERSION,
   MemoryJourneySessionStore,
   SessionStoreError,
   type JourneySessionStore,
+  type StoredJourneySession,
 } from "../src/sessionStore.ts";
 
+/**
+ * Synthetic fixtures only: invented vehicle ids, an invented route, and a
+ * synthetic coordinate line, not real stop positions. Nothing here is a real
+ * ride.
+ */
 const routeId = "route-365";
 const cityCode = "999";
 const stops: StopOnRoute[] = [
@@ -41,9 +48,56 @@ function sessionInput() {
   };
 }
 
-test("automatically matches the fresh vehicle closest to the boarding stop", async () => {
+/**
+ * A rider waiting at stop 3, so a bus can come up to them from stops 1 and 2.
+ *
+ * `sessionInput()` boards at the first stop, where nothing can be approaching:
+ * every bus on the route is at or past it, and those are exactly the buses a
+ * waiting rider's session must never select (finding F1).
+ */
+function waitingInput() {
+  return { ...sessionInput(), boardingStopSequence: 3 };
+}
+
+/**
+ * A rider who says they have just boarded at stop 1. The bus they are on is
+ * then one to four stops past it, which is where the on-board rule selects.
+ */
+function onBoardInput() {
+  return { ...sessionInput(), riderState: "on_board" };
+}
+
+/**
+ * A TAGO row, which is the only shape production ever sees. `observedAt` is
+ * the epoch sentinel because TAGO publishes no observation time; `receivedAt`
+ * is TAPSO's own receipt and nothing more.
+ */
+function tagoRow(
+  vehicleId: string,
+  receivedAt: Date,
+  stopSequence: number,
+  latitude: number,
+): VehicleObservation {
+  return {
+    vehicleId,
+    routeId,
+    observedAt: new Date(0).toISOString(),
+    receivedAt: receivedAt.toISOString(),
+    timestampSource: "unavailable",
+    directionCode: "1",
+    stopSequence,
+    latitude,
+    longitude: 126.5000,
+  };
+}
+
+test("never automatically selects a coordinate-only vehicle, however close to the boarding stop", async () => {
   const provider = new MutableProvider();
   const now = new Date("2026-09-10T05:00:00Z");
+  // BUS-A is 11 m from the boarding stop and BUS-B 2 km out; neither reports a
+  // stop sequence. Coordinates cannot say which side of the stop a bus is on —
+  // BUS-A may just have pulled away from it — so route progress is unknown for
+  // both, and the session fails closed rather than choosing by distance.
   provider.vehiclesValue = [
     { vehicleId: "BUS-A", routeId, observedAt: now.toISOString(), directionCode: "1", latitude: 33.5001, longitude: 126.5000 },
     { vehicleId: "BUS-B", routeId, observedAt: now.toISOString(), directionCode: "1", latitude: 33.5200, longitude: 126.5000 },
@@ -55,20 +109,70 @@ test("automatically matches the fresh vehicle closest to the boarding stop", asy
   });
   const view = await sessions.create(sessionInput());
 
-  assert.equal(view.selectedVehicleId, "BUS-A");
+  assert.equal(view.selectedVehicleId, undefined);
+  assert.equal(view.selectionMode, undefined);
+  // Not selected, but offered: the rider can see which bus they are boarding.
+  assert.equal(view.state, "confirmation_required");
+  assert.equal(view.progress, undefined);
+  assert.deepEqual(
+    view.candidates?.map((candidate) => [candidate.vehicleId, candidate.zone, candidate.rejectedReasons]),
+    [
+      ["BUS-A", "route_progress_unknown", ["route_progress_unknown"]],
+      ["BUS-B", "route_progress_unknown", ["route_progress_unknown"]],
+    ],
+  );
+
+  // The rider confirms the bus they can see. Its progress then comes from the
+  // nearest stop by coordinates, and says so: an estimate, never a provider
+  // stop sequence.
+  const confirmed = await sessions.confirm(view.id, { vehicleId: "BUS-A" });
+  assert.equal(confirmed.state, "tracking");
+  assert.equal(confirmed.selectionMode, "explicit");
+  assert.equal(confirmed.progress?.currentStopSequence, 1);
+  assert.equal(confirmed.progress?.remainingStops, 4);
+  assert.equal(confirmed.progress?.source, "near_stop_estimate");
+});
+
+test("automatically matches a fresh TAGO bus approaching the boarding stop", async () => {
+  const provider = new MutableProvider();
+  let now = new Date("2026-09-10T05:00:00Z");
+  // The rider waits at stop 3 and the only bus on the route comes up from stop
+  // 1 to stop 2: before the boarding stop under every reading of TAGO's nodeord.
+  provider.vehiclesValue = [tagoRow("TAGO-A", now, 1, 33.5000)];
+  const sessions = new JourneySessionCoordinator(provider, {
+    now: () => now,
+    idFactory: () => "session-1-approaching",
+    automaticMatchingEnabled: true,
+  });
+  const created = await sessions.create(waitingInput());
+
+  now = new Date("2026-09-10T05:00:05Z");
+  provider.vehiclesValue = [tagoRow("TAGO-A", now, 1, 33.5005)];
+  const early = await sessions.refresh(created.id);
+  // Two receipts are not cadence evidence yet. Where the bus is already qualifies.
+  assert.equal(early.selectedVehicleId, undefined);
+  assert.equal(early.candidates?.[0]?.zone, "approaching");
+  assert.deepEqual(early.candidates?.[0]?.rejectedReasons, ["source_cadence_not_fresh"]);
+
+  now = new Date("2026-09-10T05:00:10Z");
+  provider.vehiclesValue = [tagoRow("TAGO-A", now, 2, 33.5010)];
+  const view = await sessions.refresh(created.id);
+  assert.equal(view.selectedVehicleId, "TAGO-A");
   assert.equal(view.selectionMode, "automatic");
   assert.equal(view.state, "tracking");
-  assert.equal(view.progress?.currentStopSequence, 1);
-  assert.equal(view.progress?.source, "near_stop_estimate");
-  assert.equal(view.progress?.remainingStops, 4);
+  assert.equal(view.progress?.currentStopSequence, 2);
+  assert.equal(view.progress?.source, "provider_stop_sequence");
+  assert.equal(view.progress?.remainingStops, 3);
 });
 
 test("withholds automatic selection when candidates are too close and accepts explicit confirmation", async () => {
   const provider = new MutableProvider();
   const now = new Date("2026-09-10T05:00:00Z");
+  // Both approach a rider waiting at stop 3, one stop apart. The leader needs a
+  // lead of three stops to be chosen on its own.
   provider.vehiclesValue = [
-    { vehicleId: "BUS-A", routeId, observedAt: now.toISOString(), directionCode: "1", latitude: 33.5001, longitude: 126.5000 },
-    { vehicleId: "BUS-B", routeId, observedAt: now.toISOString(), directionCode: "1", latitude: 33.5002, longitude: 126.5000 },
+    { vehicleId: "BUS-A", routeId, observedAt: now.toISOString(), directionCode: "1", stopSequence: 2 },
+    { vehicleId: "BUS-B", routeId, observedAt: now.toISOString(), directionCode: "1", stopSequence: 1 },
   ];
   const sessions = new JourneySessionCoordinator(provider, {
     now: () => now,
@@ -77,10 +181,11 @@ test("withholds automatic selection when candidates are too close and accepts ex
     // close call, not about the rollout gate refusing everything.
     automaticMatchingEnabled: true,
   });
-  const initial = await sessions.create(sessionInput());
+  const initial = await sessions.create(waitingInput());
   assert.equal(initial.state, "confirmation_required");
   assert.equal(initial.selectedVehicleId, undefined);
   assert.equal(initial.candidates?.length, 2);
+  assert.match(initial.explanation, /candidates_too_close/);
 
   const confirmed = await sessions.confirm(initial.id, { vehicleId: "BUS-B" });
   assert.equal(confirmed.selectedVehicleId, "BUS-B");
@@ -99,7 +204,9 @@ test("never silently switches vehicles and retains monotonic stop progress", asy
     idFactory: () => "session-3",
     automaticMatchingEnabled: true,
   });
-  const initial = await sessions.create(sessionInput());
+  // On board: a bus two stops past the rider's stop is only ever theirs if they
+  // are riding it, and a ride already under way is what this test tracks.
+  const initial = await sessions.create(onBoardInput());
   assert.equal(initial.progress?.currentStopSequence, 3);
   assert.equal(initial.progress?.remainingStops, 2);
 
@@ -126,7 +233,9 @@ test("retains a missing selected vehicle briefly, then marks the session lost", 
     idFactory: () => "session-4",
     automaticMatchingEnabled: true,
   });
-  const initial = await sessions.create(sessionInput());
+  // On board, for the same reason: a bus one stop past stop 1 is the rider's
+  // only once they are on it, and losing a tracked bus is what is under test.
+  const initial = await sessions.create(onBoardInput());
   assert.equal(initial.state, "tracking");
 
   provider.vehiclesValue = [];
@@ -153,14 +262,23 @@ test("rejects a destination that precedes the boarding stop", async () => {
 test("unknown TAGO source time cannot become fresh through receipt time", async () => {
   const provider = new MutableProvider();
   const now = new Date("2026-09-10T05:00:00Z");
+  // One stop before a waiting rider's stop, in automatic mode: neither the
+  // bus's position nor the rollout gate refuses it, so the missing cadence is
+  // the only thing that can.
   provider.vehiclesValue = [{
     vehicleId: "SYNTHETIC_TAGO_BUS", routeId, observedAt: now.toISOString(),
-    receivedAt: now.toISOString(), timestampSource: "unavailable", directionCode: "1", stopSequence: 1,
+    receivedAt: now.toISOString(), timestampSource: "unavailable", directionCode: "1", stopSequence: 2,
   }];
-  const sessions = new JourneySessionCoordinator(provider, { now: () => now, idFactory: () => "synthetic-tago-session" });
-  const view = await sessions.create(sessionInput());
+  const sessions = new JourneySessionCoordinator(provider, {
+    now: () => now,
+    idFactory: () => "synthetic-tago-session",
+    automaticMatchingEnabled: true,
+  });
+  const view = await sessions.create(waitingInput());
   assert.equal(view.selectedVehicleId, undefined);
   assert.equal(view.progress, undefined);
+  assert.equal(view.sourceFreshness?.["SYNTHETIC_TAGO_BUS"]?.state, "unknown");
+  assert.deepEqual(view.candidates?.[0]?.rejectedReasons, ["source_cadence_not_fresh"]);
 });
 
 
@@ -179,30 +297,33 @@ test("TAGO cadence evidence unlocks automatic matching only after repeated chang
     longitude: 126.5000,
   });
 
-  provider.vehiclesValue = [tago(now, 1, 33.5000)];
+  // The rider is aboard from stop 1 and the bus reports stop 2, inside the
+  // on-board window at every poll, so the one thing that changes is cadence.
+  provider.vehiclesValue = [tago(now, 2, 33.5010)];
   const sessions = new JourneySessionCoordinator(provider, {
     now: () => now,
     idFactory: () => "tago-cadence-session",
     automaticMatchingEnabled: true,
   });
 
-  const initial = await sessions.create(sessionInput());
-  assert.equal(initial.state, "awaiting_match");
+  const initial = await sessions.create(onBoardInput());
+  // Offered for confirmation while cadence is still being established, never selected.
+  assert.equal(initial.state, "confirmation_required");
   assert.equal(initial.selectedVehicleId, undefined);
 
   now = new Date("2026-09-22T03:00:05Z");
-  provider.vehiclesValue = [tago(now, 1, 33.5000)];
+  provider.vehiclesValue = [tago(now, 2, 33.5010)];
   const second = await sessions.refresh(initial.id);
-  assert.equal(second.state, "awaiting_match");
+  assert.equal(second.state, "confirmation_required");
   assert.equal(second.selectedVehicleId, undefined);
 
   now = new Date("2026-09-22T03:00:10Z");
-  provider.vehiclesValue = [tago(now, 1, 33.5004)];
+  provider.vehiclesValue = [tago(now, 2, 33.5014)];
   const third = await sessions.refresh(initial.id);
   assert.equal(third.selectedVehicleId, "TAGO-A");
   assert.equal(third.selectionMode, "automatic");
   assert.equal(third.state, "tracking");
-  assert.equal(third.progress?.currentStopSequence, 1);
+  assert.equal(third.progress?.currentStopSequence, 2);
   // The ordering instant is TAPSO's own receipt, and the field says so in its
   // own name rather than leaving a reader to assume a provider time.
   assert.equal(third.progress?.evidenceAtIs, "tapso_server_receipt");
@@ -220,65 +341,53 @@ test("fresh receipt timestamps alone never unlock TAGO automatic matching", asyn
     receivedAt: now.toISOString(),
     timestampSource: "unavailable",
     directionCode: "1",
-    stopSequence: 1,
-    latitude: 33.5000,
+    stopSequence: 2,
+    latitude: 33.5010,
     longitude: 126.5000,
   });
   provider.vehiclesValue = [unchanged()];
+  // Automatic mode, and the bus one stop before a waiting rider's stop: neither
+  // the rollout gate nor the bus's position is what refuses it below.
   const sessions = new JourneySessionCoordinator(provider, {
     now: () => now,
     idFactory: () => "tago-unchanged-session",
+    automaticMatchingEnabled: true,
   });
-  const initial = await sessions.create(sessionInput());
+  const initial = await sessions.create(waitingInput());
 
+  let view = initial;
   for (const seconds of [5, 10, 15, 20]) {
     now = new Date(Date.parse("2026-09-22T04:00:00Z") + seconds * 1_000);
     provider.vehiclesValue = [unchanged()];
-    const view = await sessions.refresh(initial.id);
+    view = await sessions.refresh(initial.id);
     assert.equal(view.selectedVehicleId, undefined);
-    assert.equal(view.state, "awaiting_match");
+    // The rider may confirm the stationary bus; the matcher never selects it.
+    assert.equal(view.state, "confirmation_required");
   }
+  // Continuous receipts of content that never changed: aging, never fresh.
+  assert.equal(view.sourceFreshness?.["TAGO-STATIONARY"]?.state, "aging");
+  assert.deepEqual(view.candidates?.[0]?.rejectedReasons, ["source_cadence_not_fresh"]);
 });
 
 /* ------------------------------------------------- automatic-matching gate */
 
-/**
- * Helper for the gate tests: a TAGO row, which is the only shape production
- * ever sees. `observedAt` is the epoch sentinel because TAGO publishes no
- * observation time; `receivedAt` is TAPSO's own receipt and nothing more.
- */
-function tagoRow(
-  vehicleId: string,
-  receivedAt: Date,
-  stopSequence: number,
-  latitude: number,
-): VehicleObservation {
-  return {
-    vehicleId,
-    routeId,
-    observedAt: new Date(0).toISOString(),
-    receivedAt: receivedAt.toISOString(),
-    timestampSource: "unavailable",
-    directionCode: "1",
-    stopSequence,
-    latitude,
-    longitude: 126.5000,
-  };
-}
-
 test("automatic matching is off unless a caller opts in", async () => {
   const provider = new MutableProvider();
   const now = new Date("2026-09-22T05:00:00Z");
-  // One unambiguous winner with a provider timestamp: the easiest possible
-  // match. The default coordinator still refuses to make it.
+  // One unambiguous winner with a provider timestamp, one stop before a
+  // waiting rider's stop: the easiest possible match. The default coordinator
+  // still refuses to make it.
   provider.vehiclesValue = [
-    { vehicleId: "BUS-A", routeId, observedAt: now.toISOString(), directionCode: "1", latitude: 33.5001, longitude: 126.5000 },
+    { vehicleId: "BUS-A", routeId, observedAt: now.toISOString(), directionCode: "1", stopSequence: 2 },
   ];
   const sessions = new JourneySessionCoordinator(provider, { now: () => now, idFactory: () => "gate-default" });
 
   assert.equal(sessions.matchingMode, "shadow");
-  const view = await sessions.create(sessionInput());
+  const view = await sessions.create(waitingInput());
   assert.equal(view.matchingMode, "shadow");
+  // The matcher would have taken it, so the refusal below is the gate's alone.
+  assert.equal(view.shadowSelection?.status, "matched");
+  assert.equal(view.shadowSelection?.wouldSelectVehicleId, "BUS-A");
   assert.equal(view.selectedVehicleId, undefined);
   assert.equal(view.selectionMode, undefined);
   assert.equal(view.progress, undefined);
@@ -291,7 +400,9 @@ test("shadow mode publishes the ranking and the cadence evidence it refused to a
   provider.vehiclesValue = [tagoRow("TAGO-A", now, 1, 33.5000)];
   const sessions = new JourneySessionCoordinator(provider, { now: () => now, idFactory: () => "shadow-evidence" });
 
-  const first = await sessions.create(sessionInput());
+  // The rider waits at stop 3 and the bus is two stops out, so cadence is all
+  // that stands between it and the matcher's choice.
+  const first = await sessions.create(waitingInput());
   // Not enough samples yet, so the cadence surrogate is `unknown` and the
   // candidate is rejected — shadow or not.
   assert.equal(first.sourceFreshness?.["TAGO-A"]?.state, "unknown");
@@ -457,7 +568,9 @@ test("nothing in a TAGO session view reads as a provider observation time", asyn
     idFactory: () => "naming-contract",
     automaticMatchingEnabled: true,
   });
-  const created = await sessions.create(sessionInput());
+  // A rider waiting at stop 3, so the bus coming up from stops 1 and 2 is the
+  // one automatic mode goes on to track.
+  const created = await sessions.create(waitingInput());
   now = new Date("2026-09-22T12:00:05Z");
   provider.vehiclesValue = [tagoRow("TAGO-A", now, 1, 33.5000)];
   await sessions.refresh(created.id);
@@ -528,8 +641,10 @@ test("a session outlives the coordinator that created it", async () => {
   ];
   const options = { now: () => now, store, automaticMatchingEnabled: true };
 
+  // On board, so the bus one stop past stop 1 is the rider's own: what is
+  // under test is the stored ride, not the choice.
   const created = await new JourneySessionCoordinator(provider, { ...options, idFactory: () => "durable-1" })
-    .create(sessionInput());
+    .create(onBoardInput());
   assert.equal(created.progress?.currentStopSequence, 2);
 
   // A different process entirely — which is what a second serverless instance
@@ -557,7 +672,9 @@ test("a concurrent writer cannot move a rider backward along the route", async (
 
   provider.snapshots = [[bus(now, 3)]];
   const first = new JourneySessionCoordinator(provider, { ...options, idFactory: () => "race-1" });
-  const created = await first.create(sessionInput());
+  // On board, so the bus two stops past stop 1 is selected and there is a
+  // ride under way to race over.
+  const created = await first.create(onBoardInput());
   assert.equal(created.progress?.currentStopSequence, 3);
 
   // Two instances, each about to answer a refresh for the same ride.
@@ -668,4 +785,368 @@ test("a generated id that already exists is refused, never overwritten", async (
     new JourneySessionCoordinator(provider, options).create(sessionInput()),
     /generated session id already exists/,
   );
+});
+
+/* --------------------------------- rider state and directed route progress */
+
+test("a riderState other than waiting_at_stop or on_board is invalid input", async () => {
+  const provider = new MutableProvider();
+  const sessions = new JourneySessionCoordinator(provider, { idFactory: () => "bad-rider-state" });
+  for (const riderState of ["boarded", "ON_BOARD", "", null, 1, true]) {
+    await assert.rejects(sessions.create({ ...sessionInput(), riderState }), (error: unknown) => {
+      assert.ok(error instanceof SessionInputError, `riderState ${JSON.stringify(riderState)}`);
+      assert.equal(error.code, "INVALID_INPUT");
+      assert.match(error.message, /riderState must be waiting_at_stop or on_board/);
+      return true;
+    });
+  }
+});
+
+test("riderState round-trips through the store and appears in the view", async () => {
+  const store = new MemoryJourneySessionStore();
+  const provider = new MutableProvider();
+  const start = Date.parse("2026-09-23T05:00:00Z");
+  let now = new Date(start);
+  const options = { now: () => now, store, automaticMatchingEnabled: true };
+  // A TAGO bus one stop past stop 1. It is in the feed when both riders start
+  // (an on-board rider's bus has to be), but its cadence is not yet fresh, so
+  // neither session can select anything at creation.
+  const at = (seconds: number, latitude: number) => {
+    now = new Date(start + seconds * 1_000);
+    provider.vehiclesValue = [tagoRow("BUS-A", now, 2, latitude)];
+  };
+  at(0, 33.5010);
+  const onBoard = await new JourneySessionCoordinator(provider, { ...options, idFactory: () => "rider-on-board" })
+    .create(onBoardInput());
+  const waiting = await new JourneySessionCoordinator(provider, { ...options, idFactory: () => "rider-default" })
+    .create(sessionInput());
+  assert.equal(onBoard.riderState, "on_board");
+  assert.equal(onBoard.selectedVehicleId, undefined, "cadence is not fresh at creation");
+  assert.equal(waiting.riderState, "waiting_at_stop", "a rider who did not say is waiting");
+  assert.equal((await store.load("rider-on-board"))?.session.riderState, "on_board");
+
+  // Another instance reads both rides back and makes the first selection
+  // itself, applying each rider's own rule to the same, now fresh, bus.
+  const elsewhere = new JourneySessionCoordinator(provider, options);
+  at(10, 33.5012);
+  await elsewhere.refresh("rider-on-board");
+  await elsewhere.refresh("rider-default");
+  at(20, 33.5015);
+  const onBoardResumed = await elsewhere.refresh("rider-on-board");
+  const waitingResumed = await elsewhere.refresh("rider-default");
+
+  assert.equal(onBoardResumed.riderState, "on_board");
+  assert.equal(onBoardResumed.selectedVehicleId, "BUS-A", "the on-board rule takes the bus that has just left the stop");
+  assert.equal(onBoardResumed.selectionMode, "automatic");
+  assert.equal(waitingResumed.riderState, "waiting_at_stop");
+  assert.equal(waitingResumed.selectedVehicleId, undefined, "the waiting rule never does");
+});
+
+test("a stored row written before rider states existed reads as waiting_at_stop", async () => {
+  const store = new MemoryJourneySessionStore();
+  const provider = new MutableProvider();
+  const now = new Date("2026-09-23T05:30:00Z");
+  // Written by hand in the shape the store held before rider states: every
+  // field it required then, and no `riderState` at all.
+  const legacy: StoredJourneySession = {
+    schemaVersion: JOURNEY_SESSION_SCHEMA_VERSION,
+    id: "legacy-row",
+    routeId,
+    cityCode,
+    boardingStopSequence: 1,
+    destinationStopSequence: 5,
+    directionCode: "1",
+    stops: stops.map((stop) => ({ ...stop })),
+    boardingStop: { ...stops[0]! },
+    destinationStop: { ...stops[4]! },
+    matchConfidence: "unknown",
+    createdAtMs: now.getTime() - 60_000,
+    updatedAtMs: now.getTime() - 60_000,
+    expiresAtMs: now.getTime() + 60 * 60_000,
+    cadenceHistory: [],
+    consecutiveProviderFailures: 0,
+  };
+  assert.equal((await store.create(legacy)).outcome, "saved");
+  provider.vehiclesValue = [
+    { vehicleId: "BUS-A", routeId, observedAt: now.toISOString(), directionCode: "1", stopSequence: 2 },
+  ];
+
+  const view = await new JourneySessionCoordinator(provider, { now: () => now, store, automaticMatchingEnabled: true })
+    .refresh("legacy-row");
+  assert.equal(view.riderState, "waiting_at_stop");
+  // Matched as waiting, not merely labelled so: the bus one stop past the
+  // boarding stop, which the on-board rule would take, is not selected.
+  assert.equal(view.selectedVehicleId, undefined);
+  assert.equal(view.state, "confirmation_required");
+  assert.equal(view.candidates?.[0]?.zone, "boarding_stop_unresolved");
+});
+
+test("a polled row written before passage memory existed is withheld for good, never given an empty memory", async () => {
+  const now = new Date("2026-09-23T05:30:00Z");
+  // The shape the previous matcher stored: polled (it has cadence history) but
+  // no `passage`. Whatever that session saw cross the stop is unknown now.
+  const row = (passage?: StoredJourneySession["passage"]): StoredJourneySession => ({
+    schemaVersion: JOURNEY_SESSION_SCHEMA_VERSION,
+    id: passage ? "current-row" : "pre-passage-row",
+    routeId,
+    cityCode,
+    boardingStopSequence: 3,
+    destinationStopSequence: 5,
+    directionCode: "1",
+    stops: stops.map((stop) => ({ ...stop })),
+    boardingStop: { ...stops[2]! },
+    destinationStop: { ...stops[4]! },
+    matchConfidence: "unknown",
+    createdAtMs: now.getTime() - 5_000,
+    updatedAtMs: now.getTime() - 5_000,
+    expiresAtMs: now.getTime() + 60 * 60_000,
+    // A bus seen two stops past the rider's stop, well clear of it.
+    cadenceHistory: [["BUS-OLD", [tagoRow("BUS-OLD", new Date(now.getTime() - 5_000), 5, 33.5040)]]],
+    consecutiveProviderFailures: 0,
+    ...(passage ? { passage } : {}),
+  });
+  const provider = new MutableProvider();
+  // One bus, one stop before the rider's stop, provider-timestamped and
+  // current: the directed rule's clearest possible selection.
+  provider.vehiclesValue = [
+    { vehicleId: "BUS-A", routeId, observedAt: now.toISOString(), directionCode: "1", stopSequence: 2 },
+  ];
+
+  const store = new MemoryJourneySessionStore();
+  assert.equal((await store.create(row())).outcome, "saved");
+  assert.equal((await store.create(row({ offsets: {} }))).outcome, "saved");
+  const coordinator = new JourneySessionCoordinator(provider, { now: () => now, store, automaticMatchingEnabled: true });
+
+  const control = await coordinator.refresh("current-row");
+  assert.equal(control.selectedVehicleId, "BUS-A", "control: a row with its memory selects");
+
+  const withheld = await coordinator.refresh("pre-passage-row");
+  assert.equal(withheld.selectedVehicleId, undefined);
+  assert.equal(withheld.state, "confirmation_required");
+  assert.equal((await store.load("pre-passage-row"))?.session.passage?.withheld?.reason, "passage_memory_unavailable");
+});
+
+test("a session whose first look comes late withholds when a bus past the stop could have been at it", async () => {
+  // The rider says they are waiting at stop 3; the first provider read takes
+  // 40 s. By then one bus is two stops past the stop: it could have been at the
+  // stop when the rider started (one stop plus one per 15 s), with the rider
+  // stepping on. The bus behind it is only theirs if nobody boarded meanwhile.
+  const run = async (readSeconds: number) => {
+    let clock = new Date("2026-09-23T06:00:00Z");
+    const provider = new MutableProvider();
+    const slow: TransitProvider = {
+      stops: (request) => provider.stops(request),
+      async vehicles(request) {
+        clock = new Date(clock.getTime() + readSeconds * 1_000);
+        provider.vehiclesValue = [
+          { vehicleId: "BUS-GONE", routeId, observedAt: clock.toISOString(), directionCode: "1", stopSequence: 5 },
+          { vehicleId: "BUS-NEXT", routeId, observedAt: clock.toISOString(), directionCode: "1", stopSequence: 1 },
+        ];
+        return provider.vehicles(request);
+      },
+    };
+    return new JourneySessionCoordinator(slow, { now: () => clock, automaticMatchingEnabled: true }).create(waitingInput());
+  };
+  assert.equal((await run(0)).selectedVehicleId, "BUS-NEXT", "control: a first look at declaration time");
+  const late = await run(40);
+  assert.equal(late.selectedVehicleId, undefined);
+  assert.equal(late.state, "confirmation_required");
+});
+
+test("a waiting rider's session never automatically selects a bus at or past the boarding stop, even the only fresh one", async () => {
+  // Finding F1. These are the positions tests in this file once selected from
+  // for a rider waiting at stop 1: at the stop, one past it (where a dwelling
+  // bus and a departed one can report alike), and two past it (departed under
+  // every reading). The shadow ranking must not claim the bus either.
+  const cases = [
+    { stopSequence: 1, zone: "boarding_stop_unresolved", reason: "boarding_stop_position_unresolved" },
+    { stopSequence: 2, zone: "boarding_stop_unresolved", reason: "boarding_stop_position_unresolved" },
+    { stopSequence: 3, zone: "departed", reason: "departed_boarding_stop" },
+  ];
+  for (const automaticMatchingEnabled of [true, false]) {
+    for (const { stopSequence, zone, reason } of cases) {
+      const label = `${automaticMatchingEnabled ? "automatic" : "shadow"}, bus at stop ${stopSequence}`;
+      const provider = new MutableProvider();
+      const start = Date.parse("2026-09-23T06:00:00Z");
+      let now = new Date(start);
+      const sessions = new JourneySessionCoordinator(provider, {
+        now: () => now,
+        idFactory: () => `waiting-past-${stopSequence}`,
+        automaticMatchingEnabled,
+      });
+      // The bus creeps without changing stop, so its cadence is fresh by the
+      // third receipt and freshness cannot be what refuses it.
+      const latitude = stops[stopSequence - 1]!.latitude!;
+      provider.vehiclesValue = [tagoRow("TAGO-PAST", now, stopSequence, latitude)];
+      let view = await sessions.create(sessionInput());
+      for (const seconds of [5, 10]) {
+        now = new Date(start + seconds * 1_000);
+        provider.vehiclesValue = [tagoRow("TAGO-PAST", now, stopSequence, latitude + seconds * 0.000001)];
+        view = await sessions.refresh(view.id);
+      }
+
+      assert.equal(view.sourceFreshness?.["TAGO-PAST"]?.state, "fresh", label);
+      assert.equal(view.selectedVehicleId, undefined, label);
+      assert.equal(view.shadowSelection?.wouldSelectVehicleId, undefined, label);
+      assert.equal(view.progress, undefined, label);
+      // A bus at the stop, or one past it, may be the one the rider is
+      // stepping onto: it is never selected, but it is offered for the rider to
+      // confirm. A departed bus is not offered; the rider sees the full
+      // ranking only because nothing plausible is left.
+      assert.equal(view.state, zone === "boarding_stop_unresolved" ? "confirmation_required" : "awaiting_match", label);
+      assert.equal(view.candidates?.[0]?.stopOffset, stopSequence - 1, label);
+      assert.equal(view.candidates?.[0]?.zone, zone, label);
+      assert.deepEqual(view.candidates?.[0]?.rejectedReasons, [reason], `${label}: position is the only reason`);
+    }
+  }
+});
+
+test("an on-board session refuses to choose while two buses are one to four stops past the boarding stop", async () => {
+  // The rider is on one of them and nothing says which. The second bus blocks
+  // whether or not it is fresh: a bus whose reports went stale has not stopped
+  // being a bus the rider might be riding.
+  const variants = [
+    { id: "on-board-both-fresh", otherObservedAt: "2026-09-23T07:00:00Z", offered: ["BUS-A", "BUS-B"] },
+    { id: "on-board-other-stale", otherObservedAt: "2026-09-23T06:55:00Z", offered: ["BUS-A", "BUS-B"] },
+  ];
+  for (const { id, otherObservedAt, offered } of variants) {
+    const provider = new MutableProvider();
+    const now = new Date("2026-09-23T07:00:00Z");
+    provider.vehiclesValue = [
+      { vehicleId: "BUS-A", routeId, observedAt: now.toISOString(), directionCode: "1", stopSequence: 2 },
+      { vehicleId: "BUS-B", routeId, observedAt: otherObservedAt, directionCode: "1", stopSequence: 4 },
+    ];
+    const sessions = new JourneySessionCoordinator(provider, {
+      now: () => now,
+      idFactory: () => id,
+      automaticMatchingEnabled: true,
+    });
+    const view = await sessions.create(onBoardInput());
+
+    assert.equal(view.riderState, "on_board", id);
+    assert.equal(view.selectedVehicleId, undefined, id);
+    assert.equal(view.state, "confirmation_required", id);
+    assert.match(view.explanation, /multiple_vehicles_in_on_board_window/, id);
+    // Both are offered, nearest the stop first: the rider may be on either, and
+    // a bus whose reports went stale is no less a bus they might be riding.
+    assert.deepEqual(view.candidates?.map((candidate) => candidate.vehicleId), offered, id);
+  }
+});
+
+test("a bus that drops out of a poll keeps blocking, and if it could have reached the stop unseen the session stays withheld", async () => {
+  const provider = new MutableProvider();
+  const start = Date.parse("2026-09-23T08:00:00Z");
+  const at = (seconds: number) => new Date(start + seconds * 1_000);
+  let now = at(0);
+  // Two buses bunched on the approach to a rider waiting at stop 3: TAGO-LEAD
+  // one stop out, TAGO-FOLLOW two. Both creep forward, so both are fresh from
+  // the third receipt. They are TAGO rows, so the session's cadence history is
+  // what remembers a bus that drops out.
+  const lead = (seconds: number) => tagoRow("TAGO-LEAD", at(seconds), 2, 33.5010 + seconds * 0.000001);
+  const follow = (seconds: number) => tagoRow("TAGO-FOLLOW", at(seconds), 1, 33.5000 + seconds * 0.000001);
+  const sessions = new JourneySessionCoordinator(provider, {
+    now: () => now,
+    idFactory: () => "remembered-leader",
+    automaticMatchingEnabled: true,
+  });
+
+  provider.vehiclesValue = [lead(0), follow(0)];
+  const created = await sessions.create(waitingInput());
+  let view = created;
+  for (const seconds of [5, 10]) {
+    now = at(seconds);
+    provider.vehiclesValue = [lead(seconds), follow(seconds)];
+    view = await sessions.refresh(created.id);
+  }
+  // Both in view, one stop apart: too close to call.
+  assert.equal(view.selectedVehicleId, undefined);
+  assert.match(view.explanation, /candidates_too_close/);
+
+  // TAGO-LEAD drops out of the feed. Losing its row is not evidence that it
+  // has gone, so it is remembered at stop 2, ahead of the follower, and the
+  // follower is not promoted just because it is now alone in the snapshot.
+  for (let seconds = 15; seconds <= 95; seconds += 5) {
+    now = at(seconds);
+    provider.vehiclesValue = [follow(seconds)];
+    view = await sessions.refresh(created.id);
+    const label = `${seconds - 10} s after the leader was last seen`;
+    assert.equal(view.selectedVehicleId, undefined, label);
+    assert.equal(view.state, "confirmation_required", label);
+    assert.match(view.explanation, /leading_vehicle_not_selectable/, label);
+  }
+
+  // 95 s after its last sighting the leader is outside the 90 s evidence
+  // window and no longer remembered. It was one stop from the rider's stop when
+  // it vanished, so it may have reached the stop unseen and the rider may be on
+  // it: the follower is not promoted, now or later in this session.
+  now = at(105);
+  provider.vehiclesValue = [follow(105)];
+  view = await sessions.refresh(created.id);
+  assert.equal(view.selectedVehicleId, undefined);
+  assert.match(view.explanation, /vehicle_may_have_reached_boarding_stop_unobserved/);
+  now = at(200);
+  provider.vehiclesValue = [follow(200)];
+  view = await sessions.refresh(created.id);
+  assert.equal(view.selectedVehicleId, undefined, "withheld for good, not only while remembered");
+});
+
+test("once a bus has been seen at a waiting rider's stop, no bus is automatically selected for the rest of the session", async () => {
+  const store = new MemoryJourneySessionStore();
+  const provider = new MutableProvider();
+  const start = Date.parse("2026-09-23T09:00:00Z");
+  let now = new Date(start);
+  const options = { now: () => now, store, automaticMatchingEnabled: true };
+  const bus = (vehicleId: string, stopSequence: number): VehicleObservation => ({
+    vehicleId, routeId, observedAt: now.toISOString(), directionCode: "1", stopSequence,
+  });
+
+  // BUS-FIRST is at the rider's stop 3, where the rider may be stepping onto it.
+  provider.vehiclesValue = [bus("BUS-FIRST", 3), bus("BUS-NEXT", 1)];
+  const created = await new JourneySessionCoordinator(provider, { ...options, idFactory: () => "passage-memory" })
+    .create(waitingInput());
+  assert.equal(created.selectedVehicleId, undefined);
+  assert.equal(created.state, "confirmation_required");
+
+  // BUS-FIRST has left, perhaps with the rider aboard, and BUS-NEXT is now the
+  // leading, fresh and only bus approaching. Another instance reading the
+  // stored session still does not choose it — nor five minutes on, long after
+  // any 90 s memory of a dropped bus has lapsed. What withholds is the
+  // session's passage memory (finding F4), and nothing clears it.
+  for (const seconds of [20, 300]) {
+    now = new Date(start + seconds * 1_000);
+    provider.vehiclesValue = [bus("BUS-NEXT", 2)];
+    const view = await new JourneySessionCoordinator(provider, options).refresh("passage-memory");
+    assert.equal(view.selectedVehicleId, undefined, `${seconds} s`);
+    assert.equal(view.state, "confirmation_required", `${seconds} s`);
+    assert.match(view.explanation, /boarding_stop_reached_during_session/, `${seconds} s`);
+  }
+});
+
+test("the confirmation list offers every bus the rider could be boarding, nearest first, and nothing departed", () => {
+  // Synthetic ranking for a waiting rider at stop 10: a bus at the stop, one
+  // approaching, one just past (may be dwelling), one departed, one of unknown
+  // position, and one on another route.
+  const row = (vehicleId: string, zone: string, stopOffset?: number, rejectedReasons: string[] = []) => ({
+    vehicleId, score: 0, evidence: [], rejectedReasons, zone, ...(stopOffset === undefined ? {} : { stopOffset }),
+  });
+  const ranked = [
+    row("DEPARTED", "departed", 3, ["departed_boarding_stop"]),
+    row("APPROACHING", "approaching", -2),
+    row("AT-STOP", "boarding_stop_unresolved", 0, ["boarding_stop_position_unresolved"]),
+    row("JUST-PAST", "boarding_stop_unresolved", 1, ["boarding_stop_position_unresolved"]),
+    row("UNKNOWN", "route_progress_unknown", undefined, ["route_progress_unknown"]),
+    row("OTHER-ROUTE", "approaching", -1, ["wrong_route"]),
+  ];
+  assert.deepEqual(
+    confirmationCandidates(ranked, "waiting_at_stop").map((candidate) => candidate.vehicleId),
+    ["AT-STOP", "JUST-PAST", "APPROACHING", "UNKNOWN"],
+  );
+  // On board, the mirror: the stop and the window past it, nothing still approaching.
+  const onBoard = [
+    row("BEFORE", "not_yet_at_boarding_stop", -3, ["not_yet_at_boarding_stop"]),
+    row("AT-STOP", "boarding_stop_unresolved", 0, ["boarding_stop_position_unresolved"]),
+    row("PAST", "departed_within_on_board_window", 2),
+    row("FAR", "beyond_window", 7, ["implausible_boarding_position"]),
+  ];
+  assert.deepEqual(confirmationCandidates(onBoard, "on_board").map((candidate) => candidate.vehicleId), ["AT-STOP", "PAST"]);
 });
