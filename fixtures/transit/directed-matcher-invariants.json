@@ -1,0 +1,29 @@
+{
+  "//": "SYNTHETIC. Language-neutral specification cases for the directed-route-progress-v1 matcher contract. Expectations are derived by hand from the policy table in docs/exec-plans/HUMAN_LABOR_ELIMINATION.md section 4, not recorded from any implementation. The backend runs every case in services/api/test/crossLanguageAuthority.test.ts; a Swift port must pass the same cases before it may decide anything for a real rider.",
+  "policyVersion": "directed-route-progress-v1",
+  "route": { "routeId": "SYN-SPEC", "stopCount": 20, "boardingStopSequence": 10 },
+  "cases": [
+    { "id": "W1", "riderState": "waiting_at_stop", "vehicles": [{ "id": "A", "seq": 9, "fresh": true }], "expect": { "status": "matched", "selected": "A" }, "why": "one fresh bus one stop before the stop" },
+    { "id": "W2", "riderState": "waiting_at_stop", "vehicles": [{ "id": "A", "seq": 6, "fresh": true }], "expect": { "status": "matched", "selected": "A" }, "why": "four stops before is still inside the approach window" },
+    { "id": "W3", "riderState": "waiting_at_stop", "vehicles": [{ "id": "A", "seq": 5, "fresh": true }], "expect": { "status": "unavailable" }, "why": "five stops before is beyond the window" },
+    { "id": "W4", "riderState": "waiting_at_stop", "vehicles": [{ "id": "A", "seq": 10, "fresh": true }], "expect": { "status": "unavailable" }, "why": "at the stop: dwell and departure cannot be told apart" },
+    { "id": "W5", "riderState": "waiting_at_stop", "vehicles": [{ "id": "A", "seq": 11, "fresh": true }], "expect": { "status": "unavailable" }, "why": "one past the stop may still be dwelling at it" },
+    { "id": "W6", "riderState": "waiting_at_stop", "vehicles": [{ "id": "A", "seq": 12, "fresh": true }], "expect": { "status": "unavailable" }, "why": "F1: a departed bus is never selected, even when it is the only fresh one" },
+    { "id": "W7", "riderState": "waiting_at_stop", "vehicles": [{ "id": "A", "seq": 12, "fresh": true }, { "id": "B", "seq": 8, "fresh": true }], "expect": { "status": "matched", "selected": "B" }, "why": "the departed bus neither wins nor blocks; the approaching one is selected" },
+    { "id": "W8", "riderState": "waiting_at_stop", "vehicles": [{ "id": "A", "seq": 10, "fresh": false }, { "id": "B", "seq": 8, "fresh": true }], "expect": { "status": "ambiguous" }, "why": "a bus at the stop blocks every selection, fresh or not" },
+    { "id": "W9", "riderState": "waiting_at_stop", "vehicles": [{ "id": "A", "seq": 9, "fresh": false }, { "id": "B", "seq": 8, "fresh": true }], "expect": { "status": "ambiguous" }, "why": "only the leading vehicle can be selected; a non-fresh leader still leads" },
+    { "id": "W10", "riderState": "waiting_at_stop", "vehicles": [{ "id": "A", "seq": 9, "fresh": true }, { "id": "B", "seq": 7, "fresh": true }], "expect": { "status": "ambiguous" }, "why": "two stops of separation is too close" },
+    { "id": "W11", "riderState": "waiting_at_stop", "vehicles": [{ "id": "A", "seq": 9, "fresh": true }, { "id": "B", "seq": 6, "fresh": true }], "expect": { "status": "matched", "selected": "A" }, "why": "three stops of separation is enough" },
+    { "id": "W12", "riderState": "waiting_at_stop", "vehicles": [{ "id": "A", "seq": null, "fresh": true }, { "id": "B", "seq": 8, "fresh": true }], "expect": { "status": "ambiguous" }, "why": "a vehicle with unknown route progress blocks" },
+    { "id": "W13", "riderState": "waiting_at_stop", "vehicles": [{ "id": "B", "seq": 8, "fresh": true }], "remembered": [{ "id": "A", "seq": 9 }], "expect": { "status": "ambiguous" }, "why": "a leading bus that dropped out of the poll still leads" },
+    { "id": "W14", "riderState": "waiting_at_stop", "vehicles": [{ "id": "B", "seq": 8, "fresh": true }], "passageWithheld": true, "expect": { "status": "ambiguous" }, "why": "F4: a bus reached the stop earlier in this session; the rider may be aboard it" },
+    { "id": "W15", "riderState": "waiting_at_stop", "vehicles": [{ "id": "A", "seq": 9, "fresh": true }], "omitStops": true, "expect": { "status": "ambiguous" }, "why": "without the route's stops, topology is unverified" },
+    { "id": "O1", "riderState": "on_board", "vehicles": [{ "id": "A", "seq": 12, "fresh": true }], "expect": { "status": "matched", "selected": "A" }, "why": "the only fresh bus two past the stop" },
+    { "id": "O2", "riderState": "on_board", "vehicles": [{ "id": "A", "seq": 11, "fresh": true }], "expect": { "status": "matched", "selected": "A" }, "why": "one past the stop is selectable for a rider already aboard" },
+    { "id": "O3", "riderState": "on_board", "vehicles": [{ "id": "A", "seq": 10, "fresh": true }], "expect": { "status": "unavailable" }, "why": "at the stop blocks" },
+    { "id": "O4", "riderState": "on_board", "vehicles": [{ "id": "A", "seq": 12, "fresh": true }, { "id": "B", "seq": 9, "fresh": true }], "expect": { "status": "ambiguous" }, "why": "one before the stop may be dwelling at it with the rider aboard" },
+    { "id": "O5", "riderState": "on_board", "vehicles": [{ "id": "A", "seq": 12, "fresh": true }, { "id": "B", "seq": 14, "fresh": false }], "expect": { "status": "ambiguous" }, "why": "a second bus in the on-board window makes it ambiguous, fresh or not" },
+    { "id": "O6", "riderState": "on_board", "vehicles": [{ "id": "A", "seq": 15, "fresh": true }], "expect": { "status": "unavailable" }, "why": "five past the stop is beyond the on-board window" },
+    { "id": "O7", "riderState": "on_board", "vehicles": [{ "id": "A", "seq": 12, "fresh": true }, { "id": "B", "seq": 7, "fresh": true }], "expect": { "status": "matched", "selected": "A" }, "why": "a bus three stops before the stop cannot be the one the rider boarded and does not compete" }
+  ]
+}

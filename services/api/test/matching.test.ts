@@ -1,31 +1,154 @@
 import test from "node:test";
 import assert from "node:assert/strict";
-import { matchVehicle, matchVehicleWithSourceFreshness } from "../src/matching.ts";
+import { readdirSync, readFileSync } from "node:fs";
+import { dirname, join, relative, resolve } from "node:path";
+import { fileURLToPath } from "node:url";
 
+import type { MatchRequest, MatchResult, RankedCandidate, StopOnRoute, VehicleObservation } from "../src/domain.ts";
+import {
+  assertDirectedInvariant,
+  MATCHER_POLICY_VERSION,
+  MatcherInvariantError,
+  matchVehicle,
+  matchVehicleWithSourceFreshness,
+} from "../src/matching.ts";
+// The legacy symmetric policy, imported on purpose: a negative control showing
+// that the F1 scenarios below are ones the old matcher really committed on.
+import { matchVehicleLegacySymmetricV0 } from "../src/matchingLegacy.ts";
+import type { SourceFreshnessEvidence, SourceFreshnessState } from "../src/sourceFreshness.ts";
+
+/**
+ * Synthetic fixtures only: invented routes, stops and vehicle ids. Nothing
+ * here was observed on a real bus.
+ *
+ * A straight route of twenty stops with the rider boarding at sequence 10, so
+ * every zone boundary has room on both sides of the stop. An `offset` is stops
+ * past the boarding stop in route order; negative is before it. A waiting
+ * rider's bus is one to four stops before the stop, so every test that expects
+ * a selection for a waiting rider puts the bus there.
+ */
 const now = "2026-08-20T03:00:00.000Z";
+const ROUTE = "route-201";
+const BOARDING = 10;
+const stops: StopOnRoute[] = Array.from({ length: 20 }, (_, index) => ({
+  stopId: `SYN-${index + 1}`,
+  name: `Synthetic ${index + 1}`,
+  sequence: index + 1,
+}));
+
+function secondsAgo(seconds: number): string {
+  return new Date(Date.parse(now) - seconds * 1_000).toISOString();
+}
+
+function signed(offset: number): string {
+  return offset > 0 ? `+${offset}` : String(offset);
+}
+
+/** A provider-timestamped observation, current at `now` unless overridden. */
+function bus(
+  vehicleId: string,
+  stopSequence: number | undefined,
+  overrides: Partial<VehicleObservation> = {},
+): VehicleObservation {
+  return {
+    vehicleId,
+    routeId: ROUTE,
+    directionCode: "1",
+    observedAt: now,
+    ...(stopSequence === undefined ? {} : { stopSequence }),
+    ...overrides,
+  };
+}
+
+/**
+ * A TAGO-shaped observation: no provider time, only TAPSO's receipt. Rows in
+ * `recentlySeen` have this shape in production, because only TAGO rows enter
+ * the cadence history they are drawn from.
+ */
+function tago(vehicleId: string, stopSequence: number | undefined, receivedSecondsAgo = 0): VehicleObservation {
+  return {
+    vehicleId,
+    routeId: ROUTE,
+    directionCode: "1",
+    ...(stopSequence === undefined ? {} : { stopSequence }),
+    observedAt: new Date(0).toISOString(),
+    receivedAt: secondsAgo(receivedSecondsAgo),
+    timestampSource: "unavailable",
+  };
+}
+
+function cadence(state: SourceFreshnessState): SourceFreshnessEvidence {
+  return {
+    state,
+    sampleCount: 3,
+    spanSeconds: 10,
+    latestReceiptAgeSeconds: 0,
+    maxReceiptGapSeconds: 5,
+    contentChangeCount: state === "fresh" ? 1 : 0,
+    sequenceDecreaseCount: 0,
+    reason: `synthetic ${state} cadence`,
+  };
+}
+
+/** A waiting rider on the synthetic route, unless `overrides` say otherwise. */
+function request(candidates: VehicleObservation[], overrides: Partial<MatchRequest> = {}): MatchRequest {
+  return { routeId: ROUTE, boardingStopSequence: BOARDING, directionCode: "1", now, stops, candidates, ...overrides };
+}
+
+function onBoard(candidates: VehicleObservation[], overrides: Partial<MatchRequest> = {}): MatchRequest {
+  return request(candidates, { riderState: "on_board", ...overrides });
+}
+
+function candidateIn(result: MatchResult, vehicleId: string): RankedCandidate {
+  const found = result.ranked.find((candidate) => candidate.vehicleId === vehicleId);
+  assert.ok(found, `${vehicleId} is ranked`);
+  return found;
+}
+
+function assertSelected(result: MatchResult, vehicleId: string, message = result.explanation): void {
+  assert.equal(result.status, "matched", message);
+  assert.equal(result.selectedVehicleId, vehicleId, message);
+  assert.deepEqual(result.abstentionReasons, [], message);
+}
+
+/** Withheld although a vehicle was individually selectable, with `reason` among the reasons why. */
+function assertWithheld(result: MatchResult, reason: string, message = ""): void {
+  assert.equal(result.status, "ambiguous", message);
+  assert.equal(result.selectedVehicleId, undefined, message);
+  assert.ok(
+    result.abstentionReasons?.includes(reason),
+    `${message} expected ${reason} among ${JSON.stringify(result.abstentionReasons)}`,
+  );
+}
 
 test("selects one fresh route and direction candidate", () => {
+  // Both buses approach the rider's stop. The wrong-direction one is three
+  // stops further back, so it is rejected on direction and cannot hold up the
+  // selection by being close.
   const result = matchVehicle({
     routeId: "route-201",
     boardingStopSequence: 10,
     directionCode: "1",
     now,
+    stops,
     candidates: [
-      { vehicleId: "correct", routeId: "route-201", directionCode: "1", stopSequence: 10, observedAt: now },
-      { vehicleId: "wrong", routeId: "route-201", directionCode: "2", stopSequence: 10, observedAt: now },
+      { vehicleId: "correct", routeId: "route-201", directionCode: "1", stopSequence: 9, observedAt: now },
+      { vehicleId: "wrong", routeId: "route-201", directionCode: "2", stopSequence: 6, observedAt: now },
     ],
   });
   assert.equal(result.status, "matched");
   assert.equal(result.selectedVehicleId, "correct");
+  assert.deepEqual(candidateIn(result, "wrong").rejectedReasons, ["wrong_direction"]);
 });
 
 test("fails closed when candidates are tied", () => {
   const candidates = ["bus-a", "bus-b"].map((vehicleId) => ({
-    vehicleId, routeId: "route-201", directionCode: "1", stopSequence: 10, observedAt: now,
+    vehicleId, routeId: "route-201", directionCode: "1", stopSequence: 8, observedAt: now,
   }));
-  const result = matchVehicle({ routeId: "route-201", boardingStopSequence: 10, directionCode: "1", now, candidates });
+  const result = matchVehicle({ routeId: "route-201", boardingStopSequence: 10, directionCode: "1", now, stops, candidates });
   assert.equal(result.status, "ambiguous");
   assert.equal(result.selectedVehicleId, undefined);
+  assert.deepEqual(result.abstentionReasons, ["leading_vehicle_not_selectable"]);
 });
 
 test("rejects stale candidates", () => {
@@ -34,13 +157,14 @@ test("rejects stale candidates", () => {
     boardingStopSequence: 10,
     directionCode: "1",
     now,
+    stops,
     candidates: [{
-      vehicleId: "stale", routeId: "route-201", directionCode: "1", stopSequence: 10,
+      vehicleId: "stale", routeId: "route-201", directionCode: "1", stopSequence: 8,
       observedAt: "2026-08-20T02:55:00.000Z",
     }],
   });
   assert.equal(result.status, "unavailable");
-  assert.deepEqual(result.ranked[0].rejectedReasons, ["stale_or_invalid_timestamp"]);
+  assert.deepEqual(result.ranked[0]?.rejectedReasons, ["stale_or_invalid_timestamp"]);
 });
 
 
@@ -49,7 +173,7 @@ test("trusted server cadence can admit TAGO candidates without inventing provide
     vehicleId: "tago-live",
     routeId: "route-201",
     directionCode: "1",
-    stopSequence: 10,
+    stopSequence: 8,
     observedAt: new Date(0).toISOString(),
     receivedAt: now,
     timestampSource: "unavailable" as const,
@@ -59,6 +183,7 @@ test("trusted server cadence can admit TAGO candidates without inventing provide
     boardingStopSequence: 10,
     directionCode: "1",
     now,
+    stops,
     candidates: [candidate],
   }, new Map([
     ["tago-live", {
@@ -74,7 +199,7 @@ test("trusted server cadence can admit TAGO candidates without inventing provide
   ]));
   assert.equal(result.status, "matched");
   assert.equal(result.selectedVehicleId, "tago-live");
-  assert.ok(result.ranked[0].evidence.includes("fresh_source_cadence"));
+  assert.ok(result.ranked[0]?.evidence.includes("fresh_source_cadence"));
 });
 
 test("stateless matching still rejects the same TAGO candidate", () => {
@@ -83,16 +208,821 @@ test("stateless matching still rejects the same TAGO candidate", () => {
     boardingStopSequence: 10,
     directionCode: "1",
     now,
+    stops,
     candidates: [{
       vehicleId: "tago-untrusted",
       routeId: "route-201",
       directionCode: "1",
-      stopSequence: 10,
+      stopSequence: 8,
       observedAt: new Date(0).toISOString(),
       receivedAt: now,
       timestampSource: "unavailable",
     }],
   });
   assert.equal(result.status, "unavailable");
-  assert.deepEqual(result.ranked[0].rejectedReasons, ["stale_or_invalid_timestamp"]);
+  assert.deepEqual(result.ranked[0]?.rejectedReasons, ["stale_or_invalid_timestamp"]);
+});
+
+/* ------------------------------------------- waiting rider: route progress */
+
+const WAITING_ZONES: Array<{ name: string; offset: number; zone: string; reason?: string }> = [
+  {
+    name: "five stops before the stop is beyond the approach window",
+    offset: -5, zone: "beyond_window", reason: "implausible_boarding_position",
+  },
+  { name: "four stops before the stop is the far edge of the approach window", offset: -4, zone: "approaching" },
+  { name: "one stop before the stop is the near edge of the approach window", offset: -1, zone: "approaching" },
+  {
+    name: "a bus reporting the boarding stop itself is not selectable",
+    offset: 0, zone: "boarding_stop_unresolved", reason: "boarding_stop_position_unresolved",
+  },
+  {
+    name: "one stop past the stop is not selectable",
+    offset: 1, zone: "boarding_stop_unresolved", reason: "boarding_stop_position_unresolved",
+  },
+  { name: "two stops past the stop has departed", offset: 2, zone: "departed", reason: "departed_boarding_stop" },
+];
+
+for (const row of WAITING_ZONES) {
+  test(`waiting rider, one fresh bus: ${row.name}`, () => {
+    const result = matchVehicle(request([bus("solo", BOARDING + row.offset)]));
+    const solo = candidateIn(result, "solo");
+    assert.equal(solo.stopOffset, row.offset);
+    assert.equal(solo.zone, row.zone);
+    if (row.reason === undefined) {
+      assertSelected(result, "solo");
+      assert.deepEqual(solo.rejectedReasons, []);
+    } else {
+      assert.equal(result.status, "unavailable");
+      assert.equal(result.selectedVehicleId, undefined);
+      assert.deepEqual(solo.rejectedReasons, [row.reason]);
+    }
+  });
+}
+
+test("a bus at the boarding stop or one past it blocks a fresh approaching leader", () => {
+  assertSelected(matchVehicle(request([bus("leader", BOARDING - 2)])), "leader", "control: the leader alone");
+  // Dwelling at the stop or already gone: the unresolved nodeord reading
+  // cannot tell, and the rider may be boarding it.
+  for (const offset of [0, 1]) {
+    const result = matchVehicle(request([bus("leader", BOARDING - 2), bus("dwelling", BOARDING + offset)]));
+    assertWithheld(result, "vehicle_at_boarding_stop_unresolved", `offset ${signed(offset)}`);
+  }
+});
+
+test("a bus at the boarding stop blocks even when it is stale or only remembered", () => {
+  const stale = matchVehicle(request([
+    bus("leader", BOARDING - 2),
+    bus("dwelling", BOARDING, { observedAt: secondsAgo(300) }),
+  ]));
+  assertWithheld(stale, "vehicle_at_boarding_stop_unresolved", "stale");
+  const remembered = matchVehicle(request([bus("leader", BOARDING - 2)], {
+    recentlySeen: [tago("dwelling", BOARDING, 20)],
+  }));
+  assertWithheld(remembered, "vehicle_at_boarding_stop_unresolved", "remembered");
+});
+
+test("coordinates alone never make a bus selectable", () => {
+  // No stop sequence, parked exactly on the boarding stop's coordinates. A
+  // point on the map cannot say which side of the stop the bus is on.
+  const input = request([bus("mapped", undefined, { latitude: 33.5, longitude: 126.5 })], {
+    boardingLatitude: 33.5,
+    boardingLongitude: 126.5,
+  });
+  assert.equal(matchVehicleLegacySymmetricV0(input, new Map()).status, "matched", "negative control: legacy committed");
+  const result = matchVehicle(input);
+  assert.equal(result.status, "unavailable");
+  assert.equal(candidateIn(result, "mapped").zone, "route_progress_unknown");
+  assert.deepEqual(candidateIn(result, "mapped").rejectedReasons, ["route_progress_unknown"]);
+});
+
+test("a bus without a usable stop sequence blocks a fresh approaching leader", () => {
+  // None at all, not a whole stop, or a stop the twenty-stop route does not have.
+  for (const stopSequence of [undefined, 9.5, Number.NaN, 0, 21]) {
+    const result = matchVehicle(request([
+      bus("leader", BOARDING - 2),
+      bus("unplaced", stopSequence, { latitude: 33.5, longitude: 126.5 }),
+    ]));
+    assertWithheld(result, "candidate_route_progress_unknown", `stopSequence ${stopSequence}`);
+    assert.equal(candidateIn(result, "unplaced").zone, "route_progress_unknown", `stopSequence ${stopSequence}`);
+  }
+});
+
+test("a remembered bus without a stop sequence still blocks", () => {
+  // It blocked while present; dropping out of one poll must not raise certainty.
+  const result = matchVehicle(request([bus("leader", BOARDING - 2)], {
+    recentlySeen: [tago("unplaced", undefined, 20)],
+  }));
+  assertWithheld(result, "candidate_route_progress_unknown");
+});
+
+test("a departed bus farther past the stop never becomes selectable", () => {
+  for (const offset of [2, 3, 4, 6, 10]) {
+    const result = matchVehicle(request([bus("gone", BOARDING + offset)]));
+    assert.equal(result.status, "unavailable", `offset ${signed(offset)}`);
+    assert.equal(candidateIn(result, "gone").zone, "departed", `offset ${signed(offset)}`);
+    assert.deepEqual(candidateIn(result, "gone").rejectedReasons, ["departed_boarding_stop"], `offset ${signed(offset)}`);
+  }
+});
+
+test("a departed bus does not hold up the bus that is coming", () => {
+  const result = matchVehicle(request([
+    bus("leader", BOARDING - 1),
+    bus("gone", BOARDING + 2),
+    bus("long-gone", BOARDING + 4),
+  ]));
+  assertSelected(result, "leader");
+});
+
+test("F1 regression: a lone fresh bus one to four stops past the stop is refused", () => {
+  for (const offset of [1, 2, 3, 4]) {
+    const input = request([bus("departed", BOARDING + offset)]);
+    // The legacy policy scored this exactly like a bus the same distance
+    // before the stop, and committed to it.
+    const legacy = matchVehicleLegacySymmetricV0(input, new Map());
+    assert.equal(legacy.selectedVehicleId, "departed", `negative control: legacy commits at ${signed(offset)}`);
+    const result = matchVehicle(input);
+    assert.equal(result.status, "unavailable", `offset ${signed(offset)}`);
+    assert.equal(result.selectedVehicleId, undefined, `offset ${signed(offset)}`);
+  }
+});
+
+/* ---------------------------------------- waiting rider: leader and margin */
+
+test("a bus ahead of the fresh leader blocks it even when that bus is not fresh", () => {
+  assertSelected(matchVehicle(request([bus("leader", BOARDING - 3)])), "leader", "control: the leader alone");
+  // Not fresh is not gone: a leading bus stuck at a light still arrives first.
+  const staleAhead = matchVehicle(request([
+    bus("leader", BOARDING - 3),
+    bus("ahead", BOARDING - 1, { observedAt: secondsAgo(300) }),
+  ]));
+  assertWithheld(staleAhead, "leading_vehicle_not_selectable", "stale provider row ahead");
+  const agingAhead = matchVehicleWithSourceFreshness(
+    request([tago("leader", BOARDING - 3), tago("ahead", BOARDING - 1)]),
+    new Map([["leader", cadence("fresh")], ["ahead", cadence("aging")]]),
+  );
+  assertWithheld(agingAhead, "leading_vehicle_not_selectable", "TAGO row ahead holding still");
+});
+
+test("the three-stop margin holds at the edge of the approach window (F9)", () => {
+  // The window bounds what may be selected, not which buses may overtake the
+  // leader. A leader four stops out with a bus one or two stops behind it is
+  // exactly as contested as a leader one stop out with a bus two behind.
+  for (const [leader, follower] of [[-4, -5], [-4, -6], [-3, -5], [-2, -4]] as const) {
+    assertWithheld(
+      matchVehicle(request([bus("leader", BOARDING + leader), bus("follower", BOARDING + follower)])),
+      "candidates_too_close",
+      `leader ${leader}, follower ${follower}`,
+    );
+  }
+  // Three stops behind is clear, wherever the pair is.
+  for (const [leader, follower] of [[-4, -7], [-3, -6], [-1, -4]] as const) {
+    assertSelected(
+      matchVehicle(request([bus("leader", BOARDING + leader), bus("follower", BOARDING + follower)])),
+      "leader",
+      `leader ${leader}, follower ${follower}`,
+    );
+  }
+  // A follower that is stale, or only remembered, counts the same.
+  assertWithheld(
+    matchVehicleWithSourceFreshness(
+      request([tago("leader", BOARDING - 4), tago("follower", BOARDING - 5)]),
+      new Map([["leader", cadence("fresh")], ["follower", cadence("stale")]]),
+    ),
+    "candidates_too_close",
+    "stale follower behind the window edge",
+  );
+  // The legacy margin, which stopped counting at the window edge, committed here.
+  const edge = request([bus("leader", BOARDING - 4), bus("follower", BOARDING - 5)]);
+  assert.equal(matchVehicleLegacySymmetricV0(edge, new Map()).selectedVehicleId, "leader");
+});
+
+test("a remembered bus ahead of the fresh leader blocks it", () => {
+  // Missing from this poll, last seen twenty seconds ago: not shown to be gone.
+  const result = matchVehicle(request([bus("leader", BOARDING - 3)], {
+    recentlySeen: [tago("dropped", BOARDING - 1, 20)],
+  }));
+  assertWithheld(result, "leading_vehicle_not_selectable");
+  // Twenty seconds buys one stop plus one per fifteen seconds. From seven back
+  // it may now be five back: two stops behind the leader, too close to call,
+  // although outside the approach window (finding F9).
+  assertWithheld(
+    matchVehicle(request([bus("leader", BOARDING - 3)], { recentlySeen: [tago("dropped", BOARDING - 7, 20)] })),
+    "candidates_too_close",
+    "remembered at -7",
+  );
+  // Remembered where it cannot come within three stops of the leader even
+  // after moving on, or departed (which only departs further): nothing changes.
+  for (const stopSequence of [BOARDING - 8, BOARDING + 3]) {
+    const outside = matchVehicle(request([bus("leader", BOARDING - 3)], {
+      recentlySeen: [tago("dropped", stopSequence, 20)],
+    }));
+    assertSelected(outside, "leader", `remembered at ${signed(stopSequence - BOARDING)}`);
+  }
+});
+
+test("the current snapshot supersedes a vehicle's remembered sighting", () => {
+  // The leader's own earlier sighting, one stop further back, is not a second bus.
+  const result = matchVehicle(request([bus("leader", BOARDING - 2)], {
+    recentlySeen: [tago("leader", BOARDING - 3, 20)],
+  }));
+  assertSelected(result, "leader");
+});
+
+test("two stops of separation is too close to call", () => {
+  const result = matchVehicle(request([bus("leader", BOARDING - 1), bus("follower", BOARDING - 3)]));
+  assert.equal(result.status, "ambiguous");
+  assert.equal(result.selectedVehicleId, undefined);
+  assert.deepEqual(result.abstentionReasons, ["candidates_too_close"]);
+});
+
+test("three stops of separation is enough to select the leader", () => {
+  assertSelected(matchVehicle(request([bus("leader", BOARDING - 1), bus("follower", BOARDING - 4)])), "leader");
+});
+
+test("a follower counts against the margin whether stale or only remembered", () => {
+  const stale = matchVehicle(request([
+    bus("leader", BOARDING - 1),
+    bus("follower", BOARDING - 3, { observedAt: secondsAgo(300) }),
+  ]));
+  assertWithheld(stale, "candidates_too_close", "stale follower");
+  // Remembered, it is worse than close: twenty seconds out of sight it may have
+  // caught up with the leader, so the leader is no longer provably leading.
+  const remembered = matchVehicle(request([bus("leader", BOARDING - 1)], {
+    recentlySeen: [tago("follower", BOARDING - 3, 20)],
+  }));
+  assertWithheld(remembered, "leading_vehicle_not_selectable", "remembered follower");
+});
+
+/* ---------------------------------------------------------- on-board rider */
+
+const ON_BOARD_ZONES: Array<{ name: string; offset: number; zone: string; reason?: string }> = [
+  {
+    name: "two stops before the stop cannot be the bus just boarded",
+    offset: -2, zone: "not_yet_at_boarding_stop", reason: "not_yet_at_boarding_stop",
+  },
+  {
+    name: "one stop before the stop is not selectable",
+    offset: -1, zone: "boarding_stop_unresolved", reason: "boarding_stop_position_unresolved",
+  },
+  {
+    name: "a bus reporting the boarding stop itself is not selectable",
+    offset: 0, zone: "boarding_stop_unresolved", reason: "boarding_stop_position_unresolved",
+  },
+  { name: "one stop past the stop is the near edge of the on-board window", offset: 1, zone: "departed_within_on_board_window" },
+  { name: "four stops past the stop is the far edge of the on-board window", offset: 4, zone: "departed_within_on_board_window" },
+  {
+    name: "five stops past the stop is beyond the on-board window",
+    offset: 5, zone: "beyond_window", reason: "implausible_boarding_position",
+  },
+];
+
+for (const row of ON_BOARD_ZONES) {
+  test(`on-board rider, one fresh bus: ${row.name}`, () => {
+    const result = matchVehicle(onBoard([bus("solo", BOARDING + row.offset)]));
+    const solo = candidateIn(result, "solo");
+    assert.equal(result.riderState, "on_board");
+    assert.equal(solo.stopOffset, row.offset);
+    assert.equal(solo.zone, row.zone);
+    if (row.reason === undefined) {
+      assertSelected(result, "solo");
+      assert.deepEqual(solo.rejectedReasons, []);
+    } else {
+      assert.equal(result.status, "unavailable");
+      assert.equal(result.selectedVehicleId, undefined);
+      assert.ok(solo.rejectedReasons.includes(row.reason), JSON.stringify(solo.rejectedReasons));
+    }
+  });
+}
+
+test("on-board rider: any second bus in the on-board window withholds selection", () => {
+  assertSelected(matchVehicle(onBoard([bus("boarded", BOARDING + 1)])), "boarded", "control: alone");
+  assertSelected(
+    matchVehicle(onBoard([bus("boarded", BOARDING + 1), bus("far", BOARDING + 5)])),
+    "boarded",
+    "control: a second bus beyond the window",
+  );
+  const withSecondBus = {
+    fresh: matchVehicle(onBoard([bus("boarded", BOARDING + 1), bus("other", BOARDING + 3)])),
+    stale: matchVehicle(onBoard([
+      bus("boarded", BOARDING + 1),
+      bus("other", BOARDING + 3, { observedAt: secondsAgo(300) }),
+    ])),
+    remembered: matchVehicle(onBoard([bus("boarded", BOARDING + 1)], {
+      recentlySeen: [tago("other", BOARDING + 3, 20)],
+    })),
+  };
+  for (const [kind, result] of Object.entries(withSecondBus)) {
+    assertWithheld(result, "multiple_vehicles_in_on_board_window", kind);
+  }
+});
+
+test("an absent rider state applies the waiting rule", () => {
+  const departed = [bus("gone", BOARDING + 2)];
+  const absent = matchVehicle(request(departed));
+  assert.equal(absent.riderState, "waiting_at_stop");
+  assert.equal(absent.status, "unavailable");
+  assert.deepEqual(matchVehicle(request(departed, { riderState: "waiting_at_stop" })), absent);
+  // Only an explicit on-board declaration admits a bus past the stop.
+  assertSelected(matchVehicle(onBoard(departed)), "gone");
+});
+
+/* ---------------------------------------------------------- route topology */
+
+test("without the route's stops, automatic selection is withheld", () => {
+  for (const missing of [{ stops: undefined }, { stops: [] }]) {
+    const result = matchVehicle(request([bus("leader", BOARDING - 2)], missing));
+    assert.equal(result.status, "ambiguous", JSON.stringify(missing));
+    assert.equal(result.selectedVehicleId, undefined);
+    assert.deepEqual(result.abstentionReasons, ["route_topology_unverified"]);
+  }
+  // With nothing selectable either, the result is unavailable and still says why.
+  const nothing = matchVehicle(request([bus("gone", BOARDING + 3)], { stops: undefined }));
+  assert.equal(nothing.status, "unavailable");
+  assert.deepEqual(nothing.abstentionReasons, ["route_topology_unverified"]);
+});
+
+test("a boarding stop missing from the route's stops withholds selection", () => {
+  const result = matchVehicle(request([bus("leader", BOARDING - 2)], {
+    stops: stops.filter((stop) => stop.sequence !== BOARDING),
+  }));
+  assert.equal(result.status, "ambiguous");
+  assert.deepEqual(result.abstentionReasons, ["boarding_stop_not_on_route"]);
+});
+
+test("a boarding stop whose id repeats on the route withholds selection", () => {
+  const repeated = stops.map((stop) => (stop.sequence === 16 ? { ...stop, stopId: "SYN-10" } : stop));
+  const result = matchVehicle(request([bus("leader", BOARDING - 2)], { stops: repeated }));
+  assert.equal(result.status, "ambiguous");
+  assert.deepEqual(result.abstentionReasons, ["boarding_stop_repeats_on_route"]);
+});
+
+test("a boarding stop whose name repeats on the route withholds selection", () => {
+  // One stop served in both directions: two ids, one name, spacing aside.
+  const repeated = stops.map((stop) => (stop.sequence === 16 ? { ...stop, name: " Synthetic  10 " } : stop));
+  const result = matchVehicle(request([bus("leader", BOARDING - 2)], { stops: repeated }));
+  assert.equal(result.status, "ambiguous");
+  assert.deepEqual(result.abstentionReasons, ["boarding_stop_repeats_on_route"]);
+});
+
+/**
+ * Synthetic loop: eleven stops, then a twelfth that is the first stop again,
+ * which is how a route that closes on itself lists its stops.
+ */
+const loopStops: StopOnRoute[] = [
+  ...Array.from({ length: 11 }, (_, index) => ({
+    stopId: `SYN-LOOP-${index + 1}`,
+    name: `Synthetic loop ${index + 1}`,
+    sequence: index + 1,
+  })),
+  { stopId: "SYN-LOOP-1", name: "Synthetic loop 1", sequence: 12 },
+];
+
+test("loop: a bus one stop past the boarding stop via the seam blocks", () => {
+  // Boarding at 11, the last stop of the lap. A bus reporting 1 has passed 11
+  // and wrapped: one stop past the rider, though its plain offset is -10.
+  const input = request([bus("leader", 9), bus("wrapped", 1)], { stops: loopStops, boardingStopSequence: 11 });
+  assertSelected(matchVehicle({ ...input, candidates: [bus("leader", 9)] }), "leader", "control: the leader alone");
+  const result = matchVehicle(input);
+  assertWithheld(result, "vehicle_at_boarding_stop_unresolved");
+  assert.equal(candidateIn(result, "wrapped").stopOffset, -10);
+  assert.equal(candidateIn(result, "wrapped").zone, "boarding_stop_unresolved");
+  // On a straight route the same report is ten stops back and irrelevant.
+  assertSelected(matchVehicle({ ...input, stops }), "leader", "control: straight route");
+});
+
+test("loop: a bus approaching across the seam is never selected", () => {
+  // Boarding at 2. A bus at 11 reaches it by wrapping (11, 1, 2), but at the
+  // end of its lap it may lay over or leave service instead.
+  const result = matchVehicle(request([bus("wrapping", 11)], { stops: loopStops, boardingStopSequence: 2 }));
+  assert.equal(result.status, "unavailable");
+  assert.equal(candidateIn(result, "wrapping").zone, "approaching_across_loop_seam");
+  assert.deepEqual(candidateIn(result, "wrapping").rejectedReasons, ["approaching_across_loop_seam"]);
+});
+
+test("loop: a bus approaching across the seam still competes", () => {
+  // Boarding at 3, the leader one stop out at 2. The wrapping bus at 11 is
+  // three stops out (11, 1, 2, 3): only two behind the leader.
+  const input = request([bus("leader", 2), bus("wrapping", 11)], { stops: loopStops, boardingStopSequence: 3 });
+  assertSelected(matchVehicle({ ...input, candidates: [bus("leader", 2)] }), "leader", "control: the leader alone");
+  const result = matchVehicle(input);
+  assert.equal(result.status, "ambiguous");
+  assert.deepEqual(result.abstentionReasons, ["candidates_too_close"]);
+});
+
+/* ----------------------------------------------------- session memory (F4) */
+
+test("waiting rider: a bus seen crossing the stop withholds every later selection", () => {
+  const first = matchVehicle(request([bus("front", BOARDING - 1), bus("behind", BOARDING - 2)]));
+  assertWithheld(first, "candidates_too_close", "snapshot 1");
+  // The front bus has crossed the stop, perhaps with the rider on it. Judged on
+  // this snapshot alone, the bus behind is now a clear leader.
+  const second = [bus("front", BOARDING + 2), bus("behind", BOARDING - 1)];
+  assertSelected(matchVehicle(request(second)), "behind", "control: without memory");
+  assertWithheld(
+    matchVehicle(request(second, { passage: first.passage })),
+    "boarding_stop_reached_during_session",
+    "with memory",
+  );
+});
+
+test("waiting rider: once withheld, the session stays withheld", () => {
+  // A bus dwelling at the stop: the rider may be boarding it.
+  const first = matchVehicle(request([bus("dwelling", BOARDING), bus("next", BOARDING - 4)]));
+  assert.equal(first.passage?.withheld?.reason, "boarding_stop_reached_during_session");
+  // Two minutes later only the next bus is in sight, a clean approach on its own.
+  const later = new Date(Date.parse(now) + 120_000).toISOString();
+  const input = request([bus("next", BOARDING - 1, { observedAt: later })], { now: later });
+  assertSelected(matchVehicle(input), "next", "control: without memory");
+  const result = matchVehicle({ ...input, passage: first.passage });
+  assertWithheld(result, "boarding_stop_reached_during_session", "with memory");
+  assert.deepEqual(result.passage?.withheld, first.passage?.withheld, "set once, never moved or cleared");
+});
+
+test("on-board rider: a bus that reached the stop after the rider boarded is never theirs", () => {
+  const first = matchVehicle(onBoard([bus("late", BOARDING - 2)]));
+  assert.equal(first.status, "unavailable", "snapshot 1");
+  // One stop past the stop now. Alone, it would pass for the rider's bus.
+  const second = [bus("late", BOARDING + 1)];
+  assertSelected(matchVehicle(onBoard(second)), "late", "control: without memory");
+  const result = matchVehicle(onBoard(second, { passage: first.passage }));
+  assert.equal(result.status, "unavailable");
+  assert.ok(candidateIn(result, "late").rejectedReasons.includes("reached_boarding_stop_after_rider_boarded"));
+});
+
+test("on-board rider: a bus absent when the rider said they were aboard is never theirs", () => {
+  // The rider declared they were aboard with one bus in the feed. A bus that
+  // was not in that first snapshot cannot be the one they were already on,
+  // however alone and well placed it later appears.
+  const first = matchVehicle(onBoard([bus("present", BOARDING + 2)]));
+  const later = [bus("newcomer", BOARDING + 3)];
+  assertSelected(matchVehicle(onBoard(later)), "newcomer", "control: without memory");
+  const result = matchVehicle(onBoard(later, { passage: first.passage }));
+  assert.equal(result.selectedVehicleId, undefined);
+  assert.ok(candidateIn(result, "newcomer").rejectedReasons.includes("not_present_when_rider_boarded"));
+});
+
+test("waiting rider: a crossing is remembered when the row that shows it drops out of the poll", () => {
+  // Seen one stop before the stop, then three stops past it: the rider may be
+  // aboard. If that second row is missing from this poll and only remembered,
+  // the memory must still read it as a crossing (property P3, seed 16661).
+  const first = matchVehicle(request([bus("crosser", BOARDING - 1), bus("next", BOARDING - 5)]));
+  const crossed = [bus("crosser", BOARDING + 3), bus("next", BOARDING - 3)];
+  assertWithheld(matchVehicle(request(crossed, { passage: first.passage })), "boarding_stop_reached_during_session", "in the poll");
+  assertWithheld(
+    matchVehicle(request([bus("next", BOARDING - 3)], {
+      passage: first.passage,
+      recentlySeen: [tago("crosser", BOARDING + 3, 5)],
+    })),
+    "boarding_stop_reached_during_session",
+    "only remembered",
+  );
+});
+
+test("on-board rider: leaving the window is remembered when the row that shows it drops out of the poll", () => {
+  const first = matchVehicle(onBoard([bus("rider", BOARDING + 3), bus("other", BOARDING + 1)]));
+  assertWithheld(
+    matchVehicle(onBoard([bus("other", BOARDING + 2)], {
+      passage: first.passage,
+      recentlySeen: [tago("rider", BOARDING + 5, 5)],
+    })),
+    "vehicle_left_on_board_window_during_session",
+    "only remembered",
+  );
+});
+
+test("waiting rider: a late first decision withholds when a bus past the stop could have been at it", () => {
+  // The rider said they were waiting 40 s ago, and this is the session's first
+  // look. The bus two stops past could have been at the stop 40 s ago (one
+  // stop plus one per 15 s = 3), with the rider stepping on; the bus behind is
+  // only a clear leader if nobody boarded in between.
+  const snapshot = [bus("gone", BOARDING + 2), bus("next", BOARDING - 2)];
+  assertSelected(matchVehicle(request(snapshot)), "next", "control: a stateless match asks nothing about the past");
+  assertSelected(matchVehicle(request(snapshot, { declaredAt: now })), "next", "control: first look at declaration");
+  const late = matchVehicle(request(snapshot, { declaredAt: secondsAgo(40) }));
+  assertWithheld(late, "vehicle_may_have_reached_boarding_stop_before_first_observation");
+  // Out of reach: four stops past cannot have been at the stop 40 s ago.
+  assertSelected(
+    matchVehicle(request([bus("gone", BOARDING + 4), bus("next", BOARDING - 2)], { declaredAt: secondsAgo(40) })),
+    "next",
+    "four stops in 40 s is beyond reach",
+  );
+  // And the withhold is session memory: it survives the next snapshot.
+  assertWithheld(
+    matchVehicle(request([bus("next", BOARDING - 1)], { passage: late.passage, declaredAt: secondsAgo(45) })),
+    "vehicle_may_have_reached_boarding_stop_before_first_observation",
+    "sticky",
+  );
+});
+
+test("waiting rider: a first decision later than the memory window cannot account for the gap", () => {
+  const result = matchVehicle(request([bus("next", BOARDING - 2)], { declaredAt: secondsAgo(91) }));
+  assertWithheld(result, "session_first_observed_late");
+  // The rule reads only the gap before the first decision; memory carries on.
+  assertSelected(matchVehicle(request([bus("next", BOARDING - 2)], { declaredAt: secondsAgo(90) })), "next");
+});
+
+test("on-board rider: a bus leaving the on-board window withholds every later selection", () => {
+  const first = matchVehicle(onBoard([bus("rider", BOARDING + 3), bus("other", BOARDING + 1)]));
+  assertWithheld(first, "multiple_vehicles_in_on_board_window", "snapshot 1");
+  // One bus has left the window, possibly with the rider; the other is alone in it.
+  const second = [bus("rider", BOARDING + 5), bus("other", BOARDING + 2)];
+  assertSelected(matchVehicle(onBoard(second)), "other", "control: without memory");
+  assertWithheld(
+    matchVehicle(onBoard(second, { passage: first.passage })),
+    "vehicle_left_on_board_window_during_session",
+    "with memory",
+  );
+});
+
+/* ---------------------------------------- evidence the decision must weigh */
+
+test("one vehicle reported at two positions in one snapshot withholds selection", () => {
+  const result = matchVehicle(request([bus("twin", BOARDING - 2), bus("twin", BOARDING - 3)]));
+  assert.equal(result.status, "ambiguous");
+  assert.deepEqual(result.abstentionReasons, ["vehicle_reported_at_two_positions"]);
+  // A row repeated verbatim is one position, not two.
+  assertSelected(
+    matchVehicle(request([bus("twin", BOARDING - 2), bus("twin", BOARDING - 2)])),
+    "twin",
+    "control: an exact duplicate row",
+  );
+});
+
+test("a bus of another route never blocks, competes or counts from memory", () => {
+  const other = { routeId: "route-202" };
+  const result = matchVehicle(request([
+    bus("leader", BOARDING - 3),
+    bus("other-at-stop", BOARDING, other),
+    bus("other-just-past", BOARDING + 1, other),
+    bus("other-ahead", BOARDING - 1, other),
+    bus("other-unplaced", undefined, other),
+  ], {
+    recentlySeen: [{ ...tago("other-remembered", BOARDING, 20), ...other }],
+  }));
+  assertSelected(result, "leader");
+  for (const vehicleId of ["other-at-stop", "other-just-past", "other-ahead", "other-unplaced"]) {
+    assert.ok(candidateIn(result, vehicleId).rejectedReasons.includes("wrong_route"), vehicleId);
+  }
+});
+
+test("a wrong-direction bus is never selected, even alone", () => {
+  const input = request([bus("opposite", BOARDING - 2, { directionCode: "2" })]);
+  const result = matchVehicle(input);
+  assert.equal(result.status, "unavailable");
+  assert.deepEqual(candidateIn(result, "opposite").rejectedReasons, ["wrong_direction"]);
+  // Control: when the session asked for no direction, the same bus is selected.
+  assertSelected(matchVehicle({ ...input, directionCode: undefined }), "opposite");
+});
+
+test("a wrong-direction report inside the approach window still competes", () => {
+  // A report beside the rider's stop that contradicts the requested direction
+  // is conflicting evidence about that stretch of route. It can only lower
+  // certainty, never raise it.
+  const result = matchVehicle(request([
+    bus("leader", BOARDING - 3),
+    bus("contradictory", BOARDING - 1, { directionCode: "2" }),
+  ]));
+  assertWithheld(result, "leading_vehicle_not_selectable");
+});
+
+test("a provider timestamp counts as current up to 90 seconds old", () => {
+  assertSelected(matchVehicle(request([bus("recent", BOARDING - 2, { observedAt: secondsAgo(90) })])), "recent");
+  const old = matchVehicle(request([bus("old", BOARDING - 2, { observedAt: secondsAgo(91) })]));
+  assert.equal(old.status, "unavailable");
+  assert.deepEqual(candidateIn(old, "old").rejectedReasons, ["stale_or_invalid_timestamp"]);
+});
+
+test("a TAGO bus is selectable only on a fresh server-observed cadence", () => {
+  for (const state of ["aging", "stale", "unknown"] as const) {
+    const result = matchVehicleWithSourceFreshness(
+      request([tago("tago", BOARDING - 2)]),
+      new Map([["tago", cadence(state)]]),
+    );
+    assert.equal(result.status, "unavailable", state);
+    assert.deepEqual(candidateIn(result, "tago").rejectedReasons, ["source_cadence_not_fresh"], state);
+  }
+  assertSelected(
+    matchVehicleWithSourceFreshness(request([tago("tago", BOARDING - 2)]), new Map([["tago", cadence("fresh")]])),
+    "tago",
+  );
+});
+
+/* -------------------------------------------------- determinism and output */
+
+/** Every ordering of `items`: 24 for four. */
+function permutations<T>(items: T[]): T[][] {
+  if (items.length <= 1) return [items];
+  return items.flatMap((item, index) =>
+    permutations([...items.slice(0, index), ...items.slice(index + 1)]).map((rest) => [item, ...rest]));
+}
+
+test("identical input gives an identical result and leaves the input untouched", () => {
+  const input = request([
+    bus("leader", BOARDING - 1),
+    bus("follower", BOARDING - 4),
+    bus("gone", BOARDING + 3),
+    bus("other-route", BOARDING, { routeId: "route-202" }),
+  ], { recentlySeen: [tago("dropped", BOARDING - 8, 20)] });
+  const before = structuredClone(input);
+  const first = matchVehicle(input);
+  assertSelected(first, "leader");
+  assert.deepEqual(matchVehicle(input), first);
+  assert.deepEqual(input, before);
+});
+
+test("candidate order does not change the decision", () => {
+  const selecting = [
+    bus("leader", BOARDING - 1),
+    bus("follower", BOARDING - 4),
+    bus("gone", BOARDING + 3),
+    bus("other-route", BOARDING, { routeId: "route-202" }),
+  ];
+  const tied = [bus("bus-a", BOARDING - 2), bus("bus-b", BOARDING - 2), bus("bus-c", BOARDING - 4)];
+  assertSelected(matchVehicle(request(selecting)), "leader");
+  assertWithheld(matchVehicle(request(tied)), "leading_vehicle_not_selectable");
+  for (const candidates of [selecting, tied]) {
+    const reference = matchVehicle(request(candidates));
+    for (const order of permutations(candidates)) {
+      const result = matchVehicle(request(order));
+      const label = order.map((candidate) => candidate.vehicleId).join(",");
+      assert.equal(result.status, reference.status, label);
+      assert.equal(result.selectedVehicleId, reference.selectedVehicleId, label);
+      assert.deepEqual(result.abstentionReasons, reference.abstentionReasons, label);
+      assert.deepEqual(result.ranked, reference.ranked, label);
+    }
+  }
+});
+
+test("every result names the directed policy, the rider state and each candidate's zone", () => {
+  assert.equal(MATCHER_POLICY_VERSION, "directed-route-progress-v1");
+  const results = [
+    matchVehicle(request([bus("leader", BOARDING - 2)])),
+    matchVehicle(request([bus("bus-a", BOARDING - 2), bus("bus-b", BOARDING - 2)])),
+    matchVehicle(request([bus("gone", BOARDING + 2)])),
+  ];
+  assert.deepEqual(results.map((result) => result.status), ["matched", "ambiguous", "unavailable"]);
+  for (const result of results) {
+    assert.equal(result.policyVersion, MATCHER_POLICY_VERSION);
+    assert.equal(result.riderState, "waiting_at_stop");
+    assert.ok(Array.isArray(result.abstentionReasons));
+    for (const candidate of result.ranked) {
+      assert.equal(typeof candidate.stopOffset, "number", candidate.vehicleId);
+      assert.equal(typeof candidate.zone, "string", candidate.vehicleId);
+    }
+  }
+});
+
+/* --------------------------------------------------------------- invariant */
+
+function assertViolation(check: () => void, message: string): void {
+  assert.throws(
+    check,
+    (error: unknown) => error instanceof MatcherInvariantError && error.code === "MATCHER_INVARIANT_VIOLATION",
+    message,
+  );
+}
+
+test("the invariant throws for a waiting-rider selection at or past the stop, or beyond the window", () => {
+  for (const offset of [0, 1, 2, -5]) {
+    assertViolation(
+      () => assertDirectedInvariant(
+        { boardingStopSequence: BOARDING, candidates: [bus("picked", BOARDING + offset)] },
+        { status: "matched", selectedVehicleId: "picked" },
+      ),
+      `offset ${signed(offset)}`,
+    );
+  }
+  for (const offset of [-1, -4]) {
+    assert.doesNotThrow(() => assertDirectedInvariant(
+      { boardingStopSequence: BOARDING, candidates: [bus("picked", BOARDING + offset)] },
+      { status: "matched", selectedVehicleId: "picked" },
+    ), `offset ${signed(offset)}`);
+  }
+});
+
+test("the invariant throws for an on-board selection outside one to four stops past the stop", () => {
+  for (const offset of [-1, 0, 5]) {
+    assertViolation(
+      () => assertDirectedInvariant(
+        { boardingStopSequence: BOARDING, riderState: "on_board", candidates: [bus("picked", BOARDING + offset)] },
+        { status: "matched", selectedVehicleId: "picked" },
+      ),
+      `offset ${signed(offset)}`,
+    );
+  }
+  for (const offset of [1, 4]) {
+    assert.doesNotThrow(() => assertDirectedInvariant(
+      { boardingStopSequence: BOARDING, riderState: "on_board", candidates: [bus("picked", BOARDING + offset)] },
+      { status: "matched", selectedVehicleId: "picked" },
+    ), `offset ${signed(offset)}`);
+  }
+});
+
+test("the invariant throws for a withheld result that carries a selection", () => {
+  const input = { boardingStopSequence: BOARDING, candidates: [bus("picked", BOARDING - 2)] };
+  for (const status of ["ambiguous", "unavailable"] as const) {
+    assertViolation(() => assertDirectedInvariant(input, { status, selectedVehicleId: "picked" }), status);
+    assert.doesNotThrow(() => assertDirectedInvariant(input, { status }), status);
+  }
+});
+
+test("the invariant throws for a selection it cannot place on the route", () => {
+  assertViolation(
+    () => assertDirectedInvariant({ boardingStopSequence: BOARDING, candidates: [] }, {
+      status: "matched",
+      selectedVehicleId: "absent",
+    }),
+    "absent from the snapshot",
+  );
+  assertViolation(
+    () => assertDirectedInvariant({ boardingStopSequence: BOARDING, candidates: [bus("unplaced", undefined)] }, {
+      status: "matched",
+      selectedVehicleId: "unplaced",
+    }),
+    "no stop sequence",
+  );
+});
+
+/* -------------------------------------------------------- legacy isolation */
+
+const serviceRoot = fileURLToPath(new URL("../", import.meta.url));
+
+/**
+ * Modules that replay the legacy policy on purpose, to compare it with the
+ * current one. They may import `matchingLegacy.ts`, and the scan below fails
+ * if anything in `src/` or `api/` imports them in turn, so they stay reachable
+ * only from offline scripts. The release gate checks the same from the
+ * serving entry points (`scripts/matcher-evidence/gate.ts`, SH-1).
+ */
+const LEGACY_COMPARISON_MODULES = new Set([
+  // The old-versus-new migration over the same passive evidence. Only the
+  // offline `scripts/passive-shadow/migrate.ts` calls it.
+  "src/passiveShadowMigration",
+]);
+
+/** Relative module specifiers a source imports or re-exports, statically or dynamically. */
+function relativeImports(source: string): string[] {
+  const pattern = /\bfrom\s*["'`]([^"'`]+)["'`]|\bimport\s*\(?\s*["'`]([^"'`]+)["'`]|\brequire\s*\(\s*["'`]([^"'`]+)["'`]/g;
+  return [...source.matchAll(pattern)]
+    .map((match) => match[1] ?? match[2] ?? match[3] ?? "")
+    .filter((specifier) => specifier.startsWith("."));
+}
+
+/** A module by its path from the service root, without extension, so `./x`, `./x.ts` and `./x.js` agree. */
+function moduleKey(path: string): string {
+  return relative(serviceRoot, path).replaceAll("\\", "/").replace(/\.(?:d\.)?[cm]?[jt]sx?$/, "");
+}
+
+function sourceFiles(directory: string): string[] {
+  return readdirSync(join(serviceRoot, directory), { recursive: true, encoding: "utf8" })
+    .filter((path) => /\.[cm]?[jt]sx?$/.test(path))
+    .map((path) => join(serviceRoot, directory, path));
+}
+
+test("decide() asserts the directed invariant on the result it returns, on every path", () => {
+  // Behaviourally invisible while the rules hold, so only the source can show
+  // it: one return in decide(), immediately after the assertion on that result.
+  const source = readFileSync(resolve(dirname(fileURLToPath(import.meta.url)), "../src/matching.ts"), "utf8");
+  const start = source.indexOf("function decide(");
+  assert.ok(start >= 0, "decide() exists");
+  const end = source.indexOf("\n}\n", start);
+  const body = source.slice(start, end);
+  assert.match(body, /assertDirectedInvariant\(request, result, policy\);\s*return result;\s*$/);
+  assert.equal(body.match(/\breturn\b/g)?.length, 1, "decide() has exactly one return");
+});
+
+test("no serving module reaches the legacy matcher; its one offline comparison module is imported by nothing in src/ or api/", () => {
+  const imports = new Map([...sourceFiles("src"), ...sourceFiles("api")].map((file) => [
+    moduleKey(file),
+    relativeImports(readFileSync(file, "utf8")).map((specifier) => moduleKey(resolve(dirname(file), specifier))),
+  ]));
+  // An empty or unresolved graph would pass vacuously, so prove the scan works.
+  assert.ok(imports.has("src/matchingLegacy"), "the legacy module is in the scanned tree");
+  assert.ok(imports.get("src/journeySession")?.includes("src/matching"), "real imports resolve");
+  assert.ok(imports.get("api/health")?.includes("src/apiRuntime"), "Vercel handlers are scanned");
+  assert.deepEqual(
+    relativeImports([
+      'import { matchVehicleLegacySymmetricV0 } from "./matchingLegacy.ts";',
+      'import type { MatchResult } from "./matchingLegacy.ts";',
+      'export * from "./matchingLegacy.ts";',
+      'const legacy = await import("./matchingLegacy.ts");',
+    ].join("\n")),
+    Array(4).fill("./matchingLegacy.ts"),
+    "every import form is detected",
+  );
+
+  // Everything that reaches the legacy module, directly or transitively.
+  const reaches = new Set(["src/matchingLegacy"]);
+  let grew: boolean;
+  do {
+    grew = false;
+    for (const [importer, targets] of imports) {
+      if (reaches.has(importer) || !targets.some((target) => reaches.has(target))) continue;
+      reaches.add(importer);
+      grew = true;
+    }
+  } while (grew);
+  reaches.delete("src/matchingLegacy");
+  assert.deepEqual([...reaches].filter((importer) => !LEGACY_COMPARISON_MODULES.has(importer)).sort(), []);
 });
