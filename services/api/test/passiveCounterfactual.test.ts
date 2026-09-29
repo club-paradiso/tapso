@@ -195,6 +195,12 @@ for (const family of FAMILIES) {
     assert.ok(rows.length > 0);
     for (const item of rows) {
       assert.ok(item.applicable > 0, `${item.id} never applied: ${JSON.stringify(item.skippedByReason)}`);
+      // Applied is not judged: a counterfactual whose own expectations can
+      // never be decided checks nothing but the invariant (finding R26). The
+      // one exception is by design: the canonical GT_INDETERMINATE case.
+      if (item.id !== "long_polling_gap_120s") {
+        assert.ok(item.exercised > 0, `${item.id} applied ${item.applicable} times and never decided its own expectations`);
+      }
       assert.equal(item.expectationFailures.count, 0, `${item.id}: ${JSON.stringify(item.expectationFailures)}`);
       assert.equal(item.invariantViolations, 0, item.id);
       assert.equal(item.wrong, 0, item.id);
@@ -222,11 +228,11 @@ test("counterfactual ids are unique, stable and documented, over at least 30 fam
     "follower_overtaking",
     "leader_ahead_k1", "leader_ahead_k2", "leader_ahead_k3", "leader_ahead_k4", "leader_ahead_k5", "leader_ahead_k10",
     "boarding_stop_dwell_60s", "boarding_stop_dwell_120s",
-    "true_bus_absent", "decoys_absent", "late_appearance_s_minus_2", "candidate_disappearance_60s", "candidate_disappearance_180s",
-    "lost_leader_follower_k3_180s", "lost_leader_follower_k3_360s", "reappearance_60s",
+    "true_bus_absent", "decoys_absent", "late_appearance_s_minus_2", "candidate_disappearance_60s",
+    "lost_leader_follower_k3_180s", "lost_leader_follower_k3_360s", "reappearance_60s", "reappearance_100s",
     "stale_repeated_frames_60s", "coordinate_freeze", "content_freeze_from_60s_before_boarding",
     "receipt_jitter_10s", "receipt_jitter_20s", "receipt_jitter_40s", "packet_loss_20pct", "packet_loss_50pct",
-    "long_polling_gap_120s", "provider_error_burst_60s",
+    "long_polling_gap_120s", "long_polling_gap_110s_resumed", "provider_error_burst_60s",
     "route_loop_seam", "duplicated_stop_name", "repeated_route_geometry", "route_variant_twin", "backwards_decoy",
     "delayed_movement_20s", "delayed_movement_40s", "early_movement_20s",
     "multiple_eligible_candidates", "zero_eligible", "identity_churn",

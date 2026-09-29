@@ -837,7 +837,10 @@ function lateAppearance(): Counterfactual {
  * stops back, and the true bus out of the feed for the `holeMs` before the
  * modelled boarding: longer than the memory window, the leader is out of sight
  * while the follower closes on the stop alone (finding F15). Every other bus
- * is removed, so no third bus can be what withholds.
+ * is removed, so no third bus can be what withholds. The true bus is next seen
+ * at the stop, across more than the widest crossing bracket, so no ground
+ * truth qualifies: what is judged is that the follower is never selected
+ * (finding R26).
  */
 function lostLeaderFollower(stopsBehind: number, holeMs: number): Counterfactual {
   return {
@@ -845,8 +848,8 @@ function lostLeaderFollower(stopsBehind: number, holeMs: number): Counterfactual
     family: "lost_leader",
     doc: `Keeps only the true bus and a phantom follower ${stopsBehind} stops behind it with its timing, then drops the true bus's rows for the ${holeMs / 1_000} s before the modelled boarding.`,
     scenarios: WAIT,
-    expectations: ["NEVER_SELECTS_INJECTED", "NOT_WRONG"],
-    groundTruthShift: "UNCHANGED",
+    expectations: ["NEVER_SELECTS_INJECTED"],
+    groundTruthShift: "ANY",
     usesTruthIdentity: true,
     usesTruthTiming: true,
     apply: (passiveCase, context) => build(passiveCase, context, (world, route) => {
@@ -1028,18 +1031,25 @@ function packetLoss(rate: number): Counterfactual {
   };
 }
 
-function longPollingGap(): Counterfactual {
+/**
+ * Every poll removed from `fromBeforeBoardingMs` to `untilBeforeBoardingMs`
+ * before the modelled boarding. Ending at the boarding, the gap splits every
+ * trajectory the model needs: the canonical GT_INDETERMINATE case, reported
+ * and never counted. Ending 80 s before it, with the gap under the trajectory
+ * break, the arrival still qualifies a ground truth (finding R26).
+ */
+function longPollingGap(id: string, doc: string, fromBeforeBoardingMs: number, untilBeforeBoardingMs: number): Counterfactual {
   return {
-    id: "long_polling_gap_120s",
+    id,
     family: "long_polling_gap",
-    doc: "Removes every poll in the 120 s before the modelled boarding.",
+    doc,
     scenarios: WAIT,
     expectations: ["NOT_WRONG"],
     groundTruthShift: "ANY",
     usesTruthIdentity: false,
     usesTruthTiming: true,
     apply: (passiveCase, context) => build(passiveCase, context, (world) => {
-      const inRange = (at: number) => at >= context.boardingAt - 120_000 && at < context.boardingAt;
+      const inRange = (at: number) => at >= context.boardingAt - fromBeforeBoardingMs && at < context.boardingAt - untilBeforeBoardingMs;
       if (!world.window.some((snapshot) => inRange(timeOf(snapshot)))) return undefined;
       return { world: mapSnapshots(world, (snapshot) => (inRange(timeOf(snapshot)) ? undefined : snapshot)) };
     }),
@@ -1338,17 +1348,22 @@ export const COUNTERFACTUALS: readonly Counterfactual[] = [
   lateAppearance(),
   truthHole("candidate_disappearance_60s", "candidate_disappearance",
     "Drops the true bus's rows for the 60 s before the modelled boarding; it is next seen at the stop.", 60_000, 0, false),
-  truthHole("candidate_disappearance_180s", "candidate_disappearance",
-    "Drops the true bus's rows for the 180 s before the modelled boarding, twice the memory window; it is next seen at the stop.", 180_000, 0, false),
   ...[180_000, 360_000].map((ms) => lostLeaderFollower(3, ms)),
   truthHole("reappearance_60s", "reappearance",
     "Drops the true bus's rows from 120 s to 60 s before the modelled boarding; it comes back under the same id while still approaching.", 120_000, 60_000, true),
+  // Longer than the memory window, and short enough that the trajectory holds
+  // and the arrival still qualifies a ground truth: a hole that ends at the
+  // stop can never be judged NOT_WRONG (finding R26).
+  truthHole("reappearance_100s", "reappearance",
+    "Drops the true bus's rows from 200 s to 100 s before the modelled boarding, longer than the memory window; it comes back under the same id while still approaching.", 200_000, 100_000, true),
   staleRepeatedFrames(),
   coordinateFreeze(),
   contentFreeze(),
   ...[10_000, 20_000, 40_000].map((ms) => receiptJitter(ms)),
   ...[0.2, 0.5].map((rate) => packetLoss(rate)),
-  longPollingGap(),
+  longPollingGap("long_polling_gap_120s", "Removes every poll in the 120 s before the modelled boarding.", 120_000, 0),
+  longPollingGap("long_polling_gap_110s_resumed",
+    "Removes every poll from 190 s to 80 s before the modelled boarding: longer than the memory window, and polling resumes before the arrival.", 190_000, 80_000),
   providerErrorBurst(),
   routeLoopSeam(),
   duplicatedStopName(),
