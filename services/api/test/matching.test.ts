@@ -1267,6 +1267,80 @@ test("on board, a bus never placed and then beyond the window is the rider's lea
   assertWithheld(loopLook(200), "vehicle_left_on_board_window_during_session", "round a loop after 200 s");
 });
 
+test("on board, the rider's bus read at the window's far edge may stand a stop further on and be read a stop further still (R46)", () => {
+  // The window is a window of readings. "rider" is read at the window's last
+  // stop and also under another route, or at it and the next: no place the
+  // matcher trusts. "behind" dwells a stop short. In ten seconds a bus can go
+  // one stop; "rider" may have stood at B+5, gone to B+6, and be read at B+7.
+  // It is leaving the window, and "behind" is not the rider's bus.
+  const declared = { declaredAt: now, stops: Array.from({ length: 40 }, (_, index) => ({ stopId: `SYN-LS-${index + 1}`, name: `Synthetic long ${index + 1}`, sequence: index + 1 })) };
+  const after = (seconds: number) => new Date(Date.parse(now) + seconds * 1_000).toISOString();
+  const firsts: Array<[string, VehicleObservation[]]> = [
+    ["another route", [bus("rider", BOARDING + 4), bus("rider", BOARDING + 4, { routeId: "route-other" })]],
+    ["two places", [bus("rider", BOARDING + 4), bus("rider", BOARDING + 5)]],
+  ];
+  for (const [label, rows] of firsts) {
+    const first = matchVehicle(onBoard([...rows, bus("behind", BOARDING - 1)], declared));
+    assert.notEqual(first.status, "matched", label);
+    const look = (seconds: number, rider: number) => matchVehicle(onBoard(
+      [bus("rider", rider, { observedAt: after(seconds) }), bus("behind", BOARDING + 1, { observedAt: after(seconds) })],
+      { ...declared, now: after(seconds), passage: first.passage },
+    ));
+    // The edge of what a misread at each end allows: beyond the window by
+    // the motion model's reach (1 in 10 s, 2 in 15 s, 5 in 60 s) and two.
+    assertWithheld(look(10, BOARDING + 7), "vehicle_left_on_board_window_during_session", `${label}: 10 s`);
+    assertWithheld(look(15, BOARDING + 8), "vehicle_left_on_board_window_during_session", `${label}: 15 s`);
+    assertWithheld(look(60, BOARDING + 11), "vehicle_left_on_board_window_during_session", `${label}: 60 s`);
+    // One stop further it cannot be the rider's bus, and the bus behind is.
+    assertSelected(look(10, BOARDING + 8), "behind", `${label}: 10 s, one further`);
+    assertSelected(look(15, BOARDING + 9), "behind", `${label}: 15 s, one further`);
+    assertSelected(look(60, BOARDING + 12), "behind", `${label}: 60 s, one further`);
+  }
+});
+
+test("on board round a loop, the never-placed bound counts stops past the stop the same way, across the seam too (R47)", () => {
+  // Twenty stops round. "rider" is listed at the window's last two stops, or
+  // one stop short of them, at the declaration; "behind" dwells a stop short.
+  // Fifteen seconds on, "rider" reads at the edge of what a misread at each
+  // end allows (reach 2, and two): B+8, and withholds; one further, it does not.
+  const declared = { declaredAt: now };
+  const after = (seconds: number) => new Date(Date.parse(now) + seconds * 1_000).toISOString();
+  for (const boardingStopSequence of [10, 18]) {
+    const aboard = { stops: ring(20), boardingStopSequence };
+    const past = (stops: number) => ((boardingStopSequence + stops - 1) % 20) + 1;
+    const first = matchVehicle(onBoard([bus("rider", past(3)), bus("rider", past(4)), bus("behind", past(-1))], { ...aboard, ...declared }));
+    assert.notEqual(first.status, "matched", `boarding at ${boardingStopSequence}`);
+    const look = (rider: number) => matchVehicle(onBoard(
+      [bus("rider", past(rider), { observedAt: after(15) }), bus("behind", past(1), { observedAt: after(15) })],
+      { ...aboard, ...declared, now: after(15), passage: first.passage },
+    ));
+    assertWithheld(look(7), "vehicle_left_on_board_window_during_session", `boarding at ${boardingStopSequence}: B+7`);
+    assertWithheld(look(8), "vehicle_left_on_board_window_during_session", `boarding at ${boardingStopSequence}: B+8`);
+    assertSelected(look(9), "behind", `boarding at ${boardingStopSequence}: B+9`);
+  }
+});
+
+test("waiting round a loop, a sighting is kept before what the time allows, whatever else the same poll shows (R48)", () => {
+  // Boarding at 5 on the eleven-stop loop. Sixty seconds after the rider began
+  // waiting, "far" reads a stop back (8 to 7: what the time allows) while
+  // "fresh" is seen for the first time two past the stop, where it could have
+  // been at the stop since: a sighting, kept first.
+  const loop = { stops: loopStops, boardingStopSequence: 5 };
+  const earlier = secondsAgo(60);
+  const first = matchVehicle(request(
+    [bus("lead", 3, { observedAt: earlier }), bus("far", 8, { observedAt: earlier })],
+    { ...loop, now: earlier, declaredAt: earlier },
+  ));
+  const later = matchVehicle(request([bus("lead", 4), bus("far", 7), bus("fresh", 7)], { ...loop, passage: first.passage, declaredAt: earlier }));
+  assert.equal(later.passage?.withheld?.reason, "vehicle_first_seen_past_boarding_stop");
+
+  // A remembered row that shows a crossing memory lacks is a sighting too:
+  // "gone" was two out, and its row in the evidence window is three past.
+  const seen = matchVehicle(request([bus("gone", 3, { observedAt: earlier }), bus("far", 8, { observedAt: earlier })], { ...loop, now: earlier }));
+  const remembered = matchVehicle(request([bus("far", 7)], { ...loop, passage: seen.passage, recentlySeen: [bus("gone", 8)] }));
+  assert.equal(remembered.passage?.withheld?.reason, "boarding_stop_reached_during_session");
+});
+
 test("waiting round a loop, a remembered row a stop behind memory is what the time allows, not a sighting (R43)", () => {
   // Boarding at 5 on the eleven-stop loop. "twice" is listed at 3 and 2 at
   // once; memory keeps 3, the place nearer the stop. It then drops out, and

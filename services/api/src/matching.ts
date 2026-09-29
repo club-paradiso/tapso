@@ -80,7 +80,8 @@
  *   either: of unknown progress, it withholds once out of sight, and a bus
  *   seen at no trustworthy place and then beyond the on-board window may be
  *   the rider's bus leaving it (R30), if the rider's bus could have got there
- *   since they said they were aboard (R40).
+ *   since they said they were aboard, a stop off at each end for a misread
+ *   (R40, R46).
  *
  * There is no "best available guess". A numerical score never overrides a
  * violated rule: rules are applied first, and the score only orders what the
@@ -567,8 +568,9 @@ function decide(
  * they boarded: never selected, it still competes (finding R23). A bus the
  * feed placed at two places, or at none, is never excluded by that sighting
  * and never forgotten for it (findings R27, R30): next seen beyond the window,
- * where the rider's bus could have got to since they said they were aboard, it
- * may be theirs leaving it (finding R40).
+ * where the rider's bus could have got to since they said they were aboard
+ * (a stop off at each end for a misread), it may be theirs leaving it
+ * (findings R40, R46).
  */
 function rememberPassage(
   request: MatchRequest,
@@ -711,14 +713,18 @@ function rememberPassage(
       // Never placed before in this session, only seen at no place or at
       // two: it may have been in the window all along, so now beyond it, it
       // may be the rider's bus leaving it (finding R30). Only if it could have
-      // got there since the rider said they were aboard, when their bus was at
-      // the window's far edge at most: beyond it by no more than the motion
-      // model allows since, and a stop for a misread. Round a loop that is
-      // counted past the stop, so a bus before it can be the rider's only once
-      // there was time to go round (finding R40).
+      // got there since the rider said they were aboard. The window is a window
+      // of readings, and a reading may be a stop off: their bus, read at the
+      // window's far edge, may have stood one stop further on; it can have
+      // gone as far as the motion model allows since; and it may be read one
+      // stop further than it is. So a bus beyond the window by no more than
+      // the motion model's reach and a stop for a misread at each end may be
+      // theirs (findings R40, R46). Round a loop that is counted past the stop,
+      // so a bus before it can be the rider's only once there was time to go
+      // round.
       const beyond = loop ? (nearWindow(row.facts) ? undefined : row.facts.backward! - window) : offset > window ? offset - window : undefined;
       const neverPlaced = seen === undefined && unknownProgress.has(vehicleId) && beyond !== undefined
-        && (Number.isNaN(sinceDeclared) || beyond <= reachAfter(sinceDeclared) + 1);
+        && (Number.isNaN(sinceDeclared) || beyond <= reachAfter(sinceDeclared) + 2);
       if (left || neverPlaced) {
         withhold("vehicle_left_on_board_window_during_session");
       }
