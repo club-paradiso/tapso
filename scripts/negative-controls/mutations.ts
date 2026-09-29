@@ -1412,6 +1412,45 @@ export const NEGATIVE_CONTROLS: readonly NegativeControl[] = [
     }],
     testFiles: [T.matching],
   },
+  {
+    id: "R28-mark",
+    family: "fail-closed",
+    catalogue: "extra",
+    description: "The unknown-progress mark is dated by the decision's now again, before its own rows were received.",
+    protection: "Finding R28: a row the evidence window keeps from the sighting that left a bus unplaced never places it.",
+    edits: [{
+      file: MATCHING,
+      find: "      if (Number.isFinite(receivedAt) && receivedAt > latest) latest = receivedAt;",
+      replace: "      if (Number.isFinite(receivedAt) && receivedAt > latest && Number.isNaN(0)) latest = receivedAt;",
+    }],
+    testFiles: [T.matching],
+  },
+  {
+    id: "R29-own",
+    family: "fail-closed",
+    catalogue: "extra",
+    description: "A bus's last sighting dated up to 10 s after now reads as seen just now in the out-of-sight rule.",
+    protection: "Finding R29: the session's own sighting can only be later than now if the clock stepped back; nothing then bounds the time since.",
+    edits: [{
+      file: MATCHING,
+      find: "    const unseenSeconds = secondsSinceOwnSighting(seenAtMs, nowMs);",
+      replace: "    const unseenSeconds = secondsSince(seenAtMs, nowMs);",
+    }],
+    testFiles: [T.matching],
+  },
+  {
+    id: "R29-own-lap",
+    family: "fail-closed",
+    catalogue: "extra",
+    description: "Round a loop, the time since a bus was last seen reads as none when its sighting is dated a little after now.",
+    protection: "Finding R29 with R24: after a backward clock step, a bus seen again may have gone round through the stop.",
+    edits: [{
+      file: MATCHING,
+      find: "    const seconds = secondsSinceOwnSighting(seen.lastSeenAt === undefined ? Number.NaN : Date.parse(seen.lastSeenAt), nowMs);",
+      replace: "    const seconds = secondsSince(seen.lastSeenAt === undefined ? Number.NaN : Date.parse(seen.lastSeenAt), nowMs);",
+    }],
+    testFiles: [T.matching],
+  },
 ];
 
 /**
