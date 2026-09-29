@@ -593,9 +593,9 @@ export const NEGATIVE_CONTROLS: readonly NegativeControl[] = [
     edits: [
       {
         file: SESSION,
-        find: 'import { matchVehicleWithSourceFreshness } from "./matching.ts";\n',
+        find: 'import { DIRECTED_MATCHER_POLICY_V1, matchVehicleWithSourceFreshness } from "./matching.ts";\n',
         replace: lines(
-          'import { matchVehicleWithSourceFreshness } from "./matching.ts";',
+          'import { DIRECTED_MATCHER_POLICY_V1, matchVehicleWithSourceFreshness } from "./matching.ts";',
           'import { matchVehicleLegacySymmetricV0 } from "./matchingLegacy.ts";',
           "",
         ),
@@ -1184,6 +1184,84 @@ export const NEGATIVE_CONTROLS: readonly NegativeControl[] = [
       replace: "    && (request.routeId === undefined || candidate.routeId !== undefined));",
     }],
     testFiles: [T.matching],
+  },
+  {
+    id: "F20-never-watched",
+    family: "fail-closed",
+    catalogue: "extra",
+    description: "An automatic selection for a waiting rider is no longer watched, however it was stored.",
+    protection: "Finding F20: until the selected bus is seen at the stop, another bus seen reaching it first may be the rider's.",
+    edits: [{
+      file: SESSION,
+      find: "      && (record.riderState ?? \"waiting_at_stop\") === \"waiting_at_stop\") {\n      const watch = record.boardingWatch ??=",
+      replace: "      && (record.riderState ?? \"waiting_at_stop\") === \"waiting_at_stop\" && Number.isNaN(0)) {\n      const watch = record.boardingWatch ??=",
+    }],
+    testFiles: [T.session, T.properties],
+  },
+  {
+    id: "F20-others-ignored",
+    family: "fail-closed",
+    catalogue: "extra",
+    description: "Another bus seen reaching the stop no longer withdraws the selection.",
+    protection: "Finding F20: the rider boards the first bus of their route to arrive, whichever was selected.",
+    edits: [{
+      file: SESSION,
+      find: "    if (ANOTHER_BUS_REACHED_THE_STOP.has(others.passage?.withheld?.reason ?? \"\")) return true;",
+      replace: "    if (ANOTHER_BUS_REACHED_THE_STOP.has(others.passage?.withheld?.reason ?? \"\") && Number.isNaN(0)) return true;",
+    }],
+    testFiles: [T.session, T.properties],
+  },
+  {
+    id: "F20-selected-first",
+    family: "fail-closed",
+    catalogue: "extra",
+    description: "When the selected bus and another reach the stop in the same poll, the selection stands.",
+    protection: "Finding F20: two buses at the stop between two polls leave the rider on either.",
+    edits: [{
+      file: SESSION,
+      find: "    if (ANOTHER_BUS_REACHED_THE_STOP.has(others.passage?.withheld?.reason ?? \"\")) return true;",
+      replace: "    if (ANOTHER_BUS_REACHED_THE_STOP.has(others.passage?.withheld?.reason ?? \"\")\n      && selected.passage?.withheld?.reason !== \"boarding_stop_reached_during_session\") return true;",
+    }],
+    testFiles: [T.session],
+  },
+  {
+    id: "F20-first-sighting",
+    family: "fail-closed",
+    catalogue: "extra",
+    description: "A bus seen for the first time past the stop no longer withdraws the selection.",
+    protection: "Finding F20 with F16: a bus first seen past the stop may have been at it while the rider waited.",
+    edits: [{
+      file: SESSION,
+      find: "  \"boarding_stop_reached_during_session\",\n  \"vehicle_first_seen_past_boarding_stop\",\n]);",
+      replace: "  \"boarding_stop_reached_during_session\",\n]);",
+    }],
+    testFiles: [T.session],
+  },
+  {
+    id: "F20-watch-never-ends",
+    family: "fail-closed",
+    catalogue: "extra",
+    description: "The selected bus seen at the stop no longer ends the boarding watch.",
+    protection: "Finding F20: once the selected bus reached the stop first, a bus behind it arriving later says nothing about the rider.",
+    edits: [{
+      file: SESSION,
+      find: "      ...(selected.passage?.withheld?.reason === \"boarding_stop_reached_during_session\" ? { endedAt: now.toISOString() } : {}),",
+      replace: "      ...(Number.isNaN(0) ? { endedAt: now.toISOString() } : {}),",
+    }],
+    testFiles: [T.session, T.properties],
+  },
+  {
+    id: "F20-reselect",
+    family: "fail-closed",
+    catalogue: "extra",
+    description: "A withdrawal no longer leaves a standing reason to withhold in the session's memory.",
+    protection: "Finding F20: a rider who may be aboard another bus is never handed a new automatic selection.",
+    edits: [{
+      file: SESSION,
+      find: "      withheld: { reason: SELECTION_WITHDRAWN, at: now.toISOString() },",
+      replace: "      ...(Number.isNaN(0) ? { withheld: { reason: SELECTION_WITHDRAWN, at: now.toISOString() } } : {}),",
+    }],
+    testFiles: [T.session, T.properties],
   },
 ];
 
