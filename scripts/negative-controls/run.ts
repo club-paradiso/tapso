@@ -25,8 +25,8 @@
  *      alone.
  *   4. The control's listed test files run against the mutant. A test that
  *      fails there and did not fail on the unmutated snapshot kills it,
- *      except a test of the catalogue itself, which every mutant fails
- *      (`CATALOGUE_SELF_CHECKS`).
+ *      except a test of the catalogue itself or a subtest of it, which every
+ *      mutant fails (`CATALOGUE_SELF_CHECKS`, named by file and path).
  *   5. Every kill is confirmed: the killing tests are re-run on the unmutated
  *      snapshot and must pass again, so a test that fails whatever the mutation
  *      cannot pass for a kill. The mutant itself is not re-run: a test that
@@ -621,16 +621,26 @@ function killer(record: TestRecord): KillingTest {
  * control's edit rewrites the very text such a test looks for, so it fails on
  * every mutant: counted, it would kill each control whatever the protection's
  * own tests did, and SURVIVED could never be reported (finding R32). They
- * never kill. The baseline must hold each by this name, so a rename cannot
- * quietly count it again.
+ * never kill, nor does any subtest of theirs. Each is named by its file and
+ * its full path, so a test of the same name elsewhere still kills (finding
+ * R45), and the baseline must hold each exactly there, so a rename or a move
+ * cannot quietly count it again.
  */
-const CATALOGUE_SELF_CHECKS: ReadonlySet<string> = new Set([
-  "every negative control still applies: each edit finds its text exactly once in the source it names",
-]);
+const CATALOGUE_SELF_CHECKS: ReadonlyArray<{ file: string; path: string }> = [
+  {
+    file: "test/matcherSafetyGate.test.ts",
+    path: "every negative control still applies: each edit finds its text exactly once in the source it names",
+  },
+];
+
+function isCatalogueSelfCheck(record: TestRecord): boolean {
+  return CATALOGUE_SELF_CHECKS.some((check) => record.file === check.file
+    && (record.path === check.path || record.path.startsWith(`${check.path} > `)));
+}
 
 function newlyFailing(records: TestRecord[], baseline: ReadonlyMap<string, TestRecord>, flaky: ReadonlySet<string>): TestRecord[] {
   return records.filter((record) => record.status === "fail" && baseline.get(record.key)?.status !== "fail"
-    && !flaky.has(record.key) && !CATALOGUE_SELF_CHECKS.has(record.name));
+    && !flaky.has(record.key) && !isCatalogueSelfCheck(record));
 }
 
 function requiredHits(control: NegativeControl, failing: TestRecord[]): TestRecord[] {
@@ -789,9 +799,9 @@ async function main(): Promise<number> {
       throw new Error(`the baseline produced no test results; stderr tail:\n${baselineRun.stderrTail}`);
     }
     const baseline = new Map(baselineRun.records.map((record) => [record.key, record]));
-    const missingSelfChecks = [...CATALOGUE_SELF_CHECKS].filter((name) => !baselineRun.records.some((record) => record.name === name));
+    const missingSelfChecks = CATALOGUE_SELF_CHECKS.filter((check) => !baselineRun.records.some((record) => record.file === check.file && record.path === check.path));
     if (missingSelfChecks.length > 0) {
-      throw new Error(`the baseline has no test named ${JSON.stringify(missingSelfChecks)}: rename it here too, or it would count as a killer again`);
+      throw new Error(`the baseline has no test ${JSON.stringify(missingSelfChecks)}: name it here as it now is, or it would count as a killer again`);
     }
     const baselineFailing = baselineRun.records.filter((record) => record.status === "fail");
     const baselineGreen = baselineFailing.length === 0 && baselineRun.exitCode === 0;
