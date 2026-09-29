@@ -54,6 +54,30 @@
       "seed": 16661,
       "foundAt": "2026-09-29",
       "note": "20 000-seed run: a remembered vehicle whose last sighting shows it crossed the stop (memory min <= -1, sighting >= 0) was forgotten when its row dropped out, releasing the bus behind it. Fixed: remembered sightings are judged against passage memory like current rows (waiting: crossing; on board: leaving the window)."
+    },
+    {
+      "property": "P3-forgotten",
+      "seed": 10446,
+      "foundAt": "2026-09-29",
+      "note": "Written with the property against the matcher at f3d693a (finding F15): a vehicle that left the 90 s evidence window was dropped from every decision although its possible positions only widen, so a decision its remembered sighting withheld became a selection. Fixed in src/matching.ts: vehicles in session memory that are neither in the snapshot nor remembered compete and block from their last sighting at an uncapped reach, and the unobserved-crossing rule uses the time actually unseen."
+    },
+    {
+      "property": "P3-crossing",
+      "seed": 10099,
+      "foundAt": "2026-09-29",
+      "note": "Written with the property against the matcher at f3d693a (finding F17): on a loop, passage memory compared plain sequence offsets, so a bus seen before the stop and then past it through the seam was not remembered as crossing. Fixed: memory offsets are directed (the shorter way round a loop)."
+    },
+    {
+      "property": "P3-empty-look",
+      "seed": 10099,
+      "foundAt": "2026-09-29",
+      "note": "Written with the property against the matcher at f3d693a (finding F16): the late-first-look check ran only at the session's first decision, so an earlier look that saw nothing switched it off. Fixed: every vehicle's first known sighting past the stop is judged against the time since the rider began waiting, at every decision; on board, a vehicle missing from the first snapshot still competes."
+    },
+    {
+      "property": "P13-routes",
+      "seed": 10018,
+      "foundAt": "2026-09-29",
+      "note": "Written with the property against the matcher at f3d693a (finding F19): a vehicle id also reported under another route made the invariant check read the wrong row, throwing (HTTP 500 on /v1/matches) or not depending on candidate order. Fixed: a row under another route is a second position (withheld), and the invariant checks the rows of the request's route."
     }
   ]
 }

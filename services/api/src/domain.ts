@@ -110,20 +110,30 @@ export interface MatchRequest {
  * left". This memory can: once any bus has been seen at the boarding stop, or
  * seen crossing it, during a waiting session, the rider may be aboard it, and
  * automatic selection is withheld for the rest of that session. Nothing ever
- * clears it.
+ * clears it. It also keeps every vehicle seen in the session, so one that
+ * leaves the feed for longer than the evidence window still counts where it
+ * may be by now.
  */
 export interface PassageMemory {
   /**
-   * Per vehicle: lowest, highest and most recent stop offset from the boarding
-   * stop observed during this session, and when it was last observed.
-   * `last`/`lastSeenAt` are absent in memory written before they existed.
+   * Per vehicle: lowest, highest and most recent directed stop offset from the
+   * boarding stop observed during this session (negative before it, positive
+   * past it; on a loop, the shorter way round), and when it was last
+   * observed. `last`/`lastSeenAt` are absent in memory written before they
+   * existed.
    */
   offsets: Record<string, { min: number; max: number; last?: number; lastSeenAt?: string }>;
   /**
    * Vehicles in the session's first snapshot. An on-board rider declared they
-   * were aboard at that moment, so only one of these can be their bus.
+   * were aboard at that moment, so only one of these can be selected as their
+   * bus.
    */
   initial?: string[];
+  /**
+   * Vehicles whose latest sighting had no usable route progress, and when.
+   * Such a vehicle may be anywhere, the boarding stop included.
+   */
+  unknownProgress?: Record<string, string>;
   /** Set once and never cleared. */
   withheld?: { reason: string; at: string };
 }

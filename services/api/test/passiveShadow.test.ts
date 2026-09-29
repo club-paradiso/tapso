@@ -55,12 +55,13 @@ function departedDecoyStream() {
  * when the feed freezes two minutes earlier it is two stops out and moving.
  * Until that instant the feed also carries a bus of the route with no readable
  * stop sequence, which then leaves it. Present, then remembered for the 90 s
- * evidence window, its unknown progress withholds every decision for exactly
- * as long as the approaching bus's last real move still counts as fresh.
- * Without it that bus would already be committed in the first seconds of the
- * freeze, before the part under test: frozen content cannot be told from a bus
- * that just moved until it fills the window. After that, only the frozen
- * content stands between the approaching bus and a selection.
+ * evidence window, its unknown progress withholds every decision while the
+ * approaching bus's last real move still counts as fresh; without it that bus
+ * would be committed in the first seconds of the freeze, and the replay would
+ * keep no timeline to judge (frozen content cannot be told from a bus that
+ * just moved until it fills the window). Once out of sight, a bus of unknown
+ * progress withholds for good (finding F15), so the part under test judges
+ * the approaching bus itself: frozen content alone refuses it.
  */
 function frozenFeedStream() {
   return syntheticStream({
@@ -565,8 +566,9 @@ test("frozen provider content never unlocks a selection once it fills the cadenc
     assert.equal(approaching.length, 1, `one approaching bus at ${decision.at}`);
     assert.deepEqual(approaching[0]!.rejectedReasons, ["source_cadence_not_fresh"]);
     assert.equal(decision.rememberedVehicles, undefined);
-    // Nothing else withholds: frozen content is what refuses the bus.
-    assert.equal(decision.abstentionReasons, undefined, `unexpected withholding reasons at ${decision.at}`);
+    // The only other refusal is the unplaced bus's, which left the feed with
+    // unknown progress more than a window ago.
+    assert.deepEqual(decision.abstentionReasons, ["vehicle_of_unknown_progress_out_of_sight"], `unexpected withholding reasons at ${decision.at}`);
   }
 });
 

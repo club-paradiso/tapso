@@ -15,7 +15,13 @@ import test from "node:test";
 import assert from "node:assert/strict";
 
 import type { MatchRequest, VehicleObservation } from "../src/domain.ts";
-import { assertDirectedInvariant, matchVehicle, matchVehicleWithSourceFreshness } from "../src/matching.ts";
+import {
+  assertDirectedInvariant,
+  classifyRouteProgress,
+  matchVehicle,
+  matchVehicleWithSourceFreshness,
+  routeTopologyFacts,
+} from "../src/matching.ts";
 import { replayMatching } from "../src/matchReplay.ts";
 import { RIDE_CAPTURE_SCHEMA_VERSION, type RideCapture } from "../src/rideCapture.ts";
 import { classifyTagoCadenceFreshness } from "../src/sourceFreshness.ts";
@@ -158,6 +164,75 @@ test("P3: a withheld passage memory is never overridden by any snapshot", () => 
     }, trusted);
     assert.notEqual(withheld.status, "matched");
     assert.ok(withheld.passage?.withheld, "the memory stays withheld");
+  });
+});
+
+test("P3: a vehicle out of sight past the memory window never releases a decision its remembered sighting withheld", () => {
+  forAllSeeds("P3-forgotten", MATCHER_CASES, (seed) => {
+    const { request, trusted } = generateMatch(seed);
+    const ghosts = (request.recentlySeen ?? []).filter((row) => row.routeId === ROUTE && row.stopSequence !== undefined);
+    if (ghosts.length === 0) return;
+    const random = rng(seed ^ 0xf15);
+    const ghost = pick(random, ghosts);
+    // The session's own memory of the ghost at its last sighting, written by
+    // the matcher when the ghost was in the snapshot.
+    const sighting = decide({ ...request, now: ghost.receivedAt!, candidates: [ghost], recentlySeen: [] }, trusted);
+    const entry = sighting.passage?.offsets[ghost.vehicleId];
+    if (!entry) return;
+    const passage = {
+      ...(request.passage ?? {}),
+      offsets: { ...(request.passage?.offsets ?? {}), [ghost.vehicleId]: entry },
+    };
+    const remembered = decide({ ...request, passage }, trusted);
+    if (remembered.status === "matched") return;
+    // Then it stays out of sight: gone from the evidence window, and seen
+    // longer ago than it was.
+    const older = new Date(Date.parse(entry.lastSeenAt!) - int(random, 1, 600) * 1_000).toISOString();
+    const forgotten = decide({
+      ...request,
+      recentlySeen: request.recentlySeen!.filter((row) => row.vehicleId !== ghost.vehicleId),
+      passage: { ...passage, offsets: { ...passage.offsets, [ghost.vehicleId]: { ...entry, lastSeenAt: older } } },
+    }, trusted);
+    assert.notEqual(forgotten.status, "matched", "losing sight of a vehicle for longer released a withheld decision");
+  });
+});
+
+test("P3: a bus seen before the stop and later past it withholds the session for good, across a loop's seam too", () => {
+  forAllSeeds("P3-crossing", MATCHER_CASES, (seed) => {
+    const { request, trusted } = generateMatch(seed, { riderState: "waiting_at_stop" });
+    if (!request.stops) return;
+    const topology = routeTopologyFacts(request.stops, request.boardingStopSequence);
+    if (!topology.boardingStopFound) return;
+    const random = rng(seed ^ 0xc05);
+    const facts = (sequence: number) => classifyRouteProgress(sequence, request.boardingStopSequence, "waiting_at_stop", topology);
+    const sequences = [...topology.sequences];
+    // Before: k stops out, the shorter way round. After: m stops past, likewise.
+    const k = int(random, 1, 4);
+    const m = int(random, 0, 3);
+    const befores = sequences.filter((sequence) => facts(sequence).forward === k && (facts(sequence).backward ?? Infinity) > k);
+    const afters = sequences.filter((sequence) => facts(sequence).backward === m && (m === 0 || (facts(sequence).forward ?? Infinity) > m));
+    if (befores.length === 0 || afters.length === 0) return;
+    const crosser = (stopSequence: number): VehicleObservation => ({
+      vehicleId: `SYNTHETIC-${seed}-crosser`, routeId: ROUTE, observedAt: NOW, timestampSource: "provider", stopSequence,
+    });
+    const first = decide({ ...request, candidates: [...request.candidates, crosser(pick(random, befores))] }, trusted);
+    const second = decide({ ...request, candidates: [...request.candidates, crosser(pick(random, afters))], passage: first.passage }, trusted);
+    assert.notEqual(second.status, "matched", "a crossing was not remembered");
+    assert.ok(second.passage?.withheld, "the crossing withholds for good");
+  });
+});
+
+test("P3: an earlier look that saw nothing never releases a later decision", () => {
+  forAllSeeds("P3-empty-look", MATCHER_CASES, (seed) => {
+    const { request, trusted } = generateMatch(seed);
+    if (request.passage) return;
+    const random = rng(seed ^ 0xe7);
+    const declaredAt = new Date(Date.parse(NOW) - int(random, 1, 90) * 1_000).toISOString();
+    const withoutLook = decide({ ...request, declaredAt }, trusted);
+    if (withoutLook.status === "matched") return;
+    const empty = decide({ ...request, now: declaredAt, declaredAt, candidates: [], recentlySeen: [] }, trusted);
+    const withLook = decide({ ...request, declaredAt, passage: empty.passage }, trusted);
+    assert.notEqual(withLook.status, "matched", "an empty earlier look released a withheld decision");
   });
 });
 
@@ -466,6 +541,22 @@ test("P14: a vehicle that is never valid is never committed, however long it is 
       boardingStopSequence: boarding, destinationStopSequence: 15, intervalMs: 10_000, stops, snapshots, markers: [],
     }, { labels: new Map() });
     assert.equal(evidence.firstCommit, undefined, `${kind} vehicle was committed`);
+  });
+});
+
+test("P13: a vehicle also reported under another route is never selected and never makes the order matter", () => {
+  forAllSeeds("P13-routes", MATCHER_CASES, (seed) => {
+    const { request, trusted } = generateMatch(seed);
+    const onRoute = request.candidates.filter((row) => row.routeId === ROUTE);
+    if (onRoute.length === 0) return;
+    const random = rng(seed ^ 0x13b);
+    const target = pick(random, onRoute);
+    const twin: VehicleObservation = { ...target, routeId: "SYN-PROP-OTHER", stopSequence: int(random, 1, 40) };
+    const first = decide({ ...request, candidates: [twin, ...request.candidates] }, trusted);
+    const last = decide({ ...request, candidates: [...request.candidates, twin] }, trusted);
+    assert.equal(first.status, last.status);
+    assert.equal(first.selectedVehicleId, last.selectedVehicleId);
+    assert.notEqual(first.selectedVehicleId, target.vehicleId, "a bus the provider also places on another route was selected");
   });
 });
 

@@ -735,6 +735,193 @@ test("on-board rider: a bus leaving the on-board window withholds every later se
   );
 });
 
+/* -------------------- out of sight, first sightings, loops (F15 to F19) */
+
+test("waiting rider: a bus out of sight past the memory window still competes where it may be by now (F15)", () => {
+  // Seen eight stops out, ahead of the bus behind it, then gone from the feed.
+  // By the policy's own motion model (one stop plus one per 15 s) it may since
+  // have come within one stop of the rider: still ahead of the bus behind.
+  const sighting = { min: -8, max: -8, last: -8 };
+  const passageAfter = (seconds: number) => ({ offsets: { lost: { ...sighting, lastSeenAt: secondsAgo(seconds) } }, initial: ["lost", "next"] });
+  const snapshot = [bus("next", BOARDING - 3)];
+  assertSelected(matchVehicle(request(snapshot)), "next", "control: without memory");
+  assertWithheld(
+    matchVehicle(request(snapshot, { passage: passageAfter(89), recentlySeen: [tago("lost", BOARDING - 8, 89)] })),
+    "leading_vehicle_not_selectable",
+    "remembered, 89 s",
+  );
+  // One second later it has left the evidence window. It has not left the road.
+  const forgotten = matchVehicle(request(snapshot, { passage: passageAfter(91) }));
+  assertWithheld(forgotten, "leading_vehicle_not_selectable", "out of sight, 91 s");
+  assert.equal(forgotten.passage?.withheld, undefined, "not yet able to have reached the stop");
+  // After 120 s it could have reached the stop, and the rider may be aboard it.
+  const reached = matchVehicle(request(snapshot, { passage: passageAfter(120) }));
+  assertWithheld(reached, "vehicle_may_have_reached_boarding_stop_unobserved", "out of sight, 120 s");
+  assert.equal(reached.passage?.withheld?.reason, "vehicle_may_have_reached_boarding_stop_unobserved", "for good");
+  // Its memory is kept, not dropped: the next decision still knows it.
+  assert.deepEqual(reached.passage?.offsets.lost, { ...sighting, lastSeenAt: secondsAgo(120) });
+});
+
+test("on-board rider: a bus out of sight past the memory window still competes for the window (F15)", () => {
+  const passage = {
+    offsets: {
+      rider: { min: 1, max: 1, last: 1, lastSeenAt: secondsAgo(100) },
+      other: { min: 0, max: 0, last: 0, lastSeenAt: secondsAgo(100) },
+    },
+    initial: ["other", "rider"],
+  };
+  const snapshot = [bus("other", BOARDING + 2)];
+  assertSelected(matchVehicle(onBoard(snapshot)), "other", "control: without memory");
+  assertWithheld(matchVehicle(onBoard(snapshot, { passage })), "multiple_vehicles_in_on_board_window", "the rider may be on the lost bus");
+});
+
+test("a bus of unknown progress that leaves the feed withholds for good (F15)", () => {
+  const first = matchVehicle(request([bus("unplaced", undefined), bus("next", BOARDING - 3)]));
+  assertWithheld(first, "candidate_route_progress_unknown", "present");
+  assert.deepEqual(Object.keys(first.passage?.unknownProgress ?? {}), ["unplaced"]);
+  // Remembered from the evidence window, it blocks this poll only.
+  const remembered = matchVehicle(request([bus("next", BOARDING - 2)], {
+    passage: first.passage,
+    recentlySeen: [tago("unplaced", undefined, 30)],
+  }));
+  assertWithheld(remembered, "candidate_route_progress_unknown", "remembered");
+  assert.equal(remembered.passage?.withheld, undefined);
+  // Out of sight, it may have been at the stop: nothing will ever say it was not.
+  const gone = matchVehicle(request([bus("next", BOARDING - 2)], { passage: first.passage }));
+  assertWithheld(gone, "vehicle_of_unknown_progress_out_of_sight", "out of sight");
+  assert.equal(gone.passage?.withheld?.reason, "vehicle_of_unknown_progress_out_of_sight");
+  // Seen again at a known position, it is an ordinary bus again.
+  const placed = matchVehicle(request([bus("unplaced", BOARDING - 8), bus("next", BOARDING - 2)], { passage: first.passage }));
+  assert.equal(placed.passage?.unknownProgress, undefined);
+  assertSelected(placed, "next", "placed eight stops out, behind the leader");
+});
+
+test("waiting rider: a bus first seen past the stop mid-session withholds if it could have been at the stop since the rider began waiting (F16)", () => {
+  const declaredAt = secondsAgo(60);
+  const early = (candidates: VehicleObservation[]) => matchVehicle(request(candidates, { now: declaredAt, declaredAt }));
+  const snapshot = [bus("gone", BOARDING + 2), bus("next", BOARDING - 3)];
+  // The session looked at declaration and did not see that bus: that look
+  // says nothing about where it was. Two stops past now, it may have been at
+  // the stop within the last 60 s (one stop plus one per 15 s = 5).
+  for (const [label, first] of [
+    ["an earlier look without it", early([bus("next", BOARDING - 6, { observedAt: declaredAt })])],
+    ["an earlier empty look", early([])],
+  ] as const) {
+    assertWithheld(
+      matchVehicle(request(snapshot, { passage: first.passage, declaredAt })),
+      "vehicle_first_seen_past_boarding_stop",
+      label,
+    );
+  }
+  // The same snapshot as the first look withholds too (F12).
+  assertWithheld(matchVehicle(request(snapshot, { declaredAt })), "vehicle_may_have_reached_boarding_stop_before_first_observation");
+  // Six stops past cannot have been at the stop in 60 s: it left before the rider came.
+  const first = early([bus("next", BOARDING - 6, { observedAt: declaredAt })]);
+  assertSelected(
+    matchVehicle(request([bus("gone", BOARDING + 6), bus("next", BOARDING - 3)], { passage: first.passage, declaredAt })),
+    "next",
+    "out of reach",
+  );
+});
+
+test("on-board rider: a bus missing from the first snapshot is never selected, and still competes (F16)", () => {
+  // Not in the first snapshot, it cannot be shown to be the rider's bus; but
+  // the feed may have missed it then, so it may be theirs, and the bus the
+  // rider was seen near cannot be shown to be the only one.
+  const first = matchVehicle(onBoard([bus("present", BOARDING + 2)]));
+  const later = [bus("present", BOARDING + 3), bus("newcomer", BOARDING + 2)];
+  const result = matchVehicle(onBoard(later, { passage: first.passage }));
+  assertWithheld(result, "multiple_vehicles_in_on_board_window");
+  assert.ok(candidateIn(result, "newcomer").rejectedReasons.includes("not_present_when_rider_boarded"));
+  // A bus seen before the stop after the rider boarded is shown not to be theirs, and does not compete.
+  const reached = matchVehicle(onBoard([bus("present", BOARDING + 2), bus("follower", BOARDING - 2)]));
+  assertSelected(
+    matchVehicle(onBoard([bus("present", BOARDING + 3), bus("follower", BOARDING + 1)], { passage: reached.passage })),
+    "present",
+    "the follower reached the stop after the rider boarded",
+  );
+});
+
+test("loop: a bus seen crossing the stop through the seam withholds (F17)", () => {
+  // Boarding at 11, the last stop of the lap. One bus one stop out, another
+  // three out: too close to call. The first then reports stop 2: it has
+  // passed 11 and the terminal, two stops past the rider, though its plain
+  // offset (-9) reads as far away.
+  const loop = { stops: loopStops, boardingStopSequence: 11 };
+  const first = matchVehicle(request([bus("crosser", 10), bus("next", 8)], loop));
+  assertWithheld(first, "candidates_too_close", "snapshot 1");
+  const second = [bus("crosser", 2), bus("next", 9)];
+  assertSelected(matchVehicle(request(second, loop)), "next", "control: without memory");
+  assertWithheld(matchVehicle(request(second, { ...loop, passage: first.passage })), "boarding_stop_reached_during_session", "with memory");
+});
+
+test("loop: a bus lost across the seam may reach the stop unobserved (F17)", () => {
+  // Boarding at 5. A bus last seen at 11 is five stops out through the seam
+  // (11, 1, 2, 3, 4, 5); 100 s later it may have reached the stop.
+  const earlier = secondsAgo(100);
+  const loop = { stops: loopStops, boardingStopSequence: 5 };
+  const first = matchVehicle(request([bus("lost", 11, { observedAt: earlier }), bus("next", 1, { observedAt: earlier })], { ...loop, now: earlier }));
+  assertWithheld(
+    matchVehicle(request([bus("next", 2)], { ...loop, passage: first.passage })),
+    "vehicle_may_have_reached_boarding_stop_unobserved",
+  );
+  // On a straight route the same bus is six stops past the stop, gone for good.
+  const straight = matchVehicle(request([bus("lost", 11, { observedAt: earlier }), bus("next", 1, { observedAt: earlier })], { boardingStopSequence: 5, now: earlier }));
+  assertSelected(matchVehicle(request([bus("next", 2)], { boardingStopSequence: 5, passage: straight.passage })), "next", "control: straight route");
+  // Lost three stops past the stop, it keeps going round: 120 s later it may be back at it.
+  const past = matchVehicle(request([bus("lost", 8, { observedAt: secondsAgo(120) }), bus("next", 1, { observedAt: secondsAgo(120) })], { ...loop, now: secondsAgo(120) }));
+  assert.equal(past.passage?.offsets.lost?.last, 3, "three stops past, the shorter way round");
+  const around = matchVehicle(request([bus("next", 2)], { ...loop, passage: past.passage }));
+  assert.equal(around.passage?.withheld?.reason, "vehicle_may_have_reached_boarding_stop_unobserved", "round the loop");
+  assertSelected(matchVehicle(request([bus("next", 2)], { boardingStopSequence: 5, passage: past.passage })), "next", "control: straight route");
+});
+
+test("loop: the lap is measured in sequences, so a missing or repeated stop row cannot move the seam (F18)", () => {
+  // Boarding at 11. A bus at 1 has wrapped: one stop past the rider, blocking.
+  const input = request([bus("leader", 9), bus("wrapped", 1)], { stops: loopStops, boardingStopSequence: 11 });
+  const variants: Array<[string, StopOnRoute[]]> = [
+    ["a repeated row", [...loopStops.slice(0, 5), loopStops[4]!, ...loopStops.slice(5)]],
+    ["a missing row", loopStops.filter((stop) => stop.sequence !== 5)],
+  ];
+  for (const [label, variant] of variants) {
+    const result = matchVehicle({ ...input, stops: variant });
+    assertWithheld(result, "vehicle_at_boarding_stop_unresolved", label);
+    assert.equal(candidateIn(result, "wrapped").zone, "boarding_stop_unresolved", label);
+  }
+  // With the stop at 5 missing, a bus at 2 is still two stops past the rider,
+  // not one: counting rows would put it on the unresolved side of the stop.
+  const missing = loopStops.filter((stop) => stop.sequence !== 5);
+  for (const variant of [loopStops, missing]) {
+    assertSelected(
+      matchVehicle(request([bus("leader", 9), bus("gone", 2)], { stops: variant, boardingStopSequence: 11 })),
+      "leader",
+      `${variant.length} rows`,
+    );
+  }
+  // Two different stops under one sequence: nothing about positions holds.
+  const conflicting = [...loopStops, { stopId: "SYN-ELSEWHERE", name: "Synthetic elsewhere", sequence: 5 }];
+  assertWithheld(matchVehicle({ ...input, candidates: [bus("leader", 9)], stops: conflicting }), "route_stop_sequences_conflict");
+});
+
+test("a vehicle also reported under another route is a second position, in either order (F19)", () => {
+  const right = bus("twin", BOARDING - 2);
+  const wrong = bus("twin", BOARDING, { routeId: "route-other" });
+  for (const candidates of [[wrong, right], [right, wrong]]) {
+    const result = matchVehicle(request(candidates));
+    assert.equal(result.status, "ambiguous");
+    assert.deepEqual(result.abstentionReasons, ["vehicle_reported_at_two_positions"]);
+  }
+  // The invariant judges the rows of the request's route, whatever else shares the id.
+  assert.doesNotThrow(() => assertDirectedInvariant(
+    { routeId: ROUTE, boardingStopSequence: BOARDING, candidates: [wrong, right] },
+    { status: "matched", selectedVehicleId: "twin" },
+  ));
+  assertViolation(() => assertDirectedInvariant(
+    { routeId: ROUTE, boardingStopSequence: BOARDING, candidates: [wrong, right, bus("twin", BOARDING + 2)] },
+    { status: "matched", selectedVehicleId: "twin" },
+  ), "every row of the selected vehicle on the route is checked");
+});
+
 /* ---------------------------------------- evidence the decision must weigh */
 
 test("one vehicle reported at two positions in one snapshot withholds selection", () => {
