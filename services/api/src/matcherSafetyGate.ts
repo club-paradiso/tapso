@@ -123,7 +123,8 @@ export const PINNED_NEGATIVE_CONTROLS = [
   "H-live-stale", "H-pinned-controls", "H-live-omitted", "H-live-units", "H-live-carried", "H-mitigation-criterion",
   "H-coordinator-wiring", "H-matches-shadow",
   "F12-late", "F15-forgotten", "F15-unseen-time", "F15-unknown-out-of-sight", "F16-first-sighting", "F16-onboard-competes",
-  "F17-loop-crossing", "F17-loop-window", "F17-loop-exclusion", "F17-reached-after", "F15-onboard-not-theirs", "F17-lost-loop", "F18-lap", "F18-conflict", "F19-two-routes", "F19-invariant-route",
+  "F17-loop-crossing", "F17-loop-window", "F17-loop-exclusion", "F17-reached-after", "F15-onboard-not-theirs", "F15-placed-twice", "F15-unplaced-row",
+  "F15-future-sighting", "F17-lost-loop", "F18-lap", "F18-conflict", "F19-two-routes", "F19-invariant-route",
 ] as const;
 
 /** The criterion each human-only mitigation answers, and the only kind of evidence that can show it. */

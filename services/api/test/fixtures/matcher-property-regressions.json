@@ -96,6 +96,12 @@
       "seed": 10002,
       "foundAt": "2026-09-29",
       "note": "Against 2f09032, found with the property and by a session-level differential against the matcher before F15 to F19: round a loop, the on-board exclusion of a bus seen before the stop was read from its last sighting only, so one decision later it was forgotten and the bus, alone in the window, was selected (the earlier matcher excluded it by the minimum offset). Fixed: every such sighting is recorded in passage memory (reachedAfterBoarding) and excludes the bus for the rest of the session."
+    },
+    {
+      "property": "P13-memory-order",
+      "seed": 10000,
+      "foundAt": "2026-09-29",
+      "note": "Against 99605a0, from a review finding: when one snapshot lists a bus twice at different stops, passage memory kept whichever row came last, so what the session remembered (and whether a later decision released) depended on row order. Fixed: such a bus is remembered as of unknown progress, with its last offset the position nearest the stop ahead."
     }
   ]
 }

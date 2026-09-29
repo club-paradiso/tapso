@@ -901,6 +901,58 @@ test("loop: however short the lap, a bus in the on-board window is never read as
   assert.equal(later.passage?.withheld?.reason, "boarding_stop_reached_during_session", "a crossing longer than half the lap");
 });
 
+test("a bus the snapshot places at two positions is remembered as of unknown progress, whatever the order of its rows", () => {
+  // Thirty stops, boarding at 20. The second bus is reported five stops out and
+  // nineteen stops out in one snapshot, then leaves the feed. Before, memory
+  // kept whichever row came last, so 91 s later the leader was selected or
+  // not by row order alone.
+  const long: StopOnRoute[] = Array.from({ length: 30 }, (_, index) => ({ stopId: `SYN-LONG-${index + 1}`, name: `Synthetic long ${index + 1}`, sequence: index + 1 }));
+  const route = { stops: long, boardingStopSequence: 20 };
+  const early = secondsAgo(91);
+  const twice = [bus("twice", 15, { observedAt: early }), bus("twice", 1, { observedAt: early })];
+  const outcomes = [twice, [...twice].reverse()].map((rows) => {
+    const first = matchVehicle(request([bus("leader", 16, { observedAt: early }), ...rows], { ...route, now: early }));
+    assert.deepEqual(Object.keys(first.passage?.unknownProgress ?? {}), ["twice"]);
+    assert.equal(first.passage?.offsets.twice?.last, -5, "the position nearest the stop ahead");
+    const later = matchVehicle(request([bus("leader", 18)], { ...route, passage: first.passage }));
+    assert.equal(later.status, "ambiguous", `rows ${rows.map((row) => row.stopSequence).join(", ")}`);
+    return later.passage?.withheld?.reason;
+  });
+  assert.ok(outcomes[0], "withheld for good");
+  assert.equal(outcomes[1], outcomes[0], "whatever the order of the rows");
+});
+
+test("a remembered row does not place a bus whose latest sighting had no position", () => {
+  // One snapshot reported the bus both with and without a stop sequence; the
+  // evidence window kept the row with one. That row is not where the bus is.
+  const first = matchVehicle(request([bus("leader", BOARDING - 4), bus("blur", 1), bus("blur", undefined)]));
+  assert.deepEqual(Object.keys(first.passage?.unknownProgress ?? {}), ["blur"]);
+  const later = new Date(Date.parse(now) + 60_000).toISOString();
+  const kept = { ...tago("blur", 1), receivedAt: now };
+  assertWithheld(
+    matchVehicle(request([bus("leader", BOARDING - 3, { observedAt: later })], { now: later, passage: first.passage, recentlySeen: [kept] })),
+    "candidate_route_progress_unknown",
+  );
+  // Seen since at a known position, the remembered row places it again.
+  const placed = { ...tago("blur", 1), receivedAt: new Date(Date.parse(now) + 30_000).toISOString() };
+  assertSelected(
+    matchVehicle(request([bus("leader", BOARDING - 3, { observedAt: later })], { now: later, passage: first.passage, recentlySeen: [placed] })),
+    "leader",
+  );
+});
+
+test("a sighting or a declaration dated after now gives no bound on the time since", () => {
+  // The server clock stepped back 30 s. A bus lost five stops out cannot be
+  // taken to have been seen "just now": nothing bounds where it is.
+  const ahead = new Date(Date.parse(now) + 30_000).toISOString();
+  const passage = { offsets: { lost: { min: -5, max: -5, last: -5, lastSeenAt: ahead } }, initial: ["leader", "lost"] };
+  const result = matchVehicle(request([bus("leader", BOARDING - 1)], { passage }));
+  assert.equal(result.status, "ambiguous");
+  assert.equal(result.passage?.withheld?.reason, "vehicle_may_have_reached_boarding_stop_unobserved");
+  // A first decision before the rider's own declaration cannot say how long they waited.
+  assertWithheld(matchVehicle(request([bus("leader", BOARDING - 2)], { declaredAt: ahead })), "session_first_observed_late");
+});
+
 test("on-board rider: a bus shown not to be theirs does not compete once it is out of sight", () => {
   // The follower was seen before the stop after the rider boarded, then past
   // it: not the rider's bus. Out of sight since, it may still be in the

@@ -89,6 +89,19 @@ import type { SourceFreshnessEvidence } from "./sourceFreshness.ts";
 
 export const MATCHER_POLICY_VERSION = "directed-route-progress-v1";
 
+/**
+ * How far after `now` a sighting or a declaration may be dated before the
+ * time since it counts as unknown (the clock stepped back) rather than as
+ * none: the same 10 s a provider timestamp from the future is allowed.
+ */
+const CLOCK_SKEW_TOLERANCE_MS = 10_000;
+
+/** Seconds from `thenMs` to `nowMs`; unbounded when `thenMs` cannot be read or lies too far after `nowMs`. */
+function secondsSince(thenMs: number, nowMs: number): number {
+  if (!Number.isFinite(thenMs) || thenMs > nowMs + CLOCK_SKEW_TOLERANCE_MS) return Number.POSITIVE_INFINITY;
+  return Math.max(0, (nowMs - thenMs) / 1_000);
+}
+
 export interface DirectedMatcherPolicy {
   /**
    * Stops before the boarding stop in which a waiting rider's bus may be
@@ -376,7 +389,7 @@ function decide(
 
   const remembered: Remembered[] = (request.recentlySeen ?? [])
     .filter((row) => row.routeId === request.routeId && !current.has(row.vehicleId))
-    .map((row) => rememberedPosition(row, request, riderState, nowMs, topology, policy));
+    .map((row) => rememberedPosition(placedOnlyIfKnown(row, request.passage), request, riderState, nowMs, topology, policy));
 
   const onRoute = assessed.filter((row) => row.rightRoute);
   // A vehicle out of sight for longer than the memory window is not gone: it
@@ -538,7 +551,9 @@ function rememberPassage(
   const nowMs = Date.parse(request.now);
   const reachAfter = (seconds: number) => 1 + Math.floor(seconds / policy.rememberedSecondsPerStop);
   const declaredMs = request.declaredAt === undefined ? Number.NaN : Date.parse(request.declaredAt);
-  const sinceDeclared = (nowMs - declaredMs) / 1_000;
+  // A declaration dated well after `now` (the clock stepped back) leaves the
+  // time since it unknown: unbounded, never zero.
+  const sinceDeclared = request.declaredAt === undefined ? Number.NaN : secondsSince(declaredMs, nowMs);
   const window = policy.onBoardWindowStops;
   const loop = topology?.loop === true;
   // Round a loop, where a sighting sits is read from its distance to the stop each way.
@@ -565,6 +580,16 @@ function rememberPassage(
 
   const sawUnknown = new Set<string>();
   const sawKnown = new Set<string>();
+  // A vehicle this snapshot places at two positions has no position that can
+  // be trusted, whatever the order of its rows: it is remembered as of
+  // unknown progress, and its last offset is the one nearest the stop ahead.
+  const positionsNow = new Map<string, number[]>();
+  for (const row of onRoute) {
+    if (row.facts.offset === undefined) continue;
+    positionsNow.set(row.ranked.vehicleId, [...(positionsNow.get(row.ranked.vehicleId) ?? []), row.facts.offset]);
+  }
+  const nearestAhead = (offsets: number[]) => [...offsets].sort((left, right) => aheadOf(left) - aheadOf(right) || right - left)[0]!;
+  const aheadOf = (offset: number) => (loop ? around(offset).forward! : offset <= 0 ? -offset : Number.POSITIVE_INFINITY);
   let firstSeenPast = false;
   for (const row of onRoute) {
     const vehicleId = row.ranked.vehicleId;
@@ -587,7 +612,7 @@ function rememberPassage(
       // may have boarded it. Asked at every decision, not only the first: an
       // earlier look that did not see this bus says nothing about it.
       const past = row.facts.backward;
-      if (seen === undefined && Number.isFinite(sinceDeclared) && sinceDeclared > 0
+      if (seen === undefined && !Number.isNaN(sinceDeclared) && sinceDeclared > 0
         && past !== undefined && past >= 1 && past <= reachAfter(sinceDeclared)) {
         firstSeenPast = true;
       }
@@ -605,12 +630,14 @@ function rememberPassage(
       if (left) withhold("vehicle_left_on_board_window_during_session");
     }
     const range = offsets.get(vehicleId);
+    const placed = positionsNow.get(vehicleId)!;
     offsets.set(vehicleId, {
       min: range ? Math.min(range.min, offset) : offset,
       max: range ? Math.max(range.max, offset) : offset,
-      last: offset,
+      last: new Set(placed).size > 1 ? nearestAhead(placed) : offset,
       lastSeenAt: request.now,
     });
+    if (new Set(placed).size > 1) sawUnknown.add(vehicleId);
   }
   for (const vehicleId of sawUnknown) unknownProgress.set(vehicleId, request.now);
   for (const vehicleId of sawKnown) if (!sawUnknown.has(vehicleId)) unknownProgress.delete(vehicleId);
@@ -637,7 +664,7 @@ function rememberPassage(
     }
   }
 
-  if (riderState === "waiting_at_stop" && prior === undefined && Number.isFinite(sinceDeclared) && sinceDeclared > policy.memoryWindowSeconds) {
+  if (riderState === "waiting_at_stop" && prior === undefined && !Number.isNaN(sinceDeclared) && sinceDeclared > policy.memoryWindowSeconds) {
     // The session's first decision, made long after the rider said they were
     // waiting (the first poll failed, or was slow). Whatever crossed the stop
     // in between and left the feed was never observed, and past the memory
@@ -666,7 +693,8 @@ function rememberPassage(
     // could have reached the stop, the rider may have boarded it unobserved.
     if (riderState !== "waiting_at_stop") continue;
     const seenAtMs = range.lastSeenAt === undefined ? Number.NaN : Date.parse(range.lastSeenAt);
-    const unseenSeconds = Number.isFinite(seenAtMs) ? Math.max(0, (nowMs - seenAtMs) / 1_000) : Number.POSITIVE_INFINITY;
+    // A sighting time that cannot be read, or lies well after `now`, gives no bound.
+    const unseenSeconds = secondsSince(seenAtMs, nowMs);
     const toStop = stopsToBoardingStop(range.last ?? range.max, topology);
     if (toStop !== undefined && toStop <= reachAfter(unseenSeconds)) withhold("vehicle_may_have_reached_boarding_stop_unobserved");
   }
@@ -702,6 +730,18 @@ interface Distances {
 function stopsToBoardingStop(last: number, topology: RouteTopologyFacts | undefined): number | undefined {
   if (topology?.loop) return mod(-last, topology.cycleLength);
   return last <= 1 ? Math.max(0, -last) : undefined;
+}
+
+/**
+ * A remembered row whose vehicle's latest sighting in the session had no
+ * usable position (or two) does not place it: the evidence window may have
+ * kept another row of that same sighting. Such a row is judged unplaced.
+ */
+function placedOnlyIfKnown(row: VehicleObservation, passage: PassageMemory | undefined): VehicleObservation {
+  const since = passage?.unknownProgress?.[row.vehicleId];
+  if (since === undefined || Date.parse(row.receivedAt ?? "") > Date.parse(since)) return row;
+  const { stopSequence: _sequence, ...unplaced } = row;
+  return unplaced;
 }
 
 /**
@@ -757,7 +797,9 @@ function rememberedPosition(
     return { vehicleId: row.vehicleId, facts: base, positionScore: 0 };
   }
   const seenAtMs = row.receivedAt ? Date.parse(row.receivedAt) : Number.NaN;
-  const ageSeconds = Number.isFinite(seenAtMs) ? Math.max(0, (nowMs - seenAtMs) / 1_000) : ageLimitSeconds;
+  // A receipt time that cannot be read, or lies well after `now`, gives no
+  // bound short of the limit.
+  const ageSeconds = Math.min(secondsSince(seenAtMs, nowMs), ageLimitSeconds);
   // A straight route ends at its last stop and a loop repeats after one lap;
   // without the stop list nothing can be selected, and the window's reach is
   // walked only to say what the vehicle blocks.

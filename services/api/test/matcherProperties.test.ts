@@ -617,6 +617,23 @@ test("P13: a vehicle also reported under another route is never selected and nev
   });
 });
 
+test("P13: the order of a snapshot's rows never changes what the session remembers", () => {
+  forAllSeeds("P13-memory-order", MATCHER_CASES, (seed) => {
+    const { request, trusted } = generateMatch(seed);
+    const onRoute = request.candidates.filter((row) => row.routeId === ROUTE && row.stopSequence !== undefined);
+    if (onRoute.length === 0 || !request.stops) return;
+    const random = rng(seed ^ 0x13c);
+    // A second row for one bus, at another stop of the route.
+    const target = pick(random, onRoute);
+    const twin: VehicleObservation = { ...target, stopSequence: pick(random, request.stops).sequence };
+    const rows = [...request.candidates, twin];
+    const forward = decide({ ...request, candidates: rows }, trusted);
+    const backward = decide({ ...request, candidates: [...rows].reverse() }, trusted);
+    assert.deepEqual(backward.passage, forward.passage, "the memory depends on row order");
+    assert.equal(backward.status, forward.status);
+  });
+});
+
 /* ----------------------------------------------------------- invariant 15 */
 
 test("P15: whatever is missing from the feed, a selection is always individually valid", () => {
