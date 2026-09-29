@@ -1,5 +1,19 @@
 # One-tap field-validation submission
 
+> **Status, 2026-09-29.** Historical ExecPlan for a legacy ride flow. Human
+> rides are no longer a release requirement: release gate
+> `matcher-passive-safety-v4` decides matcher readiness from machine-produced
+> evidence and reads no ride count, and no level up to
+> `READY_FOR_CONFIRMATION_ASSISTED` needs a ride, capture export or manual
+> script run
+> ([`../validation/MATCHER_SAFETY_EVIDENCE_V4.md`](../validation/MATCHER_SAFETY_EVIDENCE_V4.md),
+> [`HUMAN_LABOR_ELIMINATION.md`](HUMAN_LABOR_ELIMINATION.md)). The submit route
+> remains in the Railway collector (`backgroundHttp.ts`); an operator ride
+> submitted through it counts only toward the historical
+> `broad-real-mode-30-boardings-v1` campaign, which stays as defined, with zero
+> observed boardings. The setup, practice-ride and replay steps below are not
+> release or validation requirements.
+
 ## Goal
 
 A completed Railway background ride counts toward the 30-boarding gate by one
@@ -47,7 +61,7 @@ or a content hash; none carries a vehicle number, a route or a time:
 | `raw:<id>:meta` | `{chunks, rawSha256, rawBytes, encoding}` | |
 | `raw:<id>:<n>` | gzip + base64 chunk (≤ 256 KiB of text) | **sensitive**: vehicle numbers and coordinates |
 | `report:<id>` | sanitized report JSON | |
-| `submission:<id>` | sanitized `FieldRideSubmission` | written last; its presence means committed |
+| `submission:<id>` | sanitized `FieldRideSubmission` | its presence means committed; only the campaign addition follows it |
 | `campaign:<campaignId>` | set of submission ids | `SADD`, idempotent |
 
 `FieldRideSubmission` records:
@@ -73,9 +87,13 @@ see the one-time setup below.
 
 **Duplicates.** `rawSha256` is taken over canonical JSON (keys sorted). The
 first submit claims it with `SET NX`. A second submit of the same capture finds
-the committed record and returns it unchanged. A submit interrupted by a
-storage failure resumes under the same id on retry, because the claim is taken
-first and the record is written last. Two submissions that share a route, start
+the committed record, repeats the idempotent campaign addition (`SADD`), and
+returns the record unchanged. A submit interrupted by a storage failure resumes
+under the same id on retry, because the claim is taken first and the record is
+written after the raw and the report. A failure between writing the record and
+adding it to the campaign set leaves a submission stored but not counted; the
+retry's repeated addition heals it (`submitCompletedCapture` in
+`services/api/src/fieldValidation.ts`). Two submissions that share a route, start
 and engine but differ in bytes are both stored and flagged in `alerts`, never
 silently merged.
 
@@ -152,6 +170,7 @@ against its recorded hash.
 - `DONE` Storage, submit, dedupe, campaign summary, finish-screen UX, pull
   script, and deterministic tests (`test/fieldValidation.test.ts`).
 - `OPEN` One-time production setup above, then one practice ride to confirm the
-  receipt on a real phone.
+  receipt on a real phone. Since 2026-09-29 neither is a release or validation
+  requirement (see the note at the top).
 - `DONE` Friend-tester credentials, as a separate beta flow with its own
   versioned campaign: `BETA_FIELD_TESTER.md`.

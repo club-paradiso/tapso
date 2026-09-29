@@ -1,5 +1,23 @@
 # Ride Capture Controller (mobile)
 
+> **Status, 2026-09-29.** Historical instrument. Human rides are no longer a
+> release requirement: release gate `matcher-passive-safety-v4` decides
+> matcher readiness from machine-produced evidence, and no level up to
+> `READY_FOR_CONFIRMATION_ASSISTED` needs a ride, stop marker, capture export
+> or manual script run
+> ([`validation/MATCHER_SAFETY_EVIDENCE_V4.md`](validation/MATCHER_SAFETY_EVIDENCE_V4.md),
+> [`exec-plans/HUMAN_LABOR_ELIMINATION.md`](exec-plans/HUMAN_LABOR_ELIMINATION.md)).
+> The page still ships with the transit API and still keeps its raw capture in
+> IndexedDB for export by hand (`services/api/public/ride-capture/app.js`),
+> but that export stopped being the evidence path on 2026-09-23, when ride
+> evidence moved to the Railway collector's one-tap submission
+> ([`exec-plans/FIELD_VALIDATION_SUBMISSION.md`](exec-plans/FIELD_VALIDATION_SUBMISSION.md)).
+> A controller capture (`captureEngine: "local-device"`) is never a
+> `CLEAN_GATE_CANDIDATE`, the only bucket that counted toward the thirty
+> (`services/api/src/rideCampaign.ts`). The 13 historical reports tagged
+> `web-controller` are `REPORT_ONLY_NO_RAW` and contribute no matcher result.
+> Nothing below is required for release or validation.
+
 A phone-sized instrument for running a controlled ride without a laptop. It is
 served from the transit API project at
 
@@ -35,7 +53,9 @@ consecutive public polls returned identical ones. The public path is unchanged.
 
 Nothing else changes. `observedAt` is still the epoch sentinel,
 `timestampSource` is still `unavailable`, the freshness policy is still
-`fail_closed`, and automatic matching is still withheld.
+`fail_closed`, and automatic matching is still withheld. *(2026-09-29: the
+freshness policy is now `server_observed_cadence_v1`, introduced by Task C;
+`/operator/snapshot` reports it in `meta.freshness.policy`.)*
 
 ## Endpoints
 

@@ -1,5 +1,24 @@
 # Task C — source freshness for a provider with no timestamps
 
+> **Status, 2026-09-29.** Historical ExecPlan. Human bus rides are no longer a
+> release requirement: release gate `matcher-passive-safety-v4` decides matcher
+> readiness from machine-produced evidence, and no level up to
+> `READY_FOR_CONFIRMATION_ASSISTED` needs a ride, stop marker, capture export or
+> manual script run
+> ([`../validation/MATCHER_SAFETY_EVIDENCE_V4.md`](../validation/MATCHER_SAFETY_EVIDENCE_V4.md),
+> [`HUMAN_LABOR_ELIMINATION.md`](HUMAN_LABOR_ELIMINATION.md)). What this plan
+> built is still in force: `server_observed_cadence_v1` still decides which TAGO
+> rows are fresh, and `TRANSIT_AUTOMATIC_MATCHING_ENABLED` still defaults to
+> `false`; the configuration now also refuses it below
+> `READY_FOR_BOUNDED_AUTOMATION`. The ride-dependent rows of "What remains
+> open" are no longer release requirements. The 30-boarding gate was
+> superseded without ever being met (zero observed boardings). The
+> calibrations stay unmeasured, but the thresholds fail closed, so calibrating
+> them changes coverage, not safety; provider lag against the physical stop is
+> designed out of the matcher's safety path, and criterion BA-4 blocks
+> automation until alert timing no longer depends on it
+> ([`../validation/EVIDENCE_SUBSTITUTION_MATRIX.md`](../validation/EVIDENCE_SUBSTITUTION_MATRIX.md)).
+
 ## The problem this exists to solve
 
 TAGO's realtime position feed (`getRouteAcctoBusLcList`) publishes no
@@ -98,18 +117,24 @@ actually arrived.
 
 | Item | Status | Owner |
 |---|---|---|
-| 30 observed boardings across multiple routes | `OPEN`; zero observed | field validation |
+| 30 observed boardings across multiple routes | `OPEN`; zero observed. Since 2026-09-29: superseded, never met | field validation |
 | Candidate-margin calibration | `OPEN` | needs the boardings above |
 | Marker-lag distribution | `OPEN` | needs a clean ride capture |
 | Arrival/alighting accuracy | `OPEN` | needs a clean ride capture |
-| Durable journey-session storage | `OPEN` | next architecture task, tracked separately |
+| Durable journey-session storage | `DONE` 2026-09-23 (was `OPEN`): Upstash store verified live, store 15/15 and preview deployment 12/12; verification did not switch production | next architecture task, tracked separately (`DURABLE_JOURNEY_SESSIONS.md`) |
 | Cadence thresholds promoted from `PROVISIONAL` | `OPEN` | needs ride evidence that separates provider lag from collector lag |
 
 The two physical rides captured so far used the local/browser recorder and are
-`CONFOUNDED` by Safari background suspension. The 2026-09-22 Railway background
-acceptance run fixed the collection mechanism — `20` snapshots, `103.06 s`
-background, worst gap `7.94 s` against a `5 s` target — but a working collector
-is not ride evidence. No clean ride capture exists yet.
+`CONFOUNDED` by Safari background suspension. *(Note, 2026-09-29: the
+2026-09-23 audit later found 13 historical ride reports from the phone's
+browser recorder, across 10 route IDs, and no raw capture for any of them, so
+all 13 are `REPORT_ONLY_NO_RAW`: they cannot be replayed under the current
+matcher and count toward nothing. Whether the two rides above are among them
+is not recorded. See `../DATA_VALIDATION.md`, "Audit, 2026-09-23".)*
+The 2026-09-22 Railway background acceptance run fixed the collection
+mechanism — `20` snapshots, `103.06 s` background, worst gap `7.94 s` against a
+`5 s` target — but a working collector is not ride evidence. No clean ride
+capture exists yet.
 
 ## Explicitly out of scope
 

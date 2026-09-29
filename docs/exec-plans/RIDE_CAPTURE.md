@@ -1,5 +1,22 @@
 # Controlled real-ride capture
 
+> **Status, 2026-09-29.** Historical ExecPlan. Human rides are no longer a
+> release requirement: release gate `matcher-passive-safety-v4` decides matcher
+> readiness from machine-produced evidence, and no level up to
+> `READY_FOR_CONFIRMATION_ASSISTED` needs a ride, stop marker, capture export or
+> manual script run
+> ([`../validation/MATCHER_SAFETY_EVIDENCE_V4.md`](../validation/MATCHER_SAFETY_EVIDENCE_V4.md),
+> [`HUMAN_LABOR_ELIMINATION.md`](HUMAN_LABOR_ELIMINATION.md)). Every ride
+> procedure and next action below is historical and not required. What remains
+> in use: the analyzer (`analyzeRideCapture`, with the matcher replay of
+> milestone 9) runs on the Railway collector whenever an operator or beta ride
+> is submitted, and those rides count only toward the historical campaigns
+> `broad-real-mode-30-boardings-v1` and `beta-matcher-30-boardings-v2`, both at
+> zero observed boardings. The CLI stays in the repository, but its captures
+> are never counted toward the thirty: only a `railway-background` capture can
+> be a `CLEAN_GATE_CANDIDATE`, the only bucket counted
+> (`services/api/src/rideCampaign.ts`).
+
 ## Outcome and non-goals
 
 Give the next validation gate in `docs/DATA_VALIDATION.md` a repeatable tool: during a real ride on any official TAGO route, poll TAGO for the chosen direction, store bounded snapshots only under ignored `work/rides/`, let the rider mark the boarded vehicle and physically passed stops, and produce a sanitized report that compares provider `nodeord` progression, content-change age, gaps, and arrival against those markers.
@@ -48,9 +65,9 @@ a Route 365 evidence probe, not the preflight for an arbitrary route; use
 ## Verified constraints
 
 - VERIFIED_OFFICIAL_SCHEMA: TAGO locations carry `vehicleno`, `nodeord`, `nodeid`, `nodenm`, `gpslati`, `gpslong` and no source timestamp. Every age in the report is time since the snapshot content for a vehicle last changed, measured with TAPSO receipt time (`docs/validation/TAGO_2026-09-11.md`).
-- VERIFIED_MEASUREMENT (2026-09-10 bounded probe): snapshot-change interval median 27.52 s, max 83.10 s. The default 5 s poll and 3 s floor stay far below the development quota for a 90-minute cap (≤ 1 080 location calls).
+- VERIFIED_MEASUREMENT (2026-09-10 bounded probe): snapshot-change interval median 27.52 s, max 83.10 s. The default 5 s poll and 3 s floor stay far below the development quota for a 90-minute cap (≤ 1 080 location calls). *(Note, 2026-09-29: the probe survives as a report only, `HISTORICAL_REPORT_ONLY`, and no numeric TAGO quota is documented anywhere, `MISSING`, so "far below the development quota" is `INFERRED`, not measured.)*
 - REPOSITORY_POLICY: `work/` is Git-ignored; capture files are written with mode `0600` and refuse to persist if the service key appears in the encoded payload.
-- UNVERIFIED: real-ride behaviour. No capture has been run yet; the tool is validated only against synthetic fixtures labelled synthetic.
+- UNVERIFIED: real-ride behaviour. No capture has been run yet; the tool is validated only against synthetic fixtures labelled synthetic. *(Superseded 2026-09-29: real rides were recorded with the phone's browser recorder; the 2026-09-23 audit found 13 reports and no raw capture for any of them, so all are `REPORT_ONLY_NO_RAW`; see `../DATA_VALIDATION.md`.)*
 - VERIFIED (2026-09-12, DRY RUN / SYNTHETIC): the whole operator flow was rehearsed by running the real CLI with a fabricated TAGO upstream injected at `fetch`. Briefing, `v`, `s`, `?`, an ambiguous `b` refusal, a partial-number `b` resolution, four markers, arrival detection, post-arrival snapshots, `work/rides/` at `0700` with files at `0600`, and a report holding neither a vehicle number nor the key. This rehearsal is not real-world evidence and is not stored in the repository.
 - VERIFIED (2026-09-12): the real CLI fails closed without a credential (`BLOCKED_BY_CREDENTIALS`), rejects a percent-escaped Encoding key by name, and warns before honouring the retired `PUBLIC_DATA_SERVICE_KEY`. No message carried a URL or a key.
 
@@ -59,7 +76,7 @@ a Route 365 evidence probe, not the preflight for an arbitrary route; use
 1. `DONE` Analysis module `services/api/src/rideCapture.ts`: schema, validation against official topology, per-vehicle pseudonymised timelines, tracked-vehicle remaining stops, marker lag, gap and content-age summaries, and a refusal guard when a raw vehicle identifier would reach the report.
 2. `DONE` Runner `services/api/src/rideCaptureRunner.ts`: bounded polling loop with rider commands, persisted after every snapshot, tolerant of provider failures, automatic stop after arrival plus a few snapshots, snapshot and duration caps.
 3. `DONE` CLI `scripts/ride-capture/capture.ts` and `scripts/ride-capture/analyze.ts`.
-4. `DONE` Deterministic Node tests (`services/api/test/rideCapture.test.ts`, 15 tests) covering tracking, gaps, reversal, marker lag, warnings, validation, runner failure tolerance, arrival stop, limits, quit, command parsing, vehicle resolution, the rider briefing, masked status output, presence and advance distributions, GPS-versus-`nodeord` movement, capture integrity counters, the evidence verdict, and an interrupted capture.
+4. `DONE` Deterministic Node tests (`services/api/test/rideCapture.test.ts`, 15 tests as of 2026-09-12; CI job `api` runs the current suite) covering tracking, gaps, reversal, marker lag, warnings, validation, runner failure tolerance, arrival stop, limits, quit, command parsing, vehicle resolution, the rider briefing, masked status output, presence and advance distributions, GPS-versus-`nodeord` movement, capture integrity counters, the evidence verdict, and an interrupted capture.
 5. `DONE` Operator readiness (Task B preparation): the rider sees the stop list and both endpoint names before the first poll, boards by the last four characters of the plate with the typed number cross-checked against the live snapshot, and can ask for vehicles or status mid-ride. The report carries p75/p90, presence ratios, advance and marker-lag distributions, integrity counters, and a `SUFFICIENT` / `INSUFFICIENT_EVIDENCE` verdict.
 6. `DONE` Mobile Ride Capture Controller at `/ride-capture/` on the transit API
    project, so a ride can be run from a phone: an authenticated uncached
@@ -68,11 +85,12 @@ a Route 365 evidence probe, not the preflight for an arbitrary route; use
    client that owns the capture in IndexedDB. `RideCapture` stays at schema
    version 1 with two optional additive fields, so CLI and controller captures
    stay interchangeable. See `../RIDE_CAPTURE_CONTROLLER.md`.
-7. `PENDING` One real ride on a preflighted route and direction — `JEB405136521` or `JEB405136522` recommended — with the sanitized report summarised in `docs/DATA_VALIDATION.md`.
+7. `HISTORICAL`, not required (2026-09-29; was `PENDING`). One real ride on a preflighted route and direction — `JEB405136521` or `JEB405136522` recommended — with the sanitized report summarised in `docs/DATA_VALIDATION.md`. Under the counting rules adopted later, a CLI capture from this ride would not count toward the thirty (see the note at the top).
 8. `PARTIAL` Task C, not this plan. The source-cadence abstraction, the shadow-mode
    rollout gate and the journey-session tests exist; see `TASK_C_SOURCE_FRESHNESS.md`.
    The thresholds remain `PROVISIONAL` because no clean ride capture exists yet, and
    automatic matching stays off. Milestone 7 is still what unblocks the rest.
+   *(Historical: since 2026-09-29 nothing waits on milestone 7.)*
 9. `DONE` Matcher replay (`services/api/src/matchReplay.ts`). The report now
    carries `matchGate`: what the real matcher would have decided at each
    captured snapshot, whether its first irreversible commit was the bus the
@@ -116,6 +134,9 @@ briefing the capture prints before its first poll, which lists every stop from
 boarding to destination with its name.
 
 ## Progress / next action
+
+*Historical: the state and the next action below were last updated on
+2026-09-12 and are not required (see the note at the top).*
 
 Implemented and tested. [PR #24](https://github.com/club-paradiso/tapso/pull/24) merged into `main` on 2026-09-11 with CI green (`api`, `transit-core`, `web`). The tool is therefore available on `main`; no credentialed run has happened yet.
 

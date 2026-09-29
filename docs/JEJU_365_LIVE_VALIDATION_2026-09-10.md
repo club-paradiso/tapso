@@ -159,6 +159,8 @@ The server uses TAGO directly. B551982 is not selectable at runtime because its 
 
 ## Exact next step toward a real TAPSO ride test
 
+> **2026-09-29:** historical, not required. No readiness level up to `READY_FOR_CONFIRMATION_ASSISTED` needs a ride, and the thirty-boarding gate in step 6 was superseded by release gate `matcher-passive-safety-v4`; see `exec-plans/HUMAN_LABOR_ELIMINATION.md`.
+
 The API-data and HTTP integration gates for the full-length Route 365 directions are now satisfied. The next step is a controlled real ride:
 
 1. Keep the API running with the service key loaded from private local environment storage.

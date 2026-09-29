@@ -1,5 +1,18 @@
 # Beta field testers
 
+> **Status, 2026-09-29.** Historical ExecPlan for a legacy ride flow. Human
+> rides, beta rides included, are no longer a release requirement: release gate
+> `matcher-passive-safety-v4` decides matcher readiness from machine-produced
+> evidence and reads no ride count, and no level up to
+> `READY_FOR_CONFIRMATION_ASSISTED` needs a ride
+> ([`../validation/MATCHER_SAFETY_EVIDENCE_V4.md`](../validation/MATCHER_SAFETY_EVIDENCE_V4.md),
+> [`HUMAN_LABOR_ELIMINATION.md`](HUMAN_LABOR_ELIMINATION.md)). The beta flow
+> remains in the Railway collector behind `BETA_TESTERS_ENABLED` and may keep
+> running; a beta ride counts only toward the historical
+> `beta-matcher-30-boardings-v2` campaign, which stays as defined, with zero
+> observed boardings. The practice ride, restart check and review steps below
+> are not release or validation requirements.
+
 ## Goal
 
 A non-technical friend with a private link records a real bus ride in four
@@ -122,7 +135,9 @@ removed.
 This closes the live-Redis/Lua uncertainty without a bus ride. It does **not**
 prove the full real-iPhone → active beta ride → Railway restart → recovered ride
 E2E path; that remains a release-evidence item before broad automatic matching
-is enabled.
+is enabled. *(Historical, 2026-09-29: no longer a release-evidence item. The
+path stays unverified and matters only to beta rides; see the note at the
+top.)*
 
 A ride is still lost (tester sees 저장되지 못했어요, slot returned) only when no
 journal exists for it — which, with the flag enabled, means its journal was
@@ -289,7 +304,8 @@ Pull beta raws for a later replay:
 | `GET /beta/campaign` | operator | sanitized v2 summary |
 
 Tester routes are limited to 60 requests/min per tester (per process).
-`/health` adds `betaTesters: "enabled" | "unconfigured"`.
+`/health` adds `betaTesters: "enabled" | "unconfigured" | "disabled"`, as in the
+flag table above (`backgroundServer.ts`).
 
 ## Production setup
 
@@ -309,6 +325,9 @@ Vercel needs nothing new. Required:
 3. `TRANSIT_ALLOWED_ORIGINS` on Railway must include the Vercel origin serving
    `beta.html` (it already must, for `background.html`).
 4. Upstash eviction must stay off (already confirmed for the field-validation data).
+   *(Unconfirmed, 2026-09-29: no record of that check exists in the repository,
+   which cannot read the setting; see `../KNOWN_ISSUES.md`. No release gate
+   depends on it.)*
 5. Create an invite from the operator page and complete one practice ride on a
    real iPhone before inviting anyone. During it, restart the Railway service
    once mid-ride and confirm the page still shows the ride, `/beta/campaign`

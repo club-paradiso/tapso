@@ -1,15 +1,18 @@
 > TAGO migration: complete and merged. Current provider setup and evidence are in `DATA_SOURCES.md`, `DATA_VALIDATION.md`, and `exec-plans/TAGO_MIGRATION.md`. Earlier B551982 instructions are historical.
 
+> **2026-09-29.** The next step is no longer a human ride. It is the rider-free path under *Next step: rider-free matcher evidence* below. Task B's ride procedures are kept as history and are not required.
+
 # Handoff
 
 For the release-focused Claude Desktop/Claude Code continuation, use `docs/CLAUDE_DESKTOP_HANDOFF.md`. The Apple team identity is now resolved: the only team available to the build host is a free Personal Team, so TestFlight distribution is gated on obtaining a paid Apple Developer Program membership. See `KNOWN_ISSUES.md` and the Team prerequisite in `TESTFLIGHT.md`.
 
 ## What works
 
-- `packages/transit-core`: deterministic Swift matching, route progress, freshness, journey state, and demo fixtures.
+- `packages/transit-core`: deterministic Swift route progress, freshness, journey state, demo fixtures, and a demo-only matcher (`VehicleMatchingEngine`, not authoritative for real riders; see `VEHICLE_MATCHING.md`).
 - `apps/ios`: generated native Xcode project, SwiftUI demo, ActivityKit lifecycle, WidgetKit Lock Screen/Dynamic Island extension, localization, and iOS tests.
-- `services/api`: the TAGO adapter boundary, one shared request handler with a local Node transport and a Vercel Functions transport, route caching, conservative matching, credential validation, timeouts, the APNs interface, and Node tests.
-- `fixtures/transit`: synthetic scenario manifest and official-shaped adapter payload.
+- `services/api`: the TAGO adapter boundary, one shared request handler with a local Node transport and a Vercel Functions transport, route caching, the directed matcher `directed-route-progress-v1` under release gate `matcher-passive-safety-v4`, journey sessions in memory or an Upstash store, credential validation, timeouts, the APNs interface, and Node tests.
+- `fixtures/transit`: synthetic scenario manifest, official-shaped adapter payload, and the language-neutral matcher specification cases.
+- Rider-free matcher evidence: CI's `matcher-evidence` job runs the property suite, the negative controls and the re-decision of the 268 former live wrong commits on every push; `.github/workflows/matcher-evidence.yml` runs passive collection, replay and counterfactuals once merged.
 
 ## Reproduce
 
@@ -23,9 +26,72 @@ xcodebuild -project apps/ios/Tapso.xcodeproj -scheme Tapso \
 
 If the repository is in an iCloud/FileProvider location, choose **Keep Downloaded** and put DerivedData under `/tmp` or another unsynced local directory. Signing can fail when copied resource forks or Finder metadata reach the `.app`; use a content-only copy if necessary.
 
-## Task B: controlled real-ride validation
+## Next step: rider-free matcher evidence
 
-This is the next evidence gate. It runs entirely against the local machine and
+Status on 2026-09-29: release gate `matcher-passive-safety-v4` has demonstrated
+`READY_FOR_SHADOW`. Automatic matching is off, and the configuration refuses it
+below `READY_FOR_BOUNDED_AUTOMATION`. The next level,
+`READY_FOR_CONFIRMATION_ASSISTED`, needs a clean, deterministic full-window
+replay of live evidence, clean counterfactuals on real bases, and a larger live
+sample (≥ 60 trajectories, ≥ 30 vehicles, ≥ 30 contested cases, ≥ 8 routes,
+≥ 3 windows, ≥ 2 time bands; Passive Shadow v3 alone has
+29 / 27 / 46 / 5 / 1 / 1). None of it needs a bus ride, a stop marker, a
+capture export, a manual script run or a manual inspection:
+
+1. **Merge the pull request.** Scheduled workflows run only from the default
+   branch, so nothing below starts before the merge.
+2. **The merge commit runs the evidence-of-record replay.** It changes
+   `ops/matcher-evidence/request.json` on `main`, which runs
+   `.github/workflows/matcher-evidence.yml` once in `replay` mode. The job
+   downloads the Passive Shadow v3 raw artifact (run `36098610702`), keeps a
+   90-day copy first, verifies it against the digest GitHub recorded at upload,
+   replays it offline twice under both policies (the two outputs must be
+   byte-identical), evaluates the current policy blind, and runs the
+   counterfactual suite on the real bases. A best-effort job also stores the raw
+   in a private draft-release vault. The source artifact expires on
+   2026-10-09T06:28:03Z and must be copied before then.
+3. **The schedule collects one bounded passive window a day.** Read-only,
+   rotating route pools across KST time bands; each window is then
+   evaluated blind, migrated and run through the counterfactual suite offline,
+   and every scheduled run also smoke-tests production. Without a
+   `TAGO_SERVICE_KEY` repository secret the job reads TAPSO's public API; with
+   one it reads TAGO directly.
+4. **The gate is re-evaluated.** After each successful replay or window, the
+   workflow's `gate-evidence` job recomputes the gate's live inputs offline
+   from every retained raw collection (`scripts/matcher-evidence/live-evidence.ts`)
+   and evaluates the gate with `scripts/matcher-evidence/gate.ts`; that result
+   is informational. CI's `matcher-evidence` job fails unless the committed
+   `artifacts/matcher-passive-safety-v4/gate-result.json` and the readiness
+   claimed in `services/api/src/matchingReadiness.ts` both match the evidence,
+   so a higher readiness arrives only in a reviewed pull request, which an agent
+   can prepare once it can read the run's artifacts. Readiness never rises
+   through a configuration change.
+
+Owner actions, each a one-time authorisation and none of them a ride:
+
+- Merge the pull request. Required: it starts steps 2 and 3.
+- Optional: add a `TAGO_SERVICE_KEY` repository secret, so the scheduled windows
+  read TAGO directly at session cadence. Gate criterion BA-2 requires that
+  evidence for `READY_FOR_BOUNDED_AUTOMATION`.
+- Optional: grant the Claude GitHub App `actions: write`, so an agent can
+  dispatch runs, or let the agent environment reach `*.blob.core.windows.net`
+  and `tapso-api.vercel.app`, so it can read their artifacts and the provider.
+
+The physical-device Live Activity check (gate criterion BA-5) matters only for
+`READY_FOR_BOUNDED_AUTOMATION`, and it is a device check, not a ride. Method and
+progress: `exec-plans/HUMAN_LABOR_ELIMINATION.md`. Evidence, and what each level
+still needs: `validation/MATCHER_SAFETY_EVIDENCE_V4.md`.
+
+## Task B: controlled real-ride validation (historical, not required)
+
+> **Historical, 2026-09-29.** Not required for release or for any readiness
+> level. Release gate `matcher-passive-safety-v4` replaced the ride-count
+> campaigns `broad-real-mode-30-boardings-v1` and
+> `beta-matcher-30-boardings-v2`, which stay as defined, with zero observed
+> boardings. The next step is the rider-free path above. The procedure below is
+> kept as the record of the rider-based approach.
+
+~~This is the next evidence gate.~~ It runs entirely against the local machine and
 does **not** depend on a deployed API. Status: `READY_FOR_RIDE` — the tooling is
 prepared and rehearsed against a synthetic upstream; nothing here is real-world
 evidence until a physical ride happens.
@@ -136,16 +202,21 @@ progress. That is Task C. See `DATA_VALIDATION.md`,
 Task C has shipped the mechanism — a server-observed cadence surrogate, a
 shadow-mode rollout gate, and tests — but not the evidence. Its thresholds are
 `PROVISIONAL` and automatic matching is off by default everywhere
-(`TRANSIT_AUTOMATIC_MATCHING_ENABLED=false`). A clean ride capture is still the
-thing that moves it forward.
+(`TRANSIT_AUTOMATIC_MATCHING_ENABLED=false`). ~~A clean ride capture is still the
+thing that moves it forward.~~ Historical: see the note at the top of this section.
 
 ## Other open evidence
 
 1. ~~Smoke test production.~~ Done 2026-09-12: `https://tapso-api.vercel.app`
    verified end to end, including live TAGO. See `PRODUCTION_TRANSIT_API.md`.
+   Once merged, the scheduled production smoke in
+   `.github/workflows/matcher-evidence.yml` repeats it, matching posture
+   included.
 2. Add route setup and ambiguity confirmation UI before calling the client MVP complete.
 3. Provision Apple credentials and replace the APNs scaffold.
-4. Execute `DEVICE_TEST_PLAN.md` on signed hardware.
+4. Execute `DEVICE_TEST_PLAN.md` on signed hardware. The release gate needs only
+   its Live Activity check (criterion BA-5), and only for
+   `READY_FOR_BOUNDED_AUTOMATION`; that is a device check, not a bus ride.
 5. Follow `TESTFLIGHT.md` for the deterministic internal-beta release path and its explicit reality boundary.
 
 ## Repository hygiene

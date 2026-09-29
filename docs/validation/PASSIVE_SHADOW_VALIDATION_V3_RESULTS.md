@@ -1,5 +1,25 @@
 # Passive Shadow Validation v3 — results, 2026-09-25
 
+> **Note, 2026-09-29.** Every matcher result below comes from the matcher then
+> serving, `symmetric-stop-distance-v0`, and everything below stands as
+> recorded, including the `NOT_READY` decision and the 268 wrong commits. F1
+> is fixed in `directed-route-progress-v1`, now the serving backend policy;
+> the old one survives only in `services/api/src/matchingLegacy.ts`, for
+> comparison and negative controls.
+> Re-decided at each of the 268 commit instants from the hash-checked ledger,
+> the directed policy selects nothing and the legacy policy reproduces all 268
+> selections (`VERIFIED_BY_REPLAY`, instant level, in the labels of
+> `../exec-plans/HUMAN_LABOR_ELIMINATION.md`; per case:
+> `FORMER_WRONG_COMMITS_UNDER_DIRECTED_POLICY.md`). What the directed policy
+> does over each full case window is `MISSING` until
+> `.github/workflows/matcher-evidence.yml` replays the raw streams after merge.
+> New raw uploads are kept 90 days; the raw artifact of run `36098610702`
+> below (14-day retention) expires 2026-10-09T06:28:03Z, and that workflow's
+> first replay run copies it. The release gate is now
+> `matcher-passive-safety-v4` (`MATCHER_SAFETY_EVIDENCE_V4.md`), and the
+> current replacement analysis for human rides is
+> `EVIDENCE_SUBSTITUTION_MATRIX.md`.
+
 Policy `passive-shadow-validation-v3`. The method is in
 `../exec-plans/PASSIVE_SHADOW_VALIDATION_V3.md`. The machine-readable evidence is
 `../../artifacts/passive-shadow-validation-v3-summary.json` (sha256

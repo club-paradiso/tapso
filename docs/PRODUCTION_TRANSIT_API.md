@@ -5,9 +5,12 @@ official TAGO bus route and location services. This document is the contract,
 the deployment procedure, and the honest list of what it does and does not yet
 guarantee.
 
-Reality labels follow the repository convention: `VERIFIED` means executed and
-observed, `IMPLEMENTED` means written and covered by tests, `UNVERIFIED` means
-neither.
+Reality labels follow the convention this document started with: `VERIFIED`
+means executed and observed, `IMPLEMENTED` means written and covered by tests,
+`UNVERIFIED` means neither. In the evidence labels of
+`exec-plans/HUMAN_LABOR_ELIMINATION.md` (2026-09-29), `VERIFIED` against a live
+deployment is `VERIFIED_LIVE_INFRASTRUCTURE`, `IMPLEMENTED` is
+`VERIFIED_BY_TEST`, and a run against a synthetic upstream is `SIMULATED`.
 
 ## Topology
 
@@ -39,6 +42,15 @@ neither.
  the same src/apiRouter is also served by src/server.ts on 127.0.0.1:8787,
  so local development and production share one implementation.
 
+ journey sessions: in-process memory by default, or Upstash Redis over its
+ REST API when TRANSIT_SESSION_STORE=redis (see Sessions).
+
+ Railway ride collector: a separate service for the legacy human-ride flows,
+ built from services/api/Dockerfile.collector (src/backgroundServer.ts). It
+ polls TAGO directly (every 5 s by default) during an operator or beta capture
+ and, when Upstash is configured, keeps field-validation submissions and
+ beta-tester data there. No release gate depends on it.
+
  apps/web (marketing site + /api/waitlist, /api/support/*) stays on its own
  Vercel project and is untouched by this service.
 ```
@@ -60,7 +72,8 @@ now needs them, so the decision is revisited here.
   caller now consumes the API project's function budget and rollback history,
   not the public product site's.
 - **Credential separation.** `TAGO_SERVICE_KEY` is set on the API project only.
-  The marketing project never holds it.
+  The marketing project never holds it. The Railway collector, a separate
+  service (see *Topology*), needs its own.
 - **Client contract.** iOS gets a base URL that is not the marketing domain, so
   a later move to a custom `api.` host changes one constant instead of a
   deployment topology.
@@ -73,6 +86,11 @@ now needs them, so the decision is revisited here.
 Rejected: adding a runtime dependency, a database, a queue, or a second hosting
 provider. None of them is needed to answer these reads, and the feature that
 would justify a durable store is policy-disabled (see *Sessions*).
+
+*2026-09-29:* the read endpoints still need none of them. Two separate pieces
+were added later: an optional Upstash session store (see *Sessions*) and the
+Railway ride collector for the legacy ride flows, which carries the package's
+one runtime dependency, `web-push` (see *Topology*).
 
 ## Base URL contract
 
@@ -96,7 +114,7 @@ accepts both so local and production paths are identical.
 
 | Method | Path | Purpose |
 |---|---|---|
-| GET | `/health` | Service, provider, cache policy, session policy, build identifier, freshness posture |
+| GET | `/health` | Service, provider, cache policy, session policy, build identifier, matching posture, freshness posture |
 | GET | `/v1/cities` | Official TAGO city discovery |
 | GET | `/v1/routes?cityCode=&routeNo=` | Every official route ID for a route number. `routeNo` is optional: without it the provider is asked to list the whole city, and a provider that will not is reported as such rather than invented |
 | GET | `/v1/stops?routeId=&cityCode=` | Ordered, direction-specific stop topology |
@@ -106,7 +124,8 @@ accepts both so local and production paths are identical.
 | GET | `/v1/sessions/:id` | Refresh a ride session |
 | POST | `/v1/sessions/:id/confirm` | Confirm a vehicle explicitly |
 
-Two further paths exist for controlled ride evidence only. They require
+Two further paths exist for controlled ride evidence only, a legacy flow that
+no release gate has required since 2026-09-29. They require
 `Authorization: Bearer <RIDE_CAPTURE_OPERATOR_TOKEN>`, answer `no-store`, and
 stay disabled unless that token is configured. They are documented in full in
 [RIDE_CAPTURE_CONTROLLER.md](RIDE_CAPTURE_CONTROLLER.md).
@@ -137,14 +156,23 @@ stay disabled unless that token is configured. They are documented in full in
   |---|---|---|
   | `providerObservationTimestamp` | `"unavailable"` | TAGO publishes none, and none is reconstructed |
   | `policy` | `"server_observed_cadence_v1"` | TAPSO judges liveness from its own repeated receipts of *changing* provider content |
-  | `automaticMatching` | `"shadow_only_pending_field_validation"` | candidates are ranked and evidence published; the server never selects a bus |
-  | `automaticMatchingWithheldBecause` | the acceptance gate text | the 30-boarding multi-route gate, not durable storage |
-  | `fieldValidationGate` | `{status: "open", requiredBoardings: 30, …}` | a hand-maintained constant, not a live counter |
+  | `automaticMatching` | `"shadow_only_pending_matching_readiness"` | candidates are ranked and evidence published; the server never selects a bus |
+  | `automaticMatchingWithheldBecause` | the readiness text | release gate `matcher-passive-safety-v4` has demonstrated `READY_FOR_SHADOW`; automatic selection needs `READY_FOR_BOUNDED_AUTOMATION`. Not durable storage |
+  | `matchingReadiness` | `{gate, demonstrated, requiredForAutomaticMatching, evidence}` | a reviewed constant in `matchingReadiness.ts` that CI ties to the committed gate result; never read from the environment |
+  | `fieldValidationGate` | `{status: "superseded", supersededBy: "matcher-passive-safety-v4", requiredBoardings: 30, …}` | the historical thirty-boarding gate, never met, no longer deciding anything |
   | `cadencePolicy.calibration` | `"provisional"` | every threshold is an operational gate, not a measured value |
 
   `automaticMatching` reads `"enabled_by_explicit_operator_opt_in"` only where
-  an operator has set `TRANSIT_AUTOMATIC_MATCHING_ENABLED=true`. It is `false`
-  on every platform by default, including the local Node server.
+  an operator has set `TRANSIT_AUTOMATIC_MATCHING_ENABLED=true` **and** the
+  demonstrated readiness is at least `READY_FOR_BOUNDED_AUTOMATION`. Below that
+  the configuration refuses the flag: `/health` then shows
+  `matching.automaticMatchingRequested: true`, `automaticMatchingEnabled: false`
+  and `withheldReason: "matching_readiness_below_bounded_automation"`, and the
+  production smoke test warns. It is `false` on every platform by default,
+  including the local Node server. `matching.matcherPolicy` names the serving
+  policy (`directed-route-progress-v1`); `POST /v1/matches` answers carry
+  `policyVersion`, `riderState`, `abstentionReasons`, `matchingMode` and
+  `automaticSelection` (`permitted` | `withheld`).
 - **Identifiers are validated before the upstream call.** `cityCode` is
   `[0-9]{1,6}`, `routeId` is `[A-Za-z0-9_-]{1,64}`, `routeNo` is up to 16
   alphanumeric or Hangul characters. The former B551982 `stdgCd` and
@@ -173,8 +201,8 @@ server-side and answered generically.
 
 ## Configuration
 
-All values are server-side environment variables. None is ever returned, logged,
-or placed in a URL a client can see.
+All values are server-side environment variables. No credential among them is
+ever returned, logged, or placed in a URL a client can see.
 
 | Name | Required | Default | Purpose |
 |---|---|---|---|
@@ -185,12 +213,20 @@ or placed in a URL a client can see.
 | `TRANSIT_DISCOVERY_TTL_MS` | no | `21600000` (6 h) | City and route-number discovery cache window |
 | `TRANSIT_RATE_LIMIT_PER_MINUTE` | no | `120` | Per-caller burst limit; `0` disables |
 | `TRANSIT_ALLOWED_ORIGINS` | no | empty | Comma-separated absolute origins allowed by CORS |
-| `TRANSIT_SESSIONS_ENABLED` | no | `false` on Vercel, `true` locally | Opt a single-instance deployment back into ride sessions |
+| `TRANSIT_SESSIONS_ENABLED` | no | `true` locally or with the `redis` store; `false` on Vercel with the `memory` store | Whether the three session routes answer (see *Sessions*) |
+| `TRANSIT_SESSION_STORE` | no | `memory` | `memory` (one process) or `redis` (Upstash Redis over its REST API). `redis` without both Upstash variables, or any other value, is refused at boot rather than falling back to memory |
+| `TRANSIT_SESSION_KEY_PREFIX` | no | `tapso:journey-session:` | Redis key namespace for journey sessions, validated at boot on every store by `src/sessionKeyPrefix.ts`: `tapso:(<segment>:){0,3}journey-session:`, at most 96 characters. Set-but-empty or malformed is refused, never defaulted. Kept out of `/health` |
+| `UPSTASH_REDIS_REST_URL` | with `redis` | — | Upstash REST endpoint; an absolute `https` URL, plain HTTP is refused |
+| `UPSTASH_REDIS_REST_TOKEN` | with `redis` | — | Upstash REST token. Like the TAGO key it never reaches `/health`; `sessions.durableStoreConfigured` reports presence only |
+| `TRANSIT_AUTOMATIC_MATCHING_ENABLED` | no | `false` | Operator opt-in to automatic vehicle selection (`true`/`1`/`false`/`0`; anything else fails at boot). Refused below `READY_FOR_BOUNDED_AUTOMATION`; the demonstrated readiness is `READY_FOR_SHADOW` (`src/matchingReadiness.ts`, never read from the environment). When refused, `/health` reports `matching.automaticMatchingRequested: true`, `automaticMatchingEnabled: false` and `withheldReason: "matching_readiness_below_bounded_automation"`, and the runtime logs `automatic_matching_refused` once per process |
+| `PORT` | no | `8787` | Local Node server (`src/server.ts`) only |
 | `RIDE_CAPTURE_OPERATOR_TOKEN` | no | unset → `/operator/*` disabled | Shared secret for the ride-capture endpoints and the mobile controller. Minimum 24 characters; a shorter value is refused. Store it on Vercel as a **Sensitive** variable |
 | `RIDE_CAPTURE_OPERATOR_RATE_LIMIT_PER_MINUTE` | no | `30` | Per-caller ceiling on the operator budget, kept separate from the public one; `0` disables |
 
 `VERCEL`, `VERCEL_ENV`, `VERCEL_REGION`, and `VERCEL_GIT_COMMIT_SHA` are supplied
-by the platform and are read for the health payload only.
+by the platform. `VERCEL` also marks a serverless deployment, which the session
+default and the retired credential name above depend on; the other three are
+read for the health payload only.
 
 The key must never appear in the repository, in a `VITE_*` variable, in the
 browser bundle, in the iOS binary, in a client request, in a log line, in an
@@ -200,6 +236,12 @@ someone needs to exercise preview deployments against live data, for
 **Preview**. Preview deployments do not inherit a production credential by
 default and should not be given one casually: preview URLs are shared more
 widely than production ones.
+
+The Railway collector (`src/backgroundServer.ts`) reads its own environment:
+`TAGO_SERVICE_KEY`, `RIDE_CAPTURE_OPERATOR_TOKEN`, `TRANSIT_ALLOWED_ORIGINS`, the
+two `UPSTASH_REDIS_REST_*` variables, `BETA_TESTERS_ENABLED`, the three
+`WEB_PUSH_VAPID_*` variables, `PORT` (default `8788`) and `HOST` (default
+`0.0.0.0`). The repository's `.env.example` lists them.
 
 ### Why the name changed
 
@@ -267,14 +309,17 @@ use the same primitive with a six-hour window.
 
 | Question | Answer |
 |---|---|
-| What is the session store? | An in-process `Map` inside `JourneySessionCoordinator`. |
-| Is it safe on serverless? | **No.** Vercel Functions scale horizontally and recycle instances. A session created on one instance is absent from the next, so `GET /v1/sessions/:id` would return `404` unpredictably. |
-| What is done about it in this phase? | The endpoints fail closed. `TRANSIT_SESSIONS_ENABLED` defaults to `false` whenever `VERCEL` is set, and the three session routes answer `503 SESSIONS_UNAVAILABLE` with the reason. `/health` reports `sessions.store` and `sessions.enabled` honestly. |
-| Is a durable database needed now? | **No.** The only thing a durable store would unlock is automatic passenger tracking, which is already withheld by the freshness gate until Tasks B and C complete. Adding Redis or Postgres now would be infrastructure for a policy-disabled feature. |
-| Is stateless enough until then? | **Yes.** Task B is a local controlled ride capture that drives `TagoTransitProvider` directly and never calls the session API. The four read endpoints it depends on are stateless. |
+| What is the session store? | A `JourneySessionStore` (`src/sessionStore.ts`) chosen by `TRANSIT_SESSION_STORE`: `memory`, the default, is a `Map` in one process; `redis` is Upstash Redis over its REST API (`src/upstashSessionStore.ts`), with every key under `TRANSIT_SESSION_KEY_PREFIX`. Every save is a compare-and-set on a version, so a stale writer cannot move a rider backward. |
+| Is the memory store safe on serverless? | **No.** Vercel Functions scale horizontally and recycle instances. A session created on one instance is absent from the next, so `GET /v1/sessions/:id` would return `404` unpredictably. |
+| What is done about it? | The endpoints fail closed. `TRANSIT_SESSIONS_ENABLED` defaults to `false` whenever `VERCEL` is set and the store is `memory`, and the three session routes answer `503 SESSIONS_UNAVAILABLE` with the reason. `/health` reports `sessions.store`, `sessions.enabled` and `sessions.durableStoreConfigured` honestly. |
+| Is the Upstash store verified? | Against the live service on 2026-09-23 (`VERIFIED_LIVE_INFRASTRUCTURE`): store 15/15 and a preview deployment 12/12 (`exec-plans/DURABLE_JOURNEY_SESSIONS.md`). Production was left on the memory store: the operator's record of 2026-09-23 (`HISTORICAL_REPORT_ONLY`), not an observation; `/health` `sessions.store` is the authority. Moving production is a separate decision that needs `TRANSIT_SESSION_KEY_PREFIX=tapso:prod:journey-session:` (`KNOWN_ISSUES.md`). |
+| Does a durable store enable automatic matching? | **No.** Sessions and automatic selection are separate flags. Automatic selection is withheld by release gate `matcher-passive-safety-v4`, not by the store, and the configuration refuses `TRANSIT_AUTOMATIC_MATCHING_ENABLED` below `READY_FOR_BOUNDED_AUTOMATION`. |
+| Does validation need sessions? | **No.** Matcher evidence comes from rider-free passive collection, which reads the stateless read endpoints or TAGO directly, and from offline replay; neither calls the session API (`.github/workflows/matcher-evidence.yml`). |
 
-When Task C defines a freshness rule and sessions become a real passenger
-feature, the session store is the one component that must be replaced first.
+Task C's freshness rule now exists (`server_observed_cadence_v1`) and the
+durable store is built. A production ride feature still needs production moved
+onto that store, and a queue or scheduled worker for APNs, which is not built
+yet (`ARCHITECTURE.md`).
 
 ## Running locally
 
@@ -294,7 +339,7 @@ Verification:
 npm --prefix services/api test
 npm --prefix apps/web ci && npm --prefix apps/web run typecheck:vercel
 npx --prefix apps/web tsc --project services/api/tsconfig.json \
-  --typeRoots apps/web/node_modules/@types      # run from apps/web
+  --typeRoots apps/web/node_modules/@types      # run from the repository root
 ```
 
 ## Deploying
@@ -344,10 +389,12 @@ because they are what any new environment of this API needs.
    `credential: { source: "missing", deprecatedNamePresent: true }` in `/health`.
 2. Settings → Deployment Protection: production must be publicly reachable for
    the iOS client. Preview may stay protected.
-3. Confirm `/health` reports `liveTransitConfigured: true` and
-   `credential.source: "canonical"`, then run the smoke script against
-   `https://tapso-api.vercel.app`. Both were done on 2026-09-12; see
-   *Production verification*.
+3. `/health` must report `liveTransitConfigured: true` and
+   `credential.source: "canonical"`, and the smoke script reports both. For
+   `https://tapso-api.vercel.app` both were checked, and the smoke script run,
+   on 2026-09-12; see *Production verification*. After merge the scheduled
+   production smoke runs the script there (see *Smoke test*), so no manual run
+   is required.
 
 There is no separate deploy command. Pushing a branch produces a preview and
 merging to `main` is the production deploy.
@@ -360,12 +407,44 @@ node --experimental-strip-types services/api/scripts/smoke.ts https://<base-url>
 ```
 
 The script checks response semantics, not status codes alone: that `/health`
-carries no credential field, that `cityCode` 39 is present, that route variants
-are not collapsed, that stop sequences are strictly increasing, that every
-vehicle keeps the epoch sentinel and `timestampSource: "unavailable"`, and that
-invalid, missing, legacy, unknown-path, and wrong-method requests are rejected.
+carries no credential field and which credential source it reports, whether
+`cityCode` 39 is present, that route variants are not collapsed, that stop
+sequences are strictly increasing, that every vehicle keeps the epoch sentinel
+and `timestampSource: "unavailable"`, and that invalid, missing, legacy,
+unknown-path, and wrong-method requests are rejected. It also checks:
+
+- **Freshness posture.** `/v1/vehicles` `meta.freshness` must carry
+  `providerObservationTimestamp: "unavailable"` and a known `automaticMatching`
+  value; the wording from before the readiness gate,
+  `shadow_only_pending_field_validation`, is a warning.
+- **Matching posture.** From the `/health` `matching` block: a failure if the
+  block is missing, if automatic matching is on while the demonstrated readiness
+  it reports is below `READY_FOR_BOUNDED_AUTOMATION`, or if it names a serving
+  policy other than `directed-route-progress-v1`; a warning if
+  `TRANSIT_AUTOMATIC_MATCHING_ENABLED` is set and refused, or if it names no
+  policy (a deployment from before the directed matcher).
+- **Sessions and the operator path.** `POST /v1/sessions` gets a write-free
+  probe (boarding stop sequence `0`, rejected by input validation before any
+  provider read or store write): `503 SESSIONS_UNAVAILABLE` or
+  `400 INVALID_INPUT` passes, and a `201` is a failure. `/operator/snapshot`
+  without a token must answer `401` or `503`.
+
 A deployment without a credential is reported as `BLOCKED_BY_CREDENTIALS`, never
-converted into a pass. It exits non-zero only on a real failure.
+converted into a pass. A warning is not a failure. It exits non-zero only on a
+real failure.
+
+No release or validation step requires running it by hand:
+
+- CI runs it on every push and pull request.
+  `services/api/test/smoke.test.ts` points it at the real request handler over a
+  synthetic provider (the credentialed path against the current contract), and
+  the `matcher-evidence` job points it at the real local server with no
+  credential and `TRANSIT_AUTOMATIC_MATCHING_ENABLED=true`, requiring the
+  refusal warning.
+- After merge, the `production-smoke` job of
+  `.github/workflows/matcher-evidence.yml` runs it against
+  `https://tapso-api.vercel.app` on every scheduled run (and on a manual
+  dispatch) and keeps its output as a 90-day artifact.
 
 ### Rollback
 
@@ -404,9 +483,11 @@ source-freshness rule.
 
 > Historical record, retained as observed on that date. Task C replaced those
 > two strings with `policy: "server_observed_cadence_v1"` and
-> `automaticMatching: "shadow_only_pending_field_validation"`. The substance did
-> not change: automatic matching is still withheld. See the freshness-posture
-> table above for what the current fields mean.
+> `automaticMatching: "shadow_only_pending_field_validation"`, and release gate
+> `matcher-passive-safety-v4` later replaced the second with
+> `"shadow_only_pending_matching_readiness"`. The substance did not change:
+> automatic matching is still withheld. See the freshness-posture table above
+> for what the current fields mean.
 
 ## Limitations
 
@@ -421,14 +502,26 @@ source-freshness rule.
 - `IMPLEMENTED`: the Vercel Functions adapter, the rewrites, and the header and
   cache policy are covered by deterministic tests and by an end-to-end run of
   the same handler over real HTTP through the local Node adapter.
-- `VERIFIED`: local end-to-end behaviour, including the credentialed,
-  uncredentialed, and serverless-shaped configurations.
+- `SIMULATED`: local end-to-end behaviour, including the credentialed,
+  uncredentialed, and serverless-shaped configurations, run through the real
+  Node adapter over a synthetic TAGO upstream
+  (`exec-plans/PRODUCTION_TRANSIT_BACKEND.md` §5).
 - Rate limiting is per warm instance, not global.
-- Ride sessions are disabled in serverless and will stay that way until a
-  durable store exists.
-- Automatic vehicle matching is withheld; see `docs/DATA_VALIDATION.md`.
+- Ride sessions are off by default on serverless while the store is `memory`,
+  which is production's store as last recorded (2026-09-23). The Upstash store
+  is built and was verified on a preview deployment; moving production onto it
+  is a separate decision (see *Sessions*).
+- Automatic vehicle matching is withheld: release gate
+  `matcher-passive-safety-v4` has demonstrated `READY_FOR_SHADOW`, and the
+  configuration refuses it below `READY_FOR_BOUNDED_AUTOMATION`; see
+  `validation/MATCHER_SAFETY_EVIDENCE_V4.md`.
 
 ## Task B prerequisite
+
+> **2026-09-29.** Historical and not required. No readiness level up to
+> `READY_FOR_CONFIRMATION_ASSISTED` needs a ride; matcher evidence now comes
+> from rider-free passive collection and replay
+> (`exec-plans/HUMAN_LABOR_ELIMINATION.md`).
 
 Task B is a controlled real Route 365 ride capture. It does not depend on this
 deployment: `scripts/ride-capture/capture.ts` constructs `TagoTransitProvider`
