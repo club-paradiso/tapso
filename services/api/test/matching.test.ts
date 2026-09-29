@@ -953,6 +953,38 @@ test("a sighting or a declaration dated after now gives no bound on the time sin
   assertWithheld(matchVehicle(request([bus("leader", BOARDING - 2)], { declaredAt: ahead })), "session_first_observed_late");
 });
 
+test("a remembered row of the sighting that left a bus unplaced stays unplaced, though received a moment after now (R28)", () => {
+  // In production a decision reads `now` and then fetches, so each row of the
+  // snapshot is received a few milliseconds later. The evidence window keeps
+  // the row with a stop sequence; it is still that same, unplaced sighting.
+  const received = new Date(Date.parse(now) + 300).toISOString();
+  const placedRow = { ...tago("blur", 1), receivedAt: received };
+  const blurRow = { ...tago("blur", undefined), receivedAt: received };
+  const later = new Date(Date.parse(now) + 60_000).toISOString();
+  for (const rows of [[placedRow, blurRow], [blurRow, placedRow]]) {
+    const first = matchVehicle(request([bus("leader", BOARDING - 4), ...rows]));
+    assertWithheld(
+      matchVehicle(request([bus("leader", BOARDING - 3, { observedAt: later })], { now: later, passage: first.passage, recentlySeen: [placedRow] })),
+      "candidate_route_progress_unknown",
+      rows.map((row) => String(row.stopSequence)).join(", "),
+    );
+  }
+});
+
+test("a sighting the session recorded, dated after now by however little, gives no bound on the time since (R29)", () => {
+  // The clock stepped back 5 s: inside the tolerance a provider's time gets,
+  // but the session's own last sighting of a bus cannot be later than now.
+  const ahead = new Date(Date.parse(now) + 5_000).toISOString();
+  const lost = { offsets: { lost: { min: -5, max: -5, last: -5, lastSeenAt: ahead } }, initial: ["leader", "lost"] };
+  assert.equal(matchVehicle(request([bus("leader", BOARDING - 1)], { passage: lost })).passage?.withheld?.reason,
+    "vehicle_may_have_reached_boarding_stop_unobserved", "out of sight");
+  // Round a loop, seen again: it may have gone round through the stop.
+  const loop = { stops: loopStops, boardingStopSequence: 11 };
+  const seen = { offsets: { round: { min: -8, max: -8, last: -8, lastSeenAt: ahead } }, initial: ["round", "c"] };
+  assert.equal(matchVehicle(request([bus("round", 6), bus("c", 10)], { ...loop, passage: seen })).passage?.withheld?.reason,
+    "vehicle_may_have_reached_boarding_stop_unobserved", "seen again round a loop");
+});
+
 test("on-board rider: a bus shown not to be theirs does not compete once it is out of sight", () => {
   // The follower was seen before the stop after the rider boarded, then past
   // it: not the rider's bus. Out of sight since, it may still be in the

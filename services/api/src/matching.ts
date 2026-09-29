@@ -96,10 +96,21 @@ export const MATCHER_POLICY_VERSION = "directed-route-progress-v1";
  */
 const CLOCK_SKEW_TOLERANCE_MS = 10_000;
 
-/** Seconds from `thenMs` to `nowMs`; unbounded when `thenMs` cannot be read or lies too far after `nowMs`. */
+/** Seconds from `thenMs` to `nowMs`; unbounded when either cannot be read or `thenMs` lies too far after `nowMs`. */
 function secondsSince(thenMs: number, nowMs: number): number {
-  if (!Number.isFinite(thenMs) || thenMs > nowMs + CLOCK_SKEW_TOLERANCE_MS) return Number.POSITIVE_INFINITY;
+  if (!Number.isFinite(thenMs) || !Number.isFinite(nowMs) || thenMs > nowMs + CLOCK_SKEW_TOLERANCE_MS) return Number.POSITIVE_INFINITY;
   return Math.max(0, (nowMs - thenMs) / 1_000);
+}
+
+/**
+ * Seconds since a sighting the session recorded itself, which is always an
+ * earlier decision's `now`. Such a stamp can only lie after `now` if the clock
+ * stepped back, by however little, and then nothing bounds the time since
+ * (finding R29): no tolerance, unlike a provider's or a receipt's time.
+ */
+function secondsSinceOwnSighting(thenMs: number, nowMs: number): number {
+  if (!Number.isFinite(thenMs) || !Number.isFinite(nowMs) || thenMs > nowMs) return Number.POSITIVE_INFINITY;
+  return (nowMs - thenMs) / 1_000;
 }
 
 export interface DirectedMatcherPolicy {
@@ -594,7 +605,7 @@ function rememberPassage(
   // last sighting was from passing the stop in the sense that matters.
   const hadTimeToPass = (seen: { lastSeenAt?: string } | undefined, throughStop: number, now: Distances) => {
     if (seen === undefined || now.backward === undefined) return false;
-    const seconds = secondsSince(seen.lastSeenAt === undefined ? Number.NaN : Date.parse(seen.lastSeenAt), nowMs);
+    const seconds = secondsSinceOwnSighting(seen.lastSeenAt === undefined ? Number.NaN : Date.parse(seen.lastSeenAt), nowMs);
     return throughStop + now.backward <= reachAfter(seconds);
   };
 
@@ -688,7 +699,20 @@ function rememberPassage(
     });
     if (new Set(placed).size > 1) sawUnknown.add(vehicleId);
   }
-  for (const vehicleId of sawUnknown) unknownProgress.set(vehicleId, request.now);
+  // The mark is dated by the latest receipt of the rows that raised it, never
+  // before them: in production a row is received a moment after `now` is
+  // read, and a row the evidence window keeps from this same snapshot must not
+  // read later as a newer, placed sighting (finding R28).
+  const markedAt = (vehicleId: string) => {
+    let latest = nowMs;
+    for (const row of onRoute) {
+      if (row.ranked.vehicleId !== vehicleId) continue;
+      const receivedAt = Date.parse(row.observation.receivedAt ?? "");
+      if (Number.isFinite(receivedAt) && receivedAt > latest) latest = receivedAt;
+    }
+    return Number.isFinite(latest) ? new Date(latest).toISOString() : request.now;
+  };
+  for (const vehicleId of sawUnknown) unknownProgress.set(vehicleId, markedAt(vehicleId));
   for (const vehicleId of sawKnown) if (!sawUnknown.has(vehicleId)) unknownProgress.delete(vehicleId);
 
   // A vehicle missing from this poll but still remembered is judged on its
@@ -746,8 +770,8 @@ function rememberPassage(
     // could have reached the stop, the rider may have boarded it unobserved.
     if (riderState !== "waiting_at_stop") continue;
     const seenAtMs = range.lastSeenAt === undefined ? Number.NaN : Date.parse(range.lastSeenAt);
-    // A sighting time that cannot be read, or lies well after `now`, gives no bound.
-    const unseenSeconds = secondsSince(seenAtMs, nowMs);
+    // A sighting time that cannot be read, or lies after `now`, gives no bound.
+    const unseenSeconds = secondsSinceOwnSighting(seenAtMs, nowMs);
     const toStop = stopsToBoardingStop(range.last ?? range.max, topology);
     if (toStop !== undefined && toStop <= reachAfter(unseenSeconds)) withhold("vehicle_may_have_reached_boarding_stop_unobserved");
   }
@@ -853,8 +877,11 @@ function rememberedPosition(
   }
   const seenAtMs = row.receivedAt ? Date.parse(row.receivedAt) : Number.NaN;
   // A receipt time that cannot be read, or lies well after `now`, gives no
-  // bound short of the limit.
-  const ageSeconds = Math.min(secondsSince(seenAtMs, nowMs), ageLimitSeconds);
+  // bound short of the limit. Out of sight longer than the window, the time is
+  // the session's own last sighting, which lies after `now` only if the clock
+  // stepped back (finding R29).
+  const since = ageLimitSeconds === Number.POSITIVE_INFINITY ? secondsSinceOwnSighting(seenAtMs, nowMs) : secondsSince(seenAtMs, nowMs);
+  const ageSeconds = Math.min(since, ageLimitSeconds);
   // A straight route ends at its last stop and a loop repeats after one lap;
   // without the stop list nothing can be selected, and the window's reach is
   // walked only to say what the vehicle blocks.
