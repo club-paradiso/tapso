@@ -143,5 +143,9 @@ jobs:
         with:
           name: passive-shadow-v3-raw
           path: work/passive-shadow/pv3-*
-          retention-days: 14
+          # The raw streams are the evidence of record for every later offline
+          # re-evaluation, so they are kept for the longest retention GitHub
+          # allows here. The evidence vault workflow copies them somewhere that
+          # does not expire.
+          retention-days: 90
           if-no-files-found: ignore
