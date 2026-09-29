@@ -67,7 +67,9 @@
  *   is compared with the last one by its distance to the stop each way, so a
  *   crossing next to the seam is still a crossing, however short the lap
  *   (F17), and a bus seen again after time enough to go round through the
- *   stop may have too (R24). The on-board rule mirrors it: a bus that reached
+ *   stop may have too (R24), as may a bus whose distance to go grew by only
+ *   one or two stops, which is also a reading a stop or two back (R43): a
+ *   possibility, not a sighting. The on-board rule mirrors it: a bus that reached
  *   the stop after the rider said they had boarded is not theirs, a bus
  *   missing from their first snapshot is never selected but still competes
  *   (F16), and a bus leaving the on-board window withholds selection for good.
@@ -77,7 +79,8 @@
  *   snapshot is never excluded by either place (R27), and is not forgotten
  *   either: of unknown progress, it withholds once out of sight, and a bus
  *   seen at no trustworthy place and then beyond the on-board window may be
- *   the rider's bus leaving it (R30).
+ *   the rider's bus leaving it (R30), if the rider's bus could have got there
+ *   since they said they were aboard (R40).
  *
  * There is no "best available guess". A numerical score never overrides a
  * violated rule: rules are applied first, and the score only orders what the
@@ -548,7 +551,10 @@ function decide(
  * the first); and a bus whose route progress was unknown when it left the
  * feed. From then on no other bus can be selected automatically: the rider may
  * already be riding. Legacy matching got such cases "right" only by committing
- * to a bus sitting at the stop.
+ * to a bus sitting at the stop. Round a loop, a bus whose distance still to go
+ * to the stop grew by one or two stops read back or went all the way round:
+ * that too withholds, as what the time allows rather than a sighting (finding
+ * R43).
  *
  * On-board rider: the rider said they were aboard when the session began, so
  * a vehicle missing from that first snapshot is never selected (it may still
@@ -560,7 +566,9 @@ function decide(
  * or seen again after time enough to go round, may have reached the stop after
  * they boarded: never selected, it still competes (finding R23). A bus the
  * feed placed at two places, or at none, is never excluded by that sighting
- * and never forgotten for it (findings R27, R30).
+ * and never forgotten for it (findings R27, R30): next seen beyond the window,
+ * where the rider's bus could have got to since they said they were aboard, it
+ * may be theirs leaving it (finding R40).
  */
 function rememberPassage(
   request: MatchRequest,
@@ -595,11 +603,16 @@ function rememberPassage(
   // The last sighting in memory; memory written before `last` existed keeps
   // only the extremes, and the furthest one stands in for it.
   const lastOf = (seen: { max: number; last?: number } | undefined) => (seen === undefined ? undefined : seen.last ?? seen.max);
-  // Since the last sighting, the distance still to travel to the stop grew:
-  // the bus went past the stop (or went backwards, which is no better).
+  // Since the last sighting, the distance still to travel to the stop grew by
+  // three stops or more: the bus went past the stop (or went backwards, which
+  // is no better). Grown by one or two, it read a stop or two back, or went
+  // all the way round through the stop, and nothing shows which: only what
+  // the time allows, never a sighting (finding R43).
   const passedOnLoop = (seen: { max: number; last?: number } | undefined, now: Distances) => {
     const last = lastOf(seen);
-    return last !== undefined && now.forward !== undefined && now.forward > around(last).forward!;
+    if (last === undefined || now.forward === undefined) return undefined;
+    const grew = now.forward - around(last).forward!;
+    return grew > 2 ? "crossed" : grew > 0 ? "read_back" : undefined;
   };
   // On board: inside the window, or one stop before the stop, where the rider's
   // bus may still read while it dwells.
@@ -647,15 +660,17 @@ function rememberPassage(
     sawKnown.add(vehicleId);
     const seen = seenBefore[vehicleId];
     if (riderState === "waiting_at_stop") {
-      const crossed = loop ? passedOnLoop(seen, row.facts) : seen !== undefined && seen.min <= -1 && offset >= 0;
+      const onLoop = loop ? passedOnLoop(seen, row.facts) : undefined;
+      const crossed = loop ? onLoop === "crossed" : seen !== undefined && seen.min <= -1 && offset >= 0;
       if (row.facts.zone === "boarding_stop_unresolved" || crossed) {
         withhold("boarding_stop_reached_during_session");
       }
       // Round a loop, seen again after long enough to have gone through the
       // stop and round to where it is now: it reads as not having crossed, and
-      // may have taken the rider (finding R24).
+      // may have taken the rider (finding R24). So may a bus read a stop or two
+      // back (finding R43).
       const last = lastOf(seen);
-      if (loop && last !== undefined && hadTimeToPass(seen, around(last).forward!, row.facts)) wentRound = true;
+      if (onLoop === "read_back" || (loop && last !== undefined && hadTimeToPass(seen, around(last).forward!, row.facts))) wentRound = true;
       // Its first known position this session. Already past the stop, it
       // could have been at the stop at any time up to the point its distance
       // past it allows; if that is after the rider began waiting, the rider
@@ -695,9 +710,16 @@ function rememberPassage(
         : seen !== undefined && seen.max >= -1 && seen.max <= window && offset > window;
       // Never placed before in this session, only seen at no place or at
       // two: it may have been in the window all along, so now beyond it, it
-      // may be the rider's bus leaving it (finding R30).
-      const neverPlaced = seen === undefined && unknownProgress.has(vehicleId);
-      if (left || (neverPlaced && (loop ? !nearWindow(row.facts) : offset > window))) {
+      // may be the rider's bus leaving it (finding R30). Only if it could have
+      // got there since the rider said they were aboard, when their bus was at
+      // the window's far edge at most: beyond it by no more than the motion
+      // model allows since, and a stop for a misread. Round a loop that is
+      // counted past the stop, so a bus before it can be the rider's only once
+      // there was time to go round (finding R40).
+      const beyond = loop ? (nearWindow(row.facts) ? undefined : row.facts.backward! - window) : offset > window ? offset - window : undefined;
+      const neverPlaced = seen === undefined && unknownProgress.has(vehicleId) && beyond !== undefined
+        && (Number.isNaN(sinceDeclared) || beyond <= reachAfter(sinceDeclared) + 1);
+      if (left || neverPlaced) {
         withhold("vehicle_left_on_board_window_during_session");
       }
     }
@@ -752,7 +774,9 @@ function rememberPassage(
     const offset = facts.offset;
     if (offset === undefined) continue;
     if (riderState === "waiting_at_stop") {
-      if (loop ? passedOnLoop(seen, facts) : seen.min <= -1 && offset >= 0) withhold("boarding_stop_reached_during_session");
+      const onLoop = loop ? passedOnLoop(seen, facts) : undefined;
+      if (loop ? onLoop === "crossed" : seen.min <= -1 && offset >= 0) withhold("boarding_stop_reached_during_session");
+      if (onLoop === "read_back") wentRound = true;
     } else if (loop
       ? nearWindow(around(lastOf(seen)!)) && !nearWindow(facts)
       : seen.max >= -1 && seen.max <= window && offset > window) {
