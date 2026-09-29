@@ -61,6 +61,8 @@ const PERTURB = "services/api/src/passiveShadowPerturb.ts";
 const SUMMARY = "services/api/src/passiveShadowSummary.ts";
 const FRESHNESS = "services/api/src/sourceFreshness.ts";
 const SESSION = "services/api/src/journeySession.ts";
+const GATE = "services/api/src/matcherSafetyGate.ts";
+const LIVE = "services/api/src/liveReplayEvidence.ts";
 
 const T = {
   matching: "services/api/test/matching.test.ts",
@@ -72,6 +74,8 @@ const T = {
   crossLanguage: "services/api/test/crossLanguageAuthority.test.ts",
   counterfactual: "services/api/test/passiveCounterfactual.test.ts",
   rideCapture: "services/api/test/rideCapture.test.ts",
+  gate: "services/api/test/matcherSafetyGate.test.ts",
+  liveEvidence: "services/api/test/liveReplayEvidence.test.ts",
 } as const;
 
 /** Joins source lines with `\n`, so multi-line anchors keep their exact indentation. */
@@ -831,6 +835,110 @@ export const NEGATIVE_CONTROLS: readonly NegativeControl[] = [
       replace: "const automaticMatchingEnabled = automaticMatchingRequested;",
     }],
     testFiles: ["services/api/test/apiConfig.test.ts", "services/api/test/apiRouter.test.ts"],
+  },
+  {
+    id: "H-live-stale",
+    family: "honesty",
+    catalogue: "extra",
+    description: "The gate accepts live and counterfactual evidence produced by any matcher sources, not only the current ones.",
+    protection: "Evidence speaks only for the code that produced it: after a matcher change, a readiness claim needs a fresh live replay.",
+    edits: [{
+      file: GATE,
+      find: "const fresh = (digest: string | undefined) => current !== undefined && digest === current;",
+      replace: "const fresh = (digest: string | undefined) => digest === current || current !== digest;",
+    }],
+    testFiles: [T.gate, T.liveEvidence],
+  },
+  {
+    id: "H-pinned-controls",
+    family: "honesty",
+    catalogue: "extra",
+    description: "SH-4 stops checking that every pinned negative control was killed, so a control deleted from the catalogue goes unnoticed.",
+    protection: "A report that lost a control cannot pass for a complete one.",
+    edits: [{
+      file: GATE,
+      find: "const unpinned = controls ? PINNED_NEGATIVE_CONTROLS.filter((id) => !controls.killedIds.includes(id)) : [];",
+      replace: "const unpinned: string[] = [];",
+    }],
+    testFiles: [T.gate],
+  },
+  {
+    id: "H-live-omitted",
+    family: "honesty",
+    catalogue: "extra",
+    description: "CA-1 passes although some retained artifacts could not be fetched or verified.",
+    protection: "A replay that left out retained evidence is not a replay of the evidence; its wrong commits could be among the omitted.",
+    edits: [{
+      file: GATE,
+      find: "status: liveStatus((value) => value.collections >= 1 && value.reproductionOk && value.omittedArtifacts.length === 0),",
+      replace: "status: liveStatus((value) => value.collections >= 1 && value.reproductionOk),",
+    }],
+    testFiles: [T.gate, T.liveEvidence],
+  },
+  {
+    id: "H-live-units",
+    family: "honesty",
+    catalogue: "extra",
+    description: "A window with no evaluated case still counts as a window, a time band and a provider path.",
+    protection: "Sample dimensions come only from windows that contributed an independent unit; an empty or failed window proves nothing.",
+    edits: [{
+      file: LIVE,
+      find: "    if (units.length === 0) continue;",
+      replace: "    if (units.length < 0) continue;",
+    }],
+    testFiles: [T.liveEvidence],
+  },
+  {
+    id: "H-live-carried",
+    family: "honesty",
+    catalogue: "extra",
+    description: "The failures of a window evaluated before are dropped once its raw is no longer retained.",
+    protection: "Expiry never erases a wrong commit: failures outlive the raw that showed them.",
+    edits: [{
+      file: LIVE,
+      find: "  for (const row of options.previous ?? []) {",
+      replace: "  for (const row of [] as DetailRow[]) {",
+    }],
+    testFiles: [T.liveEvidence],
+  },
+  {
+    id: "H-mitigation-criterion",
+    family: "honesty",
+    catalogue: "extra",
+    description: "Any passing test satisfies a human-only mitigation, whether or not it is named for its criterion.",
+    protection: "A mitigation counts only with evidence that can exist for it alone.",
+    edits: [{
+      file: GATE,
+      find: "const foreign = tests.filter((name) => !name.startsWith(`${criterion}: `));",
+      replace: "const foreign = tests.filter((name) => name.length < 0);",
+    }],
+    testFiles: [T.gate],
+  },
+  {
+    id: "H-coordinator-wiring",
+    family: "honesty",
+    catalogue: "extra",
+    description: "The runtime hands the journey-session coordinator the requested automatic-matching flag instead of the granted one.",
+    protection: "Sessions select automatically only when the configuration granted it; an opt-in refused by readiness never reaches them.",
+    edits: [{
+      file: "services/api/src/apiRuntime.ts",
+      find: "automaticMatchingEnabled: config.matching.automaticMatchingEnabled,",
+      replace: "automaticMatchingEnabled: config.matching.automaticMatchingRequested,",
+    }],
+    testFiles: ["services/api/test/apiRouter.test.ts"],
+  },
+  {
+    id: "H-matches-shadow",
+    family: "honesty",
+    catalogue: "extra",
+    description: "In shadow, POST /v1/matches offers the matcher's pick as a top-level selectedVehicleId again.",
+    protection: "Below bounded automation no answer carries a selection a client could act on; the pick is only a shadowSelection.",
+    edits: [{
+      file: "services/api/src/apiRouter.ts",
+      find: "...(automatic ? result : ranking),",
+      replace: "...(automatic ? result : { ...ranking, selectedVehicleId }),",
+    }],
+    testFiles: ["services/api/test/apiRouter.test.ts"],
   },
 ];
 

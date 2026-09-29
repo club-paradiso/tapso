@@ -80,22 +80,111 @@ export interface CriterionResult {
  *   is tolerated → n ≥ 60 runs.
  * - Bounded automation: nobody confirms, so the bound must be 1 % → n ≥ 300.
  *
- * The independent unit is the vehicle *trajectory* (one bus, one trip), not the
- * pseudo-boarding case: cases from one trajectory share the bus, the timing and
- * the competitors, and counting them separately would overstate the sample
- * roughly twenty-fold. Contested cases (two or more vehicles plausible at once)
- * are counted separately because the ambiguity rules only act there; 30 of
- * them bounds the contested failure rate at 10 %.
+ * The independent unit is the *trajectory*: one bus on one route direction in
+ * one collection window, counted only when it contributed at least one
+ * evaluated case (`liveReplayEvidence.ts`). Pseudo-boarding cases are not the
+ * unit: cases from one trajectory share the bus, the timing and the
+ * competitors, and counting them separately would overstate the sample roughly
+ * twenty-fold. For the same reason a bus split into two runs by a feed gap is
+ * one unit, never two. Contested trajectories (a waiting-rider case in which a
+ * second vehicle was plausible at a decision) are counted separately because
+ * the ambiguity rules only act there; 30 of them bound the per-trajectory
+ * contested failure rate at 10 %.
  *
- * The Passive Shadow v3 evidence of record has 29 trajectories and 27
- * vehicles, so it meets neither the confirmation-assisted nor the automation
- * minimum. These numbers were not fitted to it.
+ * Bounded automation commits for riders at session cadence, so its sample is
+ * the session-cadence subset alone (direct TAGO, uncached); the 20 s-cached
+ * public path is a different regime and does not count toward it.
+ *
+ * The Passive Shadow v3 evidence of record has 29 trajectories with cases (by
+ * its own trajectory split) and 27 vehicles from one window, so it meets
+ * neither the confirmation-assisted nor the automation minimum. These numbers
+ * were not fitted to it.
  */
 export const MINIMUMS = {
-  confirmationAssisted: { trajectories: 60, vehicles: 30, routes: 8, contestedCases: 30, collectionWindows: 3, timeBands: 2 },
-  boundedAutomation: { trajectories: 300, vehicles: 100, routes: 15, contestedCases: 100, collectionWindows: 10, timeBands: 3 },
+  confirmationAssisted: { trajectories: 60, vehicles: 30, routes: 8, contestedTrajectories: 30, collectionWindows: 3, timeBands: 2 },
+  boundedAutomation: { trajectories: 300, vehicles: 100, routes: 15, contestedTrajectories: 100, collectionWindows: 10, timeBands: 3 },
   propertySeedsPerInvariant: 2_000,
 } as const;
+
+/**
+ * Every negative control SH-4 requires, by id. A control that disappears from
+ * the catalogue must disappear from here too, in a reviewed change; a report
+ * that lacks any of these as KILLED fails SH-4 however complete it says it is.
+ */
+export const PINNED_NEGATIVE_CONTROLS = [
+  "F1", "F1b", "F1c", "F3a", "F3b", "F3c", "F3d", "F4",
+  "M-memory", "M-fresh", "M-content", "M-regress", "M-error", "M-margin", "M-topology", "M-repeat", "M-onboard", "M-legacy-import",
+  "F1-unguarded", "F1b-onboard", "F3b-order", "F3-guard-input", "F3-guard-snapshot", "F3c-pass",
+  "F4-unobserved", "F4-carry", "F4-onboard-late", "F4-onboard-left", "F4-onboard-roster",
+  "M-memory-reach", "M-stale-compete", "M-stale-compete-onboard", "M-unknown",
+  "H-perturb-live", "H-truth-flag", "H-live-guard", "H-raw-ids",
+  "F9-margin-window", "F10-remembered-crossing", "F10-remembered-window", "F11-pre-passage-row", "F12-first-look",
+  "F13-receipt-order", "F14-vehicle-guard", "F14-stop-guard", "H-policy-label", "H-truth-timing", "H-readiness-clamp",
+  "H-live-stale", "H-pinned-controls", "H-live-omitted", "H-live-units", "H-live-carried", "H-mitigation-criterion",
+  "H-coordinator-wiring", "H-matches-shadow",
+] as const;
+
+/** The criterion each human-only mitigation answers, and the only kind of evidence that can show it. */
+export const MITIGATION_CRITERIA = {
+  riderSeesAndCanUndoAutomaticPick: { criterion: "BA-3", evidenceKind: "tests" },
+  destinationAlertIndependentOfProviderLag: { criterion: "BA-4", evidenceKind: "tests" },
+  physicalDeviceLiveActivityVerified: { criterion: "BA-5", evidenceKind: "human_record" },
+  riderBoardsFirstArrivingBusMeasured: { criterion: "AM-1", evidenceKind: "human_record" },
+} as const;
+
+export type MitigationKey = keyof typeof MITIGATION_CRITERIA;
+
+/** One declared mitigation, as `ops/matcher-evidence/human-only-mitigations.json` states it. */
+export interface MitigationEntry {
+  met: boolean;
+  evidenceKind: "tests" | "human_record";
+  evidence: { tests?: string[]; record?: string } | null;
+  source: string;
+}
+
+/**
+ * A mitigation counts only with evidence that can exist for it alone: tests
+ * named for its criterion (`"BA-3: …"`) that passed in the same suite run, or
+ * a committed human record for exactly this property that names what was done,
+ * on what, when, by whom, and that it passed. A bare `met: true` is a claim.
+ */
+export function mitigationEvidenceHolds(
+  key: MitigationKey,
+  entry: MitigationEntry,
+  context: { passingTests: readonly string[]; readRecord: (record: string) => unknown },
+): { holds: boolean; reason: string } {
+  const { criterion, evidenceKind } = MITIGATION_CRITERIA[key];
+  if (entry.met !== true) return { holds: false, reason: "not declared met" };
+  if (entry.evidenceKind !== evidenceKind) return { holds: false, reason: `${criterion} can only be shown by ${evidenceKind}` };
+  if (evidenceKind === "tests") {
+    const tests = entry.evidence?.tests ?? [];
+    const passing = new Set(context.passingTests);
+    if (tests.length === 0) return { holds: false, reason: "no test named" };
+    const foreign = tests.filter((name) => !name.startsWith(`${criterion}: `));
+    if (foreign.length > 0) return { holds: false, reason: `tests not named for ${criterion}: ${foreign.join("; ")}` };
+    const missing = tests.filter((name) => !passing.has(name));
+    if (missing.length > 0) return { holds: false, reason: `did not pass in this suite run: ${missing.join("; ")}` };
+    return { holds: true, reason: `${tests.length} test(s) named for ${criterion} passed` };
+  }
+  const record = entry.evidence?.record;
+  const content = record ? context.readRecord(record) : undefined;
+  if (!content || typeof content !== "object") return { holds: false, reason: "no committed human record" };
+  const row = content as Record<string, unknown>;
+  const text = (field: string) => typeof row[field] === "string" && (row[field] as string).trim().length > 0;
+  const problems = [
+    row.evidenceClass === "VERIFIED_LIVE_HUMAN" ? "" : "evidenceClass is not VERIFIED_LIVE_HUMAN",
+    row.property === key ? "" : `property is not ${key}`,
+    row.criterion === criterion ? "" : `criterion is not ${criterion}`,
+    text("procedure") ? "" : "no procedure",
+    text("subject") ? "" : "no subject (device, build or sample)",
+    text("performedBy") ? "" : "no performedBy",
+    typeof row.performedAt === "string" && Number.isFinite(Date.parse(row.performedAt)) ? "" : "performedAt is not a date",
+    row.result === "pass" ? "" : "result is not pass",
+  ].filter(Boolean);
+  return problems.length === 0
+    ? { holds: true, reason: `human record for ${criterion}` }
+    : { holds: false, reason: problems.join("; ") };
+}
 
 /** Everything the gate reads. Each field is produced by a named tool; absence is `MISSING`. */
 export interface GateEvidence {
@@ -126,6 +215,8 @@ export interface GateEvidence {
     baselineGreen: boolean;
     /** Nothing in the working tree changed during the run. */
     realTreeUnchanged: boolean;
+    /** The ids of the controls the run killed; every pinned control must be among them. */
+    killedIds: string[];
   };
   /** `scripts/matcher-evidence/redecide-ledger.ts` over the evidence-of-record ledger. */
   formerWrongCommitInstants?: {
@@ -133,33 +224,62 @@ export interface GateEvidence {
     legacyReproduced: number;
     currentCommits: number;
   };
-  /** `scripts/passive-shadow/migrate.ts` over retained raw live collections. Absent until it has run. */
+  /**
+   * `scripts/matcher-evidence/live-evidence.ts` over retained raw live
+   * collections (`liveReplayEvidence.ts` states the counting rules). Absent
+   * until it has run.
+   */
   liveReplay?: {
     collections: number;
     reproductionOk: boolean;
     deterministicAcrossRuns: boolean;
+    /** Digest of the matcher and evaluation sources that produced this evidence. */
+    matcherSourceSha256: string;
+    /** Retained artifacts that could not be fetched or verified; any one makes the replay incomplete. */
+    omittedArtifacts: string[];
+    /** Windows evaluated before whose raw is gone: their failures are in the counts below, their sample is not. */
+    carriedForward: number;
     cases: number;
+    /** Independent units: one bus on one route direction in one window, with at least one evaluated case. */
     trajectories: number;
     trajectoriesWithCommit: number;
     vehicles: number;
     routes: number;
     collectionWindows: number;
     timeBands: number;
-    contestedCases: number;
+    /** Units with a waiting-rider case in which a second vehicle was plausible. */
+    contestedTrajectories: number;
     currentWrong: number;
     currentInvariantViolations: number;
     selectionsWhileNotFresh: number;
     correctToWrong: number;
     newWrong: number;
     providerPaths: string[];
+    /** The same sample dimensions over session-cadence windows only (direct TAGO, uncached). */
+    sessionCadence: {
+      trajectories: number;
+      vehicles: number;
+      routes: number;
+      collectionWindows: number;
+      timeBands: number;
+      contestedTrajectories: number;
+    };
   };
-  /** `scripts/passive-shadow/counterfactual.ts` over real bases. Absent until it has run on real bases. */
+  /** `scripts/matcher-evidence/live-evidence.ts`: the counterfactual suite over real bases. Absent until it has run on real bases. */
   counterfactualsOnLiveBases?: {
     families: number;
     expectationFailures: number;
     wrongAgainstRederivedTruth: number;
     invariantViolations: number;
+    /** Digest of the matcher and evaluation sources that produced this evidence. */
+    matcherSourceSha256: string;
   };
+  /**
+   * Digest of the current matcher and evaluation sources. Live and
+   * counterfactual evidence produced by any other sources is stale: it says
+   * nothing about the matcher being gated.
+   */
+  currentMatcherSourceSha256?: string;
   /** Automatic matching is off in every deployment that was checked. */
   deploymentPosture?: {
     automaticMatchingOffEverywhere: boolean;
@@ -192,13 +312,14 @@ export function evaluateGate(evidence: GateEvidence): GateResult {
   add({
     id: "SH-1", level: "READY_FOR_SHADOW", title: "Directed matcher serves every path; legacy symmetric matcher unreachable",
     status: evidence.matcher.policyVersion === "directed-route-progress-v1" ? bool(evidence.matcher.legacyFreeServingPaths) : "FAIL",
-    evidenceClass: "VERIFIED_BY_TEST",
+    evidenceClass: evidence.matcher.legacyFreeServingPaths === undefined ? "MISSING" : "VERIFIED_BY_TEST",
     observed: `${evidence.matcher.policyVersion}; legacy-free serving paths: ${String(evidence.matcher.legacyFreeServingPaths)}`,
     required: "directed-route-progress-v1 and no serving import of matchingLegacy.ts",
   });
   add({
     id: "SH-2", level: "READY_FOR_SHADOW", title: "Formal invariant enforced at runtime on every result",
-    status: bool(evidence.matcher.runtimeInvariantEnforced), evidenceClass: "VERIFIED_BY_TEST",
+    status: bool(evidence.matcher.runtimeInvariantEnforced),
+    evidenceClass: evidence.matcher.runtimeInvariantEnforced === undefined ? "MISSING" : "VERIFIED_BY_TEST",
     observed: String(evidence.matcher.runtimeInvariantEnforced), required: "true",
   });
   const tests = evidence.tests;
@@ -206,30 +327,33 @@ export function evaluateGate(evidence: GateEvidence): GateResult {
     id: "SH-3", level: "READY_FOR_SHADOW", title: "Unit, replay and property suites pass over all 15 invariants",
     status: !tests ? "MISSING"
       : tests.suitePassed && tests.propertyInvariantsCovered >= 15 && tests.propertySeedsPerInvariant >= MINIMUMS.propertySeedsPerInvariant ? "PASS" : "FAIL",
-    evidenceClass: "VERIFIED_BY_TEST",
+    evidenceClass: tests ? "VERIFIED_BY_TEST" : "MISSING",
     observed: tests ? `passed=${tests.suitePassed}, invariants=${tests.propertyInvariantsCovered}, seeds/invariant=${tests.propertySeedsPerInvariant}, regression seeds=${tests.propertyRegressionSeedsReplayed}` : "not supplied",
     required: `suite green, 15 invariants, ≥ ${MINIMUMS.propertySeedsPerInvariant} seeds each`,
   });
   const controls = evidence.negativeControls;
+  const unpinned = controls ? PINNED_NEGATIVE_CONTROLS.filter((id) => !controls.killedIds.includes(id)) : [];
   add({
     id: "SH-4", level: "READY_FOR_SHADOW", title: "Every negative control (F1, F3 leak paths, F4, fail-closed rules) is killed",
     status: !controls ? "MISSING"
       : controls.total > 0 && controls.killed === controls.total && controls.survived === 0 && controls.stale === 0
         && controls.invalid === 0 && controls.timeout === 0 && controls.complete && controls.baselineGreen && controls.realTreeUnchanged
+        && unpinned.length === 0
         ? "PASS" : "FAIL",
-    evidenceClass: "VERIFIED_BY_TEST",
+    evidenceClass: controls ? "VERIFIED_BY_TEST" : "MISSING",
     observed: controls
       ? `${controls.killed}/${controls.total} killed, ${controls.survived} survived, ${controls.stale} stale, ${controls.invalid} invalid, `
         + `${controls.timeout} timed out; complete ${controls.complete}, baseline green ${controls.baselineGreen}, tree unchanged ${controls.realTreeUnchanged}`
+        + (unpinned.length > 0 ? `; pinned controls not killed: ${unpinned.join(", ")}` : `; all ${PINNED_NEGATIVE_CONTROLS.length} pinned controls killed`)
       : "not supplied",
-    required: "a complete run on a green baseline and an unchanged tree: all killed, none survived, stale, invalid or timed out",
+    required: `a complete run on a green baseline and an unchanged tree: all killed, none survived, stale, invalid or timed out, and each of the ${PINNED_NEGATIVE_CONTROLS.length} pinned controls among the killed`,
   });
   const instants = evidence.formerWrongCommitInstants;
   add({
     id: "SH-5", level: "READY_FOR_SHADOW", title: "No former live wrong commit is still a commit at its instant",
     status: !instants ? "MISSING"
       : instants.records > 0 && instants.legacyReproduced === instants.records && instants.currentCommits === 0 ? "PASS" : "FAIL",
-    evidenceClass: "VERIFIED_BY_REPLAY",
+    evidenceClass: instants ? "VERIFIED_BY_REPLAY" : "MISSING",
     observed: instants ? `${instants.currentCommits} commits at ${instants.records} instants; legacy reproduced ${instants.legacyReproduced}` : "not supplied",
     required: "0 commits; legacy reproduces every recorded selection",
   });
@@ -237,7 +361,7 @@ export function evaluateGate(evidence: GateEvidence): GateResult {
   add({
     id: "SH-6", level: "READY_FOR_SHADOW", title: "Automatic matching off by default, and an opt-in refused below bounded automation",
     status: !posture ? "MISSING" : posture.automaticMatchingOffEverywhere ? "PASS" : "FAIL",
-    evidenceClass: posture?.checkedBy === "live_health_endpoint" ? "VERIFIED_LIVE_INFRASTRUCTURE" : "VERIFIED_BY_TEST",
+    evidenceClass: !posture ? "MISSING" : posture.checkedBy === "live_health_endpoint" ? "VERIFIED_LIVE_INFRASTRUCTURE" : "VERIFIED_BY_TEST",
     observed: posture ? `off: ${posture.automaticMatchingOffEverywhere} (${posture.checkedBy === "live_health_endpoint"
       ? "read from live /health"
       : "configuration evaluated, no live deployment read"})` : "not supplied",
@@ -245,72 +369,92 @@ export function evaluateGate(evidence: GateEvidence): GateResult {
   });
 
   /* ----------------------------------- READY_FOR_CONFIRMATION_ASSISTED */
-  const live = evidence.liveReplay;
+  // Live and counterfactual evidence speak only for the sources that produced
+  // them. Evidence from other sources, or with no digest to compare, is stale:
+  // the matcher it describes is not the one being gated.
+  const current = evidence.currentMatcherSourceSha256;
+  const fresh = (digest: string | undefined) => current !== undefined && digest === current;
+  const live = evidence.liveReplay && fresh(evidence.liveReplay.matcherSourceSha256) ? evidence.liveReplay : undefined;
+  const liveAbsent = evidence.liveReplay ? "stale: produced by other matcher sources" : "raw replay has not run";
   const liveStatus = (test: (value: NonNullable<GateEvidence["liveReplay"]>) => boolean): CriterionStatus =>
     (!live ? "MISSING" : test(live) ? "PASS" : "FAIL");
   const ca = MINIMUMS.confirmationAssisted;
   add({
-    id: "CA-1", level: "READY_FOR_CONFIRMATION_ASSISTED", title: "Full-window blind replay of retained raw live evidence, legacy side reproducing the record",
-    status: liveStatus((value) => value.collections >= 1 && value.reproductionOk), evidenceClass: live ? "VERIFIED_BY_REPLAY" : "MISSING",
-    observed: live ? `${live.collections} collection(s), reproduction ok: ${live.reproductionOk}` : "raw replay has not run",
-    required: "≥ 1 collection, reproduction ok",
+    id: "CA-1", level: "READY_FOR_CONFIRMATION_ASSISTED", title: "Full-window blind replay of every retained raw live collection, legacy side reproducing the record",
+    status: liveStatus((value) => value.collections >= 1 && value.reproductionOk && value.omittedArtifacts.length === 0),
+    evidenceClass: live ? "VERIFIED_BY_REPLAY" : "MISSING",
+    observed: live
+      ? `${live.collections} collection(s), reproduction ok: ${live.reproductionOk}, omitted artifacts: ${live.omittedArtifacts.length}, carried forward: ${live.carriedForward}`
+      : liveAbsent,
+    required: "≥ 1 collection, reproduction ok, no retained artifact left out",
   });
   add({
     id: "CA-2", level: "READY_FOR_CONFIRMATION_ASSISTED", title: "Zero wrong commits, zero invariant violations, zero non-fresh selections on live evidence",
     status: liveStatus((value) => value.currentWrong === 0 && value.currentInvariantViolations === 0 && value.selectionsWhileNotFresh === 0),
     evidenceClass: live ? "VERIFIED_BY_REPLAY" : "MISSING",
-    observed: live ? `wrong ${live.currentWrong}, violations ${live.currentInvariantViolations}, non-fresh ${live.selectionsWhileNotFresh}` : "raw replay has not run",
+    observed: live ? `wrong ${live.currentWrong}, violations ${live.currentInvariantViolations}, non-fresh ${live.selectionsWhileNotFresh}` : liveAbsent,
     required: "0 / 0 / 0",
   });
   add({
     id: "CA-3", level: "READY_FOR_CONFIRMATION_ASSISTED", title: "No previously correct live case regresses to wrong; no new wrong commit",
     status: liveStatus((value) => value.correctToWrong === 0 && value.newWrong === 0), evidenceClass: live ? "VERIFIED_BY_REPLAY" : "MISSING",
-    observed: live ? `correct→wrong ${live.correctToWrong}, new wrong ${live.newWrong}` : "raw replay has not run",
+    observed: live ? `correct→wrong ${live.correctToWrong}, new wrong ${live.newWrong}` : liveAbsent,
     required: "0 / 0",
   });
   add({
-    id: "CA-4", level: "READY_FOR_CONFIRMATION_ASSISTED", title: "Replay is deterministic across independent runs",
+    id: "CA-4", level: "READY_FOR_CONFIRMATION_ASSISTED", title: "Replay is deterministic across independent runs, case by case",
     status: liveStatus((value) => value.deterministicAcrossRuns), evidenceClass: live ? "VERIFIED_BY_REPLAY" : "MISSING",
-    observed: live ? String(live.deterministicAcrossRuns) : "raw replay has not run", required: "true",
+    observed: live ? String(live.deterministicAcrossRuns) : liveAbsent, required: "true",
   });
-  const cf = evidence.counterfactualsOnLiveBases;
+  const cf = evidence.counterfactualsOnLiveBases && fresh(evidence.counterfactualsOnLiveBases.matcherSourceSha256)
+    ? evidence.counterfactualsOnLiveBases
+    : undefined;
   add({
     id: "CA-5", level: "READY_FOR_CONFIRMATION_ASSISTED", title: "Counterfactual suite on real bases: no expectation failure, no wrong commit, no violation",
     status: !cf ? "MISSING" : cf.families >= 30 && cf.expectationFailures === 0 && cf.wrongAgainstRederivedTruth === 0 && cf.invariantViolations === 0 ? "PASS" : "FAIL",
     evidenceClass: cf ? "SIMULATED" : "MISSING",
-    observed: cf ? `${cf.families} families; expectation failures ${cf.expectationFailures}; wrong ${cf.wrongAgainstRederivedTruth}; violations ${cf.invariantViolations}` : "not run on real bases",
+    observed: cf
+      ? `${cf.families} families; expectation failures ${cf.expectationFailures}; wrong ${cf.wrongAgainstRederivedTruth}; violations ${cf.invariantViolations}`
+      : evidence.counterfactualsOnLiveBases ? "stale: produced by other matcher sources" : "not run on real bases",
     required: "≥ 30 families, 0 / 0 / 0",
   });
   add({
     id: "CA-6", level: "READY_FOR_CONFIRMATION_ASSISTED", title: "Independent live sample large enough for a 5 % bound",
-    status: liveStatus((value) => value.trajectories >= ca.trajectories && value.vehicles >= ca.vehicles && value.contestedCases >= ca.contestedCases),
+    status: liveStatus((value) => value.trajectories >= ca.trajectories && value.vehicles >= ca.vehicles
+      && value.contestedTrajectories >= ca.contestedTrajectories),
     evidenceClass: live ? "VERIFIED_LIVE_PASSIVE" : "MISSING",
-    observed: live ? `${live.trajectories} trajectories, ${live.vehicles} vehicles, ${live.contestedCases} contested cases` : "raw replay has not run",
-    required: `≥ ${ca.trajectories} trajectories, ≥ ${ca.vehicles} vehicles, ≥ ${ca.contestedCases} contested cases`,
+    observed: live ? `${live.trajectories} trajectories, ${live.vehicles} vehicles, ${live.contestedTrajectories} contested trajectories` : liveAbsent,
+    required: `≥ ${ca.trajectories} trajectories, ≥ ${ca.vehicles} vehicles, ≥ ${ca.contestedTrajectories} contested trajectories`,
   });
   add({
     id: "CA-7", level: "READY_FOR_CONFIRMATION_ASSISTED", title: "Route and time diversity",
     status: liveStatus((value) => value.routes >= ca.routes && value.collectionWindows >= ca.collectionWindows && value.timeBands >= ca.timeBands),
     evidenceClass: live ? "VERIFIED_LIVE_PASSIVE" : "MISSING",
-    observed: live ? `${live.routes} routes, ${live.collectionWindows} windows, ${live.timeBands} time bands` : "raw replay has not run",
+    observed: live ? `${live.routes} routes, ${live.collectionWindows} windows, ${live.timeBands} time bands` : liveAbsent,
     required: `≥ ${ca.routes} routes, ≥ ${ca.collectionWindows} windows, ≥ ${ca.timeBands} time bands`,
   });
 
   /* ------------------------------------- READY_FOR_BOUNDED_AUTOMATION */
   const ba = MINIMUMS.boundedAutomation;
   add({
-    id: "BA-1", level: "READY_FOR_BOUNDED_AUTOMATION", title: "Independent live sample large enough for a 1 % bound, on the envelope that would be automated",
-    status: liveStatus((value) => value.trajectories >= ba.trajectories && value.vehicles >= ba.vehicles && value.contestedCases >= ba.contestedCases
-      && value.routes >= ba.routes && value.collectionWindows >= ba.collectionWindows && value.timeBands >= ba.timeBands),
+    id: "BA-1", level: "READY_FOR_BOUNDED_AUTOMATION", title: "Independent live sample large enough for a 1 % bound, at session cadence (the envelope that would be automated)",
+    status: liveStatus(({ sessionCadence: value }) => value.trajectories >= ba.trajectories && value.vehicles >= ba.vehicles
+      && value.contestedTrajectories >= ba.contestedTrajectories && value.routes >= ba.routes
+      && value.collectionWindows >= ba.collectionWindows && value.timeBands >= ba.timeBands),
     evidenceClass: live ? "VERIFIED_LIVE_PASSIVE" : "MISSING",
-    observed: live ? `${live.trajectories} trajectories, ${live.vehicles} vehicles, ${live.routes} routes, ${live.collectionWindows} windows` : "raw replay has not run",
-    required: `≥ ${ba.trajectories} trajectories, ≥ ${ba.vehicles} vehicles, ≥ ${ba.contestedCases} contested, ≥ ${ba.routes} routes, ≥ ${ba.collectionWindows} windows, ≥ ${ba.timeBands} time bands`,
+    observed: live
+      ? `at session cadence: ${live.sessionCadence.trajectories} trajectories, ${live.sessionCadence.vehicles} vehicles, `
+        + `${live.sessionCadence.contestedTrajectories} contested, ${live.sessionCadence.routes} routes, ${live.sessionCadence.collectionWindows} windows, `
+        + `${live.sessionCadence.timeBands} time bands`
+      : liveAbsent,
+    required: `at session cadence: ≥ ${ba.trajectories} trajectories, ≥ ${ba.vehicles} vehicles, ≥ ${ba.contestedTrajectories} contested, `
+      + `≥ ${ba.routes} routes, ≥ ${ba.collectionWindows} windows, ≥ ${ba.timeBands} time bands`,
   });
   add({
-    id: "BA-2", level: "READY_FOR_BOUNDED_AUTOMATION", title: "Evidence at session cadence (direct TAGO, uncached), not only the cached public path",
-    status: liveStatus((value) => value.providerPaths.includes("tago-direct")), evidenceClass: live ? "VERIFIED_LIVE_PASSIVE" : "MISSING",
-    observed: live ? `provider paths: ${live.providerPaths.join(", ") || "none"}` : "raw replay has not run",
-    required: "includes tago-direct",
+    id: "BA-2", level: "READY_FOR_BOUNDED_AUTOMATION", title: "Evidence at session cadence (direct TAGO, uncached) with evaluated cases, not only the cached public path",
+    status: liveStatus((value) => value.sessionCadence.trajectories > 0), evidenceClass: live ? "VERIFIED_LIVE_PASSIVE" : "MISSING",
+    observed: live ? `session-cadence trajectories: ${live.sessionCadence.trajectories}; provider paths: ${live.providerPaths.join(", ") || "none"}` : liveAbsent,
+    required: "session-cadence windows with evaluated cases",
   });
   const human = evidence.humanOnlyMitigations;
   add({

@@ -9,7 +9,7 @@
  *     [--live-replay=artifacts/matcher-directed-v1/live-replay-evidence.json] \
  *     [--counterfactual-live=artifacts/matcher-directed-v1/counterfactual-live-evidence.json] \
  *     [--mitigations=ops/matcher-evidence/human-only-mitigations.json] \
- *     [--out=artifacts/matcher-passive-safety-v4/gate-result.json] [--check]
+ *     [--out=artifacts/matcher-passive-safety-v4/gate-result.json] [--check] [--fail-below-claim]
  *
  * Every input is optional: an absent file makes the criteria that read it
  * `MISSING`, and `MISSING` is never a pass. Nothing here is inferred. The two
@@ -19,6 +19,15 @@
  * `--out` file (ignoring `generatedAt`), or if the level the code claims in
  * `DEMONSTRATED_MATCHING_READINESS` is not the level the gate awards. CI runs
  * it that way, so neither the evidence nor the claim can drift unnoticed.
+ *
+ * `--fail-below-claim` writes the result and then exits 1 if it awards less
+ * than the code claims: the scheduled evidence job runs it that way, so fresh
+ * live evidence that no longer supports the claim turns the run red.
+ *
+ * Live and counterfactual evidence count only when they carry the digest of
+ * the current matcher and evaluation sources (`sourceDigest.ts`); CI cannot
+ * recompute them, because the raw collections are private, so the digest and
+ * the per-collection raw tree hashes are what tie them to their inputs.
  */
 
 import { existsSync, readdirSync, readFileSync, statSync } from "node:fs";
@@ -27,8 +36,17 @@ import path from "node:path";
 
 import { readTransitApiConfig, type ServerEnv } from "../../services/api/src/apiConfig.ts";
 import { MATCHER_POLICY_VERSION } from "../../services/api/src/matching.ts";
-import { evaluateGate, type GateEvidence } from "../../services/api/src/matcherSafetyGate.ts";
+import {
+  evaluateGate,
+  MITIGATION_CRITERIA,
+  mitigationEvidenceHolds,
+  readinessRank,
+  type GateEvidence,
+  type MitigationEntry,
+  type MitigationKey,
+} from "../../services/api/src/matcherSafetyGate.ts";
 import { automaticMatchingPermitted, DEMONSTRATED_MATCHING_READINESS } from "../../services/api/src/matchingReadiness.ts";
+import { matcherSourceDigest } from "./sourceDigest.ts";
 
 const options = new Map(process.argv.slice(2).map((arg) => {
   const [key, ...value] = arg.replace(/^--/, "").split("=");
@@ -47,25 +65,14 @@ const suite = readJson<{
 const controls = readJson<{
   summary: { total: number; killed: number; survived: number; stale: number; invalid: number; timeout: number; complete: boolean; baselineGreen: boolean };
   source: { realTreeUnchanged: boolean };
+  mutations?: Array<{ id: string; outcome: string }>;
 }>(file("negative-controls", "artifacts/matcher-directed-v1/negative-controls.json"));
 const instants = readJson<{ totals: { records: number; legacyReproducedRecordedSelection: number; currentPolicyStatus: Record<string, number> } }>(
   file("instants", "artifacts/matcher-directed-v1/former-wrong-commit-instants.json"));
 const liveReplay = readJson<NonNullable<GateEvidence["liveReplay"]>>(file("live-replay", "artifacts/matcher-directed-v1/live-replay-evidence.json"));
 const counterfactualLive = readJson<NonNullable<GateEvidence["counterfactualsOnLiveBases"]>>(
   file("counterfactual-live", "artifacts/matcher-directed-v1/counterfactual-live-evidence.json"));
-type MitigationKey = keyof GateEvidence["humanOnlyMitigations"];
-interface MitigationEntry {
-  met: boolean;
-  evidenceKind: "tests" | "human_record";
-  evidence: { tests?: string[]; record?: string } | null;
-  source: string;
-}
-const MITIGATION_KEYS: MitigationKey[] = [
-  "riderSeesAndCanUndoAutomaticPick",
-  "destinationAlertIndependentOfProviderLag",
-  "physicalDeviceLiveActivityVerified",
-  "riderBoardsFirstArrivingBusMeasured",
-];
+const MITIGATION_KEYS = Object.keys(MITIGATION_CRITERIA) as MitigationKey[];
 const mitigations = readJson<{ mitigations: Record<MitigationKey, MitigationEntry> }>(file("mitigations", "ops/matcher-evidence/human-only-mitigations.json"));
 if (!mitigations || MITIGATION_KEYS.some((key) => mitigations.mitigations?.[key] === undefined)) {
   console.error("every human-only mitigation must be declared; refusing to guess them");
@@ -99,6 +106,7 @@ const evidence: GateEvidence = {
       complete: controls.summary.complete === true,
       baselineGreen: controls.summary.baselineGreen === true,
       realTreeUnchanged: controls.source?.realTreeUnchanged === true,
+      killedIds: (controls.mutations ?? []).filter((row) => row.outcome === "KILLED").map((row) => row.id),
     },
   } : {}),
   ...(instants ? {
@@ -110,6 +118,7 @@ const evidence: GateEvidence = {
   } : {}),
   ...(liveReplay ? { liveReplay } : {}),
   ...(counterfactualLive ? { counterfactualsOnLiveBases: counterfactualLive } : {}),
+  currentMatcherSourceSha256: matcherSourceDigest(process.cwd()).sha256,
   deploymentPosture: {
     // The configuration itself, evaluated: off by default on every platform,
     // and an operator's opt-in refused at the demonstrated readiness. A live
@@ -143,6 +152,10 @@ if (options.get("check") === "true") {
   await mkdir(path.dirname(outPath), { recursive: true });
   await writeFile(outPath, `${JSON.stringify(result, null, 2)}\n`);
   console.log(JSON.stringify({ out: path.relative(process.cwd(), outPath), awarded: result.awarded, nextLevel: result.nextLevel }, null, 2));
+  if (options.get("fail-below-claim") === "true" && readinessRank(result.awarded) < readinessRank(DEMONSTRATED_MATCHING_READINESS)) {
+    console.error(`the evidence now awards ${result.awarded}, below the ${DEMONSTRATED_MATCHING_READINESS} the code claims`);
+    process.exit(1);
+  }
 }
 
 /**
@@ -195,25 +208,21 @@ function automaticMatchingCannotBeOn(): boolean {
 }
 
 /**
- * A declared mitigation counts only when its evidence checks out: named tests
- * that passed in this suite run, or a committed human-evidence record for this
- * property. A bare `met: true` is a claim, and a claim is not evidence.
+ * A declared mitigation counts only when its evidence checks out
+ * (`mitigationEvidenceHolds`): tests named for its criterion that passed in
+ * this suite run, or a committed human record for it under
+ * `artifacts/human-evidence/`. A bare `met: true` is a claim, and a claim is
+ * not evidence.
  */
 function mitigationHolds(key: MitigationKey, entry: MitigationEntry): boolean {
-  if (entry.met !== true) return false;
-  if (entry.evidenceKind === "tests") {
-    const passing = new Set(suite?.passingTests ?? []);
-    const tests = entry.evidence?.tests ?? [];
-    const holds = tests.length > 0 && tests.every((name) => passing.has(name));
-    if (!holds) console.error(`mitigation ${key} is declared met, but its named tests did not all pass in this suite run; not counted`);
-    return holds;
-  }
-  const record = entry.evidence?.record;
-  const recordPath = record ? path.resolve(record) : undefined;
-  const content = recordPath && recordPath.startsWith(path.resolve("artifacts/human-evidence") + path.sep)
-    ? readJson<{ evidenceClass?: string; property?: string }>(recordPath)
-    : undefined;
-  const holds = content?.evidenceClass === "VERIFIED_LIVE_HUMAN" && content.property === key;
-  if (!holds) console.error(`mitigation ${key} is declared met, but no committed VERIFIED_LIVE_HUMAN record for it exists under artifacts/human-evidence/; not counted`);
-  return holds;
+  const humanEvidence = path.resolve("artifacts/human-evidence") + path.sep;
+  const verdict = mitigationEvidenceHolds(key, entry, {
+    passingTests: suite?.passingTests ?? [],
+    readRecord: (record) => {
+      const target = path.resolve(record);
+      return target.startsWith(humanEvidence) ? readJson<unknown>(target) : undefined;
+    },
+  });
+  if (entry.met === true && !verdict.holds) console.error(`mitigation ${key} is declared met but not counted: ${verdict.reason}`);
+  return verdict.holds;
 }

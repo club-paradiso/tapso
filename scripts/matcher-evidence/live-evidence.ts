@@ -7,11 +7,22 @@
  *     [--record=<collectionId>,<recorded-summary.json>,<recorded-ledger.json>] \
  *     [--out-live=artifacts/matcher-directed-v1/live-replay-evidence.json] \
  *     [--out-counterfactual=artifacts/matcher-directed-v1/counterfactual-live-evidence.json] \
- *     [--counterfactual-on=<collectionId>] [--skip-incomplete]
+ *     [--counterfactual-on=<collectionId> | --no-counterfactuals] [--skip-incomplete] \
+ *     [--previous=<the committed live-replay-evidence.json>] [--omitted=<artifact id>,...]
  *
  * The counterfactual catalogue is the expensive part (about 50 transformations
  * of every case), so `--counterfactual-on` restricts it to one collection,
- * still complete over every case of it; without the flag it runs over all.
+ * still complete over every case of it, and `--no-counterfactuals` skips it
+ * (CA-5 then reads as `MISSING`); with neither it runs over all.
+ *
+ * `--previous` carries forward the failures of every window recorded there
+ * whose raw is no longer among the collections: expiry never erases a wrong
+ * commit. `--omitted` names retained artifacts that could not be fetched or
+ * verified; the gate does not count a replay with any of them as complete.
+ *
+ * The output records the digest of the matcher and evaluation sources
+ * (`sourceDigest.ts`), each collection's raw tree hash and a case-level digest
+ * of its decisions, so the counts are bound to what produced them.
  *
  * For every collection: its manifest checksums must hold, every stream must be
  * `LIVE_PASSIVE`, and its raw tree must be unchanged afterwards. Each is replayed
@@ -41,19 +52,24 @@
  * 4 network attempt.
  */
 
-import { existsSync } from "node:fs";
+import { createHash } from "node:crypto";
+import { existsSync, readFileSync } from "node:fs";
 import { mkdir, readdir, writeFile } from "node:fs/promises";
 import path from "node:path";
+import { fileURLToPath } from "node:url";
 
-import { assembleLiveReplayEvidence, type CollectionEvaluation } from "../../services/api/src/liveReplayEvidence.ts";
+import { assembleLiveReplayEvidence, type CollectionEvaluation, type DetailRow } from "../../services/api/src/liveReplayEvidence.ts";
 import { counterfactualGateEvidence, runCounterfactuals } from "../../services/api/src/passiveCounterfactual.ts";
 import type { PassiveObservationStream } from "../../services/api/src/passiveShadow.ts";
 import { runMatcherMigration } from "../../services/api/src/passiveShadowMigration.ts";
 import { runPassiveShadowPipeline } from "../../services/api/src/passiveShadowPipeline.ts";
 import { assertOutsideRaw, installNetworkGuard, loadVerifiedCollection, rawTree } from "../passive-shadow/rawCollection.ts";
 import { reproductionCheck } from "../passive-shadow/reproduction.ts";
+import { matcherSourceDigest } from "./sourceDigest.ts";
 
 const guard = installNetworkGuard("live-evidence.ts");
+const REPOSITORY_ROOT = path.resolve(fileURLToPath(new URL("../..", import.meta.url)));
+const sources = matcherSourceDigest(REPOSITORY_ROOT);
 
 const args = process.argv.slice(2);
 const directories = args.filter((arg) => !arg.startsWith("--")).map((arg) => path.resolve(arg));
@@ -62,7 +78,7 @@ const options = new Map(args.filter((arg) => arg.startsWith("--")).map((arg) => 
   return [key!, value.join("=")];
 }));
 if (directories.length === 0) {
-  console.error("Usage: live-evidence.ts <collection-dir>... [--record=<collectionId>,<summary>,<ledger>] [--out-live=<file>] [--out-counterfactual=<file>] [--counterfactual-on=<collectionId>] [--skip-incomplete]");
+  console.error("Usage: live-evidence.ts <collection-dir>... [--record=<collectionId>,<summary>,<ledger>] [--out-live=<file>] [--out-counterfactual=<file>] [--counterfactual-on=<collectionId> | --no-counterfactuals] [--skip-incomplete] [--previous=<file>] [--omitted=<id>,...]");
   process.exit(2);
 }
 const outLive = path.resolve(options.get("out-live") || "artifacts/matcher-directed-v1/live-replay-evidence.json");
@@ -79,6 +95,17 @@ const records = new Map(args.filter((arg) => arg.startsWith("--record=")).map((a
 function refuse(message: string): never {
   console.error(message);
   process.exit(3);
+}
+
+const omittedArtifacts = (options.get("omitted") ?? "").split(",").map((id) => id.trim()).filter(Boolean);
+let previous: DetailRow[] = [];
+if (options.get("previous")) {
+  try {
+    const committed = JSON.parse(readFileSync(path.resolve(options.get("previous")!), "utf8")) as { detail?: DetailRow[] };
+    previous = committed.detail ?? [];
+  } catch (error) {
+    refuse(`--previous: ${error instanceof Error ? error.message : String(error)}`);
+  }
 }
 
 interface Loaded {
@@ -132,8 +159,16 @@ for (const directory of directories) {
 for (const collectionId of records.keys()) {
   if (!loaded.some((item) => item.collectionId === collectionId)) refuse(`--record names ${collectionId}, which is not among the collections`);
 }
+const counterfactualOn = options.get("counterfactual-on");
+if (counterfactualOn && !loaded.some((item) => item.collectionId === counterfactualOn)) {
+  refuse(`--counterfactual-on names ${counterfactualOn}, which is not among the collections`);
+}
 
-async function evaluate(): Promise<{ live: ReturnType<typeof assembleLiveReplayEvidence>; counterfactual: ReturnType<typeof counterfactualGateEvidence> | null }> {
+const sha256 = (text: string) => createHash("sha256").update(text).digest("hex");
+
+type CounterfactualEvidence = NonNullable<ReturnType<typeof counterfactualGateEvidence>> & { matcherSourceSha256: string };
+
+async function evaluate(): Promise<{ live: ReturnType<typeof assembleLiveReplayEvidence>; counterfactual: CounterfactualEvidence | null }> {
   const collections: CollectionEvaluation[] = [];
   for (const item of loaded) {
     const pipeline = runPassiveShadowPipeline(item.streams, { maxPerturbationCases: 0, createdAt: "1970-01-01T00:00:00.000Z" });
@@ -143,29 +178,51 @@ async function evaluate(): Promise<{ live: ReturnType<typeof assembleLiveReplayE
       .flatMap((stream) => stream.snapshots.map((snapshot) => snapshot.capturedAt))
       .sort()[0];
     if (!firstReceiptAt) refuse(`${item.collectionId} has no snapshot`);
+    // Every decision of the collection, case by case, under both policies. The
+    // digest compares two runs at case level without writing any vehicle id.
+    const caseDigest = sha256([
+      ...pipeline.results.map((result) =>
+        `current|${result.caseId}|${result.perturbation ?? "-"}|${result.bucket}|${result.committedVehicleId ?? "-"}|${result.directedInvariantViolated}`),
+      ...migration.rows.map((row) => `migration|${row.caseId}|${row.legacy.bucket}|${row.current.bucket}`),
+    ].sort().join("\n"));
     collections.push({
       collectionId: item.collectionId,
       providerPath: item.providerPath,
       firstReceiptAt,
       rawTreeSha256: item.rawTreeSha256,
-      live: pipeline.summary.live,
+      live: {
+        cases: pipeline.summary.live.cases,
+        buckets: pipeline.summary.live.buckets,
+        staleSelections: pipeline.summary.live.staleSelections,
+      },
       results: pipeline.results.map((result) => ({
         sourceClass: result.sourceClass,
         ...(result.perturbation ? { perturbation: result.perturbation } : {}),
+        routeId: result.meta.routeId,
+        scenario: result.meta.scenario,
         groundTruthVehicleId: result.groundTruthVehicleId,
+        committed: result.committedVehicleId !== undefined,
+        contested: result.contestedDecisions > 0,
         directedInvariantViolated: result.directedInvariantViolated,
       })),
       migration: { correctToWrong: migration.correctToWrongRegressions.length, newWrong: migration.newWrongCommits.length },
       ...(record ? { reproduction: await reproductionCheck(migration, record) } : {}),
+      caseDigest,
     });
   }
   // Determinism is filled in by the caller, from two independent runs.
-  const live = assembleLiveReplayEvidence(collections, { deterministicAcrossRuns: false });
-  const counterfactualOn = options.get("counterfactual-on");
+  const live = assembleLiveReplayEvidence(collections, {
+    deterministicAcrossRuns: false,
+    matcherSourceSha256: sources.sha256,
+    previous,
+    omittedArtifacts,
+  });
+  if (options.has("no-counterfactuals")) return { live, counterfactual: null };
   const bases = counterfactualOn ? loaded.filter((item) => item.collectionId === counterfactualOn) : loaded;
   if (bases.length === 0) return { live, counterfactual: null };
   const { report } = runCounterfactuals(bases.flatMap((item) => item.streams));
-  return { live, counterfactual: counterfactualGateEvidence(report) ?? null };
+  const gateEvidence = counterfactualGateEvidence(report);
+  return { live, counterfactual: gateEvidence ? { ...gateEvidence, matcherSourceSha256: sources.sha256 } : null };
 }
 
 const first = await evaluate();
@@ -178,10 +235,11 @@ if (guard.attempts !== 0) {
   console.error(`${guard.attempts} network attempt(s); refusing to report`);
   process.exit(4);
 }
+if (matcherSourceDigest(REPOSITORY_ROOT).sha256 !== sources.sha256) refuse("the matcher sources changed during evaluation; refusing to report");
 
 const live = { ...first.live, deterministicAcrossRuns: true, skipped };
 for (const row of live.detail) {
-  if (row.reproduction.startsWith("NOT reproduced")) console.error(`${row.collectionId}: evidence of record ${row.reproduction}`);
+  if (row.reproduction?.startsWith("NOT reproduced")) console.error(`${row.collectionId}: evidence of record ${row.reproduction}`);
 }
 await mkdir(path.dirname(outLive), { recursive: true });
 await writeFile(outLive, `${JSON.stringify({ evidenceClass: "VERIFIED_BY_REPLAY", sampleClass: "VERIFIED_LIVE_PASSIVE", ...live }, null, 2)}\n`);
@@ -197,7 +255,11 @@ console.log(JSON.stringify({
   routes: live.routes,
   windows: live.collectionWindows,
   timeBands: live.timeBands,
-  contestedCases: live.contestedCases,
+  contestedTrajectories: live.contestedTrajectories,
+  sessionCadence: live.sessionCadence,
+  omittedArtifacts: live.omittedArtifacts,
+  carriedForward: live.carriedForward,
+  matcherSourceSha256: live.matcherSourceSha256,
   currentWrong: live.currentWrong,
   newWrong: live.newWrong,
   correctToWrong: live.correctToWrong,

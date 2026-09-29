@@ -1,5 +1,5 @@
 {
-  "//": "Architecture responses to properties no passive evidence can establish, read by scripts/matcher-evidence/gate.ts. An entry counts only when its evidence checks out by machine: `tests` must name tests that passed in the same suite run (VERIFIED_BY_TEST), and `record` must be a committed human-evidence file whose evidenceClass is VERIFIED_LIVE_HUMAN for this property. Setting `met` without such evidence changes nothing.",
+  "//": "Architecture responses to properties no passive evidence can establish, read by scripts/matcher-evidence/gate.ts through mitigationEvidenceHolds (services/api/src/matcherSafetyGate.ts). An entry counts only when its evidence checks out by machine. BA-3 and BA-4 take `tests`: every named test must start with its criterion id (\"BA-3: …\") and must have passed in the same suite run (VERIFIED_BY_TEST). BA-5 and AM-1 take `record`: a committed file under artifacts/human-evidence/ with evidenceClass VERIFIED_LIVE_HUMAN, this property, its criterion, a procedure, a subject (device, build or sample), performedBy, a performedAt date and result \"pass\". Setting `met` without such evidence changes nothing.",
   "mitigations": {
     "riderSeesAndCanUndoAutomaticPick": {
       "met": false,
