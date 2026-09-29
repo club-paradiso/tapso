@@ -201,17 +201,24 @@ type LoadedSession = { record: SessionRecord; version: number };
  * (finding F20).
  *
  * Only a sighting shows the selected bus's arrival: at one place on this
- * route, at the stop or one past it, or past it when last seen before it, as
- * no faster than the matcher's motion model allows and, round a loop, where a
- * reading up to two stops back would not explain it. What memory raises about
- * the selected bus never ends the watch: round a loop a bus read one stop back
- * looks like a crossing, a bus listed twice may be listed at the stop, and a
- * bus out of sight only may have reached it (finding R31).
+ * route, at the stop or one past it, or further past it no faster since its
+ * last such sighting before the stop than the matcher's motion model allows
+ * and, round a loop, where a reading up to two stops back would not explain it
+ * (findings R31, R42). What memory raises about the selected bus never ends
+ * the watch: round a loop a bus read a stop back may also have gone round, a
+ * bus listed twice may be listed at the stop, and a bus out of sight only may
+ * have reached it (finding R31). Nor does it withdraw for another bus: round a
+ * loop, another bus read a stop or two back is only what the time allows
+ * (finding R43).
  */
 export interface BoardingWatch {
   others: PassageMemory;
   selected: PassageMemory;
-  /** The selected bus's last sighting at one place on this route: its offset from the stop, and when. */
+  /**
+   * The selected bus's last sighting at one place on this route before the
+   * stop (the shorter way round a loop): its offset from the stop, and when.
+   * A crossing is measured from it.
+   */
   selectedPlace?: { offset: number; at: string };
   /** When the selected bus was seen at or past the stop. Nothing is watched from then on. */
   endedAt?: string;
@@ -339,12 +346,16 @@ export class JourneySessionCoordinator {
       return this.commit(record, version, view);
     }
     const automatic = record.selectionMode === "automatic" ? record.selectedVehicleId : undefined;
+    const watching = automatic !== undefined && record.boardingWatch?.endedAt === undefined;
     const view = this.evaluateSnapshot(record, vehicles, now);
     const withdrawal = automatic !== undefined && record.selectedVehicleId === undefined
       && record.passage?.withheld?.reason === SELECTION_WITHDRAWN
       ? { vehicleId: automatic, at: now }
       : undefined;
-    return this.commit(record, version, view, withdrawal);
+    const end = watching && record.selectedVehicleId === automatic && record.boardingWatch?.endedAt !== undefined
+      ? { vehicleId: automatic, at: now }
+      : undefined;
+    return this.commit(record, version, view, withdrawal, end);
   }
 
   async confirm(id: string, value: unknown): Promise<JourneySessionView> {
@@ -378,13 +389,15 @@ export class JourneySessionCoordinator {
    * re-derive progress from a snapshot the winner has already consumed, which
    * is how a duplicate poll turns into a contradictory answer. The winner's
    * stored state is by construction at least as advanced as ours, so it is
-   * what the rider gets, with one exception: a withdrawal (below).
+   * what the rider gets, with two exceptions: what the boarding watch saw of
+   * the stop (below).
    */
   private async commit(
     record: SessionRecord,
     version: number,
     view: JourneySessionView,
     withdrawal?: { vehicleId: string; at: Date },
+    end?: { vehicleId: string; at: Date },
   ): Promise<JourneySessionView> {
     const outcome = await this.store.save(toStored(record), version);
     if (outcome.outcome === "saved") return view;
@@ -392,7 +405,8 @@ export class JourneySessionCoordinator {
     // operator deleted it. Either way this session no longer exists.
     if (!outcome.stored) throw new SessionExpiredError();
     if (withdrawal && await this.withdrawOnWinner(outcome.stored, withdrawal)) return view;
-    return this.concurrentWriteView(outcome.stored);
+    const ended = end ? await this.endOnWinner(outcome.stored, end) : undefined;
+    return this.concurrentWriteView(ended ?? outcome.stored);
   }
 
   /**
@@ -419,6 +433,32 @@ export class JourneySessionCoordinator {
       current = outcome.stored;
     }
     return false;
+  }
+
+  /**
+   * The mirror of the above: this request's snapshot showed the automatically
+   * selected bus reaching the stop, and a request that saved first did not.
+   * While the winner still holds the same automatic selection and its watch is
+   * open, or ended later than this snapshot, the end is written onto its row,
+   * so a withdrawal read from a later snapshot and merged afterwards finds it
+   * (finding R44). A withdrawal merged first stands: the selection is gone, and
+   * the rider is asked. Returns the row as saved, or nothing if it was left.
+   */
+  private async endOnWinner(stored: VersionedJourneySession, end: { vehicleId: string; at: Date }): Promise<VersionedJourneySession | undefined> {
+    let current = stored;
+    for (let attempt = 0; attempt < 3; attempt += 1) {
+      const winner = toRecord(current.session);
+      if (winner.selectedVehicleId !== end.vehicleId || winner.selectionMode !== "automatic") return undefined;
+      const endedAt = winner.boardingWatch?.endedAt;
+      if (endedAt !== undefined && Date.parse(endedAt) <= end.at.getTime()) return undefined;
+      winner.boardingWatch = { ...(winner.boardingWatch ?? startBoardingWatch(winner.passage, end.vehicleId)), endedAt: end.at.toISOString() };
+      const session = toStored(winner);
+      const outcome = await this.store.save(session, current.version);
+      if (outcome.outcome === "saved") return { session, version: outcome.version };
+      if (!outcome.stored) throw new SessionExpiredError();
+      current = outcome.stored;
+    }
+    return undefined;
   }
 
   /** Renders the winner's persisted state without touching the provider. */
@@ -608,7 +648,13 @@ export class JourneySessionCoordinator {
     const place = placeOfSelected(record, vehicles, selectedId);
     const reached = place !== undefined
       && (place.zone === "boarding_stop_unresolved" || crossedTheStop(record, watch.selectedPlace, place, now));
-    const selectedPlace = place === undefined ? watch.selectedPlace : { offset: place.offset!, at: now.toISOString() };
+    // A crossing is measured from the last sighting before the stop. One past
+    // it, too fast to show a crossing, is no place to measure the next from:
+    // nothing would be before the stop, and no crossing could end the watch
+    // again (finding R42).
+    const selectedPlace = place !== undefined && beforeTheStop(place)
+      ? { offset: place.offset!, at: now.toISOString() }
+      : watch.selectedPlace;
     record.boardingWatch = {
       // Each look reports only what this poll showed: the sightings carry
       // over, a reason does not.
@@ -1108,11 +1154,16 @@ function placeOfSelected(record: SessionRecord, vehicles: VehicleObservation[], 
   return facts.offset === undefined ? undefined : facts;
 }
 
+/** Before the stop: on a loop, the shorter way round. Where a crossing is measured from (finding R42). */
+function beforeTheStop(place: PositionFacts): boolean {
+  return place.forward !== undefined && (place.backward === undefined || place.forward < place.backward);
+}
+
 /**
- * Past the stop now, before it at the last sighting at one place, no faster in
- * between than the matcher's motion model allows (one stop plus one per 15 s),
- * and, round a loop, not what a reading up to two stops back would also show:
- * the only crossing that shows the selected bus's arrival (finding R31).
+ * Past the stop now, no faster since the last sighting at one place before it
+ * than the matcher's motion model allows (one stop plus one per 15 s), and,
+ * round a loop, not what a reading up to two stops back would also show: the
+ * only crossing that shows the selected bus's arrival (findings R31, R42).
  */
 function crossedTheStop(
   record: SessionRecord,
