@@ -19,6 +19,14 @@ import {
   validCredential,
 } from "../public/ride-capture/beta-client-core.js";
 
+/**
+ * Synthetic test fixtures, not observations: every provider response below is
+ * constructed by the test, and nothing here is evidence that a bus was seen.
+ * Values that look real (public TAGO route and stop ids, stop names and
+ * coordinates, and vehicle numbers carried over from earlier fixtures) are
+ * used only as inputs.
+ */
+
 const page = (name: string) => readFile(new URL(`../public/ride-capture/${name}`, import.meta.url), "utf8");
 const SECRET = `tbi_${"A".repeat(43)}`;
 const stops = Array.from({ length: 10 }, (_, index) => ({ stopId: `S${index + 1}`, name: `Stop ${index + 1}`, sequence: index + 1 }));

@@ -7,6 +7,14 @@ import {
   serviceKeyWarning,
 } from "../src/serviceKey.ts";
 
+/**
+ * Synthetic test fixtures, not observations: every provider response below is
+ * constructed by the test, and nothing here is evidence that a bus was seen.
+ * Values that look real (public TAGO route and stop ids, stop names and
+ * coordinates, and vehicle numbers carried over from earlier fixtures) are
+ * used only as inputs.
+ */
+
 test("the canonical name is the one production is meant to carry", () => {
   assert.equal(CANONICAL_SERVICE_KEY_ENV, "TAGO_SERVICE_KEY");
   assert.ok(

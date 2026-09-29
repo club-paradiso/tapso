@@ -14,6 +14,14 @@ import {
   vehiclePlateSuffix,
 } from "../public/ride-capture/quick-core.js";
 
+/**
+ * Synthetic test fixtures, not observations: every provider response below is
+ * constructed by the test, and nothing here is evidence that a bus was seen.
+ * Values that look real (public TAGO route and stop ids, stop names and
+ * coordinates, and vehicle numbers carried over from earlier fixtures) are
+ * used only as inputs.
+ */
+
 test("normalizes a Korean bus plate to its last four digits", () => {
   assert.equal(normalizePlateSuffix("제주79아3651"), "3651");
   assert.equal(vehiclePlateSuffix("제주79아 36-51"), "3651");

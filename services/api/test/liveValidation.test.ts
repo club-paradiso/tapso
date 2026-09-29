@@ -2,6 +2,14 @@ import test from "node:test";
 import assert from "node:assert/strict";
 import { analyzeTransitValidation } from "../src/liveValidation.ts";
 
+/**
+ * Synthetic test fixtures, not observations: every provider response below is
+ * constructed by the test, and nothing here is evidence that a bus was seen.
+ * Values that look real (public TAGO route and stop ids, stop names and
+ * coordinates, and vehicle numbers carried over from earlier fixtures) are
+ * used only as inputs.
+ */
+
 const base = Date.parse("2026-09-10T12:00:00+09:00");
 
 function observed(vehicleId: string, seconds: number, stopSequence: number, directionCode = "1") {

@@ -20,8 +20,9 @@ import {
 } from "../public/ride-capture/background-client-core.js";
 
 /**
- * Synthetic fixtures only: invented vehicle numbers, an invented route, and a
- * coordinate grid that is not a place. Nothing here is a real ride.
+ * Synthetic fixtures only: placeholder vehicle numbers, an invented route, and
+ * a synthetic coordinate grid, not real stop positions. Nothing here is a real
+ * ride.
  */
 const TOKEN = "synthetic-operator-token-0123456789";
 const CITY = "999";

@@ -8,6 +8,14 @@ import {
 import type { RouteRequest, StopOnRoute, VehicleObservation } from "../src/domain.ts";
 import type { TransitProvider } from "../src/provider.ts";
 
+/**
+ * Synthetic test fixtures, not observations: every provider response below is
+ * constructed by the test, and nothing here is evidence that a bus was seen.
+ * Values that look real (public TAGO route and stop ids, stop names and
+ * coordinates, and vehicle numbers carried over from earlier fixtures) are
+ * used only as inputs.
+ */
+
 const ROUTE = "JEB405244003";
 const CITY = "39";
 const VEHICLE = "제주79자1234";
