@@ -737,7 +737,10 @@ export const NEGATIVE_CONTROLS: readonly NegativeControl[] = [
     edits: [{
       file: MATCHING,
       find: "  if (riderState === \"waiting_at_stop\" && prior === undefined && request.declaredAt !== undefined) {",
-      replace: "  if (false) {",
+      // Never true at runtime, but opaque to the type checker (`if (false)`
+      // and `&& false` both lose the narrowing of `declaredAt` and add type
+      // errors), so the mutant typechecks and only a test can kill it.
+      replace: "  if (riderState === \"waiting_at_stop\" && prior === undefined && request.declaredAt !== undefined && Number.isNaN(0)) {",
     }],
     testFiles: [T.matching, T.session],
   },
