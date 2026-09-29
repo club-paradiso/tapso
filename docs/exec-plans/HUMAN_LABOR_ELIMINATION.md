@@ -143,7 +143,12 @@ say so gets a confirmation prompt; the reverse would admit departed buses.
   until the full-window replay runs (routes whose stop lists repeat stop names
   withhold at those stops; a bus at the stop withholds the session); the first
   scheduled windows read production through the 20 s-cached public path unless
-  a `TAGO_SERVICE_KEY` secret is added; no TAGO quota is documented.
+  a `TAGO_SERVICE_KEY` secret is added; no TAGO quota is documented. The
+  `gate-evidence` job reads the evidence of record from the replay run's
+  90-day artifact: the private vault is a draft release, which its read-only
+  token may not see, so within 90 days of the replay run the job needs either
+  read access to the vault or a replay request that re-uploads the record.
+  Its runtime grows with every retained window (each evaluated twice).
 - Exact next action: merge before 2026-10-09T06:28:03Z (§8). The replay run's
   `gate-evidence` job computes `live-replay-evidence.json`,
   `counterfactual-live-evidence.json` and a gate result with no one's help. An
