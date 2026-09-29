@@ -1,0 +1,29 @@
+{
+  "//": "Architecture responses to properties no passive evidence can establish, read by scripts/matcher-evidence/gate.ts. An entry counts only when its evidence checks out by machine: `tests` must name tests that passed in the same suite run (VERIFIED_BY_TEST), and `record` must be a committed human-evidence file whose evidenceClass is VERIFIED_LIVE_HUMAN for this property. Setting `met` without such evidence changes nothing.",
+  "mitigations": {
+    "riderSeesAndCanUndoAutomaticPick": {
+      "met": false,
+      "evidenceKind": "tests",
+      "evidence": null,
+      "source": "No rider client drives a real journey session yet: the iOS app runs the deterministic demo only (apps/ios/TapsoApp/TapsoAppModel.swift startDemo; test/crossLanguageAuthority.test.ts proves it makes no network request). There is therefore no rider-visible undo for an automatic pick."
+    },
+    "destinationAlertIndependentOfProviderLag": {
+      "met": false,
+      "evidenceKind": "tests",
+      "evidence": null,
+      "source": "Destination progress is derived from the provider stop sequence (services/api/src/journeySession.ts evaluateSelectedObservation). TAGO publishes no observation time, so the lag between a physical stop and the provider's report is unmeasured and the alert timing depends on it."
+    },
+    "physicalDeviceLiveActivityVerified": {
+      "met": false,
+      "evidenceKind": "human_record",
+      "evidence": null,
+      "source": "docs/KNOWN_ISSUES.md: physical-device Lock Screen and Dynamic Island behaviour is UNVERIFIED; no device is registered to an available Apple team (paid membership missing). This is a device check, not a bus ride."
+    },
+    "riderBoardsFirstArrivingBusMeasured": {
+      "met": false,
+      "evidenceKind": "human_record",
+      "evidence": null,
+      "source": "The passive ground truth is the first-arrival rider model (services/api/src/passiveShadow.ts). Whether real riders board the first bus cannot be observed without riders; the product contract does not depend on it below READY_FOR_AUTOMATIC_MATCHING."
+    }
+  }
+}
