@@ -157,6 +157,9 @@ const FAMILY_CHECKS: Partial<Record<CounterfactualFamily, (rows: CounterfactualR
   decoys_absent: (rows) => assert.ok(rows[0]!.correct > 0),
   late_appearance: (rows) => assert.ok(rows[0]!.correct > 0),
   candidate_disappearance: (rows) => assert.ok(rows[0]!.correct > 0),
+  lost_leader: (rows) => {
+    for (const item of rows) assert.equal(item.selectionsOfInjected, 0, `${item.id}: the follower is never picked while the leader may be ahead of it`);
+  },
   reappearance: (rows) => assert.ok(rows[0]!.correct > 0),
   stale_repeated_frames: (rows) => assert.ok(rows[0]!.correct > 0),
   coordinate_freeze: (rows) => assert.ok(rows[0]!.correct > 0),
@@ -219,7 +222,8 @@ test("counterfactual ids are unique, stable and documented, over at least 30 fam
     "follower_overtaking",
     "leader_ahead_k1", "leader_ahead_k2", "leader_ahead_k3", "leader_ahead_k4", "leader_ahead_k5", "leader_ahead_k10",
     "boarding_stop_dwell_60s", "boarding_stop_dwell_120s",
-    "true_bus_absent", "decoys_absent", "late_appearance_s_minus_2", "candidate_disappearance_60s", "reappearance_60s",
+    "true_bus_absent", "decoys_absent", "late_appearance_s_minus_2", "candidate_disappearance_60s", "candidate_disappearance_180s",
+    "lost_leader_follower_k3_180s", "lost_leader_follower_k3_360s", "reappearance_60s",
     "stale_repeated_frames_60s", "coordinate_freeze", "content_freeze_from_60s_before_boarding",
     "receipt_jitter_10s", "receipt_jitter_20s", "receipt_jitter_40s", "packet_loss_20pct", "packet_loss_50pct",
     "long_polling_gap_120s", "provider_error_burst_60s",

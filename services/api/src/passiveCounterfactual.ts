@@ -138,6 +138,7 @@ export type CounterfactualFamily =
   | "decoys_absent"
   | "late_appearance"
   | "candidate_disappearance"
+  | "lost_leader"
   | "reappearance"
   | "stale_repeated_frames"
   | "coordinate_freeze"
@@ -831,6 +832,45 @@ function lateAppearance(): Counterfactual {
   };
 }
 
+/**
+ * Only the true bus and a phantom follower with its timing, `stopsBehind`
+ * stops back, and the true bus out of the feed for the `holeMs` before the
+ * modelled boarding: longer than the memory window, the leader is out of sight
+ * while the follower closes on the stop alone (finding F15). Every other bus
+ * is removed, so no third bus can be what withholds.
+ */
+function lostLeaderFollower(stopsBehind: number, holeMs: number): Counterfactual {
+  return {
+    id: `lost_leader_follower_k${stopsBehind}_${holeMs / 1_000}s`,
+    family: "lost_leader",
+    doc: `Keeps only the true bus and a phantom follower ${stopsBehind} stops behind it with its timing, then drops the true bus's rows for the ${holeMs / 1_000} s before the modelled boarding.`,
+    scenarios: WAIT,
+    expectations: ["NEVER_SELECTS_INJECTED", "NOT_WRONG"],
+    groundTruthShift: "UNCHANGED",
+    usesTruthIdentity: true,
+    usesTruthTiming: true,
+    apply: (passiveCase, context) => build(passiveCase, context, (world, route) => {
+      const id = injectedId("lost_leader", 1);
+      const truthId = context.truth.vehicleId;
+      const alone = mapRows(world, (row) => (row.vehicleId === truthId ? row : undefined));
+      const followed = withShiftedCopies(alone, truthId, [{ id, shift: -stopsBehind }], route);
+      if (!appearsIn(followed.window, id, context.boardingAt)) return undefined;
+      // The session must have seen the true bus before it left the feed: a bus
+      // never seen in the session is the true_bus_absent case, which no
+      // matcher can defend against.
+      const from = context.boardingAt - holeMs;
+      const inHole = (at: number) => at >= from && at < context.boardingAt;
+      const track = rowsOf(followed.window, truthId);
+      if (from <= followed.sessionStartAt || !track.some(({ at }) => at >= followed.sessionStartAt && at < from)) return undefined;
+      if (!track.some(({ at }) => inHole(at))) return undefined;
+      return {
+        world: mapRows(followed, (row, snapshot) => (row.vehicleId === truthId && inHole(timeOf(snapshot)) ? undefined : row)),
+        injected: [id],
+      };
+    }),
+  };
+}
+
 /** The true bus's rows removed in [from, until) — relative to the modelled boarding. */
 function truthHole(
   id: string,
@@ -1298,6 +1338,9 @@ export const COUNTERFACTUALS: readonly Counterfactual[] = [
   lateAppearance(),
   truthHole("candidate_disappearance_60s", "candidate_disappearance",
     "Drops the true bus's rows for the 60 s before the modelled boarding; it is next seen at the stop.", 60_000, 0, false),
+  truthHole("candidate_disappearance_180s", "candidate_disappearance",
+    "Drops the true bus's rows for the 180 s before the modelled boarding, twice the memory window; it is next seen at the stop.", 180_000, 0, false),
+  ...[180_000, 360_000].map((ms) => lostLeaderFollower(3, ms)),
   truthHole("reappearance_60s", "reappearance",
     "Drops the true bus's rows from 120 s to 60 s before the modelled boarding; it comes back under the same id while still approaching.", 120_000, 60_000, true),
   staleRepeatedFrames(),
