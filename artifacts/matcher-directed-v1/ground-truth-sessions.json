@@ -1,0 +1,25 @@
+{
+  "schemaVersion": 1,
+  "evidenceClass": "SIMULATED",
+  "countsAsLiveEvidence": false,
+  "matcherPolicy": "directed-route-progress-v1",
+  "generator": "services/api/test/groundTruthKit.ts",
+  "model": "buses at a steady 20-90 s per stop, visible late, in holes and with per-poll dropout; 10 s polls, 2 % failed; the rider waits from the first poll and boards the first bus to reach the stop",
+  "seeds": {
+    "first": 1,
+    "last": 3000
+  },
+  "counts": {
+    "sessions": 3000,
+    "automaticSelections": 1089,
+    "right": 917,
+    "wrongBoardedBusSeen": 12,
+    "wrongBoardedBusNeverSeen": 157,
+    "noArrival": 3,
+    "wrongWithdrawn": 77,
+    "wrongNotWithdrawn": 92,
+    "rightWithdrawn": 38,
+    "shownOvertaken": 67,
+    "shownOvertakenNotWithdrawn": 0
+  }
+}

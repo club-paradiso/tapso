@@ -68,6 +68,10 @@ jobs:
         run: |
           node --experimental-strip-types scripts/matcher-evidence/counterfactual-synthetic.ts --out=work/ci/counterfactual-synthetic-summary.json
           cmp work/ci/counterfactual-synthetic-summary.json artifacts/matcher-directed-v1/counterfactual-synthetic-summary.json
+      - name: Ground-truth journey sessions (SIMULATED; identical to the committed summary)
+        run: |
+          node --experimental-strip-types scripts/matcher-evidence/ground-truth-sessions.ts --out=work/ci/ground-truth-sessions.json
+          cmp work/ci/ground-truth-sessions.json artifacts/matcher-directed-v1/ground-truth-sessions.json
       - name: Former wrong-commit table (rendered from the artifact, identical to the committed document)
         run: |
           node --experimental-strip-types scripts/matcher-evidence/render-instants.ts --out=work/ci/former-wrong-commits.md
