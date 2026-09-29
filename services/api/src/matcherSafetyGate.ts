@@ -128,6 +128,8 @@ export const PINNED_NEGATIVE_CONTROLS = [
   "F20-never-watched", "F20-others-ignored", "F20-selected-first", "F20-first-sighting", "F20-watch-never-ends", "F20-reselect",
   "R23-returned", "R23-back", "R23-lap", "R23-unproven", "R23-short-loop", "R24-lap", "R24-order", "R25-spread",
   "R27-exclusion", "R27-memory", "R28-mark", "R29-own", "R29-own-lap",
+  "R30-unknown", "R30-never-placed", "F20-watch-ends-early", "R31-reason", "R31-one-place",
+  "R31-other-route", "R31-speed", "R31-loop-back", "R33-merge", "R33-order", "R34-seam",
 ] as const;
 
 /** The criterion each human-only mitigation answers, and the only kind of evidence that can show it. */

@@ -24,7 +24,9 @@
  *      error over the snapshot, so no kill can come from the CI typecheck job
  *      alone.
  *   4. The control's listed test files run against the mutant. A test that
- *      fails there and did not fail on the unmutated snapshot kills it.
+ *      fails there and did not fail on the unmutated snapshot kills it,
+ *      except a test of the catalogue itself, which every mutant fails
+ *      (`CATALOGUE_SELF_CHECKS`).
  *   5. Every kill is confirmed: the killing tests are re-run on the unmutated
  *      snapshot and must pass again, so a test that fails whatever the mutation
  *      cannot pass for a kill. The mutant itself is not re-run: a test that
@@ -614,8 +616,21 @@ function killer(record: TestRecord): KillingTest {
   return { file: `services/api/${record.file}`, test: scrub(record.fileLevel ? `${record.path} (file failed to load or crashed)` : record.path) };
 }
 
+/**
+ * Tests of this catalogue against the sources, not of any protection. Every
+ * control's edit rewrites the very text such a test looks for, so it fails on
+ * every mutant: counted, it would kill each control whatever the protection's
+ * own tests did, and SURVIVED could never be reported (finding R32). They
+ * never kill. The baseline must hold each by this name, so a rename cannot
+ * quietly count it again.
+ */
+const CATALOGUE_SELF_CHECKS: ReadonlySet<string> = new Set([
+  "every negative control still applies: each edit finds its text exactly once in the source it names",
+]);
+
 function newlyFailing(records: TestRecord[], baseline: ReadonlyMap<string, TestRecord>, flaky: ReadonlySet<string>): TestRecord[] {
-  return records.filter((record) => record.status === "fail" && baseline.get(record.key)?.status !== "fail" && !flaky.has(record.key));
+  return records.filter((record) => record.status === "fail" && baseline.get(record.key)?.status !== "fail"
+    && !flaky.has(record.key) && !CATALOGUE_SELF_CHECKS.has(record.name));
 }
 
 function requiredHits(control: NegativeControl, failing: TestRecord[]): TestRecord[] {
@@ -774,6 +789,10 @@ async function main(): Promise<number> {
       throw new Error(`the baseline produced no test results; stderr tail:\n${baselineRun.stderrTail}`);
     }
     const baseline = new Map(baselineRun.records.map((record) => [record.key, record]));
+    const missingSelfChecks = [...CATALOGUE_SELF_CHECKS].filter((name) => !baselineRun.records.some((record) => record.name === name));
+    if (missingSelfChecks.length > 0) {
+      throw new Error(`the baseline has no test named ${JSON.stringify(missingSelfChecks)}: rename it here too, or it would count as a killer again`);
+    }
     const baselineFailing = baselineRun.records.filter((record) => record.status === "fail");
     const baselineGreen = baselineFailing.length === 0 && baselineRun.exitCode === 0;
     process.stderr.write(`baseline: ${baselineRun.records.length} tests, ${baselineFailing.length} failing, ${seconds(baselineRun.durationMs)}\n`);
