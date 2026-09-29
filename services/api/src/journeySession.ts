@@ -224,6 +224,19 @@ export interface BoardingWatch {
   endedAt?: string;
 }
 
+/**
+ * What one request's snapshot showed of the boarding stop, for the row of a
+ * concurrent request that saved first (findings R33, R44, R50).
+ */
+interface WatchFinding {
+  /** `withdrawal`: another bus reached the stop before the selected one. `end`: the selected bus was seen reaching it. */
+  kind: "withdrawal" | "end";
+  vehicleId: string;
+  at: Date;
+  /** This request's snapshot: an end is read against the winner's memory of the other buses before it is written. */
+  vehicles: VehicleObservation[];
+}
+
 type SessionRecord = SessionInput & {
   id: string;
   stops: StopOnRoute[];
@@ -348,14 +361,15 @@ export class JourneySessionCoordinator {
     const automatic = record.selectionMode === "automatic" ? record.selectedVehicleId : undefined;
     const watching = automatic !== undefined && record.boardingWatch?.endedAt === undefined;
     const view = this.evaluateSnapshot(record, vehicles, now);
-    const withdrawal = automatic !== undefined && record.selectedVehicleId === undefined
-      && record.passage?.withheld?.reason === SELECTION_WITHDRAWN
-      ? { vehicleId: automatic, at: now }
-      : undefined;
-    const end = watching && record.selectedVehicleId === automatic && record.boardingWatch?.endedAt !== undefined
-      ? { vehicleId: automatic, at: now }
-      : undefined;
-    return this.commit(record, version, view, withdrawal, end);
+    let finding: WatchFinding | undefined;
+    if (automatic !== undefined) {
+      if (record.selectedVehicleId === undefined && record.passage?.withheld?.reason === SELECTION_WITHDRAWN) {
+        finding = { kind: "withdrawal", vehicleId: automatic, at: now, vehicles };
+      } else if (watching && record.selectedVehicleId === automatic && record.boardingWatch?.endedAt !== undefined) {
+        finding = { kind: "end", vehicleId: automatic, at: now, vehicles };
+      }
+    }
+    return this.commit(record, version, view, finding);
   }
 
   async confirm(id: string, value: unknown): Promise<JourneySessionView> {
@@ -389,80 +403,90 @@ export class JourneySessionCoordinator {
    * re-derive progress from a snapshot the winner has already consumed, which
    * is how a duplicate poll turns into a contradictory answer. The winner's
    * stored state is by construction at least as advanced as ours, so it is
-   * what the rider gets, with two exceptions: what the boarding watch saw of
+   * what the rider gets, with one exception: what the boarding watch saw of
    * the stop (below).
    */
   private async commit(
     record: SessionRecord,
     version: number,
     view: JourneySessionView,
-    withdrawal?: { vehicleId: string; at: Date },
-    end?: { vehicleId: string; at: Date },
+    finding?: WatchFinding,
   ): Promise<JourneySessionView> {
     const outcome = await this.store.save(toStored(record), version);
     if (outcome.outcome === "saved") return view;
     // The row vanished between the load and the save: it expired, or an
     // operator deleted it. Either way this session no longer exists.
     if (!outcome.stored) throw new SessionExpiredError();
-    if (withdrawal && await this.withdrawOnWinner(outcome.stored, withdrawal)) return view;
-    const ended = end ? await this.endOnWinner(outcome.stored, end) : undefined;
-    return this.concurrentWriteView(ended ?? outcome.stored);
-  }
-
-  /**
-   * This request's snapshot showed another bus reaching the stop before the
-   * automatically selected one. A request that saved first read another
-   * snapshot, and its row is not "more advanced" in what it knows of that: a
-   * sighting it did not see is not unseen. While the winner still holds the
-   * same automatic selection, and did not see the selected bus at the stop
-   * before this snapshot, the withdrawal is written onto its row (finding
-   * R33). A few conflicts in a row are given up on, leaving the winner's row.
-   */
-  private async withdrawOnWinner(stored: VersionedJourneySession, withdrawal: { vehicleId: string; at: Date }): Promise<boolean> {
-    let current = stored;
-    for (let attempt = 0; attempt < 3; attempt += 1) {
-      const winner = toRecord(current.session);
-      if (winner.selectedVehicleId !== withdrawal.vehicleId || winner.selectionMode !== "automatic") return false;
-      const endedAt = winner.boardingWatch?.endedAt;
-      if (endedAt !== undefined && Date.parse(endedAt) < withdrawal.at.getTime()) return false;
-      winner.boardingWatch ??= startBoardingWatch(winner.passage, withdrawal.vehicleId);
-      this.withdrawSelection(winner, withdrawal.at);
-      const outcome = await this.store.save(toStored(winner), current.version);
-      if (outcome.outcome === "saved") return true;
-      if (!outcome.stored) throw new SessionExpiredError();
-      current = outcome.stored;
+    if (finding === undefined) return this.concurrentWriteView(outcome.stored);
+    const merged = await this.mergeOntoWinner(outcome.stored, finding);
+    // A withdrawal this request made says so in its own view.
+    if (finding.kind === "withdrawal" && merged.written === "withdrawal") return view;
+    // The latest row read, not the first: a merge that gave up after a conflict
+    // has seen newer state than the winner's first row (finding R54). Withdrawn,
+    // it is answered as a withdrawal is, from this request's snapshot: an end
+    // that read as a withdrawal on the winner's memory (finding R50), or a row
+    // another request withdrew meanwhile.
+    const latest = toRecord(merged.row.session);
+    if (latest.selectedVehicleId === undefined && latest.passage?.withheld?.reason === SELECTION_WITHDRAWN) {
+      return this.evaluateSnapshot(latest, finding.vehicles, finding.at);
     }
-    return false;
+    return this.concurrentWriteView(merged.row, merged.written === "end");
   }
 
   /**
-   * The mirror of the above: this request's snapshot showed the automatically
-   * selected bus reaching the stop, and a request that saved first did not.
-   * While the winner still holds the same automatic selection and its watch is
-   * open, or ended later than this snapshot, the end is written onto its row,
-   * so a withdrawal read from a later snapshot and merged afterwards finds it
-   * (finding R44). A withdrawal merged first stands: the selection is gone, and
-   * the rider is asked. Returns the row as saved, or nothing if it was left.
+   * This request's snapshot showed the boarding stop reached: by another bus
+   * before the automatically selected one (a withdrawal), or by the selected
+   * bus itself (an end). A request that saved first read another snapshot, and
+   * its row is not "more advanced" in what it knows of that: a sighting it did
+   * not see is not unseen. While the winner still holds the same automatic
+   * selection, what this request saw is written onto its row (findings R33,
+   * R44):
+   * - a withdrawal, unless the winner saw the selected bus at the stop before
+   *   this snapshot;
+   * - an end, unless the winner's watch ended no later than this snapshot, and
+   *   only if this snapshot, read against the winner's memory of the other
+   *   buses, shows none of them reaching the stop: this request's own memory
+   *   may lack a sighting the winner's holds, and an end written over it would
+   *   hide that bus for good (finding R50). If one did, it is a withdrawal.
+   * A few conflicts in a row are given up on, leaving the latest row read.
    */
-  private async endOnWinner(stored: VersionedJourneySession, end: { vehicleId: string; at: Date }): Promise<VersionedJourneySession | undefined> {
+  private async mergeOntoWinner(
+    stored: VersionedJourneySession,
+    finding: WatchFinding,
+  ): Promise<{ row: VersionedJourneySession; written?: "withdrawal" | "end" }> {
     let current = stored;
     for (let attempt = 0; attempt < 3; attempt += 1) {
       const winner = toRecord(current.session);
-      if (winner.selectedVehicleId !== end.vehicleId || winner.selectionMode !== "automatic") return undefined;
+      if (winner.selectedVehicleId !== finding.vehicleId || winner.selectionMode !== "automatic") return { row: current };
       const endedAt = winner.boardingWatch?.endedAt;
-      if (endedAt !== undefined && Date.parse(endedAt) <= end.at.getTime()) return undefined;
-      winner.boardingWatch = { ...(winner.boardingWatch ?? startBoardingWatch(winner.passage, end.vehicleId)), endedAt: end.at.toISOString() };
+      let write: "withdrawal" | "end" = "withdrawal";
+      if (finding.kind === "withdrawal") {
+        if (endedAt !== undefined && Date.parse(endedAt) < finding.at.getTime()) return { row: current };
+      } else {
+        if (endedAt !== undefined && Date.parse(endedAt) <= finding.at.getTime()) return { row: current };
+        write = this.anotherBusReachedTheStopOnRow(current.session, finding) ? "withdrawal" : "end";
+      }
+      winner.boardingWatch ??= startBoardingWatch(winner.passage, finding.vehicleId);
+      if (write === "withdrawal") this.withdrawSelection(winner, finding.at);
+      else winner.boardingWatch = { ...winner.boardingWatch, endedAt: finding.at.toISOString() };
       const session = toStored(winner);
       const outcome = await this.store.save(session, current.version);
-      if (outcome.outcome === "saved") return { session, version: outcome.version };
+      if (outcome.outcome === "saved") return { row: { session, version: outcome.version }, written: write };
       if (!outcome.stored) throw new SessionExpiredError();
       current = outcome.stored;
     }
-    return undefined;
+    return { row: current };
+  }
+
+  /** The watch's look at this request's snapshot with the winner's memory instead of this request's own (finding R50). */
+  private anotherBusReachedTheStopOnRow(session: StoredJourneySession, finding: WatchFinding): boolean {
+    const probe = toRecord(session);
+    probe.boardingWatch ??= startBoardingWatch(probe.passage, finding.vehicleId);
+    return this.anotherBusReachedTheStopFirst(probe, finding.vehicles, finding.at, this.sourceFreshness(probe, finding.vehicles, finding.at));
   }
 
   /** Renders the winner's persisted state without touching the provider. */
-  private concurrentWriteView(stored: VersionedJourneySession): JourneySessionView {
+  private concurrentWriteView(stored: VersionedJourneySession, merged = false): JourneySessionView {
     const record = toRecord(stored.session);
     const state: JourneySessionState = record.lastProgress
       ? stateFromProgress(record.lastProgress)
@@ -470,9 +494,11 @@ export class JourneySessionCoordinator {
     return this.view(record, {
       state,
       progress: retainedProgress(record.lastProgress),
-      explanation:
-        "A concurrent update to this session was accepted first. Its stored state is returned "
-        + "unchanged rather than overwritten.",
+      explanation: merged
+        ? "A concurrent update to this session was accepted first. What this request saw of the boarding "
+          + "stop was added to it, and its stored state is returned."
+        : "A concurrent update to this session was accepted first. Its stored state is returned "
+          + "unchanged rather than overwritten.",
     });
   }
 

@@ -1,6 +1,6 @@
 import test from "node:test";
 import assert from "node:assert/strict";
-import { confirmationCandidates, JourneySessionCoordinator, SessionInputError } from "../src/journeySession.ts";
+import { confirmationCandidates, JourneySessionCoordinator, SessionExpiredError, SessionInputError } from "../src/journeySession.ts";
 import type { RouteRequest, StopOnRoute, VehicleObservation } from "../src/domain.ts";
 import type { TransitProvider } from "../src/provider.ts";
 import {
@@ -1636,21 +1636,24 @@ test("a withdrawal survives a concurrent refresh that saved first, unless that o
 
 /**
  * Concurrent requests on one stored session: LEAD is selected at 0 s for a
- * rider waiting at stop 8 of the long route, then the provider is gated, so
- * each request waits at its read until released, in the order they read.
+ * rider waiting at stop 8 of the long route (or, with `loop`, at
+ * `boardingStopSequence` of its lap of eleven), from the first snapshot
+ * `first` (by default LEAD three out and FAST seven out), then the provider is
+ * gated, so each request waits at its read until released, in the order they
+ * read.
  */
-async function concurrentRide() {
+async function concurrentRide(options: { first?: Record<string, number>; loop?: boolean; boardingStopSequence?: number } = {}) {
   const start = Date.parse("2026-09-29T09:00:00Z");
   const store = new MemoryJourneySessionStore();
-  const provider = new GatedLongRouteProvider(longRoute());
+  const provider = new GatedLongRouteProvider(longRoute({ ...(options.loop ? { loop: true } : {}) }));
   const snapshot = (seconds: number, buses: Record<string, number>): VehicleObservation[] => Object.entries(buses).map(([vehicleId, stopSequence]) => ({
     vehicleId, routeId, observedAt: new Date(start + seconds * 1_000).toISOString(), directionCode: "1", stopSequence,
   }));
   const coordinator = (seconds: number, onStore: JourneySessionStore = store) => new JourneySessionCoordinator(provider, {
     now: () => new Date(start + seconds * 1_000), store: onStore, automaticMatchingEnabled: true, idFactory: () => "ride",
   });
-  provider.snapshots = [snapshot(0, { LEAD: 5, FAST: 1 })];
-  const input = { routeId, cityCode, boardingStopSequence: 8, destinationStopSequence: 11, directionCode: "1" };
+  provider.snapshots = [snapshot(0, options.first ?? { LEAD: 5, FAST: 1 })];
+  const input = { routeId, cityCode, boardingStopSequence: options.boardingStopSequence ?? 8, destinationStopSequence: 11, directionCode: "1" };
   assert.equal((await coordinator(0).create(input)).selectedVehicleId, "LEAD");
   provider.gated = true;
   // Makes a call and lets it reach its read, where it waits to be released.
@@ -1746,6 +1749,260 @@ test("an end seen by a request that lost the race is written onto the winner's r
     assert.equal(stored?.selectedVehicleId, "LEAD", label);
     assert.equal(stored?.boardingWatch?.endedAt, ride.at(59), label);
   }
+});
+
+test("an end is read against the winner's memory before it is written: another bus crossing the stop in the same poll withdraws instead (R50)", async () => {
+  // LEAD is selected at 5 s alone in the feed. Two requests load that row.
+  // W reads at 5 s: LEAD at 6, FAST first seen one short at 7. E reads at
+  // 14 s: LEAD at the stop, FAST two past. E's own memory has no FAST, and two
+  // past is more than a bus first seen may have come since the declaration, so
+  // E sees only LEAD's arrival and ends the watch. With W's memory FAST went
+  // from one short to two past in E's poll: it crossed the stop, and the rider
+  // may be on it. W saves first; E loses, and its end is not written over that.
+  const straight = await concurrentRide({ first: { LEAD: 5 } });
+  straight.provider.snapshots = [straight.snapshot(5, { LEAD: 6, FAST: 7 }), straight.snapshot(14, { LEAD: 8, FAST: 10 })];
+  const w = await straight.begin(() => straight.coordinator(5).refresh("ride"));
+  const e = await straight.begin(() => straight.coordinator(14).refresh("ride"));
+  straight.provider.releaseNext();
+  await w.result;
+  straight.provider.releaseNext();
+  const view = await e.result;
+  assert.equal(view.selectedVehicleId, undefined);
+  assert.equal(view.state, "confirmation_required");
+  const stored = (await straight.store.load("ride"))?.session;
+  assert.equal(stored?.selectedVehicleId, undefined);
+  assert.equal(stored?.passage?.withheld?.reason, "another_vehicle_reached_boarding_stop_first");
+  straight.provider.gated = false;
+  straight.provider.snapshots = [straight.snapshot(30, { LEAD: 9, FAST: 11 })];
+  assert.equal((await straight.coordinator(30).refresh("ride")).selectedVehicleId, undefined);
+
+  // A lap of eleven, the rider at stop 5, FAR in every snapshot. W reads at
+  // 149 s (LEAD at 4, FAR one short at 4), E at 150 s (LEAD at the stop, FAR at
+  // 7). In E's memory FAR's distance to the stop grew by one, which is only what
+  // the time allows; in W's it grew by eight, which is a crossing.
+  const loop = await concurrentRide({ first: { LEAD: 3, FAR: 8 }, loop: true, boardingStopSequence: 5 });
+  loop.provider.snapshots = [loop.snapshot(149, { LEAD: 4, FAR: 4 }), loop.snapshot(150, { LEAD: 5, FAR: 7 })];
+  const lw = await loop.begin(() => loop.coordinator(149).refresh("ride"));
+  const le = await loop.begin(() => loop.coordinator(150).refresh("ride"));
+  loop.provider.releaseNext();
+  await lw.result;
+  loop.provider.releaseNext();
+  assert.equal((await le.result).selectedVehicleId, undefined);
+  assert.equal((await loop.store.load("ride"))?.session.selectedVehicleId, undefined);
+
+  // The end still stands where the winner's memory shows nothing: LEAD at the
+  // stop at 59 s, FAST one short, and a winner that read nothing of note.
+  const quiet = await concurrentRide();
+  quiet.provider.snapshots = [quiet.snapshot(58, { LEAD: 7, FAST: 6 }), quiet.snapshot(59, { LEAD: 8, FAST: 7 })];
+  const qw = await quiet.begin(() => quiet.coordinator(58).refresh("ride"));
+  const qe = await quiet.begin(() => quiet.coordinator(59).refresh("ride"));
+  quiet.provider.releaseNext();
+  await qw.result;
+  quiet.provider.releaseNext();
+  assert.match((await qe.result).explanation, /added to it/);
+  assert.equal((await quiet.store.load("ride"))?.session.boardingWatch?.endedAt, quiet.at(59));
+});
+
+test("a merge that gives up on a newer, withdrawn row, or after three conflicts, answers from the last row it read (R54)", async () => {
+  // W (61 s, its read failed) saves first. E (59 s: LEAD at the stop, FAST one
+  // short) loses and merges its end. While that merge is in flight, D (60 s:
+  // FAST at the stop) loses to W too and withdraws first: E's merge finds the
+  // withdrawn row and gives up. E answers from that row.
+  const ride = await concurrentRide();
+  ride.provider.snapshots = [new Error("synthetic provider failure"), ride.snapshot(59, { LEAD: 8, FAST: 7 }), ride.snapshot(60, { FAST: 8 })];
+  let saves = 0;
+  let d: { result: Promise<{ state: string }> } | undefined;
+  const interleaved: JourneySessionStore = {
+    load: (id) => ride.store.load(id),
+    create: (session) => ride.store.create(session),
+    delete: (id) => ride.store.delete(id),
+    save: async (session, version) => {
+      saves += 1;
+      // E's second save is its merge: D runs to completion first.
+      if (saves === 2) {
+        ride.provider.releaseNext();
+        await d?.result;
+      }
+      return ride.store.save(session, version);
+    },
+  };
+  const w = await ride.begin(() => ride.coordinator(61).refresh("ride"));
+  const e = await ride.begin(() => ride.coordinator(59, interleaved).refresh("ride"));
+  d = await ride.begin(() => ride.coordinator(60).refresh("ride"));
+  ride.provider.releaseNext();
+  await w.result;
+  ride.provider.releaseNext();
+  const view = await e.result;
+  assert.equal((await d.result).state, "confirmation_required");
+  assert.equal(view.selectedVehicleId, undefined);
+  assert.equal(view.state, "confirmation_required");
+  assert.equal((await ride.store.load("ride"))?.session.passage?.withheld?.reason, "another_vehicle_reached_boarding_stop_first");
+
+  // A merge that gives up after three conflicts answers from the last row it
+  // read as well: two benign writes land between E's merge attempts, and the
+  // third conflict is D's withdrawal.
+  const giving = await concurrentRide();
+  giving.provider.snapshots = [new Error("synthetic provider failure"), giving.snapshot(59, { LEAD: 8, FAST: 7 }), giving.snapshot(60, { FAST: 8 })];
+  let givingSaves = 0;
+  let gd: { result: Promise<{ state: string }> } | undefined;
+  const conflicted: JourneySessionStore = {
+    load: (id) => giving.store.load(id),
+    create: (session) => giving.store.create(session),
+    delete: (id) => giving.store.delete(id),
+    save: async (session, version) => {
+      givingSaves += 1;
+      if (givingSaves === 2 || givingSaves === 3) {
+        const row = (await giving.store.load("ride"))!;
+        await giving.store.save({ ...row.session, consecutiveProviderFailures: row.session.consecutiveProviderFailures + 1 }, row.version);
+      }
+      if (givingSaves === 4) {
+        giving.provider.releaseNext();
+        await gd?.result;
+      }
+      return giving.store.save(session, version);
+    },
+  };
+  const gw = await giving.begin(() => giving.coordinator(61).refresh("ride"));
+  const ge = await giving.begin(() => giving.coordinator(59, conflicted).refresh("ride"));
+  gd = await giving.begin(() => giving.coordinator(60).refresh("ride"));
+  giving.provider.releaseNext();
+  await gw.result;
+  giving.provider.releaseNext();
+  const gaveUp = await ge.result;
+  assert.equal(givingSaves, 4);
+  assert.equal(gaveUp.selectedVehicleId, undefined);
+  assert.equal(gaveUp.state, "confirmation_required");
+});
+
+test("an end is retried past a third write, never overwrites an earlier end, and a row deleted meanwhile is gone (R52)", async () => {
+  // (a) W (61 s, its read failed) saves first; E (59 s: LEAD at the stop, FAST
+  // one short) loses, and a third request's write lands before E's merge. D
+  // (60 s: FAST at the stop) then finds the end at 59 s: LEAD was there first.
+  const retry = await concurrentRide();
+  retry.provider.snapshots = [new Error("synthetic provider failure"), retry.snapshot(59, { LEAD: 8, FAST: 7 }), retry.snapshot(60, { FAST: 8 })];
+  let saves = 0;
+  const crowded: JourneySessionStore = {
+    load: (id) => retry.store.load(id),
+    create: (session) => retry.store.create(session),
+    delete: (id) => retry.store.delete(id),
+    save: async (session, version) => {
+      saves += 1;
+      if (saves === 2) {
+        const row = (await retry.store.load("ride"))!;
+        await retry.store.save({ ...row.session, consecutiveProviderFailures: row.session.consecutiveProviderFailures + 1 }, row.version);
+      }
+      return retry.store.save(session, version);
+    },
+  };
+  const rw = await retry.begin(() => retry.coordinator(61).refresh("ride"));
+  const re = await retry.begin(() => retry.coordinator(59, crowded).refresh("ride"));
+  const rd = await retry.begin(() => retry.coordinator(60).refresh("ride"));
+  retry.provider.releaseNext();
+  await rw.result;
+  retry.provider.releaseNext();
+  await re.result;
+  retry.provider.releaseNext();
+  await rd.result;
+  const kept = (await retry.store.load("ride"))?.session;
+  assert.equal(kept?.selectedVehicleId, "LEAD");
+  assert.equal(kept?.boardingWatch?.endedAt, retry.at(59));
+  assert.equal(saves, 3);
+
+  // (b) W ends the watch at 59 s and saves first; E ends it at 62 s and loses:
+  // it does not overwrite the earlier end, so D (60 s, FAST at the stop) still
+  // finds LEAD there first.
+  const overwrite = await concurrentRide();
+  overwrite.provider.snapshots = [
+    overwrite.snapshot(59, { LEAD: 8, FAST: 6 }),
+    overwrite.snapshot(62, { LEAD: 9, FAST: 7 }),
+    overwrite.snapshot(60, { FAST: 8 }),
+  ];
+  const ow = await overwrite.begin(() => overwrite.coordinator(59).refresh("ride"));
+  const oe = await overwrite.begin(() => overwrite.coordinator(62).refresh("ride"));
+  const od = await overwrite.begin(() => overwrite.coordinator(60).refresh("ride"));
+  overwrite.provider.releaseNext();
+  await ow.result;
+  overwrite.provider.releaseNext();
+  await oe.result;
+  overwrite.provider.releaseNext();
+  await od.result;
+  const stood = (await overwrite.store.load("ride"))?.session;
+  assert.equal(stood?.selectedVehicleId, "LEAD");
+  assert.equal(stood?.boardingWatch?.endedAt, overwrite.at(59));
+
+  // (c) W saves first, and the row is deleted before E's merge: the session no
+  // longer exists, and E says so.
+  const vanish = await concurrentRide();
+  vanish.provider.snapshots = [vanish.snapshot(62, { LEAD: 7 }), vanish.snapshot(59, { LEAD: 8, FAST: 7 })];
+  let vanishSaves = 0;
+  const vanishing: JourneySessionStore = {
+    load: (id) => vanish.store.load(id),
+    create: (session) => vanish.store.create(session),
+    delete: (id) => vanish.store.delete(id),
+    save: async (session, version) => {
+      vanishSaves += 1;
+      if (vanishSaves === 2) await vanish.store.delete("ride");
+      return vanish.store.save(session, version);
+    },
+  };
+  const vw = await vanish.begin(() => vanish.coordinator(62).refresh("ride"));
+  const ve = await vanish.begin(() => vanish.coordinator(59, vanishing).refresh("ride"));
+  vanish.provider.releaseNext();
+  await vw.result;
+  vanish.provider.releaseNext();
+  await assert.rejects(ve.result, SessionExpiredError);
+});
+
+test("the watch's anchor moves to every sighting before the stop, however far, round a loop too, and survives the selected bus going out of sight (R51, R53)", async () => {
+  // (a) LEAD is selected four out, then read a stop further back (five out,
+  // beyond the approach window) at 30 s and 60 s, so the last sighting before
+  // the stop is at 60 s. At 90 s a garbled row puts it two past: seven stops in
+  // thirty seconds, no crossing. FAST then reaches the stop, and LEAD never did.
+  const zone = overtakingRide();
+  assert.equal((await zone.at(0, { LEAD: 4, FAST: 1 }).create(zone.input)).selectedVehicleId, "LEAD");
+  for (const [seconds, positions] of [[30, { LEAD: 3, FAST: 2 }], [60, { LEAD: 3, FAST: 4 }], [90, { LEAD: 10, FAST: 6 }]] as const) {
+    await zone.at(seconds, positions).refresh("ride");
+  }
+  assert.equal(await watchEnded(zone.store), false);
+  const zoneView = await zone.at(120, { LEAD: 5, FAST: 8 }).refresh("ride");
+  assert.equal(zoneView.selectedVehicleId, undefined);
+  assert.equal(zoneView.state, "confirmation_required");
+
+  // (b) A lap of eleven, the rider at 5: LEAD one short at 30 s, three past at
+  // 35 s (too soon, and not where the next is measured from), four past at 90 s
+  // (four stops in sixty seconds from one short: a crossing).
+  const loop = overtakingRide({ loop: true, boardingStopSequence: 5 });
+  assert.equal((await loop.at(0, { LEAD: 3, FAST: 10 }).create(loop.input)).selectedVehicleId, "LEAD");
+  await loop.at(30, { LEAD: 4, FAST: 1 }).refresh("ride");
+  await loop.at(35, { LEAD: 8, FAST: 1 }).refresh("ride");
+  assert.equal(await watchEnded(loop.store), false);
+  await loop.at(90, { LEAD: 9, FAST: 3 }).refresh("ride");
+  assert.equal(await watchEnded(loop.store), true);
+  assert.equal((await loop.at(120, { LEAD: 10, FAST: 5 }).refresh("ride")).selectedVehicleId, "LEAD");
+
+  // (c) LEAD one short at 30 s, out of sight at 60 s, two past at 90 s: three
+  // stops in sixty seconds from the last sighting before the stop.
+  const away = overtakingRide();
+  assert.equal((await away.at(0, { LEAD: 5, FAST: 1 }).create(away.input)).selectedVehicleId, "LEAD");
+  await away.at(30, { LEAD: 7, FAST: 3 }).refresh("ride");
+  await away.at(60, { FAST: 5 }).refresh("ride");
+  assert.equal(await watchEnded(away.store), false);
+  await away.at(90, { LEAD: 10, FAST: 6 }).refresh("ride");
+  assert.equal(await watchEnded(away.store), true);
+  assert.equal((await away.at(120, { LEAD: 11, FAST: 8 }).refresh("ride")).selectedVehicleId, "LEAD");
+});
+
+test("round a loop, another bus read a stop back never hides a bus first seen past the stop: the selection is withdrawn (R48)", async () => {
+  // A lap of eleven, the rider waiting at 5, LEAD selected two out, FAR three
+  // past. At 60 s FAR reads a stop back (8 to 7), which only the time allows,
+  // and NEW is seen for the first time two past, where it could have been at
+  // the stop since the rider began waiting: a sighting, which is kept first.
+  const ride = overtakingRide({ loop: true, boardingStopSequence: 5 });
+  assert.equal((await ride.at(0, { LEAD: 3, FAR: 8 }).create(ride.input)).selectedVehicleId, "LEAD");
+  await ride.at(30, { LEAD: 3, FAR: 8 }).refresh("ride");
+  const view = await ride.at(60, { LEAD: 4, FAR: 7, NEW: 7 }).refresh("ride");
+  assert.equal(view.selectedVehicleId, undefined);
+  assert.equal(view.state, "confirmation_required");
 });
 
 test("a stored automatic selection written before the watch existed starts one from its memory", async () => {

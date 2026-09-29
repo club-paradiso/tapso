@@ -134,7 +134,8 @@ export const PINNED_NEGATIVE_CONTROLS = [
   "R31-place-time", "R31-watch-start", "R33-tie", "R33-retry", "R33-mode", "R34-window", "R34-sort", "R40-bound",
   "R40-margin", "R40-unknown-time", "R42-anchor", "R43-read-back", "R43-possibility", "R43-remembered",
   "R44-end-merge", "R44-earliest",
-  "R46-misread", "R47-loop-edge", "R48-order-first-seen", "R48-order-remembered",
+  "R46-misread", "R47-loop-edge", "R48-order-first-seen", "R48-order-remembered", "R50-stale-end", "R51-anchor-zone",
+  "R52-end-retry", "R52-end-vanish", "R53-anchor-loop", "R53-out-of-sight", "R54-latest-row", "R54-give-up",
 ] as const;
 
 /** The criterion each human-only mitigation answers, and the only kind of evidence that can show it. */
