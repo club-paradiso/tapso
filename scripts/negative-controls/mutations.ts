@@ -1806,7 +1806,7 @@ export const NEGATIVE_CONTROLS: readonly NegativeControl[] = [
     edits: [{
       file: MATCHING,
       find: "    return grew > 2 ? \"crossed\" : grew > 0 ? \"read_back\" : undefined;",
-      replace: "    return grew > 0 ? \"crossed\" : undefined;",
+      replace: "    return grew > 0 ? \"crossed\" : grew > 2 ? \"read_back\" /* unreachable: keeps the type */ : undefined;",
     }],
     testFiles: [T.matching, T.session],
   },
