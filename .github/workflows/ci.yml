@@ -45,6 +45,56 @@ jobs:
       - run: for f in beta.js beta-client-core.js beta-admin.js beta-admin-core.js background.js; do node --check services/api/public/ride-capture/$f || exit 1; done
       - run: python3 -m unittest discover -s scripts/tago -p 'test_*.py'
 
+  matcher-evidence:
+    # The offline half of release gate matcher-passive-safety-v4: every check
+    # here is deterministic and needs no network, no credential and no rider.
+    # See docs/exec-plans/HUMAN_LABOR_ELIMINATION.md.
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-node@v4
+        with:
+          node-version: 22
+      - run: npm install --prefix services/api --omit=optional --no-audit --no-fund
+      - name: Suite plus 2 000 seeds per matcher property (after every recorded regression seed)
+        run: node --experimental-strip-types scripts/matcher-evidence/run-suite.ts --property-cases=2000 --out=work/ci/test-suite.json
+      - name: Negative controls (every reintroduced leak and fail-closed break must turn the suite red)
+        run: node --experimental-strip-types scripts/negative-controls/run.ts --out=work/ci/negative-controls.json
+      - name: Former wrong-commit instants (offline, ledger hash-checked, byte-identical to the committed result)
+        run: |
+          node --experimental-strip-types scripts/matcher-evidence/redecide-ledger.ts --out=work/ci/former-wrong-commit-instants.json
+          cmp work/ci/former-wrong-commit-instants.json artifacts/matcher-directed-v1/former-wrong-commit-instants.json
+      - name: Counterfactual suite over its synthetic bases (SIMULATED; identical to the committed summary)
+        run: |
+          node --experimental-strip-types scripts/matcher-evidence/counterfactual-synthetic.ts --out=work/ci/counterfactual-synthetic-summary.json
+          cmp work/ci/counterfactual-synthetic-summary.json artifacts/matcher-directed-v1/counterfactual-synthetic-summary.json
+      - name: Former wrong-commit table (rendered from the artifact, identical to the committed document)
+        run: |
+          node --experimental-strip-types scripts/matcher-evidence/render-instants.ts --out=work/ci/former-wrong-commits.md
+          cmp work/ci/former-wrong-commits.md docs/validation/FORMER_WRONG_COMMITS_UNDER_DIRECTED_POLICY.md
+      - name: Local deployment posture (the real server, no credential, operator opt-in set) refuses automatic matching
+        run: |
+          # Without pipefail, tee would hide a failed smoke check.
+          set -o pipefail
+          mkdir -p work/ci
+          PORT=8799 TRANSIT_AUTOMATIC_MATCHING_ENABLED=true node --experimental-strip-types services/api/src/server.ts > work/ci/local-server.log 2>&1 &
+          for _ in $(seq 1 50); do curl -sf http://127.0.0.1:8799/health > /dev/null && break; sleep 0.2; done
+          node --experimental-strip-types services/api/scripts/smoke.ts http://127.0.0.1:8799 | tee work/ci/local-smoke.txt
+          grep -E '^WARN +matching posture +TRANSIT_AUTOMATIC_MATCHING_ENABLED=true is set and refused' work/ci/local-smoke.txt
+          curl -sf http://127.0.0.1:8799/health | node -e '
+            let text = ""; process.stdin.on("data", (chunk) => { text += chunk; }).on("end", () => {
+              const { matching } = JSON.parse(text);
+              const ok = matching.automaticMatchingEnabled === false && matching.automaticMatchingRequested === true
+                && matching.matcherPolicy === "directed-route-progress-v1" && matching.readiness.demonstrated === "READY_FOR_SHADOW";
+              console.log(JSON.stringify(matching.readiness)); process.exit(ok ? 0 : 1);
+            });'
+      - name: Release gate (the committed result and the code's claimed readiness must both match the evidence)
+        run: |
+          node --experimental-strip-types scripts/matcher-evidence/gate.ts --check \
+            --suite=work/ci/test-suite.json \
+            --negative-controls=work/ci/negative-controls.json \
+            --instants=work/ci/former-wrong-commit-instants.json
+
   web:
     runs-on: ubuntu-latest
     defaults:
@@ -66,6 +116,8 @@ jobs:
         run: npm install --prefix ../../services/api --omit=optional --no-audit --no-fund
       - name: Typecheck the transit API deployed surface
         run: npx tsc --project ../../services/api/tsconfig.json --typeRoots node_modules/@types
+      - name: Typecheck the offline evidence tooling
+        run: npx tsc --project ../../scripts/tsconfig.json --typeRoots node_modules/@types
       - run: npm run build
       - name: Validate Figma Code Connect templates
         run: npx --yes --package=@figma/code-connect@2.0.0 figma connect parse --config figma.config.json --dry-run

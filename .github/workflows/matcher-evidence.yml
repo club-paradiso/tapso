@@ -1,0 +1,400 @@
+# Matcher evidence — rider-free, bounded, automated. Replaces repeated human
+# bus rides as the source of matcher-safety evidence. See
+# docs/exec-plans/HUMAN_LABOR_ELIMINATION.md.
+#
+# Three ways it runs, none of them a person on a bus:
+#   - schedule: one bounded passive collection window per day, rotating time
+#     band and route pool, then the blind evaluation, the old-vs-new migration
+#     and the counterfactual suite on that window;
+#   - push to main that changes ops/matcher-evidence/request.json (a merged
+#     request): runs that request once — by default the offline replay of the
+#     Passive Shadow v3 evidence of record under the current matcher;
+#   - workflow_dispatch: the same request, on demand.
+#
+# Scheduled workflows only run from the default branch, so nothing here runs
+# before the owner merges it.
+#
+# Read-only provider access. No journey session, no Upstash write, no
+# production configuration. Raw streams (raw vehicle numbers) stay in private
+# artifacts and the private draft-release vault; only pseudonymised outputs are
+# printed. Automatic matching is never enabled by anything here.
+name: Matcher evidence
+
+on:
+  schedule:
+    # One window a day, rotating across KST time bands and weekday/weekend.
+    - cron: "37 22 * * 0"  # Mon 07:37 KST  morning peak
+    - cron: "43 3 * * 2"   # Tue 12:43 KST  midday
+    - cron: "11 9 * * 3"   # Wed 18:11 KST  evening peak
+    - cron: "29 23 * * 3"  # Thu 08:29 KST  morning peak
+    - cron: "17 5 * * 5"   # Fri 14:17 KST  afternoon
+    - cron: "7 8 * * 6"    # Sat 17:07 KST  weekend evening
+    - cron: "53 1 * * 0"   # Sun 10:53 KST  weekend morning
+  workflow_dispatch:
+  push:
+    branches: [main]
+    paths: ["ops/matcher-evidence/request.json"]
+
+concurrency:
+  group: matcher-evidence
+  cancel-in-progress: false
+
+permissions:
+  contents: read
+  actions: read
+
+env:
+  # Belt and braces: nothing in this workflow reads it, and it must never be true.
+  TRANSIT_AUTOMATIC_MATCHING_ENABLED: "false"
+
+jobs:
+  plan:
+    runs-on: ubuntu-latest
+    outputs:
+      mode: ${{ steps.plan.outputs.mode }}
+      pool: ${{ steps.plan.outputs.pool }}
+      requestId: ${{ steps.plan.outputs.requestId }}
+    steps:
+      - uses: actions/checkout@v4
+      - id: plan
+        env:
+          EVENT: ${{ github.event_name }}
+        run: |
+          node -e '
+            const r = require("./ops/matcher-evidence/request.json");
+            const pools = r.collect.pools.length;
+            // The KST weekday: the seven schedules fall on seven different KST
+            // days (07:37-18:11, far from midnight), so each pool runs once a week.
+            const weekday = new Date(Date.now() + 9 * 60 * 60 * 1000).getUTCDay();
+            const mode = process.env.EVENT === "schedule" ? "collect" : r.mode;
+            if (!["replay", "collect"].includes(mode)) throw new Error(`unknown mode ${mode}`);
+            const out = [`mode=${mode}`, `pool=${weekday % pools}`, `requestId=${r.requestId}`];
+            require("fs").appendFileSync(process.env.GITHUB_OUTPUT, out.join("\n") + "\n");
+            console.log(out.join("\n"));'
+
+  replay:
+    needs: plan
+    if: needs.plan.outputs.mode == 'replay'
+    runs-on: ubuntu-latest
+    timeout-minutes: 30
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-node@v4
+        with:
+          node-version: 22
+      - name: Read the replay request
+        id: req
+        run: |
+          node -e '
+            const r = require("./ops/matcher-evidence/request.json").replay;
+            const out = Object.entries(r).filter(([k]) => !k.startsWith("//")).map(([k, v]) => `${k}=${v}`);
+            require("fs").appendFileSync(process.env.GITHUB_OUTPUT, out.join("\n") + "\n");
+            console.log(out.join("\n"));'
+      - name: Fetch the raw evidence (no provider calls)
+        uses: actions/download-artifact@v4
+        with:
+          name: ${{ steps.req.outputs.rawArtifactName }}
+          path: work/raw
+          run-id: ${{ steps.req.outputs.rawArtifactRunId }}
+          github-token: ${{ github.token }}
+      # Preserve first, verify second: the copy must exist even if a later
+      # step fails, because the source artifact expires.
+      - name: Keep a 90-day copy of the raw evidence
+        uses: actions/upload-artifact@v4
+        with:
+          name: matcher-evidence-raw-replayed
+          path: work/raw/pv3-*
+          retention-days: 90
+      - name: Verify the raw evidence against the digest GitHub recorded when it was uploaded
+        env:
+          GH_TOKEN: ${{ github.token }}
+          ARTIFACT_ID: ${{ steps.req.outputs.rawArtifactId }}
+          EXPECTED_DIGEST: ${{ steps.req.outputs.rawArtifactDigest }}
+        run: |
+          curl -sSfL -H "Authorization: Bearer $GH_TOKEN" -H "Accept: application/vnd.github+json" \
+            -o work/raw-artifact.zip "https://api.github.com/repos/${{ github.repository }}/actions/artifacts/$ARTIFACT_ID/zip"
+          actual="sha256:$(sha256sum work/raw-artifact.zip | cut -d' ' -f1)"
+          echo "recorded at upload: $EXPECTED_DIGEST"
+          echo "downloaded now:     $actual"
+          test "$actual" = "$EXPECTED_DIGEST"
+          mkdir -p work/raw-verify
+          unzip -q work/raw-artifact.zip -d work/raw-verify
+          diff -r work/raw-verify work/raw
+          echo "the downloaded evidence is byte-identical to the artifact as uploaded"
+      - name: Locate the collection and print every raw file's sha256
+        run: |
+          ls -d work/raw/pv3-* | head -1 > collection-dir.txt
+          test -s collection-dir.txt
+          dir="$(cat collection-dir.txt)"
+          (cd "$dir" && find . -type f | sort | xargs sha256sum)
+      - name: Old-vs-new migration, twice, offline (determinism check)
+        run: |
+          dir="$(cat collection-dir.txt)"
+          for n in 1 2; do
+            status=0
+            node --experimental-strip-types scripts/passive-shadow/migrate.ts "$dir" \
+              --out-dir=work/evidence/run-$n \
+              --expect-raw-tree=${{ steps.req.outputs.expectedRawTreeSha256 }} \
+              --expect-summary=${{ steps.req.outputs.expectSummary }} \
+              --expect-ledger=${{ steps.req.outputs.expectLedger }} || status=$?
+            if [ "${status:-0}" -ne 0 ] && [ "${status:-0}" -ne 5 ]; then exit "$status"; fi
+          done
+          a="$(cat work/evidence/run-1/migration-*.json | sha256sum)"; b="$(cat work/evidence/run-2/migration-*.json | sha256sum)"
+          echo "run 1: $a"; echo "run 2: $b"
+          test "$a" = "$b"
+          echo "deterministic=true" > work/evidence/determinism.txt
+      - name: Current-policy blind evaluation, offline
+        run: |
+          node --experimental-strip-types scripts/passive-shadow/evaluate.ts "$(cat collection-dir.txt)" \
+            --summary=work/evidence/current-policy-summary.json --sensitive-out=work/sensitive
+      - name: Counterfactual suite on the real bases, offline
+        run: |
+          node --experimental-strip-types scripts/passive-shadow/counterfactual.ts "$(cat collection-dir.txt)" \
+            --out=work/evidence/counterfactual-summary.json
+      - name: Print the sanitized results
+        run: |
+          for f in work/evidence/run-1/migration-summary.json work/evidence/counterfactual-summary.json; do
+            echo "----- $f sha256 $(sha256sum "$f" | cut -d' ' -f1)"
+            node -e 'const s=require(process.argv[1]); const {rows, records, ...rest}=s; console.log(JSON.stringify(rest).slice(0, 60000))' "$(pwd)/$f"
+          done
+      - uses: actions/upload-artifact@v4
+        with:
+          name: matcher-evidence-sanitized-replay
+          path: |
+            work/evidence/run-1/migration-summary.json
+            work/evidence/run-1/migration-cases.json
+            work/evidence/current-policy-summary.json
+            work/evidence/passive-shadow-validation-v3-wrong-commits.json
+            work/evidence/counterfactual-summary.json
+            work/evidence/determinism.txt
+          retention-days: 90
+
+  collect:
+    needs: plan
+    if: needs.plan.outputs.mode == 'collect'
+    runs-on: ubuntu-latest
+    timeout-minutes: 100
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-node@v4
+        with:
+          node-version: 22
+      - name: Collect one bounded window (read-only)
+        env:
+          TAGO_SERVICE_KEY: ${{ secrets.TAGO_SERVICE_KEY }}
+          POOL: ${{ needs.plan.outputs.pool }}
+        run: |
+          set -u
+          eval "$(node -e '
+            const c = require("./ops/matcher-evidence/request.json").collect;
+            const pool = c.pools[Number(process.env.POOL)];
+            const q = (v) => JSON.stringify(String(v));
+            console.log(`CITY=${q(c.cityCode)} PROVIDER=${q(c.provider)} ROUTES=${q(pool.routes)} NUMBERS=${q(pool.routeNumbers)}`);
+            console.log(`FALLBACK_ROUTES=${q(c.pools[0].routes)} PUB_MIN=${c.publicMinutes} PUB_MAX=${c.publicMaxRoutes} DIR_MIN=${c.directMinutes} DIR_MAX=${c.directMaxRoutes}`);')"
+          provider="$PROVIDER"
+          if [ "$provider" = "auto" ]; then
+            if [ -n "${TAGO_SERVICE_KEY:-}" ]; then provider=tago-direct; else provider=tapso-public-api; fi
+          fi
+          echo "pool $POOL; provider path: $provider (TAGO key present: $([ -n "${TAGO_SERVICE_KEY:-}" ] && echo yes || echo no))"
+          minutes=$PUB_MIN; max=$PUB_MAX
+          if [ "$provider" = "tago-direct" ]; then minutes=$DIR_MIN; max=$DIR_MAX; fi
+          collect() {
+            node --experimental-strip-types scripts/passive-shadow/collect.ts --yes --provider="$provider" \
+              --city="$CITY" --routes="$1" --route-numbers="$2" --max-routes="$max" --minutes="$minutes" --out=work/raw
+          }
+          status=0
+          collect "$ROUTES" "$NUMBERS" > collection-dir.txt || status=$?
+          if [ "$status" -eq 4 ]; then
+            echo "pool $POOL found no route with vehicles; falling back to pool 0"
+            status=0
+            collect "$FALLBACK_ROUTES" "" > collection-dir.txt || status=$?
+          fi
+          test -s collection-dir.txt
+          node -e 'const m=require(process.argv[1]); console.log(JSON.stringify({collectionId:m.collectionId, providerPath:m.providerPath, stopReason:m.stopReason, providerCalls:m.providerCalls, failedCalls:m.failedCalls, incidents:m.incidents, preflight:m.preflight, streams:m.streams}, null, 2))' "$(pwd)/$(cat collection-dir.txt)/manifest.json"
+          exit $status
+      - name: Blind evaluation, migration and counterfactuals (offline)
+        run: |
+          dir="$(cat collection-dir.txt)"
+          node --experimental-strip-types scripts/passive-shadow/evaluate.ts "$dir" \
+            --summary=work/evidence/current-policy-summary.json --sensitive-out=work/sensitive
+          node --experimental-strip-types scripts/passive-shadow/migrate.ts "$dir" --out-dir=work/evidence || [ $? -eq 5 ]
+          node --experimental-strip-types scripts/passive-shadow/counterfactual.ts "$dir" --out=work/evidence/counterfactual-summary.json
+          node -e 'const s=require(process.argv[1]); const {rows, ...rest}=s; console.log(JSON.stringify({named: rest.named, invariant: rest.invariant, blockers: rest.blockers}, null, 2))' "$(pwd)/work/evidence/migration-summary.json"
+      - uses: actions/upload-artifact@v4
+        if: always()
+        with:
+          name: matcher-evidence-sanitized-window
+          path: work/evidence/
+          retention-days: 90
+          if-no-files-found: ignore
+      - name: Upload the raw window (private, raw vehicle numbers)
+        if: always()
+        uses: actions/upload-artifact@v4
+        with:
+          name: matcher-evidence-raw-window
+          path: work/raw/pv3-*
+          retention-days: 90
+          if-no-files-found: ignore
+
+  production-smoke:
+    # Replaces the manual "is production still what the docs say" inspection:
+    # response semantics, credential hygiene, the closed operator path and the
+    # matching posture (automatic selection only with a demonstrated readiness
+    # that permits it). Public endpoints only; no credential; the smoke writes
+    # nothing (its session probe is rejected by input validation). A failed
+    # check fails the scheduled run.
+    needs: plan
+    if: github.event_name == 'schedule' || github.event_name == 'workflow_dispatch'
+    runs-on: ubuntu-latest
+    timeout-minutes: 10
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-node@v4
+        with:
+          node-version: 22
+      - name: Smoke-test the production transit API
+        run: |
+          # Without pipefail, tee would turn a failed smoke into a green step.
+          set -o pipefail
+          mkdir -p work
+          node --experimental-strip-types services/api/scripts/smoke.ts https://tapso-api.vercel.app | tee work/production-smoke.txt
+      - uses: actions/upload-artifact@v4
+        if: always()
+        with:
+          name: production-smoke
+          path: work/production-smoke.txt
+          retention-days: 90
+          if-no-files-found: ignore
+
+  gate-evidence:
+    # Everything the live criteria of release gate matcher-passive-safety-v4
+    # read, recomputed offline from every raw collection still retained (this
+    # run's, earlier runs' artifacts, the vault): distinct vehicles are counted
+    # by raw id in memory and only counts leave the job. Informational: raising
+    # the readiness the code claims is a reviewed change, never this job.
+    # Runtime grows with the number of retained windows (roughly 6 minutes each,
+    # computed twice for determinism); shard it before it nears the job limit.
+    needs: [plan, replay, collect]
+    if: always() && (needs.replay.result == 'success' || needs.collect.result == 'success')
+    runs-on: ubuntu-latest
+    timeout-minutes: 350
+    permissions:
+      contents: read
+      actions: read
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-node@v4
+        with:
+          node-version: 22
+      - uses: actions/download-artifact@v4
+        with:
+          pattern: matcher-evidence-raw-*
+          path: work/collections/current
+      - name: Fetch every raw collection still retained (no provider calls; each checked against its upload digest)
+        env:
+          GH_TOKEN: ${{ github.token }}
+        run: |
+          set -eu
+          mkdir -p work/collections/earlier work/collections/vault
+          : > work/artifact-list.txt
+          repo_id="$(gh api "repos/${{ github.repository }}" --jq .id)"
+          # Only raw collections this repository's own main branch produced: a
+          # run on another branch, or a fork's pull-request run, can upload an
+          # artifact under the same name, and it must never count.
+          for name in matcher-evidence-raw-window matcher-evidence-raw-replayed; do
+            gh api --paginate "repos/${{ github.repository }}/actions/artifacts?name=$name&per_page=100" \
+              --jq ".artifacts[] | select(.expired == false and .workflow_run.head_branch == \"main\" and .workflow_run.head_repository_id == $repo_id) | \"\\(.id) \\(.digest // \"\")\"" >> work/artifact-list.txt || true
+          done
+          # The evidence of record, pinned by the artifact id and digest the request names.
+          node -e 'const r = require("./ops/matcher-evidence/request.json").replay; console.log(`${r.rawArtifactId} ${r.rawArtifactDigest}`)' >> work/artifact-list.txt
+          sort -u work/artifact-list.txt | while read -r id digest; do
+            [ -n "$id" ] || continue
+            # Without a digest recorded at upload the bytes cannot be checked.
+            if [ -z "$digest" ]; then echo "artifact $id has no recorded digest; skipped"; continue; fi
+            # An artifact that expired since the listing, or cannot be read, is
+            # left out and named; leaving evidence out can only lower a count.
+            if ! gh api "repos/${{ github.repository }}/actions/artifacts/$id/zip" > "work/$id.zip"; then echo "artifact $id could not be downloaded; skipped"; continue; fi
+            actual="sha256:$(sha256sum "work/$id.zip" | cut -d' ' -f1)"
+            if [ "$actual" != "$digest" ]; then echo "artifact $id does not match its upload digest; skipped"; continue; fi
+            mkdir -p "work/collections/earlier/$id"
+            if ! unzip -q "work/$id.zip" -d "work/collections/earlier/$id"; then echo "artifact $id is not a readable zip; skipped"; rm -rf "work/collections/earlier/$id"; continue; fi
+          done
+          # The vault is a draft release; a token that cannot see it leaves the artifacts to carry the evidence.
+          if gh release download passive-evidence-vault --pattern 'pv3-*.zip' --pattern 'pv3-*.zip.sha256' --dir work/vault-zips 2>/dev/null; then
+            for zip in work/vault-zips/pv3-*.zip; do
+              [ -f "$zip" ] || continue
+              (cd work/vault-zips && sha256sum -c "$(basename "$zip").sha256" 2>/dev/null) || { echo "$zip fails its recorded checksum; skipped"; continue; }
+              unzip -q "$zip" -d work/collections/vault
+            done
+          else
+            echo "vault not readable with this token"
+          fi
+      - name: Assemble the live gate evidence (offline, deterministic, counts only) and evaluate the gate
+        run: |
+          set -eu
+          record="$(node -e 'const r = require("./ops/matcher-evidence/request.json").replay; console.log([r.recordCollectionId, r.expectSummary, r.expectLedger].join(","))')"
+          recordId="${record%%,*}"
+          dirs="$(find work/collections -mindepth 2 -maxdepth 4 -type d -name 'pv3-*' | sort)"
+          test -n "$dirs"
+          flags=""
+          if printf '%s\n' $dirs | grep -q "/$recordId\$"; then flags="--record=$record --counterfactual-on=$recordId"; fi
+          node --experimental-strip-types scripts/matcher-evidence/live-evidence.ts $dirs $flags --skip-incomplete \
+            --out-live=work/gate/live-replay-evidence.json --out-counterfactual=work/gate/counterfactual-live-evidence.json
+          node --experimental-strip-types scripts/matcher-evidence/gate.ts \
+            --live-replay=work/gate/live-replay-evidence.json --counterfactual-live=work/gate/counterfactual-live-evidence.json \
+            --out=work/gate/gate-result.json
+      - uses: actions/upload-artifact@v4
+        if: always()
+        with:
+          name: matcher-gate-evidence
+          path: work/gate/
+          retention-days: 90
+          if-no-files-found: ignore
+
+  vault:
+    # The only job that can write, and all it writes is an asset on a private
+    # draft release: raw evidence that must outlive artifact retention. A draft
+    # release is visible only to collaborators with write access and notifies
+    # nobody. Best effort: if the organisation caps the token at read, the raw
+    # evidence still has its 90-day artifact.
+    needs: [plan, replay, collect]
+    # Only main writes to the vault: a run dispatched on another branch uses
+    # that branch's workflow file, and nothing it produced may become evidence.
+    if: always() && github.ref == 'refs/heads/main' && (needs.replay.result == 'success' || needs.collect.result == 'success')
+    runs-on: ubuntu-latest
+    permissions:
+      contents: write
+      actions: read
+    continue-on-error: true
+    steps:
+      - uses: actions/download-artifact@v4
+        with:
+          pattern: matcher-evidence-raw-*
+          path: vault
+      - name: Store in the private evidence vault
+        env:
+          GH_TOKEN: ${{ github.token }}
+          GH_REPO: ${{ github.repository }}
+        run: |
+          set -eu
+          for dir in vault/*/pv3-*; do
+            [ -d "$dir" ] || continue
+            name="$(basename "$dir")"
+            (cd "$(dirname "$dir")" && zip -qr "$OLDPWD/$name.zip" "$name")
+            sha256sum "$name.zip" > "$name.zip.sha256"
+            cat "$name.zip.sha256"
+          done
+          ls pv3-*.zip >/dev/null 2>&1 || { echo "nothing to store"; exit 0; }
+          gh release view passive-evidence-vault >/dev/null 2>&1 || gh release create passive-evidence-vault --draft \
+            --title "Passive evidence vault (private raw streams)" \
+            --notes "Raw passive collections (raw vehicle numbers). Private draft, never published. Checksums alongside each asset. See docs/exec-plans/HUMAN_LABOR_ELIMINATION.md."
+          # Immutable: an asset already in the vault is never replaced, even
+          # by a byte-different zip of the same collection.
+          existing="$(gh release view passive-evidence-vault --json assets --jq '.assets[].name')"
+          for zip in pv3-*.zip; do
+            if printf '%s\n' "$existing" | grep -qx "$zip"; then
+              echo "$zip is already in the vault; keeping the first copy"
+              continue
+            fi
+            gh release upload passive-evidence-vault "$zip" "$zip.sha256"
+          done

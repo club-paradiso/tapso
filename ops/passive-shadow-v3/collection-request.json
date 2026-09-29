@@ -1,14 +1,14 @@
 {
-  "//": "Passive Shadow Validation v3 collection request. Changing this file on a claude/*passive-shadow* branch runs .github/workflows/passive-shadow-v3.yml once; on any other branch dispatch the workflow at that ref. Read-only provider access; no Upstash writes; automatic matching stays off.",
-  "requestId": "2026-09-29-window-evening-kst-express-routes",
+  "//": "Passive Shadow Validation v3 collection request. Changing this file on a claude/*passive-shadow* branch runs .github/workflows/passive-shadow-v3.yml once. Read-only provider access; no Upstash writes; automatic matching stays off.",
+  "requestId": "2026-09-25-reevaluate-run-36098610702-r3",
   "provider": "auto",
   "cityCode": "39",
-  "routes": "",
-  "routeNumbers": "101,102,111,112,121,122,131,132,181,182",
+  "routes": "JEB405136521,JEB405136522,JEB405136523,JEB405136524,JEB405136525,JEB405136530",
+  "routeNumbers": "360,370,201,202,281,282",
   "directMinutes": 30,
   "publicMinutes": 60,
   "directMaxRoutes": 3,
   "publicMaxRoutes": 5,
-  "//window": "Second collection window: Jeju evening peak (starts about 18:30 KST on a Tuesday), express route numbers only, so the route set differs from run 36098610702 (14:28-15:27 KST, Route 365/360/370/201/202 family).",
-  "reevaluateRunId": ""
+  "//reevaluate": "Re-evaluates the raw streams collected by run 36098610702 (commit 0ec57f9) under the current PR head. No provider calls.",
+  "reevaluateRunId": "36098610702"
 }
