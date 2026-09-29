@@ -1,0 +1,225 @@
+{
+  "policyVersion": "matcher-passive-safety-v4",
+  "generatedAt": "2026-09-29T13:35:46.807Z",
+  "awarded": "READY_FOR_SHADOW",
+  "criteria": [
+    {
+      "id": "SH-1",
+      "level": "READY_FOR_SHADOW",
+      "title": "Directed matcher serves every path; legacy symmetric matcher unreachable",
+      "status": "PASS",
+      "evidenceClass": "VERIFIED_BY_TEST",
+      "observed": "directed-route-progress-v1; legacy-free serving paths: true",
+      "required": "directed-route-progress-v1 and no serving import of matchingLegacy.ts"
+    },
+    {
+      "id": "SH-2",
+      "level": "READY_FOR_SHADOW",
+      "title": "Formal invariant enforced at runtime on every result",
+      "status": "PASS",
+      "evidenceClass": "VERIFIED_BY_TEST",
+      "observed": "true",
+      "required": "true"
+    },
+    {
+      "id": "SH-3",
+      "level": "READY_FOR_SHADOW",
+      "title": "Unit, replay and property suites pass over all 15 invariants",
+      "status": "PASS",
+      "evidenceClass": "VERIFIED_BY_TEST",
+      "observed": "passed=true, invariants=15, seeds/invariant=2000, regression seeds=9",
+      "required": "suite green, 15 invariants, ≥ 2000 seeds each"
+    },
+    {
+      "id": "SH-4",
+      "level": "READY_FOR_SHADOW",
+      "title": "Every negative control (F1, F3 leak paths, F4, fail-closed rules) is killed",
+      "status": "PASS",
+      "evidenceClass": "VERIFIED_BY_TEST",
+      "observed": "48/48 killed, 0 survived, 0 stale, 0 invalid, 0 timed out; complete true, baseline green true, tree unchanged true",
+      "required": "a complete run on a green baseline and an unchanged tree: all killed, none survived, stale, invalid or timed out"
+    },
+    {
+      "id": "SH-5",
+      "level": "READY_FOR_SHADOW",
+      "title": "No former live wrong commit is still a commit at its instant",
+      "status": "PASS",
+      "evidenceClass": "VERIFIED_BY_REPLAY",
+      "observed": "0 commits at 268 instants; legacy reproduced 268",
+      "required": "0 commits; legacy reproduces every recorded selection"
+    },
+    {
+      "id": "SH-6",
+      "level": "READY_FOR_SHADOW",
+      "title": "Automatic matching off by default, and an opt-in refused below bounded automation",
+      "status": "PASS",
+      "evidenceClass": "VERIFIED_BY_TEST",
+      "observed": "off: true (configuration evaluated, no live deployment read)",
+      "required": "off"
+    },
+    {
+      "id": "CA-1",
+      "level": "READY_FOR_CONFIRMATION_ASSISTED",
+      "title": "Full-window blind replay of retained raw live evidence, legacy side reproducing the record",
+      "status": "MISSING",
+      "evidenceClass": "MISSING",
+      "observed": "raw replay has not run",
+      "required": "≥ 1 collection, reproduction ok"
+    },
+    {
+      "id": "CA-2",
+      "level": "READY_FOR_CONFIRMATION_ASSISTED",
+      "title": "Zero wrong commits, zero invariant violations, zero non-fresh selections on live evidence",
+      "status": "MISSING",
+      "evidenceClass": "MISSING",
+      "observed": "raw replay has not run",
+      "required": "0 / 0 / 0"
+    },
+    {
+      "id": "CA-3",
+      "level": "READY_FOR_CONFIRMATION_ASSISTED",
+      "title": "No previously correct live case regresses to wrong; no new wrong commit",
+      "status": "MISSING",
+      "evidenceClass": "MISSING",
+      "observed": "raw replay has not run",
+      "required": "0 / 0"
+    },
+    {
+      "id": "CA-4",
+      "level": "READY_FOR_CONFIRMATION_ASSISTED",
+      "title": "Replay is deterministic across independent runs",
+      "status": "MISSING",
+      "evidenceClass": "MISSING",
+      "observed": "raw replay has not run",
+      "required": "true"
+    },
+    {
+      "id": "CA-5",
+      "level": "READY_FOR_CONFIRMATION_ASSISTED",
+      "title": "Counterfactual suite on real bases: no expectation failure, no wrong commit, no violation",
+      "status": "MISSING",
+      "evidenceClass": "MISSING",
+      "observed": "not run on real bases",
+      "required": "≥ 30 families, 0 / 0 / 0"
+    },
+    {
+      "id": "CA-6",
+      "level": "READY_FOR_CONFIRMATION_ASSISTED",
+      "title": "Independent live sample large enough for a 5 % bound",
+      "status": "MISSING",
+      "evidenceClass": "MISSING",
+      "observed": "raw replay has not run",
+      "required": "≥ 60 trajectories, ≥ 30 vehicles, ≥ 30 contested cases"
+    },
+    {
+      "id": "CA-7",
+      "level": "READY_FOR_CONFIRMATION_ASSISTED",
+      "title": "Route and time diversity",
+      "status": "MISSING",
+      "evidenceClass": "MISSING",
+      "observed": "raw replay has not run",
+      "required": "≥ 8 routes, ≥ 3 windows, ≥ 2 time bands"
+    },
+    {
+      "id": "BA-1",
+      "level": "READY_FOR_BOUNDED_AUTOMATION",
+      "title": "Independent live sample large enough for a 1 % bound, on the envelope that would be automated",
+      "status": "MISSING",
+      "evidenceClass": "MISSING",
+      "observed": "raw replay has not run",
+      "required": "≥ 300 trajectories, ≥ 100 vehicles, ≥ 100 contested, ≥ 15 routes, ≥ 10 windows, ≥ 3 time bands"
+    },
+    {
+      "id": "BA-2",
+      "level": "READY_FOR_BOUNDED_AUTOMATION",
+      "title": "Evidence at session cadence (direct TAGO, uncached), not only the cached public path",
+      "status": "MISSING",
+      "evidenceClass": "MISSING",
+      "observed": "raw replay has not run",
+      "required": "includes tago-direct"
+    },
+    {
+      "id": "BA-3",
+      "level": "READY_FOR_BOUNDED_AUTOMATION",
+      "title": "Rider sees the automatically committed bus and can undo it (architecture response to rider-choice risk)",
+      "status": "FAIL",
+      "evidenceClass": "MISSING",
+      "observed": "false",
+      "required": "implemented and tested in the rider client"
+    },
+    {
+      "id": "BA-4",
+      "level": "READY_FOR_BOUNDED_AUTOMATION",
+      "title": "Destination alert timing does not depend on unmeasured provider lag",
+      "status": "FAIL",
+      "evidenceClass": "MISSING",
+      "observed": "false",
+      "required": "true"
+    },
+    {
+      "id": "BA-5",
+      "level": "READY_FOR_BOUNDED_AUTOMATION",
+      "title": "Live Activity shows the committed bus on a physical device",
+      "status": "MISSING",
+      "evidenceClass": "MISSING",
+      "observed": "false",
+      "required": "verified on hardware (a device check, not a ride)"
+    },
+    {
+      "id": "AM-1",
+      "level": "READY_FOR_AUTOMATIC_MATCHING",
+      "title": "How often riders board the first arriving bus is measured",
+      "status": "MISSING",
+      "evidenceClass": "MISSING",
+      "observed": "false",
+      "required": "measured from real riders; no passive source can establish it, so this level is not a product target"
+    }
+  ],
+  "nextLevel": {
+    "level": "READY_FOR_CONFIRMATION_ASSISTED",
+    "blockedBy": [
+      {
+        "id": "CA-1",
+        "status": "MISSING",
+        "observed": "raw replay has not run",
+        "required": "≥ 1 collection, reproduction ok"
+      },
+      {
+        "id": "CA-2",
+        "status": "MISSING",
+        "observed": "raw replay has not run",
+        "required": "0 / 0 / 0"
+      },
+      {
+        "id": "CA-3",
+        "status": "MISSING",
+        "observed": "raw replay has not run",
+        "required": "0 / 0"
+      },
+      {
+        "id": "CA-4",
+        "status": "MISSING",
+        "observed": "raw replay has not run",
+        "required": "true"
+      },
+      {
+        "id": "CA-5",
+        "status": "MISSING",
+        "observed": "not run on real bases",
+        "required": "≥ 30 families, 0 / 0 / 0"
+      },
+      {
+        "id": "CA-6",
+        "status": "MISSING",
+        "observed": "raw replay has not run",
+        "required": "≥ 60 trajectories, ≥ 30 vehicles, ≥ 30 contested cases"
+      },
+      {
+        "id": "CA-7",
+        "status": "MISSING",
+        "observed": "raw replay has not run",
+        "required": "≥ 8 routes, ≥ 3 windows, ≥ 2 time bands"
+      }
+    ]
+  }
+}

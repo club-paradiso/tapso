@@ -92,7 +92,7 @@ invariants, with four extra forms:
 
 | Run | Seeds per property | Result |
 |---|---|---|
-| Every CI run (`run-suite.ts --property-cases=2000`, `artifacts/matcher-directed-v1/test-suite.json`) | 2 000, after the 9 recorded regression seeds | 19 / 19 pass; the whole suite 587 / 587 (the gate-output test is checked by `gate.ts --check` instead) |
+| Every CI run (`run-suite.ts --property-cases=2000`, `artifacts/matcher-directed-v1/test-suite.json`) | 2 000, after the 9 recorded regression seeds | 19 / 19 pass; the whole suite 593 / 593 (the gate-output test is checked by `gate.ts --check` instead) |
 | Deep run 1 (this work) | 20 000 | found P3 seed 14526 (F7) and P7 seed 12091 (F8) |
 | Deep run 2 | 20 000 | found P3 seed 16661 (F10) |
 | Deep run 3, final matcher | 20 000 | **19 / 19 pass**, no new seed (1 987 s) |
@@ -103,6 +103,20 @@ model forgot a duplicate row, and a remembered vehicle of unknown progress now
 blocks); P12 10099 (the property's statement was corrected); P6/P7/P10 10008
 (the generator produced stop sequence 0); P3 14526 (F7); P7 12091 (F8); P3
 16661 (F10).
+
+### Negative controls
+
+`VERIFIED_BY_TEST`. `scripts/negative-controls/run.ts --typecheck`
+(`artifacts/matcher-directed-v1/negative-controls.json`, generated on commit
+`c039653`): **48 of 48 controls killed** (18 required, 30 extra), 0 survived,
+0 stale, 0 invalid, 0 timed out. The baseline was green (593 / 593, no type
+error), every kill was re-confirmed on the unmutated snapshot, and the working
+tree did not change during the run. Each control puts back one answer leak
+(F3, F6, F14), removes one fail-closed rule of the directed matcher, restores
+the legacy symmetric term, or disables one of the gate's own integrity checks,
+in a private copy. A mutant that adds a type error is `INVALID`, not killed:
+the F12 control was rewritten for that reason. CI reruns all 48 on every push
+and pull request.
 
 ## 5. Counterfactual suite
 
@@ -258,7 +272,21 @@ node --experimental-strip-types scripts/matcher-evidence/live-evidence.ts <dir>.
 
 ## 14. Evidence hashes
 
-PENDING_HASHES
+sha256 of every evidence file this package cites, as committed with it:
+
+| File | sha256 |
+|---|---|
+| `artifacts/passive-shadow-validation-v3-summary.json` | `0422f291e59738d82a73d222a522f6b5b743c322efae78ca4b812da4b54f5069` |
+| `artifacts/passive-shadow-validation-v3-wrong-commits.json` | `a960d428caa9d967ddbde0e66f9f1a9963cfd65df519bc6acc58951532fd8773` |
+| `artifacts/matcher-directed-v1/former-wrong-commit-instants.json` | `718b75e82f6cd30abdaadbe5280290309df4c07050f1541370efaf569e40841c` |
+| `artifacts/matcher-directed-v1/counterfactual-synthetic-summary.json` | `bfc921f2bf3fac00526365ec2dbe3b16280adb7b1fb89d876c3191b6e54bed96` |
+| `artifacts/matcher-directed-v1/test-suite.json` | `e4bba06815f4b46f65adc5adb87463acd97d50e6b402b28cd0733034b3420f87` |
+| `artifacts/matcher-directed-v1/negative-controls.json` | `859b35aa92930be3c949fe5feffb862700ecaf2f63012d48ab8ac3f53af24cd5` |
+| `artifacts/matcher-passive-safety-v4/gate-result.json` | `0609c66220119c9d5da374719cf91df53b50b8dd84d160fd884a1c63d1e10c24` |
+| `services/api/test/fixtures/matcher-property-regressions.json` | `30f39c69d9212505e1192c570422323e5e2b059f035e32ea4ddad1b1febed163` |
+| `fixtures/transit/directed-matcher-invariants.json` | `a74fa7736732c4b9e68c2ede581864a10bec020402d25769a8358c3e1c361b99` |
+| `ops/matcher-evidence/human-only-mitigations.json` | `d2873c6e8a8394cc3c09a11fbbd7ac53e01fe01a64680063b2698490256e0c6c` |
+| `ops/matcher-evidence/request.json` | `0495a6e0ab715cb09ebbfd34cee5f9e6ede1029839cf2f3d59f9737f27c5d6e2` |
 
 ## 15. HUMAN LABOR ELIMINATION
 

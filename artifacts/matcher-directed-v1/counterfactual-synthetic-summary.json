@@ -1,0 +1,1659 @@
+{
+  "schemaVersion": 1,
+  "evidenceClass": "SIMULATED",
+  "countsAsLiveEvidence": false,
+  "matcherPolicy": "directed-route-progress-v1",
+  "bases": {
+    "A": "SYNTHETIC: 30 stops, 10 s polls, three buses (services/api/test/syntheticCounterfactualBases.ts baseA)",
+    "R": "SYNTHETIC: 36 stops, seeded 20-40 s receipts like the cached public path, four buses at mixed paces (baseR)"
+  },
+  "note": "Constructed worlds only. Per family: cases where the transformation applied, where its own expectations could be decided (exercised), the outcome against the re-derived answer, and every expectation failure or invariant violation.",
+  "perBase": {
+    "A": {
+      "baseCases": 218,
+      "families": 32,
+      "familiesExercised": 31,
+      "totals": {
+        "applicable": 7677,
+        "correct": 4888,
+        "wrong": 0,
+        "abstain": 1936,
+        "groundTruthIndeterminate": 741,
+        "invariantViolations": 0,
+        "matcherInvariantErrors": 0,
+        "expectationFailures": 0,
+        "groundTruthShiftMismatches": 0
+      },
+      "byCounterfactual": [
+        {
+          "id": "departed_decoy_s1",
+          "family": "departed_decoy",
+          "expectations": [
+            "NEVER_SELECTS_INJECTED",
+            "NO_INVARIANT_VIOLATION"
+          ],
+          "applicable": 218,
+          "exercised": 218,
+          "correct": 0,
+          "wrong": 0,
+          "abstain": 218,
+          "groundTruthIndeterminate": 0,
+          "invariantViolations": 0,
+          "expectationFailures": 0
+        },
+        {
+          "id": "departed_decoy_s2",
+          "family": "departed_decoy",
+          "expectations": [
+            "NEVER_SELECTS_INJECTED",
+            "NO_INVARIANT_VIOLATION"
+          ],
+          "applicable": 207,
+          "exercised": 207,
+          "correct": 140,
+          "wrong": 0,
+          "abstain": 67,
+          "groundTruthIndeterminate": 0,
+          "invariantViolations": 0,
+          "expectationFailures": 0
+        },
+        {
+          "id": "departed_decoy_s4",
+          "family": "departed_decoy",
+          "expectations": [
+            "NEVER_SELECTS_INJECTED",
+            "NO_INVARIANT_VIOLATION"
+          ],
+          "applicable": 182,
+          "exercised": 182,
+          "correct": 125,
+          "wrong": 0,
+          "abstain": 57,
+          "groundTruthIndeterminate": 0,
+          "invariantViolations": 0,
+          "expectationFailures": 0
+        },
+        {
+          "id": "true_bus_approaching",
+          "family": "true_bus_approaching",
+          "expectations": [
+            "GROUND_TRUTH_REPRODUCED",
+            "NOT_WRONG",
+            "NO_INVARIANT_VIOLATION"
+          ],
+          "applicable": 160,
+          "exercised": 160,
+          "correct": 149,
+          "wrong": 0,
+          "abstain": 11,
+          "groundTruthIndeterminate": 0,
+          "invariantViolations": 0,
+          "expectationFailures": 0
+        },
+        {
+          "id": "approaching_vs_departed_s2",
+          "family": "approaching_vs_departed",
+          "expectations": [
+            "NEVER_SELECTS_INJECTED",
+            "NO_INVARIANT_VIOLATION"
+          ],
+          "applicable": 142,
+          "exercised": 142,
+          "correct": 132,
+          "wrong": 0,
+          "abstain": 10,
+          "groundTruthIndeterminate": 0,
+          "invariantViolations": 0,
+          "expectationFailures": 0
+        },
+        {
+          "id": "follower_behind_k1",
+          "family": "leader_follower",
+          "expectations": [
+            "NEVER_SELECTS_INJECTED",
+            "NO_INVARIANT_VIOLATION"
+          ],
+          "applicable": 160,
+          "exercised": 160,
+          "correct": 2,
+          "wrong": 0,
+          "abstain": 158,
+          "groundTruthIndeterminate": 0,
+          "invariantViolations": 0,
+          "expectationFailures": 0
+        },
+        {
+          "id": "follower_behind_k2",
+          "family": "leader_follower",
+          "expectations": [
+            "NEVER_SELECTS_INJECTED",
+            "NO_INVARIANT_VIOLATION"
+          ],
+          "applicable": 159,
+          "exercised": 159,
+          "correct": 5,
+          "wrong": 0,
+          "abstain": 154,
+          "groundTruthIndeterminate": 0,
+          "invariantViolations": 0,
+          "expectationFailures": 0
+        },
+        {
+          "id": "follower_behind_k3",
+          "family": "leader_follower",
+          "expectations": [
+            "NEVER_SELECTS_INJECTED",
+            "NO_INVARIANT_VIOLATION"
+          ],
+          "applicable": 157,
+          "exercised": 157,
+          "correct": 146,
+          "wrong": 0,
+          "abstain": 11,
+          "groundTruthIndeterminate": 0,
+          "invariantViolations": 0,
+          "expectationFailures": 0
+        },
+        {
+          "id": "follower_behind_k4",
+          "family": "leader_follower",
+          "expectations": [
+            "NEVER_SELECTS_INJECTED",
+            "NO_INVARIANT_VIOLATION"
+          ],
+          "applicable": 155,
+          "exercised": 155,
+          "correct": 145,
+          "wrong": 0,
+          "abstain": 10,
+          "groundTruthIndeterminate": 0,
+          "invariantViolations": 0,
+          "expectationFailures": 0
+        },
+        {
+          "id": "follower_behind_k5",
+          "family": "leader_follower",
+          "expectations": [
+            "NEVER_SELECTS_INJECTED",
+            "NO_INVARIANT_VIOLATION"
+          ],
+          "applicable": 153,
+          "exercised": 153,
+          "correct": 143,
+          "wrong": 0,
+          "abstain": 10,
+          "groundTruthIndeterminate": 0,
+          "invariantViolations": 0,
+          "expectationFailures": 0
+        },
+        {
+          "id": "follower_behind_k10",
+          "family": "leader_follower",
+          "expectations": [
+            "NEVER_SELECTS_INJECTED",
+            "NO_INVARIANT_VIOLATION"
+          ],
+          "applicable": 136,
+          "exercised": 136,
+          "correct": 128,
+          "wrong": 0,
+          "abstain": 8,
+          "groundTruthIndeterminate": 0,
+          "invariantViolations": 0,
+          "expectationFailures": 0
+        },
+        {
+          "id": "follower_overtaking",
+          "family": "follower_overtaking",
+          "expectations": [
+            "NOT_WRONG",
+            "NO_INVARIANT_VIOLATION"
+          ],
+          "applicable": 75,
+          "exercised": 75,
+          "correct": 0,
+          "wrong": 0,
+          "abstain": 75,
+          "groundTruthIndeterminate": 0,
+          "invariantViolations": 0,
+          "expectationFailures": 0
+        },
+        {
+          "id": "leader_ahead_k1",
+          "family": "leader_ahead",
+          "expectations": [
+            "NOT_WRONG",
+            "NO_INVARIANT_VIOLATION"
+          ],
+          "applicable": 140,
+          "exercised": 140,
+          "correct": 0,
+          "wrong": 0,
+          "abstain": 140,
+          "groundTruthIndeterminate": 0,
+          "invariantViolations": 0,
+          "expectationFailures": 0
+        },
+        {
+          "id": "leader_ahead_k2",
+          "family": "leader_ahead",
+          "expectations": [
+            "NOT_WRONG",
+            "NO_INVARIANT_VIOLATION"
+          ],
+          "applicable": 121,
+          "exercised": 121,
+          "correct": 0,
+          "wrong": 0,
+          "abstain": 121,
+          "groundTruthIndeterminate": 0,
+          "invariantViolations": 0,
+          "expectationFailures": 0
+        },
+        {
+          "id": "leader_ahead_k3",
+          "family": "leader_ahead",
+          "expectations": [
+            "NOT_WRONG",
+            "NO_INVARIANT_VIOLATION"
+          ],
+          "applicable": 102,
+          "exercised": 102,
+          "correct": 100,
+          "wrong": 0,
+          "abstain": 2,
+          "groundTruthIndeterminate": 0,
+          "invariantViolations": 0,
+          "expectationFailures": 0
+        },
+        {
+          "id": "leader_ahead_k4",
+          "family": "leader_ahead",
+          "expectations": [
+            "NOT_WRONG",
+            "NO_INVARIANT_VIOLATION"
+          ],
+          "applicable": 93,
+          "exercised": 93,
+          "correct": 91,
+          "wrong": 0,
+          "abstain": 2,
+          "groundTruthIndeterminate": 0,
+          "invariantViolations": 0,
+          "expectationFailures": 0
+        },
+        {
+          "id": "leader_ahead_k5",
+          "family": "leader_ahead",
+          "expectations": [
+            "NOT_WRONG",
+            "NO_INVARIANT_VIOLATION"
+          ],
+          "applicable": 85,
+          "exercised": 85,
+          "correct": 83,
+          "wrong": 0,
+          "abstain": 2,
+          "groundTruthIndeterminate": 0,
+          "invariantViolations": 0,
+          "expectationFailures": 0
+        },
+        {
+          "id": "leader_ahead_k10",
+          "family": "leader_ahead",
+          "expectations": [
+            "NOT_WRONG",
+            "NO_INVARIANT_VIOLATION"
+          ],
+          "applicable": 50,
+          "exercised": 50,
+          "correct": 48,
+          "wrong": 0,
+          "abstain": 2,
+          "groundTruthIndeterminate": 0,
+          "invariantViolations": 0,
+          "expectationFailures": 0
+        },
+        {
+          "id": "boarding_stop_dwell_60s",
+          "family": "boarding_stop_dwell",
+          "expectations": [
+            "NO_INVARIANT_VIOLATION",
+            "NOT_WRONG"
+          ],
+          "applicable": 160,
+          "exercised": 160,
+          "correct": 149,
+          "wrong": 0,
+          "abstain": 11,
+          "groundTruthIndeterminate": 0,
+          "invariantViolations": 0,
+          "expectationFailures": 0
+        },
+        {
+          "id": "boarding_stop_dwell_120s",
+          "family": "boarding_stop_dwell",
+          "expectations": [
+            "NO_INVARIANT_VIOLATION",
+            "NOT_WRONG"
+          ],
+          "applicable": 160,
+          "exercised": 160,
+          "correct": 149,
+          "wrong": 0,
+          "abstain": 11,
+          "groundTruthIndeterminate": 0,
+          "invariantViolations": 0,
+          "expectationFailures": 0
+        },
+        {
+          "id": "true_bus_absent",
+          "family": "true_bus_absent",
+          "expectations": [
+            "NOT_WRONG",
+            "NO_INVARIANT_VIOLATION"
+          ],
+          "applicable": 160,
+          "exercised": 128,
+          "correct": 126,
+          "wrong": 0,
+          "abstain": 2,
+          "groundTruthIndeterminate": 32,
+          "invariantViolations": 0,
+          "expectationFailures": 0
+        },
+        {
+          "id": "decoys_absent",
+          "family": "decoys_absent",
+          "expectations": [
+            "NOT_WRONG",
+            "NO_INVARIANT_VIOLATION"
+          ],
+          "applicable": 218,
+          "exercised": 218,
+          "correct": 218,
+          "wrong": 0,
+          "abstain": 0,
+          "groundTruthIndeterminate": 0,
+          "invariantViolations": 0,
+          "expectationFailures": 0
+        },
+        {
+          "id": "late_appearance_s_minus_2",
+          "family": "late_appearance",
+          "expectations": [
+            "NOT_WRONG",
+            "NO_INVARIANT_VIOLATION"
+          ],
+          "applicable": 137,
+          "exercised": 137,
+          "correct": 126,
+          "wrong": 0,
+          "abstain": 11,
+          "groundTruthIndeterminate": 0,
+          "invariantViolations": 0,
+          "expectationFailures": 0
+        },
+        {
+          "id": "candidate_disappearance_60s",
+          "family": "candidate_disappearance",
+          "expectations": [
+            "NOT_WRONG",
+            "NO_INVARIANT_VIOLATION"
+          ],
+          "applicable": 160,
+          "exercised": 140,
+          "correct": 110,
+          "wrong": 0,
+          "abstain": 30,
+          "groundTruthIndeterminate": 20,
+          "invariantViolations": 0,
+          "expectationFailures": 0
+        },
+        {
+          "id": "reappearance_60s",
+          "family": "reappearance",
+          "expectations": [
+            "NOT_WRONG",
+            "NO_INVARIANT_VIOLATION"
+          ],
+          "applicable": 121,
+          "exercised": 121,
+          "correct": 110,
+          "wrong": 0,
+          "abstain": 11,
+          "groundTruthIndeterminate": 0,
+          "invariantViolations": 0,
+          "expectationFailures": 0
+        },
+        {
+          "id": "stale_repeated_frames_60s",
+          "family": "stale_repeated_frames",
+          "expectations": [
+            "NOT_WRONG",
+            "NO_INVARIANT_VIOLATION"
+          ],
+          "applicable": 160,
+          "exercised": 159,
+          "correct": 129,
+          "wrong": 0,
+          "abstain": 30,
+          "groundTruthIndeterminate": 1,
+          "invariantViolations": 0,
+          "expectationFailures": 0
+        },
+        {
+          "id": "coordinate_freeze",
+          "family": "coordinate_freeze",
+          "expectations": [
+            "NOT_WRONG",
+            "NO_INVARIANT_VIOLATION"
+          ],
+          "applicable": 218,
+          "exercised": 218,
+          "correct": 163,
+          "wrong": 0,
+          "abstain": 55,
+          "groundTruthIndeterminate": 0,
+          "invariantViolations": 0,
+          "expectationFailures": 0
+        },
+        {
+          "id": "content_freeze_from_60s_before_boarding",
+          "family": "content_freeze",
+          "expectations": [
+            "NO_SELECTION_ON_FROZEN_WINDOW",
+            "NOT_WRONG",
+            "NO_INVARIANT_VIOLATION"
+          ],
+          "applicable": 160,
+          "exercised": 160,
+          "correct": 0,
+          "wrong": 0,
+          "abstain": 0,
+          "groundTruthIndeterminate": 160,
+          "invariantViolations": 0,
+          "expectationFailures": 0
+        },
+        {
+          "id": "receipt_jitter_10s",
+          "family": "receipt_jitter",
+          "expectations": [
+            "NOT_WRONG",
+            "NO_INVARIANT_VIOLATION"
+          ],
+          "applicable": 160,
+          "exercised": 128,
+          "correct": 128,
+          "wrong": 0,
+          "abstain": 0,
+          "groundTruthIndeterminate": 32,
+          "invariantViolations": 0,
+          "expectationFailures": 0
+        },
+        {
+          "id": "receipt_jitter_20s",
+          "family": "receipt_jitter",
+          "expectations": [
+            "NOT_WRONG",
+            "NO_INVARIANT_VIOLATION"
+          ],
+          "applicable": 160,
+          "exercised": 128,
+          "correct": 85,
+          "wrong": 0,
+          "abstain": 2,
+          "groundTruthIndeterminate": 32,
+          "invariantViolations": 0,
+          "expectationFailures": 0
+        },
+        {
+          "id": "receipt_jitter_40s",
+          "family": "receipt_jitter",
+          "expectations": [
+            "NOT_WRONG",
+            "NO_INVARIANT_VIOLATION"
+          ],
+          "applicable": 160,
+          "exercised": 127,
+          "correct": 59,
+          "wrong": 0,
+          "abstain": 27,
+          "groundTruthIndeterminate": 33,
+          "invariantViolations": 0,
+          "expectationFailures": 0
+        },
+        {
+          "id": "packet_loss_20pct",
+          "family": "packet_loss",
+          "expectations": [
+            "NOT_WRONG",
+            "NO_INVARIANT_VIOLATION"
+          ],
+          "applicable": 160,
+          "exercised": 155,
+          "correct": 139,
+          "wrong": 0,
+          "abstain": 16,
+          "groundTruthIndeterminate": 5,
+          "invariantViolations": 0,
+          "expectationFailures": 0
+        },
+        {
+          "id": "packet_loss_50pct",
+          "family": "packet_loss",
+          "expectations": [
+            "NOT_WRONG",
+            "NO_INVARIANT_VIOLATION"
+          ],
+          "applicable": 160,
+          "exercised": 136,
+          "correct": 111,
+          "wrong": 0,
+          "abstain": 25,
+          "groundTruthIndeterminate": 24,
+          "invariantViolations": 0,
+          "expectationFailures": 0
+        },
+        {
+          "id": "long_polling_gap_120s",
+          "family": "long_polling_gap",
+          "expectations": [
+            "NOT_WRONG",
+            "NO_INVARIANT_VIOLATION"
+          ],
+          "applicable": 160,
+          "exercised": 0,
+          "correct": 0,
+          "wrong": 0,
+          "abstain": 0,
+          "groundTruthIndeterminate": 160,
+          "invariantViolations": 0,
+          "expectationFailures": 0
+        },
+        {
+          "id": "provider_error_burst_60s",
+          "family": "provider_error_burst",
+          "expectations": [
+            "NOT_WRONG",
+            "NO_INVARIANT_VIOLATION"
+          ],
+          "applicable": 160,
+          "exercised": 140,
+          "correct": 110,
+          "wrong": 0,
+          "abstain": 0,
+          "groundTruthIndeterminate": 20,
+          "invariantViolations": 0,
+          "expectationFailures": 0
+        },
+        {
+          "id": "route_loop_seam",
+          "family": "route_loop_seam",
+          "expectations": [
+            "NOT_WRONG",
+            "NO_INVARIANT_VIOLATION"
+          ],
+          "applicable": 218,
+          "exercised": 218,
+          "correct": 180,
+          "wrong": 0,
+          "abstain": 38,
+          "groundTruthIndeterminate": 0,
+          "invariantViolations": 0,
+          "expectationFailures": 0
+        },
+        {
+          "id": "duplicated_stop_name",
+          "family": "duplicated_stop_name",
+          "expectations": [
+            "NO_COMMIT",
+            "NO_INVARIANT_VIOLATION"
+          ],
+          "applicable": 218,
+          "exercised": 218,
+          "correct": 0,
+          "wrong": 0,
+          "abstain": 218,
+          "groundTruthIndeterminate": 0,
+          "invariantViolations": 0,
+          "expectationFailures": 0
+        },
+        {
+          "id": "repeated_route_geometry",
+          "family": "repeated_route_geometry",
+          "expectations": [
+            "NOT_WRONG",
+            "NO_INVARIANT_VIOLATION"
+          ],
+          "applicable": 218,
+          "exercised": 218,
+          "correct": 183,
+          "wrong": 0,
+          "abstain": 35,
+          "groundTruthIndeterminate": 0,
+          "invariantViolations": 0,
+          "expectationFailures": 0
+        },
+        {
+          "id": "route_variant_twin",
+          "family": "route_variant_twin",
+          "expectations": [
+            "NEVER_SELECTS_OTHER_ROUTE",
+            "NEVER_SELECTS_INJECTED",
+            "NO_INVARIANT_VIOLATION"
+          ],
+          "applicable": 218,
+          "exercised": 218,
+          "correct": 183,
+          "wrong": 0,
+          "abstain": 35,
+          "groundTruthIndeterminate": 0,
+          "invariantViolations": 0,
+          "expectationFailures": 0
+        },
+        {
+          "id": "backwards_decoy",
+          "family": "backwards_decoy",
+          "expectations": [
+            "NEVER_SELECTS_INJECTED",
+            "NO_INVARIANT_VIOLATION"
+          ],
+          "applicable": 195,
+          "exercised": 195,
+          "correct": 67,
+          "wrong": 0,
+          "abstain": 128,
+          "groundTruthIndeterminate": 0,
+          "invariantViolations": 0,
+          "expectationFailures": 0
+        },
+        {
+          "id": "delayed_movement_20s",
+          "family": "delayed_movement",
+          "expectations": [
+            "NOT_WRONG",
+            "NO_INVARIANT_VIOLATION"
+          ],
+          "applicable": 160,
+          "exercised": 160,
+          "correct": 149,
+          "wrong": 0,
+          "abstain": 11,
+          "groundTruthIndeterminate": 0,
+          "invariantViolations": 0,
+          "expectationFailures": 0
+        },
+        {
+          "id": "delayed_movement_40s",
+          "family": "delayed_movement",
+          "expectations": [
+            "NOT_WRONG",
+            "NO_INVARIANT_VIOLATION"
+          ],
+          "applicable": 160,
+          "exercised": 160,
+          "correct": 149,
+          "wrong": 0,
+          "abstain": 11,
+          "groundTruthIndeterminate": 0,
+          "invariantViolations": 0,
+          "expectationFailures": 0
+        },
+        {
+          "id": "early_movement_20s",
+          "family": "early_movement",
+          "expectations": [
+            "NOT_WRONG",
+            "NO_INVARIANT_VIOLATION"
+          ],
+          "applicable": 160,
+          "exercised": 160,
+          "correct": 129,
+          "wrong": 0,
+          "abstain": 31,
+          "groundTruthIndeterminate": 0,
+          "invariantViolations": 0,
+          "expectationFailures": 0
+        },
+        {
+          "id": "multiple_eligible_candidates",
+          "family": "multiple_eligible",
+          "expectations": [
+            "NEVER_SELECTS_INJECTED",
+            "NO_INVARIANT_VIOLATION"
+          ],
+          "applicable": 155,
+          "exercised": 155,
+          "correct": 145,
+          "wrong": 0,
+          "abstain": 10,
+          "groundTruthIndeterminate": 0,
+          "invariantViolations": 0,
+          "expectationFailures": 0
+        },
+        {
+          "id": "zero_eligible",
+          "family": "zero_eligible",
+          "expectations": [
+            "NO_COMMIT",
+            "NO_INVARIANT_VIOLATION"
+          ],
+          "applicable": 218,
+          "exercised": 218,
+          "correct": 0,
+          "wrong": 0,
+          "abstain": 58,
+          "groundTruthIndeterminate": 160,
+          "invariantViolations": 0,
+          "expectationFailures": 0
+        },
+        {
+          "id": "identity_churn",
+          "family": "identity_churn",
+          "expectations": [
+            "NOT_WRONG",
+            "NO_INVARIANT_VIOLATION"
+          ],
+          "applicable": 154,
+          "exercised": 92,
+          "correct": 84,
+          "wrong": 0,
+          "abstain": 8,
+          "groundTruthIndeterminate": 62,
+          "invariantViolations": 0,
+          "expectationFailures": 0
+        },
+        {
+          "id": "session_start_waiting",
+          "family": "session_start_waiting",
+          "expectations": [
+            "GROUND_TRUTH_REPRODUCED",
+            "NOT_WRONG",
+            "NO_INVARIANT_VIOLATION"
+          ],
+          "applicable": 160,
+          "exercised": 160,
+          "correct": 149,
+          "wrong": 0,
+          "abstain": 11,
+          "groundTruthIndeterminate": 0,
+          "invariantViolations": 0,
+          "expectationFailures": 0
+        },
+        {
+          "id": "session_start_on_board",
+          "family": "session_start_on_board",
+          "expectations": [
+            "GROUND_TRUTH_REPRODUCED",
+            "NOT_WRONG",
+            "NO_INVARIANT_VIOLATION"
+          ],
+          "applicable": 58,
+          "exercised": 58,
+          "correct": 34,
+          "wrong": 0,
+          "abstain": 24,
+          "groundTruthIndeterminate": 0,
+          "invariantViolations": 0,
+          "expectationFailures": 0
+        },
+        {
+          "id": "delayed_on_board_start_30s",
+          "family": "delayed_on_board_start",
+          "expectations": [
+            "NOT_WRONG",
+            "NO_INVARIANT_VIOLATION"
+          ],
+          "applicable": 58,
+          "exercised": 58,
+          "correct": 34,
+          "wrong": 0,
+          "abstain": 24,
+          "groundTruthIndeterminate": 0,
+          "invariantViolations": 0,
+          "expectationFailures": 0
+        },
+        {
+          "id": "delayed_on_board_start_90s",
+          "family": "delayed_on_board_start",
+          "expectations": [
+            "NOT_WRONG",
+            "NO_INVARIANT_VIOLATION"
+          ],
+          "applicable": 58,
+          "exercised": 58,
+          "correct": 53,
+          "wrong": 0,
+          "abstain": 5,
+          "groundTruthIndeterminate": 0,
+          "invariantViolations": 0,
+          "expectationFailures": 0
+        }
+      ]
+    },
+    "R": {
+      "baseCases": 669,
+      "families": 32,
+      "familiesExercised": 31,
+      "totals": {
+        "applicable": 24778,
+        "correct": 8392,
+        "wrong": 0,
+        "abstain": 13003,
+        "groundTruthIndeterminate": 3122,
+        "invariantViolations": 0,
+        "matcherInvariantErrors": 0,
+        "expectationFailures": 0,
+        "groundTruthShiftMismatches": 0
+      },
+      "byCounterfactual": [
+        {
+          "id": "departed_decoy_s1",
+          "family": "departed_decoy",
+          "expectations": [
+            "NEVER_SELECTS_INJECTED",
+            "NO_INVARIANT_VIOLATION"
+          ],
+          "applicable": 668,
+          "exercised": 668,
+          "correct": 25,
+          "wrong": 0,
+          "abstain": 643,
+          "groundTruthIndeterminate": 0,
+          "invariantViolations": 0,
+          "expectationFailures": 0
+        },
+        {
+          "id": "departed_decoy_s2",
+          "family": "departed_decoy",
+          "expectations": [
+            "NEVER_SELECTS_INJECTED",
+            "NO_INVARIANT_VIOLATION"
+          ],
+          "applicable": 643,
+          "exercised": 643,
+          "correct": 275,
+          "wrong": 0,
+          "abstain": 368,
+          "groundTruthIndeterminate": 0,
+          "invariantViolations": 0,
+          "expectationFailures": 0
+        },
+        {
+          "id": "departed_decoy_s4",
+          "family": "departed_decoy",
+          "expectations": [
+            "NEVER_SELECTS_INJECTED",
+            "NO_INVARIANT_VIOLATION"
+          ],
+          "applicable": 594,
+          "exercised": 594,
+          "correct": 245,
+          "wrong": 0,
+          "abstain": 349,
+          "groundTruthIndeterminate": 0,
+          "invariantViolations": 0,
+          "expectationFailures": 0
+        },
+        {
+          "id": "true_bus_approaching",
+          "family": "true_bus_approaching",
+          "expectations": [
+            "GROUND_TRUTH_REPRODUCED",
+            "NOT_WRONG",
+            "NO_INVARIANT_VIOLATION"
+          ],
+          "applicable": 544,
+          "exercised": 544,
+          "correct": 288,
+          "wrong": 0,
+          "abstain": 256,
+          "groundTruthIndeterminate": 0,
+          "invariantViolations": 0,
+          "expectationFailures": 0
+        },
+        {
+          "id": "approaching_vs_departed_s2",
+          "family": "approaching_vs_departed",
+          "expectations": [
+            "NEVER_SELECTS_INJECTED",
+            "NO_INVARIANT_VIOLATION"
+          ],
+          "applicable": 503,
+          "exercised": 503,
+          "correct": 257,
+          "wrong": 0,
+          "abstain": 246,
+          "groundTruthIndeterminate": 0,
+          "invariantViolations": 0,
+          "expectationFailures": 0
+        },
+        {
+          "id": "follower_behind_k1",
+          "family": "leader_follower",
+          "expectations": [
+            "NEVER_SELECTS_INJECTED",
+            "NO_INVARIANT_VIOLATION"
+          ],
+          "applicable": 544,
+          "exercised": 544,
+          "correct": 0,
+          "wrong": 0,
+          "abstain": 544,
+          "groundTruthIndeterminate": 0,
+          "invariantViolations": 0,
+          "expectationFailures": 0
+        },
+        {
+          "id": "follower_behind_k2",
+          "family": "leader_follower",
+          "expectations": [
+            "NEVER_SELECTS_INJECTED",
+            "NO_INVARIANT_VIOLATION"
+          ],
+          "applicable": 534,
+          "exercised": 534,
+          "correct": 16,
+          "wrong": 0,
+          "abstain": 518,
+          "groundTruthIndeterminate": 0,
+          "invariantViolations": 0,
+          "expectationFailures": 0
+        },
+        {
+          "id": "follower_behind_k3",
+          "family": "leader_follower",
+          "expectations": [
+            "NEVER_SELECTS_INJECTED",
+            "NO_INVARIANT_VIOLATION"
+          ],
+          "applicable": 523,
+          "exercised": 523,
+          "correct": 283,
+          "wrong": 0,
+          "abstain": 240,
+          "groundTruthIndeterminate": 0,
+          "invariantViolations": 0,
+          "expectationFailures": 0
+        },
+        {
+          "id": "follower_behind_k4",
+          "family": "leader_follower",
+          "expectations": [
+            "NEVER_SELECTS_INJECTED",
+            "NO_INVARIANT_VIOLATION"
+          ],
+          "applicable": 512,
+          "exercised": 512,
+          "correct": 279,
+          "wrong": 0,
+          "abstain": 233,
+          "groundTruthIndeterminate": 0,
+          "invariantViolations": 0,
+          "expectationFailures": 0
+        },
+        {
+          "id": "follower_behind_k5",
+          "family": "leader_follower",
+          "expectations": [
+            "NEVER_SELECTS_INJECTED",
+            "NO_INVARIANT_VIOLATION"
+          ],
+          "applicable": 502,
+          "exercised": 502,
+          "correct": 275,
+          "wrong": 0,
+          "abstain": 227,
+          "groundTruthIndeterminate": 0,
+          "invariantViolations": 0,
+          "expectationFailures": 0
+        },
+        {
+          "id": "follower_behind_k10",
+          "family": "leader_follower",
+          "expectations": [
+            "NEVER_SELECTS_INJECTED",
+            "NO_INVARIANT_VIOLATION"
+          ],
+          "applicable": 440,
+          "exercised": 440,
+          "correct": 246,
+          "wrong": 0,
+          "abstain": 194,
+          "groundTruthIndeterminate": 0,
+          "invariantViolations": 0,
+          "expectationFailures": 0
+        },
+        {
+          "id": "follower_overtaking",
+          "family": "follower_overtaking",
+          "expectations": [
+            "NOT_WRONG",
+            "NO_INVARIANT_VIOLATION"
+          ],
+          "applicable": 331,
+          "exercised": 331,
+          "correct": 0,
+          "wrong": 0,
+          "abstain": 331,
+          "groundTruthIndeterminate": 0,
+          "invariantViolations": 0,
+          "expectationFailures": 0
+        },
+        {
+          "id": "leader_ahead_k1",
+          "family": "leader_ahead",
+          "expectations": [
+            "NOT_WRONG",
+            "NO_INVARIANT_VIOLATION"
+          ],
+          "applicable": 480,
+          "exercised": 480,
+          "correct": 0,
+          "wrong": 0,
+          "abstain": 480,
+          "groundTruthIndeterminate": 0,
+          "invariantViolations": 0,
+          "expectationFailures": 0
+        },
+        {
+          "id": "leader_ahead_k2",
+          "family": "leader_ahead",
+          "expectations": [
+            "NOT_WRONG",
+            "NO_INVARIANT_VIOLATION"
+          ],
+          "applicable": 418,
+          "exercised": 418,
+          "correct": 0,
+          "wrong": 0,
+          "abstain": 418,
+          "groundTruthIndeterminate": 0,
+          "invariantViolations": 0,
+          "expectationFailures": 0
+        },
+        {
+          "id": "leader_ahead_k3",
+          "family": "leader_ahead",
+          "expectations": [
+            "NOT_WRONG",
+            "NO_INVARIANT_VIOLATION"
+          ],
+          "applicable": 359,
+          "exercised": 359,
+          "correct": 161,
+          "wrong": 0,
+          "abstain": 198,
+          "groundTruthIndeterminate": 0,
+          "invariantViolations": 0,
+          "expectationFailures": 0
+        },
+        {
+          "id": "leader_ahead_k4",
+          "family": "leader_ahead",
+          "expectations": [
+            "NOT_WRONG",
+            "NO_INVARIANT_VIOLATION"
+          ],
+          "applicable": 302,
+          "exercised": 302,
+          "correct": 128,
+          "wrong": 0,
+          "abstain": 174,
+          "groundTruthIndeterminate": 0,
+          "invariantViolations": 0,
+          "expectationFailures": 0
+        },
+        {
+          "id": "leader_ahead_k5",
+          "family": "leader_ahead",
+          "expectations": [
+            "NOT_WRONG",
+            "NO_INVARIANT_VIOLATION"
+          ],
+          "applicable": 250,
+          "exercised": 250,
+          "correct": 101,
+          "wrong": 0,
+          "abstain": 149,
+          "groundTruthIndeterminate": 0,
+          "invariantViolations": 0,
+          "expectationFailures": 0
+        },
+        {
+          "id": "leader_ahead_k10",
+          "family": "leader_ahead",
+          "expectations": [
+            "NOT_WRONG",
+            "NO_INVARIANT_VIOLATION"
+          ],
+          "applicable": 80,
+          "exercised": 80,
+          "correct": 26,
+          "wrong": 0,
+          "abstain": 54,
+          "groundTruthIndeterminate": 0,
+          "invariantViolations": 0,
+          "expectationFailures": 0
+        },
+        {
+          "id": "boarding_stop_dwell_60s",
+          "family": "boarding_stop_dwell",
+          "expectations": [
+            "NO_INVARIANT_VIOLATION",
+            "NOT_WRONG"
+          ],
+          "applicable": 544,
+          "exercised": 544,
+          "correct": 288,
+          "wrong": 0,
+          "abstain": 256,
+          "groundTruthIndeterminate": 0,
+          "invariantViolations": 0,
+          "expectationFailures": 0
+        },
+        {
+          "id": "boarding_stop_dwell_120s",
+          "family": "boarding_stop_dwell",
+          "expectations": [
+            "NO_INVARIANT_VIOLATION",
+            "NOT_WRONG"
+          ],
+          "applicable": 544,
+          "exercised": 544,
+          "correct": 288,
+          "wrong": 0,
+          "abstain": 256,
+          "groundTruthIndeterminate": 0,
+          "invariantViolations": 0,
+          "expectationFailures": 0
+        },
+        {
+          "id": "true_bus_absent",
+          "family": "true_bus_absent",
+          "expectations": [
+            "NOT_WRONG",
+            "NO_INVARIANT_VIOLATION"
+          ],
+          "applicable": 544,
+          "exercised": 3,
+          "correct": 3,
+          "wrong": 0,
+          "abstain": 0,
+          "groundTruthIndeterminate": 541,
+          "invariantViolations": 0,
+          "expectationFailures": 0
+        },
+        {
+          "id": "decoys_absent",
+          "family": "decoys_absent",
+          "expectations": [
+            "NOT_WRONG",
+            "NO_INVARIANT_VIOLATION"
+          ],
+          "applicable": 648,
+          "exercised": 648,
+          "correct": 383,
+          "wrong": 0,
+          "abstain": 265,
+          "groundTruthIndeterminate": 0,
+          "invariantViolations": 0,
+          "expectationFailures": 0
+        },
+        {
+          "id": "late_appearance_s_minus_2",
+          "family": "late_appearance",
+          "expectations": [
+            "NOT_WRONG",
+            "NO_INVARIANT_VIOLATION"
+          ],
+          "applicable": 449,
+          "exercised": 449,
+          "correct": 111,
+          "wrong": 0,
+          "abstain": 338,
+          "groundTruthIndeterminate": 0,
+          "invariantViolations": 0,
+          "expectationFailures": 0
+        },
+        {
+          "id": "candidate_disappearance_60s",
+          "family": "candidate_disappearance",
+          "expectations": [
+            "NOT_WRONG",
+            "NO_INVARIANT_VIOLATION"
+          ],
+          "applicable": 544,
+          "exercised": 444,
+          "correct": 199,
+          "wrong": 0,
+          "abstain": 245,
+          "groundTruthIndeterminate": 100,
+          "invariantViolations": 0,
+          "expectationFailures": 0
+        },
+        {
+          "id": "reappearance_60s",
+          "family": "reappearance",
+          "expectations": [
+            "NOT_WRONG",
+            "NO_INVARIANT_VIOLATION"
+          ],
+          "applicable": 443,
+          "exercised": 436,
+          "correct": 136,
+          "wrong": 0,
+          "abstain": 300,
+          "groundTruthIndeterminate": 7,
+          "invariantViolations": 0,
+          "expectationFailures": 0
+        },
+        {
+          "id": "stale_repeated_frames_60s",
+          "family": "stale_repeated_frames",
+          "expectations": [
+            "NOT_WRONG",
+            "NO_INVARIANT_VIOLATION"
+          ],
+          "applicable": 255,
+          "exercised": 255,
+          "correct": 127,
+          "wrong": 0,
+          "abstain": 128,
+          "groundTruthIndeterminate": 0,
+          "invariantViolations": 0,
+          "expectationFailures": 0
+        },
+        {
+          "id": "coordinate_freeze",
+          "family": "coordinate_freeze",
+          "expectations": [
+            "NOT_WRONG",
+            "NO_INVARIANT_VIOLATION"
+          ],
+          "applicable": 669,
+          "exercised": 669,
+          "correct": 376,
+          "wrong": 0,
+          "abstain": 293,
+          "groundTruthIndeterminate": 0,
+          "invariantViolations": 0,
+          "expectationFailures": 0
+        },
+        {
+          "id": "content_freeze_from_60s_before_boarding",
+          "family": "content_freeze",
+          "expectations": [
+            "NO_SELECTION_ON_FROZEN_WINDOW",
+            "NOT_WRONG",
+            "NO_INVARIANT_VIOLATION"
+          ],
+          "applicable": 544,
+          "exercised": 544,
+          "correct": 0,
+          "wrong": 0,
+          "abstain": 0,
+          "groundTruthIndeterminate": 544,
+          "invariantViolations": 0,
+          "expectationFailures": 0
+        },
+        {
+          "id": "receipt_jitter_10s",
+          "family": "receipt_jitter",
+          "expectations": [
+            "NOT_WRONG",
+            "NO_INVARIANT_VIOLATION"
+          ],
+          "applicable": 544,
+          "exercised": 529,
+          "correct": 217,
+          "wrong": 0,
+          "abstain": 312,
+          "groundTruthIndeterminate": 15,
+          "invariantViolations": 0,
+          "expectationFailures": 0
+        },
+        {
+          "id": "receipt_jitter_20s",
+          "family": "receipt_jitter",
+          "expectations": [
+            "NOT_WRONG",
+            "NO_INVARIANT_VIOLATION"
+          ],
+          "applicable": 544,
+          "exercised": 525,
+          "correct": 169,
+          "wrong": 0,
+          "abstain": 356,
+          "groundTruthIndeterminate": 19,
+          "invariantViolations": 0,
+          "expectationFailures": 0
+        },
+        {
+          "id": "receipt_jitter_40s",
+          "family": "receipt_jitter",
+          "expectations": [
+            "NOT_WRONG",
+            "NO_INVARIANT_VIOLATION"
+          ],
+          "applicable": 544,
+          "exercised": 513,
+          "correct": 141,
+          "wrong": 0,
+          "abstain": 356,
+          "groundTruthIndeterminate": 31,
+          "invariantViolations": 0,
+          "expectationFailures": 0
+        },
+        {
+          "id": "packet_loss_20pct",
+          "family": "packet_loss",
+          "expectations": [
+            "NOT_WRONG",
+            "NO_INVARIANT_VIOLATION"
+          ],
+          "applicable": 544,
+          "exercised": 477,
+          "correct": 168,
+          "wrong": 0,
+          "abstain": 309,
+          "groundTruthIndeterminate": 67,
+          "invariantViolations": 0,
+          "expectationFailures": 0
+        },
+        {
+          "id": "packet_loss_50pct",
+          "family": "packet_loss",
+          "expectations": [
+            "NOT_WRONG",
+            "NO_INVARIANT_VIOLATION"
+          ],
+          "applicable": 544,
+          "exercised": 189,
+          "correct": 15,
+          "wrong": 0,
+          "abstain": 174,
+          "groundTruthIndeterminate": 355,
+          "invariantViolations": 0,
+          "expectationFailures": 0
+        },
+        {
+          "id": "long_polling_gap_120s",
+          "family": "long_polling_gap",
+          "expectations": [
+            "NOT_WRONG",
+            "NO_INVARIANT_VIOLATION"
+          ],
+          "applicable": 544,
+          "exercised": 0,
+          "correct": 0,
+          "wrong": 0,
+          "abstain": 0,
+          "groundTruthIndeterminate": 544,
+          "invariantViolations": 0,
+          "expectationFailures": 0
+        },
+        {
+          "id": "provider_error_burst_60s",
+          "family": "provider_error_burst",
+          "expectations": [
+            "NOT_WRONG",
+            "NO_INVARIANT_VIOLATION"
+          ],
+          "applicable": 544,
+          "exercised": 444,
+          "correct": 199,
+          "wrong": 0,
+          "abstain": 0,
+          "groundTruthIndeterminate": 100,
+          "invariantViolations": 0,
+          "expectationFailures": 0
+        },
+        {
+          "id": "route_loop_seam",
+          "family": "route_loop_seam",
+          "expectations": [
+            "NOT_WRONG",
+            "NO_INVARIANT_VIOLATION"
+          ],
+          "applicable": 669,
+          "exercised": 669,
+          "correct": 367,
+          "wrong": 0,
+          "abstain": 302,
+          "groundTruthIndeterminate": 0,
+          "invariantViolations": 0,
+          "expectationFailures": 0
+        },
+        {
+          "id": "duplicated_stop_name",
+          "family": "duplicated_stop_name",
+          "expectations": [
+            "NO_COMMIT",
+            "NO_INVARIANT_VIOLATION"
+          ],
+          "applicable": 669,
+          "exercised": 669,
+          "correct": 0,
+          "wrong": 0,
+          "abstain": 669,
+          "groundTruthIndeterminate": 0,
+          "invariantViolations": 0,
+          "expectationFailures": 0
+        },
+        {
+          "id": "repeated_route_geometry",
+          "family": "repeated_route_geometry",
+          "expectations": [
+            "NOT_WRONG",
+            "NO_INVARIANT_VIOLATION"
+          ],
+          "applicable": 669,
+          "exercised": 669,
+          "correct": 377,
+          "wrong": 0,
+          "abstain": 292,
+          "groundTruthIndeterminate": 0,
+          "invariantViolations": 0,
+          "expectationFailures": 0
+        },
+        {
+          "id": "route_variant_twin",
+          "family": "route_variant_twin",
+          "expectations": [
+            "NEVER_SELECTS_OTHER_ROUTE",
+            "NEVER_SELECTS_INJECTED",
+            "NO_INVARIANT_VIOLATION"
+          ],
+          "applicable": 669,
+          "exercised": 669,
+          "correct": 377,
+          "wrong": 0,
+          "abstain": 292,
+          "groundTruthIndeterminate": 0,
+          "invariantViolations": 0,
+          "expectationFailures": 0
+        },
+        {
+          "id": "backwards_decoy",
+          "family": "backwards_decoy",
+          "expectations": [
+            "NEVER_SELECTS_INJECTED",
+            "NO_INVARIANT_VIOLATION"
+          ],
+          "applicable": 620,
+          "exercised": 620,
+          "correct": 58,
+          "wrong": 0,
+          "abstain": 562,
+          "groundTruthIndeterminate": 0,
+          "invariantViolations": 0,
+          "expectationFailures": 0
+        },
+        {
+          "id": "delayed_movement_20s",
+          "family": "delayed_movement",
+          "expectations": [
+            "NOT_WRONG",
+            "NO_INVARIANT_VIOLATION"
+          ],
+          "applicable": 544,
+          "exercised": 542,
+          "correct": 289,
+          "wrong": 0,
+          "abstain": 253,
+          "groundTruthIndeterminate": 2,
+          "invariantViolations": 0,
+          "expectationFailures": 0
+        },
+        {
+          "id": "delayed_movement_40s",
+          "family": "delayed_movement",
+          "expectations": [
+            "NOT_WRONG",
+            "NO_INVARIANT_VIOLATION"
+          ],
+          "applicable": 544,
+          "exercised": 541,
+          "correct": 319,
+          "wrong": 0,
+          "abstain": 222,
+          "groundTruthIndeterminate": 3,
+          "invariantViolations": 0,
+          "expectationFailures": 0
+        },
+        {
+          "id": "early_movement_20s",
+          "family": "early_movement",
+          "expectations": [
+            "NOT_WRONG",
+            "NO_INVARIANT_VIOLATION"
+          ],
+          "applicable": 544,
+          "exercised": 544,
+          "correct": 288,
+          "wrong": 0,
+          "abstain": 256,
+          "groundTruthIndeterminate": 0,
+          "invariantViolations": 0,
+          "expectationFailures": 0
+        },
+        {
+          "id": "multiple_eligible_candidates",
+          "family": "multiple_eligible",
+          "expectations": [
+            "NEVER_SELECTS_INJECTED",
+            "NO_INVARIANT_VIOLATION"
+          ],
+          "applicable": 512,
+          "exercised": 512,
+          "correct": 279,
+          "wrong": 0,
+          "abstain": 233,
+          "groundTruthIndeterminate": 0,
+          "invariantViolations": 0,
+          "expectationFailures": 0
+        },
+        {
+          "id": "zero_eligible",
+          "family": "zero_eligible",
+          "expectations": [
+            "NO_COMMIT",
+            "NO_INVARIANT_VIOLATION"
+          ],
+          "applicable": 669,
+          "exercised": 669,
+          "correct": 0,
+          "wrong": 0,
+          "abstain": 125,
+          "groundTruthIndeterminate": 544,
+          "invariantViolations": 0,
+          "expectationFailures": 0
+        },
+        {
+          "id": "identity_churn",
+          "family": "identity_churn",
+          "expectations": [
+            "NOT_WRONG",
+            "NO_INVARIANT_VIOLATION"
+          ],
+          "applicable": 531,
+          "exercised": 281,
+          "correct": 112,
+          "wrong": 0,
+          "abstain": 169,
+          "groundTruthIndeterminate": 250,
+          "invariantViolations": 0,
+          "expectationFailures": 0
+        },
+        {
+          "id": "session_start_waiting",
+          "family": "session_start_waiting",
+          "expectations": [
+            "GROUND_TRUTH_REPRODUCED",
+            "NOT_WRONG",
+            "NO_INVARIANT_VIOLATION"
+          ],
+          "applicable": 544,
+          "exercised": 544,
+          "correct": 288,
+          "wrong": 0,
+          "abstain": 256,
+          "groundTruthIndeterminate": 0,
+          "invariantViolations": 0,
+          "expectationFailures": 0
+        },
+        {
+          "id": "session_start_on_board",
+          "family": "session_start_on_board",
+          "expectations": [
+            "GROUND_TRUTH_REPRODUCED",
+            "NOT_WRONG",
+            "NO_INVARIANT_VIOLATION"
+          ],
+          "applicable": 125,
+          "exercised": 125,
+          "correct": 89,
+          "wrong": 0,
+          "abstain": 36,
+          "groundTruthIndeterminate": 0,
+          "invariantViolations": 0,
+          "expectationFailures": 0
+        },
+        {
+          "id": "delayed_on_board_start_30s",
+          "family": "delayed_on_board_start",
+          "expectations": [
+            "NOT_WRONG",
+            "NO_INVARIANT_VIOLATION"
+          ],
+          "applicable": 125,
+          "exercised": 125,
+          "correct": 72,
+          "wrong": 0,
+          "abstain": 53,
+          "groundTruthIndeterminate": 0,
+          "invariantViolations": 0,
+          "expectationFailures": 0
+        },
+        {
+          "id": "delayed_on_board_start_90s",
+          "family": "delayed_on_board_start",
+          "expectations": [
+            "NOT_WRONG",
+            "NO_INVARIANT_VIOLATION"
+          ],
+          "applicable": 125,
+          "exercised": 125,
+          "correct": 52,
+          "wrong": 0,
+          "abstain": 73,
+          "groundTruthIndeterminate": 0,
+          "invariantViolations": 0,
+          "expectationFailures": 0
+        }
+      ]
+    }
+  }
+}

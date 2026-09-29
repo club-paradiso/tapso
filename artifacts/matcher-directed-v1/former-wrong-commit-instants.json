@@ -1,0 +1,4845 @@
+{
+  "schemaVersion": 1,
+  "kind": "former-wrong-commit-instant-redecision",
+  "evidenceClass": "VERIFIED_BY_REPLAY",
+  "evidenceNote": "Instant-level replay of the recorded commit-decision inputs of every LIVE_PASSIVE wrong commit in the Passive Shadow v3 evidence of record. Topology is assumed permissively (straight route, no repeated stop) and memory of absent vehicles is empty; both can only add abstentions under the real inputs. This does not establish each case's outcome later in its window; that requires the raw streams.",
+  "source": {
+    "ledger": "artifacts/passive-shadow-validation-v3-wrong-commits.json",
+    "ledgerSha256": "a960d428caa9d967ddbde0e66f9f1a9963cfd65df519bc6acc58951532fd8773",
+    "ledgerProvenance": {
+      "collectionId": "pv3-20260925T052712Z-f096de91",
+      "evaluatedAtCommit": "db51667f9d715c701be7d8df36a83b2c8521ff62",
+      "rawTreeSha256": "bce8b504e5b287d9f86eb79345f7e50bdce4537625247c0dee164c2afb8c82fb"
+    }
+  },
+  "matcherPolicy": "directed-route-progress-v1",
+  "controlPolicy": "symmetric-stop-distance-v0",
+  "networkAttempts": 0,
+  "totals": {
+    "records": 268,
+    "legacyReproducedRecordedSelection": 268,
+    "currentPolicyStatus": {
+      "unavailable": 268
+    },
+    "currentPolicyCommitsToFormerWrongBus": 0,
+    "currentPolicyCommitsToTrueBus": 0,
+    "currentPolicyCommitsToOtherBus": 0,
+    "formerSelectionZone": {
+      "departed": 251,
+      "boarding_stop_unresolved": 17
+    },
+    "trueBusZone": {
+      "absent_from_feed": 68,
+      "beyond_window": 200
+    }
+  },
+  "records": [
+    {
+      "caseId": "pv3-20260925T052712Z-f096de91-JEB405136001:w:s2:2026-09-25T05:28:01.803Z",
+      "routeId": "JEB405136001",
+      "boardingSequence": 2,
+      "commitAt": "2026-09-25T05:30:45.606Z",
+      "formerMechanism": "SOLE_ELIGIBLE_DEPARTED__TRUTH_NOT_IN_FEED",
+      "formerCommittedStopOffset": 4,
+      "legacyReproduced": true,
+      "current": {
+        "status": "unavailable",
+        "abstentionReasons": [],
+        "formerSelectionZone": "departed",
+        "formerSelectionRejectedBecause": [
+          "departed_boarding_stop"
+        ]
+      }
+    },
+    {
+      "caseId": "pv3-20260925T052712Z-f096de91-JEB405136001:w:s3:2026-09-25T05:28:01.803Z",
+      "routeId": "JEB405136001",
+      "boardingSequence": 3,
+      "commitAt": "2026-09-25T05:30:45.606Z",
+      "formerMechanism": "SOLE_ELIGIBLE_DEPARTED__TRUTH_NOT_IN_FEED",
+      "formerCommittedStopOffset": 3,
+      "legacyReproduced": true,
+      "current": {
+        "status": "unavailable",
+        "abstentionReasons": [],
+        "formerSelectionZone": "departed",
+        "formerSelectionRejectedBecause": [
+          "departed_boarding_stop"
+        ]
+      }
+    },
+    {
+      "caseId": "pv3-20260925T052712Z-f096de91-JEB405136001:w:s3:2026-09-25T06:04:01.803Z",
+      "routeId": "JEB405136001",
+      "boardingSequence": 3,
+      "commitAt": "2026-09-25T06:05:15.686Z",
+      "formerMechanism": "SOLE_ELIGIBLE_DEPARTED__TRUTH_NOT_IN_FEED",
+      "formerCommittedStopOffset": 3,
+      "legacyReproduced": true,
+      "current": {
+        "status": "unavailable",
+        "abstentionReasons": [],
+        "formerSelectionZone": "departed",
+        "formerSelectionRejectedBecause": [
+          "departed_boarding_stop"
+        ]
+      }
+    },
+    {
+      "caseId": "pv3-20260925T052712Z-f096de91-JEB405136001:w:s8:2026-09-25T05:52:01.803Z",
+      "routeId": "JEB405136001",
+      "boardingSequence": 8,
+      "commitAt": "2026-09-25T05:55:45.940Z",
+      "formerMechanism": "SOLE_ELIGIBLE_DEPARTED__TRUTH_NOT_IN_FEED",
+      "formerCommittedStopOffset": 4,
+      "legacyReproduced": true,
+      "current": {
+        "status": "unavailable",
+        "abstentionReasons": [],
+        "formerSelectionZone": "departed",
+        "formerSelectionRejectedBecause": [
+          "departed_boarding_stop"
+        ]
+      }
+    },
+    {
+      "caseId": "pv3-20260925T052712Z-f096de91-JEB405136001:w:s8:2026-09-25T05:54:01.803Z",
+      "routeId": "JEB405136001",
+      "boardingSequence": 8,
+      "commitAt": "2026-09-25T05:55:45.940Z",
+      "formerMechanism": "SOLE_ELIGIBLE_DEPARTED__TRUTH_NOT_IN_FEED",
+      "formerCommittedStopOffset": 4,
+      "legacyReproduced": true,
+      "current": {
+        "status": "unavailable",
+        "abstentionReasons": [],
+        "formerSelectionZone": "departed",
+        "formerSelectionRejectedBecause": [
+          "departed_boarding_stop"
+        ]
+      }
+    },
+    {
+      "caseId": "pv3-20260925T052712Z-f096de91-JEB405136001:w:s9:2026-09-25T05:52:01.803Z",
+      "routeId": "JEB405136001",
+      "boardingSequence": 9,
+      "commitAt": "2026-09-25T05:55:45.940Z",
+      "formerMechanism": "SOLE_ELIGIBLE_DEPARTED__TRUTH_NOT_IN_FEED",
+      "formerCommittedStopOffset": 3,
+      "legacyReproduced": true,
+      "current": {
+        "status": "unavailable",
+        "abstentionReasons": [],
+        "formerSelectionZone": "departed",
+        "formerSelectionRejectedBecause": [
+          "departed_boarding_stop"
+        ]
+      }
+    },
+    {
+      "caseId": "pv3-20260925T052712Z-f096de91-JEB405136001:w:s9:2026-09-25T05:54:01.803Z",
+      "routeId": "JEB405136001",
+      "boardingSequence": 9,
+      "commitAt": "2026-09-25T05:55:45.940Z",
+      "formerMechanism": "SOLE_ELIGIBLE_DEPARTED__TRUTH_NOT_IN_FEED",
+      "formerCommittedStopOffset": 3,
+      "legacyReproduced": true,
+      "current": {
+        "status": "unavailable",
+        "abstentionReasons": [],
+        "formerSelectionZone": "departed",
+        "formerSelectionRejectedBecause": [
+          "departed_boarding_stop"
+        ]
+      }
+    },
+    {
+      "caseId": "pv3-20260925T052712Z-f096de91-JEB405136001:w:s10:2026-09-25T05:54:01.803Z",
+      "routeId": "JEB405136001",
+      "boardingSequence": 10,
+      "commitAt": "2026-09-25T05:55:45.940Z",
+      "formerMechanism": "SOLE_ELIGIBLE_DEPARTED__TRUTH_NOT_IN_FEED",
+      "formerCommittedStopOffset": 2,
+      "legacyReproduced": true,
+      "current": {
+        "status": "unavailable",
+        "abstentionReasons": [],
+        "formerSelectionZone": "departed",
+        "formerSelectionRejectedBecause": [
+          "departed_boarding_stop"
+        ]
+      }
+    },
+    {
+      "caseId": "pv3-20260925T052712Z-f096de91-JEB405136001:w:s11:2026-09-25T05:56:01.803Z",
+      "routeId": "JEB405136001",
+      "boardingSequence": 11,
+      "commitAt": "2026-09-25T06:02:52.182Z",
+      "formerMechanism": "SOLE_ELIGIBLE_DEPARTED__TRUTH_BEYOND_4_STOPS",
+      "formerCommittedStopOffset": 4,
+      "legacyReproduced": true,
+      "current": {
+        "status": "unavailable",
+        "abstentionReasons": [],
+        "formerSelectionZone": "departed",
+        "trueBusZone": "beyond_window",
+        "formerSelectionRejectedBecause": [
+          "departed_boarding_stop"
+        ]
+      }
+    },
+    {
+      "caseId": "pv3-20260925T052712Z-f096de91-JEB405136001:w:s11:2026-09-25T05:58:01.803Z",
+      "routeId": "JEB405136001",
+      "boardingSequence": 11,
+      "commitAt": "2026-09-25T06:02:52.182Z",
+      "formerMechanism": "SOLE_ELIGIBLE_DEPARTED__TRUTH_BEYOND_4_STOPS",
+      "formerCommittedStopOffset": 4,
+      "legacyReproduced": true,
+      "current": {
+        "status": "unavailable",
+        "abstentionReasons": [],
+        "formerSelectionZone": "departed",
+        "trueBusZone": "beyond_window",
+        "formerSelectionRejectedBecause": [
+          "departed_boarding_stop"
+        ]
+      }
+    },
+    {
+      "caseId": "pv3-20260925T052712Z-f096de91-JEB405136001:w:s11:2026-09-25T06:00:01.803Z",
+      "routeId": "JEB405136001",
+      "boardingSequence": 11,
+      "commitAt": "2026-09-25T06:02:52.182Z",
+      "formerMechanism": "SOLE_ELIGIBLE_DEPARTED__TRUTH_BEYOND_4_STOPS",
+      "formerCommittedStopOffset": 4,
+      "legacyReproduced": true,
+      "current": {
+        "status": "unavailable",
+        "abstentionReasons": [],
+        "formerSelectionZone": "departed",
+        "trueBusZone": "beyond_window",
+        "formerSelectionRejectedBecause": [
+          "departed_boarding_stop"
+        ]
+      }
+    },
+    {
+      "caseId": "pv3-20260925T052712Z-f096de91-JEB405136001:w:s12:2026-09-25T05:58:01.803Z",
+      "routeId": "JEB405136001",
+      "boardingSequence": 12,
+      "commitAt": "2026-09-25T06:02:52.182Z",
+      "formerMechanism": "SOLE_ELIGIBLE_DEPARTED__TRUTH_BEYOND_4_STOPS",
+      "formerCommittedStopOffset": 3,
+      "legacyReproduced": true,
+      "current": {
+        "status": "unavailable",
+        "abstentionReasons": [],
+        "formerSelectionZone": "departed",
+        "trueBusZone": "beyond_window",
+        "formerSelectionRejectedBecause": [
+          "departed_boarding_stop"
+        ]
+      }
+    },
+    {
+      "caseId": "pv3-20260925T052712Z-f096de91-JEB405136001:w:s12:2026-09-25T06:00:01.803Z",
+      "routeId": "JEB405136001",
+      "boardingSequence": 12,
+      "commitAt": "2026-09-25T06:02:52.182Z",
+      "formerMechanism": "SOLE_ELIGIBLE_DEPARTED__TRUTH_BEYOND_4_STOPS",
+      "formerCommittedStopOffset": 3,
+      "legacyReproduced": true,
+      "current": {
+        "status": "unavailable",
+        "abstentionReasons": [],
+        "formerSelectionZone": "departed",
+        "trueBusZone": "beyond_window",
+        "formerSelectionRejectedBecause": [
+          "departed_boarding_stop"
+        ]
+      }
+    },
+    {
+      "caseId": "pv3-20260925T052712Z-f096de91-JEB405136001:w:s13:2026-09-25T05:28:01.803Z",
+      "routeId": "JEB405136001",
+      "boardingSequence": 13,
+      "commitAt": "2026-09-25T05:30:45.606Z",
+      "formerMechanism": "SOLE_ELIGIBLE_DEPARTED__TRUTH_BEYOND_4_STOPS",
+      "formerCommittedStopOffset": 4,
+      "legacyReproduced": true,
+      "current": {
+        "status": "unavailable",
+        "abstentionReasons": [],
+        "formerSelectionZone": "departed",
+        "trueBusZone": "beyond_window",
+        "formerSelectionRejectedBecause": [
+          "departed_boarding_stop"
+        ]
+      }
+    },
+    {
+      "caseId": "pv3-20260925T052712Z-f096de91-JEB405136001:w:s13:2026-09-25T06:00:01.803Z",
+      "routeId": "JEB405136001",
+      "boardingSequence": 13,
+      "commitAt": "2026-09-25T06:02:52.182Z",
+      "formerMechanism": "SOLE_ELIGIBLE_DEPARTED__TRUTH_BEYOND_4_STOPS",
+      "formerCommittedStopOffset": 2,
+      "legacyReproduced": true,
+      "current": {
+        "status": "unavailable",
+        "abstentionReasons": [],
+        "formerSelectionZone": "departed",
+        "trueBusZone": "beyond_window",
+        "formerSelectionRejectedBecause": [
+          "departed_boarding_stop"
+        ]
+      }
+    },
+    {
+      "caseId": "pv3-20260925T052712Z-f096de91-JEB405136001:w:s13:2026-09-25T06:04:01.803Z",
+      "routeId": "JEB405136001",
+      "boardingSequence": 13,
+      "commitAt": "2026-09-25T06:05:15.686Z",
+      "formerMechanism": "SOLE_ELIGIBLE_DEPARTED__TRUTH_BEYOND_4_STOPS",
+      "formerCommittedStopOffset": 4,
+      "legacyReproduced": true,
+      "current": {
+        "status": "unavailable",
+        "abstentionReasons": [],
+        "formerSelectionZone": "departed",
+        "trueBusZone": "beyond_window",
+        "formerSelectionRejectedBecause": [
+          "departed_boarding_stop"
+        ]
+      }
+    },
+    {
+      "caseId": "pv3-20260925T052712Z-f096de91-JEB405136001:w:s14:2026-09-25T05:28:01.803Z",
+      "routeId": "JEB405136001",
+      "boardingSequence": 14,
+      "commitAt": "2026-09-25T05:30:45.606Z",
+      "formerMechanism": "SOLE_ELIGIBLE_DEPARTED__TRUTH_BEYOND_4_STOPS",
+      "formerCommittedStopOffset": 3,
+      "legacyReproduced": true,
+      "current": {
+        "status": "unavailable",
+        "abstentionReasons": [],
+        "formerSelectionZone": "departed",
+        "trueBusZone": "beyond_window",
+        "formerSelectionRejectedBecause": [
+          "departed_boarding_stop"
+        ]
+      }
+    },
+    {
+      "caseId": "pv3-20260925T052712Z-f096de91-JEB405136001:w:s14:2026-09-25T06:04:01.803Z",
+      "routeId": "JEB405136001",
+      "boardingSequence": 14,
+      "commitAt": "2026-09-25T06:05:15.686Z",
+      "formerMechanism": "SOLE_ELIGIBLE_DEPARTED__TRUTH_BEYOND_4_STOPS",
+      "formerCommittedStopOffset": 3,
+      "legacyReproduced": true,
+      "current": {
+        "status": "unavailable",
+        "abstentionReasons": [],
+        "formerSelectionZone": "departed",
+        "trueBusZone": "beyond_window",
+        "formerSelectionRejectedBecause": [
+          "departed_boarding_stop"
+        ]
+      }
+    },
+    {
+      "caseId": "pv3-20260925T052712Z-f096de91-JEB405136001:w:s15:2026-09-25T06:04:01.803Z",
+      "routeId": "JEB405136001",
+      "boardingSequence": 15,
+      "commitAt": "2026-09-25T06:05:15.686Z",
+      "formerMechanism": "SOLE_ELIGIBLE_DEPARTED__TRUTH_BEYOND_4_STOPS",
+      "formerCommittedStopOffset": 2,
+      "legacyReproduced": true,
+      "current": {
+        "status": "unavailable",
+        "abstentionReasons": [],
+        "formerSelectionZone": "departed",
+        "trueBusZone": "beyond_window",
+        "formerSelectionRejectedBecause": [
+          "departed_boarding_stop"
+        ]
+      }
+    },
+    {
+      "caseId": "pv3-20260925T052712Z-f096de91-JEB405136001:w:s17:2026-09-25T05:52:01.803Z",
+      "routeId": "JEB405136001",
+      "boardingSequence": 17,
+      "commitAt": "2026-09-25T05:55:45.940Z",
+      "formerMechanism": "SOLE_ELIGIBLE_DEPARTED__TRUTH_BEYOND_4_STOPS",
+      "formerCommittedStopOffset": 4,
+      "legacyReproduced": true,
+      "current": {
+        "status": "unavailable",
+        "abstentionReasons": [],
+        "formerSelectionZone": "departed",
+        "trueBusZone": "beyond_window",
+        "formerSelectionRejectedBecause": [
+          "departed_boarding_stop"
+        ]
+      }
+    },
+    {
+      "caseId": "pv3-20260925T052712Z-f096de91-JEB405136001:w:s17:2026-09-25T05:54:01.803Z",
+      "routeId": "JEB405136001",
+      "boardingSequence": 17,
+      "commitAt": "2026-09-25T05:55:45.940Z",
+      "formerMechanism": "SOLE_ELIGIBLE_DEPARTED__TRUTH_BEYOND_4_STOPS",
+      "formerCommittedStopOffset": 4,
+      "legacyReproduced": true,
+      "current": {
+        "status": "unavailable",
+        "abstentionReasons": [],
+        "formerSelectionZone": "departed",
+        "trueBusZone": "beyond_window",
+        "formerSelectionRejectedBecause": [
+          "departed_boarding_stop"
+        ]
+      }
+    },
+    {
+      "caseId": "pv3-20260925T052712Z-f096de91-JEB405136001:w:s18:2026-09-25T05:52:01.803Z",
+      "routeId": "JEB405136001",
+      "boardingSequence": 18,
+      "commitAt": "2026-09-25T05:55:45.940Z",
+      "formerMechanism": "SOLE_ELIGIBLE_DEPARTED__TRUTH_BEYOND_4_STOPS",
+      "formerCommittedStopOffset": 3,
+      "legacyReproduced": true,
+      "current": {
+        "status": "unavailable",
+        "abstentionReasons": [],
+        "formerSelectionZone": "departed",
+        "trueBusZone": "beyond_window",
+        "formerSelectionRejectedBecause": [
+          "departed_boarding_stop"
+        ]
+      }
+    },
+    {
+      "caseId": "pv3-20260925T052712Z-f096de91-JEB405136001:w:s18:2026-09-25T05:54:01.803Z",
+      "routeId": "JEB405136001",
+      "boardingSequence": 18,
+      "commitAt": "2026-09-25T05:55:45.940Z",
+      "formerMechanism": "SOLE_ELIGIBLE_DEPARTED__TRUTH_BEYOND_4_STOPS",
+      "formerCommittedStopOffset": 3,
+      "legacyReproduced": true,
+      "current": {
+        "status": "unavailable",
+        "abstentionReasons": [],
+        "formerSelectionZone": "departed",
+        "trueBusZone": "beyond_window",
+        "formerSelectionRejectedBecause": [
+          "departed_boarding_stop"
+        ]
+      }
+    },
+    {
+      "caseId": "pv3-20260925T052712Z-f096de91-JEB405136001:w:s20:2026-09-25T05:56:01.803Z",
+      "routeId": "JEB405136001",
+      "boardingSequence": 20,
+      "commitAt": "2026-09-25T06:02:52.182Z",
+      "formerMechanism": "SOLE_ELIGIBLE_DEPARTED__TRUTH_BEYOND_4_STOPS",
+      "formerCommittedStopOffset": 4,
+      "legacyReproduced": true,
+      "current": {
+        "status": "unavailable",
+        "abstentionReasons": [],
+        "formerSelectionZone": "departed",
+        "trueBusZone": "beyond_window",
+        "formerSelectionRejectedBecause": [
+          "departed_boarding_stop"
+        ]
+      }
+    },
+    {
+      "caseId": "pv3-20260925T052712Z-f096de91-JEB405136001:w:s20:2026-09-25T05:58:01.803Z",
+      "routeId": "JEB405136001",
+      "boardingSequence": 20,
+      "commitAt": "2026-09-25T06:02:52.182Z",
+      "formerMechanism": "SOLE_ELIGIBLE_DEPARTED__TRUTH_BEYOND_4_STOPS",
+      "formerCommittedStopOffset": 4,
+      "legacyReproduced": true,
+      "current": {
+        "status": "unavailable",
+        "abstentionReasons": [],
+        "formerSelectionZone": "departed",
+        "trueBusZone": "beyond_window",
+        "formerSelectionRejectedBecause": [
+          "departed_boarding_stop"
+        ]
+      }
+    },
+    {
+      "caseId": "pv3-20260925T052712Z-f096de91-JEB405136001:w:s20:2026-09-25T06:00:01.803Z",
+      "routeId": "JEB405136001",
+      "boardingSequence": 20,
+      "commitAt": "2026-09-25T06:02:52.182Z",
+      "formerMechanism": "SOLE_ELIGIBLE_DEPARTED__TRUTH_BEYOND_4_STOPS",
+      "formerCommittedStopOffset": 4,
+      "legacyReproduced": true,
+      "current": {
+        "status": "unavailable",
+        "abstentionReasons": [],
+        "formerSelectionZone": "departed",
+        "trueBusZone": "beyond_window",
+        "formerSelectionRejectedBecause": [
+          "departed_boarding_stop"
+        ]
+      }
+    },
+    {
+      "caseId": "pv3-20260925T052712Z-f096de91-JEB405136001:w:s21:2026-09-25T06:00:01.803Z",
+      "routeId": "JEB405136001",
+      "boardingSequence": 21,
+      "commitAt": "2026-09-25T06:02:52.182Z",
+      "formerMechanism": "SOLE_ELIGIBLE_DEPARTED__TRUTH_BEYOND_4_STOPS",
+      "formerCommittedStopOffset": 3,
+      "legacyReproduced": true,
+      "current": {
+        "status": "unavailable",
+        "abstentionReasons": [],
+        "formerSelectionZone": "departed",
+        "trueBusZone": "beyond_window",
+        "formerSelectionRejectedBecause": [
+          "departed_boarding_stop"
+        ]
+      }
+    },
+    {
+      "caseId": "pv3-20260925T052712Z-f096de91-JEB405136001:w:s22:2026-09-25T06:04:01.803Z",
+      "routeId": "JEB405136001",
+      "boardingSequence": 22,
+      "commitAt": "2026-09-25T06:05:15.686Z",
+      "formerMechanism": "SOLE_ELIGIBLE_DEPARTED__TRUTH_BEYOND_4_STOPS",
+      "formerCommittedStopOffset": 3,
+      "legacyReproduced": true,
+      "current": {
+        "status": "unavailable",
+        "abstentionReasons": [],
+        "formerSelectionZone": "departed",
+        "trueBusZone": "beyond_window",
+        "formerSelectionRejectedBecause": [
+          "departed_boarding_stop"
+        ]
+      }
+    },
+    {
+      "caseId": "pv3-20260925T052712Z-f096de91-JEB405136001:w:s23:2026-09-25T06:04:01.803Z",
+      "routeId": "JEB405136001",
+      "boardingSequence": 23,
+      "commitAt": "2026-09-25T06:05:15.686Z",
+      "formerMechanism": "SOLE_ELIGIBLE_DEPARTED__TRUTH_BEYOND_4_STOPS",
+      "formerCommittedStopOffset": 2,
+      "legacyReproduced": true,
+      "current": {
+        "status": "unavailable",
+        "abstentionReasons": [],
+        "formerSelectionZone": "departed",
+        "trueBusZone": "beyond_window",
+        "formerSelectionRejectedBecause": [
+          "departed_boarding_stop"
+        ]
+      }
+    },
+    {
+      "caseId": "pv3-20260925T052712Z-f096de91-JEB405136001:w:s25:2026-09-25T05:28:01.803Z",
+      "routeId": "JEB405136001",
+      "boardingSequence": 25,
+      "commitAt": "2026-09-25T05:30:45.606Z",
+      "formerMechanism": "SOLE_ELIGIBLE_DEPARTED__TRUTH_BEYOND_4_STOPS",
+      "formerCommittedStopOffset": 4,
+      "legacyReproduced": true,
+      "current": {
+        "status": "unavailable",
+        "abstentionReasons": [],
+        "formerSelectionZone": "departed",
+        "trueBusZone": "beyond_window",
+        "formerSelectionRejectedBecause": [
+          "departed_boarding_stop"
+        ]
+      }
+    },
+    {
+      "caseId": "pv3-20260925T052712Z-f096de91-JEB405136001:w:s26:2026-09-25T05:28:01.803Z",
+      "routeId": "JEB405136001",
+      "boardingSequence": 26,
+      "commitAt": "2026-09-25T05:30:45.606Z",
+      "formerMechanism": "SOLE_ELIGIBLE_DEPARTED__TRUTH_BEYOND_4_STOPS",
+      "formerCommittedStopOffset": 3,
+      "legacyReproduced": true,
+      "current": {
+        "status": "unavailable",
+        "abstentionReasons": [],
+        "formerSelectionZone": "departed",
+        "trueBusZone": "beyond_window",
+        "formerSelectionRejectedBecause": [
+          "departed_boarding_stop"
+        ]
+      }
+    },
+    {
+      "caseId": "pv3-20260925T052712Z-f096de91-JEB405136001:w:s27:2026-09-25T05:28:01.803Z",
+      "routeId": "JEB405136001",
+      "boardingSequence": 27,
+      "commitAt": "2026-09-25T05:30:45.606Z",
+      "formerMechanism": "SOLE_ELIGIBLE_DEPARTED__TRUTH_BEYOND_4_STOPS",
+      "formerCommittedStopOffset": 2,
+      "legacyReproduced": true,
+      "current": {
+        "status": "unavailable",
+        "abstentionReasons": [],
+        "formerSelectionZone": "departed",
+        "trueBusZone": "beyond_window",
+        "formerSelectionRejectedBecause": [
+          "departed_boarding_stop"
+        ]
+      }
+    },
+    {
+      "caseId": "pv3-20260925T052712Z-f096de91-JEB405136001:w:s29:2026-09-25T05:54:01.803Z",
+      "routeId": "JEB405136001",
+      "boardingSequence": 29,
+      "commitAt": "2026-09-25T05:55:45.940Z",
+      "formerMechanism": "SOLE_ELIGIBLE_DEPARTED__TRUTH_BEYOND_4_STOPS",
+      "formerCommittedStopOffset": 4,
+      "legacyReproduced": true,
+      "current": {
+        "status": "unavailable",
+        "abstentionReasons": [],
+        "formerSelectionZone": "departed",
+        "trueBusZone": "beyond_window",
+        "formerSelectionRejectedBecause": [
+          "departed_boarding_stop"
+        ]
+      }
+    },
+    {
+      "caseId": "pv3-20260925T052712Z-f096de91-JEB405136001:w:s30:2026-09-25T05:54:01.803Z",
+      "routeId": "JEB405136001",
+      "boardingSequence": 30,
+      "commitAt": "2026-09-25T05:55:45.940Z",
+      "formerMechanism": "SOLE_ELIGIBLE_DEPARTED__TRUTH_BEYOND_4_STOPS",
+      "formerCommittedStopOffset": 3,
+      "legacyReproduced": true,
+      "current": {
+        "status": "unavailable",
+        "abstentionReasons": [],
+        "formerSelectionZone": "departed",
+        "trueBusZone": "beyond_window",
+        "formerSelectionRejectedBecause": [
+          "departed_boarding_stop"
+        ]
+      }
+    },
+    {
+      "caseId": "pv3-20260925T052712Z-f096de91-JEB405136002:w:s4:2026-09-25T05:28:03.148Z",
+      "routeId": "JEB405136002",
+      "boardingSequence": 4,
+      "commitAt": "2026-09-25T05:32:46.667Z",
+      "formerMechanism": "SOLE_ELIGIBLE_DEPARTED__TRUTH_NOT_IN_FEED",
+      "formerCommittedStopOffset": 4,
+      "legacyReproduced": true,
+      "current": {
+        "status": "unavailable",
+        "abstentionReasons": [],
+        "formerSelectionZone": "departed",
+        "formerSelectionRejectedBecause": [
+          "departed_boarding_stop"
+        ]
+      }
+    },
+    {
+      "caseId": "pv3-20260925T052712Z-f096de91-JEB405136002:w:s4:2026-09-25T05:30:03.148Z",
+      "routeId": "JEB405136002",
+      "boardingSequence": 4,
+      "commitAt": "2026-09-25T05:32:46.667Z",
+      "formerMechanism": "SOLE_ELIGIBLE_DEPARTED__TRUTH_NOT_IN_FEED",
+      "formerCommittedStopOffset": 4,
+      "legacyReproduced": true,
+      "current": {
+        "status": "unavailable",
+        "abstentionReasons": [],
+        "formerSelectionZone": "departed",
+        "formerSelectionRejectedBecause": [
+          "departed_boarding_stop"
+        ]
+      }
+    },
+    {
+      "caseId": "pv3-20260925T052712Z-f096de91-JEB405136002:w:s4:2026-09-25T05:46:03.148Z",
+      "routeId": "JEB405136002",
+      "boardingSequence": 4,
+      "commitAt": "2026-09-25T05:47:42.254Z",
+      "formerMechanism": "SOLE_ELIGIBLE_DEPARTED__TRUTH_NOT_IN_FEED",
+      "formerCommittedStopOffset": 4,
+      "legacyReproduced": true,
+      "current": {
+        "status": "unavailable",
+        "abstentionReasons": [],
+        "formerSelectionZone": "departed",
+        "formerSelectionRejectedBecause": [
+          "departed_boarding_stop"
+        ]
+      }
+    },
+    {
+      "caseId": "pv3-20260925T052712Z-f096de91-JEB405136002:w:s5:2026-09-25T05:30:03.148Z",
+      "routeId": "JEB405136002",
+      "boardingSequence": 5,
+      "commitAt": "2026-09-25T05:32:46.667Z",
+      "formerMechanism": "SOLE_ELIGIBLE_DEPARTED__TRUTH_NOT_IN_FEED",
+      "formerCommittedStopOffset": 3,
+      "legacyReproduced": true,
+      "current": {
+        "status": "unavailable",
+        "abstentionReasons": [],
+        "formerSelectionZone": "departed",
+        "formerSelectionRejectedBecause": [
+          "departed_boarding_stop"
+        ]
+      }
+    },
+    {
+      "caseId": "pv3-20260925T052712Z-f096de91-JEB405136002:w:s5:2026-09-25T05:46:03.148Z",
+      "routeId": "JEB405136002",
+      "boardingSequence": 5,
+      "commitAt": "2026-09-25T05:47:42.254Z",
+      "formerMechanism": "SOLE_ELIGIBLE_DEPARTED__TRUTH_NOT_IN_FEED",
+      "formerCommittedStopOffset": 3,
+      "legacyReproduced": true,
+      "current": {
+        "status": "unavailable",
+        "abstentionReasons": [],
+        "formerSelectionZone": "departed",
+        "formerSelectionRejectedBecause": [
+          "departed_boarding_stop"
+        ]
+      }
+    },
+    {
+      "caseId": "pv3-20260925T052712Z-f096de91-JEB405136002:w:s5:2026-09-25T05:48:03.148Z",
+      "routeId": "JEB405136002",
+      "boardingSequence": 5,
+      "commitAt": "2026-09-25T05:49:06.842Z",
+      "formerMechanism": "SOLE_ELIGIBLE_DEPARTED__TRUTH_NOT_IN_FEED",
+      "formerCommittedStopOffset": 4,
+      "legacyReproduced": true,
+      "current": {
+        "status": "unavailable",
+        "abstentionReasons": [],
+        "formerSelectionZone": "departed",
+        "formerSelectionRejectedBecause": [
+          "departed_boarding_stop"
+        ]
+      }
+    },
+    {
+      "caseId": "pv3-20260925T052712Z-f096de91-JEB405136002:w:s6:2026-09-25T05:30:03.148Z",
+      "routeId": "JEB405136002",
+      "boardingSequence": 6,
+      "commitAt": "2026-09-25T05:32:46.667Z",
+      "formerMechanism": "SOLE_ELIGIBLE_DEPARTED__TRUTH_NOT_IN_FEED",
+      "formerCommittedStopOffset": 2,
+      "legacyReproduced": true,
+      "current": {
+        "status": "unavailable",
+        "abstentionReasons": [],
+        "formerSelectionZone": "departed",
+        "formerSelectionRejectedBecause": [
+          "departed_boarding_stop"
+        ]
+      }
+    },
+    {
+      "caseId": "pv3-20260925T052712Z-f096de91-JEB405136002:w:s6:2026-09-25T05:32:03.148Z",
+      "routeId": "JEB405136002",
+      "boardingSequence": 6,
+      "commitAt": "2026-09-25T05:36:17.698Z",
+      "formerMechanism": "SOLE_ELIGIBLE_DEPARTED__TRUTH_NOT_IN_FEED",
+      "formerCommittedStopOffset": 4,
+      "legacyReproduced": true,
+      "current": {
+        "status": "unavailable",
+        "abstentionReasons": [],
+        "formerSelectionZone": "departed",
+        "formerSelectionRejectedBecause": [
+          "departed_boarding_stop"
+        ]
+      }
+    },
+    {
+      "caseId": "pv3-20260925T052712Z-f096de91-JEB405136002:w:s6:2026-09-25T05:34:03.148Z",
+      "routeId": "JEB405136002",
+      "boardingSequence": 6,
+      "commitAt": "2026-09-25T05:36:17.698Z",
+      "formerMechanism": "SOLE_ELIGIBLE_DEPARTED__TRUTH_NOT_IN_FEED",
+      "formerCommittedStopOffset": 4,
+      "legacyReproduced": true,
+      "current": {
+        "status": "unavailable",
+        "abstentionReasons": [],
+        "formerSelectionZone": "departed",
+        "formerSelectionRejectedBecause": [
+          "departed_boarding_stop"
+        ]
+      }
+    },
+    {
+      "caseId": "pv3-20260925T052712Z-f096de91-JEB405136002:w:s6:2026-09-25T05:48:03.148Z",
+      "routeId": "JEB405136002",
+      "boardingSequence": 6,
+      "commitAt": "2026-09-25T05:49:06.842Z",
+      "formerMechanism": "SOLE_ELIGIBLE_DEPARTED__TRUTH_NOT_IN_FEED",
+      "formerCommittedStopOffset": 3,
+      "legacyReproduced": true,
+      "current": {
+        "status": "unavailable",
+        "abstentionReasons": [],
+        "formerSelectionZone": "departed",
+        "formerSelectionRejectedBecause": [
+          "departed_boarding_stop"
+        ]
+      }
+    },
+    {
+      "caseId": "pv3-20260925T052712Z-f096de91-JEB405136002:w:s7:2026-09-25T05:32:03.148Z",
+      "routeId": "JEB405136002",
+      "boardingSequence": 7,
+      "commitAt": "2026-09-25T05:36:17.698Z",
+      "formerMechanism": "SOLE_ELIGIBLE_DEPARTED__TRUTH_NOT_IN_FEED",
+      "formerCommittedStopOffset": 3,
+      "legacyReproduced": true,
+      "current": {
+        "status": "unavailable",
+        "abstentionReasons": [],
+        "formerSelectionZone": "departed",
+        "formerSelectionRejectedBecause": [
+          "departed_boarding_stop"
+        ]
+      }
+    },
+    {
+      "caseId": "pv3-20260925T052712Z-f096de91-JEB405136002:w:s7:2026-09-25T05:34:03.148Z",
+      "routeId": "JEB405136002",
+      "boardingSequence": 7,
+      "commitAt": "2026-09-25T05:36:17.698Z",
+      "formerMechanism": "SOLE_ELIGIBLE_DEPARTED__TRUTH_NOT_IN_FEED",
+      "formerCommittedStopOffset": 3,
+      "legacyReproduced": true,
+      "current": {
+        "status": "unavailable",
+        "abstentionReasons": [],
+        "formerSelectionZone": "departed",
+        "formerSelectionRejectedBecause": [
+          "departed_boarding_stop"
+        ]
+      }
+    },
+    {
+      "caseId": "pv3-20260925T052712Z-f096de91-JEB405136002:w:s7:2026-09-25T05:36:03.148Z",
+      "routeId": "JEB405136002",
+      "boardingSequence": 7,
+      "commitAt": "2026-09-25T05:37:17.240Z",
+      "formerMechanism": "SOLE_ELIGIBLE_DEPARTED__TRUTH_NOT_IN_FEED",
+      "formerCommittedStopOffset": 4,
+      "legacyReproduced": true,
+      "current": {
+        "status": "unavailable",
+        "abstentionReasons": [],
+        "formerSelectionZone": "departed",
+        "formerSelectionRejectedBecause": [
+          "departed_boarding_stop"
+        ]
+      }
+    },
+    {
+      "caseId": "pv3-20260925T052712Z-f096de91-JEB405136002:w:s7:2026-09-25T05:48:03.148Z",
+      "routeId": "JEB405136002",
+      "boardingSequence": 7,
+      "commitAt": "2026-09-25T05:49:06.842Z",
+      "formerMechanism": "SOLE_ELIGIBLE_DEPARTED__TRUTH_NOT_IN_FEED",
+      "formerCommittedStopOffset": 2,
+      "legacyReproduced": true,
+      "current": {
+        "status": "unavailable",
+        "abstentionReasons": [],
+        "formerSelectionZone": "departed",
+        "formerSelectionRejectedBecause": [
+          "departed_boarding_stop"
+        ]
+      }
+    },
+    {
+      "caseId": "pv3-20260925T052712Z-f096de91-JEB405136002:w:s8:2026-09-25T05:34:03.148Z",
+      "routeId": "JEB405136002",
+      "boardingSequence": 8,
+      "commitAt": "2026-09-25T05:36:17.698Z",
+      "formerMechanism": "SOLE_ELIGIBLE_DEPARTED__TRUTH_NOT_IN_FEED",
+      "formerCommittedStopOffset": 2,
+      "legacyReproduced": true,
+      "current": {
+        "status": "unavailable",
+        "abstentionReasons": [],
+        "formerSelectionZone": "departed",
+        "formerSelectionRejectedBecause": [
+          "departed_boarding_stop"
+        ]
+      }
+    },
+    {
+      "caseId": "pv3-20260925T052712Z-f096de91-JEB405136002:w:s8:2026-09-25T05:36:03.148Z",
+      "routeId": "JEB405136002",
+      "boardingSequence": 8,
+      "commitAt": "2026-09-25T05:37:17.240Z",
+      "formerMechanism": "SOLE_ELIGIBLE_DEPARTED__TRUTH_NOT_IN_FEED",
+      "formerCommittedStopOffset": 3,
+      "legacyReproduced": true,
+      "current": {
+        "status": "unavailable",
+        "abstentionReasons": [],
+        "formerSelectionZone": "departed",
+        "formerSelectionRejectedBecause": [
+          "departed_boarding_stop"
+        ]
+      }
+    },
+    {
+      "caseId": "pv3-20260925T052712Z-f096de91-JEB405136002:w:s8:2026-09-25T05:38:03.148Z",
+      "routeId": "JEB405136002",
+      "boardingSequence": 8,
+      "commitAt": "2026-09-25T05:39:26.698Z",
+      "formerMechanism": "SOLE_ELIGIBLE_DEPARTED__TRUTH_NOT_IN_FEED",
+      "formerCommittedStopOffset": 4,
+      "legacyReproduced": true,
+      "current": {
+        "status": "unavailable",
+        "abstentionReasons": [],
+        "formerSelectionZone": "departed",
+        "formerSelectionRejectedBecause": [
+          "departed_boarding_stop"
+        ]
+      }
+    },
+    {
+      "caseId": "pv3-20260925T052712Z-f096de91-JEB405136002:w:s8:2026-09-25T05:40:03.148Z",
+      "routeId": "JEB405136002",
+      "boardingSequence": 8,
+      "commitAt": "2026-09-25T05:41:26.654Z",
+      "formerMechanism": "SOLE_ELIGIBLE_DEPARTED__TRUTH_NOT_IN_FEED",
+      "formerCommittedStopOffset": 4,
+      "legacyReproduced": true,
+      "current": {
+        "status": "unavailable",
+        "abstentionReasons": [],
+        "formerSelectionZone": "departed",
+        "formerSelectionRejectedBecause": [
+          "departed_boarding_stop"
+        ]
+      }
+    },
+    {
+      "caseId": "pv3-20260925T052712Z-f096de91-JEB405136002:w:s8:2026-09-25T05:50:03.148Z",
+      "routeId": "JEB405136002",
+      "boardingSequence": 8,
+      "commitAt": "2026-09-25T05:55:46.770Z",
+      "formerMechanism": "SOLE_ELIGIBLE_DEPARTED__TRUTH_NOT_IN_FEED",
+      "formerCommittedStopOffset": 4,
+      "legacyReproduced": true,
+      "current": {
+        "status": "unavailable",
+        "abstentionReasons": [],
+        "formerSelectionZone": "departed",
+        "formerSelectionRejectedBecause": [
+          "departed_boarding_stop"
+        ]
+      }
+    },
+    {
+      "caseId": "pv3-20260925T052712Z-f096de91-JEB405136002:w:s8:2026-09-25T05:52:03.148Z",
+      "routeId": "JEB405136002",
+      "boardingSequence": 8,
+      "commitAt": "2026-09-25T05:55:46.770Z",
+      "formerMechanism": "SOLE_ELIGIBLE_DEPARTED__TRUTH_NOT_IN_FEED",
+      "formerCommittedStopOffset": 4,
+      "legacyReproduced": true,
+      "current": {
+        "status": "unavailable",
+        "abstentionReasons": [],
+        "formerSelectionZone": "departed",
+        "formerSelectionRejectedBecause": [
+          "departed_boarding_stop"
+        ]
+      }
+    },
+    {
+      "caseId": "pv3-20260925T052712Z-f096de91-JEB405136002:w:s8:2026-09-25T05:54:03.148Z",
+      "routeId": "JEB405136002",
+      "boardingSequence": 8,
+      "commitAt": "2026-09-25T05:55:46.770Z",
+      "formerMechanism": "SOLE_ELIGIBLE_DEPARTED__TRUTH_NOT_IN_FEED",
+      "formerCommittedStopOffset": 4,
+      "legacyReproduced": true,
+      "current": {
+        "status": "unavailable",
+        "abstentionReasons": [],
+        "formerSelectionZone": "departed",
+        "formerSelectionRejectedBecause": [
+          "departed_boarding_stop"
+        ]
+      }
+    },
+    {
+      "caseId": "pv3-20260925T052712Z-f096de91-JEB405136002:w:s8:2026-09-25T05:56:03.148Z",
+      "routeId": "JEB405136002",
+      "boardingSequence": 8,
+      "commitAt": "2026-09-25T05:57:47.570Z",
+      "formerMechanism": "SOLE_ELIGIBLE_DEPARTED__TRUTH_NOT_IN_FEED",
+      "formerCommittedStopOffset": 4,
+      "legacyReproduced": true,
+      "current": {
+        "status": "unavailable",
+        "abstentionReasons": [],
+        "formerSelectionZone": "departed",
+        "formerSelectionRejectedBecause": [
+          "departed_boarding_stop"
+        ]
+      }
+    },
+    {
+      "caseId": "pv3-20260925T052712Z-f096de91-JEB405136002:w:s9:2026-09-25T05:36:03.148Z",
+      "routeId": "JEB405136002",
+      "boardingSequence": 9,
+      "commitAt": "2026-09-25T05:37:17.240Z",
+      "formerMechanism": "SOLE_ELIGIBLE_DEPARTED__TRUTH_NOT_IN_FEED",
+      "formerCommittedStopOffset": 2,
+      "legacyReproduced": true,
+      "current": {
+        "status": "unavailable",
+        "abstentionReasons": [],
+        "formerSelectionZone": "departed",
+        "formerSelectionRejectedBecause": [
+          "departed_boarding_stop"
+        ]
+      }
+    },
+    {
+      "caseId": "pv3-20260925T052712Z-f096de91-JEB405136002:w:s9:2026-09-25T05:38:03.148Z",
+      "routeId": "JEB405136002",
+      "boardingSequence": 9,
+      "commitAt": "2026-09-25T05:39:26.698Z",
+      "formerMechanism": "SOLE_ELIGIBLE_DEPARTED__TRUTH_NOT_IN_FEED",
+      "formerCommittedStopOffset": 3,
+      "legacyReproduced": true,
+      "current": {
+        "status": "unavailable",
+        "abstentionReasons": [],
+        "formerSelectionZone": "departed",
+        "formerSelectionRejectedBecause": [
+          "departed_boarding_stop"
+        ]
+      }
+    },
+    {
+      "caseId": "pv3-20260925T052712Z-f096de91-JEB405136002:w:s9:2026-09-25T05:40:03.148Z",
+      "routeId": "JEB405136002",
+      "boardingSequence": 9,
+      "commitAt": "2026-09-25T05:41:26.654Z",
+      "formerMechanism": "SOLE_ELIGIBLE_DEPARTED__TRUTH_NOT_IN_FEED",
+      "formerCommittedStopOffset": 3,
+      "legacyReproduced": true,
+      "current": {
+        "status": "unavailable",
+        "abstentionReasons": [],
+        "formerSelectionZone": "departed",
+        "formerSelectionRejectedBecause": [
+          "departed_boarding_stop"
+        ]
+      }
+    },
+    {
+      "caseId": "pv3-20260925T052712Z-f096de91-JEB405136002:w:s9:2026-09-25T05:52:03.148Z",
+      "routeId": "JEB405136002",
+      "boardingSequence": 9,
+      "commitAt": "2026-09-25T05:55:46.770Z",
+      "formerMechanism": "SOLE_ELIGIBLE_DEPARTED__TRUTH_NOT_IN_FEED",
+      "formerCommittedStopOffset": 3,
+      "legacyReproduced": true,
+      "current": {
+        "status": "unavailable",
+        "abstentionReasons": [],
+        "formerSelectionZone": "departed",
+        "formerSelectionRejectedBecause": [
+          "departed_boarding_stop"
+        ]
+      }
+    },
+    {
+      "caseId": "pv3-20260925T052712Z-f096de91-JEB405136002:w:s9:2026-09-25T05:54:03.148Z",
+      "routeId": "JEB405136002",
+      "boardingSequence": 9,
+      "commitAt": "2026-09-25T05:55:46.770Z",
+      "formerMechanism": "SOLE_ELIGIBLE_DEPARTED__TRUTH_NOT_IN_FEED",
+      "formerCommittedStopOffset": 3,
+      "legacyReproduced": true,
+      "current": {
+        "status": "unavailable",
+        "abstentionReasons": [],
+        "formerSelectionZone": "departed",
+        "formerSelectionRejectedBecause": [
+          "departed_boarding_stop"
+        ]
+      }
+    },
+    {
+      "caseId": "pv3-20260925T052712Z-f096de91-JEB405136002:w:s9:2026-09-25T05:56:03.148Z",
+      "routeId": "JEB405136002",
+      "boardingSequence": 9,
+      "commitAt": "2026-09-25T05:57:47.570Z",
+      "formerMechanism": "SOLE_ELIGIBLE_DEPARTED__TRUTH_NOT_IN_FEED",
+      "formerCommittedStopOffset": 3,
+      "legacyReproduced": true,
+      "current": {
+        "status": "unavailable",
+        "abstentionReasons": [],
+        "formerSelectionZone": "departed",
+        "formerSelectionRejectedBecause": [
+          "departed_boarding_stop"
+        ]
+      }
+    },
+    {
+      "caseId": "pv3-20260925T052712Z-f096de91-JEB405136002:w:s10:2026-09-25T05:38:03.148Z",
+      "routeId": "JEB405136002",
+      "boardingSequence": 10,
+      "commitAt": "2026-09-25T05:39:26.698Z",
+      "formerMechanism": "SOLE_ELIGIBLE_DEPARTED__TRUTH_NOT_IN_FEED",
+      "formerCommittedStopOffset": 2,
+      "legacyReproduced": true,
+      "current": {
+        "status": "unavailable",
+        "abstentionReasons": [],
+        "formerSelectionZone": "departed",
+        "formerSelectionRejectedBecause": [
+          "departed_boarding_stop"
+        ]
+      }
+    },
+    {
+      "caseId": "pv3-20260925T052712Z-f096de91-JEB405136002:w:s10:2026-09-25T05:40:03.148Z",
+      "routeId": "JEB405136002",
+      "boardingSequence": 10,
+      "commitAt": "2026-09-25T05:41:26.654Z",
+      "formerMechanism": "SOLE_ELIGIBLE_DEPARTED__TRUTH_NOT_IN_FEED",
+      "formerCommittedStopOffset": 2,
+      "legacyReproduced": true,
+      "current": {
+        "status": "unavailable",
+        "abstentionReasons": [],
+        "formerSelectionZone": "departed",
+        "formerSelectionRejectedBecause": [
+          "departed_boarding_stop"
+        ]
+      }
+    },
+    {
+      "caseId": "pv3-20260925T052712Z-f096de91-JEB405136002:w:s10:2026-09-25T05:54:03.148Z",
+      "routeId": "JEB405136002",
+      "boardingSequence": 10,
+      "commitAt": "2026-09-25T05:55:46.770Z",
+      "formerMechanism": "SOLE_ELIGIBLE_DEPARTED__TRUTH_NOT_IN_FEED",
+      "formerCommittedStopOffset": 2,
+      "legacyReproduced": true,
+      "current": {
+        "status": "unavailable",
+        "abstentionReasons": [],
+        "formerSelectionZone": "departed",
+        "formerSelectionRejectedBecause": [
+          "departed_boarding_stop"
+        ]
+      }
+    },
+    {
+      "caseId": "pv3-20260925T052712Z-f096de91-JEB405136002:w:s10:2026-09-25T05:56:03.148Z",
+      "routeId": "JEB405136002",
+      "boardingSequence": 10,
+      "commitAt": "2026-09-25T05:57:47.570Z",
+      "formerMechanism": "SOLE_ELIGIBLE_DEPARTED__TRUTH_NOT_IN_FEED",
+      "formerCommittedStopOffset": 2,
+      "legacyReproduced": true,
+      "current": {
+        "status": "unavailable",
+        "abstentionReasons": [],
+        "formerSelectionZone": "departed",
+        "formerSelectionRejectedBecause": [
+          "departed_boarding_stop"
+        ]
+      }
+    },
+    {
+      "caseId": "pv3-20260925T052712Z-f096de91-JEB405136002:w:s11:2026-09-25T05:40:03.148Z",
+      "routeId": "JEB405136002",
+      "boardingSequence": 11,
+      "commitAt": "2026-09-25T05:41:26.654Z",
+      "formerMechanism": "SOLE_ELIGIBLE_DEPARTED__TRUTH_NOT_IN_FEED",
+      "formerCommittedStopOffset": 1,
+      "legacyReproduced": true,
+      "current": {
+        "status": "unavailable",
+        "abstentionReasons": [
+          "boarding_stop_reached_during_session",
+          "vehicle_at_boarding_stop_unresolved"
+        ],
+        "formerSelectionZone": "boarding_stop_unresolved",
+        "formerSelectionRejectedBecause": [
+          "boarding_stop_position_unresolved"
+        ]
+      }
+    },
+    {
+      "caseId": "pv3-20260925T052712Z-f096de91-JEB405136002:w:s11:2026-09-25T05:56:03.148Z",
+      "routeId": "JEB405136002",
+      "boardingSequence": 11,
+      "commitAt": "2026-09-25T05:57:47.570Z",
+      "formerMechanism": "SOLE_ELIGIBLE_DEPARTED__TRUTH_NOT_IN_FEED",
+      "formerCommittedStopOffset": 1,
+      "legacyReproduced": true,
+      "current": {
+        "status": "unavailable",
+        "abstentionReasons": [
+          "boarding_stop_reached_during_session",
+          "vehicle_at_boarding_stop_unresolved"
+        ],
+        "formerSelectionZone": "boarding_stop_unresolved",
+        "formerSelectionRejectedBecause": [
+          "boarding_stop_position_unresolved"
+        ]
+      }
+    },
+    {
+      "caseId": "pv3-20260925T052712Z-f096de91-JEB405136002:w:s11:2026-09-25T05:58:03.148Z",
+      "routeId": "JEB405136002",
+      "boardingSequence": 11,
+      "commitAt": "2026-09-25T06:02:53.011Z",
+      "formerMechanism": "SOLE_ELIGIBLE_DEPARTED__TRUTH_BEYOND_4_STOPS",
+      "formerCommittedStopOffset": 4,
+      "legacyReproduced": true,
+      "current": {
+        "status": "unavailable",
+        "abstentionReasons": [],
+        "formerSelectionZone": "departed",
+        "trueBusZone": "beyond_window",
+        "formerSelectionRejectedBecause": [
+          "departed_boarding_stop"
+        ]
+      }
+    },
+    {
+      "caseId": "pv3-20260925T052712Z-f096de91-JEB405136002:w:s11:2026-09-25T06:00:03.148Z",
+      "routeId": "JEB405136002",
+      "boardingSequence": 11,
+      "commitAt": "2026-09-25T06:02:53.011Z",
+      "formerMechanism": "SOLE_ELIGIBLE_DEPARTED__TRUTH_BEYOND_4_STOPS",
+      "formerCommittedStopOffset": 4,
+      "legacyReproduced": true,
+      "current": {
+        "status": "unavailable",
+        "abstentionReasons": [],
+        "formerSelectionZone": "departed",
+        "trueBusZone": "beyond_window",
+        "formerSelectionRejectedBecause": [
+          "departed_boarding_stop"
+        ]
+      }
+    },
+    {
+      "caseId": "pv3-20260925T052712Z-f096de91-JEB405136002:w:s12:2026-09-25T06:00:03.148Z",
+      "routeId": "JEB405136002",
+      "boardingSequence": 12,
+      "commitAt": "2026-09-25T06:02:53.011Z",
+      "formerMechanism": "SOLE_ELIGIBLE_DEPARTED__TRUTH_BEYOND_4_STOPS",
+      "formerCommittedStopOffset": 3,
+      "legacyReproduced": true,
+      "current": {
+        "status": "unavailable",
+        "abstentionReasons": [],
+        "formerSelectionZone": "departed",
+        "trueBusZone": "beyond_window",
+        "formerSelectionRejectedBecause": [
+          "departed_boarding_stop"
+        ]
+      }
+    },
+    {
+      "caseId": "pv3-20260925T052712Z-f096de91-JEB405136002:w:s13:2026-09-25T05:46:03.148Z",
+      "routeId": "JEB405136002",
+      "boardingSequence": 13,
+      "commitAt": "2026-09-25T05:47:42.254Z",
+      "formerMechanism": "SOLE_ELIGIBLE_DEPARTED__TRUTH_BEYOND_4_STOPS",
+      "formerCommittedStopOffset": 3,
+      "legacyReproduced": true,
+      "current": {
+        "status": "unavailable",
+        "abstentionReasons": [],
+        "formerSelectionZone": "departed",
+        "trueBusZone": "beyond_window",
+        "formerSelectionRejectedBecause": [
+          "departed_boarding_stop"
+        ]
+      }
+    },
+    {
+      "caseId": "pv3-20260925T052712Z-f096de91-JEB405136002:w:s14:2026-09-25T05:48:03.148Z",
+      "routeId": "JEB405136002",
+      "boardingSequence": 14,
+      "commitAt": "2026-09-25T05:49:06.842Z",
+      "formerMechanism": "SOLE_ELIGIBLE_DEPARTED__TRUTH_BEYOND_4_STOPS",
+      "formerCommittedStopOffset": 3,
+      "legacyReproduced": true,
+      "current": {
+        "status": "unavailable",
+        "abstentionReasons": [],
+        "formerSelectionZone": "departed",
+        "trueBusZone": "beyond_window",
+        "formerSelectionRejectedBecause": [
+          "departed_boarding_stop"
+        ]
+      }
+    },
+    {
+      "caseId": "pv3-20260925T052712Z-f096de91-JEB405136002:w:s15:2026-09-25T05:30:03.148Z",
+      "routeId": "JEB405136002",
+      "boardingSequence": 15,
+      "commitAt": "2026-09-25T05:32:46.667Z",
+      "formerMechanism": "SOLE_ELIGIBLE_DEPARTED__TRUTH_BEYOND_4_STOPS",
+      "formerCommittedStopOffset": 4,
+      "legacyReproduced": true,
+      "current": {
+        "status": "unavailable",
+        "abstentionReasons": [],
+        "formerSelectionZone": "departed",
+        "trueBusZone": "beyond_window",
+        "formerSelectionRejectedBecause": [
+          "departed_boarding_stop"
+        ]
+      }
+    },
+    {
+      "caseId": "pv3-20260925T052712Z-f096de91-JEB405136002:w:s15:2026-09-25T05:48:03.148Z",
+      "routeId": "JEB405136002",
+      "boardingSequence": 15,
+      "commitAt": "2026-09-25T05:49:06.842Z",
+      "formerMechanism": "SOLE_ELIGIBLE_DEPARTED__TRUTH_BEYOND_4_STOPS",
+      "formerCommittedStopOffset": 2,
+      "legacyReproduced": true,
+      "current": {
+        "status": "unavailable",
+        "abstentionReasons": [],
+        "formerSelectionZone": "departed",
+        "trueBusZone": "beyond_window",
+        "formerSelectionRejectedBecause": [
+          "departed_boarding_stop"
+        ]
+      }
+    },
+    {
+      "caseId": "pv3-20260925T052712Z-f096de91-JEB405136002:w:s16:2026-09-25T05:32:03.148Z",
+      "routeId": "JEB405136002",
+      "boardingSequence": 16,
+      "commitAt": "2026-09-25T05:36:17.698Z",
+      "formerMechanism": "SOLE_ELIGIBLE_DEPARTED__TRUTH_BEYOND_4_STOPS",
+      "formerCommittedStopOffset": 4,
+      "legacyReproduced": true,
+      "current": {
+        "status": "unavailable",
+        "abstentionReasons": [],
+        "formerSelectionZone": "departed",
+        "trueBusZone": "beyond_window",
+        "formerSelectionRejectedBecause": [
+          "departed_boarding_stop"
+        ]
+      }
+    },
+    {
+      "caseId": "pv3-20260925T052712Z-f096de91-JEB405136002:w:s16:2026-09-25T05:34:03.148Z",
+      "routeId": "JEB405136002",
+      "boardingSequence": 16,
+      "commitAt": "2026-09-25T05:36:17.698Z",
+      "formerMechanism": "SOLE_ELIGIBLE_DEPARTED__TRUTH_BEYOND_4_STOPS",
+      "formerCommittedStopOffset": 4,
+      "legacyReproduced": true,
+      "current": {
+        "status": "unavailable",
+        "abstentionReasons": [],
+        "formerSelectionZone": "departed",
+        "trueBusZone": "beyond_window",
+        "formerSelectionRejectedBecause": [
+          "departed_boarding_stop"
+        ]
+      }
+    },
+    {
+      "caseId": "pv3-20260925T052712Z-f096de91-JEB405136002:w:s17:2026-09-25T05:32:03.148Z",
+      "routeId": "JEB405136002",
+      "boardingSequence": 17,
+      "commitAt": "2026-09-25T05:36:17.698Z",
+      "formerMechanism": "SOLE_ELIGIBLE_DEPARTED__TRUTH_BEYOND_4_STOPS",
+      "formerCommittedStopOffset": 3,
+      "legacyReproduced": true,
+      "current": {
+        "status": "unavailable",
+        "abstentionReasons": [],
+        "formerSelectionZone": "departed",
+        "trueBusZone": "beyond_window",
+        "formerSelectionRejectedBecause": [
+          "departed_boarding_stop"
+        ]
+      }
+    },
+    {
+      "caseId": "pv3-20260925T052712Z-f096de91-JEB405136002:w:s17:2026-09-25T05:34:03.148Z",
+      "routeId": "JEB405136002",
+      "boardingSequence": 17,
+      "commitAt": "2026-09-25T05:36:17.698Z",
+      "formerMechanism": "SOLE_ELIGIBLE_DEPARTED__TRUTH_BEYOND_4_STOPS",
+      "formerCommittedStopOffset": 3,
+      "legacyReproduced": true,
+      "current": {
+        "status": "unavailable",
+        "abstentionReasons": [],
+        "formerSelectionZone": "departed",
+        "trueBusZone": "beyond_window",
+        "formerSelectionRejectedBecause": [
+          "departed_boarding_stop"
+        ]
+      }
+    },
+    {
+      "caseId": "pv3-20260925T052712Z-f096de91-JEB405136002:w:s17:2026-09-25T05:36:03.148Z",
+      "routeId": "JEB405136002",
+      "boardingSequence": 17,
+      "commitAt": "2026-09-25T05:37:17.240Z",
+      "formerMechanism": "SOLE_ELIGIBLE_DEPARTED__TRUTH_BEYOND_4_STOPS",
+      "formerCommittedStopOffset": 4,
+      "legacyReproduced": true,
+      "current": {
+        "status": "unavailable",
+        "abstentionReasons": [],
+        "formerSelectionZone": "departed",
+        "trueBusZone": "beyond_window",
+        "formerSelectionRejectedBecause": [
+          "departed_boarding_stop"
+        ]
+      }
+    },
+    {
+      "caseId": "pv3-20260925T052712Z-f096de91-JEB405136002:w:s17:2026-09-25T05:52:03.148Z",
+      "routeId": "JEB405136002",
+      "boardingSequence": 17,
+      "commitAt": "2026-09-25T05:55:46.770Z",
+      "formerMechanism": "SOLE_ELIGIBLE_DEPARTED__TRUTH_BEYOND_4_STOPS",
+      "formerCommittedStopOffset": 4,
+      "legacyReproduced": true,
+      "current": {
+        "status": "unavailable",
+        "abstentionReasons": [],
+        "formerSelectionZone": "departed",
+        "trueBusZone": "beyond_window",
+        "formerSelectionRejectedBecause": [
+          "departed_boarding_stop"
+        ]
+      }
+    },
+    {
+      "caseId": "pv3-20260925T052712Z-f096de91-JEB405136002:w:s17:2026-09-25T05:54:03.148Z",
+      "routeId": "JEB405136002",
+      "boardingSequence": 17,
+      "commitAt": "2026-09-25T05:55:46.770Z",
+      "formerMechanism": "SOLE_ELIGIBLE_DEPARTED__TRUTH_BEYOND_4_STOPS",
+      "formerCommittedStopOffset": 4,
+      "legacyReproduced": true,
+      "current": {
+        "status": "unavailable",
+        "abstentionReasons": [],
+        "formerSelectionZone": "departed",
+        "trueBusZone": "beyond_window",
+        "formerSelectionRejectedBecause": [
+          "departed_boarding_stop"
+        ]
+      }
+    },
+    {
+      "caseId": "pv3-20260925T052712Z-f096de91-JEB405136002:w:s18:2026-09-25T05:34:03.148Z",
+      "routeId": "JEB405136002",
+      "boardingSequence": 18,
+      "commitAt": "2026-09-25T05:36:17.698Z",
+      "formerMechanism": "SOLE_ELIGIBLE_DEPARTED__TRUTH_BEYOND_4_STOPS",
+      "formerCommittedStopOffset": 2,
+      "legacyReproduced": true,
+      "current": {
+        "status": "unavailable",
+        "abstentionReasons": [],
+        "formerSelectionZone": "departed",
+        "trueBusZone": "beyond_window",
+        "formerSelectionRejectedBecause": [
+          "departed_boarding_stop"
+        ]
+      }
+    },
+    {
+      "caseId": "pv3-20260925T052712Z-f096de91-JEB405136002:w:s18:2026-09-25T05:36:03.148Z",
+      "routeId": "JEB405136002",
+      "boardingSequence": 18,
+      "commitAt": "2026-09-25T05:37:17.240Z",
+      "formerMechanism": "SOLE_ELIGIBLE_DEPARTED__TRUTH_BEYOND_4_STOPS",
+      "formerCommittedStopOffset": 3,
+      "legacyReproduced": true,
+      "current": {
+        "status": "unavailable",
+        "abstentionReasons": [],
+        "formerSelectionZone": "departed",
+        "trueBusZone": "beyond_window",
+        "formerSelectionRejectedBecause": [
+          "departed_boarding_stop"
+        ]
+      }
+    },
+    {
+      "caseId": "pv3-20260925T052712Z-f096de91-JEB405136002:w:s18:2026-09-25T05:38:03.148Z",
+      "routeId": "JEB405136002",
+      "boardingSequence": 18,
+      "commitAt": "2026-09-25T05:39:26.698Z",
+      "formerMechanism": "SOLE_ELIGIBLE_DEPARTED__TRUTH_BEYOND_4_STOPS",
+      "formerCommittedStopOffset": 4,
+      "legacyReproduced": true,
+      "current": {
+        "status": "unavailable",
+        "abstentionReasons": [],
+        "formerSelectionZone": "departed",
+        "trueBusZone": "beyond_window",
+        "formerSelectionRejectedBecause": [
+          "departed_boarding_stop"
+        ]
+      }
+    },
+    {
+      "caseId": "pv3-20260925T052712Z-f096de91-JEB405136002:w:s18:2026-09-25T05:40:03.148Z",
+      "routeId": "JEB405136002",
+      "boardingSequence": 18,
+      "commitAt": "2026-09-25T05:41:26.654Z",
+      "formerMechanism": "SOLE_ELIGIBLE_DEPARTED__TRUTH_BEYOND_4_STOPS",
+      "formerCommittedStopOffset": 4,
+      "legacyReproduced": true,
+      "current": {
+        "status": "unavailable",
+        "abstentionReasons": [],
+        "formerSelectionZone": "departed",
+        "trueBusZone": "beyond_window",
+        "formerSelectionRejectedBecause": [
+          "departed_boarding_stop"
+        ]
+      }
+    },
+    {
+      "caseId": "pv3-20260925T052712Z-f096de91-JEB405136002:w:s18:2026-09-25T05:52:03.148Z",
+      "routeId": "JEB405136002",
+      "boardingSequence": 18,
+      "commitAt": "2026-09-25T05:55:46.770Z",
+      "formerMechanism": "SOLE_ELIGIBLE_DEPARTED__TRUTH_BEYOND_4_STOPS",
+      "formerCommittedStopOffset": 3,
+      "legacyReproduced": true,
+      "current": {
+        "status": "unavailable",
+        "abstentionReasons": [],
+        "formerSelectionZone": "departed",
+        "trueBusZone": "beyond_window",
+        "formerSelectionRejectedBecause": [
+          "departed_boarding_stop"
+        ]
+      }
+    },
+    {
+      "caseId": "pv3-20260925T052712Z-f096de91-JEB405136002:w:s18:2026-09-25T05:54:03.148Z",
+      "routeId": "JEB405136002",
+      "boardingSequence": 18,
+      "commitAt": "2026-09-25T05:55:46.770Z",
+      "formerMechanism": "SOLE_ELIGIBLE_DEPARTED__TRUTH_BEYOND_4_STOPS",
+      "formerCommittedStopOffset": 3,
+      "legacyReproduced": true,
+      "current": {
+        "status": "unavailable",
+        "abstentionReasons": [],
+        "formerSelectionZone": "departed",
+        "trueBusZone": "beyond_window",
+        "formerSelectionRejectedBecause": [
+          "departed_boarding_stop"
+        ]
+      }
+    },
+    {
+      "caseId": "pv3-20260925T052712Z-f096de91-JEB405136002:w:s18:2026-09-25T05:56:03.148Z",
+      "routeId": "JEB405136002",
+      "boardingSequence": 18,
+      "commitAt": "2026-09-25T05:57:47.570Z",
+      "formerMechanism": "SOLE_ELIGIBLE_DEPARTED__TRUTH_BEYOND_4_STOPS",
+      "formerCommittedStopOffset": 4,
+      "legacyReproduced": true,
+      "current": {
+        "status": "unavailable",
+        "abstentionReasons": [],
+        "formerSelectionZone": "departed",
+        "trueBusZone": "beyond_window",
+        "formerSelectionRejectedBecause": [
+          "departed_boarding_stop"
+        ]
+      }
+    },
+    {
+      "caseId": "pv3-20260925T052712Z-f096de91-JEB405136002:w:s19:2026-09-25T05:36:03.148Z",
+      "routeId": "JEB405136002",
+      "boardingSequence": 19,
+      "commitAt": "2026-09-25T05:37:17.240Z",
+      "formerMechanism": "SOLE_ELIGIBLE_DEPARTED__TRUTH_BEYOND_4_STOPS",
+      "formerCommittedStopOffset": 2,
+      "legacyReproduced": true,
+      "current": {
+        "status": "unavailable",
+        "abstentionReasons": [],
+        "formerSelectionZone": "departed",
+        "trueBusZone": "beyond_window",
+        "formerSelectionRejectedBecause": [
+          "departed_boarding_stop"
+        ]
+      }
+    },
+    {
+      "caseId": "pv3-20260925T052712Z-f096de91-JEB405136002:w:s19:2026-09-25T05:38:03.148Z",
+      "routeId": "JEB405136002",
+      "boardingSequence": 19,
+      "commitAt": "2026-09-25T05:39:26.698Z",
+      "formerMechanism": "SOLE_ELIGIBLE_DEPARTED__TRUTH_BEYOND_4_STOPS",
+      "formerCommittedStopOffset": 3,
+      "legacyReproduced": true,
+      "current": {
+        "status": "unavailable",
+        "abstentionReasons": [],
+        "formerSelectionZone": "departed",
+        "trueBusZone": "beyond_window",
+        "formerSelectionRejectedBecause": [
+          "departed_boarding_stop"
+        ]
+      }
+    },
+    {
+      "caseId": "pv3-20260925T052712Z-f096de91-JEB405136002:w:s19:2026-09-25T05:40:03.148Z",
+      "routeId": "JEB405136002",
+      "boardingSequence": 19,
+      "commitAt": "2026-09-25T05:41:26.654Z",
+      "formerMechanism": "SOLE_ELIGIBLE_DEPARTED__TRUTH_BEYOND_4_STOPS",
+      "formerCommittedStopOffset": 3,
+      "legacyReproduced": true,
+      "current": {
+        "status": "unavailable",
+        "abstentionReasons": [],
+        "formerSelectionZone": "departed",
+        "trueBusZone": "beyond_window",
+        "formerSelectionRejectedBecause": [
+          "departed_boarding_stop"
+        ]
+      }
+    },
+    {
+      "caseId": "pv3-20260925T052712Z-f096de91-JEB405136002:w:s19:2026-09-25T05:54:03.148Z",
+      "routeId": "JEB405136002",
+      "boardingSequence": 19,
+      "commitAt": "2026-09-25T05:55:46.770Z",
+      "formerMechanism": "SOLE_ELIGIBLE_DEPARTED__TRUTH_BEYOND_4_STOPS",
+      "formerCommittedStopOffset": 2,
+      "legacyReproduced": true,
+      "current": {
+        "status": "unavailable",
+        "abstentionReasons": [],
+        "formerSelectionZone": "departed",
+        "trueBusZone": "beyond_window",
+        "formerSelectionRejectedBecause": [
+          "departed_boarding_stop"
+        ]
+      }
+    },
+    {
+      "caseId": "pv3-20260925T052712Z-f096de91-JEB405136002:w:s19:2026-09-25T05:56:03.148Z",
+      "routeId": "JEB405136002",
+      "boardingSequence": 19,
+      "commitAt": "2026-09-25T05:57:47.570Z",
+      "formerMechanism": "SOLE_ELIGIBLE_DEPARTED__TRUTH_BEYOND_4_STOPS",
+      "formerCommittedStopOffset": 3,
+      "legacyReproduced": true,
+      "current": {
+        "status": "unavailable",
+        "abstentionReasons": [],
+        "formerSelectionZone": "departed",
+        "trueBusZone": "beyond_window",
+        "formerSelectionRejectedBecause": [
+          "departed_boarding_stop"
+        ]
+      }
+    },
+    {
+      "caseId": "pv3-20260925T052712Z-f096de91-JEB405136002:w:s20:2026-09-25T05:38:03.148Z",
+      "routeId": "JEB405136002",
+      "boardingSequence": 20,
+      "commitAt": "2026-09-25T05:39:26.698Z",
+      "formerMechanism": "SOLE_ELIGIBLE_DEPARTED__TRUTH_BEYOND_4_STOPS",
+      "formerCommittedStopOffset": 2,
+      "legacyReproduced": true,
+      "current": {
+        "status": "unavailable",
+        "abstentionReasons": [],
+        "formerSelectionZone": "departed",
+        "trueBusZone": "beyond_window",
+        "formerSelectionRejectedBecause": [
+          "departed_boarding_stop"
+        ]
+      }
+    },
+    {
+      "caseId": "pv3-20260925T052712Z-f096de91-JEB405136002:w:s20:2026-09-25T05:40:03.148Z",
+      "routeId": "JEB405136002",
+      "boardingSequence": 20,
+      "commitAt": "2026-09-25T05:41:26.654Z",
+      "formerMechanism": "SOLE_ELIGIBLE_DEPARTED__TRUTH_BEYOND_4_STOPS",
+      "formerCommittedStopOffset": 2,
+      "legacyReproduced": true,
+      "current": {
+        "status": "unavailable",
+        "abstentionReasons": [],
+        "formerSelectionZone": "departed",
+        "trueBusZone": "beyond_window",
+        "formerSelectionRejectedBecause": [
+          "departed_boarding_stop"
+        ]
+      }
+    },
+    {
+      "caseId": "pv3-20260925T052712Z-f096de91-JEB405136002:w:s20:2026-09-25T05:56:03.148Z",
+      "routeId": "JEB405136002",
+      "boardingSequence": 20,
+      "commitAt": "2026-09-25T05:57:47.570Z",
+      "formerMechanism": "SOLE_ELIGIBLE_DEPARTED__TRUTH_BEYOND_4_STOPS",
+      "formerCommittedStopOffset": 2,
+      "legacyReproduced": true,
+      "current": {
+        "status": "unavailable",
+        "abstentionReasons": [],
+        "formerSelectionZone": "departed",
+        "trueBusZone": "beyond_window",
+        "formerSelectionRejectedBecause": [
+          "departed_boarding_stop"
+        ]
+      }
+    },
+    {
+      "caseId": "pv3-20260925T052712Z-f096de91-JEB405136002:w:s21:2026-09-25T05:40:03.148Z",
+      "routeId": "JEB405136002",
+      "boardingSequence": 21,
+      "commitAt": "2026-09-25T05:41:26.654Z",
+      "formerMechanism": "SOLE_ELIGIBLE_DEPARTED__TRUTH_BEYOND_4_STOPS",
+      "formerCommittedStopOffset": 1,
+      "legacyReproduced": true,
+      "current": {
+        "status": "unavailable",
+        "abstentionReasons": [
+          "boarding_stop_reached_during_session",
+          "vehicle_at_boarding_stop_unresolved"
+        ],
+        "formerSelectionZone": "boarding_stop_unresolved",
+        "trueBusZone": "beyond_window",
+        "formerSelectionRejectedBecause": [
+          "boarding_stop_position_unresolved"
+        ]
+      }
+    },
+    {
+      "caseId": "pv3-20260925T052712Z-f096de91-JEB405136002:w:s21:2026-09-25T05:58:03.148Z",
+      "routeId": "JEB405136002",
+      "boardingSequence": 21,
+      "commitAt": "2026-09-25T06:02:53.011Z",
+      "formerMechanism": "SOLE_ELIGIBLE_DEPARTED__TRUTH_BEYOND_4_STOPS",
+      "formerCommittedStopOffset": 4,
+      "legacyReproduced": true,
+      "current": {
+        "status": "unavailable",
+        "abstentionReasons": [],
+        "formerSelectionZone": "departed",
+        "trueBusZone": "beyond_window",
+        "formerSelectionRejectedBecause": [
+          "departed_boarding_stop"
+        ]
+      }
+    },
+    {
+      "caseId": "pv3-20260925T052712Z-f096de91-JEB405136002:w:s21:2026-09-25T06:00:03.148Z",
+      "routeId": "JEB405136002",
+      "boardingSequence": 21,
+      "commitAt": "2026-09-25T06:02:53.011Z",
+      "formerMechanism": "SOLE_ELIGIBLE_DEPARTED__TRUTH_BEYOND_4_STOPS",
+      "formerCommittedStopOffset": 4,
+      "legacyReproduced": true,
+      "current": {
+        "status": "unavailable",
+        "abstentionReasons": [],
+        "formerSelectionZone": "departed",
+        "trueBusZone": "beyond_window",
+        "formerSelectionRejectedBecause": [
+          "departed_boarding_stop"
+        ]
+      }
+    },
+    {
+      "caseId": "pv3-20260925T052712Z-f096de91-JEB405136002:w:s22:2026-09-25T06:00:03.148Z",
+      "routeId": "JEB405136002",
+      "boardingSequence": 22,
+      "commitAt": "2026-09-25T06:02:53.011Z",
+      "formerMechanism": "SOLE_ELIGIBLE_DEPARTED__TRUTH_BEYOND_4_STOPS",
+      "formerCommittedStopOffset": 3,
+      "legacyReproduced": true,
+      "current": {
+        "status": "unavailable",
+        "abstentionReasons": [],
+        "formerSelectionZone": "departed",
+        "trueBusZone": "beyond_window",
+        "formerSelectionRejectedBecause": [
+          "departed_boarding_stop"
+        ]
+      }
+    },
+    {
+      "caseId": "pv3-20260925T052712Z-f096de91-JEB405136002:w:s23:2026-09-25T05:48:03.148Z",
+      "routeId": "JEB405136002",
+      "boardingSequence": 23,
+      "commitAt": "2026-09-25T05:49:06.842Z",
+      "formerMechanism": "SOLE_ELIGIBLE_DEPARTED__TRUTH_BEYOND_4_STOPS",
+      "formerCommittedStopOffset": 4,
+      "legacyReproduced": true,
+      "current": {
+        "status": "unavailable",
+        "abstentionReasons": [],
+        "formerSelectionZone": "departed",
+        "trueBusZone": "beyond_window",
+        "formerSelectionRejectedBecause": [
+          "departed_boarding_stop"
+        ]
+      }
+    },
+    {
+      "caseId": "pv3-20260925T052712Z-f096de91-JEB405136002:w:s24:2026-09-25T05:48:03.148Z",
+      "routeId": "JEB405136002",
+      "boardingSequence": 24,
+      "commitAt": "2026-09-25T05:49:06.842Z",
+      "formerMechanism": "SOLE_ELIGIBLE_DEPARTED__TRUTH_BEYOND_4_STOPS",
+      "formerCommittedStopOffset": 3,
+      "legacyReproduced": true,
+      "current": {
+        "status": "unavailable",
+        "abstentionReasons": [],
+        "formerSelectionZone": "departed",
+        "trueBusZone": "beyond_window",
+        "formerSelectionRejectedBecause": [
+          "departed_boarding_stop"
+        ]
+      }
+    },
+    {
+      "caseId": "pv3-20260925T052712Z-f096de91-JEB405136002:w:s25:2026-09-25T05:30:03.148Z",
+      "routeId": "JEB405136002",
+      "boardingSequence": 25,
+      "commitAt": "2026-09-25T05:32:46.667Z",
+      "formerMechanism": "SOLE_ELIGIBLE_DEPARTED__TRUTH_BEYOND_4_STOPS",
+      "formerCommittedStopOffset": 4,
+      "legacyReproduced": true,
+      "current": {
+        "status": "unavailable",
+        "abstentionReasons": [],
+        "formerSelectionZone": "departed",
+        "trueBusZone": "beyond_window",
+        "formerSelectionRejectedBecause": [
+          "departed_boarding_stop"
+        ]
+      }
+    },
+    {
+      "caseId": "pv3-20260925T052712Z-f096de91-JEB405136002:w:s25:2026-09-25T05:48:03.148Z",
+      "routeId": "JEB405136002",
+      "boardingSequence": 25,
+      "commitAt": "2026-09-25T05:49:06.842Z",
+      "formerMechanism": "SOLE_ELIGIBLE_DEPARTED__TRUTH_BEYOND_4_STOPS",
+      "formerCommittedStopOffset": 2,
+      "legacyReproduced": true,
+      "current": {
+        "status": "unavailable",
+        "abstentionReasons": [],
+        "formerSelectionZone": "departed",
+        "trueBusZone": "beyond_window",
+        "formerSelectionRejectedBecause": [
+          "departed_boarding_stop"
+        ]
+      }
+    },
+    {
+      "caseId": "pv3-20260925T052712Z-f096de91-JEB405136002:w:s26:2026-09-25T05:30:03.148Z",
+      "routeId": "JEB405136002",
+      "boardingSequence": 26,
+      "commitAt": "2026-09-25T05:32:46.667Z",
+      "formerMechanism": "SOLE_ELIGIBLE_DEPARTED__TRUTH_BEYOND_4_STOPS",
+      "formerCommittedStopOffset": 3,
+      "legacyReproduced": true,
+      "current": {
+        "status": "unavailable",
+        "abstentionReasons": [],
+        "formerSelectionZone": "departed",
+        "trueBusZone": "beyond_window",
+        "formerSelectionRejectedBecause": [
+          "departed_boarding_stop"
+        ]
+      }
+    },
+    {
+      "caseId": "pv3-20260925T052712Z-f096de91-JEB405136002:w:s26:2026-09-25T05:48:03.148Z",
+      "routeId": "JEB405136002",
+      "boardingSequence": 26,
+      "commitAt": "2026-09-25T05:49:06.842Z",
+      "formerMechanism": "SOLE_ELIGIBLE_DEPARTED__TRUTH_BEYOND_4_STOPS",
+      "formerCommittedStopOffset": 1,
+      "legacyReproduced": true,
+      "current": {
+        "status": "unavailable",
+        "abstentionReasons": [
+          "boarding_stop_reached_during_session",
+          "vehicle_at_boarding_stop_unresolved"
+        ],
+        "formerSelectionZone": "boarding_stop_unresolved",
+        "trueBusZone": "beyond_window",
+        "formerSelectionRejectedBecause": [
+          "boarding_stop_position_unresolved"
+        ]
+      }
+    },
+    {
+      "caseId": "pv3-20260925T052712Z-f096de91-JEB405136002:w:s27:2026-09-25T05:32:03.148Z",
+      "routeId": "JEB405136002",
+      "boardingSequence": 27,
+      "commitAt": "2026-09-25T05:36:17.698Z",
+      "formerMechanism": "SOLE_ELIGIBLE_DEPARTED__TRUTH_BEYOND_4_STOPS",
+      "formerCommittedStopOffset": 4,
+      "legacyReproduced": true,
+      "current": {
+        "status": "unavailable",
+        "abstentionReasons": [],
+        "formerSelectionZone": "departed",
+        "trueBusZone": "beyond_window",
+        "formerSelectionRejectedBecause": [
+          "departed_boarding_stop"
+        ]
+      }
+    },
+    {
+      "caseId": "pv3-20260925T052712Z-f096de91-JEB405136002:w:s27:2026-09-25T05:34:03.148Z",
+      "routeId": "JEB405136002",
+      "boardingSequence": 27,
+      "commitAt": "2026-09-25T05:36:17.698Z",
+      "formerMechanism": "SOLE_ELIGIBLE_DEPARTED__TRUTH_BEYOND_4_STOPS",
+      "formerCommittedStopOffset": 4,
+      "legacyReproduced": true,
+      "current": {
+        "status": "unavailable",
+        "abstentionReasons": [],
+        "formerSelectionZone": "departed",
+        "trueBusZone": "beyond_window",
+        "formerSelectionRejectedBecause": [
+          "departed_boarding_stop"
+        ]
+      }
+    },
+    {
+      "caseId": "pv3-20260925T052712Z-f096de91-JEB405136002:w:s27:2026-09-25T05:36:03.148Z",
+      "routeId": "JEB405136002",
+      "boardingSequence": 27,
+      "commitAt": "2026-09-25T05:37:17.240Z",
+      "formerMechanism": "SOLE_ELIGIBLE_DEPARTED__TRUTH_BEYOND_4_STOPS",
+      "formerCommittedStopOffset": 4,
+      "legacyReproduced": true,
+      "current": {
+        "status": "unavailable",
+        "abstentionReasons": [],
+        "formerSelectionZone": "departed",
+        "trueBusZone": "beyond_window",
+        "formerSelectionRejectedBecause": [
+          "departed_boarding_stop"
+        ]
+      }
+    },
+    {
+      "caseId": "pv3-20260925T052712Z-f096de91-JEB405136002:w:s28:2026-09-25T05:34:03.148Z",
+      "routeId": "JEB405136002",
+      "boardingSequence": 28,
+      "commitAt": "2026-09-25T05:36:17.698Z",
+      "formerMechanism": "SOLE_ELIGIBLE_DEPARTED__TRUTH_BEYOND_4_STOPS",
+      "formerCommittedStopOffset": 3,
+      "legacyReproduced": true,
+      "current": {
+        "status": "unavailable",
+        "abstentionReasons": [],
+        "formerSelectionZone": "departed",
+        "trueBusZone": "beyond_window",
+        "formerSelectionRejectedBecause": [
+          "departed_boarding_stop"
+        ]
+      }
+    },
+    {
+      "caseId": "pv3-20260925T052712Z-f096de91-JEB405136002:w:s28:2026-09-25T05:36:03.148Z",
+      "routeId": "JEB405136002",
+      "boardingSequence": 28,
+      "commitAt": "2026-09-25T05:37:17.240Z",
+      "formerMechanism": "SOLE_ELIGIBLE_DEPARTED__TRUTH_BEYOND_4_STOPS",
+      "formerCommittedStopOffset": 3,
+      "legacyReproduced": true,
+      "current": {
+        "status": "unavailable",
+        "abstentionReasons": [],
+        "formerSelectionZone": "departed",
+        "trueBusZone": "beyond_window",
+        "formerSelectionRejectedBecause": [
+          "departed_boarding_stop"
+        ]
+      }
+    },
+    {
+      "caseId": "pv3-20260925T052712Z-f096de91-JEB405136002:w:s28:2026-09-25T05:38:03.148Z",
+      "routeId": "JEB405136002",
+      "boardingSequence": 28,
+      "commitAt": "2026-09-25T05:39:26.698Z",
+      "formerMechanism": "SOLE_ELIGIBLE_DEPARTED__TRUTH_BEYOND_4_STOPS",
+      "formerCommittedStopOffset": 4,
+      "legacyReproduced": true,
+      "current": {
+        "status": "unavailable",
+        "abstentionReasons": [],
+        "formerSelectionZone": "departed",
+        "trueBusZone": "beyond_window",
+        "formerSelectionRejectedBecause": [
+          "departed_boarding_stop"
+        ]
+      }
+    },
+    {
+      "caseId": "pv3-20260925T052712Z-f096de91-JEB405136002:w:s29:2026-09-25T05:36:03.148Z",
+      "routeId": "JEB405136002",
+      "boardingSequence": 29,
+      "commitAt": "2026-09-25T05:37:17.240Z",
+      "formerMechanism": "SOLE_ELIGIBLE_DEPARTED__TRUTH_BEYOND_4_STOPS",
+      "formerCommittedStopOffset": 2,
+      "legacyReproduced": true,
+      "current": {
+        "status": "unavailable",
+        "abstentionReasons": [],
+        "formerSelectionZone": "departed",
+        "trueBusZone": "beyond_window",
+        "formerSelectionRejectedBecause": [
+          "departed_boarding_stop"
+        ]
+      }
+    },
+    {
+      "caseId": "pv3-20260925T052712Z-f096de91-JEB405136002:w:s29:2026-09-25T05:38:03.148Z",
+      "routeId": "JEB405136002",
+      "boardingSequence": 29,
+      "commitAt": "2026-09-25T05:39:26.698Z",
+      "formerMechanism": "SOLE_ELIGIBLE_DEPARTED__TRUTH_BEYOND_4_STOPS",
+      "formerCommittedStopOffset": 3,
+      "legacyReproduced": true,
+      "current": {
+        "status": "unavailable",
+        "abstentionReasons": [],
+        "formerSelectionZone": "departed",
+        "trueBusZone": "beyond_window",
+        "formerSelectionRejectedBecause": [
+          "departed_boarding_stop"
+        ]
+      }
+    },
+    {
+      "caseId": "pv3-20260925T052712Z-f096de91-JEB405136002:w:s29:2026-09-25T05:40:03.148Z",
+      "routeId": "JEB405136002",
+      "boardingSequence": 29,
+      "commitAt": "2026-09-25T05:41:26.654Z",
+      "formerMechanism": "SOLE_ELIGIBLE_DEPARTED__TRUTH_BEYOND_4_STOPS",
+      "formerCommittedStopOffset": 4,
+      "legacyReproduced": true,
+      "current": {
+        "status": "unavailable",
+        "abstentionReasons": [],
+        "formerSelectionZone": "departed",
+        "trueBusZone": "beyond_window",
+        "formerSelectionRejectedBecause": [
+          "departed_boarding_stop"
+        ]
+      }
+    },
+    {
+      "caseId": "pv3-20260925T052712Z-f096de91-JEB405136002:w:s29:2026-09-25T05:54:03.148Z",
+      "routeId": "JEB405136002",
+      "boardingSequence": 29,
+      "commitAt": "2026-09-25T05:58:17.453Z",
+      "formerMechanism": "SOLE_ELIGIBLE_DEPARTED__TRUTH_BEYOND_4_STOPS",
+      "formerCommittedStopOffset": 4,
+      "legacyReproduced": true,
+      "current": {
+        "status": "unavailable",
+        "abstentionReasons": [],
+        "formerSelectionZone": "departed",
+        "trueBusZone": "beyond_window",
+        "formerSelectionRejectedBecause": [
+          "departed_boarding_stop"
+        ]
+      }
+    },
+    {
+      "caseId": "pv3-20260925T052712Z-f096de91-JEB405136002:w:s29:2026-09-25T05:56:03.148Z",
+      "routeId": "JEB405136002",
+      "boardingSequence": 29,
+      "commitAt": "2026-09-25T05:58:17.453Z",
+      "formerMechanism": "SOLE_ELIGIBLE_DEPARTED__TRUTH_BEYOND_4_STOPS",
+      "formerCommittedStopOffset": 4,
+      "legacyReproduced": true,
+      "current": {
+        "status": "unavailable",
+        "abstentionReasons": [],
+        "formerSelectionZone": "departed",
+        "trueBusZone": "beyond_window",
+        "formerSelectionRejectedBecause": [
+          "departed_boarding_stop"
+        ]
+      }
+    },
+    {
+      "caseId": "pv3-20260925T052712Z-f096de91-JEB405136002:w:s30:2026-09-25T05:36:03.148Z",
+      "routeId": "JEB405136002",
+      "boardingSequence": 30,
+      "commitAt": "2026-09-25T05:37:17.240Z",
+      "formerMechanism": "SOLE_ELIGIBLE_DEPARTED__TRUTH_BEYOND_4_STOPS",
+      "formerCommittedStopOffset": 1,
+      "legacyReproduced": true,
+      "current": {
+        "status": "unavailable",
+        "abstentionReasons": [
+          "boarding_stop_reached_during_session",
+          "vehicle_at_boarding_stop_unresolved"
+        ],
+        "formerSelectionZone": "boarding_stop_unresolved",
+        "trueBusZone": "beyond_window",
+        "formerSelectionRejectedBecause": [
+          "boarding_stop_position_unresolved"
+        ]
+      }
+    },
+    {
+      "caseId": "pv3-20260925T052712Z-f096de91-JEB405136002:w:s30:2026-09-25T05:38:03.148Z",
+      "routeId": "JEB405136002",
+      "boardingSequence": 30,
+      "commitAt": "2026-09-25T05:39:26.698Z",
+      "formerMechanism": "SOLE_ELIGIBLE_DEPARTED__TRUTH_BEYOND_4_STOPS",
+      "formerCommittedStopOffset": 2,
+      "legacyReproduced": true,
+      "current": {
+        "status": "unavailable",
+        "abstentionReasons": [],
+        "formerSelectionZone": "departed",
+        "trueBusZone": "beyond_window",
+        "formerSelectionRejectedBecause": [
+          "departed_boarding_stop"
+        ]
+      }
+    },
+    {
+      "caseId": "pv3-20260925T052712Z-f096de91-JEB405136002:w:s30:2026-09-25T05:40:03.148Z",
+      "routeId": "JEB405136002",
+      "boardingSequence": 30,
+      "commitAt": "2026-09-25T05:41:26.654Z",
+      "formerMechanism": "SOLE_ELIGIBLE_DEPARTED__TRUTH_BEYOND_4_STOPS",
+      "formerCommittedStopOffset": 3,
+      "legacyReproduced": true,
+      "current": {
+        "status": "unavailable",
+        "abstentionReasons": [],
+        "formerSelectionZone": "departed",
+        "trueBusZone": "beyond_window",
+        "formerSelectionRejectedBecause": [
+          "departed_boarding_stop"
+        ]
+      }
+    },
+    {
+      "caseId": "pv3-20260925T052712Z-f096de91-JEB405136002:w:s30:2026-09-25T05:54:03.148Z",
+      "routeId": "JEB405136002",
+      "boardingSequence": 30,
+      "commitAt": "2026-09-25T05:58:17.453Z",
+      "formerMechanism": "SOLE_ELIGIBLE_DEPARTED__TRUTH_BEYOND_4_STOPS",
+      "formerCommittedStopOffset": 3,
+      "legacyReproduced": true,
+      "current": {
+        "status": "unavailable",
+        "abstentionReasons": [],
+        "formerSelectionZone": "departed",
+        "trueBusZone": "beyond_window",
+        "formerSelectionRejectedBecause": [
+          "departed_boarding_stop"
+        ]
+      }
+    },
+    {
+      "caseId": "pv3-20260925T052712Z-f096de91-JEB405136002:w:s30:2026-09-25T05:56:03.148Z",
+      "routeId": "JEB405136002",
+      "boardingSequence": 30,
+      "commitAt": "2026-09-25T05:58:17.453Z",
+      "formerMechanism": "SOLE_ELIGIBLE_DEPARTED__TRUTH_BEYOND_4_STOPS",
+      "formerCommittedStopOffset": 3,
+      "legacyReproduced": true,
+      "current": {
+        "status": "unavailable",
+        "abstentionReasons": [],
+        "formerSelectionZone": "departed",
+        "trueBusZone": "beyond_window",
+        "formerSelectionRejectedBecause": [
+          "departed_boarding_stop"
+        ]
+      }
+    },
+    {
+      "caseId": "pv3-20260925T052712Z-f096de91-JEB405136002:w:s31:2026-09-25T05:40:03.148Z",
+      "routeId": "JEB405136002",
+      "boardingSequence": 31,
+      "commitAt": "2026-09-25T05:41:26.654Z",
+      "formerMechanism": "SOLE_ELIGIBLE_DEPARTED__TRUTH_BEYOND_4_STOPS",
+      "formerCommittedStopOffset": 2,
+      "legacyReproduced": true,
+      "current": {
+        "status": "unavailable",
+        "abstentionReasons": [],
+        "formerSelectionZone": "departed",
+        "trueBusZone": "beyond_window",
+        "formerSelectionRejectedBecause": [
+          "departed_boarding_stop"
+        ]
+      }
+    },
+    {
+      "caseId": "pv3-20260925T052712Z-f096de91-JEB405136002:w:s31:2026-09-25T06:00:03.148Z",
+      "routeId": "JEB405136002",
+      "boardingSequence": 31,
+      "commitAt": "2026-09-25T06:02:53.011Z",
+      "formerMechanism": "SOLE_ELIGIBLE_DEPARTED__TRUTH_BEYOND_4_STOPS",
+      "formerCommittedStopOffset": 4,
+      "legacyReproduced": true,
+      "current": {
+        "status": "unavailable",
+        "abstentionReasons": [],
+        "formerSelectionZone": "departed",
+        "trueBusZone": "beyond_window",
+        "formerSelectionRejectedBecause": [
+          "departed_boarding_stop"
+        ]
+      }
+    },
+    {
+      "caseId": "pv3-20260925T052712Z-f096de91-JEB405136002:w:s32:2026-09-25T05:42:03.148Z",
+      "routeId": "JEB405136002",
+      "boardingSequence": 32,
+      "commitAt": "2026-09-25T05:47:42.254Z",
+      "formerMechanism": "SOLE_ELIGIBLE_DEPARTED__TRUTH_BEYOND_4_STOPS",
+      "formerCommittedStopOffset": 4,
+      "legacyReproduced": true,
+      "current": {
+        "status": "unavailable",
+        "abstentionReasons": [],
+        "formerSelectionZone": "departed",
+        "trueBusZone": "beyond_window",
+        "formerSelectionRejectedBecause": [
+          "departed_boarding_stop"
+        ]
+      }
+    },
+    {
+      "caseId": "pv3-20260925T052712Z-f096de91-JEB405136002:w:s32:2026-09-25T05:44:03.148Z",
+      "routeId": "JEB405136002",
+      "boardingSequence": 32,
+      "commitAt": "2026-09-25T05:47:42.254Z",
+      "formerMechanism": "SOLE_ELIGIBLE_DEPARTED__TRUTH_BEYOND_4_STOPS",
+      "formerCommittedStopOffset": 4,
+      "legacyReproduced": true,
+      "current": {
+        "status": "unavailable",
+        "abstentionReasons": [],
+        "formerSelectionZone": "departed",
+        "trueBusZone": "beyond_window",
+        "formerSelectionRejectedBecause": [
+          "departed_boarding_stop"
+        ]
+      }
+    },
+    {
+      "caseId": "pv3-20260925T052712Z-f096de91-JEB405136002:w:s32:2026-09-25T05:46:03.148Z",
+      "routeId": "JEB405136002",
+      "boardingSequence": 32,
+      "commitAt": "2026-09-25T05:47:42.254Z",
+      "formerMechanism": "SOLE_ELIGIBLE_DEPARTED__TRUTH_BEYOND_4_STOPS",
+      "formerCommittedStopOffset": 4,
+      "legacyReproduced": true,
+      "current": {
+        "status": "unavailable",
+        "abstentionReasons": [],
+        "formerSelectionZone": "departed",
+        "trueBusZone": "beyond_window",
+        "formerSelectionRejectedBecause": [
+          "departed_boarding_stop"
+        ]
+      }
+    },
+    {
+      "caseId": "pv3-20260925T052712Z-f096de91-JEB405136002:w:s32:2026-09-25T06:00:03.148Z",
+      "routeId": "JEB405136002",
+      "boardingSequence": 32,
+      "commitAt": "2026-09-25T06:02:53.011Z",
+      "formerMechanism": "SOLE_ELIGIBLE_DEPARTED__TRUTH_BEYOND_4_STOPS",
+      "formerCommittedStopOffset": 3,
+      "legacyReproduced": true,
+      "current": {
+        "status": "unavailable",
+        "abstentionReasons": [],
+        "formerSelectionZone": "departed",
+        "trueBusZone": "beyond_window",
+        "formerSelectionRejectedBecause": [
+          "departed_boarding_stop"
+        ]
+      }
+    },
+    {
+      "caseId": "pv3-20260925T052712Z-f096de91-JEB405136002:w:s33:2026-09-25T05:42:03.148Z",
+      "routeId": "JEB405136002",
+      "boardingSequence": 33,
+      "commitAt": "2026-09-25T05:47:42.254Z",
+      "formerMechanism": "SOLE_ELIGIBLE_DEPARTED__TRUTH_BEYOND_4_STOPS",
+      "formerCommittedStopOffset": 3,
+      "legacyReproduced": true,
+      "current": {
+        "status": "unavailable",
+        "abstentionReasons": [],
+        "formerSelectionZone": "departed",
+        "trueBusZone": "beyond_window",
+        "formerSelectionRejectedBecause": [
+          "departed_boarding_stop"
+        ]
+      }
+    },
+    {
+      "caseId": "pv3-20260925T052712Z-f096de91-JEB405136002:w:s33:2026-09-25T05:44:03.148Z",
+      "routeId": "JEB405136002",
+      "boardingSequence": 33,
+      "commitAt": "2026-09-25T05:47:42.254Z",
+      "formerMechanism": "SOLE_ELIGIBLE_DEPARTED__TRUTH_BEYOND_4_STOPS",
+      "formerCommittedStopOffset": 3,
+      "legacyReproduced": true,
+      "current": {
+        "status": "unavailable",
+        "abstentionReasons": [],
+        "formerSelectionZone": "departed",
+        "trueBusZone": "beyond_window",
+        "formerSelectionRejectedBecause": [
+          "departed_boarding_stop"
+        ]
+      }
+    },
+    {
+      "caseId": "pv3-20260925T052712Z-f096de91-JEB405136002:w:s33:2026-09-25T05:46:03.148Z",
+      "routeId": "JEB405136002",
+      "boardingSequence": 33,
+      "commitAt": "2026-09-25T05:47:42.254Z",
+      "formerMechanism": "SOLE_ELIGIBLE_DEPARTED__TRUTH_BEYOND_4_STOPS",
+      "formerCommittedStopOffset": 3,
+      "legacyReproduced": true,
+      "current": {
+        "status": "unavailable",
+        "abstentionReasons": [],
+        "formerSelectionZone": "departed",
+        "trueBusZone": "beyond_window",
+        "formerSelectionRejectedBecause": [
+          "departed_boarding_stop"
+        ]
+      }
+    },
+    {
+      "caseId": "pv3-20260925T052712Z-f096de91-JEB405136002:w:s34:2026-09-25T05:44:03.148Z",
+      "routeId": "JEB405136002",
+      "boardingSequence": 34,
+      "commitAt": "2026-09-25T05:47:42.254Z",
+      "formerMechanism": "SOLE_ELIGIBLE_DEPARTED__TRUTH_BEYOND_4_STOPS",
+      "formerCommittedStopOffset": 2,
+      "legacyReproduced": true,
+      "current": {
+        "status": "unavailable",
+        "abstentionReasons": [],
+        "formerSelectionZone": "departed",
+        "trueBusZone": "beyond_window",
+        "formerSelectionRejectedBecause": [
+          "departed_boarding_stop"
+        ]
+      }
+    },
+    {
+      "caseId": "pv3-20260925T052712Z-f096de91-JEB405136002:w:s34:2026-09-25T05:46:03.148Z",
+      "routeId": "JEB405136002",
+      "boardingSequence": 34,
+      "commitAt": "2026-09-25T05:47:42.254Z",
+      "formerMechanism": "SOLE_ELIGIBLE_DEPARTED__TRUTH_BEYOND_4_STOPS",
+      "formerCommittedStopOffset": 2,
+      "legacyReproduced": true,
+      "current": {
+        "status": "unavailable",
+        "abstentionReasons": [],
+        "formerSelectionZone": "departed",
+        "trueBusZone": "beyond_window",
+        "formerSelectionRejectedBecause": [
+          "departed_boarding_stop"
+        ]
+      }
+    },
+    {
+      "caseId": "pv3-20260925T052712Z-f096de91-JEB405136521:w:s2:2026-09-25T05:28:04.070Z",
+      "routeId": "JEB405136521",
+      "boardingSequence": 2,
+      "commitAt": "2026-09-25T05:29:01.963Z",
+      "formerMechanism": "SOLE_ELIGIBLE_DEPARTED__TRUTH_NOT_IN_FEED",
+      "formerCommittedStopOffset": 2,
+      "legacyReproduced": true,
+      "current": {
+        "status": "unavailable",
+        "abstentionReasons": [],
+        "formerSelectionZone": "departed",
+        "formerSelectionRejectedBecause": [
+          "departed_boarding_stop"
+        ]
+      }
+    },
+    {
+      "caseId": "pv3-20260925T052712Z-f096de91-JEB405136521:w:s2:2026-09-25T05:48:04.070Z",
+      "routeId": "JEB405136521",
+      "boardingSequence": 2,
+      "commitAt": "2026-09-25T05:49:07.666Z",
+      "formerMechanism": "SOLE_ELIGIBLE_DEPARTED__TRUTH_NOT_IN_FEED",
+      "formerCommittedStopOffset": 3,
+      "legacyReproduced": true,
+      "current": {
+        "status": "unavailable",
+        "abstentionReasons": [],
+        "formerSelectionZone": "departed",
+        "formerSelectionRejectedBecause": [
+          "departed_boarding_stop"
+        ]
+      }
+    },
+    {
+      "caseId": "pv3-20260925T052712Z-f096de91-JEB405136521:w:s3:2026-09-25T05:28:04.070Z",
+      "routeId": "JEB405136521",
+      "boardingSequence": 3,
+      "commitAt": "2026-09-25T05:29:01.963Z",
+      "formerMechanism": "SOLE_ELIGIBLE_DEPARTED__TRUTH_NOT_IN_FEED",
+      "formerCommittedStopOffset": 1,
+      "legacyReproduced": true,
+      "current": {
+        "status": "unavailable",
+        "abstentionReasons": [
+          "boarding_stop_reached_during_session",
+          "vehicle_at_boarding_stop_unresolved"
+        ],
+        "formerSelectionZone": "boarding_stop_unresolved",
+        "formerSelectionRejectedBecause": [
+          "boarding_stop_position_unresolved"
+        ]
+      }
+    },
+    {
+      "caseId": "pv3-20260925T052712Z-f096de91-JEB405136521:w:s6:2026-09-25T05:52:04.070Z",
+      "routeId": "JEB405136521",
+      "boardingSequence": 6,
+      "commitAt": "2026-09-25T05:55:47.585Z",
+      "formerMechanism": "SOLE_ELIGIBLE_DEPARTED__TRUTH_NOT_IN_FEED",
+      "formerCommittedStopOffset": 4,
+      "legacyReproduced": true,
+      "current": {
+        "status": "unavailable",
+        "abstentionReasons": [],
+        "formerSelectionZone": "departed",
+        "formerSelectionRejectedBecause": [
+          "departed_boarding_stop"
+        ]
+      }
+    },
+    {
+      "caseId": "pv3-20260925T052712Z-f096de91-JEB405136521:w:s6:2026-09-25T05:54:04.070Z",
+      "routeId": "JEB405136521",
+      "boardingSequence": 6,
+      "commitAt": "2026-09-25T05:55:20.120Z",
+      "formerMechanism": "SOLE_ELIGIBLE_DEPARTED__TRUTH_NOT_IN_FEED",
+      "formerCommittedStopOffset": 4,
+      "legacyReproduced": true,
+      "current": {
+        "status": "unavailable",
+        "abstentionReasons": [],
+        "formerSelectionZone": "departed",
+        "formerSelectionRejectedBecause": [
+          "departed_boarding_stop"
+        ]
+      }
+    },
+    {
+      "caseId": "pv3-20260925T052712Z-f096de91-JEB405136521:w:s7:2026-09-25T05:32:04.070Z",
+      "routeId": "JEB405136521",
+      "boardingSequence": 7,
+      "commitAt": "2026-09-25T05:37:18.070Z",
+      "formerMechanism": "SOLE_ELIGIBLE_DEPARTED__TRUTH_NOT_IN_FEED",
+      "formerCommittedStopOffset": 4,
+      "legacyReproduced": true,
+      "current": {
+        "status": "unavailable",
+        "abstentionReasons": [],
+        "formerSelectionZone": "departed",
+        "formerSelectionRejectedBecause": [
+          "departed_boarding_stop"
+        ]
+      }
+    },
+    {
+      "caseId": "pv3-20260925T052712Z-f096de91-JEB405136521:w:s7:2026-09-25T05:34:04.070Z",
+      "routeId": "JEB405136521",
+      "boardingSequence": 7,
+      "commitAt": "2026-09-25T05:37:18.070Z",
+      "formerMechanism": "SOLE_ELIGIBLE_DEPARTED__TRUTH_NOT_IN_FEED",
+      "formerCommittedStopOffset": 4,
+      "legacyReproduced": true,
+      "current": {
+        "status": "unavailable",
+        "abstentionReasons": [],
+        "formerSelectionZone": "departed",
+        "formerSelectionRejectedBecause": [
+          "departed_boarding_stop"
+        ]
+      }
+    },
+    {
+      "caseId": "pv3-20260925T052712Z-f096de91-JEB405136521:w:s7:2026-09-25T05:36:04.070Z",
+      "routeId": "JEB405136521",
+      "boardingSequence": 7,
+      "commitAt": "2026-09-25T05:37:18.070Z",
+      "formerMechanism": "SOLE_ELIGIBLE_DEPARTED__TRUTH_NOT_IN_FEED",
+      "formerCommittedStopOffset": 4,
+      "legacyReproduced": true,
+      "current": {
+        "status": "unavailable",
+        "abstentionReasons": [],
+        "formerSelectionZone": "departed",
+        "formerSelectionRejectedBecause": [
+          "departed_boarding_stop"
+        ]
+      }
+    },
+    {
+      "caseId": "pv3-20260925T052712Z-f096de91-JEB405136521:w:s7:2026-09-25T05:52:04.070Z",
+      "routeId": "JEB405136521",
+      "boardingSequence": 7,
+      "commitAt": "2026-09-25T05:55:47.585Z",
+      "formerMechanism": "SOLE_ELIGIBLE_DEPARTED__TRUTH_NOT_IN_FEED",
+      "formerCommittedStopOffset": 3,
+      "legacyReproduced": true,
+      "current": {
+        "status": "unavailable",
+        "abstentionReasons": [],
+        "formerSelectionZone": "departed",
+        "formerSelectionRejectedBecause": [
+          "departed_boarding_stop"
+        ]
+      }
+    },
+    {
+      "caseId": "pv3-20260925T052712Z-f096de91-JEB405136521:w:s7:2026-09-25T05:54:04.070Z",
+      "routeId": "JEB405136521",
+      "boardingSequence": 7,
+      "commitAt": "2026-09-25T05:55:20.120Z",
+      "formerMechanism": "SOLE_ELIGIBLE_DEPARTED__TRUTH_NOT_IN_FEED",
+      "formerCommittedStopOffset": 3,
+      "legacyReproduced": true,
+      "current": {
+        "status": "unavailable",
+        "abstentionReasons": [],
+        "formerSelectionZone": "departed",
+        "formerSelectionRejectedBecause": [
+          "departed_boarding_stop"
+        ]
+      }
+    },
+    {
+      "caseId": "pv3-20260925T052712Z-f096de91-JEB405136521:w:s8:2026-09-25T05:34:04.070Z",
+      "routeId": "JEB405136521",
+      "boardingSequence": 8,
+      "commitAt": "2026-09-25T05:37:18.070Z",
+      "formerMechanism": "SOLE_ELIGIBLE_DEPARTED__TRUTH_NOT_IN_FEED",
+      "formerCommittedStopOffset": 3,
+      "legacyReproduced": true,
+      "current": {
+        "status": "unavailable",
+        "abstentionReasons": [],
+        "formerSelectionZone": "departed",
+        "formerSelectionRejectedBecause": [
+          "departed_boarding_stop"
+        ]
+      }
+    },
+    {
+      "caseId": "pv3-20260925T052712Z-f096de91-JEB405136521:w:s8:2026-09-25T05:36:04.070Z",
+      "routeId": "JEB405136521",
+      "boardingSequence": 8,
+      "commitAt": "2026-09-25T05:37:18.070Z",
+      "formerMechanism": "SOLE_ELIGIBLE_DEPARTED__TRUTH_NOT_IN_FEED",
+      "formerCommittedStopOffset": 3,
+      "legacyReproduced": true,
+      "current": {
+        "status": "unavailable",
+        "abstentionReasons": [],
+        "formerSelectionZone": "departed",
+        "formerSelectionRejectedBecause": [
+          "departed_boarding_stop"
+        ]
+      }
+    },
+    {
+      "caseId": "pv3-20260925T052712Z-f096de91-JEB405136521:w:s8:2026-09-25T05:54:04.070Z",
+      "routeId": "JEB405136521",
+      "boardingSequence": 8,
+      "commitAt": "2026-09-25T05:55:20.120Z",
+      "formerMechanism": "SOLE_ELIGIBLE_DEPARTED__TRUTH_NOT_IN_FEED",
+      "formerCommittedStopOffset": 2,
+      "legacyReproduced": true,
+      "current": {
+        "status": "unavailable",
+        "abstentionReasons": [],
+        "formerSelectionZone": "departed",
+        "formerSelectionRejectedBecause": [
+          "departed_boarding_stop"
+        ]
+      }
+    },
+    {
+      "caseId": "pv3-20260925T052712Z-f096de91-JEB405136521:w:s9:2026-09-25T05:36:04.070Z",
+      "routeId": "JEB405136521",
+      "boardingSequence": 9,
+      "commitAt": "2026-09-25T05:37:18.070Z",
+      "formerMechanism": "SOLE_ELIGIBLE_DEPARTED__TRUTH_NOT_IN_FEED",
+      "formerCommittedStopOffset": 2,
+      "legacyReproduced": true,
+      "current": {
+        "status": "unavailable",
+        "abstentionReasons": [],
+        "formerSelectionZone": "departed",
+        "formerSelectionRejectedBecause": [
+          "departed_boarding_stop"
+        ]
+      }
+    },
+    {
+      "caseId": "pv3-20260925T052712Z-f096de91-JEB405136521:w:s9:2026-09-25T05:38:04.070Z",
+      "routeId": "JEB405136521",
+      "boardingSequence": 9,
+      "commitAt": "2026-09-25T05:39:27.514Z",
+      "formerMechanism": "SOLE_ELIGIBLE_DEPARTED__TRUTH_NOT_IN_FEED",
+      "formerCommittedStopOffset": 4,
+      "legacyReproduced": true,
+      "current": {
+        "status": "unavailable",
+        "abstentionReasons": [],
+        "formerSelectionZone": "departed",
+        "formerSelectionRejectedBecause": [
+          "departed_boarding_stop"
+        ]
+      }
+    },
+    {
+      "caseId": "pv3-20260925T052712Z-f096de91-JEB405136521:w:s9:2026-09-25T05:40:04.070Z",
+      "routeId": "JEB405136521",
+      "boardingSequence": 9,
+      "commitAt": "2026-09-25T05:41:27.492Z",
+      "formerMechanism": "SOLE_ELIGIBLE_DEPARTED__TRUTH_NOT_IN_FEED",
+      "formerCommittedStopOffset": 4,
+      "legacyReproduced": true,
+      "current": {
+        "status": "unavailable",
+        "abstentionReasons": [],
+        "formerSelectionZone": "departed",
+        "formerSelectionRejectedBecause": [
+          "departed_boarding_stop"
+        ]
+      }
+    },
+    {
+      "caseId": "pv3-20260925T052712Z-f096de91-JEB405136521:w:s10:2026-09-25T05:38:04.070Z",
+      "routeId": "JEB405136521",
+      "boardingSequence": 10,
+      "commitAt": "2026-09-25T05:39:27.514Z",
+      "formerMechanism": "SOLE_ELIGIBLE_DEPARTED__TRUTH_NOT_IN_FEED",
+      "formerCommittedStopOffset": 3,
+      "legacyReproduced": true,
+      "current": {
+        "status": "unavailable",
+        "abstentionReasons": [],
+        "formerSelectionZone": "departed",
+        "formerSelectionRejectedBecause": [
+          "departed_boarding_stop"
+        ]
+      }
+    },
+    {
+      "caseId": "pv3-20260925T052712Z-f096de91-JEB405136521:w:s10:2026-09-25T05:40:04.070Z",
+      "routeId": "JEB405136521",
+      "boardingSequence": 10,
+      "commitAt": "2026-09-25T05:41:27.492Z",
+      "formerMechanism": "SOLE_ELIGIBLE_DEPARTED__TRUTH_NOT_IN_FEED",
+      "formerCommittedStopOffset": 3,
+      "legacyReproduced": true,
+      "current": {
+        "status": "unavailable",
+        "abstentionReasons": [],
+        "formerSelectionZone": "departed",
+        "formerSelectionRejectedBecause": [
+          "departed_boarding_stop"
+        ]
+      }
+    },
+    {
+      "caseId": "pv3-20260925T052712Z-f096de91-JEB405136521:w:s11:2026-09-25T05:40:04.070Z",
+      "routeId": "JEB405136521",
+      "boardingSequence": 11,
+      "commitAt": "2026-09-25T05:41:27.492Z",
+      "formerMechanism": "SOLE_ELIGIBLE_DEPARTED__TRUTH_NOT_IN_FEED",
+      "formerCommittedStopOffset": 2,
+      "legacyReproduced": true,
+      "current": {
+        "status": "unavailable",
+        "abstentionReasons": [],
+        "formerSelectionZone": "departed",
+        "formerSelectionRejectedBecause": [
+          "departed_boarding_stop"
+        ]
+      }
+    },
+    {
+      "caseId": "pv3-20260925T052712Z-f096de91-JEB405136521:w:s11:2026-09-25T05:58:04.070Z",
+      "routeId": "JEB405136521",
+      "boardingSequence": 11,
+      "commitAt": "2026-09-25T06:02:54.311Z",
+      "formerMechanism": "SOLE_ELIGIBLE_DEPARTED__TRUTH_NOT_IN_FEED",
+      "formerCommittedStopOffset": 4,
+      "legacyReproduced": true,
+      "current": {
+        "status": "unavailable",
+        "abstentionReasons": [],
+        "formerSelectionZone": "departed",
+        "formerSelectionRejectedBecause": [
+          "departed_boarding_stop"
+        ]
+      }
+    },
+    {
+      "caseId": "pv3-20260925T052712Z-f096de91-JEB405136521:w:s11:2026-09-25T06:00:04.070Z",
+      "routeId": "JEB405136521",
+      "boardingSequence": 11,
+      "commitAt": "2026-09-25T06:02:54.311Z",
+      "formerMechanism": "SOLE_ELIGIBLE_DEPARTED__TRUTH_NOT_IN_FEED",
+      "formerCommittedStopOffset": 4,
+      "legacyReproduced": true,
+      "current": {
+        "status": "unavailable",
+        "abstentionReasons": [],
+        "formerSelectionZone": "departed",
+        "formerSelectionRejectedBecause": [
+          "departed_boarding_stop"
+        ]
+      }
+    },
+    {
+      "caseId": "pv3-20260925T052712Z-f096de91-JEB405136521:w:s12:2026-09-25T05:28:04.070Z",
+      "routeId": "JEB405136521",
+      "boardingSequence": 12,
+      "commitAt": "2026-09-25T05:29:01.963Z",
+      "formerMechanism": "SOLE_ELIGIBLE_DEPARTED__TRUTH_BEYOND_4_STOPS",
+      "formerCommittedStopOffset": 4,
+      "legacyReproduced": true,
+      "current": {
+        "status": "unavailable",
+        "abstentionReasons": [],
+        "formerSelectionZone": "departed",
+        "trueBusZone": "beyond_window",
+        "formerSelectionRejectedBecause": [
+          "departed_boarding_stop"
+        ]
+      }
+    },
+    {
+      "caseId": "pv3-20260925T052712Z-f096de91-JEB405136521:w:s12:2026-09-25T05:40:04.070Z",
+      "routeId": "JEB405136521",
+      "boardingSequence": 12,
+      "commitAt": "2026-09-25T05:41:27.492Z",
+      "formerMechanism": "SOLE_ELIGIBLE_DEPARTED__TRUTH_NOT_IN_FEED",
+      "formerCommittedStopOffset": 1,
+      "legacyReproduced": true,
+      "current": {
+        "status": "unavailable",
+        "abstentionReasons": [
+          "boarding_stop_reached_during_session",
+          "vehicle_at_boarding_stop_unresolved"
+        ],
+        "formerSelectionZone": "boarding_stop_unresolved",
+        "formerSelectionRejectedBecause": [
+          "boarding_stop_position_unresolved"
+        ]
+      }
+    },
+    {
+      "caseId": "pv3-20260925T052712Z-f096de91-JEB405136521:w:s12:2026-09-25T05:44:04.070Z",
+      "routeId": "JEB405136521",
+      "boardingSequence": 12,
+      "commitAt": "2026-09-25T05:45:26.799Z",
+      "formerMechanism": "SOLE_ELIGIBLE_DEPARTED__TRUTH_NOT_IN_FEED",
+      "formerCommittedStopOffset": 4,
+      "legacyReproduced": true,
+      "current": {
+        "status": "unavailable",
+        "abstentionReasons": [],
+        "formerSelectionZone": "departed",
+        "formerSelectionRejectedBecause": [
+          "departed_boarding_stop"
+        ]
+      }
+    },
+    {
+      "caseId": "pv3-20260925T052712Z-f096de91-JEB405136521:w:s12:2026-09-25T06:00:04.070Z",
+      "routeId": "JEB405136521",
+      "boardingSequence": 12,
+      "commitAt": "2026-09-25T06:02:54.311Z",
+      "formerMechanism": "SOLE_ELIGIBLE_DEPARTED__TRUTH_NOT_IN_FEED",
+      "formerCommittedStopOffset": 3,
+      "legacyReproduced": true,
+      "current": {
+        "status": "unavailable",
+        "abstentionReasons": [],
+        "formerSelectionZone": "departed",
+        "formerSelectionRejectedBecause": [
+          "departed_boarding_stop"
+        ]
+      }
+    },
+    {
+      "caseId": "pv3-20260925T052712Z-f096de91-JEB405136521:w:s12:2026-09-25T06:02:04.070Z",
+      "routeId": "JEB405136521",
+      "boardingSequence": 12,
+      "commitAt": "2026-09-25T06:05:25.904Z",
+      "formerMechanism": "SOLE_ELIGIBLE_DEPARTED__TRUTH_BEYOND_4_STOPS",
+      "formerCommittedStopOffset": 4,
+      "legacyReproduced": true,
+      "current": {
+        "status": "unavailable",
+        "abstentionReasons": [],
+        "formerSelectionZone": "departed",
+        "trueBusZone": "beyond_window",
+        "formerSelectionRejectedBecause": [
+          "departed_boarding_stop"
+        ]
+      }
+    },
+    {
+      "caseId": "pv3-20260925T052712Z-f096de91-JEB405136521:w:s12:2026-09-25T06:04:04.070Z",
+      "routeId": "JEB405136521",
+      "boardingSequence": 12,
+      "commitAt": "2026-09-25T06:05:25.904Z",
+      "formerMechanism": "SOLE_ELIGIBLE_DEPARTED__TRUTH_BEYOND_4_STOPS",
+      "formerCommittedStopOffset": 4,
+      "legacyReproduced": true,
+      "current": {
+        "status": "unavailable",
+        "abstentionReasons": [],
+        "formerSelectionZone": "departed",
+        "trueBusZone": "beyond_window",
+        "formerSelectionRejectedBecause": [
+          "departed_boarding_stop"
+        ]
+      }
+    },
+    {
+      "caseId": "pv3-20260925T052712Z-f096de91-JEB405136521:w:s12:2026-09-25T06:06:04.070Z",
+      "routeId": "JEB405136521",
+      "boardingSequence": 12,
+      "commitAt": "2026-09-25T06:07:09.552Z",
+      "formerMechanism": "SOLE_ELIGIBLE_DEPARTED__TRUTH_BEYOND_4_STOPS",
+      "formerCommittedStopOffset": 4,
+      "legacyReproduced": true,
+      "current": {
+        "status": "unavailable",
+        "abstentionReasons": [],
+        "formerSelectionZone": "departed",
+        "trueBusZone": "beyond_window",
+        "formerSelectionRejectedBecause": [
+          "departed_boarding_stop"
+        ]
+      }
+    },
+    {
+      "caseId": "pv3-20260925T052712Z-f096de91-JEB405136521:w:s13:2026-09-25T05:28:04.070Z",
+      "routeId": "JEB405136521",
+      "boardingSequence": 13,
+      "commitAt": "2026-09-25T05:29:01.963Z",
+      "formerMechanism": "SOLE_ELIGIBLE_DEPARTED__TRUTH_BEYOND_4_STOPS",
+      "formerCommittedStopOffset": 3,
+      "legacyReproduced": true,
+      "current": {
+        "status": "unavailable",
+        "abstentionReasons": [],
+        "formerSelectionZone": "departed",
+        "trueBusZone": "beyond_window",
+        "formerSelectionRejectedBecause": [
+          "departed_boarding_stop"
+        ]
+      }
+    },
+    {
+      "caseId": "pv3-20260925T052712Z-f096de91-JEB405136521:w:s13:2026-09-25T05:44:04.070Z",
+      "routeId": "JEB405136521",
+      "boardingSequence": 13,
+      "commitAt": "2026-09-25T05:45:26.799Z",
+      "formerMechanism": "SOLE_ELIGIBLE_DEPARTED__TRUTH_NOT_IN_FEED",
+      "formerCommittedStopOffset": 3,
+      "legacyReproduced": true,
+      "current": {
+        "status": "unavailable",
+        "abstentionReasons": [],
+        "formerSelectionZone": "departed",
+        "formerSelectionRejectedBecause": [
+          "departed_boarding_stop"
+        ]
+      }
+    },
+    {
+      "caseId": "pv3-20260925T052712Z-f096de91-JEB405136521:w:s13:2026-09-25T05:46:04.070Z",
+      "routeId": "JEB405136521",
+      "boardingSequence": 13,
+      "commitAt": "2026-09-25T05:48:09.531Z",
+      "formerMechanism": "SOLE_ELIGIBLE_DEPARTED__TRUTH_BEYOND_4_STOPS",
+      "formerCommittedStopOffset": 4,
+      "legacyReproduced": true,
+      "current": {
+        "status": "unavailable",
+        "abstentionReasons": [],
+        "formerSelectionZone": "departed",
+        "trueBusZone": "beyond_window",
+        "formerSelectionRejectedBecause": [
+          "departed_boarding_stop"
+        ]
+      }
+    },
+    {
+      "caseId": "pv3-20260925T052712Z-f096de91-JEB405136521:w:s13:2026-09-25T05:48:04.070Z",
+      "routeId": "JEB405136521",
+      "boardingSequence": 13,
+      "commitAt": "2026-09-25T05:49:07.666Z",
+      "formerMechanism": "SOLE_ELIGIBLE_DEPARTED__TRUTH_BEYOND_4_STOPS",
+      "formerCommittedStopOffset": 4,
+      "legacyReproduced": true,
+      "current": {
+        "status": "unavailable",
+        "abstentionReasons": [],
+        "formerSelectionZone": "departed",
+        "trueBusZone": "beyond_window",
+        "formerSelectionRejectedBecause": [
+          "departed_boarding_stop"
+        ]
+      }
+    },
+    {
+      "caseId": "pv3-20260925T052712Z-f096de91-JEB405136521:w:s13:2026-09-25T06:02:04.070Z",
+      "routeId": "JEB405136521",
+      "boardingSequence": 13,
+      "commitAt": "2026-09-25T06:05:25.904Z",
+      "formerMechanism": "SOLE_ELIGIBLE_DEPARTED__TRUTH_BEYOND_4_STOPS",
+      "formerCommittedStopOffset": 3,
+      "legacyReproduced": true,
+      "current": {
+        "status": "unavailable",
+        "abstentionReasons": [],
+        "formerSelectionZone": "departed",
+        "trueBusZone": "beyond_window",
+        "formerSelectionRejectedBecause": [
+          "departed_boarding_stop"
+        ]
+      }
+    },
+    {
+      "caseId": "pv3-20260925T052712Z-f096de91-JEB405136521:w:s13:2026-09-25T06:04:04.070Z",
+      "routeId": "JEB405136521",
+      "boardingSequence": 13,
+      "commitAt": "2026-09-25T06:05:25.904Z",
+      "formerMechanism": "SOLE_ELIGIBLE_DEPARTED__TRUTH_BEYOND_4_STOPS",
+      "formerCommittedStopOffset": 3,
+      "legacyReproduced": true,
+      "current": {
+        "status": "unavailable",
+        "abstentionReasons": [],
+        "formerSelectionZone": "departed",
+        "trueBusZone": "beyond_window",
+        "formerSelectionRejectedBecause": [
+          "departed_boarding_stop"
+        ]
+      }
+    },
+    {
+      "caseId": "pv3-20260925T052712Z-f096de91-JEB405136521:w:s13:2026-09-25T06:06:04.070Z",
+      "routeId": "JEB405136521",
+      "boardingSequence": 13,
+      "commitAt": "2026-09-25T06:07:09.552Z",
+      "formerMechanism": "SOLE_ELIGIBLE_DEPARTED__TRUTH_BEYOND_4_STOPS",
+      "formerCommittedStopOffset": 3,
+      "legacyReproduced": true,
+      "current": {
+        "status": "unavailable",
+        "abstentionReasons": [],
+        "formerSelectionZone": "departed",
+        "trueBusZone": "beyond_window",
+        "formerSelectionRejectedBecause": [
+          "departed_boarding_stop"
+        ]
+      }
+    },
+    {
+      "caseId": "pv3-20260925T052712Z-f096de91-JEB405136521:w:s14:2026-09-25T05:28:04.070Z",
+      "routeId": "JEB405136521",
+      "boardingSequence": 14,
+      "commitAt": "2026-09-25T05:29:01.963Z",
+      "formerMechanism": "SOLE_ELIGIBLE_DEPARTED__TRUTH_BEYOND_4_STOPS",
+      "formerCommittedStopOffset": 2,
+      "legacyReproduced": true,
+      "current": {
+        "status": "unavailable",
+        "abstentionReasons": [],
+        "formerSelectionZone": "departed",
+        "trueBusZone": "beyond_window",
+        "formerSelectionRejectedBecause": [
+          "departed_boarding_stop"
+        ]
+      }
+    },
+    {
+      "caseId": "pv3-20260925T052712Z-f096de91-JEB405136521:w:s14:2026-09-25T05:44:04.070Z",
+      "routeId": "JEB405136521",
+      "boardingSequence": 14,
+      "commitAt": "2026-09-25T05:45:26.799Z",
+      "formerMechanism": "SOLE_ELIGIBLE_DEPARTED__TRUTH_NOT_IN_FEED",
+      "formerCommittedStopOffset": 2,
+      "legacyReproduced": true,
+      "current": {
+        "status": "unavailable",
+        "abstentionReasons": [],
+        "formerSelectionZone": "departed",
+        "formerSelectionRejectedBecause": [
+          "departed_boarding_stop"
+        ]
+      }
+    },
+    {
+      "caseId": "pv3-20260925T052712Z-f096de91-JEB405136521:w:s14:2026-09-25T05:46:04.070Z",
+      "routeId": "JEB405136521",
+      "boardingSequence": 14,
+      "commitAt": "2026-09-25T05:48:09.531Z",
+      "formerMechanism": "SOLE_ELIGIBLE_DEPARTED__TRUTH_BEYOND_4_STOPS",
+      "formerCommittedStopOffset": 3,
+      "legacyReproduced": true,
+      "current": {
+        "status": "unavailable",
+        "abstentionReasons": [],
+        "formerSelectionZone": "departed",
+        "trueBusZone": "beyond_window",
+        "formerSelectionRejectedBecause": [
+          "departed_boarding_stop"
+        ]
+      }
+    },
+    {
+      "caseId": "pv3-20260925T052712Z-f096de91-JEB405136521:w:s14:2026-09-25T05:48:04.070Z",
+      "routeId": "JEB405136521",
+      "boardingSequence": 14,
+      "commitAt": "2026-09-25T05:49:07.666Z",
+      "formerMechanism": "SOLE_ELIGIBLE_DEPARTED__TRUTH_BEYOND_4_STOPS",
+      "formerCommittedStopOffset": 3,
+      "legacyReproduced": true,
+      "current": {
+        "status": "unavailable",
+        "abstentionReasons": [],
+        "formerSelectionZone": "departed",
+        "trueBusZone": "beyond_window",
+        "formerSelectionRejectedBecause": [
+          "departed_boarding_stop"
+        ]
+      }
+    },
+    {
+      "caseId": "pv3-20260925T052712Z-f096de91-JEB405136521:w:s14:2026-09-25T06:04:04.070Z",
+      "routeId": "JEB405136521",
+      "boardingSequence": 14,
+      "commitAt": "2026-09-25T06:05:25.904Z",
+      "formerMechanism": "SOLE_ELIGIBLE_DEPARTED__TRUTH_BEYOND_4_STOPS",
+      "formerCommittedStopOffset": 2,
+      "legacyReproduced": true,
+      "current": {
+        "status": "unavailable",
+        "abstentionReasons": [],
+        "formerSelectionZone": "departed",
+        "trueBusZone": "beyond_window",
+        "formerSelectionRejectedBecause": [
+          "departed_boarding_stop"
+        ]
+      }
+    },
+    {
+      "caseId": "pv3-20260925T052712Z-f096de91-JEB405136521:w:s14:2026-09-25T06:06:04.070Z",
+      "routeId": "JEB405136521",
+      "boardingSequence": 14,
+      "commitAt": "2026-09-25T06:07:09.552Z",
+      "formerMechanism": "SOLE_ELIGIBLE_DEPARTED__TRUTH_BEYOND_4_STOPS",
+      "formerCommittedStopOffset": 2,
+      "legacyReproduced": true,
+      "current": {
+        "status": "unavailable",
+        "abstentionReasons": [],
+        "formerSelectionZone": "departed",
+        "trueBusZone": "beyond_window",
+        "formerSelectionRejectedBecause": [
+          "departed_boarding_stop"
+        ]
+      }
+    },
+    {
+      "caseId": "pv3-20260925T052712Z-f096de91-JEB405136521:w:s15:2026-09-25T05:46:04.070Z",
+      "routeId": "JEB405136521",
+      "boardingSequence": 15,
+      "commitAt": "2026-09-25T05:48:09.531Z",
+      "formerMechanism": "SOLE_ELIGIBLE_DEPARTED__TRUTH_BEYOND_4_STOPS",
+      "formerCommittedStopOffset": 2,
+      "legacyReproduced": true,
+      "current": {
+        "status": "unavailable",
+        "abstentionReasons": [],
+        "formerSelectionZone": "departed",
+        "trueBusZone": "beyond_window",
+        "formerSelectionRejectedBecause": [
+          "departed_boarding_stop"
+        ]
+      }
+    },
+    {
+      "caseId": "pv3-20260925T052712Z-f096de91-JEB405136521:w:s15:2026-09-25T05:48:04.070Z",
+      "routeId": "JEB405136521",
+      "boardingSequence": 15,
+      "commitAt": "2026-09-25T05:49:07.666Z",
+      "formerMechanism": "SOLE_ELIGIBLE_DEPARTED__TRUTH_BEYOND_4_STOPS",
+      "formerCommittedStopOffset": 2,
+      "legacyReproduced": true,
+      "current": {
+        "status": "unavailable",
+        "abstentionReasons": [],
+        "formerSelectionZone": "departed",
+        "trueBusZone": "beyond_window",
+        "formerSelectionRejectedBecause": [
+          "departed_boarding_stop"
+        ]
+      }
+    },
+    {
+      "caseId": "pv3-20260925T052712Z-f096de91-JEB405136521:w:s16:2026-09-25T05:32:04.070Z",
+      "routeId": "JEB405136521",
+      "boardingSequence": 16,
+      "commitAt": "2026-09-25T05:37:18.070Z",
+      "formerMechanism": "SOLE_ELIGIBLE_DEPARTED__TRUTH_BEYOND_4_STOPS",
+      "formerCommittedStopOffset": 3,
+      "legacyReproduced": true,
+      "current": {
+        "status": "unavailable",
+        "abstentionReasons": [],
+        "formerSelectionZone": "departed",
+        "trueBusZone": "beyond_window",
+        "formerSelectionRejectedBecause": [
+          "departed_boarding_stop"
+        ]
+      }
+    },
+    {
+      "caseId": "pv3-20260925T052712Z-f096de91-JEB405136521:w:s16:2026-09-25T05:34:04.070Z",
+      "routeId": "JEB405136521",
+      "boardingSequence": 16,
+      "commitAt": "2026-09-25T05:37:18.070Z",
+      "formerMechanism": "SOLE_ELIGIBLE_DEPARTED__TRUTH_BEYOND_4_STOPS",
+      "formerCommittedStopOffset": 3,
+      "legacyReproduced": true,
+      "current": {
+        "status": "unavailable",
+        "abstentionReasons": [],
+        "formerSelectionZone": "departed",
+        "trueBusZone": "beyond_window",
+        "formerSelectionRejectedBecause": [
+          "departed_boarding_stop"
+        ]
+      }
+    },
+    {
+      "caseId": "pv3-20260925T052712Z-f096de91-JEB405136521:w:s16:2026-09-25T05:36:04.070Z",
+      "routeId": "JEB405136521",
+      "boardingSequence": 16,
+      "commitAt": "2026-09-25T05:37:18.070Z",
+      "formerMechanism": "SOLE_ELIGIBLE_DEPARTED__TRUTH_BEYOND_4_STOPS",
+      "formerCommittedStopOffset": 3,
+      "legacyReproduced": true,
+      "current": {
+        "status": "unavailable",
+        "abstentionReasons": [],
+        "formerSelectionZone": "departed",
+        "trueBusZone": "beyond_window",
+        "formerSelectionRejectedBecause": [
+          "departed_boarding_stop"
+        ]
+      }
+    },
+    {
+      "caseId": "pv3-20260925T052712Z-f096de91-JEB405136521:w:s16:2026-09-25T05:48:04.070Z",
+      "routeId": "JEB405136521",
+      "boardingSequence": 16,
+      "commitAt": "2026-09-25T05:49:07.666Z",
+      "formerMechanism": "SOLE_ELIGIBLE_DEPARTED__TRUTH_BEYOND_4_STOPS",
+      "formerCommittedStopOffset": 1,
+      "legacyReproduced": true,
+      "current": {
+        "status": "unavailable",
+        "abstentionReasons": [
+          "boarding_stop_reached_during_session",
+          "vehicle_at_boarding_stop_unresolved"
+        ],
+        "formerSelectionZone": "boarding_stop_unresolved",
+        "trueBusZone": "beyond_window",
+        "formerSelectionRejectedBecause": [
+          "boarding_stop_position_unresolved"
+        ]
+      }
+    },
+    {
+      "caseId": "pv3-20260925T052712Z-f096de91-JEB405136521:w:s16:2026-09-25T05:54:04.070Z",
+      "routeId": "JEB405136521",
+      "boardingSequence": 16,
+      "commitAt": "2026-09-25T05:55:20.120Z",
+      "formerMechanism": "SOLE_ELIGIBLE_DEPARTED__TRUTH_BEYOND_4_STOPS",
+      "formerCommittedStopOffset": 4,
+      "legacyReproduced": true,
+      "current": {
+        "status": "unavailable",
+        "abstentionReasons": [],
+        "formerSelectionZone": "departed",
+        "trueBusZone": "beyond_window",
+        "formerSelectionRejectedBecause": [
+          "departed_boarding_stop"
+        ]
+      }
+    },
+    {
+      "caseId": "pv3-20260925T052712Z-f096de91-JEB405136521:w:s17:2026-09-25T05:34:04.070Z",
+      "routeId": "JEB405136521",
+      "boardingSequence": 17,
+      "commitAt": "2026-09-25T05:37:18.070Z",
+      "formerMechanism": "SOLE_ELIGIBLE_DEPARTED__TRUTH_BEYOND_4_STOPS",
+      "formerCommittedStopOffset": 2,
+      "legacyReproduced": true,
+      "current": {
+        "status": "unavailable",
+        "abstentionReasons": [],
+        "formerSelectionZone": "departed",
+        "trueBusZone": "beyond_window",
+        "formerSelectionRejectedBecause": [
+          "departed_boarding_stop"
+        ]
+      }
+    },
+    {
+      "caseId": "pv3-20260925T052712Z-f096de91-JEB405136521:w:s17:2026-09-25T05:36:04.070Z",
+      "routeId": "JEB405136521",
+      "boardingSequence": 17,
+      "commitAt": "2026-09-25T05:37:18.070Z",
+      "formerMechanism": "SOLE_ELIGIBLE_DEPARTED__TRUTH_BEYOND_4_STOPS",
+      "formerCommittedStopOffset": 2,
+      "legacyReproduced": true,
+      "current": {
+        "status": "unavailable",
+        "abstentionReasons": [],
+        "formerSelectionZone": "departed",
+        "trueBusZone": "beyond_window",
+        "formerSelectionRejectedBecause": [
+          "departed_boarding_stop"
+        ]
+      }
+    },
+    {
+      "caseId": "pv3-20260925T052712Z-f096de91-JEB405136521:w:s17:2026-09-25T05:50:04.070Z",
+      "routeId": "JEB405136521",
+      "boardingSequence": 17,
+      "commitAt": "2026-09-25T05:55:47.585Z",
+      "formerMechanism": "SOLE_ELIGIBLE_DEPARTED__TRUTH_BEYOND_4_STOPS",
+      "formerCommittedStopOffset": 4,
+      "legacyReproduced": true,
+      "current": {
+        "status": "unavailable",
+        "abstentionReasons": [],
+        "formerSelectionZone": "departed",
+        "trueBusZone": "beyond_window",
+        "formerSelectionRejectedBecause": [
+          "departed_boarding_stop"
+        ]
+      }
+    },
+    {
+      "caseId": "pv3-20260925T052712Z-f096de91-JEB405136521:w:s17:2026-09-25T05:52:04.070Z",
+      "routeId": "JEB405136521",
+      "boardingSequence": 17,
+      "commitAt": "2026-09-25T05:55:47.585Z",
+      "formerMechanism": "SOLE_ELIGIBLE_DEPARTED__TRUTH_BEYOND_4_STOPS",
+      "formerCommittedStopOffset": 4,
+      "legacyReproduced": true,
+      "current": {
+        "status": "unavailable",
+        "abstentionReasons": [],
+        "formerSelectionZone": "departed",
+        "trueBusZone": "beyond_window",
+        "formerSelectionRejectedBecause": [
+          "departed_boarding_stop"
+        ]
+      }
+    },
+    {
+      "caseId": "pv3-20260925T052712Z-f096de91-JEB405136521:w:s17:2026-09-25T05:54:04.070Z",
+      "routeId": "JEB405136521",
+      "boardingSequence": 17,
+      "commitAt": "2026-09-25T05:55:20.120Z",
+      "formerMechanism": "SOLE_ELIGIBLE_DEPARTED__TRUTH_BEYOND_4_STOPS",
+      "formerCommittedStopOffset": 3,
+      "legacyReproduced": true,
+      "current": {
+        "status": "unavailable",
+        "abstentionReasons": [],
+        "formerSelectionZone": "departed",
+        "trueBusZone": "beyond_window",
+        "formerSelectionRejectedBecause": [
+          "departed_boarding_stop"
+        ]
+      }
+    },
+    {
+      "caseId": "pv3-20260925T052712Z-f096de91-JEB405136521:w:s18:2026-09-25T05:34:04.070Z",
+      "routeId": "JEB405136521",
+      "boardingSequence": 18,
+      "commitAt": "2026-09-25T05:37:18.070Z",
+      "formerMechanism": "SOLE_ELIGIBLE_DEPARTED__TRUTH_BEYOND_4_STOPS",
+      "formerCommittedStopOffset": 1,
+      "legacyReproduced": true,
+      "current": {
+        "status": "unavailable",
+        "abstentionReasons": [
+          "boarding_stop_reached_during_session",
+          "vehicle_at_boarding_stop_unresolved"
+        ],
+        "formerSelectionZone": "boarding_stop_unresolved",
+        "trueBusZone": "beyond_window",
+        "formerSelectionRejectedBecause": [
+          "boarding_stop_position_unresolved"
+        ]
+      }
+    },
+    {
+      "caseId": "pv3-20260925T052712Z-f096de91-JEB405136521:w:s18:2026-09-25T05:36:04.070Z",
+      "routeId": "JEB405136521",
+      "boardingSequence": 18,
+      "commitAt": "2026-09-25T05:37:18.070Z",
+      "formerMechanism": "SOLE_ELIGIBLE_DEPARTED__TRUTH_BEYOND_4_STOPS",
+      "formerCommittedStopOffset": 1,
+      "legacyReproduced": true,
+      "current": {
+        "status": "unavailable",
+        "abstentionReasons": [
+          "boarding_stop_reached_during_session",
+          "vehicle_at_boarding_stop_unresolved"
+        ],
+        "formerSelectionZone": "boarding_stop_unresolved",
+        "trueBusZone": "beyond_window",
+        "formerSelectionRejectedBecause": [
+          "boarding_stop_position_unresolved"
+        ]
+      }
+    },
+    {
+      "caseId": "pv3-20260925T052712Z-f096de91-JEB405136521:w:s18:2026-09-25T05:38:04.070Z",
+      "routeId": "JEB405136521",
+      "boardingSequence": 18,
+      "commitAt": "2026-09-25T05:39:27.514Z",
+      "formerMechanism": "SOLE_ELIGIBLE_DEPARTED__TRUTH_BEYOND_4_STOPS",
+      "formerCommittedStopOffset": 2,
+      "legacyReproduced": true,
+      "current": {
+        "status": "unavailable",
+        "abstentionReasons": [],
+        "formerSelectionZone": "departed",
+        "trueBusZone": "beyond_window",
+        "formerSelectionRejectedBecause": [
+          "departed_boarding_stop"
+        ]
+      }
+    },
+    {
+      "caseId": "pv3-20260925T052712Z-f096de91-JEB405136521:w:s18:2026-09-25T05:40:04.070Z",
+      "routeId": "JEB405136521",
+      "boardingSequence": 18,
+      "commitAt": "2026-09-25T05:41:27.492Z",
+      "formerMechanism": "SOLE_ELIGIBLE_DEPARTED__TRUTH_BEYOND_4_STOPS",
+      "formerCommittedStopOffset": 3,
+      "legacyReproduced": true,
+      "current": {
+        "status": "unavailable",
+        "abstentionReasons": [],
+        "formerSelectionZone": "departed",
+        "trueBusZone": "beyond_window",
+        "formerSelectionRejectedBecause": [
+          "departed_boarding_stop"
+        ]
+      }
+    },
+    {
+      "caseId": "pv3-20260925T052712Z-f096de91-JEB405136521:w:s18:2026-09-25T05:54:04.070Z",
+      "routeId": "JEB405136521",
+      "boardingSequence": 18,
+      "commitAt": "2026-09-25T05:55:20.120Z",
+      "formerMechanism": "SOLE_ELIGIBLE_DEPARTED__TRUTH_BEYOND_4_STOPS",
+      "formerCommittedStopOffset": 2,
+      "legacyReproduced": true,
+      "current": {
+        "status": "unavailable",
+        "abstentionReasons": [],
+        "formerSelectionZone": "departed",
+        "trueBusZone": "beyond_window",
+        "formerSelectionRejectedBecause": [
+          "departed_boarding_stop"
+        ]
+      }
+    },
+    {
+      "caseId": "pv3-20260925T052712Z-f096de91-JEB405136521:w:s19:2026-09-25T05:38:04.070Z",
+      "routeId": "JEB405136521",
+      "boardingSequence": 19,
+      "commitAt": "2026-09-25T05:39:27.514Z",
+      "formerMechanism": "SOLE_ELIGIBLE_DEPARTED__TRUTH_BEYOND_4_STOPS",
+      "formerCommittedStopOffset": 1,
+      "legacyReproduced": true,
+      "current": {
+        "status": "unavailable",
+        "abstentionReasons": [
+          "boarding_stop_reached_during_session",
+          "vehicle_at_boarding_stop_unresolved"
+        ],
+        "formerSelectionZone": "boarding_stop_unresolved",
+        "trueBusZone": "beyond_window",
+        "formerSelectionRejectedBecause": [
+          "boarding_stop_position_unresolved"
+        ]
+      }
+    },
+    {
+      "caseId": "pv3-20260925T052712Z-f096de91-JEB405136521:w:s19:2026-09-25T05:40:04.070Z",
+      "routeId": "JEB405136521",
+      "boardingSequence": 19,
+      "commitAt": "2026-09-25T05:41:27.492Z",
+      "formerMechanism": "SOLE_ELIGIBLE_DEPARTED__TRUTH_BEYOND_4_STOPS",
+      "formerCommittedStopOffset": 2,
+      "legacyReproduced": true,
+      "current": {
+        "status": "unavailable",
+        "abstentionReasons": [],
+        "formerSelectionZone": "departed",
+        "trueBusZone": "beyond_window",
+        "formerSelectionRejectedBecause": [
+          "departed_boarding_stop"
+        ]
+      }
+    },
+    {
+      "caseId": "pv3-20260925T052712Z-f096de91-JEB405136521:w:s19:2026-09-25T05:54:04.070Z",
+      "routeId": "JEB405136521",
+      "boardingSequence": 19,
+      "commitAt": "2026-09-25T05:55:20.120Z",
+      "formerMechanism": "SOLE_ELIGIBLE_DEPARTED__TRUTH_BEYOND_4_STOPS",
+      "formerCommittedStopOffset": 1,
+      "legacyReproduced": true,
+      "current": {
+        "status": "unavailable",
+        "abstentionReasons": [
+          "boarding_stop_reached_during_session",
+          "vehicle_at_boarding_stop_unresolved"
+        ],
+        "formerSelectionZone": "boarding_stop_unresolved",
+        "trueBusZone": "beyond_window",
+        "formerSelectionRejectedBecause": [
+          "boarding_stop_position_unresolved"
+        ]
+      }
+    },
+    {
+      "caseId": "pv3-20260925T052712Z-f096de91-JEB405136521:w:s21:2026-09-25T05:28:04.070Z",
+      "routeId": "JEB405136521",
+      "boardingSequence": 21,
+      "commitAt": "2026-09-25T05:29:01.963Z",
+      "formerMechanism": "SOLE_ELIGIBLE_DEPARTED__TRUTH_BEYOND_4_STOPS",
+      "formerCommittedStopOffset": 4,
+      "legacyReproduced": true,
+      "current": {
+        "status": "unavailable",
+        "abstentionReasons": [],
+        "formerSelectionZone": "departed",
+        "trueBusZone": "beyond_window",
+        "formerSelectionRejectedBecause": [
+          "departed_boarding_stop"
+        ]
+      }
+    },
+    {
+      "caseId": "pv3-20260925T052712Z-f096de91-JEB405136521:w:s21:2026-09-25T05:44:04.070Z",
+      "routeId": "JEB405136521",
+      "boardingSequence": 21,
+      "commitAt": "2026-09-25T05:45:26.799Z",
+      "formerMechanism": "SOLE_ELIGIBLE_DEPARTED__TRUTH_BEYOND_4_STOPS",
+      "formerCommittedStopOffset": 3,
+      "legacyReproduced": true,
+      "current": {
+        "status": "unavailable",
+        "abstentionReasons": [],
+        "formerSelectionZone": "departed",
+        "trueBusZone": "beyond_window",
+        "formerSelectionRejectedBecause": [
+          "departed_boarding_stop"
+        ]
+      }
+    },
+    {
+      "caseId": "pv3-20260925T052712Z-f096de91-JEB405136521:w:s22:2026-09-25T05:28:04.070Z",
+      "routeId": "JEB405136521",
+      "boardingSequence": 22,
+      "commitAt": "2026-09-25T05:29:01.963Z",
+      "formerMechanism": "SOLE_ELIGIBLE_DEPARTED__TRUTH_BEYOND_4_STOPS",
+      "formerCommittedStopOffset": 3,
+      "legacyReproduced": true,
+      "current": {
+        "status": "unavailable",
+        "abstentionReasons": [],
+        "formerSelectionZone": "departed",
+        "trueBusZone": "beyond_window",
+        "formerSelectionRejectedBecause": [
+          "departed_boarding_stop"
+        ]
+      }
+    },
+    {
+      "caseId": "pv3-20260925T052712Z-f096de91-JEB405136521:w:s22:2026-09-25T05:44:04.070Z",
+      "routeId": "JEB405136521",
+      "boardingSequence": 22,
+      "commitAt": "2026-09-25T05:45:26.799Z",
+      "formerMechanism": "SOLE_ELIGIBLE_DEPARTED__TRUTH_BEYOND_4_STOPS",
+      "formerCommittedStopOffset": 2,
+      "legacyReproduced": true,
+      "current": {
+        "status": "unavailable",
+        "abstentionReasons": [],
+        "formerSelectionZone": "departed",
+        "trueBusZone": "beyond_window",
+        "formerSelectionRejectedBecause": [
+          "departed_boarding_stop"
+        ]
+      }
+    },
+    {
+      "caseId": "pv3-20260925T052712Z-f096de91-JEB405136521:w:s22:2026-09-25T05:46:04.070Z",
+      "routeId": "JEB405136521",
+      "boardingSequence": 22,
+      "commitAt": "2026-09-25T05:48:09.531Z",
+      "formerMechanism": "SOLE_ELIGIBLE_DEPARTED__TRUTH_BEYOND_4_STOPS",
+      "formerCommittedStopOffset": 4,
+      "legacyReproduced": true,
+      "current": {
+        "status": "unavailable",
+        "abstentionReasons": [],
+        "formerSelectionZone": "departed",
+        "trueBusZone": "beyond_window",
+        "formerSelectionRejectedBecause": [
+          "departed_boarding_stop"
+        ]
+      }
+    },
+    {
+      "caseId": "pv3-20260925T052712Z-f096de91-JEB405136521:w:s22:2026-09-25T06:00:04.070Z",
+      "routeId": "JEB405136521",
+      "boardingSequence": 22,
+      "commitAt": "2026-09-25T06:02:54.311Z",
+      "formerMechanism": "SOLE_ELIGIBLE_DEPARTED__TRUTH_BEYOND_4_STOPS",
+      "formerCommittedStopOffset": 4,
+      "legacyReproduced": true,
+      "current": {
+        "status": "unavailable",
+        "abstentionReasons": [],
+        "formerSelectionZone": "departed",
+        "trueBusZone": "beyond_window",
+        "formerSelectionRejectedBecause": [
+          "departed_boarding_stop"
+        ]
+      }
+    },
+    {
+      "caseId": "pv3-20260925T052712Z-f096de91-JEB405136521:w:s23:2026-09-25T05:28:04.070Z",
+      "routeId": "JEB405136521",
+      "boardingSequence": 23,
+      "commitAt": "2026-09-25T05:29:01.963Z",
+      "formerMechanism": "SOLE_ELIGIBLE_DEPARTED__TRUTH_BEYOND_4_STOPS",
+      "formerCommittedStopOffset": 2,
+      "legacyReproduced": true,
+      "current": {
+        "status": "unavailable",
+        "abstentionReasons": [],
+        "formerSelectionZone": "departed",
+        "trueBusZone": "beyond_window",
+        "formerSelectionRejectedBecause": [
+          "departed_boarding_stop"
+        ]
+      }
+    },
+    {
+      "caseId": "pv3-20260925T052712Z-f096de91-JEB405136521:w:s23:2026-09-25T05:44:04.070Z",
+      "routeId": "JEB405136521",
+      "boardingSequence": 23,
+      "commitAt": "2026-09-25T05:45:26.799Z",
+      "formerMechanism": "SOLE_ELIGIBLE_DEPARTED__TRUTH_BEYOND_4_STOPS",
+      "formerCommittedStopOffset": 1,
+      "legacyReproduced": true,
+      "current": {
+        "status": "unavailable",
+        "abstentionReasons": [
+          "boarding_stop_reached_during_session",
+          "vehicle_at_boarding_stop_unresolved"
+        ],
+        "formerSelectionZone": "boarding_stop_unresolved",
+        "trueBusZone": "beyond_window",
+        "formerSelectionRejectedBecause": [
+          "boarding_stop_position_unresolved"
+        ]
+      }
+    },
+    {
+      "caseId": "pv3-20260925T052712Z-f096de91-JEB405136521:w:s23:2026-09-25T05:46:04.070Z",
+      "routeId": "JEB405136521",
+      "boardingSequence": 23,
+      "commitAt": "2026-09-25T05:48:09.531Z",
+      "formerMechanism": "SOLE_ELIGIBLE_DEPARTED__TRUTH_BEYOND_4_STOPS",
+      "formerCommittedStopOffset": 3,
+      "legacyReproduced": true,
+      "current": {
+        "status": "unavailable",
+        "abstentionReasons": [],
+        "formerSelectionZone": "departed",
+        "trueBusZone": "beyond_window",
+        "formerSelectionRejectedBecause": [
+          "departed_boarding_stop"
+        ]
+      }
+    },
+    {
+      "caseId": "pv3-20260925T052712Z-f096de91-JEB405136521:w:s23:2026-09-25T05:48:04.070Z",
+      "routeId": "JEB405136521",
+      "boardingSequence": 23,
+      "commitAt": "2026-09-25T05:49:07.666Z",
+      "formerMechanism": "SOLE_ELIGIBLE_DEPARTED__TRUTH_BEYOND_4_STOPS",
+      "formerCommittedStopOffset": 4,
+      "legacyReproduced": true,
+      "current": {
+        "status": "unavailable",
+        "abstentionReasons": [],
+        "formerSelectionZone": "departed",
+        "trueBusZone": "beyond_window",
+        "formerSelectionRejectedBecause": [
+          "departed_boarding_stop"
+        ]
+      }
+    },
+    {
+      "caseId": "pv3-20260925T052712Z-f096de91-JEB405136521:w:s23:2026-09-25T06:02:04.070Z",
+      "routeId": "JEB405136521",
+      "boardingSequence": 23,
+      "commitAt": "2026-09-25T06:05:25.904Z",
+      "formerMechanism": "SOLE_ELIGIBLE_DEPARTED__TRUTH_BEYOND_4_STOPS",
+      "formerCommittedStopOffset": 4,
+      "legacyReproduced": true,
+      "current": {
+        "status": "unavailable",
+        "abstentionReasons": [],
+        "formerSelectionZone": "departed",
+        "trueBusZone": "beyond_window",
+        "formerSelectionRejectedBecause": [
+          "departed_boarding_stop"
+        ]
+      }
+    },
+    {
+      "caseId": "pv3-20260925T052712Z-f096de91-JEB405136521:w:s23:2026-09-25T06:04:04.070Z",
+      "routeId": "JEB405136521",
+      "boardingSequence": 23,
+      "commitAt": "2026-09-25T06:05:25.904Z",
+      "formerMechanism": "SOLE_ELIGIBLE_DEPARTED__TRUTH_BEYOND_4_STOPS",
+      "formerCommittedStopOffset": 4,
+      "legacyReproduced": true,
+      "current": {
+        "status": "unavailable",
+        "abstentionReasons": [],
+        "formerSelectionZone": "departed",
+        "trueBusZone": "beyond_window",
+        "formerSelectionRejectedBecause": [
+          "departed_boarding_stop"
+        ]
+      }
+    },
+    {
+      "caseId": "pv3-20260925T052712Z-f096de91-JEB405136521:w:s23:2026-09-25T06:06:04.070Z",
+      "routeId": "JEB405136521",
+      "boardingSequence": 23,
+      "commitAt": "2026-09-25T06:07:09.552Z",
+      "formerMechanism": "SOLE_ELIGIBLE_DEPARTED__TRUTH_BEYOND_4_STOPS",
+      "formerCommittedStopOffset": 4,
+      "legacyReproduced": true,
+      "current": {
+        "status": "unavailable",
+        "abstentionReasons": [],
+        "formerSelectionZone": "departed",
+        "trueBusZone": "beyond_window",
+        "formerSelectionRejectedBecause": [
+          "departed_boarding_stop"
+        ]
+      }
+    },
+    {
+      "caseId": "pv3-20260925T052712Z-f096de91-JEB405136521:w:s24:2026-09-25T05:30:04.070Z",
+      "routeId": "JEB405136521",
+      "boardingSequence": 24,
+      "commitAt": "2026-09-25T05:37:18.070Z",
+      "formerMechanism": "SOLE_ELIGIBLE_DEPARTED__TRUTH_BEYOND_4_STOPS",
+      "formerCommittedStopOffset": 4,
+      "legacyReproduced": true,
+      "current": {
+        "status": "unavailable",
+        "abstentionReasons": [],
+        "formerSelectionZone": "departed",
+        "trueBusZone": "beyond_window",
+        "formerSelectionRejectedBecause": [
+          "departed_boarding_stop"
+        ]
+      }
+    },
+    {
+      "caseId": "pv3-20260925T052712Z-f096de91-JEB405136521:w:s24:2026-09-25T05:32:04.070Z",
+      "routeId": "JEB405136521",
+      "boardingSequence": 24,
+      "commitAt": "2026-09-25T05:37:18.070Z",
+      "formerMechanism": "SOLE_ELIGIBLE_DEPARTED__TRUTH_BEYOND_4_STOPS",
+      "formerCommittedStopOffset": 4,
+      "legacyReproduced": true,
+      "current": {
+        "status": "unavailable",
+        "abstentionReasons": [],
+        "formerSelectionZone": "departed",
+        "trueBusZone": "beyond_window",
+        "formerSelectionRejectedBecause": [
+          "departed_boarding_stop"
+        ]
+      }
+    },
+    {
+      "caseId": "pv3-20260925T052712Z-f096de91-JEB405136521:w:s24:2026-09-25T05:34:04.070Z",
+      "routeId": "JEB405136521",
+      "boardingSequence": 24,
+      "commitAt": "2026-09-25T05:37:18.070Z",
+      "formerMechanism": "SOLE_ELIGIBLE_DEPARTED__TRUTH_BEYOND_4_STOPS",
+      "formerCommittedStopOffset": 4,
+      "legacyReproduced": true,
+      "current": {
+        "status": "unavailable",
+        "abstentionReasons": [],
+        "formerSelectionZone": "departed",
+        "trueBusZone": "beyond_window",
+        "formerSelectionRejectedBecause": [
+          "departed_boarding_stop"
+        ]
+      }
+    },
+    {
+      "caseId": "pv3-20260925T052712Z-f096de91-JEB405136521:w:s24:2026-09-25T05:36:04.070Z",
+      "routeId": "JEB405136521",
+      "boardingSequence": 24,
+      "commitAt": "2026-09-25T05:37:18.070Z",
+      "formerMechanism": "SOLE_ELIGIBLE_DEPARTED__TRUTH_BEYOND_4_STOPS",
+      "formerCommittedStopOffset": 4,
+      "legacyReproduced": true,
+      "current": {
+        "status": "unavailable",
+        "abstentionReasons": [],
+        "formerSelectionZone": "departed",
+        "trueBusZone": "beyond_window",
+        "formerSelectionRejectedBecause": [
+          "departed_boarding_stop"
+        ]
+      }
+    },
+    {
+      "caseId": "pv3-20260925T052712Z-f096de91-JEB405136521:w:s24:2026-09-25T05:48:04.070Z",
+      "routeId": "JEB405136521",
+      "boardingSequence": 24,
+      "commitAt": "2026-09-25T05:49:07.666Z",
+      "formerMechanism": "SOLE_ELIGIBLE_DEPARTED__TRUTH_BEYOND_4_STOPS",
+      "formerCommittedStopOffset": 3,
+      "legacyReproduced": true,
+      "current": {
+        "status": "unavailable",
+        "abstentionReasons": [],
+        "formerSelectionZone": "departed",
+        "trueBusZone": "beyond_window",
+        "formerSelectionRejectedBecause": [
+          "departed_boarding_stop"
+        ]
+      }
+    },
+    {
+      "caseId": "pv3-20260925T052712Z-f096de91-JEB405136521:w:s24:2026-09-25T06:02:04.070Z",
+      "routeId": "JEB405136521",
+      "boardingSequence": 24,
+      "commitAt": "2026-09-25T06:05:25.904Z",
+      "formerMechanism": "SOLE_ELIGIBLE_DEPARTED__TRUTH_BEYOND_4_STOPS",
+      "formerCommittedStopOffset": 3,
+      "legacyReproduced": true,
+      "current": {
+        "status": "unavailable",
+        "abstentionReasons": [],
+        "formerSelectionZone": "departed",
+        "trueBusZone": "beyond_window",
+        "formerSelectionRejectedBecause": [
+          "departed_boarding_stop"
+        ]
+      }
+    },
+    {
+      "caseId": "pv3-20260925T052712Z-f096de91-JEB405136521:w:s24:2026-09-25T06:04:04.070Z",
+      "routeId": "JEB405136521",
+      "boardingSequence": 24,
+      "commitAt": "2026-09-25T06:05:25.904Z",
+      "formerMechanism": "SOLE_ELIGIBLE_DEPARTED__TRUTH_BEYOND_4_STOPS",
+      "formerCommittedStopOffset": 3,
+      "legacyReproduced": true,
+      "current": {
+        "status": "unavailable",
+        "abstentionReasons": [],
+        "formerSelectionZone": "departed",
+        "trueBusZone": "beyond_window",
+        "formerSelectionRejectedBecause": [
+          "departed_boarding_stop"
+        ]
+      }
+    },
+    {
+      "caseId": "pv3-20260925T052712Z-f096de91-JEB405136521:w:s24:2026-09-25T06:06:04.070Z",
+      "routeId": "JEB405136521",
+      "boardingSequence": 24,
+      "commitAt": "2026-09-25T06:07:09.552Z",
+      "formerMechanism": "SOLE_ELIGIBLE_DEPARTED__TRUTH_BEYOND_4_STOPS",
+      "formerCommittedStopOffset": 3,
+      "legacyReproduced": true,
+      "current": {
+        "status": "unavailable",
+        "abstentionReasons": [],
+        "formerSelectionZone": "departed",
+        "trueBusZone": "beyond_window",
+        "formerSelectionRejectedBecause": [
+          "departed_boarding_stop"
+        ]
+      }
+    },
+    {
+      "caseId": "pv3-20260925T052712Z-f096de91-JEB405136521:w:s25:2026-09-25T05:30:04.070Z",
+      "routeId": "JEB405136521",
+      "boardingSequence": 25,
+      "commitAt": "2026-09-25T05:37:18.070Z",
+      "formerMechanism": "SOLE_ELIGIBLE_DEPARTED__TRUTH_BEYOND_4_STOPS",
+      "formerCommittedStopOffset": 3,
+      "legacyReproduced": true,
+      "current": {
+        "status": "unavailable",
+        "abstentionReasons": [],
+        "formerSelectionZone": "departed",
+        "trueBusZone": "beyond_window",
+        "formerSelectionRejectedBecause": [
+          "departed_boarding_stop"
+        ]
+      }
+    },
+    {
+      "caseId": "pv3-20260925T052712Z-f096de91-JEB405136521:w:s25:2026-09-25T05:32:04.070Z",
+      "routeId": "JEB405136521",
+      "boardingSequence": 25,
+      "commitAt": "2026-09-25T05:37:18.070Z",
+      "formerMechanism": "SOLE_ELIGIBLE_DEPARTED__TRUTH_BEYOND_4_STOPS",
+      "formerCommittedStopOffset": 3,
+      "legacyReproduced": true,
+      "current": {
+        "status": "unavailable",
+        "abstentionReasons": [],
+        "formerSelectionZone": "departed",
+        "trueBusZone": "beyond_window",
+        "formerSelectionRejectedBecause": [
+          "departed_boarding_stop"
+        ]
+      }
+    },
+    {
+      "caseId": "pv3-20260925T052712Z-f096de91-JEB405136521:w:s25:2026-09-25T05:34:04.070Z",
+      "routeId": "JEB405136521",
+      "boardingSequence": 25,
+      "commitAt": "2026-09-25T05:37:18.070Z",
+      "formerMechanism": "SOLE_ELIGIBLE_DEPARTED__TRUTH_BEYOND_4_STOPS",
+      "formerCommittedStopOffset": 3,
+      "legacyReproduced": true,
+      "current": {
+        "status": "unavailable",
+        "abstentionReasons": [],
+        "formerSelectionZone": "departed",
+        "trueBusZone": "beyond_window",
+        "formerSelectionRejectedBecause": [
+          "departed_boarding_stop"
+        ]
+      }
+    },
+    {
+      "caseId": "pv3-20260925T052712Z-f096de91-JEB405136521:w:s25:2026-09-25T05:36:04.070Z",
+      "routeId": "JEB405136521",
+      "boardingSequence": 25,
+      "commitAt": "2026-09-25T05:37:18.070Z",
+      "formerMechanism": "SOLE_ELIGIBLE_DEPARTED__TRUTH_BEYOND_4_STOPS",
+      "formerCommittedStopOffset": 3,
+      "legacyReproduced": true,
+      "current": {
+        "status": "unavailable",
+        "abstentionReasons": [],
+        "formerSelectionZone": "departed",
+        "trueBusZone": "beyond_window",
+        "formerSelectionRejectedBecause": [
+          "departed_boarding_stop"
+        ]
+      }
+    },
+    {
+      "caseId": "pv3-20260925T052712Z-f096de91-JEB405136521:w:s25:2026-09-25T05:38:04.070Z",
+      "routeId": "JEB405136521",
+      "boardingSequence": 25,
+      "commitAt": "2026-09-25T05:39:27.514Z",
+      "formerMechanism": "SOLE_ELIGIBLE_DEPARTED__TRUTH_BEYOND_4_STOPS",
+      "formerCommittedStopOffset": 3,
+      "legacyReproduced": true,
+      "current": {
+        "status": "unavailable",
+        "abstentionReasons": [],
+        "formerSelectionZone": "departed",
+        "trueBusZone": "beyond_window",
+        "formerSelectionRejectedBecause": [
+          "departed_boarding_stop"
+        ]
+      }
+    },
+    {
+      "caseId": "pv3-20260925T052712Z-f096de91-JEB405136521:w:s25:2026-09-25T05:48:04.070Z",
+      "routeId": "JEB405136521",
+      "boardingSequence": 25,
+      "commitAt": "2026-09-25T05:49:07.666Z",
+      "formerMechanism": "SOLE_ELIGIBLE_DEPARTED__TRUTH_BEYOND_4_STOPS",
+      "formerCommittedStopOffset": 2,
+      "legacyReproduced": true,
+      "current": {
+        "status": "unavailable",
+        "abstentionReasons": [],
+        "formerSelectionZone": "departed",
+        "trueBusZone": "beyond_window",
+        "formerSelectionRejectedBecause": [
+          "departed_boarding_stop"
+        ]
+      }
+    },
+    {
+      "caseId": "pv3-20260925T052712Z-f096de91-JEB405136521:w:s25:2026-09-25T05:54:04.070Z",
+      "routeId": "JEB405136521",
+      "boardingSequence": 25,
+      "commitAt": "2026-09-25T05:55:20.120Z",
+      "formerMechanism": "SOLE_ELIGIBLE_DEPARTED__TRUTH_BEYOND_4_STOPS",
+      "formerCommittedStopOffset": 3,
+      "legacyReproduced": true,
+      "current": {
+        "status": "unavailable",
+        "abstentionReasons": [],
+        "formerSelectionZone": "departed",
+        "trueBusZone": "beyond_window",
+        "formerSelectionRejectedBecause": [
+          "departed_boarding_stop"
+        ]
+      }
+    },
+    {
+      "caseId": "pv3-20260925T052712Z-f096de91-JEB405136521:w:s25:2026-09-25T06:02:04.070Z",
+      "routeId": "JEB405136521",
+      "boardingSequence": 25,
+      "commitAt": "2026-09-25T06:05:25.904Z",
+      "formerMechanism": "SOLE_ELIGIBLE_DEPARTED__TRUTH_BEYOND_4_STOPS",
+      "formerCommittedStopOffset": 2,
+      "legacyReproduced": true,
+      "current": {
+        "status": "unavailable",
+        "abstentionReasons": [],
+        "formerSelectionZone": "departed",
+        "trueBusZone": "beyond_window",
+        "formerSelectionRejectedBecause": [
+          "departed_boarding_stop"
+        ]
+      }
+    },
+    {
+      "caseId": "pv3-20260925T052712Z-f096de91-JEB405136521:w:s25:2026-09-25T06:04:04.070Z",
+      "routeId": "JEB405136521",
+      "boardingSequence": 25,
+      "commitAt": "2026-09-25T06:05:25.904Z",
+      "formerMechanism": "SOLE_ELIGIBLE_DEPARTED__TRUTH_BEYOND_4_STOPS",
+      "formerCommittedStopOffset": 2,
+      "legacyReproduced": true,
+      "current": {
+        "status": "unavailable",
+        "abstentionReasons": [],
+        "formerSelectionZone": "departed",
+        "trueBusZone": "beyond_window",
+        "formerSelectionRejectedBecause": [
+          "departed_boarding_stop"
+        ]
+      }
+    },
+    {
+      "caseId": "pv3-20260925T052712Z-f096de91-JEB405136521:w:s25:2026-09-25T06:06:04.070Z",
+      "routeId": "JEB405136521",
+      "boardingSequence": 25,
+      "commitAt": "2026-09-25T06:07:09.552Z",
+      "formerMechanism": "SOLE_ELIGIBLE_DEPARTED__TRUTH_BEYOND_4_STOPS",
+      "formerCommittedStopOffset": 2,
+      "legacyReproduced": true,
+      "current": {
+        "status": "unavailable",
+        "abstentionReasons": [],
+        "formerSelectionZone": "departed",
+        "trueBusZone": "beyond_window",
+        "formerSelectionRejectedBecause": [
+          "departed_boarding_stop"
+        ]
+      }
+    },
+    {
+      "caseId": "pv3-20260925T052712Z-f096de91-JEB405136521:w:s26:2026-09-25T05:34:04.070Z",
+      "routeId": "JEB405136521",
+      "boardingSequence": 26,
+      "commitAt": "2026-09-25T05:37:18.070Z",
+      "formerMechanism": "SOLE_ELIGIBLE_DEPARTED__TRUTH_BEYOND_4_STOPS",
+      "formerCommittedStopOffset": 2,
+      "legacyReproduced": true,
+      "current": {
+        "status": "unavailable",
+        "abstentionReasons": [],
+        "formerSelectionZone": "departed",
+        "trueBusZone": "beyond_window",
+        "formerSelectionRejectedBecause": [
+          "departed_boarding_stop"
+        ]
+      }
+    },
+    {
+      "caseId": "pv3-20260925T052712Z-f096de91-JEB405136521:w:s26:2026-09-25T05:36:04.070Z",
+      "routeId": "JEB405136521",
+      "boardingSequence": 26,
+      "commitAt": "2026-09-25T05:37:18.070Z",
+      "formerMechanism": "SOLE_ELIGIBLE_DEPARTED__TRUTH_BEYOND_4_STOPS",
+      "formerCommittedStopOffset": 2,
+      "legacyReproduced": true,
+      "current": {
+        "status": "unavailable",
+        "abstentionReasons": [],
+        "formerSelectionZone": "departed",
+        "trueBusZone": "beyond_window",
+        "formerSelectionRejectedBecause": [
+          "departed_boarding_stop"
+        ]
+      }
+    },
+    {
+      "caseId": "pv3-20260925T052712Z-f096de91-JEB405136521:w:s26:2026-09-25T05:38:04.070Z",
+      "routeId": "JEB405136521",
+      "boardingSequence": 26,
+      "commitAt": "2026-09-25T05:39:27.514Z",
+      "formerMechanism": "SOLE_ELIGIBLE_DEPARTED__TRUTH_BEYOND_4_STOPS",
+      "formerCommittedStopOffset": 2,
+      "legacyReproduced": true,
+      "current": {
+        "status": "unavailable",
+        "abstentionReasons": [],
+        "formerSelectionZone": "departed",
+        "trueBusZone": "beyond_window",
+        "formerSelectionRejectedBecause": [
+          "departed_boarding_stop"
+        ]
+      }
+    },
+    {
+      "caseId": "pv3-20260925T052712Z-f096de91-JEB405136521:w:s26:2026-09-25T05:40:04.070Z",
+      "routeId": "JEB405136521",
+      "boardingSequence": 26,
+      "commitAt": "2026-09-25T05:41:27.492Z",
+      "formerMechanism": "SOLE_ELIGIBLE_DEPARTED__TRUTH_BEYOND_4_STOPS",
+      "formerCommittedStopOffset": 4,
+      "legacyReproduced": true,
+      "current": {
+        "status": "unavailable",
+        "abstentionReasons": [],
+        "formerSelectionZone": "departed",
+        "trueBusZone": "beyond_window",
+        "formerSelectionRejectedBecause": [
+          "departed_boarding_stop"
+        ]
+      }
+    },
+    {
+      "caseId": "pv3-20260925T052712Z-f096de91-JEB405136521:w:s26:2026-09-25T05:50:04.070Z",
+      "routeId": "JEB405136521",
+      "boardingSequence": 26,
+      "commitAt": "2026-09-25T05:55:47.585Z",
+      "formerMechanism": "SOLE_ELIGIBLE_DEPARTED__TRUTH_BEYOND_4_STOPS",
+      "formerCommittedStopOffset": 3,
+      "legacyReproduced": true,
+      "current": {
+        "status": "unavailable",
+        "abstentionReasons": [],
+        "formerSelectionZone": "departed",
+        "trueBusZone": "beyond_window",
+        "formerSelectionRejectedBecause": [
+          "departed_boarding_stop"
+        ]
+      }
+    },
+    {
+      "caseId": "pv3-20260925T052712Z-f096de91-JEB405136521:w:s26:2026-09-25T05:52:04.070Z",
+      "routeId": "JEB405136521",
+      "boardingSequence": 26,
+      "commitAt": "2026-09-25T05:55:47.585Z",
+      "formerMechanism": "SOLE_ELIGIBLE_DEPARTED__TRUTH_BEYOND_4_STOPS",
+      "formerCommittedStopOffset": 3,
+      "legacyReproduced": true,
+      "current": {
+        "status": "unavailable",
+        "abstentionReasons": [],
+        "formerSelectionZone": "departed",
+        "trueBusZone": "beyond_window",
+        "formerSelectionRejectedBecause": [
+          "departed_boarding_stop"
+        ]
+      }
+    },
+    {
+      "caseId": "pv3-20260925T052712Z-f096de91-JEB405136521:w:s26:2026-09-25T05:54:04.070Z",
+      "routeId": "JEB405136521",
+      "boardingSequence": 26,
+      "commitAt": "2026-09-25T05:55:20.120Z",
+      "formerMechanism": "SOLE_ELIGIBLE_DEPARTED__TRUTH_BEYOND_4_STOPS",
+      "formerCommittedStopOffset": 2,
+      "legacyReproduced": true,
+      "current": {
+        "status": "unavailable",
+        "abstentionReasons": [],
+        "formerSelectionZone": "departed",
+        "trueBusZone": "beyond_window",
+        "formerSelectionRejectedBecause": [
+          "departed_boarding_stop"
+        ]
+      }
+    },
+    {
+      "caseId": "pv3-20260925T052712Z-f096de91-JEB405136521:w:s27:2026-09-25T05:38:04.070Z",
+      "routeId": "JEB405136521",
+      "boardingSequence": 27,
+      "commitAt": "2026-09-25T05:39:27.514Z",
+      "formerMechanism": "SOLE_ELIGIBLE_DEPARTED__TRUTH_BEYOND_4_STOPS",
+      "formerCommittedStopOffset": 1,
+      "legacyReproduced": true,
+      "current": {
+        "status": "unavailable",
+        "abstentionReasons": [
+          "boarding_stop_reached_during_session",
+          "vehicle_at_boarding_stop_unresolved"
+        ],
+        "formerSelectionZone": "boarding_stop_unresolved",
+        "trueBusZone": "beyond_window",
+        "formerSelectionRejectedBecause": [
+          "boarding_stop_position_unresolved"
+        ]
+      }
+    },
+    {
+      "caseId": "pv3-20260925T052712Z-f096de91-JEB405136521:w:s27:2026-09-25T05:40:04.070Z",
+      "routeId": "JEB405136521",
+      "boardingSequence": 27,
+      "commitAt": "2026-09-25T05:41:27.492Z",
+      "formerMechanism": "SOLE_ELIGIBLE_DEPARTED__TRUTH_BEYOND_4_STOPS",
+      "formerCommittedStopOffset": 3,
+      "legacyReproduced": true,
+      "current": {
+        "status": "unavailable",
+        "abstentionReasons": [],
+        "formerSelectionZone": "departed",
+        "trueBusZone": "beyond_window",
+        "formerSelectionRejectedBecause": [
+          "departed_boarding_stop"
+        ]
+      }
+    },
+    {
+      "caseId": "pv3-20260925T052712Z-f096de91-JEB405136521:w:s29:2026-09-25T05:44:04.070Z",
+      "routeId": "JEB405136521",
+      "boardingSequence": 29,
+      "commitAt": "2026-09-25T05:45:26.799Z",
+      "formerMechanism": "SOLE_ELIGIBLE_DEPARTED__TRUTH_BEYOND_4_STOPS",
+      "formerCommittedStopOffset": 4,
+      "legacyReproduced": true,
+      "current": {
+        "status": "unavailable",
+        "abstentionReasons": [],
+        "formerSelectionZone": "departed",
+        "trueBusZone": "beyond_window",
+        "formerSelectionRejectedBecause": [
+          "departed_boarding_stop"
+        ]
+      }
+    },
+    {
+      "caseId": "pv3-20260925T052712Z-f096de91-JEB405136521:w:s30:2026-09-25T05:28:04.070Z",
+      "routeId": "JEB405136521",
+      "boardingSequence": 30,
+      "commitAt": "2026-09-25T05:29:01.963Z",
+      "formerMechanism": "SOLE_ELIGIBLE_DEPARTED__TRUTH_BEYOND_4_STOPS",
+      "formerCommittedStopOffset": 4,
+      "legacyReproduced": true,
+      "current": {
+        "status": "unavailable",
+        "abstentionReasons": [],
+        "formerSelectionZone": "departed",
+        "trueBusZone": "beyond_window",
+        "formerSelectionRejectedBecause": [
+          "departed_boarding_stop"
+        ]
+      }
+    },
+    {
+      "caseId": "pv3-20260925T052712Z-f096de91-JEB405136521:w:s30:2026-09-25T05:44:04.070Z",
+      "routeId": "JEB405136521",
+      "boardingSequence": 30,
+      "commitAt": "2026-09-25T05:45:26.799Z",
+      "formerMechanism": "SOLE_ELIGIBLE_DEPARTED__TRUTH_BEYOND_4_STOPS",
+      "formerCommittedStopOffset": 3,
+      "legacyReproduced": true,
+      "current": {
+        "status": "unavailable",
+        "abstentionReasons": [],
+        "formerSelectionZone": "departed",
+        "trueBusZone": "beyond_window",
+        "formerSelectionRejectedBecause": [
+          "departed_boarding_stop"
+        ]
+      }
+    },
+    {
+      "caseId": "pv3-20260925T052712Z-f096de91-JEB405136521:w:s31:2026-09-25T05:28:04.070Z",
+      "routeId": "JEB405136521",
+      "boardingSequence": 31,
+      "commitAt": "2026-09-25T05:29:01.963Z",
+      "formerMechanism": "SOLE_ELIGIBLE_DEPARTED__TRUTH_BEYOND_4_STOPS",
+      "formerCommittedStopOffset": 3,
+      "legacyReproduced": true,
+      "current": {
+        "status": "unavailable",
+        "abstentionReasons": [],
+        "formerSelectionZone": "departed",
+        "trueBusZone": "beyond_window",
+        "formerSelectionRejectedBecause": [
+          "departed_boarding_stop"
+        ]
+      }
+    },
+    {
+      "caseId": "pv3-20260925T052712Z-f096de91-JEB405136521:w:s31:2026-09-25T05:46:04.070Z",
+      "routeId": "JEB405136521",
+      "boardingSequence": 31,
+      "commitAt": "2026-09-25T05:48:09.531Z",
+      "formerMechanism": "SOLE_ELIGIBLE_DEPARTED__TRUTH_BEYOND_4_STOPS",
+      "formerCommittedStopOffset": 3,
+      "legacyReproduced": true,
+      "current": {
+        "status": "unavailable",
+        "abstentionReasons": [],
+        "formerSelectionZone": "departed",
+        "trueBusZone": "beyond_window",
+        "formerSelectionRejectedBecause": [
+          "departed_boarding_stop"
+        ]
+      }
+    },
+    {
+      "caseId": "pv3-20260925T052712Z-f096de91-JEB405136521:w:s32:2026-09-25T05:28:04.070Z",
+      "routeId": "JEB405136521",
+      "boardingSequence": 32,
+      "commitAt": "2026-09-25T05:29:01.963Z",
+      "formerMechanism": "SOLE_ELIGIBLE_DEPARTED__TRUTH_BEYOND_4_STOPS",
+      "formerCommittedStopOffset": 2,
+      "legacyReproduced": true,
+      "current": {
+        "status": "unavailable",
+        "abstentionReasons": [],
+        "formerSelectionZone": "departed",
+        "trueBusZone": "beyond_window",
+        "formerSelectionRejectedBecause": [
+          "departed_boarding_stop"
+        ]
+      }
+    },
+    {
+      "caseId": "pv3-20260925T052712Z-f096de91-JEB405136521:w:s32:2026-09-25T05:46:04.070Z",
+      "routeId": "JEB405136521",
+      "boardingSequence": 32,
+      "commitAt": "2026-09-25T05:48:09.531Z",
+      "formerMechanism": "SOLE_ELIGIBLE_DEPARTED__TRUTH_BEYOND_4_STOPS",
+      "formerCommittedStopOffset": 2,
+      "legacyReproduced": true,
+      "current": {
+        "status": "unavailable",
+        "abstentionReasons": [],
+        "formerSelectionZone": "departed",
+        "trueBusZone": "beyond_window",
+        "formerSelectionRejectedBecause": [
+          "departed_boarding_stop"
+        ]
+      }
+    },
+    {
+      "caseId": "pv3-20260925T052712Z-f096de91-JEB405136521:w:s32:2026-09-25T05:48:04.070Z",
+      "routeId": "JEB405136521",
+      "boardingSequence": 32,
+      "commitAt": "2026-09-25T05:49:07.666Z",
+      "formerMechanism": "SOLE_ELIGIBLE_DEPARTED__TRUTH_BEYOND_4_STOPS",
+      "formerCommittedStopOffset": 2,
+      "legacyReproduced": true,
+      "current": {
+        "status": "unavailable",
+        "abstentionReasons": [],
+        "formerSelectionZone": "departed",
+        "trueBusZone": "beyond_window",
+        "formerSelectionRejectedBecause": [
+          "departed_boarding_stop"
+        ]
+      }
+    },
+    {
+      "caseId": "pv3-20260925T052712Z-f096de91-JEB405136521:w:s32:2026-09-25T06:02:04.070Z",
+      "routeId": "JEB405136521",
+      "boardingSequence": 32,
+      "commitAt": "2026-09-25T06:05:25.904Z",
+      "formerMechanism": "SOLE_ELIGIBLE_DEPARTED__TRUTH_BEYOND_4_STOPS",
+      "formerCommittedStopOffset": 3,
+      "legacyReproduced": true,
+      "current": {
+        "status": "unavailable",
+        "abstentionReasons": [],
+        "formerSelectionZone": "departed",
+        "trueBusZone": "beyond_window",
+        "formerSelectionRejectedBecause": [
+          "departed_boarding_stop"
+        ]
+      }
+    },
+    {
+      "caseId": "pv3-20260925T052712Z-f096de91-JEB405136521:w:s32:2026-09-25T06:04:04.070Z",
+      "routeId": "JEB405136521",
+      "boardingSequence": 32,
+      "commitAt": "2026-09-25T06:05:25.904Z",
+      "formerMechanism": "SOLE_ELIGIBLE_DEPARTED__TRUTH_BEYOND_4_STOPS",
+      "formerCommittedStopOffset": 3,
+      "legacyReproduced": true,
+      "current": {
+        "status": "unavailable",
+        "abstentionReasons": [],
+        "formerSelectionZone": "departed",
+        "trueBusZone": "beyond_window",
+        "formerSelectionRejectedBecause": [
+          "departed_boarding_stop"
+        ]
+      }
+    },
+    {
+      "caseId": "pv3-20260925T052712Z-f096de91-JEB405136521:w:s32:2026-09-25T06:06:04.070Z",
+      "routeId": "JEB405136521",
+      "boardingSequence": 32,
+      "commitAt": "2026-09-25T06:07:09.552Z",
+      "formerMechanism": "SOLE_ELIGIBLE_DEPARTED__TRUTH_BEYOND_4_STOPS",
+      "formerCommittedStopOffset": 4,
+      "legacyReproduced": true,
+      "current": {
+        "status": "unavailable",
+        "abstentionReasons": [],
+        "formerSelectionZone": "departed",
+        "trueBusZone": "beyond_window",
+        "formerSelectionRejectedBecause": [
+          "departed_boarding_stop"
+        ]
+      }
+    },
+    {
+      "caseId": "pv3-20260925T052712Z-f096de91-JEB405136521:w:s33:2026-09-25T05:28:04.070Z",
+      "routeId": "JEB405136521",
+      "boardingSequence": 33,
+      "commitAt": "2026-09-25T05:29:01.963Z",
+      "formerMechanism": "SOLE_ELIGIBLE_DEPARTED__TRUTH_BEYOND_4_STOPS",
+      "formerCommittedStopOffset": 1,
+      "legacyReproduced": true,
+      "current": {
+        "status": "unavailable",
+        "abstentionReasons": [
+          "boarding_stop_reached_during_session",
+          "vehicle_at_boarding_stop_unresolved"
+        ],
+        "formerSelectionZone": "boarding_stop_unresolved",
+        "trueBusZone": "beyond_window",
+        "formerSelectionRejectedBecause": [
+          "boarding_stop_position_unresolved"
+        ]
+      }
+    },
+    {
+      "caseId": "pv3-20260925T052712Z-f096de91-JEB405136521:w:s33:2026-09-25T05:48:04.070Z",
+      "routeId": "JEB405136521",
+      "boardingSequence": 33,
+      "commitAt": "2026-09-25T05:49:07.666Z",
+      "formerMechanism": "SOLE_ELIGIBLE_DEPARTED__TRUTH_BEYOND_4_STOPS",
+      "formerCommittedStopOffset": 1,
+      "legacyReproduced": true,
+      "current": {
+        "status": "unavailable",
+        "abstentionReasons": [
+          "boarding_stop_reached_during_session",
+          "vehicle_at_boarding_stop_unresolved"
+        ],
+        "formerSelectionZone": "boarding_stop_unresolved",
+        "trueBusZone": "beyond_window",
+        "formerSelectionRejectedBecause": [
+          "boarding_stop_position_unresolved"
+        ]
+      }
+    },
+    {
+      "caseId": "pv3-20260925T052712Z-f096de91-JEB405136521:w:s33:2026-09-25T06:02:04.070Z",
+      "routeId": "JEB405136521",
+      "boardingSequence": 33,
+      "commitAt": "2026-09-25T06:05:25.904Z",
+      "formerMechanism": "SOLE_ELIGIBLE_DEPARTED__TRUTH_BEYOND_4_STOPS",
+      "formerCommittedStopOffset": 2,
+      "legacyReproduced": true,
+      "current": {
+        "status": "unavailable",
+        "abstentionReasons": [],
+        "formerSelectionZone": "departed",
+        "trueBusZone": "beyond_window",
+        "formerSelectionRejectedBecause": [
+          "departed_boarding_stop"
+        ]
+      }
+    },
+    {
+      "caseId": "pv3-20260925T052712Z-f096de91-JEB405136521:w:s33:2026-09-25T06:04:04.070Z",
+      "routeId": "JEB405136521",
+      "boardingSequence": 33,
+      "commitAt": "2026-09-25T06:05:25.904Z",
+      "formerMechanism": "SOLE_ELIGIBLE_DEPARTED__TRUTH_BEYOND_4_STOPS",
+      "formerCommittedStopOffset": 2,
+      "legacyReproduced": true,
+      "current": {
+        "status": "unavailable",
+        "abstentionReasons": [],
+        "formerSelectionZone": "departed",
+        "trueBusZone": "beyond_window",
+        "formerSelectionRejectedBecause": [
+          "departed_boarding_stop"
+        ]
+      }
+    },
+    {
+      "caseId": "pv3-20260925T052712Z-f096de91-JEB405136521:w:s33:2026-09-25T06:06:04.070Z",
+      "routeId": "JEB405136521",
+      "boardingSequence": 33,
+      "commitAt": "2026-09-25T06:07:09.552Z",
+      "formerMechanism": "SOLE_ELIGIBLE_DEPARTED__TRUTH_BEYOND_4_STOPS",
+      "formerCommittedStopOffset": 3,
+      "legacyReproduced": true,
+      "current": {
+        "status": "unavailable",
+        "abstentionReasons": [],
+        "formerSelectionZone": "departed",
+        "trueBusZone": "beyond_window",
+        "formerSelectionRejectedBecause": [
+          "departed_boarding_stop"
+        ]
+      }
+    },
+    {
+      "caseId": "pv3-20260925T052712Z-f096de91-JEB405136521:w:s34:2026-09-25T05:30:04.070Z",
+      "routeId": "JEB405136521",
+      "boardingSequence": 34,
+      "commitAt": "2026-09-25T05:37:18.070Z",
+      "formerMechanism": "SOLE_ELIGIBLE_DEPARTED__TRUTH_BEYOND_4_STOPS",
+      "formerCommittedStopOffset": 4,
+      "legacyReproduced": true,
+      "current": {
+        "status": "unavailable",
+        "abstentionReasons": [],
+        "formerSelectionZone": "departed",
+        "trueBusZone": "beyond_window",
+        "formerSelectionRejectedBecause": [
+          "departed_boarding_stop"
+        ]
+      }
+    },
+    {
+      "caseId": "pv3-20260925T052712Z-f096de91-JEB405136521:w:s34:2026-09-25T05:32:04.070Z",
+      "routeId": "JEB405136521",
+      "boardingSequence": 34,
+      "commitAt": "2026-09-25T05:37:18.070Z",
+      "formerMechanism": "SOLE_ELIGIBLE_DEPARTED__TRUTH_BEYOND_4_STOPS",
+      "formerCommittedStopOffset": 4,
+      "legacyReproduced": true,
+      "current": {
+        "status": "unavailable",
+        "abstentionReasons": [],
+        "formerSelectionZone": "departed",
+        "trueBusZone": "beyond_window",
+        "formerSelectionRejectedBecause": [
+          "departed_boarding_stop"
+        ]
+      }
+    },
+    {
+      "caseId": "pv3-20260925T052712Z-f096de91-JEB405136521:w:s34:2026-09-25T05:34:04.070Z",
+      "routeId": "JEB405136521",
+      "boardingSequence": 34,
+      "commitAt": "2026-09-25T05:37:18.070Z",
+      "formerMechanism": "SOLE_ELIGIBLE_DEPARTED__TRUTH_BEYOND_4_STOPS",
+      "formerCommittedStopOffset": 4,
+      "legacyReproduced": true,
+      "current": {
+        "status": "unavailable",
+        "abstentionReasons": [],
+        "formerSelectionZone": "departed",
+        "trueBusZone": "beyond_window",
+        "formerSelectionRejectedBecause": [
+          "departed_boarding_stop"
+        ]
+      }
+    },
+    {
+      "caseId": "pv3-20260925T052712Z-f096de91-JEB405136521:w:s34:2026-09-25T05:36:04.070Z",
+      "routeId": "JEB405136521",
+      "boardingSequence": 34,
+      "commitAt": "2026-09-25T05:37:18.070Z",
+      "formerMechanism": "SOLE_ELIGIBLE_DEPARTED__TRUTH_BEYOND_4_STOPS",
+      "formerCommittedStopOffset": 4,
+      "legacyReproduced": true,
+      "current": {
+        "status": "unavailable",
+        "abstentionReasons": [],
+        "formerSelectionZone": "departed",
+        "trueBusZone": "beyond_window",
+        "formerSelectionRejectedBecause": [
+          "departed_boarding_stop"
+        ]
+      }
+    },
+    {
+      "caseId": "pv3-20260925T052712Z-f096de91-JEB405136521:w:s34:2026-09-25T05:54:04.070Z",
+      "routeId": "JEB405136521",
+      "boardingSequence": 34,
+      "commitAt": "2026-09-25T05:55:20.120Z",
+      "formerMechanism": "SOLE_ELIGIBLE_DEPARTED__TRUTH_BEYOND_4_STOPS",
+      "formerCommittedStopOffset": 4,
+      "legacyReproduced": true,
+      "current": {
+        "status": "unavailable",
+        "abstentionReasons": [],
+        "formerSelectionZone": "departed",
+        "trueBusZone": "beyond_window",
+        "formerSelectionRejectedBecause": [
+          "departed_boarding_stop"
+        ]
+      }
+    },
+    {
+      "caseId": "pv3-20260925T052712Z-f096de91-JEB405136521:w:s34:2026-09-25T06:06:04.070Z",
+      "routeId": "JEB405136521",
+      "boardingSequence": 34,
+      "commitAt": "2026-09-25T06:07:09.552Z",
+      "formerMechanism": "SOLE_ELIGIBLE_DEPARTED__TRUTH_BEYOND_4_STOPS",
+      "formerCommittedStopOffset": 2,
+      "legacyReproduced": true,
+      "current": {
+        "status": "unavailable",
+        "abstentionReasons": [],
+        "formerSelectionZone": "departed",
+        "trueBusZone": "beyond_window",
+        "formerSelectionRejectedBecause": [
+          "departed_boarding_stop"
+        ]
+      }
+    },
+    {
+      "caseId": "pv3-20260925T052712Z-f096de91-JEB405136521:w:s35:2026-09-25T05:32:04.070Z",
+      "routeId": "JEB405136521",
+      "boardingSequence": 35,
+      "commitAt": "2026-09-25T05:37:18.070Z",
+      "formerMechanism": "SOLE_ELIGIBLE_DEPARTED__TRUTH_BEYOND_4_STOPS",
+      "formerCommittedStopOffset": 3,
+      "legacyReproduced": true,
+      "current": {
+        "status": "unavailable",
+        "abstentionReasons": [],
+        "formerSelectionZone": "departed",
+        "trueBusZone": "beyond_window",
+        "formerSelectionRejectedBecause": [
+          "departed_boarding_stop"
+        ]
+      }
+    },
+    {
+      "caseId": "pv3-20260925T052712Z-f096de91-JEB405136521:w:s35:2026-09-25T05:34:04.070Z",
+      "routeId": "JEB405136521",
+      "boardingSequence": 35,
+      "commitAt": "2026-09-25T05:37:18.070Z",
+      "formerMechanism": "SOLE_ELIGIBLE_DEPARTED__TRUTH_BEYOND_4_STOPS",
+      "formerCommittedStopOffset": 3,
+      "legacyReproduced": true,
+      "current": {
+        "status": "unavailable",
+        "abstentionReasons": [],
+        "formerSelectionZone": "departed",
+        "trueBusZone": "beyond_window",
+        "formerSelectionRejectedBecause": [
+          "departed_boarding_stop"
+        ]
+      }
+    },
+    {
+      "caseId": "pv3-20260925T052712Z-f096de91-JEB405136521:w:s35:2026-09-25T05:36:04.070Z",
+      "routeId": "JEB405136521",
+      "boardingSequence": 35,
+      "commitAt": "2026-09-25T05:37:18.070Z",
+      "formerMechanism": "SOLE_ELIGIBLE_DEPARTED__TRUTH_BEYOND_4_STOPS",
+      "formerCommittedStopOffset": 3,
+      "legacyReproduced": true,
+      "current": {
+        "status": "unavailable",
+        "abstentionReasons": [],
+        "formerSelectionZone": "departed",
+        "trueBusZone": "beyond_window",
+        "formerSelectionRejectedBecause": [
+          "departed_boarding_stop"
+        ]
+      }
+    },
+    {
+      "caseId": "pv3-20260925T052712Z-f096de91-JEB405136521:w:s35:2026-09-25T05:52:04.070Z",
+      "routeId": "JEB405136521",
+      "boardingSequence": 35,
+      "commitAt": "2026-09-25T05:55:47.585Z",
+      "formerMechanism": "SOLE_ELIGIBLE_DEPARTED__TRUTH_BEYOND_4_STOPS",
+      "formerCommittedStopOffset": 4,
+      "legacyReproduced": true,
+      "current": {
+        "status": "unavailable",
+        "abstentionReasons": [],
+        "formerSelectionZone": "departed",
+        "trueBusZone": "beyond_window",
+        "formerSelectionRejectedBecause": [
+          "departed_boarding_stop"
+        ]
+      }
+    },
+    {
+      "caseId": "pv3-20260925T052712Z-f096de91-JEB405136521:w:s35:2026-09-25T05:54:04.070Z",
+      "routeId": "JEB405136521",
+      "boardingSequence": 35,
+      "commitAt": "2026-09-25T05:55:20.120Z",
+      "formerMechanism": "SOLE_ELIGIBLE_DEPARTED__TRUTH_BEYOND_4_STOPS",
+      "formerCommittedStopOffset": 3,
+      "legacyReproduced": true,
+      "current": {
+        "status": "unavailable",
+        "abstentionReasons": [],
+        "formerSelectionZone": "departed",
+        "trueBusZone": "beyond_window",
+        "formerSelectionRejectedBecause": [
+          "departed_boarding_stop"
+        ]
+      }
+    },
+    {
+      "caseId": "pv3-20260925T052712Z-f096de91-JEB405136521:w:s36:2026-09-25T05:34:04.070Z",
+      "routeId": "JEB405136521",
+      "boardingSequence": 36,
+      "commitAt": "2026-09-25T05:37:18.070Z",
+      "formerMechanism": "SOLE_ELIGIBLE_DEPARTED__TRUTH_BEYOND_4_STOPS",
+      "formerCommittedStopOffset": 2,
+      "legacyReproduced": true,
+      "current": {
+        "status": "unavailable",
+        "abstentionReasons": [],
+        "formerSelectionZone": "departed",
+        "trueBusZone": "beyond_window",
+        "formerSelectionRejectedBecause": [
+          "departed_boarding_stop"
+        ]
+      }
+    },
+    {
+      "caseId": "pv3-20260925T052712Z-f096de91-JEB405136521:w:s36:2026-09-25T05:36:04.070Z",
+      "routeId": "JEB405136521",
+      "boardingSequence": 36,
+      "commitAt": "2026-09-25T05:37:18.070Z",
+      "formerMechanism": "SOLE_ELIGIBLE_DEPARTED__TRUTH_BEYOND_4_STOPS",
+      "formerCommittedStopOffset": 2,
+      "legacyReproduced": true,
+      "current": {
+        "status": "unavailable",
+        "abstentionReasons": [],
+        "formerSelectionZone": "departed",
+        "trueBusZone": "beyond_window",
+        "formerSelectionRejectedBecause": [
+          "departed_boarding_stop"
+        ]
+      }
+    },
+    {
+      "caseId": "pv3-20260925T052712Z-f096de91-JEB405136521:w:s36:2026-09-25T05:54:04.070Z",
+      "routeId": "JEB405136521",
+      "boardingSequence": 36,
+      "commitAt": "2026-09-25T05:55:20.120Z",
+      "formerMechanism": "SOLE_ELIGIBLE_DEPARTED__TRUTH_BEYOND_4_STOPS",
+      "formerCommittedStopOffset": 2,
+      "legacyReproduced": true,
+      "current": {
+        "status": "unavailable",
+        "abstentionReasons": [],
+        "formerSelectionZone": "departed",
+        "trueBusZone": "beyond_window",
+        "formerSelectionRejectedBecause": [
+          "departed_boarding_stop"
+        ]
+      }
+    },
+    {
+      "caseId": "pv3-20260925T052712Z-f096de91-JEB405136521:w:s37:2026-09-25T05:36:04.070Z",
+      "routeId": "JEB405136521",
+      "boardingSequence": 37,
+      "commitAt": "2026-09-25T05:37:18.070Z",
+      "formerMechanism": "SOLE_ELIGIBLE_DEPARTED__TRUTH_BEYOND_4_STOPS",
+      "formerCommittedStopOffset": 1,
+      "legacyReproduced": true,
+      "current": {
+        "status": "unavailable",
+        "abstentionReasons": [
+          "boarding_stop_reached_during_session",
+          "vehicle_at_boarding_stop_unresolved"
+        ],
+        "formerSelectionZone": "boarding_stop_unresolved",
+        "trueBusZone": "beyond_window",
+        "formerSelectionRejectedBecause": [
+          "boarding_stop_position_unresolved"
+        ]
+      }
+    },
+    {
+      "caseId": "pv3-20260925T052712Z-f096de91-JEB405136521:w:s37:2026-09-25T05:38:04.070Z",
+      "routeId": "JEB405136521",
+      "boardingSequence": 37,
+      "commitAt": "2026-09-25T05:39:27.514Z",
+      "formerMechanism": "SOLE_ELIGIBLE_DEPARTED__TRUTH_BEYOND_4_STOPS",
+      "formerCommittedStopOffset": 4,
+      "legacyReproduced": true,
+      "current": {
+        "status": "unavailable",
+        "abstentionReasons": [],
+        "formerSelectionZone": "departed",
+        "trueBusZone": "beyond_window",
+        "formerSelectionRejectedBecause": [
+          "departed_boarding_stop"
+        ]
+      }
+    },
+    {
+      "caseId": "pv3-20260925T052712Z-f096de91-JEB405320112:w:s96:2026-09-25T05:30:05.736Z",
+      "routeId": "JEB405320112",
+      "boardingSequence": 96,
+      "commitAt": "2026-09-25T05:31:19.839Z",
+      "formerMechanism": "SOLE_ELIGIBLE_DEPARTED__TRUTH_BEYOND_4_STOPS",
+      "formerCommittedStopOffset": 4,
+      "legacyReproduced": true,
+      "current": {
+        "status": "unavailable",
+        "abstentionReasons": [],
+        "formerSelectionZone": "departed",
+        "trueBusZone": "beyond_window",
+        "formerSelectionRejectedBecause": [
+          "departed_boarding_stop"
+        ]
+      }
+    }
+  ]
+}
