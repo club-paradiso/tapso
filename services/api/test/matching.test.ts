@@ -870,10 +870,35 @@ test("loop: a bus lost across the seam may reach the stop unobserved (F17)", () 
   assertSelected(matchVehicle(request([bus("next", 2)], { boardingStopSequence: 5, passage: straight.passage })), "next", "control: straight route");
   // Lost three stops past the stop, it keeps going round: 120 s later it may be back at it.
   const past = matchVehicle(request([bus("lost", 8, { observedAt: secondsAgo(120) }), bus("next", 1, { observedAt: secondsAgo(120) })], { ...loop, now: secondsAgo(120) }));
-  assert.equal(past.passage?.offsets.lost?.last, 3, "three stops past, the shorter way round");
+  assert.equal(past.passage?.offsets.lost?.last, 3, "three stops past the stop");
   const around = matchVehicle(request([bus("next", 2)], { ...loop, passage: past.passage }));
   assert.equal(around.passage?.withheld?.reason, "vehicle_may_have_reached_boarding_stop_unobserved", "round the loop");
   assertSelected(matchVehicle(request([bus("next", 2)], { boardingStopSequence: 5, passage: past.passage })), "next", "control: straight route");
+});
+
+test("loop: however short the lap, a bus in the on-board window is never read as one before the stop (F17)", () => {
+  // Eight stops round, boarding at 2. A bus four stops past is also four
+  // stops before the stop the other way round: it may be the rider's bus, so
+  // it competes, and the bus one stop past is not the only one.
+  const short: StopOnRoute[] = [
+    ...Array.from({ length: 8 }, (_, index) => ({ stopId: `SYN-SHORT-${index + 1}`, name: `Synthetic short ${index + 1}`, sequence: index + 1 })),
+    { stopId: "SYN-SHORT-1", name: "Synthetic short 1", sequence: 9 },
+  ];
+  const aboard = { stops: short, boardingStopSequence: 2 };
+  const first = matchVehicle(onBoard([bus("far", 6), bus("near", 3)], aboard));
+  assertWithheld(first, "multiple_vehicles_in_on_board_window", "a bus four stops past competes");
+  // One stop further it has left the window, possibly with the rider.
+  assertWithheld(
+    matchVehicle(onBoard([bus("far", 7), bus("near", 4)], { ...aboard, passage: first.passage })),
+    "vehicle_left_on_board_window_during_session",
+    "leaving the window across half the lap",
+  );
+  // A waiting rider: a bus one stop out, next seen five stops past (more than
+  // half the lap). Its distance to the stop grew: it went past it.
+  const waiting = { stops: short, boardingStopSequence: 2 };
+  const seen = matchVehicle(request([bus("crosser", 1), bus("next", 5)], waiting));
+  const later = matchVehicle(request([bus("crosser", 7), bus("next", 6)], { ...waiting, passage: seen.passage }));
+  assert.equal(later.passage?.withheld?.reason, "boarding_stop_reached_during_session", "a crossing longer than half the lap");
 });
 
 test("loop: the lap is measured in sequences, so a missing or repeated stop row cannot move the seam (F18)", () => {

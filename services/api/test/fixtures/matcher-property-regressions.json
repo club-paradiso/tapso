@@ -78,6 +78,18 @@
       "seed": 10018,
       "foundAt": "2026-09-29",
       "note": "Written with the property against the matcher at f3d693a (finding F19): a vehicle id also reported under another route made the invariant check read the wrong row, throwing (HTTP 500 on /v1/matches) or not depending on candidate order. Fixed: a row under another route is a second position (withheld), and the invariant checks the rows of the request's route."
+    },
+    {
+      "property": "P3-crossing",
+      "seed": 10012,
+      "foundAt": "2026-09-29",
+      "note": "The widened property (any position the bus can only reach by passing the stop) against 5408311, whose memory stored directed offsets (the shorter way round a loop): a crossing longer than half the lap read as a bus still before the stop. Fixed: memory keeps plain offsets, and round a loop a sighting is compared with the last one by its distance to the stop; a distance that grew is a crossing."
+    },
+    {
+      "property": "P12-loops",
+      "seed": 10037,
+      "foundAt": "2026-09-29",
+      "note": "Against 5408311: on a loop of eight stops, a bus four stops past the boarding stop is also four before it the other way; the directed offset read it as before the stop, excluded it as not the rider's bus, and the other bus in the on-board window was selected. Fixed: a bus that may be in the on-board window is never excluded, and leaving the window is read from its distance past the stop."
     }
   ]
 }

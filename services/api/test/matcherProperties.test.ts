@@ -38,6 +38,7 @@ import {
   generateMatch,
   generateTrajectory,
   int,
+  syntheticStops,
   offsetOf,
   pick,
   rng,
@@ -206,11 +207,14 @@ test("P3: a bus seen before the stop and later past it withholds the session for
     const random = rng(seed ^ 0xc05);
     const facts = (sequence: number) => classifyRouteProgress(sequence, request.boardingStopSequence, "waiting_at_stop", topology);
     const sequences = [...topology.sequences];
-    // Before: k stops out, the shorter way round. After: m stops past, likewise.
+    // Before: k stops out. After: anywhere it can only have reached by passing
+    // the stop, however far round a loop that is (its distance to the stop grew).
     const k = int(random, 1, 4);
-    const m = int(random, 0, 3);
     const befores = sequences.filter((sequence) => facts(sequence).forward === k && (facts(sequence).backward ?? Infinity) > k);
-    const afters = sequences.filter((sequence) => facts(sequence).backward === m && (m === 0 || (facts(sequence).forward ?? Infinity) > m));
+    const afters = sequences.filter((sequence) => {
+      const after = facts(sequence);
+      return after.backward !== undefined && (after.forward === undefined || after.forward === 0 || after.forward > k);
+    });
     if (befores.length === 0 || afters.length === 0) return;
     const crosser = (stopSequence: number): VehicleObservation => ({
       vehicleId: `SYNTHETIC-${seed}-crosser`, routeId: ROUTE, observedAt: NOW, timestampSource: "provider", stopSequence,
@@ -499,6 +503,29 @@ test("P12: two plausible vehicles too close together never produce a selection",
       || row.stopSequence - request.boardingStopSequence < window[0]! || row.stopSequence - request.boardingStopSequence > window[1]!);
     const result = decide({ ...request, candidates: [...others, ...pair] }, trust);
     assert.notEqual(result.status, "matched");
+  });
+});
+
+test("P12: two buses in the on-board window never produce a selection, on a loop of any length", () => {
+  forAllSeeds("P12-loops", MATCHER_CASES, (seed) => {
+    const random = rng(seed ^ 0x12b);
+    const lap = int(random, 5, 40);
+    const stops = syntheticStops(lap + 1, { loop: true });
+    const topology = routeTopologyFacts(stops, 1);
+    if (!topology.loop) return;
+    const boarding = int(random, 1, lap);
+    const window = 4;
+    const first = int(random, 1, window);
+    const second = int(random, 1, window);
+    if (first === second) return;
+    // Sequences first and second stops past the boarding stop, round the loop.
+    const at = (past: number) => 1 + ((boarding - 1 + past) % lap);
+    const pair: VehicleObservation[] = [first, second].map((past, index) => ({
+      vehicleId: `SYNTHETIC-${seed}-aboard-${index}`, routeId: ROUTE, observedAt: NOW, timestampSource: "provider", stopSequence: at(past),
+    }));
+    const request: MatchRequest = { routeId: ROUTE, boardingStopSequence: boarding, now: NOW, stops, riderState: "on_board", candidates: pair };
+    const result = decide(request, new Map());
+    assert.notEqual(result.status, "matched", `lap ${lap}, boarding ${boarding}, buses ${first} and ${second} stops past`);
   });
 });
 

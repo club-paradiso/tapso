@@ -63,9 +63,10 @@
  *   first time already past the stop could have been at it since the rider
  *   began waiting, at the session's first look (F12) or any later one (F16);
  *   when a bus out of sight could, by now, have reached the stop (F15); and
- *   when a bus of unknown progress leaves the feed. Memory offsets are
- *   directed, the shorter way round a loop, so a crossing next to the seam is
- *   still a crossing (F17). The on-board rule mirrors it: a bus that reached
+ *   when a bus of unknown progress leaves the feed. Round a loop, a sighting
+ *   is compared with the last one by its distance to the stop each way, so a
+ *   crossing next to the seam is still a crossing, however short the lap
+ *   (F17). The on-board rule mirrors it: a bus that reached
  *   the stop after the rider said they had boarded is not theirs, a bus
  *   missing from their first snapshot is never selected but still competes
  *   (F16), and a bus leaving the on-board window withholds selection for good.
@@ -492,9 +493,12 @@ function decide(
  * Fold this snapshot into the session's memory, and say what the memory now
  * forbids.
  *
- * Offsets in memory are directed: stops before (−) or past (+) the boarding
- * stop, and on a loop the shorter way round, so a bus that crosses the stop
- * next to the seam is still seen to cross it (finding F17).
+ * Offsets in memory are plain sequence differences from the boarding stop. On
+ * a straight route they order everything. Round a loop they do not: a
+ * sighting is compared with the last one by its distance to the stop each
+ * way, so a bus that crosses the stop next to the seam is still seen to cross
+ * it, and a bus in the on-board window is never read as one before the stop,
+ * however short the lap (finding F17).
  *
  * Waiting rider: a bus seen at the boarding stop, or seen before it and now at
  * or past it, may be the bus the rider boarded. So may a bus that dropped out
@@ -534,6 +538,19 @@ function rememberPassage(
   const reachAfter = (seconds: number) => 1 + Math.floor(seconds / policy.rememberedSecondsPerStop);
   const declaredMs = request.declaredAt === undefined ? Number.NaN : Date.parse(request.declaredAt);
   const sinceDeclared = (nowMs - declaredMs) / 1_000;
+  const window = policy.onBoardWindowStops;
+  const loop = topology?.loop === true;
+  // Round a loop, where a sighting sits is read from its distance to the stop each way.
+  const around = (offset: number): Distances => ({ forward: mod(-offset, topology!.cycleLength), backward: mod(offset, topology!.cycleLength) });
+  // Since the last sighting, the distance still to travel to the stop grew:
+  // the bus went past the stop (or went backwards, which is no better).
+  const passedOnLoop = (seen: { last?: number } | undefined, now: Distances) =>
+    seen?.last !== undefined && now.forward !== undefined && now.forward > around(seen.last).forward!;
+  // On board: inside the window, or one stop before the stop, where the rider's
+  // bus may still read while it dwells.
+  const nearWindow = (at: Distances) => (at.backward !== undefined && at.backward <= window) || at.forward === 1;
+  // Before the stop, beyond any reading of the window: it reached the stop after the rider boarded.
+  const beforeStop = (at: Distances) => at.forward !== undefined && at.forward >= 2 && !nearWindow(at);
 
   const sawUnknown = new Set<string>();
   const sawKnown = new Set<string>();
@@ -541,7 +558,7 @@ function rememberPassage(
   for (const row of onRoute) {
     const vehicleId = row.ranked.vehicleId;
     if (riderState === "on_board" && !initial.includes(vehicleId)) unproven.set(vehicleId, "not_present_when_rider_boarded");
-    const offset = directedOffset(row.facts);
+    const offset = row.facts.offset;
     if (offset === undefined) {
       sawUnknown.add(vehicleId);
       continue;
@@ -549,7 +566,8 @@ function rememberPassage(
     sawKnown.add(vehicleId);
     const seen = seenBefore[vehicleId];
     if (riderState === "waiting_at_stop") {
-      if (row.facts.zone === "boarding_stop_unresolved" || (seen !== undefined && seen.min <= -1 && offset >= 0)) {
+      const crossed = loop ? passedOnLoop(seen, row.facts) : seen !== undefined && seen.min <= -1 && offset >= 0;
+      if (row.facts.zone === "boarding_stop_unresolved" || crossed) {
         withhold("boarding_stop_reached_during_session");
       }
       // Its first known position this session. Already past the stop, it
@@ -563,13 +581,14 @@ function rememberPassage(
         firstSeenPast = true;
       }
     } else {
-      if (offset <= -2 || (seen !== undefined && seen.min <= -2)) {
-        excluded.set(vehicleId, excluded.get(vehicleId) ?? "reached_boarding_stop_after_rider_boarded");
-      }
-      const window = policy.onBoardWindowStops;
-      if (seen !== undefined && seen.max >= -1 && seen.max <= window && offset > window) {
-        withhold("vehicle_left_on_board_window_during_session");
-      }
+      const reachedAfter = loop
+        ? beforeStop(row.facts) || (seen?.last !== undefined && beforeStop(around(seen.last)))
+        : offset <= -2 || (seen !== undefined && seen.min <= -2);
+      if (reachedAfter) excluded.set(vehicleId, excluded.get(vehicleId) ?? "reached_boarding_stop_after_rider_boarded");
+      const left = loop
+        ? seen?.last !== undefined && nearWindow(around(seen.last)) && !nearWindow(row.facts)
+        : seen !== undefined && seen.max >= -1 && seen.max <= window && offset > window;
+      if (left) withhold("vehicle_left_on_board_window_during_session");
     }
     const range = offsets.get(vehicleId);
     offsets.set(vehicleId, {
@@ -592,11 +611,14 @@ function rememberPassage(
     remembered.add(row.vehicleId);
     const seen = seenBefore[row.vehicleId];
     if (seen === undefined) continue;
-    const offset = directedOffset(classifyRouteProgress(row.stopSequence, request.boardingStopSequence, riderState, topology, policy));
+    const facts = classifyRouteProgress(row.stopSequence, request.boardingStopSequence, riderState, topology, policy);
+    const offset = facts.offset;
     if (offset === undefined) continue;
     if (riderState === "waiting_at_stop") {
-      if (seen.min <= -1 && offset >= 0) withhold("boarding_stop_reached_during_session");
-    } else if (seen.max >= -1 && seen.max <= policy.onBoardWindowStops && offset > policy.onBoardWindowStops) {
+      if (loop ? passedOnLoop(seen, facts) : seen.min <= -1 && offset >= 0) withhold("boarding_stop_reached_during_session");
+    } else if (loop
+      ? seen.last !== undefined && nearWindow(around(seen.last)) && !nearWindow(facts)
+      : seen.max >= -1 && seen.max <= window && offset > window) {
       withhold("vehicle_left_on_board_window_during_session");
     }
   }
@@ -642,25 +664,20 @@ function rememberPassage(
   return { memory, excluded, unproven };
 }
 
-/**
- * Signed stops from the boarding stop: negative before it, positive past it.
- * On a loop, the shorter way round (a tie reads as before the stop).
- */
-function directedOffset(facts: PositionFacts): number | undefined {
-  if (facts.offset === undefined) return undefined;
-  if (facts.forward === undefined || facts.backward === undefined) return facts.offset;
-  if (facts.backward < facts.forward) return facts.backward;
-  return facts.forward === 0 ? 0 : -facts.forward;
+interface Distances {
+  forward?: number;
+  backward?: number;
 }
 
 /**
- * Stops a vehicle last seen at directed offset `last` still has to travel to
- * reach the boarding stop, or undefined when it has passed it for good (a
- * straight route). At the stop, or one past it under an unresolved reading, is 0.
+ * Stops a vehicle last seen at offset `last` still has to travel to reach the
+ * boarding stop: round a loop, whichever side it was on; on a straight route,
+ * undefined once it has passed it for good. At the stop, or one past it under
+ * an unresolved reading, is 0.
  */
 function stopsToBoardingStop(last: number, topology: RouteTopologyFacts | undefined): number | undefined {
-  if (last <= 1) return Math.max(0, -last);
-  return topology?.loop ? topology.cycleLength - last : undefined;
+  if (topology?.loop) return mod(-last, topology.cycleLength);
+  return last <= 1 ? Math.max(0, -last) : undefined;
 }
 
 /**

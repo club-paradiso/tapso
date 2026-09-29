@@ -116,11 +116,11 @@ export interface MatchRequest {
  */
 export interface PassageMemory {
   /**
-   * Per vehicle: lowest, highest and most recent directed stop offset from the
-   * boarding stop observed during this session (negative before it, positive
-   * past it; on a loop, the shorter way round), and when it was last
-   * observed. `last`/`lastSeenAt` are absent in memory written before they
-   * existed.
+   * Per vehicle: lowest, highest and most recent stop offset from the boarding
+   * stop observed during this session (sequence minus the boarding stop's), and
+   * when it was last observed. Round a loop the matcher reads `last` by its
+   * distance to the stop each way. `last`/`lastSeenAt` are absent in memory
+   * written before they existed.
    */
   offsets: Record<string, { min: number; max: number; last?: number; lastSeenAt?: string }>;
   /**
