@@ -15,6 +15,8 @@
  * so tests can prove that changing the matcher's output changes the verdict.
  */
 
+import type { RiderState } from "./domain.ts";
+import { DIRECTED_MATCHER_POLICY_V1, MATCHER_POLICY_VERSION, type MatcherFunction } from "./matching.ts";
 import { replayMatching, type MatchGateEvidence, type ReplayDecision, type ReplayOptions } from "./matchReplay.ts";
 import type { RideCapture } from "./rideCapture.ts";
 import { TAGO_CADENCE_POLICY_V1, type SourceFreshnessState } from "./sourceFreshness.ts";
@@ -68,6 +70,17 @@ export type WrongKind = "DEPARTED_VEHICLE" | "FOLLOWING_VEHICLE" | "OTHER";
 export interface PassiveCaseResult {
   schemaVersion: typeof PASSIVE_SHADOW_SCHEMA_VERSION;
   policyVersion: typeof PASSIVE_SHADOW_POLICY_VERSION;
+  /** The matcher policy the case was replayed under. */
+  matcherPolicy: string;
+  /** The rider state the replay declared, from the scenario. */
+  riderState: RiderState;
+  /**
+   * The formal invariant, checked on the replay's output rather than trusted:
+   * a waiting rider's first commit was not one to four stops before the
+   * boarding stop, or an on-board rider's was not one to four stops past it.
+   * Any `true` is a gate failure by itself.
+   */
+  directedInvariantViolated: boolean;
   sourceClass: PassiveSourceClass;
   /** Set on adversarial variants; absent for an unperturbed case. */
   perturbation?: string;
@@ -137,6 +150,21 @@ export interface EvaluateOptions {
   perturbation?: string;
   /** Forces the result's source class; perturbations always pass SYNTHETIC_OR_PERTURBED. */
   sourceClass?: PassiveSourceClass;
+  /**
+   * Replay under another matcher — in practice the legacy symmetric policy,
+   * so the same cases can be compared before and after. Must name its policy.
+   */
+  matcher?: MatcherFunction;
+  matcherPolicy?: string;
+}
+
+/**
+ * The rider's declaration for each scenario. This is the only case field that
+ * reaches the replay, and it is information a real rider has: whether they are
+ * standing at the stop or already on the bus. It says nothing about which bus.
+ */
+export function riderStateFor(scenario: PassiveCaseMeta["scenario"]): RiderState {
+  return scenario === "ON_BOARD_START" ? "on_board" : "waiting_at_stop";
 }
 
 const NEARBY_STOPS = 4;
@@ -162,7 +190,12 @@ export function evaluatePassiveCase(
   const labels = blindLabels(input);
   const replay = options.replay ?? replayMatching;
   // No boardedVehicleId, by construction. The vault has not been opened yet.
-  const evidence = replay(toBlindCapture(input), { labels, recordDecisions: true });
+  const evidence = replay(toBlindCapture(input), {
+    labels,
+    recordDecisions: true,
+    riderState: riderStateFor(meta.scenario),
+    ...(options.matcher ? { matcher: options.matcher, matcherPolicy: options.matcherPolicy } : {}),
+  });
   const truth = vault.reveal(meta.caseId);
   return classifyPassiveCase(meta, input, evidence, labels, truth, options);
 }
@@ -280,10 +313,20 @@ export function classifyPassiveCase(
     reason = "no commit; no eligible candidate with a sufficient margin at any decision";
   }
 
+  const riderState = riderStateFor(meta.scenario);
+  // Both edges of the window: before the rider is aboard, one to four stops
+  // before the stop; once aboard, one to four stops past it.
+  const directedInvariantViolated = committedStopOffset !== undefined
+    && (riderState === "on_board"
+      ? committedStopOffset < 1 || committedStopOffset > DIRECTED_MATCHER_POLICY_V1.onBoardWindowStops
+      : committedStopOffset > -1 || committedStopOffset < -DIRECTED_MATCHER_POLICY_V1.approachWindowStops);
   const keepTimeline = bucket !== "PASSIVE_CORRECT";
   return {
     schemaVersion: PASSIVE_SHADOW_SCHEMA_VERSION,
     policyVersion: PASSIVE_SHADOW_POLICY_VERSION,
+    matcherPolicy: evidence.matcherPolicy ?? options.matcherPolicy ?? MATCHER_POLICY_VERSION,
+    riderState,
+    directedInvariantViolated,
     sourceClass: options.sourceClass ?? meta.sourceClass,
     ...(options.perturbation ? { perturbation: options.perturbation } : {}),
     caseId: meta.caseId,

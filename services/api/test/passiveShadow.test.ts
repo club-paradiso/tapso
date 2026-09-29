@@ -1,6 +1,9 @@
 import assert from "node:assert/strict";
 import test from "node:test";
 
+import type { RiderState } from "../src/domain.ts";
+import { MATCHER_POLICY_VERSION } from "../src/matching.ts";
+import { LEGACY_MATCHER_POLICY_VERSION, matchVehicleLegacySymmetricV0 } from "../src/matchingLegacy.ts";
 import { replayMatching, type MatchGateEvidence, type ReplayOptions } from "../src/matchReplay.ts";
 import type { RideCapture } from "../src/rideCapture.ts";
 import {
@@ -14,14 +17,24 @@ import {
   type PassiveCase,
   type PassiveMatcherInput,
 } from "../src/passiveShadow.ts";
-import { blindLabels, evaluatePassiveCase, type ReplayFunction } from "../src/passiveShadowEvaluate.ts";
+import { blindLabels, evaluatePassiveCase, type EvaluateOptions, type ReplayFunction } from "../src/passiveShadowEvaluate.ts";
 import { evaluatePerturbations, PERTURBATIONS } from "../src/passiveShadowPerturb.ts";
 import { buildWrongCommitLedger, difficultyProfile, rateMetrics, summarizeAdversarial, summarizeLive } from "../src/passiveShadowSummary.ts";
-import { runPassiveShadowPipeline } from "../src/passiveShadowPipeline.ts";
+import { runPassiveShadowPipeline, type PipelineOutput } from "../src/passiveShadowPipeline.ts";
 import { SYN_ROUTE, T0, syntheticStream } from "./syntheticPassive.ts";
 
 const DECOY = "SYN-DECOY-0001";
 const TRUTH = "SYN-TRUTH-0002";
+const UNPLACED = "SYN-UNPLACED-0003";
+
+/**
+ * The legacy `symmetric-stop-distance-v0` policy, injected on purpose: it is
+ * the one that commits to buses that have already left the stop (finding F1).
+ * Tests use it only where they need those wrong commits to exist, and every
+ * result it produces names its own policy.
+ */
+const LEGACY = { matcher: matchVehicleLegacySymmetricV0, matcherPolicy: LEGACY_MATCHER_POLICY_VERSION };
+const legacyReplay: ReplayFunction = (capture, options) => replayMatching(capture, { ...options, ...LEGACY });
 
 /**
  * A departed decoy two stops past the boarding stop, and the bus the rider
@@ -32,6 +45,28 @@ function departedDecoyStream() {
     buses: [
       { id: DECOY, startSequence: 11, msPerStop: 30_000, offsetMs: -15_000 },
       { id: TRUTH, startSequence: 4, msPerStop: 30_000, offsetMs: -10_000 },
+    ],
+    durationMs: 700_000,
+  });
+}
+
+/**
+ * The bus the rider boards reaches stop 10 at +240 s, one stop a minute, so
+ * when the feed freezes two minutes earlier it is two stops out and moving.
+ * Until that instant the feed also carries a bus of the route with no readable
+ * stop sequence, which then leaves it. Present, then remembered for the 90 s
+ * evidence window, its unknown progress withholds every decision for exactly
+ * as long as the approaching bus's last real move still counts as fresh.
+ * Without it that bus would already be committed in the first seconds of the
+ * freeze, before the part under test: frozen content cannot be told from a bus
+ * that just moved until it fills the window. After that, only the frozen
+ * content stands between the approaching bus and a selection.
+ */
+function frozenFeedStream() {
+  return syntheticStream({
+    buses: [
+      { id: TRUTH, startSequence: 6, msPerStop: 60_000 },
+      { id: UNPLACED, startSequence: 3, msPerStop: 60_000, withoutStopSequence: true, hidden: [[120_000, Number.POSITIVE_INFINITY]] },
     ],
     durationMs: 700_000,
   });
@@ -58,6 +93,22 @@ function committingReplay(vehicleId: string | undefined, extra: Partial<MatchGat
       ...extra,
     };
   };
+}
+
+/**
+ * The directed side of a legacy comparison: no case and no adversarial variant
+ * commits, for a waiting rider, to a bus at or past the boarding stop, or, for
+ * a rider on board, to one that has not yet left it.
+ */
+function assertNoDepartedCommit(output: PipelineOutput): void {
+  const variants = output.perturbed.flatMap((entry) => entry.variants.flatMap((variant) => (variant.result ? [variant.result] : [])));
+  assert.ok(output.results.length > 0 && variants.length > 0);
+  for (const result of [...output.results, ...variants]) {
+    const label = `${result.caseId}${result.perturbation ? ` (${result.perturbation})` : ""}`;
+    assert.equal(result.matcherPolicy, MATCHER_POLICY_VERSION, label);
+    assert.notEqual(result.wrongKind, "DEPARTED_VEHICLE", label);
+    assert.equal(result.directedInvariantViolated, false, label);
+  }
 }
 
 /* ------------------------------------------------------------ leak guard */
@@ -113,18 +164,113 @@ test("a ground-truth field smuggled into the matcher input is refused", () => {
   assert.throws(() => assertBlindMatcherInput(annotated), GroundTruthLeakError);
 });
 
+test("a ground-truth field smuggled into a vehicle row or a route stop is refused", () => {
+  const { cases, vault } = generatePassiveCases([departedDecoyStream()]);
+  const passiveCase = caseAt(cases, 10);
+  const withVehicles = passiveCase.input.snapshots.findIndex((snapshot) => snapshot.vehicles.length > 0);
+  assert.ok(withVehicles >= 0, "the fixture has a snapshot with vehicles");
+  // A per-vehicle flag is the most direct way to hand the matcher its answer;
+  // the guard must look inside every row, not only at the envelope.
+  const flagged = {
+    ...passiveCase.input,
+    snapshots: passiveCase.input.snapshots.map((snapshot, index) => (index !== withVehicles ? snapshot : {
+      ...snapshot,
+      vehicles: snapshot.vehicles.map((vehicle) => ({ ...vehicle, isGroundTruth: vehicle.vehicleId === TRUTH })),
+    })),
+  } as unknown as PassiveMatcherInput;
+  assert.throws(() => assertBlindMatcherInput(flagged), (error: unknown) =>
+    error instanceof GroundTruthLeakError && /vehicle row carries non-blind field "isGroundTruth"/.test(error.message));
+  assert.throws(() => evaluatePassiveCase({ ...passiveCase, input: flagged }, vault), GroundTruthLeakError);
+
+  const annotatedStops = {
+    ...passiveCase.input,
+    stops: passiveCase.input.stops.map((stop, index) => (index === 0 ? { ...stop, boardedHere: TRUTH } : stop)),
+  } as unknown as PassiveMatcherInput;
+  assert.throws(() => assertBlindMatcherInput(annotatedStops), (error: unknown) =>
+    error instanceof GroundTruthLeakError && /route stop carries non-blind field "boardedHere"/.test(error.message));
+
+  // Every field a real provider row carries is still accepted.
+  assert.doesNotThrow(() => assertBlindMatcherInput(passiveCase.input));
+});
+
+test("the replay receives the scenario's rider state and nothing else from the case metadata", () => {
+  const { cases, vault } = generatePassiveCases([departedDecoyStream()]);
+  const waiting = caseAt(cases, 10);
+  const onBoard = caseAt(cases, 10, T0 + 170_000, "ON_BOARD_START");
+  const runs: Array<{ passiveCase: PassiveCase; riderState: RiderState; evaluate: EvaluateOptions; keys: string[] }> = [
+    { passiveCase: waiting, riderState: "waiting_at_stop", evaluate: {}, keys: ["labels", "recordDecisions", "riderState"] },
+    { passiveCase: onBoard, riderState: "on_board", evaluate: {}, keys: ["labels", "recordDecisions", "riderState"] },
+    // A comparison replay adds the matcher it names, and still nothing from the case.
+    { passiveCase: waiting, riderState: "waiting_at_stop", evaluate: LEGACY, keys: ["labels", "matcher", "matcherPolicy", "recordDecisions", "riderState"] },
+  ];
+  for (const run of runs) {
+    const calls: Array<{ capture: RideCapture; options: ReplayOptions }> = [];
+    const spy: ReplayFunction = (capture, options) => {
+      calls.push({ capture, options });
+      return replayMatching(capture, options);
+    };
+    evaluatePassiveCase(run.passiveCase, vault, { ...run.evaluate, replay: spy });
+    assert.equal(calls.length, 1);
+    const { capture, options } = calls[0]!;
+    assert.deepEqual(Object.keys(options).sort(), run.keys);
+    assert.equal(options.riderState, run.riderState);
+    assert.deepEqual(new Set(Object.keys(capture)), new Set(BLIND_INPUT_KEYS));
+    // Not even inside an allowed field: no trajectory, event, case or time the generator knows.
+    const encoded = JSON.stringify({ ...options, labels: [...options.labels] });
+    for (const field of ["caseId", "streamId", "collectionId", "scenario", "sessionStartAt", "windowEndAt", "boardingEventId", "trajectoryId"] as const) {
+      assert.equal(encoded.includes(run.passiveCase.meta[field]), false, `the replay received meta.${field}`);
+    }
+  }
+});
+
 /* ------------------------------------------------------- real matcher */
 
-test("the real matcher commits to a departed decoy: PASSIVE_WRONG, DEPARTED_VEHICLE (finding F1, synthetic)", () => {
+test("the legacy symmetric matcher commits to a departed decoy: PASSIVE_WRONG, DEPARTED_VEHICLE (finding F1, synthetic)", () => {
+  // The legacy policy, injected on purpose: the permanent demonstration that
+  // this evaluation catches F1 in any matcher that has it.
   const { cases, vault } = generatePassiveCases([departedDecoyStream()]);
-  const result = evaluatePassiveCase(caseAt(cases, 10), vault);
+  const result = evaluatePassiveCase(caseAt(cases, 10), vault, LEGACY);
+  assert.equal(result.matcherPolicy, LEGACY_MATCHER_POLICY_VERSION);
   assert.equal(result.groundTruthVehicleId, TRUTH);
   assert.equal(result.bucket, "PASSIVE_WRONG");
   assert.equal(result.committedVehicleId, DECOY);
   assert.equal(result.wrongKind, "DEPARTED_VEHICLE");
   assert.equal(result.difficulty, "DEPARTED_DECOY");
+  assert.equal(result.directedInvariantViolated, true);
   assert.equal(result.sourceClass, "SYNTHETIC_OR_PERTURBED");
   assert.ok(result.timeline && result.timeline.length > 0, "a failed case keeps its decision timeline");
+});
+
+test("the directed matcher never commits to the departed decoy (finding F1, synthetic)", () => {
+  const { cases, vault } = generatePassiveCases([departedDecoyStream()]);
+  const passiveCase = caseAt(cases, 10);
+  const replayed: MatchGateEvidence[] = [];
+  const result = evaluatePassiveCase(passiveCase, vault, {
+    replay: (capture, options) => {
+      const evidence = replayMatching(capture, options);
+      replayed.push(evidence);
+      return evidence;
+    },
+  });
+  assert.equal(result.matcherPolicy, MATCHER_POLICY_VERSION);
+  assert.notEqual(result.bucket, "PASSIVE_WRONG");
+  assert.notEqual(result.committedVehicleId, DECOY);
+  assert.equal(result.wrongKind, undefined);
+  assert.equal(result.directedInvariantViolated, false);
+  // Refused on its position at every decision, not by an accident of timing:
+  // first at the boarding stop's unresolved edge, then as departed.
+  const decoy = blindLabels(passiveCase.input).get(DECOY);
+  const decisions = replayed[0]!.decisions!;
+  assert.ok(decisions.some((decision) => decision.candidates.some((candidate) => candidate.label === decoy)));
+  for (const decision of decisions) {
+    assert.notEqual(decision.selectedLabel, decoy, `decoy selected at ${decision.at}`);
+    const row = decision.candidates.find((candidate) => candidate.label === decoy);
+    if (!row) continue;
+    assert.ok(
+      row.rejectedReasons.includes("boarding_stop_position_unresolved") || row.rejectedReasons.includes("departed_boarding_stop"),
+      `decoy not refused on position at ${decision.at}`,
+    );
+  }
 });
 
 test("an approaching bus with no decoy nearby is PASSIVE_CORRECT", () => {
@@ -140,6 +286,31 @@ test("an approaching bus with no decoy nearby is PASSIVE_CORRECT", () => {
   assert.equal(result.bucket, "PASSIVE_CORRECT");
   assert.equal(result.committedVehicleId, TRUTH);
   assert.equal(result.timeline, undefined);
+});
+
+test("an ON_BOARD_START case replays as a rider already aboard and commits only once the bus has left the stop", () => {
+  const { cases, vault } = generatePassiveCases([departedDecoyStream()], { scenarios: ["ON_BOARD_START"] });
+  const passiveCase = caseAt(cases, 10, T0 + 170_000, "ON_BOARD_START");
+  const replayed: MatchGateEvidence[] = [];
+  const result = evaluatePassiveCase(passiveCase, vault, {
+    replay: (capture, options) => {
+      const evidence = replayMatching(capture, options);
+      replayed.push(evidence);
+      return evidence;
+    },
+  });
+  assert.equal(replayed[0]!.riderState, "on_board");
+  assert.equal(result.riderState, "on_board");
+  assert.equal(result.bucket, "PASSIVE_CORRECT");
+  assert.equal(result.committedVehicleId, TRUTH);
+  assert.ok(result.committedStopOffset! >= 1 && result.committedStopOffset! <= 4, `committed at offset ${result.committedStopOffset}`);
+  assert.equal(result.directedInvariantViolated, false);
+  // Replayed as a waiting rider instead, the same capture never commits: the
+  // bus is at the boarding stop from the first snapshot.
+  const asWaiting = evaluatePassiveCase(passiveCase, vault, {
+    replay: (capture, options) => replayMatching(capture, { ...options, riderState: "waiting_at_stop" }),
+  });
+  assert.equal(asWaiting.committedVehicleId, undefined);
 });
 
 /* ------------------------------------------------------- buckets */
@@ -208,6 +379,8 @@ test("provider failures are classified, never read as an empty route", () => {
   assert.ok(result.failedPolls > 0);
   // Failures are counted; the case is not silently turned into "no bus".
   assert.equal(result.totalPolls, passiveCase.input.snapshots.length);
+  // Nor is a failed poll replayed as a decision over an empty route.
+  assert.equal(result.decisionsEvaluated, passiveCase.input.snapshots.filter((snapshot) => !snapshot.error).length);
 
   const heavy = syntheticStream({
     buses: [{ id: TRUTH, startSequence: 8, msPerStop: 30_000, offsetMs: -5_000 }],
@@ -337,20 +510,41 @@ test("a stream cannot claim to be live when it was not collected from a live pro
 
 test("every perturbation is labelled synthetic and the ones that need the answer say so", () => {
   const { cases, vault } = generatePassiveCases([departedDecoyStream()]);
-  const variants = evaluatePerturbations(caseAt(cases, 10), vault);
+  const passiveCase = caseAt(cases, 10);
+  const variants = evaluatePerturbations(passiveCase, vault);
   assert.equal(variants.length, PERTURBATIONS.length);
   for (const variant of variants) {
     if (!variant.result) continue;
     assert.equal(variant.result.sourceClass, "SYNTHETIC_OR_PERTURBED");
     assert.equal(variant.result.perturbation, variant.perturbation.id);
   }
+  // A perturbed live case is synthetic too: checked through a relabelled copy that never leaves this test.
+  const relabelled: PassiveCase = { ...passiveCase, meta: { ...passiveCase.meta, sourceClass: "LIVE_PASSIVE" } };
+  const fromLive = evaluatePerturbations(relabelled, vault).filter((variant) => variant.result !== undefined);
+  assert.ok(fromLive.length > 0);
+  for (const variant of fromLive) assert.equal(variant.result!.sourceClass, "SYNTHETIC_OR_PERTURBED", variant.perturbation.id);
   const opposite = variants.find((variant) => variant.perturbation.id === "synthetic_opposite_route_twin")!;
   assert.ok(opposite.result!.directionRejections > 0, "an opposite-route twin must be rejected on route");
   assert.ok(PERTURBATIONS.filter((item) => item.usesTruthIdentity).length >= 3);
+  // A variant whose input changes with the answer's identity used it, whatever it declares.
+  const truth = vault.reveal(passiveCase.meta.caseId);
+  const context = { boardingAt: Date.parse(truth.provenance.crossingNextAt), truthVehicleId: truth.vehicleId, seed: 1 };
+  const dependent = PERTURBATIONS.filter((perturbation) =>
+    JSON.stringify(perturbation.apply(passiveCase.input, context) ?? null)
+      !== JSON.stringify(perturbation.apply(passiveCase.input, { ...context, truthVehicleId: DECOY }) ?? null));
+  assert.ok(dependent.length >= 3);
+  for (const perturbation of dependent) assert.equal(perturbation.usesTruthIdentity, true, `${perturbation.id} depends on the answer's identity`);
+  // Likewise for the answer's timing: a variant whose input moves with the
+  // boarding instant used it, whatever it declares.
+  const timed = PERTURBATIONS.filter((perturbation) =>
+    JSON.stringify(perturbation.apply(passiveCase.input, context) ?? null)
+      !== JSON.stringify(perturbation.apply(passiveCase.input, { ...context, boardingAt: context.boardingAt - 30_000 }) ?? null));
+  assert.ok(timed.length >= 3);
+  for (const perturbation of timed) assert.equal(perturbation.usesTruthTiming, true, `${perturbation.id} depends on the answer's timing`);
 });
 
 test("frozen provider content never unlocks a selection once it fills the cadence window", () => {
-  const { cases, vault } = generatePassiveCases([departedDecoyStream()]);
+  const { cases, vault } = generatePassiveCases([frozenFeedStream()]);
   const passiveCase = caseAt(cases, 10);
   const boardingAt = Date.parse(vault.reveal(passiveCase.meta.caseId).provenance.crossingNextAt);
   const [frozen] = evaluatePerturbations(passiveCase, vault, {
@@ -365,6 +559,14 @@ test("frozen provider content never unlocks a selection once it fills the cadenc
   for (const decision of frozenTail) {
     assert.notEqual(decision.status, "matched", `selection on frozen content at ${decision.at}`);
     for (const candidate of decision.candidates) assert.notEqual(candidate.cadence, "fresh");
+    // And the bus approaching the stop is refused for its frozen content alone:
+    // it has no other rejection and no competitor is present or remembered.
+    const approaching = decision.candidates.filter((candidate) => candidate.zone === "approaching");
+    assert.equal(approaching.length, 1, `one approaching bus at ${decision.at}`);
+    assert.deepEqual(approaching[0]!.rejectedReasons, ["source_cadence_not_fresh"]);
+    assert.equal(decision.rememberedVehicles, undefined);
+    // Nothing else withholds: frozen content is what refuses the bus.
+    assert.equal(decision.abstentionReasons, undefined, `unexpected withholding reasons at ${decision.at}`);
   }
 });
 
@@ -388,13 +590,18 @@ test("the summary exposes no raw vehicle number", () => {
     ],
     durationMs: 700_000,
   });
-  const output = runPassiveShadowPipeline([stream], { createdAt: "2026-09-25T00:00:00.000Z" });
-  const encoded = JSON.stringify(output.summary);
-  assert.equal(encoded.includes("1234"), false);
-  assert.equal(encoded.includes("5678"), false);
-  assert.ok(encoded.includes("veh-01"));
-  assert.equal(output.summary.automaticMatching, "disabled");
-  assert.equal(output.summary.gateClosed, false);
+  // Under the legacy policy too, injected on purpose: on this stream only it
+  // makes the wrong commits whose diagnostics name a committed vehicle.
+  for (const replay of [undefined, legacyReplay]) {
+    const output = runPassiveShadowPipeline([stream], { createdAt: "2026-09-25T00:00:00.000Z", ...(replay ? { replay } : {}) });
+    const encoded = JSON.stringify(output.summary);
+    assert.equal(encoded.includes("1234"), false);
+    assert.equal(encoded.includes("5678"), false);
+    assert.ok(encoded.includes("veh-01"));
+    if (replay) assert.ok(output.summary.diagnostics.some((diagnostic) => diagnostic.matcherFinalChoice !== null));
+    assert.equal(output.summary.automaticMatching, "disabled");
+    assert.equal(output.summary.gateClosed, false);
+  }
   assert.equal(SYN_ROUTE, stream.routeId);
 });
 
@@ -414,6 +621,8 @@ test("an abstention is attributed to the freshness gate only when the true bus w
   };
   const frozen = evaluatePassiveCase(frozenAll, vault);
   assert.equal(frozen.committedVehicleId, undefined);
+  // Not even the legacy policy commits here, and on the live rows it commits to the decoy (below).
+  assert.equal(evaluatePassiveCase(frozenAll, vault, LEGACY).committedVehicleId, undefined);
   assert.equal(frozen.groundTruthNeverFresh, true);
   const live = evaluatePassiveCase(passiveCase, vault);
   assert.equal(live.groundTruthNeverFresh, false);
@@ -422,16 +631,23 @@ test("an abstention is attributed to the freshness gate only when the true bus w
     variants: [{ perturbation: PERTURBATIONS[0]!, result: { ...frozen, sourceClass: "SYNTHETIC_OR_PERTURBED" } }],
   }]);
   assert.equal(adversarial.variants[0]!.staleRejection, 1);
-  // A wrong commit is never counted as a freshness rejection, whatever its cadence history.
+  // A wrong commit is never counted as a freshness rejection, whatever its
+  // cadence history. The directed matcher makes none on this case, so the wrong
+  // commit is the legacy policy's, injected on purpose.
+  const wrong = evaluatePassiveCase(passiveCase, vault, LEGACY);
+  assert.equal(wrong.bucket, "PASSIVE_WRONG");
   const wrongAdversarial = summarizeAdversarial([{
     baseline: live,
-    variants: [{ perturbation: PERTURBATIONS[0]!, result: { ...live, groundTruthNeverFresh: true, sourceClass: "SYNTHETIC_OR_PERTURBED" } }],
+    variants: [{ perturbation: PERTURBATIONS[0]!, result: { ...wrong, groundTruthNeverFresh: true, sourceClass: "SYNTHETIC_OR_PERTURBED" } }],
   }]);
   assert.equal(wrongAdversarial.variants[0]!.staleRejection, 0);
 });
 
 test("the wrong-commit profile covers every wrong commit and records how far past the stop it was", () => {
-  const output = runPassiveShadowPipeline([departedDecoyStream()], { createdAt: "2026-09-25T00:00:00.000Z" });
+  // The legacy policy, injected on purpose: the profile needs wrong commits to
+  // cover, and on this stream only the legacy policy makes any.
+  const output = runPassiveShadowPipeline([departedDecoyStream()], { createdAt: "2026-09-25T00:00:00.000Z", replay: legacyReplay });
+  assert.ok(output.results.every((result) => result.matcherPolicy === LEGACY_MATCHER_POLICY_VERSION));
   const wrong = output.results.filter((result) => result.bucket === "PASSIVE_WRONG");
   assert.ok(wrong.length > 0);
   for (const result of wrong) assert.ok(result.committedStopOffset !== undefined);
@@ -442,6 +658,8 @@ test("the wrong-commit profile covers every wrong commit and records how far pas
   const profile = summarizeLive([], output.generated, relabelled, (id) => id).wrongCommitProfile;
   assert.equal(profile.total, wrong.length);
   assert.equal(Object.values(profile.byWrongKind).reduce((sum, value) => sum + value, 0), wrong.length);
+  // The same stream under the directed matcher.
+  assertNoDepartedCommit(runPassiveShadowPipeline([departedDecoyStream()], { createdAt: "2026-09-25T00:00:00.000Z" }));
 });
 
 test("every live wrong commit gets its own ledger record with the mechanism read off the commit decision", () => {
@@ -452,7 +670,9 @@ test("every live wrong commit gets its own ledger record with the mechanism read
     ],
     durationMs: 700_000,
   });
-  const output = runPassiveShadowPipeline([stream], { createdAt: "2026-09-25T00:00:00.000Z" });
+  // The legacy policy, injected on purpose: the ledger needs wrong commits to
+  // record, and on this stream only the legacy policy makes any.
+  const output = runPassiveShadowPipeline([stream], { createdAt: "2026-09-25T00:00:00.000Z", replay: legacyReplay });
   // Synthetic results never enter the live ledger.
   assert.equal(output.wrongCommitLedger.total, 0);
   const wrong = output.results.filter((result) => result.bucket === "PASSIVE_WRONG");
@@ -471,15 +691,27 @@ test("every live wrong commit gets its own ledger record with the mechanism read
   assert.ok(record.truthAtCommit.inFeed);
   assert.ok(record.truthAtCommit.rejected!.includes("implausible_boarding_position"));
   assert.ok(record.timeline.some((decision) => decision.status === "matched" && decision.selected === "SELECTED"));
+  // The same stream under the directed matcher leaves nothing to record, even relabelled live.
+  const directed = runPassiveShadowPipeline([stream], { createdAt: "2026-09-25T00:00:00.000Z" });
+  assertNoDepartedCommit(directed);
+  assert.equal(buildWrongCommitLedger([stream], directed.results.map((result) => ({ ...result, sourceClass: "LIVE_PASSIVE" as const }))).total, 0);
 });
 
 test("the difficulty profile separates trivial cases and counts abstentions that were safer than committing", () => {
   const { cases, vault } = generatePassiveCases([departedDecoyStream()]);
   const passiveCase = caseAt(cases, 10);
-  const abstained = evaluatePassiveCase(passiveCase, vault, { replay: committingReplay(undefined) });
+  // The legacy policy, injected on purpose: only under it is the departed decoy eligible at all.
+  const abstained = evaluatePassiveCase(passiveCase, vault, { replay: committingReplay(undefined), ...LEGACY });
   // The departed decoy was the first eligible candidate: forcing a commit would have picked it.
   assert.equal(abstained.forcedTopWouldBeWrong, true);
   assert.ok(abstained.approachingVsDepartedDecisions > 0);
+  // The directed matcher never makes a departed bus eligible, so the same
+  // counterfactual picks the approaching truth, and the case itself commits to
+  // nothing at or past the stop.
+  assert.equal(evaluatePassiveCase(passiveCase, vault, { replay: committingReplay(undefined) }).forcedTopWouldBeWrong, false);
+  const directed = evaluatePassiveCase(passiveCase, vault);
+  assert.notEqual(directed.wrongKind, "DEPARTED_VEHICLE");
+  assert.equal(directed.directedInvariantViolated, false);
   const single = syntheticStream({
     buses: [{ id: TRUTH, startSequence: 8, msPerStop: 30_000, offsetMs: -5_000 }],
     durationMs: 600_000,

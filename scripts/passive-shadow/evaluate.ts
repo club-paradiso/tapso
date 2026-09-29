@@ -26,24 +26,16 @@
  */
 
 import { createHash } from "node:crypto";
-import net from "node:net";
 import { mkdir, readdir, readFile, writeFile } from "node:fs/promises";
 import path from "node:path";
 
 import { streamSha256, validatePassiveStream, type PassiveObservationStream } from "../../services/api/src/passiveShadow.ts";
 import { runPassiveShadowPipeline } from "../../services/api/src/passiveShadowPipeline.ts";
+import { assertOutsideRaw, installNetworkGuard } from "./rawCollection.ts";
 
 /* ------------------------------------------------------- offline guard */
 
-let networkAttempts = 0;
-globalThis.fetch = (async () => {
-  networkAttempts += 1;
-  throw new Error("evaluate.ts is offline: a network call was attempted");
-}) as typeof fetch;
-net.Socket.prototype.connect = function guardedConnect(): never {
-  networkAttempts += 1;
-  throw new Error("evaluate.ts is offline: a socket connection was attempted");
-} as typeof net.Socket.prototype.connect;
+const guard = installNetworkGuard("evaluate.ts");
 
 /* -------------------------------------------------------------- inputs */
 
@@ -58,8 +50,16 @@ if (!directoryArg) {
 }
 const directory = path.resolve(directoryArg);
 const sensitive = path.resolve(options.get("sensitive-out") || `${directory}.evaluation`);
-if (sensitive === directory || sensitive.startsWith(`${directory}${path.sep}`)) {
-  throw new Error("--sensitive-out must be outside the raw collection directory");
+const summaryPath = path.resolve(options.get("summary") || path.join(sensitive, "summary.json"));
+const ledgerPath = path.resolve(options.get("wrong-ledger") || path.join(path.dirname(summaryPath), "passive-shadow-validation-v3-wrong-commits.json"));
+// Every output, checked before anything runs: none may land in the raw evidence.
+assertOutsideRaw(directory, sensitive, "--sensitive-out");
+assertOutsideRaw(directory, summaryPath, "--summary");
+assertOutsideRaw(directory, ledgerPath, "--wrong-ledger");
+const maxPerturbationCases = Number(options.get("max-perturbation-cases") || 300);
+if (!Number.isInteger(maxPerturbationCases) || maxPerturbationCases < 0) {
+  console.error("--max-perturbation-cases must be a non-negative integer");
+  process.exit(2);
 }
 
 const before = await rawTree(directory);
@@ -97,12 +97,11 @@ if (streams.length !== manifest.streams.length) {
 /* ---------------------------------------------------------- evaluation */
 
 const started = Date.now();
-const output = runPassiveShadowPipeline(streams, {
-  maxPerturbationCases: Number(options.get("max-perturbation-cases") || 300),
-});
+const output = runPassiveShadowPipeline(streams, { maxPerturbationCases });
 
 const after = await rawTree(directory);
 if (after.sha256 !== before.sha256) throw new Error("raw collection changed during evaluation; refusing to report");
+const networkAttempts = guard.attempts;
 if (networkAttempts !== 0) throw new Error(`${networkAttempts} network attempt(s) during evaluation; refusing to report`);
 
 const summary = {
@@ -126,10 +125,9 @@ const summary = {
   },
 };
 
-const summaryPath = path.resolve(options.get("summary") || path.join(sensitive, "summary.json"));
 await mkdir(path.dirname(summaryPath), { recursive: true });
 await writeFile(summaryPath, `${JSON.stringify(summary, null, 2)}\n`);
-const ledgerPath = path.resolve(options.get("wrong-ledger") || path.join(path.dirname(summaryPath), "passive-shadow-validation-v3-wrong-commits.json"));
+await mkdir(path.dirname(ledgerPath), { recursive: true });
 await writeFile(ledgerPath, `${JSON.stringify({ ...output.wrongCommitLedger, provenance: { collectionId: manifest.collectionId, evaluatedAtCommit: summary.provenance.evaluatedAtCommit, rawTreeSha256: before.sha256 } }, null, 1)}\n`);
 await mkdir(sensitive, { recursive: true, mode: 0o700 });
 await writeFile(path.join(sensitive, "ground-truth-vault.json"), JSON.stringify(output.generated.vault.export()), { mode: 0o600 });

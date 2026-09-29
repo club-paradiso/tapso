@@ -19,12 +19,13 @@
  * instrument that makes the gate countable.
  */
 
-import type { VehicleObservation } from "./domain.ts";
-import { matchVehicleWithSourceFreshness } from "./matching.ts";
+import type { MatchResult, PassageMemory, RiderState, VehicleObservation } from "./domain.ts";
+import { MATCHER_POLICY_VERSION, matchVehicleWithSourceFreshness, type MatcherFunction } from "./matching.ts";
 import type { RideCapture, RideSnapshot } from "./rideCapture.ts";
 import {
   appendCadenceObservation,
   classifyTagoCadenceFreshness,
+  recentlySeenVehicles,
   type SourceFreshnessEvidence,
   type SourceFreshnessState,
 } from "./sourceFreshness.ts";
@@ -66,6 +67,10 @@ export interface FirstCommit {
 }
 
 export interface MatchGateEvidence {
+  /** The matcher policy the capture was replayed under. */
+  matcherPolicy: string;
+  /** The rider state every decision was made for. */
+  riderState: RiderState;
   /** Successful snapshots the matcher was replayed against. */
   evaluatedSnapshots: number;
   outcomeCounts: Record<MatchDecisionOutcome, number>;
@@ -77,9 +82,9 @@ export interface MatchGateEvidence {
   firstCommit?: FirstCommit;
   selectionVerdict: SelectionVerdict;
   /**
-   * How far ahead the leader was, wherever there were at least two eligible
-   * candidates. `AMBIGUITY_MARGIN` is 12; this is the evidence for whether
-   * that number is defensible.
+   * The total-score gap between the two best eligible candidates, wherever
+   * there were at least two. Descriptive only: the directed policy decides
+   * on a stop margin (`marginStops`), not on this gap.
    */
   candidateMargin: NumberSummary;
   /**
@@ -130,34 +135,172 @@ export interface ReplayDecision {
   selectedLabel?: string;
   eligibleCount: number;
   margin?: number;
+  /** Decision-level reasons a selection was withheld (directed policy only). */
+  abstentionReasons?: string[];
+  /** Vehicles absent from this snapshot that still competed from memory. */
+  rememberedVehicles?: number;
   candidates: Array<{
     label: string;
     score: number;
     rejectedReasons: string[];
     stopSequence?: number;
     cadence?: SourceFreshnessState;
+    zone?: string;
   }>;
 }
 
 export interface ReplayOptions {
   /** Pseudonyms by raw vehicle id, so this never emits a vehicle number. */
   labels: ReadonlyMap<string, string>;
+  /**
+   * The answer, used only to *score* decisions after the blind replay has made
+   * all of them. It never reaches `replayBlind`; see F3 in
+   * `docs/exec-plans/PASSIVE_SHADOW_VALIDATION_V3.md`.
+   */
   boardedVehicleId?: string;
   /** Opt in to `MatchGateEvidence.decisions`. Changes no other output. */
   recordDecisions?: boolean;
+  /**
+   * What the rider declared at session start. `replayMatching` defaults to the
+   * capture's own start declaration (`declaredRiderStateAtStart`);
+   * `replayBlind` defaults to `waiting_at_stop`.
+   */
+  riderState?: RiderState;
+  /**
+   * The direction the rider's session asked for, if it asked for one. Only a
+   * declared request direction may constrain the replay; deriving it from the
+   * boarded vehicle would hand the matcher the answer.
+   */
+  declaredDirectionCode?: string;
+  /** The matcher to replay. Defaults to the production directed matcher. */
+  matcher?: MatcherFunction;
+  /** Recorded as `matcherPolicy`. Required whenever `matcher` is not the default. */
+  matcherPolicy?: string;
 }
 
-export function replayMatching(capture: RideCapture, options: ReplayOptions): MatchGateEvidence {
-  const warnings: string[] = [];
-  const { labels, boardedVehicleId } = options;
-  const boarded = boardedVehicleId?.trim() || undefined;
+/** One decision of the blind replay, by raw vehicle id. Never serialised. */
+export interface BlindDecision {
+  at: string;
+  result: MatchResult;
+  freshness: ReadonlyMap<string, SourceFreshnessEvidence>;
+  positions: ReadonlyMap<string, number | undefined>;
+  /** Vehicles in this snapshot that carry no provider timestamp (TAGO). */
+  receiptTimedVehicles: ReadonlySet<string>;
+  rememberedVehicles: number;
+}
 
+export interface BlindReplay {
+  matcherPolicy: string;
+  riderState: RiderState;
+  decisions: BlindDecision[];
+  sawTagoObservation: boolean;
+}
+
+/**
+ * Every matcher decision a live session would have made on this capture, made
+ * without the answer. The signature is the guarantee: there is no parameter
+ * through which the boarded vehicle could arrive.
+ */
+export function replayBlind(
+  capture: RideCapture,
+  options: Pick<ReplayOptions, "riderState" | "declaredDirectionCode" | "matcher" | "matcherPolicy"> = {},
+): BlindReplay {
+  const riderState: RiderState = options.riderState ?? "waiting_at_stop";
+  const matcher = options.matcher ?? matchVehicleWithSourceFreshness;
+  if (options.matcher && !options.matcherPolicy) throw new Error("a replacement matcher must name its policy");
+  if (!options.matcher && options.matcherPolicy && options.matcherPolicy !== MATCHER_POLICY_VERSION) {
+    throw new Error(`the production matcher is ${MATCHER_POLICY_VERSION}; it cannot be labelled ${options.matcherPolicy}`);
+  }
+  const matcherPolicy = options.matcherPolicy ?? MATCHER_POLICY_VERSION;
   const snapshots = [...(capture.snapshots ?? [])]
     .filter((snapshot) => !snapshot.error)
     .sort((left, right) => Date.parse(left.capturedAt) - Date.parse(right.capturedAt));
-
   const boardingStop = (capture.stops ?? []).find((stop) => stop.sequence === capture.boardingStopSequence);
-  const directionCode = rideDirectionCode(snapshots, boarded);
+  const directionCode = options.declaredDirectionCode?.trim() || undefined;
+
+  // The cadence surrogate is stateful: it only means anything when it is built
+  // from the same consecutive receipts a live session would have accumulated.
+  // The same history is the matcher's memory of vehicles that drop out of a
+  // poll, exactly as `JourneySessionCoordinator` keeps it.
+  const cadenceHistory = new Map<string, VehicleObservation[]>();
+  let sawTagoObservation = false;
+  // Session memory of passages past the boarding stop, threaded from one
+  // decision to the next exactly as a live session persists it.
+  let passage: PassageMemory | undefined;
+  const decisions: BlindDecision[] = [];
+
+  for (const snapshot of snapshots) {
+    const at = new Date(Date.parse(snapshot.capturedAt));
+    if (!Number.isFinite(at.getTime())) continue;
+
+    const freshness = new Map<string, SourceFreshnessEvidence>();
+    for (const observation of snapshot.vehicles) {
+      if (observation.timestampSource !== "unavailable") continue;
+      sawTagoObservation = true;
+      const history = appendCadenceObservation(
+        cadenceHistory.get(observation.vehicleId) ?? [],
+        observation,
+        at,
+      );
+      cadenceHistory.set(observation.vehicleId, history);
+      freshness.set(observation.vehicleId, classifyTagoCadenceFreshness(history, at));
+    }
+    const recentlySeen = recentlySeenVehicles(cadenceHistory, snapshot.vehicles, at);
+
+    const result = matcher({
+      routeId: capture.routeId,
+      boardingStopSequence: capture.boardingStopSequence,
+      boardingLatitude: boardingStop?.latitude,
+      boardingLongitude: boardingStop?.longitude,
+      ...(directionCode ? { directionCode } : {}),
+      now: at.toISOString(),
+      candidates: snapshot.vehicles,
+      riderState,
+      stops: capture.stops ?? [],
+      recentlySeen,
+      ...(passage ? { passage } : {}),
+      ...(capture.startedAt ? { declaredAt: capture.startedAt } : {}),
+    }, freshness);
+    // The label is evidence: a replay counted under one policy must have been
+    // decided by it, so a result that names a different policy is refused.
+    if (result.policyVersion !== undefined && result.policyVersion !== matcherPolicy) {
+      throw new Error(`replay labelled ${matcherPolicy} was decided by ${result.policyVersion}`);
+    }
+    passage = result.passage ?? passage;
+
+    decisions.push({
+      at: snapshot.capturedAt,
+      result,
+      freshness,
+      positions: new Map(snapshot.vehicles.map((vehicle) => [vehicle.vehicleId, vehicle.stopSequence])),
+      receiptTimedVehicles: new Set(snapshot.vehicles
+        .filter((vehicle) => vehicle.timestampSource === "unavailable")
+        .map((vehicle) => vehicle.vehicleId)),
+      rememberedVehicles: recentlySeen.length,
+    });
+  }
+  return { matcherPolicy, riderState, decisions, sawTagoObservation };
+}
+
+
+export function replayMatching(capture: RideCapture, options: ReplayOptions): MatchGateEvidence {
+  const warnings: string[] = [];
+  const { labels } = options;
+
+  // Phase 1: every decision, made blind. The boarded vehicle is not passed and
+  // cannot be: `replayBlind` has no parameter for it.
+  const blind = replayBlind(capture, {
+    riderState: options.riderState ?? declaredRiderStateAtStart(capture),
+    declaredDirectionCode: options.declaredDirectionCode,
+    matcher: options.matcher,
+    matcherPolicy: options.matcherPolicy,
+  });
+
+  // Phase 2: only now is the answer read, to score what was already decided.
+  const boarded = options.boardedVehicleId?.trim() || undefined;
+  const snapshots = [...(capture.snapshots ?? [])]
+    .filter((snapshot) => !snapshot.error)
+    .sort((left, right) => Date.parse(left.capturedAt) - Date.parse(right.capturedAt));
 
   const outcomeCounts: Record<MatchDecisionOutcome, number> = {
     selected_boarded: 0,
@@ -181,39 +324,9 @@ export function replayMatching(capture: RideCapture, options: ReplayOptions): Ma
   let evaluated = 0;
   const decisions: ReplayDecision[] | undefined = options.recordDecisions ? [] : undefined;
 
-  // The cadence surrogate is stateful: it only means anything when it is built
-  // from the same consecutive receipts a live session would have accumulated.
-  const cadenceHistory = new Map<string, VehicleObservation[]>();
-  let sawTagoObservation = false;
-
-  for (const snapshot of snapshots) {
-    const at = new Date(Date.parse(snapshot.capturedAt));
-    if (!Number.isFinite(at.getTime())) continue;
+  for (const decision of blind.decisions) {
     evaluated += 1;
-
-    const freshness = new Map<string, SourceFreshnessEvidence>();
-    for (const observation of snapshot.vehicles) {
-      if (observation.timestampSource !== "unavailable") continue;
-      sawTagoObservation = true;
-      const history = appendCadenceObservation(
-        cadenceHistory.get(observation.vehicleId) ?? [],
-        observation,
-        at,
-      );
-      cadenceHistory.set(observation.vehicleId, history);
-      freshness.set(observation.vehicleId, classifyTagoCadenceFreshness(history, at));
-    }
-
-    const result = matchVehicleWithSourceFreshness({
-      routeId: capture.routeId,
-      boardingStopSequence: capture.boardingStopSequence,
-      boardingLatitude: boardingStop?.latitude,
-      boardingLongitude: boardingStop?.longitude,
-      ...(directionCode ? { directionCode } : {}),
-      now: at.toISOString(),
-      candidates: snapshot.vehicles,
-    }, freshness);
-
+    const { result, freshness } = decision;
     const eligible = result.ranked.filter((candidate) => candidate.rejectedReasons.length === 0);
     wrongDirectionRejections += result.ranked.filter(
       (candidate) => candidate.rejectedReasons.includes("wrong_direction"),
@@ -235,15 +348,18 @@ export function replayMatching(capture: RideCapture, options: ReplayOptions): Ma
     }
 
     if (decisions) {
-      const positions = new Map(snapshot.vehicles.map((vehicle) => [vehicle.vehicleId, vehicle.stopSequence]));
       decisions.push({
-        at: snapshot.capturedAt,
+        at: decision.at,
         status: result.status,
         ...(result.selectedVehicleId ? { selectedLabel: labels.get(result.selectedVehicleId) ?? "unlabelled" } : {}),
         eligibleCount: eligible.length,
         ...(margin === undefined ? {} : { margin }),
+        ...(result.abstentionReasons && result.abstentionReasons.length > 0
+          ? { abstentionReasons: [...result.abstentionReasons] }
+          : {}),
+        ...(decision.rememberedVehicles > 0 ? { rememberedVehicles: decision.rememberedVehicles } : {}),
         candidates: result.ranked.map((candidate) => {
-          const stopSequence = positions.get(candidate.vehicleId);
+          const stopSequence = decision.positions.get(candidate.vehicleId);
           const cadence = freshness.get(candidate.vehicleId)?.state;
           return {
             label: labels.get(candidate.vehicleId) ?? "unlabelled",
@@ -251,6 +367,7 @@ export function replayMatching(capture: RideCapture, options: ReplayOptions): Ma
             rejectedReasons: [...candidate.rejectedReasons],
             ...(stopSequence === undefined ? {} : { stopSequence }),
             ...(cadence === undefined ? {} : { cadence }),
+            ...(candidate.zone === undefined ? {} : { zone: candidate.zone }),
           };
         }),
       });
@@ -260,16 +377,13 @@ export function replayMatching(capture: RideCapture, options: ReplayOptions): Ma
     outcomeCounts[outcome] += 1;
 
     if (result.selectedVehicleId) {
-      const selectedIsTago = snapshot.vehicles.some(
-        (vehicle) => vehicle.vehicleId === result.selectedVehicleId
-          && vehicle.timestampSource === "unavailable",
-      );
+      const selectedIsTago = decision.receiptTimedVehicles.has(result.selectedVehicleId);
       if (selectedIsTago && freshness.get(result.selectedVehicleId)?.state !== "fresh") {
         selectionsWhileNotFresh += 1;
       }
       if (!firstCommit) {
         firstCommit = {
-          at: snapshot.capturedAt,
+          at: decision.at,
           selectedLabel: labels.get(result.selectedVehicleId) ?? "unlabelled",
           ...(margin === undefined ? {} : { margin }),
           eligibleCount: eligible.length,
@@ -283,7 +397,7 @@ export function replayMatching(capture: RideCapture, options: ReplayOptions): Ma
 
   if (!boarded) warnings.push("No boarded vehicle was recorded; the matcher replay cannot be scored");
   if (evaluated === 0) warnings.push("No successful snapshot was available to replay the matcher against");
-  if (evaluated > 0 && !sawTagoObservation) {
+  if (evaluated > 0 && !blind.sawTagoObservation) {
     warnings.push(
       "No observation carried timestampSource=unavailable, so the cadence surrogate TAGO relies on was never exercised",
     );
@@ -296,6 +410,8 @@ export function replayMatching(capture: RideCapture, options: ReplayOptions): Ma
   }
 
   return {
+    matcherPolicy: blind.matcherPolicy,
+    riderState: blind.riderState,
     evaluatedSnapshots: evaluated,
     outcomeCounts,
     ...(firstCommit ? { firstCommit } : {}),
@@ -312,10 +428,38 @@ export function replayMatching(capture: RideCapture, options: ReplayOptions): Ma
       selectionsWhileNotFresh,
       boardedCadenceStates,
     },
-    usableForGate: Boolean(boarded) && evaluated > 0 && sawTagoObservation && selectionVerdict !== "no_boarded_vehicle",
+    usableForGate: Boolean(boarded) && evaluated > 0 && blind.sawTagoObservation && selectionVerdict !== "no_boarded_vehicle",
     warnings,
     ...(decisions ? { decisions } : {}),
   };
+}
+
+/**
+ * What the rider had declared when the capture began — never which bus.
+ *
+ * A capture whose `boarded` marker is stamped at or before its first
+ * successful snapshot was started by a rider who was already boarding: the
+ * Railway and beta flows record exactly that at start. Every other capture
+ * began with the rider waiting. The marker's *time* is the rider's own
+ * declaration, the same thing a live session receives as `riderState`; the
+ * boarded vehicle's identity is not read here.
+ */
+export function declaredRiderStateAtStart(capture: Pick<RideCapture, "markers" | "snapshots">): RiderState {
+  const firstSnapshotMs = Math.min(
+    ...(capture.snapshots ?? [])
+      .filter((snapshot) => !snapshot.error)
+      .map((snapshot) => Date.parse(snapshot.capturedAt))
+      .filter(Number.isFinite),
+  );
+  const boardedMs = Math.min(
+    ...(capture.markers ?? [])
+      .filter((marker) => marker.kind === "boarded")
+      .map((marker) => Date.parse(marker.at))
+      .filter(Number.isFinite),
+  );
+  return Number.isFinite(boardedMs) && Number.isFinite(firstSnapshotMs) && boardedMs <= firstSnapshotMs
+    ? "on_board"
+    : "waiting_at_stop";
 }
 
 function classify(
@@ -336,24 +480,6 @@ function verdict(
   if (!boarded) return "no_boarded_vehicle";
   if (!firstCommit) return "never_committed";
   return firstCommit.selectedLabel === labels.get(boarded) ? "correct" : "wrong";
-}
-
-/**
- * The direction the ride ran in, taken from the boarded vehicle rather than
- * assumed.
- *
- * A TAGO route id already carries direction identity, so this is a
- * cross-check rather than the primary signal: if the boarded bus reported a
- * direction code, the matcher is replayed against that same constraint a live
- * session would have been given.
- */
-function rideDirectionCode(snapshots: RideSnapshot[], boarded: string | undefined): string | undefined {
-  if (!boarded) return undefined;
-  for (const snapshot of snapshots) {
-    const observation = snapshot.vehicles.find((vehicle) => vehicle.vehicleId === boarded);
-    if (observation?.directionCode) return observation.directionCode;
-  }
-  return undefined;
 }
 
 function distinctDirectionCodes(snapshots: RideSnapshot[], boarded: string | undefined): Set<string> {
