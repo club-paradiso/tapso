@@ -81,8 +81,9 @@ S + 1, and a bus reporting S may already have left. So:
   have been at it since the rider started waiting, at the session's first look
   (F12) or any later one (F16); when a bus whose route progress was unknown
   leaves the feed (F15); and for a stored session whose memory predates this
-  policy (F11). Memory offsets are directed: on a loop, the shorter way round,
-  so a crossing next to the seam is still one (F17). An on-board rider's bus
+  policy (F11). Round a loop, each sighting is compared with the last by its
+  distance to the stop each way, so a crossing next to the seam, or longer than
+  half the lap, is still one (F17). An on-board rider's bus
   must have been in the feed when they said they were aboard: a bus missing
   then is never selected, but it still competes, because the feed may have
   missed theirs (F16); a bus leaving the on-board window withholds for good.
