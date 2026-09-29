@@ -17,7 +17,7 @@ Status markers added 2026-09-29, each from what the repository shows; an item wi
 
 Replaces item 8. Steps 1–7 need no bus ride; method and progress are in `exec-plans/HUMAN_LABOR_ELIMINATION.md`, evidence in `validation/MATCHER_SAFETY_EVIDENCE_V4.md`.
 
-1. `DONE`: Directed matcher `directed-route-progress-v1`, with a runtime invariant on every result; findings F1, F3–F20 and review findings R1–R36 fixed (`VEHICLE_MATCHING.md`, `exec-plans/HUMAN_LABOR_ELIMINATION.md` §3).
+1. `DONE`: Directed matcher `directed-route-progress-v1`, with a runtime invariant on every result; findings F1, F3–F20 and review findings R1–R45 fixed (`VEHICLE_MATCHING.md`, `exec-plans/HUMAN_LABOR_ELIMINATION.md` §3).
 2. `DONE`: The 268 former live wrong commits re-decided at their commit instants: the directed policy selects none, and the legacy policy reproduces all 268 (`VERIFIED_BY_REPLAY`, instant level).
 3. `DONE`: Property suite, negative controls and counterfactual library, run in CI (`VERIFIED_BY_TEST`; counterfactuals so far only on synthetic bases, `SIMULATED`).
 4. `DONE`: Release gate `matcher-passive-safety-v4` awards `READY_FOR_SHADOW`, and the configuration refuses automatic matching below `READY_FOR_BOUNDED_AUTOMATION`.

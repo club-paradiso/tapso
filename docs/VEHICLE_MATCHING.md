@@ -85,7 +85,9 @@ S + 1, and a bus reporting S may already have left. So:
   distance to the stop each way, so a crossing next to the seam, or longer than
   half the lap, is still one (F17); so is a bus seen again after long enough
   to have gone round through the stop, though it reads as still approaching
-  (R24). An on-board rider's bus
+  (R24). A bus whose distance still to go grew by only one or two stops may
+  have gone all the way round, or read a stop or two back: that withholds as
+  what the time allows, not as a sighting of the stop (R43). An on-board rider's bus
   must have been in the feed when they said they were aboard: a bus missing
   then is never selected, but it still competes, because the feed may have
   missed theirs (F16); a bus leaving the on-board window withholds for good.
@@ -97,7 +99,12 @@ S + 1, and a bus reporting S may already have left. So:
   snapshot places twice is never excluded by one of its places (R27), and is
   not forgotten either: on board it is of unknown progress, withholding once
   out of sight, and a bus seen at no trustworthy place (none, or two) and
-  then beyond the window may be the rider's bus leaving it (R30).
+  then beyond the window may be the rider's bus leaving it (R30), if the
+  rider's bus could have got there since they said they were aboard: from the
+  window's far edge, as far as the motion model allows since, and a stop more
+  for a misread; round a loop, counted past the stop, so a bus before it only
+  once there was time to go round (R40). Without a declaration time nothing
+  bounds it, and it withholds.
 - **Time.** The session's own sightings are always earlier decisions' `now`;
   one dated after `now` means the clock stepped back, and nothing bounds the
   time since (R29). A mark of unknown progress is dated by the receipts of the
@@ -125,16 +132,23 @@ S + 1, and a bus reporting S may already have left. So:
   that just left the stop included, and nothing is selected automatically
   again. What memory merely allows (a bus out of sight that could by now have
   reached the stop) withholds a selection but never withdraws one: every
-  short dropout of the bus behind would otherwise undo it. Only a sighting
-  ends the watch (R31): the selected bus at one place on this route, at the
-  stop or one past it; or past it when last seen before it, no faster than
-  the matcher's motion model allows since and, round a loop, not where a
-  reading up to two stops back would also put it. A reading one stop back, a
-  row listed twice or under another route, a remembered row and a bus merely
-  out of sight never end it. A withdrawal that loses a concurrent write is
-  written onto the winning row, unless that row saw the selected bus at the
-  stop earlier (R33). A selection the rider confirmed, or one made on board,
-  is never watched.
+  short dropout of the bus behind would otherwise undo it; so does another
+  bus round a loop whose distance to the stop grew by only a stop or two
+  (R43). Only a sighting ends the watch (R31): the selected bus at one place
+  on this route, at the stop or one past it; or further past it, no faster
+  since its last sighting at one place before the stop than the matcher's
+  motion model allows and, round a loop, not where a reading up to two stops
+  back would also put it. A sighting past the stop that came too soon is not
+  where the next is measured from: the last one before the stop stays, so a
+  bus seen past the stop ends the watch once the time since allows it (R42).
+  From one stop short, two past takes 30 s at the least. A reading one stop
+  back, a row listed twice or under another route, a remembered row and a
+  bus merely out of sight never end it. What a request that lost a
+  concurrent write saw of the stop is written onto the winning row: a
+  withdrawal, unless that row saw the selected bus at the stop earlier (R33),
+  and an end, the earlier kept, while that row holds the same automatic
+  selection (R44). A selection the rider confirmed, or one made on board, is
+  never watched.
 
 There is no best-available guess, and no score overrides a rule: rules decide
 what may be selected, and the score only orders what they allow.

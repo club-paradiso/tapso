@@ -160,6 +160,25 @@ unless stated otherwise:
 | R35 | Control F20-reselect named a protection its edit does not remove (the matcher re-derives a sighting's reason from the same snapshot, so nothing is reselected either way) | **Fixed** (`7bc5528`): it names what the standing reason gives (the rider keeps being asked) and must be killed by those tests |
 | R36 | The committed synthetic counterfactual summary predated R26's catalogue change, so CI's byte comparison would fail before the ground-truth and gate steps | **Fixed**: regenerated with the rest of the evidence |
 
+Found by the sixth adversarial review (the fifth pass's fixes; two lenses, each
+finding shown by a probe, or by a mutant the whole suite left green, with the
+probe showing what the mutant changes for a rider). Tests that only pin
+existing behaviour pass on the commit before; every behavioural fix has a test
+that fails there. `SIMULATED` figures come from the reviewers' scratch
+generators, not committed, and are in `KNOWN_ISSUES.md`:
+
+| Id | Finding | Status |
+|---|---|---|
+| R37 | R30's never-placed rule had no test round a loop, across the seam, for a bus listed twice again, or at the window's last stop: dropping its loop half, reading a loop by plain offset, exempting a bus listed twice again, or `>=` at the edge each left the suite green | **Tested** (`eda68f2`): controls R30-never-placed-loop, -plain, -twice, -edge |
+| R38 | R31's motion bound was never tested from the selected bus's latest sighting before the stop, nor from the place the selection read: timing it from the selection, or starting from memory's furthest place, left the suite green | **Tested** (`fe95af1`): controls R31-place-time, R31-watch-start |
+| R39 | R33's edges had no test: an end and a withdrawal read at the same instant, a third write before the merge, and the rider's confirmation saved first | **Tested** (`fe95af1`): controls R33-tie, R33-retry, R33-mode |
+| R40 | R30's never-placed rule had no motion bound: one far bus first listed at no place or at two ended on-board automatic selection for the session, and round a loop it fired on a bus before the stop | **Fixed** (`eda68f2`): only where the rider's bus could have got to since the declaration, from the window's far edge, a stop more for a misread; unbounded without a declaration time. Controls R40-bound, -margin, -unknown-time |
+| R41 | R34 had no test for a bus four stops past, nor for the order round a loop | **Tested** (`fe95af1`): controls R34-window, R34-sort |
+| R42 | R31: a sighting past the stop too soon to be a crossing became the watch's anchor, so no later crossing could end the watch, and a bus behind reaching the stop later withdrew a right selection | **Fixed** (`fe95af1`): the anchor is the last sighting at one place before the stop. Control R42-anchor |
+| R43 | Round a loop, another bus read one stop back raised the matcher's crossing reason, which withdrew a right selection; R31 left more watches open to it | **Fixed** (`eda68f2`): a distance to the stop grown by one or two stops is a possibility, never a sighting; three or more is a crossing as before. Controls R43-read-back, -possibility, -remembered |
+| R44 | R33 merged only withdrawals: of three concurrent requests, an end seen by one that lost was dropped, and a withdrawal from a later snapshot was merged over a right selection | **Fixed** (`fe95af1`): an end is written onto the winner's row too, the earliest kept; a withdrawal merged first stands (`KNOWN_ISSUES.md`). Controls R44-end-merge, R44-earliest |
+| R45 | Latent in R32: the self-check was excluded from kill accounting by its bare name, so a same-named test elsewhere could not kill, and per-control subtests of the self-check would kill every control | **Fixed** (`4141f38`): named by file and full path, subtests included; shown on scratch copies both ways |
+
 ## 4. The matcher contract (`directed-route-progress-v1`)
 
 Before evidence establishes that the rider is aboard, no automatically selected
@@ -237,8 +256,10 @@ say so gets a confirmation prompt; the reverse would admit departed buses.
 
 - Done in this branch: everything in §5 marked done. Every behavioural
   finding in §3 has a regression test and a negative control that turns the
-  suite red if the fix is removed; R32, R35 and R36, about the evidence
-  tooling itself, are shown as their rows say.
+  suite red if the fix is removed, and every gap a review found in the
+  tests (R37–R39, R41) is closed by tests that kill the mutants it named;
+  R32, R35, R36 and R45, about the evidence tooling itself, are shown as
+  their rows say.
 - Risks: coverage cost of the fail-closed rules on real routes is unmeasured
   until the full-window replay runs (routes whose stop lists repeat stop names
   withhold at those stops; a bus at the stop withholds the session); the first
@@ -292,6 +313,21 @@ say so gets a confirmation prompt; the reverse would admit departed buses.
   withholds. Reused for a permissive decision it turned caution into false
   evidence. The cost, accepted: a right selection is withdrawn when the
   selected bus's arrival is shown only ambiguously.
+- **Bound the never-placed rule by the motion model from the declaration
+  (R40).** It rests on the premise the whole on-board rule rests on: the
+  rider's bus was in the window when they said they were aboard. A later
+  declaration is the documented late-declaration case either way. Rejected:
+  firing on any never-placed bus beyond the window, which ended on-board
+  selection for the session on one glitch of a far bus.
+- **Round a loop, a reading one or two stops back is a possibility (R43).**
+  Nothing tells it from a bus that went nearly all the way round, so it
+  withholds a selection not yet made and withdraws none, for another bus as
+  for the selected one (R31); three stops or more is a crossing, the same
+  guard the watch's end uses.
+- **Merge a lost end as a lost withdrawal is merged (R44).** Rejected:
+  undoing a withdrawal when an earlier end arrives after it (restoring a
+  selection is the riskier write); that order stays over-conservative, and
+  documented.
 - **On board, a short loop selects nothing (R23), and a bus placed twice is of
   unknown progress (R27, R30).** On a lap under ten stops, the stops just past
   the boarding stop cannot be told from those just before it under every
