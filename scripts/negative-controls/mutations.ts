@@ -334,8 +334,8 @@ export const NEGATIVE_CONTROLS: readonly NegativeControl[] = [
     protection: "Once any bus has been seen at or crossing the boarding stop during a waiting session, no bus is ever selected automatically in that session.",
     edits: [{
       file: MATCHING,
-      find: '        withhold("boarding_stop_reached_during_session");\n      }\n      // Its first known position',
-      replace: "        { /* Negative control F4: a bus at or crossing the boarding stop no longer withholds the session. */ }\n      }\n      // Its first known position",
+      find: '        withhold("boarding_stop_reached_during_session");\n      }\n      // Round a loop, seen again',
+      replace: "        { /* Negative control F4: a bus at or crossing the boarding stop no longer withholds the session. */ }\n      }\n      // Round a loop, seen again",
     }],
     testFiles: [T.matching, T.properties, T.session, T.replay],
   },
@@ -347,8 +347,8 @@ export const NEGATIVE_CONTROLS: readonly NegativeControl[] = [
     protection: "A bus that may have reached the stop unobserved withholds the waiting session, as a seen arrival would.",
     edits: [{
       file: MATCHING,
-      find: 'withhold("vehicle_may_have_reached_boarding_stop_unobserved");',
-      replace: "{ /* Negative control F4-unobserved: a possible unobserved arrival no longer withholds. */ }",
+      find: 'if (toStop !== undefined && toStop <= reachAfter(unseenSeconds)) withhold("vehicle_may_have_reached_boarding_stop_unobserved");',
+      replace: "if (toStop !== undefined && toStop <= reachAfter(unseenSeconds)) { /* Negative control F4-unobserved: a possible unobserved arrival no longer withholds. */ }",
     }],
     testFiles: [T.matching, T.properties, T.session, T.replay],
   },
@@ -1089,8 +1089,8 @@ export const NEGATIVE_CONTROLS: readonly NegativeControl[] = [
     protection: "A bus with two positions at once has none that can be trusted; what the session remembers of it never depends on row order.",
     edits: [{
       file: MATCHING,
-      find: "    if (new Set(placed).size > 1) sawUnknown.add(vehicleId);",
-      replace: "    if (new Set(placed).size > 1 && Number.isNaN(0)) sawUnknown.add(vehicleId);",
+      find: "      lastSeenAt: request.now,\n    });\n    if (new Set(placed).size > 1) sawUnknown.add(vehicleId);",
+      replace: "      lastSeenAt: request.now,\n    });\n    if (new Set(placed).size > 1 && Number.isNaN(0)) sawUnknown.add(vehicleId);",
     }],
     testFiles: [T.matching, T.properties],
   },
@@ -1115,8 +1115,8 @@ export const NEGATIVE_CONTROLS: readonly NegativeControl[] = [
     protection: "When the clock steps back, the time since a sighting is unknown, never zero.",
     edits: [{
       file: MATCHING,
-      find: "  if (!Number.isFinite(thenMs) || thenMs > nowMs + CLOCK_SKEW_TOLERANCE_MS) return Number.POSITIVE_INFINITY;",
-      replace: "  if (!Number.isFinite(thenMs)) return Number.POSITIVE_INFINITY;",
+      find: "  if (!Number.isFinite(thenMs) || !Number.isFinite(nowMs) || thenMs > nowMs + CLOCK_SKEW_TOLERANCE_MS) return Number.POSITIVE_INFINITY;",
+      replace: "  if (!Number.isFinite(thenMs) || !Number.isFinite(nowMs)) return Number.POSITIVE_INFINITY;",
     }],
     testFiles: [T.matching],
   },

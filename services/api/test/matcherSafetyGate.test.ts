@@ -1,5 +1,6 @@
 import assert from "node:assert/strict";
 import test from "node:test";
+import { readFileSync } from "node:fs";
 
 import {
   evaluateGate,
@@ -287,6 +288,26 @@ test("live and counterfactual evidence from other matcher sources is stale, and 
 test("every negative control in the catalogue is pinned by the gate, and every pinned one exists", () => {
   const catalogue = NEGATIVE_CONTROLS.map((control) => control.id).sort();
   assert.deepEqual([...PINNED_NEGATIVE_CONTROLS].sort(), catalogue);
+});
+
+test("every negative control still applies: each edit finds its text exactly once in the source it names", () => {
+  // The runner reports a moved protection as STALE only when the full
+  // catalogue runs; this catches it in the ordinary suite, the moment a
+  // refactor moves the text a control edits. Overlapping matches count, as in
+  // the runner.
+  const occurrences = (haystack: string, needle: string) => {
+    let count = 0;
+    for (let from = haystack.indexOf(needle); from !== -1; from = haystack.indexOf(needle, from + 1)) count += 1;
+    return count;
+  };
+  for (const control of NEGATIVE_CONTROLS) {
+    const sources = new Map<string, string>();
+    for (const [index, edit] of control.edits.entries()) {
+      const text = sources.get(edit.file) ?? readFileSync(new URL(`../../../${edit.file}`, import.meta.url), "utf8");
+      assert.equal(occurrences(text, edit.find), 1, `${control.id}, edit ${index + 1}: its text must occur exactly once in ${edit.file}`);
+      sources.set(edit.file, text.replace(edit.find, edit.replace));
+    }
+  }
 });
 
 test("a mitigation counts only with evidence that can exist for it alone", () => {
