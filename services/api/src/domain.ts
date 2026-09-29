@@ -141,6 +141,13 @@ export interface PassageMemory {
    * it is recorded.
    */
   reachedAfterBoarding?: string[];
+  /**
+   * On board, round a loop: vehicles seen clear of the boarding stop and later
+   * back at it or closer past it, or seen again after long enough to have gone
+   * round through it. Each may have reached the stop after the rider boarded
+   * (or read a stop back), so none of them is ever selected; they still compete.
+   */
+  returnedToStop?: string[];
   /** Set once and never cleared. */
   withheld?: { reason: string; at: string };
 }

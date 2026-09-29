@@ -984,6 +984,143 @@ test("on-board rider on a loop: a bus once seen before the stop is never theirs,
   }
 });
 
+/** Synthetic ring of `lap` stops, the last row the first stop again. */
+function ring(lap: number): StopOnRoute[] {
+  return [
+    ...Array.from({ length: lap }, (_, index) => ({ stopId: `SYN-R${lap}-${index + 1}`, name: `Synthetic ring ${lap} ${index + 1}`, sequence: index + 1 })),
+    { stopId: `SYN-R${lap}-1`, name: `Synthetic ring ${lap} 1`, sequence: lap + 1 },
+  ];
+}
+
+test("on board round a loop, a bus seen clear of the stop and later back at it or closer past it is never selected, and still competes (R23)", () => {
+  // Fourteen stops round, boarding at 7: stops 8 to 11 are one to four past it.
+  const aboard = { stops: ring(14), boardingStopSequence: 7 };
+  // Four stops past, then one: it went through the stop after the rider boarded,
+  // or read three stops back. Without the earlier sighting it would be theirs.
+  const first = matchVehicle(onBoard([bus("round", 11)], aboard));
+  assertSelected(first, "round", "control: alone in the window");
+  assertSelected(matchVehicle(onBoard([bus("round", 8)], aboard)), "round", "control: without memory");
+  const back = matchVehicle(onBoard([bus("round", 8)], { ...aboard, passage: first.passage }));
+  assert.equal(back.status, "unavailable");
+  assert.deepEqual(candidateIn(back, "round").rejectedReasons, ["may_have_reached_boarding_stop_after_rider_boarded"]);
+  assert.deepEqual(back.passage?.returnedToStop, ["round"]);
+  // One stop back is enough: a stop read back is as unsafe as a lap.
+  const jitter = matchVehicle(onBoard([bus("round", 10)], { ...aboard, passage: matchVehicle(onBoard([bus("round", 11)], aboard)).passage }));
+  assert.equal(jitter.status, "unavailable", "one stop back");
+  // Back at the stop before it (it may be arriving) counts too, for good.
+  let passage = matchVehicle(onBoard([bus("round", 6)], { ...aboard, passage: first.passage })).passage;
+  const later = matchVehicle(onBoard([bus("round", 9)], { ...aboard, passage }));
+  assert.equal(later.status, "unavailable", "sticky after the stop before it");
+  // It still competes: with it in the window, the rider's bus is not the only one.
+  passage = matchVehicle(onBoard([bus("round", 11), bus("rider", 9)], aboard)).passage;
+  assertWithheld(matchVehicle(onBoard([bus("round", 8), bus("rider", 10)], { ...aboard, passage })), "multiple_vehicles_in_on_board_window");
+  // The rider's own bus dwelling at the stop reads the stop before it, then the
+  // stop, then moves on: never clear of the stop first, so it stays theirs.
+  passage = matchVehicle(onBoard([bus("dwell", 6)], aboard)).passage;
+  passage = matchVehicle(onBoard([bus("dwell", 7)], { ...aboard, passage })).passage;
+  assertSelected(matchVehicle(onBoard([bus("dwell", 9)], { ...aboard, passage })), "dwell", "the rider's bus leaving the stop");
+});
+
+test("on board round a loop, a bus seen again after long enough to have gone round through the stop is never selected (R23)", () => {
+  // Three stops past at the first look, four past at the next. 400 s is time
+  // for eleven stops to the stop and four on; 20 s is not.
+  const aboard = { stops: ring(14), boardingStopSequence: 7 };
+  const at = (seconds: number) => matchVehicle(onBoard([bus("slow", 10, { observedAt: secondsAgo(seconds) })], { ...aboard, now: secondsAgo(seconds) }));
+  assert.equal(matchVehicle(onBoard([bus("slow", 11)], { ...aboard, passage: at(400).passage })).status, "unavailable");
+  assertSelected(matchVehicle(onBoard([bus("slow", 11)], { ...aboard, passage: at(20).passage })), "slow", "control: 20 s");
+});
+
+test("on board, a loop too short to tell the stops just past the boarding stop from those just before it selects nothing (R23)", () => {
+  // Nine stops round: a bus two stops past the stop is also seven before it,
+  // and a stop read either way brings the window and the approach together.
+  const short = matchVehicle(onBoard([bus("only", 4)], { stops: ring(9), boardingStopSequence: 2 }));
+  assert.equal(short.status, "ambiguous");
+  assert.deepEqual(short.abstentionReasons, ["loop_too_short_for_on_board_selection"]);
+  assertSelected(matchVehicle(onBoard([bus("only", 4)], { stops: ring(10), boardingStopSequence: 2 })), "only", "control: ten stops round");
+  // A waiting rider on the same loop is judged as before.
+  assertSelected(matchVehicle(request([bus("only", 8)], { stops: ring(9), boardingStopSequence: 9 })), "only", "control: waiting");
+});
+
+test("waiting round a loop, a bus seen again after long enough to have gone round through the stop withholds for good (R24)", () => {
+  // Boarding at 11, the lap's last stop. B is eight stops out, then five; C
+  // nine, then one. In 200 s B had time to reach the stop, take the rider and
+  // go on round to five stops out (8 + 6 stops).
+  const loop = { stops: loopStops, boardingStopSequence: 11 };
+  const look = (seconds: number) => matchVehicle(request(
+    [bus("b", 3, { observedAt: secondsAgo(seconds) }), bus("c", 2, { observedAt: secondsAgo(seconds) })],
+    { ...loop, now: secondsAgo(seconds) },
+  ));
+  const later = [bus("b", 6), bus("c", 10)];
+  const withheld = matchVehicle(request(later, { ...loop, passage: look(200).passage }));
+  assert.equal(withheld.status, "ambiguous");
+  assert.equal(withheld.passage?.withheld?.reason, "vehicle_may_have_reached_boarding_stop_unobserved");
+  assertSelected(matchVehicle(request(later, { ...loop, passage: look(20).passage })), "c", "control: 20 s");
+  // At the terminal both times, read as the first stop and then as the
+  // closing row: a relabel, unless there was time for the whole lap.
+  const terminal = { stops: ring(10), boardingStopSequence: 6 };
+  const atTerminal = (seconds: number) => matchVehicle(request(
+    [bus("x", 1, { observedAt: secondsAgo(seconds) }), bus("l", 2, { observedAt: secondsAgo(seconds) })],
+    { ...terminal, now: secondsAgo(seconds) },
+  ));
+  const relabelled = [bus("x", 11), bus("l", 5)];
+  assert.equal(matchVehicle(request(relabelled, { ...terminal, passage: atTerminal(150).passage })).passage?.withheld?.reason,
+    "vehicle_may_have_reached_boarding_stop_unobserved", "a lap in 150 s");
+  assertSelected(matchVehicle(request(relabelled, { ...terminal, passage: atTerminal(10).passage })), "l", "control: a relabel in 10 s");
+});
+
+test("round a loop, a reason a sighting raises is kept before one the time since allows, whatever the order of the rows", () => {
+  // Boarding at 11. Seen 200 s ago, "round" was eight stops out and "crosser"
+  // one; now "round" is five out (it had time to go round) and "crosser" is two
+  // past (it crossed). The session keeps the crossing: the journey session's
+  // boarding watch withdraws a selection on a sighting, never on the time since.
+  const loop = { stops: loopStops, boardingStopSequence: 11 };
+  const earlier = secondsAgo(200);
+  const first = matchVehicle(request(
+    [bus("round", 3, { observedAt: earlier }), bus("crosser", 10, { observedAt: earlier })],
+    { ...loop, now: earlier },
+  ));
+  for (const rows of [[bus("round", 6), bus("crosser", 2)], [bus("crosser", 2), bus("round", 6)]]) {
+    const result = matchVehicle(request(rows, { ...loop, passage: first.passage }));
+    assert.equal(result.passage?.withheld?.reason, "boarding_stop_reached_during_session", rows.map((row) => row.vehicleId).join(", "));
+  }
+});
+
+test("on board, a bus the snapshot places twice is never excluded by one of the places, and keeps competing (R27)", () => {
+  // The rider's bus is two stops past the stop. "twice" is reported three
+  // past and three before at once, or three before and, under another route,
+  // two past. The place before the stop would say it reached the stop after
+  // the rider boarded and stop it competing; nothing about it can be trusted.
+  const twins: Array<[string, VehicleObservation[]]> = [
+    ["two stops", [bus("twice", BOARDING + 3), bus("twice", BOARDING - 3)]],
+    ["another route", [bus("twice", BOARDING - 3), bus("twice", BOARDING + 2, { routeId: "route-other" })]],
+  ];
+  for (const [label, rows] of twins) {
+    const first = matchVehicle(onBoard([bus("rider", BOARDING + 2), ...rows]));
+    assert.equal(first.passage?.reachedAfterBoarding, undefined, label);
+    assert.equal(first.passage?.offsets.twice, undefined, `${label}: memory keeps no place for it`);
+    const later = matchVehicle(onBoard([bus("rider", BOARDING + 3), bus("twice", BOARDING + 4)], { passage: first.passage }));
+    assertWithheld(later, "multiple_vehicles_in_on_board_window", label);
+  }
+  // Seen before the stop at one place, it is excluded as before.
+  const once = matchVehicle(onBoard([bus("rider", BOARDING + 2), bus("once", BOARDING - 3)]));
+  assertSelected(matchVehicle(onBoard([bus("rider", BOARDING + 3), bus("once", BOARDING + 4)], { passage: once.passage })), "rider", "control");
+});
+
+test("a loop with a very long sequence span never throws, however long a bus has been out of sight (R25)", () => {
+  // A stop list whose lap spans 400,000 sequences. A bus out of sight with no
+  // bound on the time since is walked round the whole lap.
+  const sparse: StopOnRoute[] = [
+    { stopId: "SYN-SPARSE-A", name: "Synthetic sparse A", sequence: 1 },
+    { stopId: "SYN-SPARSE-B", name: "Synthetic sparse B", sequence: 2 },
+    { stopId: "SYN-SPARSE-A", name: "Synthetic sparse A", sequence: 400_001 },
+  ];
+  for (const lastSeenAt of [undefined, new Date(Date.parse(now) + 60_000).toISOString()]) {
+    const passage = { offsets: { gone: { min: -1, max: -1, last: -1, ...(lastSeenAt ? { lastSeenAt } : {}) } }, initial: ["gone"] };
+    const result = matchVehicle(request([bus("x", 1)], { stops: sparse, boardingStopSequence: 2, passage }));
+    assert.notEqual(result.status, "matched", `lastSeenAt ${lastSeenAt}`);
+  }
+});
+
 test("loop: the lap is measured in sequences, so a missing or repeated stop row cannot move the seam (F18)", () => {
   // Boarding at 11. A bus at 1 has wrapped: one stop past the rider, blocking.
   const input = request([bus("leader", 9), bus("wrapped", 1)], { stops: loopStops, boardingStopSequence: 11 });

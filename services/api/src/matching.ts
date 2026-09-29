@@ -376,6 +376,12 @@ function decide(
     if (!topology.boardingStopFound) abstentions.add("boarding_stop_not_on_route");
     if (topology.boardingStopRepeats) abstentions.add("boarding_stop_repeats_on_route");
     if (topology.sequenceConflict) abstentions.add("route_stop_sequences_conflict");
+    // On board round a loop too short for its stops just past the boarding
+    // stop to be told from those just before it, under any reading of TAGO's
+    // nodeord, no position says which bus the rider boarded (finding R23).
+    if (riderState === "on_board" && topology.loop && topology.cycleLength < 2 * policy.onBoardWindowStops + 2) {
+      abstentions.add("loop_too_short_for_on_board_selection");
+    }
   } else {
     abstentions.add("route_topology_unverified");
   }
@@ -425,7 +431,8 @@ function decide(
     abstentions.add("vehicle_at_boarding_stop_unresolved");
   }
 
-  const passage = rememberPassage(request, onRoute, riderState, topology, policy);
+  const reportedTwice = new Set([...positionsByVehicle].filter(([, entry]) => entry.positions.size > 1).map(([vehicleId]) => vehicleId));
+  const passage = rememberPassage(request, onRoute, riderState, topology, policy, reportedTwice);
   if (passage.memory.withheld) abstentions.add(passage.memory.withheld.reason);
   for (const row of onRoute) {
     const excluded = passage.excluded.get(row.ranked.vehicleId);
@@ -537,12 +544,15 @@ function rememberPassage(
   riderState: RiderState,
   topology: RouteTopologyFacts | undefined,
   policy: DirectedMatcherPolicy,
+  /** Vehicles this snapshot reports at more than one place (another route or no stop included). */
+  reportedTwice: ReadonlySet<string>,
 ): { memory: PassageMemory; excluded: Map<string, string>; unproven: Map<string, string> } {
   const prior = request.passage;
   const seenBefore = prior?.offsets ?? {};
   const offsets = new Map(Object.entries(seenBefore).map(([vehicleId, range]) => [vehicleId, { ...range }]));
   const unknownProgress = new Map(Object.entries(prior?.unknownProgress ?? {}));
   const reachedAfterBoarding = new Set(prior?.reachedAfterBoarding ?? []);
+  const returnedToStop = new Set(prior?.returnedToStop ?? []);
   let withheld = prior?.withheld;
   const withhold = (reason: string) => { if (!withheld) withheld = { reason, at: request.now }; };
   const initial = prior?.initial ?? [...new Set(onRoute.map((row) => row.ranked.vehicleId))].sort();
@@ -577,6 +587,16 @@ function rememberPassage(
     reachedAfterBoarding.has(vehicleId) || (seen !== undefined && (loop
       ? [seen.last, seen.min].some((value) => value !== undefined && beforeStop(around(value)))
       : seen.min <= -2));
+  // Two or more stops from the stop each way: no reading of TAGO's nodeord puts a bus there at the stop.
+  const clearOfStop = (at: Distances) => (at.forward ?? 0) >= 2 && (at.backward ?? 0) >= 2;
+  // Round a loop: whether, since its last sighting, the vehicle had time to go
+  // through the stop and on to where it is now. `throughStop` is how far that
+  // last sighting was from passing the stop in the sense that matters.
+  const hadTimeToPass = (seen: { lastSeenAt?: string } | undefined, throughStop: number, now: Distances) => {
+    if (seen === undefined || now.backward === undefined) return false;
+    const seconds = secondsSince(seen.lastSeenAt === undefined ? Number.NaN : Date.parse(seen.lastSeenAt), nowMs);
+    return throughStop + now.backward <= reachAfter(seconds);
+  };
 
   const sawUnknown = new Set<string>();
   const sawKnown = new Set<string>();
@@ -591,6 +611,7 @@ function rememberPassage(
   const nearestAhead = (offsets: number[]) => [...offsets].sort((left, right) => aheadOf(left) - aheadOf(right) || right - left)[0]!;
   const aheadOf = (offset: number) => (loop ? around(offset).forward! : offset <= 0 ? -offset : Number.POSITIVE_INFINITY);
   let firstSeenPast = false;
+  let wentRound = false;
   for (const row of onRoute) {
     const vehicleId = row.ranked.vehicleId;
     if (riderState === "on_board" && !initial.includes(vehicleId)) unproven.set(vehicleId, "not_present_when_rider_boarded");
@@ -606,6 +627,11 @@ function rememberPassage(
       if (row.facts.zone === "boarding_stop_unresolved" || crossed) {
         withhold("boarding_stop_reached_during_session");
       }
+      // Round a loop, seen again after long enough to have gone through the
+      // stop and round to where it is now: it reads as not having crossed, and
+      // may have taken the rider (finding R24).
+      const last = lastOf(seen);
+      if (loop && last !== undefined && hadTimeToPass(seen, around(last).forward!, row.facts)) wentRound = true;
       // Its first known position this session. Already past the stop, it
       // could have been at the stop at any time up to the point its distance
       // past it allows; if that is after the rider began waiting, the rider
@@ -620,10 +646,26 @@ function rememberPassage(
       // Seen before the stop at any time in the session, it reached the stop
       // after the rider boarded, for good. Round a loop the extremes of plain
       // offsets do not say where it was, so every such sighting is recorded.
-      const beforeNow = loop ? beforeStop(row.facts) : offset <= -2;
+      // A bus the snapshot places twice has no place to be excluded by: an
+      // exclusion stops it competing, so it takes a sighting that can be
+      // trusted (finding R27).
+      const beforeNow = !reportedTwice.has(vehicleId) && (loop ? beforeStop(row.facts) : offset <= -2);
       if (beforeNow) reachedAfterBoarding.add(vehicleId);
       if (beforeNow || reachedEarlier(vehicleId, seen)) excluded.set(vehicleId, excluded.get(vehicleId) ?? "reached_boarding_stop_after_rider_boarded");
       const lastSeen = lastOf(seen);
+      if (loop && lastSeen !== undefined) {
+        // Seen clear of the stop and now back at it, or closer past it: it
+        // went through the stop after the rider boarded, or read a stop back.
+        // Seen again after long enough to have gone round through it (from a
+        // sighting at the stop, a whole lap: that pass may be the boarding
+        // itself): it may have. Never theirs by selection, it still competes,
+        // as a bus the feed may have garbled must (finding R23).
+        const then = around(lastSeen);
+        const clearThen = clearOfStop(then);
+        const back = clearThen && (row.facts.forward === 1 || row.facts.backward! < then.backward!);
+        if (back || hadTimeToPass(seen, clearThen ? then.forward! : topology!.cycleLength - 1, row.facts)) returnedToStop.add(vehicleId);
+      }
+      if (returnedToStop.has(vehicleId)) unproven.set(vehicleId, unproven.get(vehicleId) ?? "may_have_reached_boarding_stop_after_rider_boarded");
       const left = loop
         ? lastSeen !== undefined && nearWindow(around(lastSeen)) && !nearWindow(row.facts)
         : seen !== undefined && seen.max >= -1 && seen.max <= window && offset > window;
@@ -631,6 +673,13 @@ function rememberPassage(
     }
     const range = offsets.get(vehicleId);
     const placed = positionsNow.get(vehicleId)!;
+    // On board, memory is what later exclusions are read from, so a sighting
+    // at two places leaves it as it was (finding R27). Waiting, every place
+    // counts: there memory only ever makes the matcher more careful.
+    if (riderState === "on_board" && reportedTwice.has(vehicleId)) {
+      if (new Set(placed).size > 1) sawUnknown.add(vehicleId);
+      continue;
+    }
     offsets.set(vehicleId, {
       min: range ? Math.min(range.min, offset) : offset,
       max: range ? Math.max(range.max, offset) : offset,
@@ -676,6 +725,10 @@ function rememberPassage(
       ? "vehicle_may_have_reached_boarding_stop_before_first_observation"
       : "vehicle_first_seen_past_boarding_stop");
   }
+  // Every reason above was raised by a sighting; every one below only by what
+  // the time since allows. The first reason is the one kept, and the journey
+  // session's boarding watch tells the two kinds apart by it.
+  if (wentRound) withhold("vehicle_may_have_reached_boarding_stop_unobserved");
 
   if (riderState === "on_board") {
     // A bus shown to have reached the stop after the rider boarded is not
@@ -711,6 +764,7 @@ function rememberPassage(
       ? { unknownProgress: Object.fromEntries([...unknownProgress].sort(([left], [right]) => left.localeCompare(right))) }
       : {}),
     ...(reachedAfterBoarding.size > 0 ? { reachedAfterBoarding: [...reachedAfterBoarding].sort() } : {}),
+    ...(returnedToStop.size > 0 ? { returnedToStop: [...returnedToStop].sort() } : {}),
     ...(withheld ? { withheld } : {}),
   };
   return { memory, excluded, unproven };
@@ -761,7 +815,8 @@ function forgottenVehicles(
     if (present.has(vehicleId)) continue;
     let stopSequence = request.boardingStopSequence + (range.last ?? range.max);
     if (topology?.loop) {
-      const first = Math.min(...topology.sequences);
+      let first = Number.POSITIVE_INFINITY;
+      for (const sequence of topology.sequences) first = Math.min(first, sequence);
       stopSequence = first + mod(stopSequence - first, topology.cycleLength);
     }
     rows.push({
@@ -813,19 +868,30 @@ function rememberedPosition(
   // Where it may be now is a matter of sequence arithmetic: a sequence the stop
   // list happens to lack is still a place it may have reached, not an unknown.
   const shape = topology ? { loop: topology.loop, cycleLength: topology.cycleLength } : undefined;
-  const possible: PositionFacts[] = [];
+  // Folded step by step: a long walk (a lap measured in sequences can be
+  // long) never builds a list, nor spreads one into an argument list.
+  const nearest = (facts: PositionFacts) => (riderState === "on_board" ? facts.backward : facts.forward) ?? Number.POSITIVE_INFINITY;
+  let blocks = false;
+  let closest: PositionFacts | undefined;
+  let score = 0;
+  let closestForward: number | undefined;
   for (let step = 0; step <= reach; step += 1) {
     let sequence = row.stopSequence + step;
     if (sequence > last) {
       if (!topology?.loop) break;
       sequence = first + mod(sequence - first, topology.cycleLength);
     }
-    possible.push(classifyRouteProgress(sequence, request.boardingStopSequence, riderState, shape, policy));
+    const possible = classifyRouteProgress(sequence, request.boardingStopSequence, riderState, shape, policy);
+    blocks ||= possible.blocks;
+    if (possible.competes) {
+      // The first of the nearest, in walk order.
+      if (closest === undefined || nearest(possible) < nearest(closest)) closest = possible;
+      score = Math.max(score, positionScore(possible, riderState));
+    }
+    if (possible.forward !== undefined && possible.forward >= 1 && (closestForward === undefined || possible.forward < closestForward)) {
+      closestForward = possible.forward;
+    }
   }
-  const blocks = possible.some((facts) => facts.blocks);
-  const competing = possible.filter((facts) => facts.competes);
-  const nearest = (facts: PositionFacts) => (riderState === "on_board" ? facts.backward : facts.forward) ?? Number.POSITIVE_INFINITY;
-  const closest = [...competing].sort((left, right) => nearest(left) - nearest(right))[0];
   const facts: PositionFacts = {
     zone: blocks ? "boarding_stop_unresolved" : closest?.zone ?? base.zone,
     offset: base.offset,
@@ -833,15 +899,13 @@ function rememberedPosition(
     ...(closest?.backward === undefined ? (base.backward === undefined ? {} : { backward: base.backward }) : { backward: closest.backward }),
     selectable: false,
     blocks,
-    competes: competing.length > 0,
+    competes: closest !== undefined,
   };
-  const score = Math.max(0, ...possible.filter((candidate) => candidate.competes).map((candidate) => positionScore(candidate, riderState)));
-  const approaching = possible.map((candidate) => candidate.forward).filter((forward): forward is number => forward !== undefined && forward >= 1);
   return {
     vehicleId: row.vehicleId,
     facts,
     positionScore: score,
-    ...(approaching.length > 0 ? { closestForward: Math.min(...approaching) } : {}),
+    ...(closestForward === undefined ? {} : { closestForward }),
   };
 }
 
