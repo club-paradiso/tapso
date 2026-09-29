@@ -1184,21 +1184,27 @@ class LongRouteProvider implements TransitProvider {
 /**
  * A rider waiting at stop 8 of the long route, riding to stop 11, with every
  * poll answered by a fresh coordinator over one store: what the session knows
- * after a selection has to survive the store.
+ * after a selection has to survive the store. `rows` lists a snapshot as the
+ * provider would, a bus twice if need be; with `tago`, rows carry TAPSO's
+ * receipt only, as TAGO's do.
  */
-function overtakingRide(options: { loop?: boolean; boardingStopSequence?: number; riderState?: string } = {}) {
+function overtakingRide(options: { loop?: boolean; boardingStopSequence?: number; riderState?: string; tago?: boolean } = {}) {
   const route = longRoute(options);
   const provider = new LongRouteProvider(route);
   const store = new MemoryJourneySessionStore();
   const start = Date.parse("2026-09-29T09:00:00Z");
   let now = new Date(start);
-  const at = (seconds: number, positions: Record<string, number>) => {
+  const rows = (seconds: number, listed: ReadonlyArray<readonly [string, number, string?]>) => {
     now = new Date(start + seconds * 1_000);
-    provider.vehiclesValue = Object.entries(positions).map(([vehicleId, stopSequence]) => ({
-      vehicleId, routeId, observedAt: now.toISOString(), directionCode: "1", stopSequence,
-    }));
+    provider.vehiclesValue = listed.map(([vehicleId, stopSequence, onRoute = routeId]): VehicleObservation => (options.tago
+      ? {
+        vehicleId, routeId: onRoute, directionCode: "1", stopSequence,
+        observedAt: new Date(0).toISOString(), receivedAt: new Date(now.getTime() + 3).toISOString(), timestampSource: "unavailable",
+      }
+      : { vehicleId, routeId: onRoute, observedAt: now.toISOString(), directionCode: "1", stopSequence }));
     return new JourneySessionCoordinator(provider, { now: () => now, store, automaticMatchingEnabled: true, idFactory: () => "ride" });
   };
+  const at = (seconds: number, positions: Record<string, number>) => rows(seconds, Object.entries(positions));
   const input = {
     routeId,
     cityCode,
@@ -1207,7 +1213,7 @@ function overtakingRide(options: { loop?: boolean; boardingStopSequence?: number
     directionCode: "1",
     ...(options.riderState ? { riderState: options.riderState } : {}),
   };
-  return { at, input, store };
+  return { at, rows, input, store };
 }
 
 test("an automatic selection is withdrawn when another bus is seen reaching the stop first, and nothing is selected again", async () => {
@@ -1346,6 +1352,203 @@ test("round a loop, another bus crossing the stop next to the seam withdraws the
   const view = await ride.at(60, { LEAD: 2, FAST: 5 }).refresh("ride");
   assert.equal(view.selectedVehicleId, undefined);
   assert.equal(view.state, "confirmation_required");
+});
+
+/** Whether the stored session's boarding watch has ended. */
+async function watchEnded(store: MemoryJourneySessionStore): Promise<boolean> {
+  return (await store.load("ride"))?.session.boardingWatch?.endedAt !== undefined;
+}
+
+test("round a loop, the selected bus read one stop back does not end the watch: a bus reaching the stop first still withdraws (R31)", async () => {
+  // A lap of eleven; the rider waits at stop 5. LEAD is two stops out, FAST six.
+  const ride = overtakingRide({ loop: true, boardingStopSequence: 5 });
+  assert.equal((await ride.at(0, { LEAD: 3, FAST: 10 }).create(ride.input)).selectedVehicleId, "LEAD");
+  // LEAD reads one stop back. Round a loop the stop is then further ahead,
+  // which is also how a crossing looks, but no bus goes nine stops round in
+  // thirty seconds.
+  await ride.at(30, { LEAD: 2, FAST: 1 }).refresh("ride");
+  assert.equal(await watchEnded(ride.store), false);
+  assert.equal((await ride.at(60, { LEAD: 3, FAST: 4 }).refresh("ride")).selectedVehicleId, "LEAD");
+  const view = await ride.at(90, { LEAD: 4, FAST: 5 }).refresh("ride");
+  assert.equal(view.selectedVehicleId, undefined);
+  assert.equal(view.state, "confirmation_required");
+});
+
+test("round a loop, the selected bus seen again two stops back after a long gap does not end the watch (R31)", async () => {
+  const ride = overtakingRide({ loop: true, boardingStopSequence: 5 });
+  assert.equal((await ride.at(0, { LEAD: 3, FAST: 10 }).create(ride.input)).selectedVehicleId, "LEAD");
+  // Five minutes on, LEAD reads two stops further back. It may have gone
+  // round through the stop; it may have stood and read two stops back. Only
+  // the first would be an arrival, and nothing shows which.
+  await ride.at(300, { LEAD: 1, FAST: 3 }).refresh("ride");
+  assert.equal(await watchEnded(ride.store), false);
+  assert.equal((await ride.at(330, { LEAD: 2, FAST: 5 }).refresh("ride")).selectedVehicleId, undefined);
+  // Four stops on, through the stop, in a minute: that is an arrival.
+  const crossing = overtakingRide({ loop: true, boardingStopSequence: 5 });
+  assert.equal((await crossing.at(0, { LEAD: 3, FAST: 10 }).create(crossing.input)).selectedVehicleId, "LEAD");
+  await crossing.at(60, { LEAD: 7, FAST: 1 }).refresh("ride");
+  assert.equal(await watchEnded(crossing.store), true);
+  assert.equal((await crossing.at(90, { LEAD: 8, FAST: 5 }).refresh("ride")).selectedVehicleId, "LEAD");
+});
+
+test("the selected bus listed at two places, or also under another route, at the stop does not end the watch (R31)", async () => {
+  // LEAD is listed two stops out and, garbled, one past the stop, in either
+  // order; or at the stop under another route, with or without its row on
+  // this route. The matcher trusts no place of a bus listed so; nor does the
+  // watch.
+  const listings: ReadonlyArray<ReadonlyArray<readonly [string, number, string?]>> = [
+    [["LEAD", 6], ["LEAD", 9]],
+    [["LEAD", 9], ["LEAD", 6]],
+    [["LEAD", 8, "route-other"], ["LEAD", 6]],
+    [["LEAD", 8, "route-other"]],
+  ];
+  for (const listing of listings) {
+    const ride = overtakingRide();
+    assert.equal((await ride.at(0, { LEAD: 5, FAST: 1 }).create(ride.input)).selectedVehicleId, "LEAD");
+    await ride.rows(30, [...listing, ["FAST", 4]]).refresh("ride");
+    assert.equal(await watchEnded(ride.store), false, JSON.stringify(listing));
+    const view = await ride.at(60, { LEAD: 7, FAST: 8 }).refresh("ride");
+    assert.equal(view.selectedVehicleId, undefined, JSON.stringify(listing));
+    assert.equal(view.state, "confirmation_required", JSON.stringify(listing));
+  }
+});
+
+test("the selected bus's remembered row never ends the watch, whichever order its two rows came in (R31)", async () => {
+  // TAGO rows, a lap of eleven, the rider at stop 5. LEAD is listed at two
+  // places a stop apart, then drops out for a poll. The evidence window keeps
+  // one of the two rows by the provider's order; read against memory, one
+  // order looks like a bus that went through the stop.
+  for (const order of [[["LEAD", 3], ["LEAD", 2]], [["LEAD", 2], ["LEAD", 3]]] as const) {
+    const ride = overtakingRide({ loop: true, boardingStopSequence: 5, tago: true });
+    await ride.rows(0, [["LEAD", 1], ["FAST", 8]]).create(ride.input);
+    await ride.rows(10, [["LEAD", 1], ["FAST", 8]]).refresh("ride");
+    assert.equal((await ride.rows(20, [["LEAD", 2], ["FAST", 9]]).refresh("ride")).selectedVehicleId, "LEAD", `${order}`);
+    await ride.rows(30, [...order, ["FAST", 9]]).refresh("ride");
+    await ride.rows(40, [["FAST", 10]]).refresh("ride");
+    assert.equal(await watchEnded(ride.store), false, `${order}`);
+    for (const [seconds, listed] of [[60, [["LEAD", 3], ["FAST", 11]]], [90, [["LEAD", 3], ["FAST", 1]]], [120, [["LEAD", 3], ["FAST", 2]]], [150, [["LEAD", 4], ["FAST", 3]]]] as const) {
+      await ride.rows(seconds, listed).refresh("ride");
+    }
+    const view = await ride.rows(180, [["LEAD", 4], ["FAST", 5]]).refresh("ride");
+    assert.equal(view.selectedVehicleId, undefined, `${order}`);
+    assert.equal(view.state, "confirmation_required", `${order}`);
+  }
+});
+
+test("the selected bus out of sight never ends the watch: a bus seen at the stop afterwards withdraws (R31)", async () => {
+  const ride = overtakingRide();
+  assert.equal((await ride.at(0, { LEAD: 5, FAST: 1 }).create(ride.input)).selectedVehicleId, "LEAD");
+  // LEAD drops out; past the memory window it may, by now, have reached the
+  // stop. That withholds a selection; it is not LEAD seen there.
+  for (const [seconds, positions] of [[30, { FAST: 3 }], [150, { FAST: 7 }]] as const) {
+    await ride.at(seconds, positions).refresh("ride");
+    assert.equal(await watchEnded(ride.store), false, `${seconds} s`);
+  }
+  const view = await ride.at(170, { FAST: 8 }).refresh("ride");
+  assert.equal(view.selectedVehicleId, undefined);
+  assert.equal(view.state, "confirmation_required");
+});
+
+test("the selected bus seen past the stop ends the watch only if it could have got there since it was seen before it (R31)", async () => {
+  // One stop out, then two past thirty seconds later: three stops, as far as
+  // a bus can go in that time. It went through the stop first.
+  const ride = overtakingRide();
+  assert.equal((await ride.at(0, { LEAD: 5, BEHIND: 1 }).create(ride.input)).selectedVehicleId, "LEAD");
+  await ride.at(10, { LEAD: 7, BEHIND: 2 }).refresh("ride");
+  await ride.at(40, { LEAD: 10, BEHIND: 4 }).refresh("ride");
+  assert.equal(await watchEnded(ride.store), true);
+  assert.equal((await ride.at(90, { LEAD: 10, BEHIND: 8 }).refresh("ride")).selectedVehicleId, "LEAD");
+
+  // Three out, then two past ten seconds later: five stops in ten seconds is
+  // no bus moving, so it shows no arrival, and the bus behind reaching the
+  // stop withdraws the selection.
+  const jump = overtakingRide();
+  assert.equal((await jump.at(0, { LEAD: 5, BEHIND: 1 }).create(jump.input)).selectedVehicleId, "LEAD");
+  await jump.at(10, { LEAD: 10, BEHIND: 2 }).refresh("ride");
+  assert.equal(await watchEnded(jump.store), false);
+  assert.equal((await jump.at(60, { LEAD: 10, BEHIND: 8 }).refresh("ride")).selectedVehicleId, undefined);
+});
+
+test("after a withdrawal round a loop, the bus that just left the stop is offered across the seam too (R34)", async () => {
+  // A lap of eleven; the rider waits at stop 10. FAST overtakes LEAD and is
+  // two stops past the stop, where the closing stop is also the first: TAGO
+  // may report it as 12 or as 1.
+  for (const [label, closing] of [["as the closing stop", 12], ["as the first stop", 1]] as const) {
+    const ride = overtakingRide({ loop: true, boardingStopSequence: 10 });
+    assert.equal((await ride.at(0, { LEAD: 8, FAST: 3 }).create(ride.input)).selectedVehicleId, "LEAD", label);
+    await ride.at(30, { LEAD: 8, FAST: 7 }).refresh("ride");
+    const view = await ride.at(60, { LEAD: 9, FAST: closing }).refresh("ride");
+    assert.equal(view.selectedVehicleId, undefined, label);
+    assert.deepEqual(view.candidates?.map((candidate) => candidate.vehicleId), ["LEAD", "FAST"], label);
+  }
+});
+
+/** The long route's provider, each call answered with the next snapshot once released. */
+class GatedLongRouteProvider extends LongRouteProvider {
+  snapshots: VehicleObservation[][] = [];
+  gated = false;
+  private readonly waiting: Array<() => void> = [];
+
+  override async vehicles(_request: RouteRequest): Promise<VehicleObservation[]> {
+    const snapshot = this.snapshots.shift() ?? [];
+    if (this.gated) await new Promise<void>((resolve) => this.waiting.push(resolve));
+    return snapshot.map((vehicle) => ({ ...vehicle }));
+  }
+
+  releaseNext(): void {
+    this.waiting.shift()?.();
+  }
+}
+
+test("a withdrawal survives a concurrent refresh that saved first, unless that one saw the selected bus at the stop earlier (R33)", async () => {
+  const start = Date.parse("2026-09-29T09:00:00Z");
+  const positions = (seconds: number, buses: Record<string, number>) => Object.entries(buses).map(([vehicleId, stopSequence]) => ({
+    vehicleId, routeId, observedAt: new Date(start + seconds * 1_000).toISOString(), directionCode: "1", stopSequence,
+  }));
+  const input = { routeId, cityCode, boardingStopSequence: 8, destinationStopSequence: 11, directionCode: "1" };
+  // Two requests load the same stored session. `early` reads its snapshot at
+  // `earlySeconds`, `late` at `lateSeconds`; `late` saves first.
+  const race = async (earlySeconds: number, early: Record<string, number>, lateSeconds: number, late: Record<string, number>) => {
+    const store = new MemoryJourneySessionStore();
+    const provider = new GatedLongRouteProvider(longRoute());
+    const coordinator = (seconds: number) => new JourneySessionCoordinator(provider, {
+      now: () => new Date(start + seconds * 1_000), store, automaticMatchingEnabled: true, idFactory: () => "ride",
+    });
+    provider.snapshots = [positions(0, { LEAD: 5, FAST: 1 })];
+    assert.equal((await coordinator(0).create(input)).selectedVehicleId, "LEAD");
+    provider.gated = true;
+    provider.snapshots = [positions(lateSeconds, late), positions(earlySeconds, early)];
+    // Both load the same stored version before either saves.
+    const lateCall = coordinator(lateSeconds).refresh("ride");
+    await tick();
+    const earlyCall = coordinator(earlySeconds).refresh("ride");
+    await tick();
+    // The later reader saves first.
+    provider.releaseNext();
+    const lateView = await lateCall;
+    provider.releaseNext();
+    const earlyView = await earlyCall;
+    return { store, earlyView, lateView };
+  };
+
+  // At 60 s FAST is at the stop and LEAD a stop short; at 61 s LEAD is at the
+  // stop and FAST's row missing. The later reader ends the watch and saves
+  // first; FAST still reached the stop first.
+  const first = await race(60, { LEAD: 7, FAST: 8 }, 61, { LEAD: 8 });
+  assert.equal(first.lateView.selectedVehicleId, "LEAD");
+  assert.equal(first.earlyView.selectedVehicleId, undefined);
+  assert.equal(first.earlyView.state, "confirmation_required");
+  const stored = (await first.store.load("ride"))?.session;
+  assert.equal(stored?.selectedVehicleId, undefined);
+  assert.equal(stored?.passage?.withheld?.reason, "another_vehicle_reached_boarding_stop_first");
+
+  // Seen at the stop at 59 s, LEAD was there before FAST was seen at 60 s:
+  // the watch had ended, and the selection stands.
+  const second = await race(60, { LEAD: 7, FAST: 8 }, 59, { LEAD: 8 });
+  const kept = (await second.store.load("ride"))?.session;
+  assert.equal(kept?.selectedVehicleId, "LEAD");
+  assert.equal(second.earlyView.selectedVehicleId, "LEAD");
+  assert.match(second.earlyView.explanation, /concurrent update/);
 });
 
 test("a stored automatic selection written before the watch existed starts one from its memory", async () => {

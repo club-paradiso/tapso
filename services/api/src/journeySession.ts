@@ -1,7 +1,13 @@
 import { randomUUID } from "node:crypto";
 import type { MatchResult, PassageMemory, RankedCandidate, RiderState, RouteRequest, StopOnRoute, VehicleObservation } from "./domain.ts";
 import { distanceMeters } from "./geo.ts";
-import { DIRECTED_MATCHER_POLICY_V1, matchVehicleWithSourceFreshness } from "./matching.ts";
+import {
+  DIRECTED_MATCHER_POLICY_V1,
+  classifyRouteProgress,
+  matchVehicleWithSourceFreshness,
+  routeTopologyFacts,
+  type PositionFacts,
+} from "./matching.ts";
 import {
   appendCadenceObservation,
   classifyTagoCadenceFreshness,
@@ -193,10 +199,20 @@ type LoadedSession = { record: SessionRecord; version: number };
  * bus of the route, one of the selected bus alone. Kept apart, a sighting at
  * the stop is known to be the selected bus's arrival or another bus's
  * (finding F20).
+ *
+ * Only a sighting shows the selected bus's arrival: at one place on this
+ * route, at the stop or one past it, or past it when last seen before it, as
+ * no faster than the matcher's motion model allows and, round a loop, where a
+ * reading up to two stops back would not explain it. What memory raises about
+ * the selected bus never ends the watch: round a loop a bus read one stop back
+ * looks like a crossing, a bus listed twice may be listed at the stop, and a
+ * bus out of sight only may have reached it (finding R31).
  */
 export interface BoardingWatch {
   others: PassageMemory;
   selected: PassageMemory;
+  /** The selected bus's last sighting at one place on this route: its offset from the stop, and when. */
+  selectedPlace?: { offset: number; at: string };
   /** When the selected bus was seen at or past the stop. Nothing is watched from then on. */
   endedAt?: string;
 }
@@ -322,8 +338,13 @@ export class JourneySessionCoordinator {
       const view = this.absorbProviderFailure(record, now, error);
       return this.commit(record, version, view);
     }
+    const automatic = record.selectionMode === "automatic" ? record.selectedVehicleId : undefined;
     const view = this.evaluateSnapshot(record, vehicles, now);
-    return this.commit(record, version, view);
+    const withdrawal = automatic !== undefined && record.selectedVehicleId === undefined
+      && record.passage?.withheld?.reason === SELECTION_WITHDRAWN
+      ? { vehicleId: automatic, at: now }
+      : undefined;
+    return this.commit(record, version, view, withdrawal);
   }
 
   async confirm(id: string, value: unknown): Promise<JourneySessionView> {
@@ -357,19 +378,47 @@ export class JourneySessionCoordinator {
    * re-derive progress from a snapshot the winner has already consumed, which
    * is how a duplicate poll turns into a contradictory answer. The winner's
    * stored state is by construction at least as advanced as ours, so it is
-   * what the rider gets.
+   * what the rider gets, with one exception: a withdrawal (below).
    */
   private async commit(
     record: SessionRecord,
     version: number,
     view: JourneySessionView,
+    withdrawal?: { vehicleId: string; at: Date },
   ): Promise<JourneySessionView> {
     const outcome = await this.store.save(toStored(record), version);
     if (outcome.outcome === "saved") return view;
     // The row vanished between the load and the save: it expired, or an
     // operator deleted it. Either way this session no longer exists.
     if (!outcome.stored) throw new SessionExpiredError();
+    if (withdrawal && await this.withdrawOnWinner(outcome.stored, withdrawal)) return view;
     return this.concurrentWriteView(outcome.stored);
+  }
+
+  /**
+   * This request's snapshot showed another bus reaching the stop before the
+   * automatically selected one. A request that saved first read another
+   * snapshot, and its row is not "more advanced" in what it knows of that: a
+   * sighting it did not see is not unseen. While the winner still holds the
+   * same automatic selection, and did not see the selected bus at the stop
+   * before this snapshot, the withdrawal is written onto its row (finding
+   * R33). A few conflicts in a row are given up on, leaving the winner's row.
+   */
+  private async withdrawOnWinner(stored: VersionedJourneySession, withdrawal: { vehicleId: string; at: Date }): Promise<boolean> {
+    let current = stored;
+    for (let attempt = 0; attempt < 3; attempt += 1) {
+      const winner = toRecord(current.session);
+      if (winner.selectedVehicleId !== withdrawal.vehicleId || winner.selectionMode !== "automatic") return false;
+      const endedAt = winner.boardingWatch?.endedAt;
+      if (endedAt !== undefined && Date.parse(endedAt) < withdrawal.at.getTime()) return false;
+      winner.boardingWatch ??= startBoardingWatch(winner.passage, withdrawal.vehicleId);
+      this.withdrawSelection(winner, withdrawal.at);
+      const outcome = await this.store.save(toStored(winner), current.version);
+      if (outcome.outcome === "saved") return true;
+      if (!outcome.stored) throw new SessionExpiredError();
+      current = outcome.stored;
+    }
+    return false;
   }
 
   /** Renders the winner's persisted state without touching the provider. */
@@ -467,7 +516,7 @@ export class JourneySessionCoordinator {
       if (record.passage?.withheld?.reason === SELECTION_WITHDRAWN) {
         return this.view(record, {
           state: "confirmation_required",
-          candidates: withdrawalCandidates(result.ranked),
+          candidates: withdrawalCandidates(result.ranked, record),
           explanation: "Another bus of this route was seen reaching the boarding stop before the automatically "
             + "selected one, so the rider may be aboard it. The selection is withdrawn and no bus will be selected "
             + "automatically again in this session; confirm the bus you are on.",
@@ -526,7 +575,7 @@ export class JourneySessionCoordinator {
    * Fold this snapshot into the boarding watch. True when a bus other than the
    * selected one was seen reaching the boarding stop before the selected bus
    * was, or in the same poll: either may then be the bus the rider boarded.
-   * The selected bus seen at or past the stop first ends the watch.
+   * The selected bus seen reaching the stop first ends the watch.
    */
   private anotherBusReachedTheStopFirst(
     record: SessionRecord,
@@ -554,12 +603,19 @@ export class JourneySessionCoordinator {
     const others = look(false, watch.others);
     const selected = look(true, watch.selected);
     if (ANOTHER_BUS_REACHED_THE_STOP.has(others.passage?.withheld?.reason ?? "")) return true;
+    // The selected bus's own look keeps its memory for a withdrawal later; its
+    // reasons are the matcher's caution, never evidence of an arrival.
+    const place = placeOfSelected(record, vehicles, selectedId);
+    const reached = place !== undefined
+      && (place.zone === "boarding_stop_unresolved" || crossedTheStop(record, watch.selectedPlace, place, now));
+    const selectedPlace = place === undefined ? watch.selectedPlace : { offset: place.offset!, at: now.toISOString() };
     record.boardingWatch = {
       // Each look reports only what this poll showed: the sightings carry
       // over, a reason does not.
       others: withoutWithheld(others.passage ?? watch.others),
       selected: withoutWithheld(selected.passage ?? watch.selected),
-      ...(selected.passage?.withheld?.reason === "boarding_stop_reached_during_session" ? { endedAt: now.toISOString() } : {}),
+      ...(selectedPlace === undefined ? {} : { selectedPlace }),
+      ...(reached ? { endedAt: now.toISOString() } : {}),
     };
     return false;
   }
@@ -993,15 +1049,24 @@ function nearestTheStopFirst(left: RankedCandidate, right: RankedCandidate): num
 /**
  * After a withdrawal the rider may still be waiting, or may be riding the bus
  * that reached the stop first: a bus that has just left the stop is offered
- * too, which a waiting rider's confirmation list otherwise never does.
+ * too, which a waiting rider's confirmation list otherwise never does. Round a
+ * loop, how far a bus is past the stop is counted across the seam, where the
+ * closing stop is labelled as the first (finding R34).
  */
-function withdrawalCandidates(ranked: RankedCandidate[]): RankedCandidate[] {
+function withdrawalCandidates(ranked: RankedCandidate[], record: SessionRecord): RankedCandidate[] {
   const zones = CONFIRMATION_ZONES.waiting_at_stop;
+  const topology = routeTopologyFacts(record.stops, record.boardingStop.sequence);
+  const lap = topology.cycleLength;
+  const around = (offset: number) => ((offset % lap) + lap) % lap;
+  const past = (offset: number) => (topology.loop ? around(offset) : offset);
+  const distance = (candidate: RankedCandidate) => (candidate.stopOffset === undefined
+    ? Number.POSITIVE_INFINITY
+    : topology.loop ? Math.min(around(candidate.stopOffset), around(-candidate.stopOffset)) : Math.abs(candidate.stopOffset));
   return ranked
     .filter((candidate) => !candidate.rejectedReasons.includes("wrong_route") && candidate.zone !== undefined
-      && (zones.has(candidate.zone) || (candidate.zone === "departed" && candidate.stopOffset !== undefined
-        && candidate.stopOffset <= DIRECTED_MATCHER_POLICY_V1.onBoardWindowStops)))
-    .sort(nearestTheStopFirst);
+      && (zones.has(candidate.zone) || (candidate.stopOffset !== undefined
+        && past(candidate.stopOffset) >= 1 && past(candidate.stopOffset) <= DIRECTED_MATCHER_POLICY_V1.onBoardWindowStops)))
+    .sort((left, right) => distance(left) - distance(right) || left.vehicleId.localeCompare(right.vehicleId));
 }
 
 /**
@@ -1019,7 +1084,53 @@ function startBoardingWatch(passage: PassageMemory | undefined, selectedVehicleI
       ...(Object.keys(unknownProgress).length > 0 ? { unknownProgress } : {}),
     };
   };
-  return { others: half(false), selected: half(true) };
+  // Selected, the bus was at one place: the one its selection read.
+  const seen = passage?.offsets[selectedVehicleId];
+  const offset = seen?.last ?? seen?.max;
+  return {
+    others: half(false),
+    selected: half(true),
+    ...(offset !== undefined && seen?.lastSeenAt !== undefined ? { selectedPlace: { offset, at: seen.lastSeenAt } } : {}),
+  };
+}
+
+/**
+ * Where the selected bus is in this snapshot, if at one place on this route.
+ * Listed twice, also under another route, or with no stop, it is at no place
+ * that can be trusted, as the matcher itself holds (finding R31).
+ */
+function placeOfSelected(record: SessionRecord, vehicles: VehicleObservation[], selectedId: string): PositionFacts | undefined {
+  const rows = vehicles.filter((vehicle) => vehicle.vehicleId === selectedId);
+  if (rows.length === 0 || rows.some((row) => row.routeId !== record.routeId)) return undefined;
+  if (new Set(rows.map((row) => row.stopSequence)).size !== 1) return undefined;
+  const topology = routeTopologyFacts(record.stops, record.boardingStop.sequence);
+  const facts = classifyRouteProgress(rows[0]!.stopSequence, record.boardingStop.sequence, "waiting_at_stop", topology);
+  return facts.offset === undefined ? undefined : facts;
+}
+
+/**
+ * Past the stop now, before it at the last sighting at one place, no faster in
+ * between than the matcher's motion model allows (one stop plus one per 15 s),
+ * and, round a loop, not what a reading up to two stops back would also show:
+ * the only crossing that shows the selected bus's arrival (finding R31).
+ */
+function crossedTheStop(
+  record: SessionRecord,
+  last: BoardingWatch["selectedPlace"],
+  now: PositionFacts,
+  at: Date,
+): boolean {
+  if (last === undefined || now.backward === undefined || now.backward < 2) return false;
+  const thenMs = Date.parse(last.at);
+  // A time that cannot be read, or lies after now, bounds nothing; unbounded,
+  // every crossing would be possible, and none is shown.
+  if (!Number.isFinite(thenMs) || thenMs > at.getTime()) return false;
+  const reach = 1 + Math.floor((at.getTime() - thenMs) / 1_000 / DIRECTED_MATCHER_POLICY_V1.rememberedSecondsPerStop);
+  const topology = routeTopologyFacts(record.stops, record.boardingStop.sequence);
+  const lap = topology.cycleLength;
+  const toStopThen = topology.loop ? ((-last.offset % lap) + lap) % lap : -last.offset;
+  const through = toStopThen + now.backward;
+  return toStopThen >= 1 && through <= reach && (!topology.loop || lap - through > 2);
 }
 
 function withoutWithheld(passage: PassageMemory): PassageMemory {

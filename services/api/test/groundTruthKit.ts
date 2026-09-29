@@ -167,7 +167,8 @@ export async function runGroundTruthSession(session: GroundTruthSession): Promis
  * When the feed first shows that `bus` reached the boarding stop after `after`
  * seconds, in a way a sighting can show it: at the stop (or one past it, where
  * dwell and departure cannot be told apart); past it, having last been seen
- * before it less than a lap of travel earlier; or past it for the first time,
+ * before it, and round a loop not so nearly a lap on that a reading up to two
+ * stops back would show the same (finding R31); or past it for the first time,
  * near enough that it could have been at the stop since the rider began
  * waiting. Undefined when no poll shows it so.
  */
@@ -187,5 +188,5 @@ export function firstShownReaching(session: GroundTruthSession, bus: GroundTruth
   if (before === undefined) return past <= 1 + Math.floor(shown.t / 15) ? shown.t : undefined;
   if (before.t >= arrival) return undefined;
   const travelled = Math.floor(session.position(bus, shown.t)) - Math.floor(session.position(bus, before.t));
-  return !session.loop || travelled < session.lap ? shown.t : undefined;
+  return !session.loop || travelled <= session.lap - 3 ? shown.t : undefined;
 }
