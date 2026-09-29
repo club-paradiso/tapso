@@ -66,10 +66,15 @@
  *   when a bus of unknown progress leaves the feed. Round a loop, a sighting
  *   is compared with the last one by its distance to the stop each way, so a
  *   crossing next to the seam is still a crossing, however short the lap
- *   (F17). The on-board rule mirrors it: a bus that reached
+ *   (F17), and a bus seen again after time enough to go round through the
+ *   stop may have too (R24). The on-board rule mirrors it: a bus that reached
  *   the stop after the rider said they had boarded is not theirs, a bus
  *   missing from their first snapshot is never selected but still competes
  *   (F16), and a bus leaving the on-board window withholds selection for good.
+ *   Round a loop, a bus that came back to the stop, or had time to, is never
+ *   selected and still competes, and a loop too short to tell the window from
+ *   the approach selects nothing on board (R23). A bus placed twice in one
+ *   snapshot is never excluded by either place (R27).
  *
  * There is no "best available guess". A numerical score never overrides a
  * violated rule: rules are applied first, and the score only orders what the
@@ -547,7 +552,10 @@ function decide(
  * be theirs, missing from the feed, so it keeps competing); a bus seen two or
  * more stops before the boarding stop reached it after they boarded and is not
  * theirs; and a bus seen inside the on-board window and later beyond it may be
- * the rider's bus leaving the window, so selection is withheld for good.
+ * the rider's bus leaving the window, so selection is withheld for good. Round
+ * a loop, a bus seen clear of the stop and later back at it or closer past it,
+ * or seen again after time enough to go round, may have reached the stop after
+ * they boarded: never selected, it still competes (finding R23).
  */
 function rememberPassage(
   request: MatchRequest,

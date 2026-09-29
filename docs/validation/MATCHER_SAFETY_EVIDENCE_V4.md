@@ -24,7 +24,8 @@ matcher result.
 | Margin | 12 position points among eligible buses in the ±4 window | three stops over every vehicle heading for the stop, wherever it is (F9) |
 | Vehicle missing from one poll | forgotten | remembered 90 s, competing from wherever it could have reached; a crossing it showed is not forgotten (F10); past 90 s still competing from session memory, its reach growing with the time since (F15) |
 | A bus reached the stop during the session | irrelevant | withholds for the rest of the session (F4), also when first seen already past it at any look (F12, F16), when lost while it could by now have reached it (F15), across a loop's seam (F17), and for a session stored without memory (F11) |
-| Rider already aboard | same rule as waiting | separate rule: +1…+4, only one vehicle; a bus missing from the first snapshot never selected, still competing (F16) |
+| Rider already aboard | same rule as waiting | separate rule: +1…+4, only one vehicle; a bus missing from the first snapshot never selected, still competing (F16); round a loop, a bus that came back to the stop or had time to never selected, and a lap under ten stops selects nothing (R23) |
+| After an automatic selection | tracked to the end, whatever happens | until the selected bus is seen at the stop, another bus seen reaching it first withdraws the selection for good and the rider is asked (F20) |
 | Missing topology / repeated stop name / two stops under one sequence | not checked | withholds (F18) |
 | Invariant | none | `assertDirectedInvariant` on every result |
 
@@ -67,6 +68,14 @@ wrong commit or any correct→wrong regression.
 | F17 | Review, probes; properties P3-crossing (seeds 10099, 10012) and P12-loops (seed 10037) | On a loop, memory compared plain offsets: a crossing at the seam, or a bus lost past the stop, went unnoticed; the first fix (directed offsets, the shorter way round) misread a short loop, excluding a bus in the on-board window | Round a loop, each sighting compared with the last by its distance to the stop each way |
 | F18 | Review, probes | A loop's lap was counted in stop rows; a missing or repeated row moved the seam | Lap in sequences; conflicting rows withhold |
 | F19 | Review, probes; property P13-routes, seed 10018 | The invariant read another route's row with the selected id (HTTP 500, order-dependent) | Two-route id withholds; invariant reads the request's route |
+| F20 | Ground-truth fuzzing (`SIMULATED`): every wrong selection of a bus the feed had shown was an overtaking after the selection | A session kept tracking an automatically selected bus after another bus reached the stop first | The boarding watch: another bus seen at, crossing or first past the stop withdraws the selection for good; property P16 |
+
+Findings of the adversarial reviews of this work itself (R1–R29: evidence
+workflow, gate integrity, and the F15–F20 fixes, among them R23 a bus coming
+back round a loop on board, R24 a lap between two sightings, R27 a bus placed
+twice excluded by one place, R28–R29 receipt and clock timing) are listed with
+their fixes in the ExecPlan §3. Each has a test that fails on the commit
+before its fix.
 
 Every failing seed is replayed first on every run
 (`services/api/test/fixtures/matcher-property-regressions.json`).
@@ -87,13 +96,14 @@ invariants, with four extra forms:
 | P6 | Repeated unchanged provider content never unlocks automatic matching |
 | P7 | A failed provider poll counts exactly as a poll never made; a window of failed polls never commits |
 | P8 | A stop-sequence regression fails closed |
-| P9 | Once a session selects a vehicle, the selection never changes |
+| P9 | Once a session selects a vehicle it never switches to another, and a withdrawn selection is never replaced automatically |
 | P10 | The boarded vehicle's identity never changes a replayed decision |
 | P11 | Unknown route progress fails closed |
 | P12 | Two plausible vehicles too close together never produce a selection |
 | P13 | Identical input gives an identical decision in any candidate order |
 | P14 | A vehicle that is never valid is never committed, however long it is watched |
 | P15 | Whatever is missing from the feed, a selection is always individually valid |
+| P16 | Ground truth (`SIMULATED`, `groundTruthKit.ts`): an automatic selection is withdrawn by the poll that shows another bus reaching the stop first, and never after the selected bus was seen there |
 
 | Run | Seeds per property | Result |
 |---|---|---|

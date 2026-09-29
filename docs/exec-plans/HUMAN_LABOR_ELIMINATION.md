@@ -72,6 +72,7 @@ automatic path by a fail-closed product rule.
 | F17 | Loop routes: passage memory compared plain sequence offsets, so a crossing next to the seam read as a bus far away, and a bus lost past the stop could never come round. The first fix stored directed offsets (the shorter way round), which on a short loop (eight stops) read a bus four stops past the stop as four before it, excluded it from the on-board window and selected the other bus, and missed a crossing longer than half the lap | `INFERRED` from code (review), reproduced by probes; properties P3-crossing (seeds 10099, 10012) and P12-loops (seed 10037) | **Fixed**: memory keeps plain offsets; round a loop each sighting is compared with the last by its distance to the stop each way (a distance to the stop that grew is a crossing; a bus that may be in the on-board window is never excluded; leaving the window is read from the distance past the stop) |
 | F18 | A loop's lap was the number of stop rows, so a missing or repeated row (a paged stop list) moved the seam and released a bus one stop past the rider | `INFERRED` from code (review), reproduced by probes | **Fixed**: the lap is measured in sequences; two different stops under one sequence withhold |
 | F19 | The invariant check read the first row with the selected id, which could be another route's: HTTP 500 on `POST /v1/matches`, depending on candidate order | `INFERRED` from code (review), reproduced by probes; property P13-routes seed 10018 | **Fixed**: a row under another route is a second position (withheld); the invariant checks every row of the request's route |
+| F20 | An automatic selection is a prediction: its margin is counted in stops, and a faster bus behind can reach the stop first. Once a session had selected, it never looked again, and kept tracking the selected bus while the rider rode the other one | `SIMULATED` (ground-truth fuzzing: buses moving continuously at 20–90 s per stop, the rider boarding the first to arrive. At the matcher, every wrong first commit to a bus the feed had shown, 15 of 1 827, was an overtaking after the commit: the selected bus really was the nearest then. Through the session coordinator, 3 000 sessions of `scripts/matcher-evidence/ground-truth-sessions.ts`: the feed showed 67 wrong selections being overtaken before the selected bus reached the stop, and none was withdrawn) | **Fixed**: until the selected bus is seen at the stop, the session watches every other bus with the matcher's own session-memory rules; one seen at the stop, crossing it, or first seen past it withdraws the selection for good and the rider is asked which bus they are on. What memory merely allows never withdraws. All 67 are now withdrawn by the poll that shows it, at the cost of 38 of 917 right selections also withdrawn (`SIMULATED`); property P16 |
 
 Found by the adversarial review of the branch (2026-09-29, second pass), each
 fixed with a test and, where it guards the gate, a negative control:
@@ -111,8 +112,37 @@ control:
 | R21 | A bus of unknown progress was treated as placed while the evidence window held a known row of that same sighting | **Fixed** (`8ed1f7b`): such a row is judged unplaced |
 | R22 | A sighting or a declaration dated after now read as "just now" (a backward clock step) | **Fixed** (`8ed1f7b`): more than 10 s after now, or unreadable, is an unbounded time since |
 
-With these, the differential finds no decision in which the new matcher
-selects and the old one did not, and no first commit that differs.
+With these, that differential finds no decision in which the new matcher
+selects and the old one did not, and no first commit that differs. (Its
+generator is the scope of that claim: wider differentials run by the fourth
+pass below do find such decisions, and each is traced there.)
+
+Found by the adversarial review of the R17–R22 fixes (fourth pass: four
+lenses, each finding reproduced by a probe and checked by a skeptic that tried
+to refute it on the current tree), and by re-running the reviewers' own
+fuzzers on each fix, each fixed with a test that fails on the commit before the
+fix and a negative control:
+
+| Id | Finding | Status |
+|---|---|---|
+| R23 | On board round a loop, a bus seen clear of the stop and later back at it, or closer past it, went through the stop after the rider boarded; on a short loop (six to eight stops) it was selected as the rider's bus, and on a twenty-stop loop after a long gap too | **Fixed** (`2f4b11e`): such a bus, and one seen again after time enough to go round, is never selected and still competes (`returnedToStop`); on board, a loop shorter than two windows and the stop either side (a lap under ten) withholds; property P12-returned |
+| R24 | Waiting round a loop, a bus seen at two decisions far enough apart may have reached the stop, taken the rider and gone round to where it now reads as approaching; that, and the terminal relabelled from the first to the closing sequence after a lap's time, released the bus behind | **Fixed** (`2f4b11e`): it withholds for good, with the reason kept after every reason a sighting raises; property P3-lap |
+| R25 | A loop whose sequences span ~125 000 walked a bus out of sight round the whole lap into a spread argument list: `RangeError`, on every later refresh | **Fixed** (`2f4b11e`): the walk is folded step by step |
+| R26 | `candidate_disappearance_180s` and the lost-leader counterfactuals could never qualify a ground truth, so their `NOT_WRONG` was never decided; the first checked nothing but the invariant | **Fixed** (`fc18085`): replaced by `reappearance_100s`; lost leader judged by the follower never being selected; a 110 s polling gap that resumes before the arrival; every counterfactual but the documented indeterminate one must be exercised |
+| R27 | On board, a bus the snapshot placed twice was excluded by its place before the stop and stopped competing (found re-running the loop fuzzer on R23) | **Fixed** (`2f4b11e`): an exclusion takes a sighting at one place; on board such a sighting leaves memory as it was |
+| R28 | Under production timing (`now` read before the fetch), the unknown-progress mark predated its own rows, so a kept row of that unplaced sighting placed the bus: selected at 60 s, withheld for good at 95 s on the same fact, by row order | **Fixed** (`2a04f11`): the mark is dated by the latest receipt of its rows |
+| R29 | A bus's last sighting in session memory dated 0–10 s after `now` (a backward clock step) read as "seen just now" | **Fixed** (`2a04f11`): the session's own sighting times get no tolerance |
+
+After these, a single-decision differential (20 000 generated decisions) and a
+session differential (3 000 sessions, 355 668 decisions) against f3d693a find
+no decision in which only the new matcher selects and no different pick. The
+reviewers' wider fuzzers do find decisions where only the new matcher selects;
+each was traced: intended changes (a repeated stop row deduplicated, a lap
+measured in sequences, the unobserved rule using the time actually unseen, a
+bus that came round the loop excluded), overtaking beyond the margin (F20), or
+an on-board rider whose own bus is missing from the feed, which no matcher can
+defend against (the premise of F16), where the old matcher withheld only by
+misreading a bus past the stop through the seam as far before it.
 
 ## 4. The matcher contract (`directed-route-progress-v1`)
 
