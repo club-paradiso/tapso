@@ -193,7 +193,7 @@ test("an authorized snapshot bypasses the vehicle cache and says so", async () =
   assert.equal(body.meta.snapshotCache, "bypassed");
   assert.equal(body.meta.freshness.providerObservationTimestamp, "unavailable");
   assert.equal(body.meta.freshness.policy, "server_observed_cadence_v1");
-  assert.equal(body.meta.freshness.automaticMatching, "shadow_only_pending_field_validation");
+  assert.equal(body.meta.freshness.automaticMatching, "shadow_only_pending_matching_readiness");
   assert.equal(body.meta.routeId, ROUTE);
   assert.equal(body.items[0].observedAt, EPOCH, "the epoch sentinel is never replaced by a receipt time");
   assert.equal(body.items[0].timestampSource, "unavailable");

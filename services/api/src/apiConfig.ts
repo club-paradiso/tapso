@@ -7,6 +7,15 @@
  */
 
 import { DEFAULT_STOP_CACHE_TTL_MS, DEFAULT_VEHICLE_CACHE_TTL_MS } from "./cachedTransitProvider.ts";
+import type { ReadinessLevel } from "./matcherSafetyGate.ts";
+import { MATCHER_POLICY_VERSION } from "./matching.ts";
+import {
+  AUTOMATIC_MATCHING_MINIMUM_READINESS,
+  automaticMatchingPermitted,
+  DEMONSTRATED_MATCHING_READINESS,
+  READINESS_EVIDENCE_PATH,
+  READINESS_GATE,
+} from "./matchingReadiness.ts";
 import { resolveOperatorToken } from "./operatorAuth.ts";
 import { readSessionKeyPrefix } from "./sessionKeyPrefix.ts";
 import { resolveTagoServiceKey, type ServiceKeySource } from "./serviceKey.ts";
@@ -23,8 +32,10 @@ export const DEFAULT_RATE_LIMIT_PER_MINUTE = 120;
 export const DEFAULT_OPERATOR_RATE_LIMIT_PER_MINUTE = 30;
 
 /**
- * The acceptance gate `docs/DATA_VALIDATION.md` states for broad real mode. It
- * is quoted here so `/health` cannot drift away from the document that owns it.
+ * The historical broad-real-mode acceptance gate `docs/DATA_VALIDATION.md`
+ * states. It was never met, and it no longer decides anything: release gate
+ * `matcher-passive-safety-v4` superseded it. It is still quoted so `/health`
+ * says plainly which gate a reader may remember and what replaced it.
  */
 export const REQUIRED_FIELD_BOARDINGS = 30;
 export const FIELD_VALIDATION_REQUIREMENT =
@@ -32,11 +43,13 @@ export const FIELD_VALIDATION_REQUIREMENT =
   + "no silent direction reversal, and bounded stale-data behaviour";
 /**
  * Durable session storage is a real and separate gap, but it is not why
- * automatic matching is off. It is off because the field-validation campaign
- * above has not been run. Saying anything else would overstate how close the
- * feature is.
+ * automatic matching is off. It is off because the demonstrated matcher
+ * readiness is below what automatic selection needs. Saying anything else
+ * would overstate how close the feature is.
  */
-export const AUTOMATIC_MATCHING_WITHHELD_REASON = "field_validation_gate_open";
+export const MATCHING_READINESS_WITHHELD_REASON = "matching_readiness_below_bounded_automation";
+/** Readiness would permit it, and no operator has asked for it. */
+export const NOT_REQUESTED_WITHHELD_REASON = "automatic_matching_not_requested";
 
 /**
  * Where journey sessions live. `memory` is the default everywhere; a durable
@@ -89,12 +102,20 @@ export interface TransitApiConfig {
    * enough to let the server pick a rider's bus for them.
    */
   matching: {
+    /** The matcher policy serving sessions and `POST /v1/matches`. */
+    matcherPolicy: string;
     /**
-     * False on every deployment unless an operator sets
-     * `TRANSIT_AUTOMATIC_MATCHING_ENABLED=true` on purpose. The local Node
-     * server gets no exemption: the blocker is field evidence, not topology.
+     * Whether the server may pick a rider's bus. True only when an operator
+     * sets `TRANSIT_AUTOMATIC_MATCHING_ENABLED=true` on purpose *and* the
+     * demonstrated readiness permits it. The local Node server gets no
+     * exemption: the blocker is evidence, not topology.
      */
     automaticMatchingEnabled: boolean;
+    /**
+     * What the environment asked for. `true` here with
+     * `automaticMatchingEnabled: false` means the request was refused.
+     */
+    automaticMatchingRequested: boolean;
     /**
      * `shadow` ranks candidates and publishes cadence evidence but never
      * assigns `selectedVehicleId` on its own. `automatic` additionally allows
@@ -104,13 +125,23 @@ export interface TransitApiConfig {
     /** Why automatic selection is withheld. Absent when it is not withheld. */
     withheldReason?: string;
     /**
-     * The documented broad-real-mode acceptance gate from
-     * `docs/DATA_VALIDATION.md`. This is a hand-maintained constant, not a
-     * live counter: nothing in the server observes boardings yet, so it stays
-     * `open` until a human edits it after the field campaign.
+     * The readiness release gate `matcher-passive-safety-v4` awarded, from
+     * code (`matchingReadiness.ts`) that CI ties to the committed gate result.
+     * It is never read from the environment.
+     */
+    readiness: {
+      gate: string;
+      demonstrated: ReadinessLevel;
+      requiredForAutomaticMatching: ReadinessLevel;
+      evidence: string;
+    };
+    /**
+     * The historical broad-real-mode acceptance gate, never met, superseded
+     * by the readiness gate above. A constant, not a live counter.
      */
     fieldValidationGate: {
-      status: "open";
+      status: "superseded";
+      supersededBy: string;
       requiredBoardings: number;
       requirement: string;
     };
@@ -147,6 +178,12 @@ export interface TransitApiConfig {
 
 export interface ReadConfigOptions {
   nodeVersion?: string;
+  /**
+   * Tests only: the readiness to evaluate the flag against. Deployments always
+   * use `DEMONSTRATED_MATCHING_READINESS`; nothing reads this from the
+   * environment.
+   */
+  demonstratedReadiness?: ReadinessLevel;
 }
 
 export function readTransitApiConfig(
@@ -163,9 +200,13 @@ export function readTransitApiConfig(
     DEFAULT_OPERATOR_RATE_LIMIT_PER_MINUTE,
   );
   // Default false on every platform. An operator who wants automatic selection
-  // has to say so in an environment variable, and the reason it is off by
-  // default is recorded next to the flag rather than left to a changelog.
-  const automaticMatchingEnabled = boolean(env, "TRANSIT_AUTOMATIC_MATCHING_ENABLED", false);
+  // has to say so in an environment variable, and even then the flag cannot
+  // exceed the evidence: below the readiness automatic selection needs, the
+  // request is refused and `/health` shows both what was asked and why not.
+  const automaticMatchingRequested = boolean(env, "TRANSIT_AUTOMATIC_MATCHING_ENABLED", false);
+  const demonstratedReadiness = options.demonstratedReadiness ?? DEMONSTRATED_MATCHING_READINESS;
+  const readinessPermitsAutomatic = automaticMatchingPermitted(demonstratedReadiness);
+  const automaticMatchingEnabled = automaticMatchingRequested && readinessPermitsAutomatic;
   // Reading this validates it: asking for `redis` without usable credentials
   // throws here rather than booting a deployment that answers every session
   // request with a store error.
@@ -197,13 +238,26 @@ export function readTransitApiConfig(
       durableStoreConfigured: sessionStore === "redis",
     },
     matching: {
+      matcherPolicy: MATCHER_POLICY_VERSION,
       automaticMatchingEnabled,
+      automaticMatchingRequested,
       mode: automaticMatchingEnabled ? "automatic" : "shadow",
       ...(automaticMatchingEnabled
         ? {}
-        : { withheldReason: AUTOMATIC_MATCHING_WITHHELD_REASON }),
+        : {
+          withheldReason: readinessPermitsAutomatic
+            ? NOT_REQUESTED_WITHHELD_REASON
+            : MATCHING_READINESS_WITHHELD_REASON,
+        }),
+      readiness: {
+        gate: READINESS_GATE,
+        demonstrated: demonstratedReadiness,
+        requiredForAutomaticMatching: AUTOMATIC_MATCHING_MINIMUM_READINESS,
+        evidence: READINESS_EVIDENCE_PATH,
+      },
       fieldValidationGate: {
-        status: "open",
+        status: "superseded",
+        supersededBy: READINESS_GATE,
         requiredBoardings: REQUIRED_FIELD_BOARDINGS,
         requirement: FIELD_VALIDATION_REQUIREMENT,
       },

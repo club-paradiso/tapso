@@ -247,6 +247,43 @@ test("a storage failure keeps the ride, and a retry completes it without double 
   }
 });
 
+/** Fails the first N campaign additions, after the submission itself is stored. */
+class FlakyCampaignStore extends MemoryFieldValidationStore {
+  failures: number;
+  constructor(failures: number) {
+    super();
+    this.failures = failures;
+  }
+  override async addToCampaign(...args: Parameters<MemoryFieldValidationStore["addToCampaign"]>) {
+    if (this.failures > 0) {
+      this.failures -= 1;
+      throw new (await import("../src/fieldValidation.ts")).FieldValidationError("synthetic storage outage");
+    }
+    return super.addToCampaign(...args);
+  }
+}
+
+test("a failure between storing a submission and counting it heals on retry, once", async () => {
+  const h = railwayHarness();
+  const done = await h.completedRide();
+  const store = new FlakyCampaignStore(1);
+  const api = await serve(h, store);
+  try {
+    assert.equal((await api.submit(done.sessionId)).status, 503);
+    // The record is stored but not counted. The retry finds it and counts it.
+    const retried = await api.submit(done.sessionId);
+    const receipt = await retried.json() as SubmissionReceipt;
+    assert.equal(receipt.duplicate, true);
+    assert.equal(receipt.campaign.submissions, 1);
+    assert.equal(receipt.campaign.cleanObservedBoardings, 1);
+    // And a third submission still counts it once.
+    const again = await (await api.submit(done.sessionId)).json() as SubmissionReceipt;
+    assert.equal(again.campaign.submissions, 1);
+  } finally {
+    await api.close();
+  }
+});
+
 test("without durable storage, submit refuses and manual export still works", async () => {
   const h = railwayHarness();
   const done = await h.completedRide();

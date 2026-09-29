@@ -42,6 +42,20 @@ export function createTransitApi(env: ServerEnv = process.env as ServerEnv): Tra
     }));
   }
 
+  // Same once-per-process rule: an operator who set the automatic-matching
+  // flag learns from the runtime log, not only from `/health`, that the
+  // demonstrated readiness refused it.
+  if (config.matching.automaticMatchingRequested && !config.matching.automaticMatchingEnabled) {
+    console.warn(JSON.stringify({
+      timestamp: new Date().toISOString(),
+      level: "warn",
+      event: "automatic_matching_refused",
+      message: `TRANSIT_AUTOMATIC_MATCHING_ENABLED=true is refused: release gate ${config.matching.readiness.gate} `
+        + `has demonstrated ${config.matching.readiness.demonstrated}, and automatic selection needs `
+        + `${config.matching.readiness.requiredForAutomaticMatching}`,
+    }));
+  }
+
   // Passed explicitly so this function honours the `env` it was given rather
   // than reaching back into `process.env` through the provider's own default.
   const upstream = new TagoTransitProvider({ serviceKey: credential.key });
@@ -89,8 +103,9 @@ export function createTransitApi(env: ServerEnv = process.env as ServerEnv): Tra
       config,
       discovery: upstream,
       provider,
-      // The uncached provider reaches exactly one place: the authenticated
-      // operator snapshot route used to collect ride evidence.
+      // As `directProvider`, the uncached provider reaches exactly one route:
+      // the authenticated operator snapshot. It also backs discovery and the
+      // session coordinator above, which must see consecutive, uncached reads.
       directProvider: upstream,
       sessions,
       ...(limiter ? { limiter } : {}),

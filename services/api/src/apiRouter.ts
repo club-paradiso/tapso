@@ -38,16 +38,17 @@ import { TAGO_CADENCE_POLICY_V1 } from "./sourceFreshness.ts";
  *    built from repeated server receipts of *changing* provider content. It
  *    never claims to know when TAGO observed the vehicle.
  * 3. `automaticMatching` — whether the server may pick a rider's bus. It is a
- *    product-safety decision gated on field evidence, not on either of the
- *    above being solved.
+ *    product-safety decision gated on the matcher readiness the release gate
+ *    demonstrated, not on either of the above being solved.
  */
 function freshnessPosture(config: TransitApiConfig): Record<string, unknown> {
+  const { readiness } = config.matching;
   return {
     providerObservationTimestamp: "unavailable",
     policy: "server_observed_cadence_v1",
     automaticMatching: config.matching.automaticMatchingEnabled
       ? "enabled_by_explicit_operator_opt_in"
-      : "shadow_only_pending_field_validation",
+      : "shadow_only_pending_matching_readiness",
     /**
      * Why it is withheld, in full, because a one-word status invites the wrong
      * guess. Durable session storage is a real and separate gap; it is not the
@@ -56,7 +57,13 @@ function freshnessPosture(config: TransitApiConfig): Record<string, unknown> {
      */
     ...(config.matching.automaticMatchingEnabled
       ? {}
-      : { automaticMatchingWithheldBecause: config.matching.fieldValidationGate.requirement }),
+      : {
+        automaticMatchingWithheldBecause: config.matching.withheldReason === "automatic_matching_not_requested"
+          ? "no operator has enabled TRANSIT_AUTOMATIC_MATCHING_ENABLED"
+          : `release gate ${readiness.gate} has demonstrated ${readiness.demonstrated}; `
+            + `automatic selection needs ${readiness.requiredForAutomaticMatching} (${readiness.evidence})`,
+      }),
+    matchingReadiness: readiness,
     fieldValidationGate: config.matching.fieldValidationGate,
     /**
      * Seconds, and every one of them a conservative operational gate on TAPSO's
@@ -379,6 +386,9 @@ async function dispatch(
       candidateCount: payload.candidates.length,
     });
     const result = matchVehicle(payload);
+    // Stateless ranking over caller-supplied candidates, advisory only. It
+    // carries the deployment's matching posture so no client can read a
+    // `matched` status as permission to select a rider's bus on its own.
     logEvent(
       result.status !== "matched"
         ? "vehicle_match_confirmation_required"
@@ -392,7 +402,13 @@ async function dispatch(
         selectedVehicleId: result.selectedVehicleId,
       },
     );
-    return { response: json(result, 200, { "cache-control": "no-store" }) };
+    return {
+      response: json({
+        ...result,
+        matchingMode: config.matching.mode,
+        automaticSelection: config.matching.automaticMatchingEnabled ? "permitted" : "withheld",
+      }, 200, { "cache-control": "no-store" }),
+    };
   }
 
   if (resolved.route === "operator_snapshot") {
@@ -582,6 +598,32 @@ function parseMatchRequest(value: unknown): MatchRequest {
     const record = candidate as Record<string, unknown>;
     if (typeof record.vehicleId !== "string" || typeof record.routeId !== "string" || typeof record.observedAt !== "string") {
       throw apiError("INVALID_INPUT", "candidate vehicleId, routeId, and observedAt are required");
+    }
+  }
+  if (input.riderState !== undefined && input.riderState !== "waiting_at_stop" && input.riderState !== "on_board") {
+    throw apiError("INVALID_INPUT", "riderState must be waiting_at_stop or on_board");
+  }
+  if (input.stops !== undefined) {
+    if (!Array.isArray(input.stops) || input.stops.length > 500) {
+      throw apiError("INVALID_INPUT", "stops must be an array of at most 500 items");
+    }
+    for (const stop of input.stops) {
+      const record = stop as Record<string, unknown> | null;
+      if (!record || typeof record !== "object" || typeof record.stopId !== "string"
+        || typeof record.name !== "string" || typeof record.sequence !== "number" || !Number.isInteger(record.sequence)) {
+        throw apiError("INVALID_INPUT", "each stop needs stopId, name, and an integer sequence");
+      }
+    }
+  }
+  if (input.recentlySeen !== undefined) {
+    if (!Array.isArray(input.recentlySeen) || input.recentlySeen.length > 500) {
+      throw apiError("INVALID_INPUT", "recentlySeen must be an array of at most 500 items");
+    }
+    for (const row of input.recentlySeen) {
+      const record = row as Record<string, unknown> | null;
+      if (!record || typeof record !== "object" || typeof record.vehicleId !== "string" || typeof record.routeId !== "string") {
+        throw apiError("INVALID_INPUT", "each recentlySeen row needs vehicleId and routeId");
+      }
     }
   }
   return input as unknown as MatchRequest;
