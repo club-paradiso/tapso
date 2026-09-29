@@ -134,6 +134,13 @@ export interface PassageMemory {
    * Such a vehicle may be anywhere, the boarding stop included.
    */
   unknownProgress?: Record<string, string>;
+  /**
+   * On board: vehicles seen two or more stops before the boarding stop during
+   * the session. They reached it after the rider boarded, so none of them is
+   * the rider's bus. Round a loop the offsets' extremes cannot say this, so
+   * it is recorded.
+   */
+  reachedAfterBoarding?: string[];
   /** Set once and never cleared. */
   withheld?: { reason: string; at: string };
 }

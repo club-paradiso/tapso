@@ -1056,6 +1056,19 @@ export const NEGATIVE_CONTROLS: readonly NegativeControl[] = [
     testFiles: [T.matching, T.properties],
   },
   {
+    id: "F17-reached-after",
+    family: "F4",
+    catalogue: "extra",
+    description: "On board, a bus seen before the stop is no longer recorded as having reached it after the rider boarded; round a loop, the offsets' extremes alone then forget it.",
+    protection: "Finding F17: a bus that reached the stop after the rider boarded is never theirs, for the rest of the session, on any route shape.",
+    edits: [{
+      file: MATCHING,
+      find: "      if (beforeNow) reachedAfterBoarding.add(vehicleId);",
+      replace: "      if (beforeNow && Number.isNaN(0)) reachedAfterBoarding.add(vehicleId);",
+    }],
+    testFiles: [T.matching, T.properties],
+  },
+  {
     id: "F17-lost-loop",
     family: "F4",
     catalogue: "extra",

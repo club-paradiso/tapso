@@ -529,6 +529,36 @@ test("P12: two buses in the on-board window never produce a selection, on a loop
   });
 });
 
+test("P12: on board, a bus once seen before the stop is never selected later in the session, on any route shape", () => {
+  forAllSeeds("P12-reached-after", MATCHER_CASES, (seed) => {
+    const random = rng(seed ^ 0x12c);
+    const loop = chance(random, 0.6);
+    const count = int(random, 8, 40);
+    const stops = syntheticStops(count, { loop });
+    const boarding = int(random, 2, count - 1);
+    const topology = routeTopologyFacts(stops, boarding);
+    const facts = (sequence: number) => classifyRouteProgress(sequence, boarding, "on_board", topology);
+    const sequences = [...topology.sequences];
+    // First seen two or more stops before the stop, and nowhere a bus in the window could read.
+    const befores = sequences.filter((sequence) => {
+      const at = facts(sequence);
+      return at.forward !== undefined && at.forward >= 2 && at.forward !== 1 && (at.backward === undefined || at.backward > 4);
+    });
+    const insides = sequences.filter((sequence) => facts(sequence).zone === "departed_within_on_board_window");
+    if (befores.length === 0 || insides.length === 0) return;
+    const row = (stopSequence: number): VehicleObservation => ({
+      vehicleId: `SYNTHETIC-${seed}-late`, routeId: ROUTE, observedAt: NOW, timestampSource: "provider", stopSequence,
+    });
+    const base: MatchRequest = { routeId: ROUTE, boardingStopSequence: boarding, now: NOW, stops, riderState: "on_board", candidates: [] };
+    let passage = decide({ ...base, candidates: [row(pick(random, befores))] }, new Map()).passage;
+    for (let step = 0; step < 4; step += 1) {
+      const result = decide({ ...base, candidates: [row(pick(random, insides))], passage }, new Map());
+      assert.notEqual(result.status, "matched", `step ${step}: a bus that reached the stop after the rider boarded was selected`);
+      passage = result.passage;
+    }
+  });
+});
+
 /* ----------------------------------------------------------- invariant 13 */
 
 test("P13: identical input gives an identical decision, whatever the candidate order", () => {

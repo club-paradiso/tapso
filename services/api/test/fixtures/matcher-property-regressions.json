@@ -90,6 +90,12 @@
       "seed": 10037,
       "foundAt": "2026-09-29",
       "note": "Against 5408311: on a loop of eight stops, a bus four stops past the boarding stop is also four before it the other way; the directed offset read it as before the stop, excluded it as not the rider's bus, and the other bus in the on-board window was selected. Fixed: a bus that may be in the on-board window is never excluded, and leaving the window is read from its distance past the stop."
+    },
+    {
+      "property": "P12-reached-after",
+      "seed": 10002,
+      "foundAt": "2026-09-29",
+      "note": "Against 2f09032, found with the property and by a session-level differential against the matcher before F15 to F19: round a loop, the on-board exclusion of a bus seen before the stop was read from its last sighting only, so one decision later it was forgotten and the bus, alone in the window, was selected (the earlier matcher excluded it by the minimum offset). Fixed: every such sighting is recorded in passage memory (reachedAfterBoarding) and excludes the bus for the rest of the session."
     }
   ]
 }

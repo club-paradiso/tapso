@@ -901,6 +901,26 @@ test("loop: however short the lap, a bus in the on-board window is never read as
   assert.equal(later.passage?.withheld?.reason, "boarding_stop_reached_during_session", "a crossing longer than half the lap");
 });
 
+test("on-board rider on a loop: a bus once seen before the stop is never theirs, however it reads later (F17)", () => {
+  // Fourteen stops round, boarding at 7. A bus at 13 is eight stops before the
+  // stop the way it travels (its plain offset, +6, reads as past it). It
+  // reached the stop after the rider said they were aboard: it is not their
+  // bus, at every later decision, whatever the extremes of its plain offsets say.
+  const ring: StopOnRoute[] = [
+    ...Array.from({ length: 14 }, (_, index) => ({ stopId: `SYN-RING-${index + 1}`, name: `Synthetic ring ${index + 1}`, sequence: index + 1 })),
+    { stopId: "SYN-RING-1", name: "Synthetic ring 1", sequence: 15 },
+  ];
+  const aboard = { stops: ring, boardingStopSequence: 7 };
+  let passage = matchVehicle(onBoard([bus("late", 13)], aboard)).passage;
+  assert.deepEqual(passage?.reachedAfterBoarding, ["late"]);
+  for (const sequence of [8, 9, 10]) {
+    const result = matchVehicle(onBoard([bus("late", sequence)], { ...aboard, passage }));
+    assert.equal(result.status, "unavailable", `at ${sequence}`);
+    assert.ok(candidateIn(result, "late").rejectedReasons.includes("reached_boarding_stop_after_rider_boarded"), `at ${sequence}`);
+    passage = result.passage;
+  }
+});
+
 test("loop: the lap is measured in sequences, so a missing or repeated stop row cannot move the seam (F18)", () => {
   // Boarding at 11. A bus at 1 has wrapped: one stop past the rider, blocking.
   const input = request([bus("leader", 9), bus("wrapped", 1)], { stops: loopStops, boardingStopSequence: 11 });

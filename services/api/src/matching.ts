@@ -529,6 +529,7 @@ function rememberPassage(
   const seenBefore = prior?.offsets ?? {};
   const offsets = new Map(Object.entries(seenBefore).map(([vehicleId, range]) => [vehicleId, { ...range }]));
   const unknownProgress = new Map(Object.entries(prior?.unknownProgress ?? {}));
+  const reachedAfterBoarding = new Set(prior?.reachedAfterBoarding ?? []);
   let withheld = prior?.withheld;
   const withhold = (reason: string) => { if (!withheld) withheld = { reason, at: request.now }; };
   const initial = prior?.initial ?? [...new Set(onRoute.map((row) => row.ranked.vehicleId))].sort();
@@ -542,10 +543,15 @@ function rememberPassage(
   const loop = topology?.loop === true;
   // Round a loop, where a sighting sits is read from its distance to the stop each way.
   const around = (offset: number): Distances => ({ forward: mod(-offset, topology!.cycleLength), backward: mod(offset, topology!.cycleLength) });
+  // The last sighting in memory; memory written before `last` existed keeps
+  // only the extremes, and the furthest one stands in for it.
+  const lastOf = (seen: { max: number; last?: number } | undefined) => (seen === undefined ? undefined : seen.last ?? seen.max);
   // Since the last sighting, the distance still to travel to the stop grew:
   // the bus went past the stop (or went backwards, which is no better).
-  const passedOnLoop = (seen: { last?: number } | undefined, now: Distances) =>
-    seen?.last !== undefined && now.forward !== undefined && now.forward > around(seen.last).forward!;
+  const passedOnLoop = (seen: { max: number; last?: number } | undefined, now: Distances) => {
+    const last = lastOf(seen);
+    return last !== undefined && now.forward !== undefined && now.forward > around(last).forward!;
+  };
   // On board: inside the window, or one stop before the stop, where the rider's
   // bus may still read while it dwells.
   const nearWindow = (at: Distances) => (at.backward !== undefined && at.backward <= window) || at.forward === 1;
@@ -581,12 +587,18 @@ function rememberPassage(
         firstSeenPast = true;
       }
     } else {
-      const reachedAfter = loop
-        ? beforeStop(row.facts) || (seen?.last !== undefined && beforeStop(around(seen.last)))
-        : offset <= -2 || (seen !== undefined && seen.min <= -2);
-      if (reachedAfter) excluded.set(vehicleId, excluded.get(vehicleId) ?? "reached_boarding_stop_after_rider_boarded");
+      // Seen before the stop at any time in the session, it reached the stop
+      // after the rider boarded, for good. Round a loop the extremes of plain
+      // offsets do not say where it was, so every such sighting is recorded.
+      const beforeNow = loop ? beforeStop(row.facts) : offset <= -2;
+      if (beforeNow) reachedAfterBoarding.add(vehicleId);
+      const beforeEarlier = reachedAfterBoarding.has(vehicleId) || (seen !== undefined && (loop
+        ? [seen.last, seen.min].some((value) => value !== undefined && beforeStop(around(value)))
+        : seen.min <= -2));
+      if (beforeNow || beforeEarlier) excluded.set(vehicleId, excluded.get(vehicleId) ?? "reached_boarding_stop_after_rider_boarded");
+      const lastSeen = lastOf(seen);
       const left = loop
-        ? seen?.last !== undefined && nearWindow(around(seen.last)) && !nearWindow(row.facts)
+        ? lastSeen !== undefined && nearWindow(around(lastSeen)) && !nearWindow(row.facts)
         : seen !== undefined && seen.max >= -1 && seen.max <= window && offset > window;
       if (left) withhold("vehicle_left_on_board_window_during_session");
     }
@@ -617,7 +629,7 @@ function rememberPassage(
     if (riderState === "waiting_at_stop") {
       if (loop ? passedOnLoop(seen, facts) : seen.min <= -1 && offset >= 0) withhold("boarding_stop_reached_during_session");
     } else if (loop
-      ? seen.last !== undefined && nearWindow(around(seen.last)) && !nearWindow(facts)
+      ? nearWindow(around(lastOf(seen)!)) && !nearWindow(facts)
       : seen.max >= -1 && seen.max <= window && offset > window) {
       withhold("vehicle_left_on_board_window_during_session");
     }
@@ -659,6 +671,7 @@ function rememberPassage(
     ...(unknownProgress.size > 0
       ? { unknownProgress: Object.fromEntries([...unknownProgress].sort(([left], [right]) => left.localeCompare(right))) }
       : {}),
+    ...(reachedAfterBoarding.size > 0 ? { reachedAfterBoarding: [...reachedAfterBoarding].sort() } : {}),
     ...(withheld ? { withheld } : {}),
   };
   return { memory, excluded, unproven };
