@@ -102,6 +102,18 @@
       "seed": 10000,
       "foundAt": "2026-09-29",
       "note": "Against 99605a0, from a review finding: when one snapshot lists a bus twice at different stops, passage memory kept whichever row came last, so what the session remembered (and whether a later decision released) depended on row order. Fixed: such a bus is remembered as of unknown progress, with its last offset the position nearest the stop ahead."
+    },
+    {
+      "property": "P12-returned",
+      "seed": 10011,
+      "foundAt": "2026-09-29",
+      "note": "Against cb9fe42, lap 19, boarding 16, on board: a bus three stops past the stop, clear of it, read two past 55 s later (19 then 18) and was then selected in the window. It went round through the stop, or read a stop back (R23)."
+    },
+    {
+      "property": "P3-lap",
+      "seed": 10001,
+      "foundAt": "2026-09-29",
+      "note": "Against cb9fe42, lap 37, boarding 18, waiting: a bus 33 stops out (four past the stop), seen again 945 s later nine stops out, had time to reach the stop, take the rider and go round, and was not withheld (R24)."
     }
   ]
 }

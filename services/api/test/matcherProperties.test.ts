@@ -228,6 +228,33 @@ test("P3: a bus seen before the stop and later past it withholds the session for
   });
 });
 
+test("P3: round a loop, a bus seen again after long enough to have gone round through the stop withholds for good", () => {
+  forAllSeeds("P3-lap", MATCHER_CASES, (seed) => {
+    const random = rng(seed ^ 0x3a9);
+    const lap = int(random, 5, 40);
+    const stops = syntheticStops(lap + 1, { loop: true });
+    const boarding = int(random, 1, lap);
+    const topology = routeTopologyFacts(stops, boarding);
+    if (!topology.loop) return;
+    const facts = (sequence: number) => classifyRouteProgress(sequence, boarding, "waiting_at_stop", topology);
+    // Seen anywhere before the stop, then anywhere at all, after time enough
+    // for the stops to the stop and on to the second position.
+    const sequences = [...topology.sequences].filter((sequence) => (facts(sequence).forward ?? 0) >= 1);
+    const [before, after] = [pick(random, sequences), pick(random, [...topology.sequences])];
+    const through = facts(before).forward! + facts(after).backward!;
+    const gap = 15 * through + int(random, 0, 60);
+    const earlier = new Date(Date.parse(NOW) - gap * 1_000).toISOString();
+    const row = (stopSequence: number, observedAt: string): VehicleObservation => ({
+      vehicleId: `SYNTHETIC-${seed}-round`, routeId: ROUTE, observedAt, timestampSource: "provider", stopSequence,
+    });
+    const base: MatchRequest = { routeId: ROUTE, boardingStopSequence: boarding, stops, riderState: "waiting_at_stop", now: earlier, candidates: [] };
+    const first = decide({ ...base, candidates: [row(before, earlier)] }, new Map());
+    const second = decide({ ...base, now: NOW, candidates: [row(after, NOW)], passage: first.passage }, new Map());
+    assert.notEqual(second.status, "matched", `lap ${lap}, boarding ${boarding}: ${before} then ${after} after ${gap} s`);
+    assert.ok(second.passage?.withheld, `lap ${lap}, boarding ${boarding}: ${before} then ${after} after ${gap} s is not withheld for good`);
+  });
+});
+
 test("P3: an earlier look that saw nothing never releases a later decision", () => {
   forAllSeeds("P3-empty-look", MATCHER_CASES, (seed) => {
     const { request, trusted } = generateMatch(seed);
@@ -562,6 +589,43 @@ test("P12: on board, a bus once seen before the stop is never selected later in 
     for (let step = 0; step < 4; step += 1) {
       const result = decide({ ...base, candidates: [row(pick(random, insides))], passage }, new Map());
       assert.notEqual(result.status, "matched", `step ${step}: a bus that reached the stop after the rider boarded was selected`);
+      passage = result.passage;
+    }
+  });
+});
+
+test("P12: on board round a loop, a bus that came back to the stop, or had time to, is never selected later", () => {
+  forAllSeeds("P12-returned", MATCHER_CASES, (seed) => {
+    const random = rng(seed ^ 0x12d);
+    const lap = int(random, 10, 40);
+    const stops = syntheticStops(lap + 1, { loop: true });
+    const boarding = int(random, 1, lap);
+    const topology = routeTopologyFacts(stops, boarding);
+    if (!topology.loop) return;
+    const facts = (sequence: number) => classifyRouteProgress(sequence, boarding, "on_board", topology);
+    const sequences = [...topology.sequences];
+    // First seen clear of the stop: two or more stops from it each way.
+    const clear = sequences.filter((sequence) => (facts(sequence).forward ?? 0) >= 2 && (facts(sequence).backward ?? 0) >= 2);
+    const first = pick(random, clear);
+    const then = facts(first);
+    // Then back at the stop before it, or closer past it; or anywhere, after
+    // time enough to go through the stop and on to there.
+    const back = sequences.filter((sequence) => facts(sequence).forward === 1 || facts(sequence).backward! < then.backward!);
+    const lapped = chance(random, 0.5) || back.length === 0;
+    const second = lapped ? pick(random, sequences) : pick(random, back);
+    const gap = lapped ? 15 * (then.forward! + facts(second).backward!) + int(random, 0, 60) : int(random, 5, 60);
+    const earlier = new Date(Date.parse(NOW) - gap * 1_000).toISOString();
+    const row = (stopSequence: number, observedAt: string): VehicleObservation => ({
+      vehicleId: `SYNTHETIC-${seed}-round`, routeId: ROUTE, observedAt, timestampSource: "provider", stopSequence,
+    });
+    const base: MatchRequest = { routeId: ROUTE, boardingStopSequence: boarding, stops, riderState: "on_board", now: earlier, candidates: [] };
+    let passage = decide({ ...base, candidates: [row(first, earlier)] }, new Map()).passage;
+    passage = decide({ ...base, now: NOW, candidates: [row(second, NOW)], passage }, new Map()).passage;
+    const insides = sequences.filter((sequence) => facts(sequence).zone === "departed_within_on_board_window");
+    for (let step = 1; step <= 3; step += 1) {
+      const at = new Date(Date.parse(NOW) + step * 10_000).toISOString();
+      const result = decide({ ...base, now: at, candidates: [row(pick(random, insides), at)], passage }, new Map());
+      assert.notEqual(result.status, "matched", `lap ${lap}, boarding ${boarding}: ${first} then ${second} after ${gap} s, step ${step}`);
       passage = result.passage;
     }
   });
