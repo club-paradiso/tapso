@@ -1069,6 +1069,19 @@ export const NEGATIVE_CONTROLS: readonly NegativeControl[] = [
     testFiles: [T.matching, T.properties],
   },
   {
+    id: "F15-onboard-not-theirs",
+    family: "F4",
+    catalogue: "extra",
+    description: "On board, a bus shown to have reached the stop after the rider boarded competes again once it is out of sight.",
+    protection: "A bus that cannot be the rider's never competes for the on-board window, seen or not.",
+    edits: [{
+      file: MATCHING,
+      find: "      if (!current.has(vehicleId) && reachedEarlier(vehicleId, range)) excluded.set(vehicleId, \"reached_boarding_stop_after_rider_boarded\");",
+      replace: "      if (!current.has(vehicleId) && reachedEarlier(vehicleId, range) && Number.isNaN(0)) excluded.set(vehicleId, \"reached_boarding_stop_after_rider_boarded\");",
+    }],
+    testFiles: [T.matching],
+  },
+  {
     id: "F17-lost-loop",
     family: "F4",
     catalogue: "extra",

@@ -557,6 +557,11 @@ function rememberPassage(
   const nearWindow = (at: Distances) => (at.backward !== undefined && at.backward <= window) || at.forward === 1;
   // Before the stop, beyond any reading of the window: it reached the stop after the rider boarded.
   const beforeStop = (at: Distances) => at.forward !== undefined && at.forward >= 2 && !nearWindow(at);
+  // On board: shown by an earlier sighting to have reached the stop after the rider boarded.
+  const reachedEarlier = (vehicleId: string, seen: { min: number; last?: number } | undefined) =>
+    reachedAfterBoarding.has(vehicleId) || (seen !== undefined && (loop
+      ? [seen.last, seen.min].some((value) => value !== undefined && beforeStop(around(value)))
+      : seen.min <= -2));
 
   const sawUnknown = new Set<string>();
   const sawKnown = new Set<string>();
@@ -592,10 +597,7 @@ function rememberPassage(
       // offsets do not say where it was, so every such sighting is recorded.
       const beforeNow = loop ? beforeStop(row.facts) : offset <= -2;
       if (beforeNow) reachedAfterBoarding.add(vehicleId);
-      const beforeEarlier = reachedAfterBoarding.has(vehicleId) || (seen !== undefined && (loop
-        ? [seen.last, seen.min].some((value) => value !== undefined && beforeStop(around(value)))
-        : seen.min <= -2));
-      if (beforeNow || beforeEarlier) excluded.set(vehicleId, excluded.get(vehicleId) ?? "reached_boarding_stop_after_rider_boarded");
+      if (beforeNow || reachedEarlier(vehicleId, seen)) excluded.set(vehicleId, excluded.get(vehicleId) ?? "reached_boarding_stop_after_rider_boarded");
       const lastSeen = lastOf(seen);
       const left = loop
         ? lastSeen !== undefined && nearWindow(around(lastSeen)) && !nearWindow(row.facts)
@@ -646,6 +648,15 @@ function rememberPassage(
     withhold(prior === undefined
       ? "vehicle_may_have_reached_boarding_stop_before_first_observation"
       : "vehicle_first_seen_past_boarding_stop");
+  }
+
+  if (riderState === "on_board") {
+    // A bus shown to have reached the stop after the rider boarded is not
+    // theirs wherever it is now: remembered or out of sight, it does not
+    // compete either (it still blocks by where it may be, as a visible one does).
+    for (const [vehicleId, range] of Object.entries(seenBefore)) {
+      if (!current.has(vehicleId) && reachedEarlier(vehicleId, range)) excluded.set(vehicleId, "reached_boarding_stop_after_rider_boarded");
+    }
   }
 
   for (const [vehicleId, range] of Object.entries(seenBefore)) {

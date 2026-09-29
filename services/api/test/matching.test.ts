@@ -901,6 +901,17 @@ test("loop: however short the lap, a bus in the on-board window is never read as
   assert.equal(later.passage?.withheld?.reason, "boarding_stop_reached_during_session", "a crossing longer than half the lap");
 });
 
+test("on-board rider: a bus shown not to be theirs does not compete once it is out of sight", () => {
+  // The follower was seen before the stop after the rider boarded, then past
+  // it: not the rider's bus. Out of sight since, it may still be in the
+  // window, but it cannot be theirs, so the rider's bus is the only candidate.
+  const at = (seconds: number) => secondsAgo(seconds);
+  const first = matchVehicle(onBoard([bus("rider", BOARDING + 2, { observedAt: at(200) }), bus("follower", BOARDING - 3, { observedAt: at(200) })], { now: at(200) }));
+  const second = matchVehicle(onBoard([bus("rider", BOARDING + 2, { observedAt: at(140) }), bus("follower", BOARDING + 1, { observedAt: at(140) })], { now: at(140), passage: first.passage }));
+  assert.ok(candidateIn(second, "follower").rejectedReasons.includes("reached_boarding_stop_after_rider_boarded"));
+  assertSelected(matchVehicle(onBoard([bus("rider", BOARDING + 3)], { passage: second.passage })), "rider", "the follower, out of sight, is still not theirs");
+});
+
 test("on-board rider on a loop: a bus once seen before the stop is never theirs, however it reads later (F17)", () => {
   // Fourteen stops round, boarding at 7. A bus at 13 is eight stops before the
   // stop the way it travels (its plain offset, +6, reads as past it). It
