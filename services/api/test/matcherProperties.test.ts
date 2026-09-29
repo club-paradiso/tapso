@@ -2,7 +2,7 @@
  * Property-based verification of the directed matcher. SYNTHETIC: every case
  * is generated from a seed by `propertyKit.ts`; nothing here is field evidence.
  *
- * Each property is one of the fifteen safety invariants the release gate names
+ * Each property is one of the sixteen safety invariants the release gate names
  * (`docs/exec-plans/HUMAN_LABOR_ELIMINATION.md`). A failure prints its seed;
  * the seed then goes into `fixtures/matcher-property-regressions.json`, which
  * is replayed first on every run, for ever.
@@ -26,6 +26,7 @@ import { replayMatching } from "../src/matchReplay.ts";
 import { RIDE_CAPTURE_SCHEMA_VERSION, type RideCapture } from "../src/rideCapture.ts";
 import { classifyTagoCadenceFreshness } from "../src/sourceFreshness.ts";
 import { JourneySessionCoordinator } from "../src/journeySession.ts";
+import { firstShownReaching, generateGroundTruthSession, runGroundTruthSession } from "./groundTruthKit.ts";
 import type { RouteRequest, StopOnRoute } from "../src/domain.ts";
 import {
   EPOCH,
@@ -47,6 +48,7 @@ import {
 const MATCHER_CASES = 2_000;
 const REPLAY_CASES = 150;
 const SESSION_CASES = 60;
+const GROUND_TRUTH_CASES = 300;
 
 function decide(request: MatchRequest, trusted: Map<string, ReturnType<typeof freshness>>) {
   return matchVehicleWithSourceFreshness(request, trusted);
@@ -391,7 +393,7 @@ test("P8: a stop-sequence regression inside the window fails closed", () => {
 
 /* ------------------------------------------------------------ invariant 9 */
 
-test("P9: once a session selects a vehicle, the selection never changes", async () => {
+test("P9: once a session selects a vehicle it never switches to another, and a withdrawn selection is never replaced automatically", async () => {
   await forAllSeedsAsync("P9", SESSION_CASES, async (seed) => {
     const trajectory = generateTrajectory(seed);
     let cursor = 0;
@@ -417,6 +419,7 @@ test("P9: once a session selects a vehicle, the selection never changes", async 
       destinationStopSequence: Math.min(trajectory.stops.length, trajectory.boarding + 3),
     });
     let selected = created.selectedVehicleId;
+    let withdrawn = false;
     for (cursor += 1; cursor < trajectory.snapshots.length; cursor += 1) {
       nowMs += 10_000;
       let view;
@@ -425,8 +428,13 @@ test("P9: once a session selects a vehicle, the selection never changes", async 
       } catch {
         continue;
       }
-      if (selected !== undefined) assert.equal(view.selectedVehicleId, selected, `seed ${seed}: selection switched`);
-      selected = view.selectedVehicleId ?? selected;
+      if (selected !== undefined) {
+        // Withdrawn (finding F20) is not switched: the view names no bus at all.
+        if (view.selectedVehicleId !== undefined) assert.equal(view.selectedVehicleId, selected, `seed ${seed}: selection switched`);
+        if (withdrawn) assert.equal(view.selectedVehicleId, undefined, `seed ${seed}: selected again after a withdrawal`);
+        withdrawn ||= view.selectedVehicleId === undefined;
+      }
+      selected ??= view.selectedVehicleId;
     }
   });
 });
@@ -650,6 +658,32 @@ test("P15: whatever is missing from the feed, a selection is always individually
     assert.equal(selected.routeId, ROUTE);
     assert.deepEqual(ranked.rejectedReasons, []);
     if (selected.timestampSource === "unavailable") assert.equal(trusted.get(selected.vehicleId)?.state, "fresh");
+  });
+});
+
+/* ----------------------------------------------------------- invariant 16 */
+
+test("P16: an automatic selection is withdrawn once the feed shows another bus reaching the stop first, and never after the selected bus", async () => {
+  // Ground truth (SYNTHETIC): buses move continuously and the rider boards the
+  // first to reach the stop. The selection is a prediction; a faster bus
+  // behind can beat it by more than any margin in stops (finding F20).
+  await forAllSeedsAsync("P16", GROUND_TRUTH_CASES, async (seed) => {
+    const session = generateGroundTruthSession(seed);
+    const run = await runGroundTruthSession(session);
+    if (!run.selected) return;
+    const selectedBus = session.buses.find((bus) => bus.id === run.selected!.vehicleId)!;
+    const selectedShown = firstShownReaching(session, selectedBus, run.selected.at);
+    if (selectedShown !== undefined && run.withdrawnAt !== undefined) {
+      assert.ok(run.withdrawnAt <= selectedShown, `seed ${seed}: withdrawn at ${run.withdrawnAt} s, after the selected bus was seen at the stop at ${selectedShown} s`);
+    }
+    const boarded = session.truth?.bus;
+    if (boarded === undefined || boarded.id === selectedBus.id) return;
+    const boardedShown = firstShownReaching(session, boarded, run.selected.at);
+    if (boardedShown === undefined || (selectedShown !== undefined && selectedShown < boardedShown)) return;
+    assert.ok(
+      run.withdrawnAt !== undefined && run.withdrawnAt <= boardedShown,
+      `seed ${seed}: ${boarded.id} was seen reaching the stop at ${boardedShown} s, before the selected ${selectedBus.id}; withdrawn: ${run.withdrawnAt}`,
+    );
   });
 });
 
