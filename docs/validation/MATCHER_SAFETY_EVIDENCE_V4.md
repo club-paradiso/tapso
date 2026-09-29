@@ -350,7 +350,7 @@ analysis is `STILL_REQUIRED`.**
 
 | Id | Action | Status | Why only a person can do it |
 |---|---|---|---|
-| — | Merge the pull request (or grant `actions: write`, or allow the environment to reach the artifact store and the API) | `STILL_REQUIRED` | Repository and environment authorisation |
+| — | Restore the account's GitHub Actions budget and merge the pull request, or allow the environment to reach the artifact store and the API | `STILL_REQUIRED` | Account, payment and environment authorisation |
 | H30 | Optionally add a `TAGO_SERVICE_KEY` repository secret | `STILL_REQUIRED` (optional) | Credential. Needed only for direct-TAGO windows (BA-2) |
 | H08, H31 | Physical-device Live Activity check; Apple Developer membership | `STILL_REQUIRED` for `READY_FOR_BOUNDED_AUTOMATION` only | A device check, not a ride; the membership is a paid enrolment |
 | H25–H27, H33 | Credential rotation; platform environment variables; branch protection | `STILL_REQUIRED` when they change | Account and administrator actions |
@@ -363,9 +363,13 @@ analysis is `STILL_REQUIRED`.**
 ## Blocker
 
 The full-window replay, the real-base counterfactuals and every new live window
-need a machine that can read GitHub artifacts and the provider. Any one of
-these unblocks them with no human ride and no manual step: merging this pull
-request (the merge commit runs the replay and the schedule starts), granting
-the Claude GitHub App `actions: write`, or allowing this environment to reach
-`*.blob.core.windows.net` and `tapso-api.vercel.app`. The evidence-of-record
-raw artifact expires **2026-10-09T06:28:03Z**; the first run copies it.
+need a machine that can read GitHub artifacts and the provider. Since
+2026-09-29 GitHub-hosted jobs of this repository fail before a runner is
+assigned (every job, no steps, no logs; cause `INFERRED`: the account's Actions
+budget), so merging alone runs nothing. Either path unblocks them with no human
+ride: the owner restores the Actions budget or spending limit and merges this
+pull request (the merge commit runs the replay and the schedule starts); or the
+owner lets this environment reach `productionresultssa18.blob.core.windows.net`
+and `tapso-api.vercel.app`, and a session copies the raw (the integration
+already mints signed download URLs) and replays it offline with the same
+scripts. The evidence-of-record raw artifact expires **2026-10-09T06:28:03Z**.

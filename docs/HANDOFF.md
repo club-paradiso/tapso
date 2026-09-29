@@ -69,13 +69,20 @@ capture export, a manual script run or a manual inspection:
 
 Owner actions, each a one-time authorisation and none of them a ride:
 
+- Let GitHub Actions start jobs again. Since 2026-09-29 every GitHub-hosted job
+  of this repository fails before a runner is assigned (cause `INFERRED`: the
+  account's Actions budget), so until then neither CI nor the evidence
+  workflow runs. Restore the budget or spending limit.
 - Merge the pull request. Required: it starts steps 2 and 3.
+- Or, instead of both: allow the agent environment to reach
+  `productionresultssa18.blob.core.windows.net` and `tapso-api.vercel.app`, so a
+  session can copy the raw artifact and replay it offline without Actions.
+  Either way, before 2026-10-09T06:28:03Z.
 - Optional: add a `TAGO_SERVICE_KEY` repository secret, so the scheduled windows
   read TAGO directly at session cadence. Gate criterion BA-2 requires that
   evidence for `READY_FOR_BOUNDED_AUTOMATION`.
 - Optional: grant the Claude GitHub App `actions: write`, so an agent can
-  dispatch runs, or let the agent environment reach `*.blob.core.windows.net`
-  and `tapso-api.vercel.app`, so it can read their artifacts and the provider.
+  dispatch and re-run workflows once Actions can start jobs.
 
 The physical-device Live Activity check (gate criterion BA-5) matters only for
 `READY_FOR_BOUNDED_AUTOMATION`, and it is a device check, not a ride. Method and

@@ -47,6 +47,8 @@ automatic path by a fail-closed product rule.
 | The evidence-of-record ledger (268 records) carries every candidate at each wrong commit's decision: stop sequence, cadence state, role | `VERIFIED_BY_REPLAY` | Instant-level re-decision is possible without raw |
 | Run `36098610702` resolved `provider: auto` to `tapso-public-api`, so no `TAGO_SERVICE_KEY` repository secret existed then | `INFERRED` (from `requestedProviderPath`) | Session-cadence (5 s, uncached) passive evidence needs a credential only the owner can add |
 | No numeric TAGO daily quota is documented anywhere | `MISSING` | Scheduled windows are bounded to one a day at the load of the one window already run without incident |
+| Since 2026-09-29 09:26 UTC every GitHub-hosted job of this repository fails before a runner is assigned (CI runs `36549160780`, `36576508391`, `36576849919`: no steps, no logs, `runner_id` 0), including on a commit that changes no code those jobs run; the repository recorded the same symptom as an account Actions budget block (`MARKETING_SITE.md`) | `VERIFIED_LIVE_INFRASTRUCTURE` (symptom); cause `INFERRED` | Neither CI nor `matcher-evidence.yml` runs until the account lets Actions start jobs again; a re-run from this session is refused (`403`) |
+| The GitHub integration can mint a signed download URL for the v3 raw artifact `10849693394`; this container's egress refuses its host (`productionresultssa18.blob.core.windows.net`, `CONNECT 403`, retried once on 2026-09-29) | `VERIFIED_LIVE_INFRASTRUCTURE` | Allowing that host would let a session like this one copy the raw and replay it offline without Actions |
 
 ## 3. Findings
 
@@ -149,7 +151,9 @@ say so gets a confirmation prompt; the reverse would admit departed buses.
   token may not see, so within 90 days of the replay run the job needs either
   read access to the vault or a replay request that re-uploads the record.
   Its runtime grows with every retained window (each evaluated twice).
-- Exact next action: merge before 2026-10-09T06:28:03Z (§8). The replay run's
+- Exact next action: one of the two unblocking paths in §8 before
+  2026-10-09T06:28:03Z; merging alone runs nothing while Actions cannot start
+  jobs. The replay run's
   `gate-evidence` job computes `live-replay-evidence.json`,
   `counterfactual-live-evidence.json` and a gate result with no one's help. An
   agent with artifact access then commits those two files (counts only),
@@ -186,14 +190,26 @@ integration cannot dispatch workflows, and changing a trigger so that a push
 from this branch starts one was refused. Nothing here attempts another route.
 
 `.github/workflows/matcher-evidence.yml` does all three with no rider and no
-manual step once it is on `main`: the merge commit runs the evidence-of-record
-replay (and copies the raw artifact before it expires on 2026-10-09), and the
-schedule runs one bounded window a day; after either, the `gate-evidence` job
-recomputes the gate's live inputs from every retained raw collection. Any one
-of these unblocks it:
-merging the pull request; granting the Claude GitHub App `actions: write`;
-or allowing this environment to reach `*.blob.core.windows.net` and
-`tapso-api.vercel.app`.
+manual step once it is on `main` and GitHub Actions can start jobs: the merge
+commit runs the evidence-of-record replay (and copies the raw artifact before
+it expires on 2026-10-09T06:28:03Z), and the schedule runs one bounded window
+a day; after either, the `gate-evidence` job recomputes the gate's live inputs
+from every retained raw collection.
+
+Since 2026-09-29 GitHub-hosted jobs of this repository fail before a runner is
+assigned (§2; cause `INFERRED`: the account's Actions budget). So there are two
+ways through, and either works before the expiry:
+
+1. The owner restores the account's Actions budget or spending limit (an
+   account and payment action), then merges the pull request.
+2. The owner allows this environment to reach
+   `productionresultssa18.blob.core.windows.net` (the artifact store; the
+   integration already mints signed download URLs) and `tapso-api.vercel.app`.
+   A session like this one then copies the raw, replays it offline with the
+   same scripts, and commits the counts, with no Actions run at all.
+
+Granting the Claude GitHub App `actions: write` helps only once Actions can
+start jobs.
 
 ## 9. Reproduce
 
