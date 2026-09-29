@@ -271,7 +271,7 @@ async function dispatch(
   const { config, provider, discovery } = dependencies;
 
   if (resolved.route === "health") {
-    return { response: json(healthPayload(config, support.now()), 200, { "cache-control": "no-store" }) };
+    return { response: json(healthPayload(config, support.now(), dependencies.sessions), 200, { "cache-control": "no-store" }) };
   }
 
   if (resolved.route === "cities") {
@@ -386,27 +386,35 @@ async function dispatch(
       candidateCount: payload.candidates.length,
     });
     const result = matchVehicle(payload);
-    // Stateless ranking over caller-supplied candidates, advisory only. It
-    // carries the deployment's matching posture so no client can read a
-    // `matched` status as permission to select a rider's bus on its own.
+    const automatic = config.matching.automaticMatchingEnabled;
+    // Stateless ranking over caller-supplied candidates. Below the readiness
+    // automatic selection needs, the matcher's pick is never offered as a
+    // selection: like a session's, it moves to `shadowSelection`, so a client
+    // that acts on `selectedVehicleId` has nothing to act on.
+    const { selectedVehicleId, ...ranking } = result;
     logEvent(
       result.status !== "matched"
         ? "vehicle_match_confirmation_required"
-        : result.confidence === "high"
-          ? "vehicle_match_high_confidence"
-          : "vehicle_match_selected",
+        : !automatic
+          ? "vehicle_match_shadow"
+          : result.confidence === "high"
+            ? "vehicle_match_high_confidence"
+            : "vehicle_match_selected",
       {
         routeId: payload.routeId,
         status: result.status,
         confidence: result.confidence,
-        selectedVehicleId: result.selectedVehicleId,
+        ...(automatic ? { selectedVehicleId } : { wouldSelectVehicleId: selectedVehicleId }),
       },
     );
     return {
       response: json({
-        ...result,
+        ...(automatic ? result : ranking),
+        ...(!automatic && selectedVehicleId
+          ? { shadowSelection: { status: result.status, wouldSelectVehicleId: selectedVehicleId, confidence: result.confidence } }
+          : {}),
         matchingMode: config.matching.mode,
-        automaticSelection: config.matching.automaticMatchingEnabled ? "permitted" : "withheld",
+        automaticSelection: automatic ? "permitted" : "withheld",
       }, 200, { "cache-control": "no-store" }),
     };
   }
@@ -485,7 +493,7 @@ async function dispatch(
 
 /* ------------------------------------------------------------------- health */
 
-function healthPayload(config: TransitApiConfig, now: Date): Record<string, unknown> {
+function healthPayload(config: TransitApiConfig, now: Date, sessions: JourneySessionCoordinator | undefined): Record<string, unknown> {
   return {
     ok: true,
     service: "tapso-transit-api",
@@ -512,7 +520,13 @@ function healthPayload(config: TransitApiConfig, now: Date): Record<string, unkn
     operator: config.operator,
     runtime: config.runtime,
     build: config.build,
-    matching: config.matching,
+    matching: {
+      ...config.matching,
+      // What the session coordinator actually runs, not what the configuration
+      // says: wiring that handed it the requested flag instead of the granted
+      // one would show here as "automatic" while everything else says shadow.
+      sessionMatchingMode: sessions?.matchingMode ?? "none",
+    },
     freshness: freshnessPosture(config),
   };
 }
@@ -626,7 +640,29 @@ function parseMatchRequest(value: unknown): MatchRequest {
       }
     }
   }
-  return input as unknown as MatchRequest;
+  if (input.directionCode !== undefined && typeof input.directionCode !== "string") {
+    throw apiError("INVALID_INPUT", "directionCode must be a string");
+  }
+  for (const field of ["boardingLatitude", "boardingLongitude"] as const) {
+    if (input[field] !== undefined && (typeof input[field] !== "number" || !Number.isFinite(input[field]))) {
+      throw apiError("INVALID_INPUT", `${field} must be a finite number`);
+    }
+  }
+  // Only what a stateless request can carry. Session memory (`passage`) and the
+  // session's declaration time belong to a journey session, never to a caller.
+  const request: MatchRequest = {
+    routeId: input.routeId,
+    boardingStopSequence: input.boardingStopSequence,
+    now: input.now,
+    candidates: input.candidates as MatchRequest["candidates"],
+  };
+  if (input.directionCode !== undefined) request.directionCode = input.directionCode as string;
+  if (input.boardingLatitude !== undefined) request.boardingLatitude = input.boardingLatitude as number;
+  if (input.boardingLongitude !== undefined) request.boardingLongitude = input.boardingLongitude as number;
+  if (input.riderState !== undefined) request.riderState = input.riderState as MatchRequest["riderState"];
+  if (input.stops !== undefined) request.stops = input.stops as MatchRequest["stops"];
+  if (input.recentlySeen !== undefined) request.recentlySeen = input.recentlySeen as MatchRequest["recentlySeen"];
+  return request;
 }
 
 /* ------------------------------------------------------------------- limits */

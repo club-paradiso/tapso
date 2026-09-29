@@ -440,12 +440,13 @@ test("matching rejects an unknown rider state, and a stateless match stays advis
   assert.equal(response.status, 200);
   const body = await response.json();
   assert.equal(body.status, "matched");
-  assert.equal(body.selectedVehicleId, "A");
+  // Still advice: this deployment never opted in, so the pick is never offered
+  // as a selection. It is published as what the matcher would have chosen.
+  assert.equal(body.selectedVehicleId, undefined);
+  assert.deepEqual(body.shadowSelection, { status: "matched", wouldSelectVehicleId: "A", confidence: body.confidence });
   assert.equal(body.riderState, "waiting_at_stop", "an absent rider state is a rider waiting at the stop");
   assert.equal(body.policyVersion, MATCHER_POLICY_VERSION);
   assert.deepEqual(body.abstentionReasons, []);
-  // Still advice: this deployment never opted in, so no client may read
-  // `matched` as permission to pick the rider's bus.
   assert.equal(body.matchingMode, "shadow");
   assert.equal(body.automaticSelection, "withheld");
 
@@ -460,7 +461,8 @@ test("matching rejects an unknown rider state, and a stateless match stays advis
   // READY_FOR_SHADOW the flag is refused and the answer stays advice.
   const optedIn = harness({ TRANSIT_AUTOMATIC_MATCHING_ENABLED: "true" });
   const refused = await (await postJson(optedIn.handler, "/v1/matches", { ...request, stops: STOPS })).json();
-  assert.equal(refused.selectedVehicleId, "A");
+  assert.equal(refused.selectedVehicleId, undefined);
+  assert.equal(refused.shadowSelection.wouldSelectVehicleId, "A");
   assert.equal(refused.matchingMode, "shadow");
   assert.equal(refused.automaticSelection, "withheld");
 
@@ -469,8 +471,38 @@ test("matching rejects an unknown rider state, and a stateless match stays advis
   const ready = harness({ TRANSIT_AUTOMATIC_MATCHING_ENABLED: "true" }, { demonstratedReadiness: "READY_FOR_BOUNDED_AUTOMATION" });
   const permitted = await (await postJson(ready.handler, "/v1/matches", { ...request, stops: STOPS })).json();
   assert.equal(permitted.selectedVehicleId, "A");
+  assert.equal(permitted.shadowSelection, undefined);
   assert.equal(permitted.matchingMode, "automatic");
   assert.equal(permitted.automaticSelection, "permitted");
+});
+
+test("a stateless match carries no session memory: passage and declaredAt from a caller are ignored, never a 500", async () => {
+  const { handler } = harness();
+  const request = {
+    routeId: ROUTE,
+    boardingStopSequence: 2,
+    now: "2026-09-12T00:00:10.000Z",
+    stops: STOPS,
+    candidates: [
+      { vehicleId: "A", routeId: ROUTE, observedAt: "2026-09-12T00:00:05.000Z", timestampSource: "provider", stopSequence: 1 },
+    ],
+  };
+  const baseline = await (await postJson(handler, "/v1/matches", request)).json();
+  // A malformed memory used to reach the matcher and crash it; a well-formed
+  // one would have let a caller steer a stateless answer.
+  for (const extra of [
+    { passage: { offsets: { A: null } } },
+    { passage: { offsets: {}, withheld: { reason: "caller_supplied", at: "2026-09-12T00:00:00.000Z" } } },
+    { declaredAt: "not a time" },
+  ]) {
+    const response = await postJson(handler, "/v1/matches", { ...request, ...extra });
+    assert.equal(response.status, 200, JSON.stringify(extra));
+    const body = await response.json();
+    assert.equal(body.status, baseline.status, JSON.stringify(extra));
+    assert.deepEqual(body.shadowSelection, baseline.shadowSelection, JSON.stringify(extra));
+  }
+  const badDirection = await postJson(handler, "/v1/matches", { ...request, directionCode: 7 });
+  assert.equal(badDirection.status, 400);
 });
 
 test("bodies must be JSON, bounded, and well formed", async () => {
@@ -560,6 +592,19 @@ test("a serverless deployment carrying only the retired name fails closed end to
   assert.equal(body.error, "BLOCKED_BY_CREDENTIALS");
   assert.match(body.message, /TAGO_SERVICE_KEY/);
   assert.ok(!JSON.stringify(body).includes("legacy-name-only"));
+});
+
+test("the wired session coordinator runs exactly the matching mode the configuration granted", async () => {
+  // The real composition: an operator's opt-in at READY_FOR_SHADOW is refused,
+  // and the coordinator that decides journey sessions must be told the refusal,
+  // not the request. /health reports what the coordinator actually runs.
+  const { createTransitApi } = await import("../src/apiRuntime.ts");
+  for (const env of [{}, { TRANSIT_AUTOMATIC_MATCHING_ENABLED: "true" }, { VERCEL: "1", TRANSIT_AUTOMATIC_MATCHING_ENABLED: "true" }]) {
+    const api = createTransitApi({ TAGO_SERVICE_KEY: "synthetic-key", ...env });
+    const health = await (await api.handler(new Request("http://api.test/health"))).json();
+    assert.equal(health.matching.automaticMatchingEnabled, false, JSON.stringify(env));
+    assert.equal(health.matching.sessionMatchingMode, "shadow", JSON.stringify(env));
+  }
 });
 
 test("the canonical name reaches the real provider through the wiring", async () => {

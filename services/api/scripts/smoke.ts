@@ -193,6 +193,11 @@ function describeMatchingPosture(matching: Record<string, unknown> | undefined):
   if (matching.automaticMatchingEnabled === true && !automaticPermitted) {
     return fail(`automatic matching is on while demonstrated readiness is ${demonstrated}`);
   }
+  // What the session coordinator actually runs. A deployment from before this
+  // field reports none, which says nothing either way.
+  if (matching.sessionMatchingMode === "automatic" && !automaticPermitted) {
+    return fail(`journey sessions match automatically while demonstrated readiness is ${demonstrated}`);
+  }
   if (matching.matcherPolicy === undefined) {
     return { outcome: "WARN", detail: "deployment predates the directed matcher: /health reports no matcherPolicy" };
   }

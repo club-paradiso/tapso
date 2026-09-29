@@ -108,7 +108,11 @@ export interface JourneySessionView {
   progress?: JourneyProgressView;
   candidates?: RankedCandidate[];
   explanation: string;
-  /** `shadow` until the field-validation gate closes and an operator opts in. */
+  /**
+   * `shadow` until release gate `matcher-passive-safety-v4` demonstrates
+   * `READY_FOR_BOUNDED_AUTOMATION` and an operator sets
+   * `TRANSIT_AUTOMATIC_MATCHING_ENABLED=true`.
+   */
   matchingMode: "shadow" | "automatic";
   /** Present in shadow mode whenever a ranking was computed but not acted on. */
   shadowSelection?: ShadowSelectionView;
