@@ -19,7 +19,7 @@
  */
 
 import type { PassageMemory, StopOnRoute, VehicleObservation } from "./domain.ts";
-import type { JourneyProgressView } from "./journeySession.ts";
+import type { BoardingWatch, JourneyProgressView } from "./journeySession.ts";
 
 /** Bumped when the persisted shape changes in a way an old row cannot satisfy. */
 export const JOURNEY_SESSION_SCHEMA_VERSION = 1;
@@ -59,6 +59,8 @@ export interface StoredJourneySession {
   consecutiveProviderFailures: number;
   /** Matcher memory of passages past the boarding stop. Absent on older rows: an empty memory. */
   passage?: PassageMemory;
+  /** After an automatic selection for a waiting rider (finding F20). See `BoardingWatch`. */
+  boardingWatch?: BoardingWatch;
 }
 
 /**

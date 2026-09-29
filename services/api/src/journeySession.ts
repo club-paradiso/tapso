@@ -1,7 +1,7 @@
 import { randomUUID } from "node:crypto";
-import type { PassageMemory, RankedCandidate, RiderState, RouteRequest, StopOnRoute, VehicleObservation } from "./domain.ts";
+import type { MatchResult, PassageMemory, RankedCandidate, RiderState, RouteRequest, StopOnRoute, VehicleObservation } from "./domain.ts";
 import { distanceMeters } from "./geo.ts";
-import { matchVehicleWithSourceFreshness } from "./matching.ts";
+import { DIRECTED_MATCHER_POLICY_V1, matchVehicleWithSourceFreshness } from "./matching.ts";
 import {
   appendCadenceObservation,
   classifyTagoCadenceFreshness,
@@ -31,6 +31,23 @@ const DEFAULT_NEAR_STOP_RADIUS_METERS = 120;
  * dressed up as a healthy session. Persistent failure is never success.
  */
 const DEFAULT_MAX_CONSECUTIVE_PROVIDER_FAILURES = 3;
+
+/**
+ * What shows that a bus other than the selected one reached the boarding stop:
+ * it was seen at the stop, seen crossing it, or seen for the first time already
+ * past it when it could have been at it since the rider began waiting. These
+ * are the matcher's session-memory reasons that a sighting raises. What memory
+ * merely allows (a bus out of sight that could by now have reached the stop)
+ * withholds a selection but never withdraws one: every short dropout of the
+ * bus behind would otherwise undo it (finding F20).
+ */
+const ANOTHER_BUS_REACHED_THE_STOP: ReadonlySet<string> = new Set([
+  "boarding_stop_reached_during_session",
+  "vehicle_first_seen_past_boarding_stop",
+]);
+
+/** The standing reason a withdrawn selection leaves in the session's memory. */
+const SELECTION_WITHDRAWN = "another_vehicle_reached_boarding_stop_first";
 
 type MatchConfidence = "high" | "medium" | "low" | "unknown";
 
@@ -168,6 +185,22 @@ type SessionInput = {
  */
 type LoadedSession = { record: SessionRecord; version: number };
 
+/**
+ * An automatic selection for a waiting rider predicts the bus they will board;
+ * the margin it needs is counted in stops, and a faster bus behind can still
+ * reach the stop first. Until the selected bus is seen at the stop, the session
+ * keeps two passage memories from the moment of selection: one of every other
+ * bus of the route, one of the selected bus alone. Kept apart, a sighting at
+ * the stop is known to be the selected bus's arrival or another bus's
+ * (finding F20).
+ */
+export interface BoardingWatch {
+  others: PassageMemory;
+  selected: PassageMemory;
+  /** When the selected bus was seen at or past the stop. Nothing is watched from then on. */
+  endedAt?: string;
+}
+
 type SessionRecord = SessionInput & {
   id: string;
   stops: StopOnRoute[];
@@ -186,6 +219,8 @@ type SessionRecord = SessionInput & {
   consecutiveProviderFailures: number;
   /** What the matcher has seen pass the boarding stop during this session. */
   passage?: PassageMemory;
+  /** Present from an automatic selection for a waiting rider on. */
+  boardingWatch?: BoardingWatch;
 };
 
 export class JourneySessionCoordinator {
@@ -305,6 +340,8 @@ export class JourneySessionCoordinator {
 
     record.selectedVehicleId = vehicleId;
     record.selectionMode = "explicit";
+    // The rider says which bus they are on: nothing is left to watch for.
+    delete record.boardingWatch;
     // Confirming a vehicle says who to follow. It says nothing about whether
     // the provider is still reporting that vehicle usefully, so the cadence
     // gate below runs unchanged and an unconfirmed-by-evidence ride degrades.
@@ -386,6 +423,19 @@ export class JourneySessionCoordinator {
     this.recordCadenceSnapshot(record, vehicles, now);
     const sourceFreshness = this.sourceFreshness(record, vehicles, now);
 
+    // Until the automatically selected bus is seen at the stop, another bus
+    // seen reaching it first may be the one the rider boarded: the selection
+    // is withdrawn, and no bus is selected automatically again (finding F20).
+    // The watch starts from the matcher's memory as the selection left it,
+    // which is also all a session stored before the watch existed has.
+    if (record.selectedVehicleId !== undefined && record.selectionMode === "automatic"
+      && (record.riderState ?? "waiting_at_stop") === "waiting_at_stop") {
+      const watch = record.boardingWatch ??= startBoardingWatch(record.passage, record.selectedVehicleId);
+      if (watch.endedAt === undefined && this.anotherBusReachedTheStopFirst(record, vehicles, now, sourceFreshness)) {
+        this.withdrawSelection(record, now);
+      }
+    }
+
     if (!record.selectedVehicleId) {
       const result = matchVehicleWithSourceFreshness({
         routeId: record.routeId,
@@ -411,6 +461,19 @@ export class JourneySessionCoordinator {
       // bus at the stop, which the matcher never selects on its own but which
       // is exactly the one a rider at the stop is most likely stepping onto.
       const plausible = confirmationCandidates(result.ranked, record.riderState ?? "waiting_at_stop");
+
+      // Withdrawn now or earlier: until the rider says which bus they are on,
+      // that is the question, whatever else the snapshot shows.
+      if (record.passage?.withheld?.reason === SELECTION_WITHDRAWN) {
+        return this.view(record, {
+          state: "confirmation_required",
+          candidates: withdrawalCandidates(result.ranked),
+          explanation: "Another bus of this route was seen reaching the boarding stop before the automatically "
+            + "selected one, so the rider may be aboard it. The selection is withdrawn and no bus will be selected "
+            + "automatically again in this session; confirm the bus you are on.",
+          sourceFreshness,
+        });
+      }
 
       // Shadow mode: the ranking is computed and published, and then not acted
       // on. `selectedVehicleId` stays unset until a rider confirms, whatever
@@ -457,6 +520,70 @@ export class JourneySessionCoordinator {
     const observation = vehicles.find((candidate) => candidate.vehicleId === record.selectedVehicleId);
     if (!observation) return this.handleMissingObservation(record, now);
     return this.evaluateSelectedObservation(record, observation, now, sourceFreshness);
+  }
+
+  /**
+   * Fold this snapshot into the boarding watch. True when a bus other than the
+   * selected one was seen reaching the boarding stop before the selected bus
+   * was, or in the same poll: either may then be the bus the rider boarded.
+   * The selected bus seen at or past the stop first ends the watch.
+   */
+  private anotherBusReachedTheStopFirst(
+    record: SessionRecord,
+    vehicles: VehicleObservation[],
+    now: Date,
+    sourceFreshness: ReadonlyMap<string, SourceFreshnessEvidence>,
+  ): boolean {
+    const watch = record.boardingWatch!;
+    const selectedId = record.selectedVehicleId!;
+    const recentlySeen = recentlySeenVehicles(record.cadenceHistory, vehicles, now);
+    // The matcher's own session memory rules, run on each half of the route's
+    // buses apart: which half raised a reason says whose sighting it was.
+    const look = (selected: boolean, passage: PassageMemory): MatchResult => matchVehicleWithSourceFreshness({
+      routeId: record.routeId,
+      boardingStopSequence: record.boardingStop.sequence,
+      directionCode: record.directionCode,
+      now: now.toISOString(),
+      candidates: vehicles.filter((vehicle) => (vehicle.vehicleId === selectedId) === selected),
+      riderState: "waiting_at_stop",
+      stops: record.stops,
+      recentlySeen: recentlySeen.filter((vehicle) => (vehicle.vehicleId === selectedId) === selected),
+      passage,
+      declaredAt: new Date(record.createdAtMs).toISOString(),
+    }, sourceFreshness);
+    const others = look(false, watch.others);
+    const selected = look(true, watch.selected);
+    if (ANOTHER_BUS_REACHED_THE_STOP.has(others.passage?.withheld?.reason ?? "")) return true;
+    record.boardingWatch = {
+      // Each look reports only what this poll showed: the sightings carry
+      // over, a reason does not.
+      others: withoutWithheld(others.passage ?? watch.others),
+      selected: withoutWithheld(selected.passage ?? watch.selected),
+      ...(selected.passage?.withheld?.reason === "boarding_stop_reached_during_session" ? { endedAt: now.toISOString() } : {}),
+    };
+    return false;
+  }
+
+  /**
+   * The rider may be aboard another bus. The selection and the progress it
+   * produced are dropped, and the session's memory now holds both halves of
+   * the watch with a standing reason to withhold, so the matcher never selects
+   * automatically again in this session. The rider can still confirm a bus.
+   */
+  private withdrawSelection(record: SessionRecord, now: Date): void {
+    const watch = record.boardingWatch!;
+    const unknownProgress = { ...watch.others.unknownProgress, ...watch.selected.unknownProgress };
+    record.passage = {
+      offsets: { ...watch.others.offsets, ...watch.selected.offsets },
+      initial: record.passage?.initial ?? [],
+      ...(Object.keys(unknownProgress).length > 0 ? { unknownProgress } : {}),
+      withheld: { reason: SELECTION_WITHDRAWN, at: now.toISOString() },
+    };
+    delete record.selectedVehicleId;
+    delete record.selectionMode;
+    delete record.lastObservation;
+    delete record.lastProgress;
+    delete record.boardingWatch;
   }
 
   private evaluateSelectedObservation(
@@ -700,6 +827,7 @@ function toStored(record: SessionRecord): StoredJourneySession {
     cadenceHistory: [...record.cadenceHistory],
     consecutiveProviderFailures: record.consecutiveProviderFailures,
     ...(record.passage === undefined ? {} : { passage: record.passage }),
+    ...(record.boardingWatch === undefined ? {} : { boardingWatch: record.boardingWatch }),
   };
 }
 
@@ -735,6 +863,7 @@ function toRecord(session: StoredJourneySession): SessionRecord {
       : session.cadenceHistory.length > 0
         ? { passage: { offsets: {}, withheld: { reason: "passage_memory_unavailable", at: new Date(session.updatedAtMs).toISOString() } } }
         : {}),
+    ...(session.boardingWatch === undefined ? {} : { boardingWatch: session.boardingWatch }),
   };
 }
 
@@ -851,11 +980,51 @@ export function confirmationCandidates(ranked: RankedCandidate[], riderState: Ri
   const zones = CONFIRMATION_ZONES[riderState];
   return ranked
     .filter((candidate) => !candidate.rejectedReasons.includes("wrong_route") && candidate.zone !== undefined && zones.has(candidate.zone))
-    .sort((left, right) => {
-      const a = left.stopOffset === undefined ? Number.POSITIVE_INFINITY : Math.abs(left.stopOffset);
-      const b = right.stopOffset === undefined ? Number.POSITIVE_INFINITY : Math.abs(right.stopOffset);
-      return a - b || left.vehicleId.localeCompare(right.vehicleId);
-    });
+    .sort(nearestTheStopFirst);
+}
+
+/** A bus whose stop is unknown goes last; ties go to the vehicle id. */
+function nearestTheStopFirst(left: RankedCandidate, right: RankedCandidate): number {
+  const a = left.stopOffset === undefined ? Number.POSITIVE_INFINITY : Math.abs(left.stopOffset);
+  const b = right.stopOffset === undefined ? Number.POSITIVE_INFINITY : Math.abs(right.stopOffset);
+  return a - b || left.vehicleId.localeCompare(right.vehicleId);
+}
+
+/**
+ * After a withdrawal the rider may still be waiting, or may be riding the bus
+ * that reached the stop first: a bus that has just left the stop is offered
+ * too, which a waiting rider's confirmation list otherwise never does.
+ */
+function withdrawalCandidates(ranked: RankedCandidate[]): RankedCandidate[] {
+  const zones = CONFIRMATION_ZONES.waiting_at_stop;
+  return ranked
+    .filter((candidate) => !candidate.rejectedReasons.includes("wrong_route") && candidate.zone !== undefined
+      && (zones.has(candidate.zone) || (candidate.zone === "departed" && candidate.stopOffset !== undefined
+        && candidate.stopOffset <= DIRECTED_MATCHER_POLICY_V1.onBoardWindowStops)))
+    .sort(nearestTheStopFirst);
+}
+
+/**
+ * The watch starts from the matcher's memory at the moment of selection, split
+ * into the selected bus and every other bus. A standing reason is never carried
+ * into it: the matcher selected, so there was none.
+ */
+function startBoardingWatch(passage: PassageMemory | undefined, selectedVehicleId: string): BoardingWatch {
+  const half = (selected: boolean): PassageMemory => {
+    const keep = ([vehicleId]: [string, unknown]) => (vehicleId === selectedVehicleId) === selected;
+    const unknownProgress = Object.fromEntries(Object.entries(passage?.unknownProgress ?? {}).filter(keep));
+    return {
+      offsets: Object.fromEntries(Object.entries(passage?.offsets ?? {}).filter(keep)),
+      initial: passage?.initial ?? [],
+      ...(Object.keys(unknownProgress).length > 0 ? { unknownProgress } : {}),
+    };
+  };
+  return { others: half(false), selected: half(true) };
+}
+
+function withoutWithheld(passage: PassageMemory): PassageMemory {
+  const { withheld: _withheld, ...rest } = passage;
+  return rest;
 }
 
 function progressPhase(delta: number): JourneyProgressPhase {
