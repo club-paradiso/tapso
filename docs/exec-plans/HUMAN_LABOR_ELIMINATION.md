@@ -95,6 +95,25 @@ fixed with a test and, where it guards the gate, a negative control:
 | R15 | Missing shadow criteria were labelled as verified evidence classes | **Fixed** |
 | R16 | The vault would upload raw vehicle numbers to a release someone had published | **Fixed**: refuses unless it is a draft |
 
+Found by the adversarial review of the F15–F19 fix and by a session-level
+differential against the matcher before it (f3d693a: 3 000 synthetic sessions,
+355 668 decisions, 40 % loops, 30 % on board, feed holes up to 400 s, looking
+for any decision in which the new matcher selects and the old one did not),
+each fixed with a test that fails on the commit before the fix and a negative
+control:
+
+| Id | Finding | Status |
+|---|---|---|
+| R17 | The first F17 fix stored directed offsets (the shorter way round a loop); on a short loop a bus four stops past the stop read as four before it, was excluded from the on-board window and the other bus was selected; a crossing longer than half the lap was missed | **Fixed** (`274567d`): plain offsets, compared round the loop by distance to the stop; properties P12-loops, widened P3-crossing |
+| R18 | That rework read the on-board exclusion ("reached the stop after the rider boarded") from the last sighting only: one decision later the bus was forgotten and, alone in the window, selected (found by the differential) | **Fixed** (`660069a`): every such sighting is recorded (`reachedAfterBoarding`); property P12-reached-after |
+| R19 | An excluded bus competed for the on-board window again once out of sight (over-conservative) | **Fixed** (`99605a0`): it does not compete, and still blocks by where it may be |
+| R20 | A bus listed twice in one snapshot was remembered at whichever row came last, so a later release depended on row order | **Fixed** (`8ed1f7b`): remembered as of unknown progress; property P13-memory-order |
+| R21 | A bus of unknown progress was treated as placed while the evidence window held a known row of that same sighting | **Fixed** (`8ed1f7b`): such a row is judged unplaced |
+| R22 | A sighting or a declaration dated after now read as "just now" (a backward clock step) | **Fixed** (`8ed1f7b`): more than 10 s after now, or unreadable, is an unbounded time since |
+
+With these, the differential finds no decision in which the new matcher
+selects and the old one did not, and no first commit that differs.
+
 ## 4. The matcher contract (`directed-route-progress-v1`)
 
 Before evidence establishes that the rider is aboard, no automatically selected
