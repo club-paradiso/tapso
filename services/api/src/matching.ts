@@ -74,7 +74,10 @@
  *   Round a loop, a bus that came back to the stop, or had time to, is never
  *   selected and still competes, and a loop too short to tell the window from
  *   the approach selects nothing on board (R23). A bus placed twice in one
- *   snapshot is never excluded by either place (R27).
+ *   snapshot is never excluded by either place (R27), and is not forgotten
+ *   either: of unknown progress, it withholds once out of sight, and a bus
+ *   seen at no trustworthy place and then beyond the on-board window may be
+ *   the rider's bus leaving it (R30).
  *
  * There is no "best available guess". A numerical score never overrides a
  * violated rule: rules are applied first, and the score only orders what the
@@ -273,7 +276,7 @@ function normalizedName(name: string): string {
 
 /* ------------------------------------------------------------ positions */
 
-interface PositionFacts {
+export interface PositionFacts {
   zone: RouteProgressZone;
   offset?: number;
   /** Stops still to travel before reaching the boarding stop, when that is finite. */
@@ -555,7 +558,9 @@ function decide(
  * the rider's bus leaving the window, so selection is withheld for good. Round
  * a loop, a bus seen clear of the stop and later back at it or closer past it,
  * or seen again after time enough to go round, may have reached the stop after
- * they boarded: never selected, it still competes (finding R23).
+ * they boarded: never selected, it still competes (finding R23). A bus the
+ * feed placed at two places, or at none, is never excluded by that sighting
+ * and never forgotten for it (findings R27, R30).
  */
 function rememberPassage(
   request: MatchRequest,
@@ -688,15 +693,25 @@ function rememberPassage(
       const left = loop
         ? lastSeen !== undefined && nearWindow(around(lastSeen)) && !nearWindow(row.facts)
         : seen !== undefined && seen.max >= -1 && seen.max <= window && offset > window;
-      if (left) withhold("vehicle_left_on_board_window_during_session");
+      // Never placed before in this session, only seen at no place or at
+      // two: it may have been in the window all along, so now beyond it, it
+      // may be the rider's bus leaving it (finding R30).
+      const neverPlaced = seen === undefined && unknownProgress.has(vehicleId);
+      if (left || (neverPlaced && (loop ? !nearWindow(row.facts) : offset > window))) {
+        withhold("vehicle_left_on_board_window_during_session");
+      }
     }
     const range = offsets.get(vehicleId);
     const placed = positionsNow.get(vehicleId)!;
-    // On board, memory is what later exclusions are read from, so a sighting
-    // at two places leaves it as it was (finding R27). Waiting, every place
-    // counts: there memory only ever makes the matcher more careful.
+    // On board, memory is also what later exclusions are read from, and a
+    // sighting at two places, or also under another route, has no place a bus
+    // can be excluded by (finding R27): memory is left as it was. It is still
+    // not forgotten (finding R30): marked as of unknown progress, it withholds
+    // once out of sight, and next seen beyond the window it may be the rider's
+    // bus leaving it. Waiting, every place counts: there memory only ever
+    // makes the matcher more careful.
     if (riderState === "on_board" && reportedTwice.has(vehicleId)) {
-      if (new Set(placed).size > 1) sawUnknown.add(vehicleId);
+      sawUnknown.add(vehicleId);
       continue;
     }
     offsets.set(vehicleId, {

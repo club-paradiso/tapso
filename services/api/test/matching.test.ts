@@ -1130,12 +1130,70 @@ test("on board, a bus the snapshot places twice is never excluded by one of the 
     const first = matchVehicle(onBoard([bus("rider", BOARDING + 2), ...rows]));
     assert.equal(first.passage?.reachedAfterBoarding, undefined, label);
     assert.equal(first.passage?.offsets.twice, undefined, `${label}: memory keeps no place for it`);
+    assert.notEqual(first.passage?.unknownProgress?.twice, undefined, `${label}: it is of unknown progress (R30)`);
     const later = matchVehicle(onBoard([bus("rider", BOARDING + 3), bus("twice", BOARDING + 4)], { passage: first.passage }));
     assertWithheld(later, "multiple_vehicles_in_on_board_window", label);
   }
   // Seen before the stop at one place, it is excluded as before.
   const once = matchVehicle(onBoard([bus("rider", BOARDING + 2), bus("once", BOARDING - 3)]));
   assertSelected(matchVehicle(onBoard([bus("rider", BOARDING + 3), bus("once", BOARDING + 4)], { passage: once.passage })), "rider", "control");
+});
+
+test("on board, the rider's bus listed at two places, or also at none, still withholds when it leaves the window (R30)", () => {
+  // The rider rides "rider", listed one and two stops past the stop at once
+  // (or one past and once with no stop); "behind" dwells a stop short. A
+  // minute later "rider" is five past, beyond the window, and "behind" is in
+  // it. Forgetting the garbled sighting would select "behind".
+  const minuteLater = new Date(Date.parse(now) + 60_000).toISOString();
+  const firsts: Array<[string, VehicleObservation[]]> = [
+    ["two places", [bus("rider", BOARDING + 1), bus("rider", BOARDING + 2)]],
+    ["a place and none", [bus("rider", BOARDING + 1), bus("rider", undefined)]],
+    ["listed once (control)", [bus("rider", BOARDING + 1)]],
+  ];
+  for (const [label, rows] of firsts) {
+    const first = matchVehicle(onBoard([...rows, bus("behind", BOARDING - 1)]));
+    assert.notEqual(first.status, "matched", label);
+    const later = matchVehicle(onBoard(
+      [bus("rider", BOARDING + 5, { observedAt: minuteLater }), bus("behind", BOARDING + 1, { observedAt: minuteLater })],
+      { now: minuteLater, passage: first.passage },
+    ));
+    assertWithheld(later, "vehicle_left_on_board_window_during_session", label);
+    assert.equal(later.passage?.withheld?.reason, "vehicle_left_on_board_window_during_session", label);
+  }
+});
+
+test("on board, a bus seen only at no place and then beyond the window may be the rider's bus leaving it (R30)", () => {
+  const minuteLater = new Date(Date.parse(now) + 60_000).toISOString();
+  const first = matchVehicle(onBoard([bus("rider", undefined), bus("behind", BOARDING - 1)]));
+  const later = matchVehicle(onBoard(
+    [bus("rider", BOARDING + 5, { observedAt: minuteLater }), bus("behind", BOARDING + 1, { observedAt: minuteLater })],
+    { now: minuteLater, passage: first.passage },
+  ));
+  assertWithheld(later, "vehicle_left_on_board_window_during_session");
+  // Seen at a place in between, the ordinary rule decides: placed beyond the
+  // window from the start, it never was in it.
+  const placedFar = matchVehicle(onBoard([bus("far", BOARDING + 7), bus("rider", BOARDING + 1)]));
+  assertSelected(matchVehicle(onBoard(
+    [bus("far", BOARDING + 8, { observedAt: minuteLater }), bus("rider", BOARDING + 2, { observedAt: minuteLater })],
+    { now: minuteLater, passage: placedFar.passage },
+  )), "rider", "control");
+});
+
+test("on board, a bus in the window listed at two places or under another route keeps competing once out of sight (R30)", () => {
+  // "twice" is in the on-board window, and also listed elsewhere: at a second
+  // stop, or under another route. Then it leaves the feed for longer than the
+  // evidence window. It may be the rider's bus: "rider" is never the only one.
+  const later = new Date(Date.parse(now) + 100_000).toISOString();
+  const twins: Array<[string, VehicleObservation[]]> = [
+    ["two stops", [bus("twice", BOARDING + 3), bus("twice", BOARDING + 7)]],
+    ["another route", [bus("twice", BOARDING + 3), bus("twice", BOARDING + 3, { routeId: "route-other" })]],
+  ];
+  for (const [label, rows] of twins) {
+    const first = matchVehicle(onBoard([bus("rider", BOARDING + 2), ...rows]));
+    assert.notEqual(first.passage?.unknownProgress?.twice, undefined, `${label}: marked as of unknown progress`);
+    const gone = matchVehicle(onBoard([bus("rider", BOARDING + 3, { observedAt: later })], { now: later, passage: first.passage }));
+    assertWithheld(gone, "vehicle_of_unknown_progress_out_of_sight", label);
+  }
 });
 
 test("a loop with a very long sequence span never throws, however long a bus has been out of sight (R25)", () => {
