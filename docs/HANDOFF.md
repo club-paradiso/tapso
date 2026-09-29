@@ -33,9 +33,11 @@ Status on 2026-09-29: release gate `matcher-passive-safety-v4` has demonstrated
 below `READY_FOR_BOUNDED_AUTOMATION`. The next level,
 `READY_FOR_CONFIRMATION_ASSISTED`, needs a clean, deterministic full-window
 replay of live evidence, clean counterfactuals on real bases, and a larger live
-sample (≥ 60 trajectories, ≥ 30 vehicles, ≥ 30 contested cases, ≥ 8 routes,
-≥ 3 windows, ≥ 2 time bands; Passive Shadow v3 alone has
-29 / 27 / 46 / 5 / 1 / 1). None of it needs a bus ride, a stop marker, a
+sample (≥ 60 trajectories, ≥ 30 vehicles, ≥ 30 contested trajectories, ≥ 8 routes,
+≥ 3 windows, ≥ 2 time bands; Passive Shadow v3 alone has 29 trajectories
+with cases by its own split (the gate's unit can only merge them), 27 vehicles,
+5 routes, 1 window and 1 time band, and its 46 contested cases come from at
+most 29 trajectories). None of it needs a bus ride, a stop marker, a
 capture export, a manual script run or a manual inspection:
 
 1. **Merge the pull request.** Scheduled workflows run only from the default
@@ -79,7 +81,7 @@ Owner actions, each a one-time authorisation and none of them a ride:
   session can copy the raw artifact and replay it offline without Actions.
   Either way, before 2026-10-09T06:28:03Z.
 - Optional: add a `TAGO_SERVICE_KEY` repository secret, so the scheduled windows
-  read TAGO directly at session cadence. Gate criterion BA-2 requires that
+  read TAGO directly at session cadence. Gate criteria BA-1 and BA-2 require that
   evidence for `READY_FOR_BOUNDED_AUTOMATION`.
 - Optional: grant the Claude GitHub App `actions: write`, so an agent can
   dispatch and re-run workflows once Actions can start jobs.

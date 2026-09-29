@@ -196,7 +196,8 @@ result disagree.
   a 5 s uncached session.
 - Direct-TAGO collection needs a `TAGO_SERVICE_KEY` repository secret. With it
   the scheduled job switches to `tago-direct` automatically (30 min, ≤ 1 080
-  calls). Gate BA-2 requires such evidence.
+  calls). Gates BA-1 and BA-2 require such evidence: the bounded-automation
+  sample is counted at session cadence only.
 - The daily window reads production through the public API, which reaches
   TAGO at most once per 20 s per route (~900 upstream calls per window). No
   daily quota is documented (`MISSING`); one window a day matches the load of
@@ -225,7 +226,7 @@ automated windows accumulate; provider lag, rider data entry and hardware UX are
 | Level | Status | Why |
 |---|---|---|
 | `READY_FOR_SHADOW` | **awarded** | SH-1…SH-6 pass (see gate result) |
-| `READY_FOR_CONFIRMATION_ASSISTED` | not awarded | CA-1…CA-5 `MISSING` (full-window raw replay and real-base counterfactuals have not run); CA-6/CA-7 need ≥ 60 trajectories, ≥ 30 vehicles, ≥ 30 contested cases, ≥ 8 routes, ≥ 3 windows, ≥ 2 time bands — v3 alone has 29 / 27 / 46 / 5 / 1 / 1 |
+| `READY_FOR_CONFIRMATION_ASSISTED` | not awarded | CA-1…CA-5 `MISSING` (full-window raw replay and real-base counterfactuals have not run); CA-6/CA-7 need ≥ 60 trajectories, ≥ 30 vehicles, ≥ 30 contested trajectories, ≥ 8 routes, ≥ 3 windows, ≥ 2 time bands — v3 alone has 29 trajectories with cases by its own split (the gate's unit can only merge them), 27 vehicles, 5 routes, 1 window and 1 time band (its 46 contested cases come from at most 29 trajectories; the exact counts need its raw) |
 | `READY_FOR_BOUNDED_AUTOMATION` | not awarded | also needs 300 trajectories, direct-TAGO evidence, and three client/device mitigations that do not exist yet |
 | `READY_FOR_AUTOMATIC_MATCHING` | not awarded, not a target | needs rider behaviour measured by humans |
 
@@ -246,6 +247,30 @@ not the readiness the gate awards. The live criteria read
 `artifacts/matcher-directed-v1/live-replay-evidence.json` and
 `counterfactual-live-evidence.json`; neither is committed yet, so those criteria
 are `MISSING`.
+
+What the gate refuses to count, each pinned by a test and a negative control:
+
+- live or counterfactual evidence produced by other matcher and evaluation
+  sources than the current ones (`sourceDigest.ts`): it is stale, so `MISSING`;
+- a live replay that left out any retained artifact it could not fetch or
+  verify (CA-1);
+- a trajectory counted twice: the unit is one bus on one route direction in
+  one window with an evaluated case, so a feed gap never splits a trip in two,
+  and a window with no case adds no window, time band or provider path;
+- contested *cases* in place of contested *trajectories* (CA-6, BA-1);
+- for bounded automation, any sample not collected at session cadence (BA-1
+  counts direct-TAGO windows only);
+- a window's wrong commits after its raw expires: they are carried forward
+  from the evidence recorded before, while its sample is not;
+- a negative-control report missing any of the pinned control ids (SH-4);
+- a human-only mitigation backed by tests not named for its criterion, or by a
+  human record without its procedure, subject, performer, date and result.
+
+CI cannot recompute the live inputs, because the raw collections are private.
+What ties the committed counts to their inputs is the matcher digest, each
+collection's raw tree hash and case-level decision digest, and the workflow's
+own two-process byte comparison; anyone with repository access can re-run
+`live-evidence.ts` on the same raw and compare.
 
 ## 13. Reproduce
 

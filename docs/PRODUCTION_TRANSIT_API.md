@@ -170,9 +170,16 @@ stay disabled unless that token is configured. They are documented in full in
   and `withheldReason: "matching_readiness_below_bounded_automation"`, and the
   production smoke test warns. It is `false` on every platform by default,
   including the local Node server. `matching.matcherPolicy` names the serving
-  policy (`directed-route-progress-v1`); `POST /v1/matches` answers carry
-  `policyVersion`, `riderState`, `abstentionReasons`, `matchingMode` and
-  `automaticSelection` (`permitted` | `withheld`).
+  policy (`directed-route-progress-v1`), and `matching.sessionMatchingMode`
+  reports what the journey-session coordinator actually runs (`shadow` unless
+  automatic selection was granted; the smoke test fails if it reads
+  `automatic` below `READY_FOR_BOUNDED_AUTOMATION`). `POST /v1/matches` answers
+  carry `policyVersion`, `riderState`, `abstentionReasons`, `matchingMode` and
+  `automaticSelection` (`permitted` | `withheld`). While selection is withheld
+  the answer has no `selectedVehicleId`: the matcher's pick is published as
+  `shadowSelection: {status, wouldSelectVehicleId, confidence}`, exactly as a
+  session's is, and logged as `vehicle_match_shadow`. The endpoint is
+  stateless: it accepts no session memory (`passage`, `declaredAt`).
 - **Identifiers are validated before the upstream call.** `cityCode` is
   `[0-9]{1,6}`, `routeId` is `[A-Za-z0-9_-]{1,64}`, `routeNo` is up to 16
   alphanumeric or Hangul characters. The former B551982 `stdgCd` and
@@ -418,7 +425,8 @@ unknown-path, and wrong-method requests are rejected. It also checks:
   value; the wording from before the readiness gate,
   `shadow_only_pending_field_validation`, is a warning.
 - **Matching posture.** From the `/health` `matching` block: a failure if the
-  block is missing, if automatic matching is on while the demonstrated readiness
+  block is missing, if automatic matching is on, or journey sessions report
+  `sessionMatchingMode: "automatic"`, while the demonstrated readiness
   it reports is below `READY_FOR_BOUNDED_AUTOMATION`, or if it names a serving
   policy other than `directed-route-progress-v1`; a warning if
   `TRANSIT_AUTOMATIC_MATCHING_ENABLED` is set and refused, or if it names no

@@ -22,7 +22,7 @@ Replaces item 8. Steps 1–7 need no bus ride; method and progress are in `exec-
 3. `DONE`: Property suite, negative controls and counterfactual library, run in CI (`VERIFIED_BY_TEST`; counterfactuals so far only on synthetic bases, `SIMULATED`).
 4. `DONE`: Release gate `matcher-passive-safety-v4` awards `READY_FOR_SHADOW`, and the configuration refuses automatic matching below `READY_FOR_BOUNDED_AUTOMATION`.
 5. `MISSING`: Full-window replay of the Passive Shadow v3 raw streams, and counterfactuals on real bases. `.github/workflows/matcher-evidence.yml` runs both on the merge commit; the raw artifact expires on 2026-10-09T06:28:03Z.
-6. `MISSING`: New passive windows. Once merged, the same workflow collects one bounded window a day, rotating route pools, towards the `READY_FOR_CONFIRMATION_ASSISTED` minimums (≥ 60 trajectories, ≥ 30 vehicles, ≥ 30 contested cases, ≥ 8 routes, ≥ 3 windows, ≥ 2 time bands).
+6. `MISSING`: New passive windows. Once merged, the same workflow collects one bounded window a day, rotating route pools, towards the `READY_FOR_CONFIRMATION_ASSISTED` minimums (≥ 60 trajectories, ≥ 30 vehicles, ≥ 30 contested trajectories, ≥ 8 routes, ≥ 3 windows, ≥ 2 time bands).
 7. `OPEN`: `READY_FOR_BOUNDED_AUTOMATION` needs ≥ 300 trajectories and the other automation minimums, direct-TAGO evidence (a `TAGO_SERVICE_KEY` repository secret), and three client and device mitigations that do not exist yet: a rider-visible undo of an automatic pick, destination alerts independent of provider lag, and a physical-device Live Activity check (a device check, not a ride).
 8. Not a product target: `READY_FOR_AUTOMATIC_MATCHING`, which needs rider behaviour measured by humans.
 

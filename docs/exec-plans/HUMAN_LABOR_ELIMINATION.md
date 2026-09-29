@@ -68,6 +68,28 @@ automatic path by a fail-closed product rule.
 | F13 | The cadence history accepted a receipt no newer than the latest it held: a late older receipt or a second row for one vehicle in one snapshot could manufacture a sample or a content change | `INFERRED` from code (audit), pinned by test | **Fixed**: receipts only move forward |
 | F14 | The blind-input guard checked only the envelope and snapshots; a per-vehicle or per-stop truth field would have reached the matcher | `INFERRED` from code (audit), pinned by test | **Fixed**: every vehicle row and route stop is checked against the observation fields the domain defines |
 
+Found by the adversarial review of the branch (2026-09-29, second pass), each
+fixed with a test and, where it guards the gate, a negative control:
+
+| Id | Finding | Status |
+|---|---|---|
+| R1 | The scheduled collect step prefixed `$(pwd)/` to the absolute path `collect.ts` prints, so every window would fail after collecting and never be evaluated or vaulted | **Fixed** |
+| R2 | An artifact upload drops an empty `streams/`, so a no-vehicle window would have made every later `gate-evidence` run refuse | **Fixed**: a missing `streams/` reads as empty; the window is named and left out |
+| R3 | The trajectory count included runs without cases and runs split by a feed gap (v3: 31, not 29) | **Fixed**: one bus on one route direction in one window, with a case |
+| R4 | A window with no case still counted as a window, a time band and a provider path; one empty direct-TAGO window satisfied BA-2 | **Fixed** |
+| R5 | Contested minimums counted correlated cases | **Fixed**: contested trajectories |
+| R6 | Bounded automation's sample could come from the cached public path | **Fixed**: BA-1 counts session-cadence windows only |
+| R7 | Evidence that expired or could not be fetched simply vanished, wrong commits included | **Fixed**: failures carried forward; omitted artifacts fail CA-1 |
+| R8 | Committed live evidence was not bound to the matcher that produced it | **Fixed**: source digest; stale evidence is `MISSING` |
+| R9 | Determinism compared aggregate counts in one process | **Fixed**: case-level digests, two processes, byte comparison |
+| R10 | SH-4 did not pin the controls; a deleted control kept it green | **Fixed**: 56 pinned ids |
+| R11 | Any passing test could stand for BA-3/BA-4, and any two-field JSON for BA-5 | **Fixed**: criterion-named tests; a human-record schema |
+| R12 | Skipped or todo property tests counted as covered | **Fixed** |
+| R13 | `POST /v1/matches` offered `selectedVehicleId` in shadow, and passed caller-supplied session memory to the matcher (a malformed one gave a 500) | **Fixed**: `shadowSelection`; stateless request only |
+| R14 | Nothing checked that the session coordinator got the granted, not the requested, flag | **Fixed**: `/health` reports `sessionMatchingMode`; test, smoke check, control |
+| R15 | Missing shadow criteria were labelled as verified evidence classes | **Fixed** |
+| R16 | The vault would upload raw vehicle numbers to a release someone had published | **Fixed**: refuses unless it is a draft |
+
 ## 4. The matcher contract (`directed-route-progress-v1`)
 
 Before evidence establishes that the rider is aboard, no automatically selected
