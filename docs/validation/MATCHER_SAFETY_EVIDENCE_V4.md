@@ -24,8 +24,8 @@ matcher result.
 | Margin | 12 position points among eligible buses in the ±4 window | three stops over every vehicle heading for the stop, wherever it is (F9) |
 | Vehicle missing from one poll | forgotten | remembered 90 s, competing from wherever it could have reached; a crossing it showed is not forgotten (F10); past 90 s still competing from session memory, its reach growing with the time since (F15) |
 | A bus reached the stop during the session | irrelevant | withholds for the rest of the session (F4), also when first seen already past it at any look (F12, F16), when lost while it could by now have reached it (F15), across a loop's seam (F17), and for a session stored without memory (F11) |
-| Rider already aboard | same rule as waiting | separate rule: +1…+4, only one vehicle; a bus missing from the first snapshot never selected, still competing (F16); round a loop, a bus that came back to the stop or had time to never selected, and a lap under ten stops selects nothing (R23) |
-| After an automatic selection | tracked to the end, whatever happens | until the selected bus is seen at the stop, another bus seen reaching it first withdraws the selection for good and the rider is asked (F20) |
+| Rider already aboard | same rule as waiting | separate rule: +1…+4, only one vehicle; a bus missing from the first snapshot never selected, still competing (F16); round a loop, a bus that came back to the stop or had time to never selected, and a lap under ten stops selects nothing (R23); a bus placed twice never excluded by it (R27) nor forgotten for it (R30) |
+| After an automatic selection | tracked to the end, whatever happens | until the selected bus is seen reaching the stop (a sighting, never a reason memory raises: R31), another bus seen reaching it first withdraws the selection for good and the rider is asked (F20), also across a concurrent write (R33) |
 | Missing topology / repeated stop name / two stops under one sequence | not checked | withholds (F18) |
 | Invariant | none | `assertDirectedInvariant` on every result |
 
@@ -70,12 +70,14 @@ wrong commit or any correct→wrong regression.
 | F19 | Review, probes; property P13-routes, seed 10018 | The invariant read another route's row with the selected id (HTTP 500, order-dependent) | Two-route id withholds; invariant reads the request's route |
 | F20 | Ground-truth fuzzing (`SIMULATED`): every wrong selection of a bus the feed had shown was an overtaking after the selection | A session kept tracking an automatically selected bus after another bus reached the stop first | The boarding watch: another bus seen at, crossing or first past the stop withdraws the selection for good; property P16 |
 
-Findings of the adversarial reviews of this work itself (R1–R29: evidence
+Findings of the adversarial reviews of this work itself (R1–R36: evidence
 workflow, gate integrity, and the F15–F20 fixes, among them R23 a bus coming
 back round a loop on board, R24 a lap between two sightings, R27 a bus placed
-twice excluded by one place, R28–R29 receipt and clock timing) are listed with
-their fixes in the ExecPlan §3. Each has a test that fails on the commit
-before its fix.
+twice excluded by one place, R28–R29 receipt and clock timing, R30 a bus
+placed twice forgotten on board, R31 the boarding watch ended by a reading
+that shows no arrival, R32 a self-check that killed every control) are listed
+with their fixes in the ExecPlan §3. Each behavioural fix has a test that
+fails on the commit before it.
 
 Every failing seed is replayed first on every run
 (`services/api/test/fixtures/matcher-property-regressions.json`).

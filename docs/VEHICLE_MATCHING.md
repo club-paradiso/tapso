@@ -94,7 +94,10 @@ S + 1, and a bus reporting S may already have left. So:
   reached the stop after the rider boarded: it is never selected and still
   competes (R23). A loop shorter than two on-board windows and the stop either
   side (a lap under ten stops) withholds on-board selection. A bus the
-  snapshot places twice is never excluded by one of its places (R27).
+  snapshot places twice is never excluded by one of its places (R27), and is
+  not forgotten either: on board it is of unknown progress, withholding once
+  out of sight, and a bus seen at no trustworthy place (none, or two) and
+  then beyond the window may be the rider's bus leaving it (R30).
 - **Time.** The session's own sightings are always earlier decisions' `now`;
   one dated after `now` means the clock stepped back, and nothing bounds the
   time since (R29). A mark of unknown progress is dated by the receipts of the
@@ -122,8 +125,16 @@ S + 1, and a bus reporting S may already have left. So:
   that just left the stop included, and nothing is selected automatically
   again. What memory merely allows (a bus out of sight that could by now have
   reached the stop) withholds a selection but never withdraws one: every
-  short dropout of the bus behind would otherwise undo it. A selection the
-  rider confirmed, or one made on board, is never watched.
+  short dropout of the bus behind would otherwise undo it. Only a sighting
+  ends the watch (R31): the selected bus at one place on this route, at the
+  stop or one past it; or past it when last seen before it, no faster than
+  the matcher's motion model allows since and, round a loop, not where a
+  reading up to two stops back would also put it. A reading one stop back, a
+  row listed twice or under another route, a remembered row and a bus merely
+  out of sight never end it. A withdrawal that loses a concurrent write is
+  written onto the winning row, unless that row saw the selected bus at the
+  stop earlier (R33). A selection the rider confirmed, or one made on board,
+  is never watched.
 
 There is no best-available guess, and no score overrides a rule: rules decide
 what may be selected, and the score only orders what they allow.
@@ -135,7 +146,7 @@ could be boarding or riding, nearest the stop first — including a bus at the
 stop, which the matcher never selects on its own but which is exactly the one a
 waiting rider is most likely stepping onto. A departed bus is not offered,
 except after a withdrawn selection (F20), when the rider may be on the bus that
-has just left the stop.
+has just left the stop, counted round a loop across its seam too (R34).
 
 ## Evidence and readiness
 

@@ -144,6 +144,22 @@ an on-board rider whose own bus is missing from the feed, which no matcher can
 defend against (the premise of F16), where the old matcher withheld only by
 misreading a bus past the stop through the seam as far before it.
 
+Found by the fifth adversarial review (F20's watch, the R23–R29 loop and
+clock fixes, and the evidence tooling: three lenses, each finding reproduced by
+a probe, every high one confirmed by a skeptic on the current tree), each fixed
+with a test that fails on the commit before the fix and a negative control,
+unless stated otherwise:
+
+| Id | Finding | Status |
+|---|---|---|
+| R30 | R27 left memory as it was for an on-board sighting at two places, and two cautious rules read that memory: the rider's bus listed at S+1 and S+2 then once past the window no longer withheld (the bus behind was selected), and a bus in the window also listed under another route was forgotten once out of sight. Older, found by the same lens: a bus seen only at no place and then beyond the window | **Fixed** (`5f9b9ea`): on board, such a bus is always of unknown progress, so out of sight it withholds; memory keeps no place of it (no exclusion, as R27 requires); a bus never placed at one place and then beyond the window withholds, as the rider's bus leaving it may |
+| R31 | F20's watch ended on the matcher's crossing reason for the selected bus, which is caution, not evidence: round a loop a reading one stop back, a row listed twice at the stop, and, by the order of two rows in one TAGO response, a remembered row all ended it, and a faster bus then reaching the stop first withdrew nothing | **Fixed** (`19a395e`): only a sighting ends the watch (one place on this route, at the stop or one past it; or past it after one before it, within the motion model and, round a loop, beyond what a reading two stops back would show); P16's notion of "shown" says the same |
+| R32 | The catalogue self-check added in `54a780e` fails on every mutant (the mutant replaces the text it looks for), so `run.ts` counted it as a kill: a control whose protection had lost its tests was reported KILLED, and SURVIVED could not be reported | **Fixed** (`7bc5528`): self-checks never count as killers, and the runner refuses a baseline without them by name; shown on a scratch copy where a comment-only control and a control with its only test deleted are SURVIVED again |
+| R33 | Of two concurrent refreshes, a withdrawal computed by the one that lost the compare-and-set was dropped, also when the winner had ended the watch on a later snapshot | **Fixed** (`19a395e`): written onto the winner's row, unless the winner saw the selected bus at the stop first or the rider confirmed |
+| R34 | After a withdrawal round a loop, the bus that just left the stop was not offered when it reported the first stop's sequence across the seam | **Fixed** (`19a395e`) |
+| R35 | Control F20-reselect named a protection its edit does not remove (the matcher re-derives a sighting's reason from the same snapshot, so nothing is reselected either way) | **Fixed** (`7bc5528`): it names what the standing reason gives (the rider keeps being asked) and must be killed by those tests |
+| R36 | The committed synthetic counterfactual summary predated R26's catalogue change, so CI's byte comparison would fail before the ground-truth and gate steps | **Fixed**: regenerated with the rest of the evidence |
+
 ## 4. The matcher contract (`directed-route-progress-v1`)
 
 Before evidence establishes that the rider is aboard, no automatically selected
