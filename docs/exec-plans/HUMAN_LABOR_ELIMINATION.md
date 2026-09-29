@@ -198,8 +198,8 @@ say so gets a confirmation prompt; the reverse would admit departed buses.
 | 0 | Audit and evidence inventory | Every evidence source classified; human-labor ledger | **done** (§10, §11; ledger statuses in the evidence package §15) |
 | 1 | F1, F3 fixed with invariant and negative controls | suite green; every mutation killed | **done** (F1–F14; negative-control catalogue in `scripts/negative-controls/mutations.ts`, all killed) |
 | 2 | Immutable replay of the evidence of record, old vs new | `migrate.ts` reproduces the record, 0 new wrong, all 268 accounted | instant level **done** (§6); full window **blocked** (§8), tooling verified on synthetic collections (deterministic across runs) |
-| 3 | Counterfactual suite over real trajectories | ≥ 30 families, metamorphic expectations | 32 families **done on synthetic bases** (`SIMULATED`, 0 wrong); real bases **blocked** (§8) |
-| 4 | Property suite | 15 invariants, ≥ 2 000 seeds each, failing seeds persisted | **done** (9 regression seeds; three found only by 20 000-seed runs) |
+| 3 | Counterfactual suite over real trajectories | ≥ 30 families, metamorphic expectations | 33 families **done on synthetic bases** (`SIMULATED`, 0 wrong, every family exercised); real bases **blocked** (§8) |
+| 4 | Property suite | 16 invariants, ≥ 2 000 seeds each, failing seeds persisted | **done** (29 property tests; 19 regression seeds, three found only by 20 000-seed runs); ground-truth sessions through the coordinator (`SIMULATED`, P16) |
 | 5 | Automated passive collection | scheduled, bounded, manifests, hashes | workflow written and linted; **runs after merge**; its `gate-evidence` job turns every retained raw collection into the gate's live inputs (`live-evidence.ts`, verified on a scratch stand-in collection, never committed) |
 | 6–9 | Substitution matrix, contract, gate v4, readiness | machine-checkable gate result | **done**: `READY_FOR_SHADOW`, tied to code by CI |
 | 10 | Infrastructure checks automated | scripted, fault-injected where possible | **done** where this session reaches: smoke contract tested end to end in CI, local posture smoke, scheduled production smoke after merge; restart/outage fault injection covered by deterministic tests. Railway and Vercel control planes: `MISSING` (no access) |
@@ -219,9 +219,14 @@ say so gets a confirmation prompt; the reverse would admit departed buses.
   its window needs the raw streams.
 - **Counterfactual suite over synthetic bases**
   (`artifacts/matcher-directed-v1/counterfactual-synthetic-summary.json`,
-  `SIMULATED`): 32 families, 32 455 evaluations, 0 wrong, 0 invariant
+  `SIMULATED`): 33 families, 34 200 evaluations, 0 wrong, 0 invariant
   violations, 0 expectation failures; the legacy matcher on the same bases
-  fails 31 of 32 families.
+  fails 32 of 33 families.
+- **Ground-truth journey sessions**
+  (`artifacts/matcher-directed-v1/ground-truth-sessions.json`, `SIMULATED`):
+  3 000 sessions through the coordinator in automatic mode; every overtaking
+  the feed showed (67) withdrawn by the poll that showed it; 38 of 917 right
+  selections withdrawn too. Numbers in the evidence package §5a.
 - **Test suite, property suite and negative controls**
   (`artifacts/matcher-directed-v1/test-suite.json`, `negative-controls.json`,
   `VERIFIED_BY_TEST`) and the **gate result**
@@ -230,14 +235,19 @@ say so gets a confirmation prompt; the reverse would admit departed buses.
 
 ## 6a. Progress, risks and exact next action (2026-09-29)
 
-- Done in this branch: everything in §5 marked done. Every finding in §3 has
-  a regression test and a negative control that turns the suite red if the fix
-  is removed.
+- Done in this branch: everything in §5 marked done. Every behavioural
+  finding in §3 has a regression test and a negative control that turns the
+  suite red if the fix is removed; R32, R35 and R36, about the evidence
+  tooling itself, are shown as their rows say.
 - Risks: coverage cost of the fail-closed rules on real routes is unmeasured
   until the full-window replay runs (routes whose stop lists repeat stop names
   withhold at those stops; a bus at the stop withholds the session); the first
   scheduled windows read production through the 20 s-cached public path unless
-  a `TAGO_SERVICE_KEY` secret is added; no TAGO quota is documented. The
+  a `TAGO_SERVICE_KEY` secret is added; no TAGO quota is documented. What
+  automatic mode would get wrong is known only from simulation: in the
+  ground-truth model 169 of 1 089 automatic selections pick the wrong bus,
+  157 of them because the rider's bus was not in the feed yet (`SIMULATED`,
+  evidence package §5a), which is why the rider confirms. The
   `gate-evidence` job reads the evidence of record from the replay run's
   90-day artifact: the private vault is a draft release, which its read-only
   token may not see, so within 90 days of the replay run the job needs either
@@ -272,6 +282,21 @@ say so gets a confirmation prompt; the reverse would admit departed buses.
   of three at the trajectory level (`MINIMUMS` in `matcherSafetyGate.ts`) and
   were not fitted to existing evidence: v3's 29 trajectories meet neither the
   confirmation-assisted (60) nor the automation (300) minimum.
+- **Withdraw an automatic selection on a sighting, never on a possibility
+  (F20).** Withdrawing on what memory merely allows (a bus out of sight that
+  could by now have reached the stop) would undo a selection at every short
+  dropout of the bus behind. Not withdrawing when another bus is seen reaching
+  the stop first leaves the rider tracked on a bus they are not on.
+- **End the boarding watch on a sighting, never on the matcher's caution
+  (R31).** The matcher's crossing reason is over-inclusive on purpose: it
+  withholds. Reused for a permissive decision it turned caution into false
+  evidence. The cost, accepted: a right selection is withdrawn when the
+  selected bus's arrival is shown only ambiguously.
+- **On board, a short loop selects nothing (R23), and a bus placed twice is of
+  unknown progress (R27, R30).** On a lap under ten stops, the stops just past
+  the boarding stop cannot be told from those just before it under every
+  reading of `nodeord`. A bus at two places has no place that could exclude
+  it, and forgetting it would drop the rules that only add caution.
 
 ## 8. Blocker and exact next action
 

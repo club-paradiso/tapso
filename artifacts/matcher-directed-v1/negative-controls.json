@@ -2,16 +2,16 @@
   "schemaVersion": 1,
   "kind": "tapso-negative-controls",
   "evidenceClass": "VERIFIED_BY_TEST",
-  "createdAt": "2026-09-29T13:30:42.652Z",
+  "createdAt": "2026-09-29T19:54:07.916Z",
   "command": "node --experimental-strip-types scripts/negative-controls/run.ts --typecheck",
   "node": "v22.22.2",
   "platform": "linux-x64",
   "matcherPolicy": "directed-route-progress-v1",
   "source": {
-    "gitHead": "c039653cbc0cee9f3f08dc4700aa22a5bd6a19a6",
+    "gitHead": "aac505fed9672f88d5d126bc676ec188d6e1e19a",
     "servicesApiUncommittedChanges": false,
-    "servicesApiSrcSha256": "99b626808673bcbdbbd583f2d69d7f5ebfe2ff288eb6784e323be856d7ba362c",
-    "servicesApiTestSha256": "10459fc3978e2bf25cb2584fb41a45ef1deb41d4d6f0d50a7653170e3157382d",
+    "servicesApiSrcSha256": "aece2afcc4edf4dd76ba79f2df6cfe041a6a802251e385e67e4f4d7e03cf5158",
+    "servicesApiTestSha256": "cd213ca3908f55ac600a49ebfd6a29f56242155d33a4e8d23d1fbb2a7ccc623a",
     "realTreeUnchanged": true,
     "repositoryStatusUnchanged": true,
     "changedDuringRun": [],
@@ -25,17 +25,17 @@
   },
   "baseline": {
     "testFiles": 35,
-    "tests": 593,
-    "passed": 593,
+    "tests": 658,
+    "passed": 658,
     "failed": 0,
     "skipped": 0,
     "green": true,
     "failingTests": [],
     "typeErrors": 0,
-    "durationMs": 43865
+    "durationMs": 59814
   },
   "killConfirmation": {
-    "killingTestFilesRerunOnSnapshot": 10,
+    "killingTestFilesRerunOnSnapshot": 12,
     "flakyTestsExcluded": []
   },
   "mutations": [
@@ -51,6 +51,95 @@
           "file": "services/api/src/matching.ts",
           "find": "const selectable = offset <= -1 && offset >= -window;",
           "replace": "const selectable = Math.abs(offset) >= 1 && Math.abs(offset) <= window;"
+        }
+      ],
+      "testFiles": [
+        "services/api/test/matching.test.ts",
+        "services/api/test/matcherProperties.test.ts",
+        "services/api/test/journeySession.test.ts",
+        "services/api/test/matchReplay.test.ts",
+        "services/api/test/passiveShadow.test.ts",
+        "services/api/test/crossLanguageAuthority.test.ts"
+      ],
+      "missingTestFiles": [],
+      "outcome": "KILLED",
+      "reason": "33 test(s) newly fail in the listed test files",
+      "failingTestCount": 33,
+      "failingTestCountIncludingBaseline": 33,
+      "killedBy": [
+        {
+          "file": "services/api/test/crossLanguageAuthority.test.ts",
+          "test": "specification W6: F1: a departed bus is never selected, even when it is the only fresh one"
+        },
+        {
+          "file": "services/api/test/crossLanguageAuthority.test.ts",
+          "test": "specification W7: the departed bus neither wins nor blocks; the approaching one is selected"
+        },
+        {
+          "file": "services/api/test/journeySession.test.ts",
+          "test": "a session whose first look comes late withholds when a bus past the stop could have been at it"
+        },
+        {
+          "file": "services/api/test/journeySession.test.ts",
+          "test": "a waiting rider's session never automatically selects a bus at or past the boarding stop, even the only fresh one"
+        },
+        {
+          "file": "services/api/test/journeySession.test.ts",
+          "test": "after a withdrawal the rider may be on the bus that just left the stop, so it is offered"
+        },
+        {
+          "file": "services/api/test/journeySession.test.ts",
+          "test": "a bus first seen past the stop withdraws a selection only if it could have been at the stop since the rider began waiting"
+        },
+        {
+          "file": "services/api/test/journeySession.test.ts",
+          "test": "the selected bus's remembered row never ends the watch, whichever order its two rows came in (R31)"
+        },
+        {
+          "file": "services/api/test/matchReplay.test.ts",
+          "test": "once a bus has reached the boarding stop the replay never commits to the one behind it"
+        },
+        {
+          "file": "services/api/test/matcherProperties.test.ts",
+          "test": "P1: a waiting rider's automatic selection is always 1-4 stops before the stop, never at or past it"
+        },
+        {
+          "file": "services/api/test/matcherProperties.test.ts",
+          "test": "P2: moving a departed or at-stop bus farther past the stop never makes it selectable or raises its score"
+        },
+        {
+          "file": "services/api/test/matcherProperties.test.ts",
+          "test": "P3: removing evidence never turns a withheld decision into a selection"
+        },
+        {
+          "file": "services/api/test/matcherProperties.test.ts",
+          "test": "P3: round a loop, a bus seen again after long enough to have gone round through the stop withholds for good"
+        }
+      ],
+      "baselineFailuresInListedFiles": [],
+      "loadCheck": "passed",
+      "typecheck": "passed",
+      "testFilesRun": 6,
+      "durationMs": 33534,
+      "killedIn": "listed-test-files"
+    },
+    {
+      "id": "F1-unguarded",
+      "family": "F1",
+      "catalogue": "extra",
+      "description": "F1 with the runtime invariant assertion also removed, so only the tests themselves can notice a departed bus being selected.",
+      "protection": "The tests assert directed selection behaviour directly, not only through the runtime invariant's throw.",
+      "file": "services/api/src/matching.ts",
+      "edits": [
+        {
+          "file": "services/api/src/matching.ts",
+          "find": "const selectable = offset <= -1 && offset >= -window;",
+          "replace": "const selectable = Math.abs(offset) >= 1 && Math.abs(offset) <= window;"
+        },
+        {
+          "file": "services/api/src/matching.ts",
+          "find": "  assertDirectedInvariant(request, result, policy);\n",
+          "replace": ""
         }
       ],
       "testFiles": [
@@ -84,93 +173,12 @@
           "test": "a waiting rider's session never automatically selects a bus at or past the boarding stop, even the only fresh one"
         },
         {
-          "file": "services/api/test/matchReplay.test.ts",
-          "test": "once a bus has reached the boarding stop the replay never commits to the one behind it"
-        },
-        {
-          "file": "services/api/test/matcherProperties.test.ts",
-          "test": "P1: a waiting rider's automatic selection is always 1-4 stops before the stop, never at or past it"
-        },
-        {
-          "file": "services/api/test/matcherProperties.test.ts",
-          "test": "P2: moving a departed or at-stop bus farther past the stop never makes it selectable or raises its score"
-        },
-        {
-          "file": "services/api/test/matcherProperties.test.ts",
-          "test": "P3: removing evidence never turns a withheld decision into a selection"
-        },
-        {
-          "file": "services/api/test/matcherProperties.test.ts",
-          "test": "P4: older evidence never improves a candidate's eligibility or score"
-        },
-        {
-          "file": "services/api/test/matcherProperties.test.ts",
-          "test": "P13: identical input gives an identical decision, whatever the candidate order"
-        },
-        {
-          "file": "services/api/test/matcherProperties.test.ts",
-          "test": "P14: a vehicle that is never valid is never committed, however long it is watched"
-        },
-        {
-          "file": "services/api/test/matcherProperties.test.ts",
-          "test": "P15: whatever is missing from the feed, a selection is always individually valid"
-        }
-      ],
-      "baselineFailuresInListedFiles": [],
-      "loadCheck": "passed",
-      "typecheck": "passed",
-      "testFilesRun": 6,
-      "durationMs": 18592,
-      "killedIn": "listed-test-files"
-    },
-    {
-      "id": "F1-unguarded",
-      "family": "F1",
-      "catalogue": "extra",
-      "description": "F1 with the runtime invariant assertion also removed, so only the tests themselves can notice a departed bus being selected.",
-      "protection": "The tests assert directed selection behaviour directly, not only through the runtime invariant's throw.",
-      "file": "services/api/src/matching.ts",
-      "edits": [
-        {
-          "file": "services/api/src/matching.ts",
-          "find": "const selectable = offset <= -1 && offset >= -window;",
-          "replace": "const selectable = Math.abs(offset) >= 1 && Math.abs(offset) <= window;"
-        },
-        {
-          "file": "services/api/src/matching.ts",
-          "find": "  assertDirectedInvariant(request, result, policy);\n",
-          "replace": ""
-        }
-      ],
-      "testFiles": [
-        "services/api/test/matching.test.ts",
-        "services/api/test/matcherProperties.test.ts",
-        "services/api/test/journeySession.test.ts",
-        "services/api/test/matchReplay.test.ts",
-        "services/api/test/passiveShadow.test.ts",
-        "services/api/test/crossLanguageAuthority.test.ts"
-      ],
-      "missingTestFiles": [],
-      "outcome": "KILLED",
-      "reason": "24 test(s) newly fail in the listed test files",
-      "failingTestCount": 24,
-      "failingTestCountIncludingBaseline": 24,
-      "killedBy": [
-        {
-          "file": "services/api/test/crossLanguageAuthority.test.ts",
-          "test": "specification W6: F1: a departed bus is never selected, even when it is the only fresh one"
-        },
-        {
-          "file": "services/api/test/crossLanguageAuthority.test.ts",
-          "test": "specification W7: the departed bus neither wins nor blocks; the approaching one is selected"
+          "file": "services/api/test/journeySession.test.ts",
+          "test": "after a withdrawal the rider may be on the bus that just left the stop, so it is offered"
         },
         {
           "file": "services/api/test/journeySession.test.ts",
-          "test": "a session whose first look comes late withholds when a bus past the stop could have been at it"
-        },
-        {
-          "file": "services/api/test/journeySession.test.ts",
-          "test": "a waiting rider's session never automatically selects a bus at or past the boarding stop, even the only fresh one"
+          "test": "the selected bus's remembered row never ends the watch, whichever order its two rows came in (R31)"
         },
         {
           "file": "services/api/test/matchReplay.test.ts",
@@ -195,21 +203,13 @@
         {
           "file": "services/api/test/matcherProperties.test.ts",
           "test": "P15: whatever is missing from the feed, a selection is always individually valid"
-        },
-        {
-          "file": "services/api/test/matching.test.ts",
-          "test": "waiting rider, one fresh bus: two stops past the stop has departed"
-        },
-        {
-          "file": "services/api/test/matching.test.ts",
-          "test": "a departed bus farther past the stop never becomes selectable"
         }
       ],
       "baselineFailuresInListedFiles": [],
       "loadCheck": "passed",
       "typecheck": "passed",
       "testFilesRun": 6,
-      "durationMs": 18764,
+      "durationMs": 32805,
       "killedIn": "listed-test-files"
     },
     {
@@ -234,9 +234,9 @@
       ],
       "missingTestFiles": [],
       "outcome": "KILLED",
-      "reason": "11 test(s) newly fail in the listed test files",
-      "failingTestCount": 11,
-      "failingTestCountIncludingBaseline": 11,
+      "reason": "20 test(s) newly fail in the listed test files",
+      "failingTestCount": 20,
+      "failingTestCountIncludingBaseline": 20,
       "killedBy": [
         {
           "file": "services/api/test/crossLanguageAuthority.test.ts",
@@ -255,39 +255,43 @@
           "test": "once a bus has been seen at a waiting rider's stop, no bus is automatically selected for the rest of the session"
         },
         {
+          "file": "services/api/test/journeySession.test.ts",
+          "test": "an automatic selection is withdrawn when another bus is seen reaching the stop first, and nothing is selected again"
+        },
+        {
+          "file": "services/api/test/journeySession.test.ts",
+          "test": "the selected bus seen at the stop first ends the watch: a bus behind reaching the stop later withdraws nothing"
+        },
+        {
+          "file": "services/api/test/journeySession.test.ts",
+          "test": "round a loop, the selected bus read one stop back does not end the watch: a bus reaching the stop first still withdraws (R31)"
+        },
+        {
+          "file": "services/api/test/journeySession.test.ts",
+          "test": "round a loop, the selected bus seen again two stops back after a long gap does not end the watch (R31)"
+        },
+        {
+          "file": "services/api/test/journeySession.test.ts",
+          "test": "the selected bus's remembered row never ends the watch, whichever order its two rows came in (R31)"
+        },
+        {
+          "file": "services/api/test/journeySession.test.ts",
+          "test": "a withdrawal survives a concurrent refresh that saved first, unless that one saw the selected bus at the stop earlier (R33)"
+        },
+        {
+          "file": "services/api/test/matcherProperties.test.ts",
+          "test": "P3: a bus seen before the stop and later past it withholds the session for good, across a loop's seam too"
+        },
+        {
           "file": "services/api/test/matcherProperties.test.ts",
           "test": "P11: unknown route progress fails closed"
-        },
-        {
-          "file": "services/api/test/matching.test.ts",
-          "test": "waiting rider, one fresh bus: a bus reporting the boarding stop itself is not selectable"
-        },
-        {
-          "file": "services/api/test/matching.test.ts",
-          "test": "waiting rider, one fresh bus: one stop past the stop is not selectable"
-        },
-        {
-          "file": "services/api/test/matching.test.ts",
-          "test": "a bus at the boarding stop or one past it blocks a fresh approaching leader"
-        },
-        {
-          "file": "services/api/test/matching.test.ts",
-          "test": "a bus at the boarding stop blocks even when it is stale or only remembered"
-        },
-        {
-          "file": "services/api/test/matching.test.ts",
-          "test": "loop: a bus one stop past the boarding stop via the seam blocks"
-        },
-        {
-          "file": "services/api/test/matching.test.ts",
-          "test": "waiting rider: once withheld, the session stays withheld"
         }
       ],
       "baselineFailuresInListedFiles": [],
       "loadCheck": "passed",
       "typecheck": "passed",
       "testFilesRun": 4,
-      "durationMs": 17125,
+      "durationMs": 28862,
       "killedIn": "listed-test-files"
     },
     {
@@ -312,9 +316,9 @@
       ],
       "missingTestFiles": [],
       "outcome": "KILLED",
-      "reason": "3 test(s) newly fail in the listed test files",
-      "failingTestCount": 3,
-      "failingTestCountIncludingBaseline": 3,
+      "reason": "4 test(s) newly fail in the listed test files",
+      "failingTestCount": 4,
+      "failingTestCountIncludingBaseline": 4,
       "killedBy": [
         {
           "file": "services/api/test/crossLanguageAuthority.test.ts",
@@ -327,13 +331,17 @@
         {
           "file": "services/api/test/matching.test.ts",
           "test": "on-board rider, one fresh bus: a bus reporting the boarding stop itself is not selectable"
+        },
+        {
+          "file": "services/api/test/matching.test.ts",
+          "test": "on board, the rider's bus listed at two places, or also at none, still withholds when it leaves the window (R30)"
         }
       ],
       "baselineFailuresInListedFiles": [],
       "loadCheck": "passed",
       "typecheck": "passed",
       "testFilesRun": 4,
-      "durationMs": 18303,
+      "durationMs": 40359,
       "killedIn": "listed-test-files"
     },
     {
@@ -370,7 +378,7 @@
       "loadCheck": "passed",
       "typecheck": "passed",
       "testFilesRun": 3,
-      "durationMs": 16687,
+      "durationMs": 33088,
       "killedIn": "listed-test-files"
     },
     {
@@ -408,7 +416,7 @@
       "loadCheck": "passed",
       "typecheck": "passed",
       "testFilesRun": 4,
-      "durationMs": 18200,
+      "durationMs": 44432,
       "killedIn": "listed-test-files"
     },
     {
@@ -487,7 +495,7 @@
       "loadCheck": "passed",
       "typecheck": "passed",
       "testFilesRun": 1,
-      "durationMs": 4077,
+      "durationMs": 7770,
       "killedIn": "listed-test-files"
     },
     {
@@ -522,7 +530,7 @@
       "loadCheck": "passed",
       "typecheck": "passed",
       "testFilesRun": 1,
-      "durationMs": 16774,
+      "durationMs": 20199,
       "killedIn": "listed-test-files"
     },
     {
@@ -557,7 +565,7 @@
       "loadCheck": "passed",
       "typecheck": "passed",
       "testFilesRun": 1,
-      "durationMs": 16312,
+      "durationMs": 16935,
       "killedIn": "listed-test-files"
     },
     {
@@ -592,7 +600,7 @@
       "loadCheck": "passed",
       "typecheck": "passed",
       "testFilesRun": 1,
-      "durationMs": 16620,
+      "durationMs": 17197,
       "killedIn": "listed-test-files"
     },
     {
@@ -636,7 +644,7 @@
       "loadCheck": "passed",
       "typecheck": "passed",
       "testFilesRun": 1,
-      "durationMs": 16650,
+      "durationMs": 18435,
       "killedIn": "listed-test-files"
     },
     {
@@ -675,7 +683,7 @@
       "loadCheck": "passed",
       "typecheck": "passed",
       "testFilesRun": 1,
-      "durationMs": 16689,
+      "durationMs": 19034,
       "killedIn": "listed-test-files"
     },
     {
@@ -731,7 +739,7 @@
       "loadCheck": "passed",
       "typecheck": "passed",
       "testFilesRun": 4,
-      "durationMs": 17475,
+      "durationMs": 39829,
       "killedIn": "listed-test-files"
     },
     {
@@ -744,8 +752,90 @@
       "edits": [
         {
           "file": "services/api/src/matching.ts",
-          "find": "        withhold(\"boarding_stop_reached_during_session\");\n      }\n    } else {",
-          "replace": "        { /* Negative control F4: a bus at or crossing the boarding stop no longer withholds the session. */ }\n      }\n    } else {"
+          "find": "        withhold(\"boarding_stop_reached_during_session\");\n      }\n      // Round a loop, seen again",
+          "replace": "        { /* Negative control F4: a bus at or crossing the boarding stop no longer withholds the session. */ }\n      }\n      // Round a loop, seen again"
+        }
+      ],
+      "testFiles": [
+        "services/api/test/matching.test.ts",
+        "services/api/test/matcherProperties.test.ts",
+        "services/api/test/journeySession.test.ts",
+        "services/api/test/matchReplay.test.ts"
+      ],
+      "missingTestFiles": [],
+      "outcome": "KILLED",
+      "reason": "24 test(s) newly fail in the listed test files",
+      "failingTestCount": 24,
+      "failingTestCountIncludingBaseline": 24,
+      "killedBy": [
+        {
+          "file": "services/api/test/journeySession.test.ts",
+          "test": "once a bus has been seen at a waiting rider's stop, no bus is automatically selected for the rest of the session"
+        },
+        {
+          "file": "services/api/test/journeySession.test.ts",
+          "test": "an automatic selection is withdrawn when another bus is seen reaching the stop first, and nothing is selected again"
+        },
+        {
+          "file": "services/api/test/journeySession.test.ts",
+          "test": "after a withdrawal the rider may be on the bus that just left the stop, so it is offered"
+        },
+        {
+          "file": "services/api/test/journeySession.test.ts",
+          "test": "another bus at the stop in the same poll as the selected bus withdraws the selection"
+        },
+        {
+          "file": "services/api/test/journeySession.test.ts",
+          "test": "a bus out of sight that could have reached the stop never withdraws a selection; seen past it, it does"
+        },
+        {
+          "file": "services/api/test/journeySession.test.ts",
+          "test": "round a loop, another bus crossing the stop next to the seam withdraws the selection"
+        },
+        {
+          "file": "services/api/test/journeySession.test.ts",
+          "test": "round a loop, the selected bus read one stop back does not end the watch: a bus reaching the stop first still withdraws (R31)"
+        },
+        {
+          "file": "services/api/test/journeySession.test.ts",
+          "test": "round a loop, the selected bus seen again two stops back after a long gap does not end the watch (R31)"
+        },
+        {
+          "file": "services/api/test/journeySession.test.ts",
+          "test": "the selected bus listed at two places, or also under another route, at the stop does not end the watch (R31)"
+        },
+        {
+          "file": "services/api/test/journeySession.test.ts",
+          "test": "the selected bus's remembered row never ends the watch, whichever order its two rows came in (R31)"
+        },
+        {
+          "file": "services/api/test/journeySession.test.ts",
+          "test": "the selected bus out of sight never ends the watch: a bus seen at the stop afterwards withdraws (R31)"
+        },
+        {
+          "file": "services/api/test/journeySession.test.ts",
+          "test": "the selected bus seen past the stop ends the watch only if it could have got there since it was seen before it (R31)"
+        }
+      ],
+      "baselineFailuresInListedFiles": [],
+      "loadCheck": "passed",
+      "typecheck": "passed",
+      "testFilesRun": 4,
+      "durationMs": 31350,
+      "killedIn": "listed-test-files"
+    },
+    {
+      "id": "F4-unobserved",
+      "family": "F4",
+      "catalogue": "extra",
+      "description": "A vehicle that left the feed and the memory window while it could have reached the boarding stop no longer withholds the waiting session.",
+      "protection": "A bus that may have reached the stop unobserved withholds the waiting session, as a seen arrival would.",
+      "file": "services/api/src/matching.ts",
+      "edits": [
+        {
+          "file": "services/api/src/matching.ts",
+          "find": "if (toStop !== undefined && toStop <= reachAfter(unseenSeconds)) withhold(\"vehicle_may_have_reached_boarding_stop_unobserved\");",
+          "replace": "if (toStop !== undefined && toStop <= reachAfter(unseenSeconds)) { /* Negative control F4-unobserved: a possible unobserved arrival no longer withholds. */ }"
         }
       ],
       "testFiles": [
@@ -762,68 +852,30 @@
       "killedBy": [
         {
           "file": "services/api/test/journeySession.test.ts",
-          "test": "once a bus has been seen at a waiting rider's stop, no bus is automatically selected for the rest of the session"
-        },
-        {
-          "file": "services/api/test/matchReplay.test.ts",
-          "test": "once a bus has reached the boarding stop the replay never commits to the one behind it"
-        },
-        {
-          "file": "services/api/test/matching.test.ts",
-          "test": "waiting rider: a bus seen crossing the stop withholds every later selection"
-        },
-        {
-          "file": "services/api/test/matching.test.ts",
-          "test": "waiting rider: once withheld, the session stays withheld"
-        },
-        {
-          "file": "services/api/test/matching.test.ts",
-          "test": "waiting rider: a crossing is remembered when the row that shows it drops out of the poll"
-        }
-      ],
-      "baselineFailuresInListedFiles": [],
-      "loadCheck": "passed",
-      "typecheck": "passed",
-      "testFilesRun": 4,
-      "durationMs": 18991,
-      "killedIn": "listed-test-files"
-    },
-    {
-      "id": "F4-unobserved",
-      "family": "F4",
-      "catalogue": "extra",
-      "description": "A vehicle that left the feed and the memory window while it could have reached the boarding stop no longer withholds the waiting session.",
-      "protection": "A bus that may have reached the stop unobserved withholds the waiting session, as a seen arrival would.",
-      "file": "services/api/src/matching.ts",
-      "edits": [
-        {
-          "file": "services/api/src/matching.ts",
-          "find": "withhold(\"vehicle_may_have_reached_boarding_stop_unobserved\");",
-          "replace": "{ /* Negative control F4-unobserved: a possible unobserved arrival no longer withholds. */ }"
-        }
-      ],
-      "testFiles": [
-        "services/api/test/matching.test.ts",
-        "services/api/test/matcherProperties.test.ts",
-        "services/api/test/journeySession.test.ts",
-        "services/api/test/matchReplay.test.ts"
-      ],
-      "missingTestFiles": [],
-      "outcome": "KILLED",
-      "reason": "1 test(s) newly fail in the listed test files",
-      "failingTestCount": 1,
-      "failingTestCountIncludingBaseline": 1,
-      "killedBy": [
-        {
-          "file": "services/api/test/journeySession.test.ts",
           "test": "a bus that drops out of a poll keeps blocking, and if it could have reached the stop unseen the session stays withheld"
+        },
+        {
+          "file": "services/api/test/matching.test.ts",
+          "test": "waiting rider: a bus out of sight past the memory window still competes where it may be by now (F15)"
+        },
+        {
+          "file": "services/api/test/matching.test.ts",
+          "test": "loop: a bus lost across the seam may reach the stop unobserved (F17)"
+        },
+        {
+          "file": "services/api/test/matching.test.ts",
+          "test": "a sighting or a declaration dated after now gives no bound on the time since"
+        },
+        {
+          "file": "services/api/test/matching.test.ts",
+          "test": "a sighting the session recorded, dated after now by however little, gives no bound on the time since (R29)"
         }
       ],
       "baselineFailuresInListedFiles": [],
       "loadCheck": "passed",
       "typecheck": "passed",
       "testFilesRun": 4,
-      "durationMs": 18280,
+      "durationMs": 29736,
       "killedIn": "listed-test-files"
     },
     {
@@ -847,9 +899,9 @@
       ],
       "missingTestFiles": [],
       "outcome": "KILLED",
-      "reason": "5 test(s) newly fail in the listed test files",
-      "failingTestCount": 5,
-      "failingTestCountIncludingBaseline": 5,
+      "reason": "9 test(s) newly fail in the listed test files",
+      "failingTestCount": 9,
+      "failingTestCountIncludingBaseline": 9,
       "killedBy": [
         {
           "file": "services/api/test/journeySession.test.ts",
@@ -858,6 +910,22 @@
         {
           "file": "services/api/test/journeySession.test.ts",
           "test": "once a bus has been seen at a waiting rider's stop, no bus is automatically selected for the rest of the session"
+        },
+        {
+          "file": "services/api/test/journeySession.test.ts",
+          "test": "an automatic selection is withdrawn when another bus is seen reaching the stop first, and nothing is selected again"
+        },
+        {
+          "file": "services/api/test/journeySession.test.ts",
+          "test": "after a withdrawal the rider may be on the bus that just left the stop, so it is offered"
+        },
+        {
+          "file": "services/api/test/journeySession.test.ts",
+          "test": "after a withdrawal round a loop, the bus that just left the stop is offered across the seam too (R34)"
+        },
+        {
+          "file": "services/api/test/journeySession.test.ts",
+          "test": "a withdrawal survives a concurrent refresh that saved first, unless that one saw the selected bus at the stop earlier (R33)"
         },
         {
           "file": "services/api/test/matcherProperties.test.ts",
@@ -876,7 +944,7 @@
       "loadCheck": "passed",
       "typecheck": "passed",
       "testFilesRun": 3,
-      "durationMs": 18632,
+      "durationMs": 28749,
       "killedIn": "listed-test-files"
     },
     {
@@ -900,20 +968,40 @@
       ],
       "missingTestFiles": [],
       "outcome": "KILLED",
-      "reason": "1 test(s) newly fail in the listed test files",
-      "failingTestCount": 1,
-      "failingTestCountIncludingBaseline": 1,
+      "reason": "6 test(s) newly fail in the listed test files",
+      "failingTestCount": 6,
+      "failingTestCountIncludingBaseline": 6,
       "killedBy": [
+        {
+          "file": "services/api/test/matcherProperties.test.ts",
+          "test": "P12: on board, a bus once seen before the stop is never selected later in the session, on any route shape"
+        },
         {
           "file": "services/api/test/matching.test.ts",
           "test": "on-board rider: a bus that reached the stop after the rider boarded is never theirs"
+        },
+        {
+          "file": "services/api/test/matching.test.ts",
+          "test": "on-board rider: a bus missing from the first snapshot is never selected, and still competes (F16)"
+        },
+        {
+          "file": "services/api/test/matching.test.ts",
+          "test": "on-board rider: a bus shown not to be theirs does not compete once it is out of sight"
+        },
+        {
+          "file": "services/api/test/matching.test.ts",
+          "test": "on-board rider on a loop: a bus once seen before the stop is never theirs, however it reads later (F17)"
+        },
+        {
+          "file": "services/api/test/matching.test.ts",
+          "test": "on board, a bus the snapshot places twice is never excluded by one of the places, and keeps competing (R27)"
         }
       ],
       "baselineFailuresInListedFiles": [],
       "loadCheck": "passed",
       "typecheck": "passed",
       "testFilesRun": 3,
-      "durationMs": 17800,
+      "durationMs": 28808,
       "killedIn": "listed-test-files"
     },
     {
@@ -926,8 +1014,8 @@
       "edits": [
         {
           "file": "services/api/src/matching.ts",
-          "find": "        withhold(\"vehicle_left_on_board_window_during_session\");\n      }\n    }\n    const range",
-          "replace": "        { /* Negative control F4-onboard-left: a bus leaving the on-board window no longer withholds. */ }\n      }\n    }\n    const range"
+          "find": "      if (left || (neverPlaced && (loop ? !nearWindow(row.facts) : offset > window))) {",
+          "replace": "      if ((left && Number.isNaN(0)) || (neverPlaced && (loop ? !nearWindow(row.facts) : offset > window))) {"
         }
       ],
       "testFiles": [
@@ -937,33 +1025,41 @@
       ],
       "missingTestFiles": [],
       "outcome": "KILLED",
-      "reason": "1 test(s) newly fail in the listed test files",
-      "failingTestCount": 1,
-      "failingTestCountIncludingBaseline": 1,
+      "reason": "3 test(s) newly fail in the listed test files",
+      "failingTestCount": 3,
+      "failingTestCountIncludingBaseline": 3,
       "killedBy": [
         {
           "file": "services/api/test/matching.test.ts",
           "test": "on-board rider: a bus leaving the on-board window withholds every later selection"
+        },
+        {
+          "file": "services/api/test/matching.test.ts",
+          "test": "loop: however short the lap, a bus in the on-board window is never read as one before the stop (F17)"
+        },
+        {
+          "file": "services/api/test/matching.test.ts",
+          "test": "on board, the rider's bus listed at two places, or also at none, still withholds when it leaves the window (R30)"
         }
       ],
       "baselineFailuresInListedFiles": [],
       "loadCheck": "passed",
       "typecheck": "passed",
       "testFilesRun": 3,
-      "durationMs": 18289,
+      "durationMs": 28664,
       "killedIn": "listed-test-files"
     },
     {
       "id": "F4-onboard-roster",
       "family": "F4",
       "catalogue": "extra",
-      "description": "On board, a vehicle absent from the session's first snapshot is no longer excluded.",
-      "protection": "An on-board rider's bus must have been in the feed when they said they had boarded; a bus that turns up later is not theirs.",
+      "description": "On board, a vehicle absent from the session's first snapshot can be selected again.",
+      "protection": "A bus missing from the feed when the rider said they had boarded cannot be shown to be theirs, so it is never selected.",
       "file": "services/api/src/matching.ts",
       "edits": [
         {
           "file": "services/api/src/matching.ts",
-          "find": "if (riderState === \"on_board\" && !initial.includes(vehicleId)) excluded.set(vehicleId, \"not_present_when_rider_boarded\");",
+          "find": "if (riderState === \"on_board\" && !initial.includes(vehicleId)) unproven.set(vehicleId, \"not_present_when_rider_boarded\");",
           "replace": "{ /* Negative control F4-onboard-roster: vehicles absent when the rider boarded are no longer excluded. */ }"
         }
       ],
@@ -974,20 +1070,24 @@
       ],
       "missingTestFiles": [],
       "outcome": "KILLED",
-      "reason": "1 test(s) newly fail in the listed test files",
-      "failingTestCount": 1,
-      "failingTestCountIncludingBaseline": 1,
+      "reason": "2 test(s) newly fail in the listed test files",
+      "failingTestCount": 2,
+      "failingTestCountIncludingBaseline": 2,
       "killedBy": [
         {
           "file": "services/api/test/matching.test.ts",
           "test": "on-board rider: a bus absent when the rider said they were aboard is never theirs"
+        },
+        {
+          "file": "services/api/test/matching.test.ts",
+          "test": "on-board rider: a bus missing from the first snapshot is never selected, and still competes (F16)"
         }
       ],
       "baselineFailuresInListedFiles": [],
       "loadCheck": "passed",
       "typecheck": "passed",
       "testFilesRun": 3,
-      "durationMs": 17739,
+      "durationMs": 29704,
       "killedIn": "listed-test-files"
     },
     {
@@ -1012,18 +1112,10 @@
       ],
       "missingTestFiles": [],
       "outcome": "KILLED",
-      "reason": "8 test(s) newly fail in the listed test files",
-      "failingTestCount": 8,
-      "failingTestCountIncludingBaseline": 8,
+      "reason": "9 test(s) newly fail in the listed test files",
+      "failingTestCount": 9,
+      "failingTestCountIncludingBaseline": 9,
       "killedBy": [
-        {
-          "file": "services/api/test/journeySession.test.ts",
-          "test": "a bus that drops out of a poll keeps blocking, and if it could have reached the stop unseen the session stays withheld"
-        },
-        {
-          "file": "services/api/test/matchReplay.test.ts",
-          "test": "a bus that drops out of one poll still competes in the replay"
-        },
         {
           "file": "services/api/test/matcherProperties.test.ts",
           "test": "P3: removing evidence never turns a withheld decision into a selection"
@@ -1047,13 +1139,25 @@
         {
           "file": "services/api/test/matching.test.ts",
           "test": "on-board rider: any second bus in the on-board window withholds selection"
+        },
+        {
+          "file": "services/api/test/matching.test.ts",
+          "test": "a bus of unknown progress that leaves the feed withholds for good (F15)"
+        },
+        {
+          "file": "services/api/test/matching.test.ts",
+          "test": "a remembered row does not place a bus whose latest sighting had no position"
+        },
+        {
+          "file": "services/api/test/matching.test.ts",
+          "test": "a remembered row of the sighting that left a bus unplaced stays unplaced, though received a moment after now (R28)"
         }
       ],
       "baselineFailuresInListedFiles": [],
       "loadCheck": "passed",
       "typecheck": "passed",
       "testFilesRun": 4,
-      "durationMs": 18151,
+      "durationMs": 31064,
       "killedIn": "listed-test-files"
     },
     {
@@ -1066,7 +1170,7 @@
       "edits": [
         {
           "file": "services/api/src/matching.ts",
-          "find": "const reach = 1 + Math.floor(Math.min(ageSeconds, policy.memoryWindowSeconds) / policy.rememberedSecondsPerStop);",
+          "find": "const reach = Math.min(walkLimit, 1 + Math.floor(Math.min(ageSeconds, ageLimitSeconds) / policy.rememberedSecondsPerStop));",
           "replace": "const reach = 0;"
         }
       ],
@@ -1078,9 +1182,9 @@
       ],
       "missingTestFiles": [],
       "outcome": "KILLED",
-      "reason": "2 test(s) newly fail in the listed test files",
-      "failingTestCount": 2,
-      "failingTestCountIncludingBaseline": 2,
+      "reason": "3 test(s) newly fail in the listed test files",
+      "failingTestCount": 3,
+      "failingTestCountIncludingBaseline": 3,
       "killedBy": [
         {
           "file": "services/api/test/matching.test.ts",
@@ -1089,13 +1193,17 @@
         {
           "file": "services/api/test/matching.test.ts",
           "test": "a follower counts against the margin whether stale or only remembered"
+        },
+        {
+          "file": "services/api/test/matching.test.ts",
+          "test": "waiting rider: a bus out of sight past the memory window still competes where it may be by now (F15)"
         }
       ],
       "baselineFailuresInListedFiles": [],
       "loadCheck": "passed",
       "typecheck": "passed",
       "testFilesRun": 4,
-      "durationMs": 20389,
+      "durationMs": 37935,
       "killedIn": "listed-test-files"
     },
     {
@@ -1119,10 +1227,14 @@
       ],
       "missingTestFiles": [],
       "outcome": "KILLED",
-      "reason": "7 test(s) newly fail in the listed test files",
-      "failingTestCount": 7,
-      "failingTestCountIncludingBaseline": 7,
+      "reason": "8 test(s) newly fail in the listed test files",
+      "failingTestCount": 8,
+      "failingTestCountIncludingBaseline": 8,
       "killedBy": [
+        {
+          "file": "services/api/test/journeySession.test.ts",
+          "test": "a selection the rider confirmed, or one made on board, is never withdrawn by another bus reaching the stop"
+        },
         {
           "file": "services/api/test/matcherProperties.test.ts",
           "test": "P3: removing evidence never turns a withheld decision into a selection"
@@ -1156,7 +1268,7 @@
       "loadCheck": "passed",
       "typecheck": "passed",
       "testFilesRun": 3,
-      "durationMs": 23028,
+      "durationMs": 37237,
       "killedIn": "listed-test-files"
     },
     {
@@ -1180,9 +1292,9 @@
       ],
       "missingTestFiles": [],
       "outcome": "KILLED",
-      "reason": "4 test(s) newly fail in the listed test files",
-      "failingTestCount": 4,
-      "failingTestCountIncludingBaseline": 4,
+      "reason": "7 test(s) newly fail in the listed test files",
+      "failingTestCount": 7,
+      "failingTestCountIncludingBaseline": 7,
       "killedBy": [
         {
           "file": "services/api/test/journeySession.test.ts",
@@ -1197,15 +1309,27 @@
           "test": "P12: two plausible vehicles too close together never produce a selection"
         },
         {
+          "file": "services/api/test/matcherProperties.test.ts",
+          "test": "P12: two buses in the on-board window never produce a selection, on a loop of any length"
+        },
+        {
           "file": "services/api/test/matching.test.ts",
           "test": "on-board rider: any second bus in the on-board window withholds selection"
+        },
+        {
+          "file": "services/api/test/matching.test.ts",
+          "test": "on-board rider: a bus missing from the first snapshot is never selected, and still competes (F16)"
+        },
+        {
+          "file": "services/api/test/matching.test.ts",
+          "test": "on board round a loop, a bus seen clear of the stop and later back at it or closer past it is never selected, and still competes (R23)"
         }
       ],
       "baselineFailuresInListedFiles": [],
       "loadCheck": "passed",
       "typecheck": "passed",
       "testFilesRun": 3,
-      "durationMs": 22671,
+      "durationMs": 37426,
       "killedIn": "listed-test-files"
     },
     {
@@ -1288,7 +1412,7 @@
       "loadCheck": "passed",
       "typecheck": "passed",
       "testFilesRun": 5,
-      "durationMs": 22383,
+      "durationMs": 45273,
       "killedIn": "listed-test-files"
     },
     {
@@ -1363,7 +1487,7 @@
       "loadCheck": "passed",
       "typecheck": "passed",
       "testFilesRun": 5,
-      "durationMs": 23682,
+      "durationMs": 40801,
       "killedIn": "listed-test-files"
     },
     {
@@ -1405,7 +1529,7 @@
       "loadCheck": "passed",
       "typecheck": "passed",
       "testFilesRun": 4,
-      "durationMs": 18515,
+      "durationMs": 35740,
       "killedIn": "listed-test-files"
     },
     {
@@ -1455,7 +1579,7 @@
       "loadCheck": "passed",
       "typecheck": "passed",
       "testFilesRun": 4,
-      "durationMs": 17578,
+      "durationMs": 37126,
       "killedIn": "listed-test-files"
     },
     {
@@ -1480,9 +1604,9 @@
       ],
       "missingTestFiles": [],
       "outcome": "KILLED",
-      "reason": "10 test(s) newly fail in the listed test files",
-      "failingTestCount": 10,
-      "failingTestCountIncludingBaseline": 10,
+      "reason": "12 test(s) newly fail in the listed test files",
+      "failingTestCount": 12,
+      "failingTestCountIncludingBaseline": 12,
       "killedBy": [
         {
           "file": "services/api/test/crossLanguageAuthority.test.ts",
@@ -1495,6 +1619,10 @@
         {
           "file": "services/api/test/journeySession.test.ts",
           "test": "a bus that drops out of a poll keeps blocking, and if it could have reached the stop unseen the session stays withheld"
+        },
+        {
+          "file": "services/api/test/journeySession.test.ts",
+          "test": "a selection the rider confirmed, or one made on board, is never withdrawn by another bus reaching the stop"
         },
         {
           "file": "services/api/test/matcherProperties.test.ts",
@@ -1523,13 +1651,17 @@
         {
           "file": "services/api/test/matching.test.ts",
           "test": "waiting rider: a bus seen crossing the stop withholds every later selection"
+        },
+        {
+          "file": "services/api/test/matching.test.ts",
+          "test": "loop: a bus seen crossing the stop through the seam withholds (F17)"
         }
       ],
       "baselineFailuresInListedFiles": [],
       "loadCheck": "passed",
       "typecheck": "passed",
       "testFilesRun": 4,
-      "durationMs": 17816,
+      "durationMs": 35536,
       "killedIn": "listed-test-files"
     },
     {
@@ -1570,7 +1702,7 @@
       "loadCheck": "passed",
       "typecheck": "passed",
       "testFilesRun": 3,
-      "durationMs": 18167,
+      "durationMs": 29448,
       "killedIn": "listed-test-files"
     },
     {
@@ -1610,7 +1742,7 @@
       "loadCheck": "passed",
       "typecheck": "passed",
       "testFilesRun": 2,
-      "durationMs": 18230,
+      "durationMs": 28668,
       "killedIn": "listed-test-files"
     },
     {
@@ -1634,9 +1766,9 @@
       ],
       "missingTestFiles": [],
       "outcome": "KILLED",
-      "reason": "4 test(s) newly fail in the listed test files",
-      "failingTestCount": 4,
-      "failingTestCountIncludingBaseline": 4,
+      "reason": "7 test(s) newly fail in the listed test files",
+      "failingTestCount": 7,
+      "failingTestCountIncludingBaseline": 7,
       "killedBy": [
         {
           "file": "services/api/test/matcherProperties.test.ts",
@@ -1653,13 +1785,25 @@
         {
           "file": "services/api/test/matching.test.ts",
           "test": "a remembered bus without a stop sequence still blocks"
+        },
+        {
+          "file": "services/api/test/matching.test.ts",
+          "test": "a bus of unknown progress that leaves the feed withholds for good (F15)"
+        },
+        {
+          "file": "services/api/test/matching.test.ts",
+          "test": "a remembered row does not place a bus whose latest sighting had no position"
+        },
+        {
+          "file": "services/api/test/matching.test.ts",
+          "test": "a remembered row of the sighting that left a bus unplaced stays unplaced, though received a moment after now (R28)"
         }
       ],
       "baselineFailuresInListedFiles": [],
       "loadCheck": "passed",
       "typecheck": "passed",
       "testFilesRun": 3,
-      "durationMs": 17631,
+      "durationMs": 34058,
       "killedIn": "listed-test-files"
     },
     {
@@ -1683,9 +1827,9 @@
       ],
       "missingTestFiles": [],
       "outcome": "KILLED",
-      "reason": "5 test(s) newly fail in the listed test files",
-      "failingTestCount": 5,
-      "failingTestCountIncludingBaseline": 5,
+      "reason": "11 test(s) newly fail in the listed test files",
+      "failingTestCount": 11,
+      "failingTestCountIncludingBaseline": 11,
       "killedBy": [
         {
           "file": "services/api/test/journeySession.test.ts",
@@ -1700,19 +1844,43 @@
           "test": "P12: two plausible vehicles too close together never produce a selection"
         },
         {
+          "file": "services/api/test/matcherProperties.test.ts",
+          "test": "P12: two buses in the on-board window never produce a selection, on a loop of any length"
+        },
+        {
           "file": "services/api/test/matching.test.ts",
           "test": "on-board rider: any second bus in the on-board window withholds selection"
         },
         {
           "file": "services/api/test/matching.test.ts",
           "test": "on-board rider: a bus leaving the on-board window withholds every later selection"
+        },
+        {
+          "file": "services/api/test/matching.test.ts",
+          "test": "on-board rider: a bus out of sight past the memory window still competes for the window (F15)"
+        },
+        {
+          "file": "services/api/test/matching.test.ts",
+          "test": "on-board rider: a bus missing from the first snapshot is never selected, and still competes (F16)"
+        },
+        {
+          "file": "services/api/test/matching.test.ts",
+          "test": "loop: however short the lap, a bus in the on-board window is never read as one before the stop (F17)"
+        },
+        {
+          "file": "services/api/test/matching.test.ts",
+          "test": "on board round a loop, a bus seen clear of the stop and later back at it or closer past it is never selected, and still competes (R23)"
+        },
+        {
+          "file": "services/api/test/matching.test.ts",
+          "test": "on board, a bus the snapshot places twice is never excluded by one of the places, and keeps competing (R27)"
         }
       ],
       "baselineFailuresInListedFiles": [],
       "loadCheck": "passed",
       "typecheck": "passed",
       "testFilesRun": 3,
-      "durationMs": 16194,
+      "durationMs": 35461,
       "killedIn": "listed-test-files"
     },
     {
@@ -1725,8 +1893,8 @@
       "edits": [
         {
           "file": "services/api/src/journeySession.ts",
-          "find": "import { matchVehicleWithSourceFreshness } from \"./matching.ts\";\n",
-          "replace": "import { matchVehicleWithSourceFreshness } from \"./matching.ts\";\nimport { matchVehicleLegacySymmetricV0 } from \"./matchingLegacy.ts\";\n"
+          "find": "  type PositionFacts,\n} from \"./matching.ts\";\n",
+          "replace": "  type PositionFacts,\n} from \"./matching.ts\";\nimport { matchVehicleLegacySymmetricV0 } from \"./matchingLegacy.ts\";\n"
         },
         {
           "file": "services/api/src/journeySession.ts",
@@ -1741,9 +1909,9 @@
       ],
       "missingTestFiles": [],
       "outcome": "KILLED",
-      "reason": "16 test(s) newly fail in the listed test files",
-      "failingTestCount": 16,
-      "failingTestCountIncludingBaseline": 16,
+      "reason": "23 test(s) newly fail in the listed test files",
+      "failingTestCount": 23,
+      "failingTestCountIncludingBaseline": 23,
       "killedBy": [
         {
           "file": "services/api/test/matching.test.ts",
@@ -1801,7 +1969,7 @@
       "loadCheck": "passed",
       "typecheck": "passed",
       "testFilesRun": 3,
-      "durationMs": 15695,
+      "durationMs": 23277,
       "requiredKillerFired": true,
       "killedIn": "listed-test-files"
     },
@@ -1837,7 +2005,7 @@
       "loadCheck": "passed",
       "typecheck": "passed",
       "testFilesRun": 1,
-      "durationMs": 14892,
+      "durationMs": 18193,
       "killedIn": "listed-test-files"
     },
     {
@@ -1872,7 +2040,7 @@
       "loadCheck": "passed",
       "typecheck": "passed",
       "testFilesRun": 1,
-      "durationMs": 14832,
+      "durationMs": 19273,
       "killedIn": "listed-test-files"
     },
     {
@@ -1907,7 +2075,7 @@
       "loadCheck": "passed",
       "typecheck": "passed",
       "testFilesRun": 1,
-      "durationMs": 14803,
+      "durationMs": 18919,
       "killedIn": "listed-test-files"
     },
     {
@@ -1951,7 +2119,7 @@
       "loadCheck": "passed",
       "typecheck": "passed",
       "testFilesRun": 1,
-      "durationMs": 12516,
+      "durationMs": 16579,
       "killedIn": "listed-test-files"
     },
     {
@@ -1996,7 +2164,7 @@
       "loadCheck": "passed",
       "typecheck": "passed",
       "testFilesRun": 3,
-      "durationMs": 47867,
+      "durationMs": 54827,
       "killedIn": "listed-test-files"
     },
     {
@@ -2009,7 +2177,7 @@
       "edits": [
         {
           "file": "services/api/src/matching.ts",
-          "find": "      if (seen.min <= -1 && offset >= 0) withhold(\"boarding_stop_reached_during_session\");",
+          "find": "      if (loop ? passedOnLoop(seen, facts) : seen.min <= -1 && offset >= 0) withhold(\"boarding_stop_reached_during_session\");",
           "replace": "      { /* Negative control F10: a remembered crossing is forgotten. */ }"
         }
       ],
@@ -2036,7 +2204,7 @@
       "loadCheck": "passed",
       "typecheck": "passed",
       "testFilesRun": 2,
-      "durationMs": 18395,
+      "durationMs": 28605,
       "killedIn": "listed-test-files"
     },
     {
@@ -2049,8 +2217,8 @@
       "edits": [
         {
           "file": "services/api/src/matching.ts",
-          "find": "    } else if (seen.max >= -1 && seen.max <= policy.onBoardWindowStops && offset > policy.onBoardWindowStops) {\n      withhold(\"vehicle_left_on_board_window_during_session\");",
-          "replace": "    } else if (false) {\n      /* Negative control F10-remembered-window */"
+          "find": "      : seen.max >= -1 && seen.max <= window && offset > window) {\n      withhold(\"vehicle_left_on_board_window_during_session\");",
+          "replace": "      : Number.isNaN(0)) {\n      /* Negative control F10-remembered-window */"
         }
       ],
       "testFiles": [
@@ -2072,7 +2240,7 @@
       "loadCheck": "passed",
       "typecheck": "passed",
       "testFilesRun": 2,
-      "durationMs": 16230,
+      "durationMs": 29712,
       "killedIn": "listed-test-files"
     },
     {
@@ -2107,7 +2275,7 @@
       "loadCheck": "passed",
       "typecheck": "passed",
       "testFilesRun": 1,
-      "durationMs": 3658,
+      "durationMs": 6778,
       "killedIn": "listed-test-files"
     },
     {
@@ -2120,8 +2288,8 @@
       "edits": [
         {
           "file": "services/api/src/matching.ts",
-          "find": "  if (riderState === \"waiting_at_stop\" && prior === undefined && request.declaredAt !== undefined) {",
-          "replace": "  if (riderState === \"waiting_at_stop\" && prior === undefined && request.declaredAt !== undefined && Number.isNaN(0)) {"
+          "find": "      if (seen === undefined && !Number.isNaN(sinceDeclared) && sinceDeclared > 0",
+          "replace": "      if (seen === undefined && prior !== undefined && !Number.isNaN(sinceDeclared) && sinceDeclared > 0"
         }
       ],
       "testFiles": [
@@ -2144,14 +2312,14 @@
         },
         {
           "file": "services/api/test/matching.test.ts",
-          "test": "waiting rider: a first decision later than the memory window cannot account for the gap"
+          "test": "waiting rider: a bus first seen past the stop mid-session withholds if it could have been at the stop since the rider began waiting (F16)"
         }
       ],
       "baselineFailuresInListedFiles": [],
       "loadCheck": "passed",
       "typecheck": "passed",
       "testFilesRun": 2,
-      "durationMs": 3525,
+      "durationMs": 7194,
       "killedIn": "listed-test-files"
     },
     {
@@ -2195,7 +2363,7 @@
       "loadCheck": "passed",
       "typecheck": "passed",
       "testFilesRun": 2,
-      "durationMs": 15970,
+      "durationMs": 35123,
       "killedIn": "listed-test-files"
     },
     {
@@ -2230,7 +2398,7 @@
       "loadCheck": "passed",
       "typecheck": "passed",
       "testFilesRun": 1,
-      "durationMs": 14771,
+      "durationMs": 22026,
       "killedIn": "listed-test-files"
     },
     {
@@ -2265,7 +2433,7 @@
       "loadCheck": "passed",
       "typecheck": "passed",
       "testFilesRun": 1,
-      "durationMs": 16370,
+      "durationMs": 23450,
       "killedIn": "listed-test-files"
     },
     {
@@ -2300,7 +2468,7 @@
       "loadCheck": "passed",
       "typecheck": "passed",
       "testFilesRun": 1,
-      "durationMs": 3910,
+      "durationMs": 7791,
       "killedIn": "listed-test-files"
     },
     {
@@ -2335,7 +2503,7 @@
       "loadCheck": "passed",
       "typecheck": "passed",
       "testFilesRun": 1,
-      "durationMs": 15930,
+      "durationMs": 21123,
       "killedIn": "listed-test-files"
     },
     {
@@ -2358,9 +2526,9 @@
       ],
       "missingTestFiles": [],
       "outcome": "KILLED",
-      "reason": "5 test(s) newly fail in the listed test files",
-      "failingTestCount": 5,
-      "failingTestCountIncludingBaseline": 5,
+      "reason": "6 test(s) newly fail in the listed test files",
+      "failingTestCount": 6,
+      "failingTestCountIncludingBaseline": 6,
       "killedBy": [
         {
           "file": "services/api/test/apiConfig.test.ts",
@@ -2376,6 +2544,10 @@
         },
         {
           "file": "services/api/test/apiRouter.test.ts",
+          "test": "the wired session coordinator runs exactly the matching mode the configuration granted"
+        },
+        {
+          "file": "services/api/test/apiRouter.test.ts",
           "test": "the real wiring refuses an automatic-matching opt-in below the readiness it needs, and logs it once"
         },
         {
@@ -2387,13 +2559,2335 @@
       "loadCheck": "passed",
       "typecheck": "passed",
       "testFilesRun": 2,
-      "durationMs": 3792,
+      "durationMs": 7293,
+      "killedIn": "listed-test-files"
+    },
+    {
+      "id": "H-live-stale",
+      "family": "honesty",
+      "catalogue": "extra",
+      "description": "The gate accepts live and counterfactual evidence produced by any matcher sources, not only the current ones.",
+      "protection": "Evidence speaks only for the code that produced it: after a matcher change, a readiness claim needs a fresh live replay.",
+      "file": "services/api/src/matcherSafetyGate.ts",
+      "edits": [
+        {
+          "file": "services/api/src/matcherSafetyGate.ts",
+          "find": "const fresh = (digest: string | undefined) => current !== undefined && digest === current;",
+          "replace": "const fresh = (digest: string | undefined) => digest === current || current !== digest;"
+        }
+      ],
+      "testFiles": [
+        "services/api/test/matcherSafetyGate.test.ts",
+        "services/api/test/liveReplayEvidence.test.ts"
+      ],
+      "missingTestFiles": [],
+      "outcome": "KILLED",
+      "reason": "2 test(s) newly fail in the listed test files",
+      "failingTestCount": 2,
+      "failingTestCountIncludingBaseline": 3,
+      "killedBy": [
+        {
+          "file": "services/api/test/liveReplayEvidence.test.ts",
+          "test": "the assembled evidence is exactly what the gate reads; a wrong commit, an omitted artifact or a stale digest stops it"
+        },
+        {
+          "file": "services/api/test/matcherSafetyGate.test.ts",
+          "test": "live and counterfactual evidence from other matcher sources is stale, and stale is missing"
+        }
+      ],
+      "baselineFailuresInListedFiles": [],
+      "loadCheck": "passed",
+      "typecheck": "passed",
+      "testFilesRun": 2,
+      "durationMs": 7533,
+      "killedIn": "listed-test-files"
+    },
+    {
+      "id": "H-pinned-controls",
+      "family": "honesty",
+      "catalogue": "extra",
+      "description": "SH-4 stops checking that every pinned negative control was killed, so a control deleted from the catalogue goes unnoticed.",
+      "protection": "A report that lost a control cannot pass for a complete one.",
+      "file": "services/api/src/matcherSafetyGate.ts",
+      "edits": [
+        {
+          "file": "services/api/src/matcherSafetyGate.ts",
+          "find": "const unpinned = controls ? PINNED_NEGATIVE_CONTROLS.filter((id) => !controls.killedIds.includes(id)) : [];",
+          "replace": "const unpinned: string[] = [];"
+        }
+      ],
+      "testFiles": [
+        "services/api/test/matcherSafetyGate.test.ts"
+      ],
+      "missingTestFiles": [],
+      "outcome": "KILLED",
+      "reason": "1 test(s) newly fail in the listed test files",
+      "failingTestCount": 1,
+      "failingTestCountIncludingBaseline": 2,
+      "killedBy": [
+        {
+          "file": "services/api/test/matcherSafetyGate.test.ts",
+          "test": "every shadow criterion is necessary"
+        }
+      ],
+      "baselineFailuresInListedFiles": [],
+      "loadCheck": "passed",
+      "typecheck": "passed",
+      "testFilesRun": 1,
+      "durationMs": 7731,
+      "killedIn": "listed-test-files"
+    },
+    {
+      "id": "H-live-omitted",
+      "family": "honesty",
+      "catalogue": "extra",
+      "description": "CA-1 passes although some retained artifacts could not be fetched or verified.",
+      "protection": "A replay that left out retained evidence is not a replay of the evidence; its wrong commits could be among the omitted.",
+      "file": "services/api/src/matcherSafetyGate.ts",
+      "edits": [
+        {
+          "file": "services/api/src/matcherSafetyGate.ts",
+          "find": "status: liveStatus((value) => value.collections >= 1 && value.reproductionOk && value.omittedArtifacts.length === 0),",
+          "replace": "status: liveStatus((value) => value.collections >= 1 && value.reproductionOk),"
+        }
+      ],
+      "testFiles": [
+        "services/api/test/matcherSafetyGate.test.ts",
+        "services/api/test/liveReplayEvidence.test.ts"
+      ],
+      "missingTestFiles": [],
+      "outcome": "KILLED",
+      "reason": "2 test(s) newly fail in the listed test files",
+      "failingTestCount": 2,
+      "failingTestCountIncludingBaseline": 3,
+      "killedBy": [
+        {
+          "file": "services/api/test/liveReplayEvidence.test.ts",
+          "test": "the assembled evidence is exactly what the gate reads; a wrong commit, an omitted artifact or a stale digest stops it"
+        },
+        {
+          "file": "services/api/test/matcherSafetyGate.test.ts",
+          "test": "confirmation-assisted needs the rule-of-three sample on live evidence, and nothing wrong in it"
+        }
+      ],
+      "baselineFailuresInListedFiles": [],
+      "loadCheck": "passed",
+      "typecheck": "passed",
+      "testFilesRun": 2,
+      "durationMs": 7883,
+      "killedIn": "listed-test-files"
+    },
+    {
+      "id": "H-live-units",
+      "family": "honesty",
+      "catalogue": "extra",
+      "description": "A window with no evaluated case still counts as a window, a time band and a provider path.",
+      "protection": "Sample dimensions come only from windows that contributed an independent unit; an empty or failed window proves nothing.",
+      "file": "services/api/src/liveReplayEvidence.ts",
+      "edits": [
+        {
+          "file": "services/api/src/liveReplayEvidence.ts",
+          "find": "    if (units.length === 0) continue;",
+          "replace": "    if (units.length < 0) continue;"
+        }
+      ],
+      "testFiles": [
+        "services/api/test/liveReplayEvidence.test.ts"
+      ],
+      "missingTestFiles": [],
+      "outcome": "KILLED",
+      "reason": "1 test(s) newly fail in the listed test files",
+      "failingTestCount": 1,
+      "failingTestCountIncludingBaseline": 1,
+      "killedBy": [
+        {
+          "file": "services/api/test/liveReplayEvidence.test.ts",
+          "test": "a window with no evaluated case adds no window, time band or provider path"
+        }
+      ],
+      "baselineFailuresInListedFiles": [],
+      "loadCheck": "passed",
+      "typecheck": "passed",
+      "testFilesRun": 1,
+      "durationMs": 10311,
+      "killedIn": "listed-test-files"
+    },
+    {
+      "id": "H-live-carried",
+      "family": "honesty",
+      "catalogue": "extra",
+      "description": "The failures of a window evaluated before are dropped once its raw is no longer retained.",
+      "protection": "Expiry never erases a wrong commit: failures outlive the raw that showed them.",
+      "file": "services/api/src/liveReplayEvidence.ts",
+      "edits": [
+        {
+          "file": "services/api/src/liveReplayEvidence.ts",
+          "find": "  for (const row of options.previous ?? []) {",
+          "replace": "  for (const row of [] as DetailRow[]) {"
+        }
+      ],
+      "testFiles": [
+        "services/api/test/liveReplayEvidence.test.ts"
+      ],
+      "missingTestFiles": [],
+      "outcome": "KILLED",
+      "reason": "1 test(s) newly fail in the listed test files",
+      "failingTestCount": 1,
+      "failingTestCountIncludingBaseline": 1,
+      "killedBy": [
+        {
+          "file": "services/api/test/liveReplayEvidence.test.ts",
+          "test": "a window whose raw is gone keeps its failures and adds no sample"
+        }
+      ],
+      "baselineFailuresInListedFiles": [],
+      "loadCheck": "passed",
+      "typecheck": "passed",
+      "testFilesRun": 1,
+      "durationMs": 8769,
+      "killedIn": "listed-test-files"
+    },
+    {
+      "id": "H-mitigation-criterion",
+      "family": "honesty",
+      "catalogue": "extra",
+      "description": "Any passing test satisfies a human-only mitigation, whether or not it is named for its criterion.",
+      "protection": "A mitigation counts only with evidence that can exist for it alone.",
+      "file": "services/api/src/matcherSafetyGate.ts",
+      "edits": [
+        {
+          "file": "services/api/src/matcherSafetyGate.ts",
+          "find": "const foreign = tests.filter((name) => !name.startsWith(`${criterion}: `));",
+          "replace": "const foreign = tests.filter((name) => name.length < 0);"
+        }
+      ],
+      "testFiles": [
+        "services/api/test/matcherSafetyGate.test.ts"
+      ],
+      "missingTestFiles": [],
+      "outcome": "KILLED",
+      "reason": "1 test(s) newly fail in the listed test files",
+      "failingTestCount": 1,
+      "failingTestCountIncludingBaseline": 2,
+      "killedBy": [
+        {
+          "file": "services/api/test/matcherSafetyGate.test.ts",
+          "test": "a mitigation counts only with evidence that can exist for it alone"
+        }
+      ],
+      "baselineFailuresInListedFiles": [],
+      "loadCheck": "passed",
+      "typecheck": "passed",
+      "testFilesRun": 1,
+      "durationMs": 8476,
+      "killedIn": "listed-test-files"
+    },
+    {
+      "id": "H-coordinator-wiring",
+      "family": "honesty",
+      "catalogue": "extra",
+      "description": "The runtime hands the journey-session coordinator the requested automatic-matching flag instead of the granted one.",
+      "protection": "Sessions select automatically only when the configuration granted it; an opt-in refused by readiness never reaches them.",
+      "file": "services/api/src/apiRuntime.ts",
+      "edits": [
+        {
+          "file": "services/api/src/apiRuntime.ts",
+          "find": "automaticMatchingEnabled: config.matching.automaticMatchingEnabled,",
+          "replace": "automaticMatchingEnabled: config.matching.automaticMatchingRequested,"
+        }
+      ],
+      "testFiles": [
+        "services/api/test/apiRouter.test.ts"
+      ],
+      "missingTestFiles": [],
+      "outcome": "KILLED",
+      "reason": "1 test(s) newly fail in the listed test files",
+      "failingTestCount": 1,
+      "failingTestCountIncludingBaseline": 1,
+      "killedBy": [
+        {
+          "file": "services/api/test/apiRouter.test.ts",
+          "test": "the wired session coordinator runs exactly the matching mode the configuration granted"
+        }
+      ],
+      "baselineFailuresInListedFiles": [],
+      "loadCheck": "passed",
+      "typecheck": "passed",
+      "testFilesRun": 1,
+      "durationMs": 8510,
+      "killedIn": "listed-test-files"
+    },
+    {
+      "id": "H-matches-shadow",
+      "family": "honesty",
+      "catalogue": "extra",
+      "description": "In shadow, POST /v1/matches offers the matcher's pick as a top-level selectedVehicleId again.",
+      "protection": "Below bounded automation no answer carries a selection a client could act on; the pick is only a shadowSelection.",
+      "file": "services/api/src/apiRouter.ts",
+      "edits": [
+        {
+          "file": "services/api/src/apiRouter.ts",
+          "find": "...(automatic ? result : ranking),",
+          "replace": "...(automatic ? result : { ...ranking, selectedVehicleId }),"
+        }
+      ],
+      "testFiles": [
+        "services/api/test/apiRouter.test.ts"
+      ],
+      "missingTestFiles": [],
+      "outcome": "KILLED",
+      "reason": "1 test(s) newly fail in the listed test files",
+      "failingTestCount": 1,
+      "failingTestCountIncludingBaseline": 1,
+      "killedBy": [
+        {
+          "file": "services/api/test/apiRouter.test.ts",
+          "test": "matching rejects an unknown rider state, and a stateless match stays advisory by default"
+        }
+      ],
+      "baselineFailuresInListedFiles": [],
+      "loadCheck": "passed",
+      "typecheck": "passed",
+      "testFilesRun": 1,
+      "durationMs": 11295,
+      "killedIn": "listed-test-files"
+    },
+    {
+      "id": "F12-late",
+      "family": "F4",
+      "catalogue": "extra",
+      "description": "A session's first decision more than the memory window after the rider began waiting no longer withholds.",
+      "protection": "Finding F12: past the memory window, what crossed the stop before the first look cannot even be bounded.",
+      "file": "services/api/src/matching.ts",
+      "edits": [
+        {
+          "file": "services/api/src/matching.ts",
+          "find": "if (riderState === \"waiting_at_stop\" && prior === undefined && !Number.isNaN(sinceDeclared) && sinceDeclared > policy.memoryWindowSeconds) {",
+          "replace": "if (riderState === \"waiting_at_stop\" && prior === undefined && !Number.isNaN(sinceDeclared) && sinceDeclared > policy.memoryWindowSeconds && Number.isNaN(0)) {"
+        }
+      ],
+      "testFiles": [
+        "services/api/test/matching.test.ts",
+        "services/api/test/journeySession.test.ts"
+      ],
+      "missingTestFiles": [],
+      "outcome": "KILLED",
+      "reason": "2 test(s) newly fail in the listed test files",
+      "failingTestCount": 2,
+      "failingTestCountIncludingBaseline": 2,
+      "killedBy": [
+        {
+          "file": "services/api/test/matching.test.ts",
+          "test": "waiting rider: a first decision later than the memory window cannot account for the gap"
+        },
+        {
+          "file": "services/api/test/matching.test.ts",
+          "test": "a sighting or a declaration dated after now gives no bound on the time since"
+        }
+      ],
+      "baselineFailuresInListedFiles": [],
+      "loadCheck": "passed",
+      "typecheck": "passed",
+      "testFilesRun": 2,
+      "durationMs": 9763,
+      "killedIn": "listed-test-files"
+    },
+    {
+      "id": "F15-forgotten",
+      "family": "F4",
+      "catalogue": "extra",
+      "description": "A vehicle in session memory that is neither in the snapshot nor remembered from the evidence window no longer blocks or competes.",
+      "protection": "Finding F15: a bus out of sight for longer than the memory window is anywhere its last sighting and the time since allow; losing sight of it never raises certainty.",
+      "file": "services/api/src/matching.ts",
+      "edits": [
+        {
+          "file": "services/api/src/matching.ts",
+          "find": "remembered.push(...forgottenVehicles(request, onRoute, remembered, topology)",
+          "replace": "remembered.push(...forgottenVehicles(request, onRoute, remembered, topology).filter(() => Number.isNaN(0))"
+        }
+      ],
+      "testFiles": [
+        "services/api/test/matching.test.ts",
+        "services/api/test/matcherProperties.test.ts",
+        "services/api/test/passiveCounterfactual.test.ts"
+      ],
+      "missingTestFiles": [],
+      "outcome": "KILLED",
+      "reason": "3 test(s) newly fail in the listed test files",
+      "failingTestCount": 3,
+      "failingTestCountIncludingBaseline": 3,
+      "killedBy": [
+        {
+          "file": "services/api/test/matcherProperties.test.ts",
+          "test": "P3: a vehicle out of sight past the memory window never releases a decision its remembered sighting withheld"
+        },
+        {
+          "file": "services/api/test/matching.test.ts",
+          "test": "waiting rider: a bus out of sight past the memory window still competes where it may be by now (F15)"
+        },
+        {
+          "file": "services/api/test/matching.test.ts",
+          "test": "on-board rider: a bus out of sight past the memory window still competes for the window (F15)"
+        }
+      ],
+      "baselineFailuresInListedFiles": [],
+      "loadCheck": "passed",
+      "typecheck": "passed",
+      "testFilesRun": 3,
+      "durationMs": 93461,
+      "killedIn": "listed-test-files"
+    },
+    {
+      "id": "F15-unseen-time",
+      "family": "F4",
+      "catalogue": "extra",
+      "description": "The unobserved-arrival rule caps the time a lost vehicle has been moving at the memory window again.",
+      "protection": "Finding F15: a bus eight or more stops out that leaves the feed can still reach the stop unobserved, given time.",
+      "file": "services/api/src/matching.ts",
+      "edits": [
+        {
+          "file": "services/api/src/matching.ts",
+          "find": "toStop <= reachAfter(unseenSeconds)",
+          "replace": "toStop <= reachAfter(Math.min(unseenSeconds, policy.memoryWindowSeconds))"
+        }
+      ],
+      "testFiles": [
+        "services/api/test/matching.test.ts",
+        "services/api/test/matcherProperties.test.ts"
+      ],
+      "missingTestFiles": [],
+      "outcome": "KILLED",
+      "reason": "2 test(s) newly fail in the listed test files",
+      "failingTestCount": 2,
+      "failingTestCountIncludingBaseline": 2,
+      "killedBy": [
+        {
+          "file": "services/api/test/matching.test.ts",
+          "test": "waiting rider: a bus out of sight past the memory window still competes where it may be by now (F15)"
+        },
+        {
+          "file": "services/api/test/matching.test.ts",
+          "test": "loop: a bus lost across the seam may reach the stop unobserved (F17)"
+        }
+      ],
+      "baselineFailuresInListedFiles": [],
+      "loadCheck": "passed",
+      "typecheck": "passed",
+      "testFilesRun": 2,
+      "durationMs": 45266,
+      "killedIn": "listed-test-files"
+    },
+    {
+      "id": "F15-unknown-out-of-sight",
+      "family": "F4",
+      "catalogue": "extra",
+      "description": "A vehicle whose route progress was unknown when it left the feed no longer withholds the session.",
+      "protection": "Finding F15: a bus of unknown progress may have been at the stop or been the rider's bus; out of sight, nothing will say otherwise.",
+      "file": "services/api/src/matching.ts",
+      "edits": [
+        {
+          "file": "services/api/src/matching.ts",
+          "find": "if (!current.has(vehicleId) && !remembered.has(vehicleId)) withhold(\"vehicle_of_unknown_progress_out_of_sight\");",
+          "replace": "if (!current.has(vehicleId) && !remembered.has(vehicleId) && Number.isNaN(0)) withhold(\"vehicle_of_unknown_progress_out_of_sight\");"
+        }
+      ],
+      "testFiles": [
+        "services/api/test/matching.test.ts",
+        "services/api/test/passiveShadow.test.ts"
+      ],
+      "missingTestFiles": [],
+      "outcome": "KILLED",
+      "reason": "3 test(s) newly fail in the listed test files",
+      "failingTestCount": 3,
+      "failingTestCountIncludingBaseline": 3,
+      "killedBy": [
+        {
+          "file": "services/api/test/matching.test.ts",
+          "test": "a bus of unknown progress that leaves the feed withholds for good (F15)"
+        },
+        {
+          "file": "services/api/test/matching.test.ts",
+          "test": "on board, a bus in the window listed at two places or under another route keeps competing once out of sight (R30)"
+        },
+        {
+          "file": "services/api/test/passiveShadow.test.ts",
+          "test": "frozen provider content never unlocks a selection once it fills the cadence window"
+        }
+      ],
+      "baselineFailuresInListedFiles": [],
+      "loadCheck": "passed",
+      "typecheck": "passed",
+      "testFilesRun": 2,
+      "durationMs": 25254,
+      "killedIn": "listed-test-files"
+    },
+    {
+      "id": "F16-first-sighting",
+      "family": "F4",
+      "catalogue": "extra",
+      "description": "A bus first seen past the stop is judged only at the session's first decision, as before finding F16.",
+      "protection": "Finding F16: an earlier look that did not see a bus says nothing about it; its first sighting past the stop may still be the rider's bus.",
+      "file": "services/api/src/matching.ts",
+      "edits": [
+        {
+          "file": "services/api/src/matching.ts",
+          "find": "      if (seen === undefined && !Number.isNaN(sinceDeclared) && sinceDeclared > 0",
+          "replace": "      if (seen === undefined && prior === undefined && !Number.isNaN(sinceDeclared) && sinceDeclared > 0"
+        }
+      ],
+      "testFiles": [
+        "services/api/test/matching.test.ts",
+        "services/api/test/matcherProperties.test.ts"
+      ],
+      "missingTestFiles": [],
+      "outcome": "KILLED",
+      "reason": "3 test(s) newly fail in the listed test files",
+      "failingTestCount": 3,
+      "failingTestCountIncludingBaseline": 3,
+      "killedBy": [
+        {
+          "file": "services/api/test/matcherProperties.test.ts",
+          "test": "P3: an earlier look that saw nothing never releases a later decision"
+        },
+        {
+          "file": "services/api/test/matcherProperties.test.ts",
+          "test": "P16: an automatic selection is withdrawn once the feed shows another bus reaching the stop first, and never after the selected bus"
+        },
+        {
+          "file": "services/api/test/matching.test.ts",
+          "test": "waiting rider: a bus first seen past the stop mid-session withholds if it could have been at the stop since the rider began waiting (F16)"
+        }
+      ],
+      "baselineFailuresInListedFiles": [],
+      "loadCheck": "passed",
+      "typecheck": "passed",
+      "testFilesRun": 2,
+      "durationMs": 41360,
+      "killedIn": "listed-test-files"
+    },
+    {
+      "id": "F16-onboard-competes",
+      "family": "F4",
+      "catalogue": "extra",
+      "description": "On board, a vehicle missing from the first snapshot stops competing as well as being unselectable.",
+      "protection": "Finding F16: a bus the feed missed when the rider boarded may be theirs, so the bus beside it cannot be shown to be the only one.",
+      "file": "services/api/src/matching.ts",
+      "edits": [
+        {
+          "file": "services/api/src/matching.ts",
+          "find": "row.facts = { ...row.facts, selectable: false, ...(excluded ? { competes: false } : {}) };",
+          "replace": "row.facts = { ...row.facts, selectable: false, competes: false };"
+        }
+      ],
+      "testFiles": [
+        "services/api/test/matching.test.ts"
+      ],
+      "missingTestFiles": [],
+      "outcome": "KILLED",
+      "reason": "2 test(s) newly fail in the listed test files",
+      "failingTestCount": 2,
+      "failingTestCountIncludingBaseline": 2,
+      "killedBy": [
+        {
+          "file": "services/api/test/matching.test.ts",
+          "test": "on-board rider: a bus missing from the first snapshot is never selected, and still competes (F16)"
+        },
+        {
+          "file": "services/api/test/matching.test.ts",
+          "test": "on board round a loop, a bus seen clear of the stop and later back at it or closer past it is never selected, and still competes (R23)"
+        }
+      ],
+      "baselineFailuresInListedFiles": [],
+      "loadCheck": "passed",
+      "typecheck": "passed",
+      "testFilesRun": 1,
+      "durationMs": 8038,
+      "killedIn": "listed-test-files"
+    },
+    {
+      "id": "F17-loop-crossing",
+      "family": "F4",
+      "catalogue": "extra",
+      "description": "Round a loop, a bus whose distance to the stop grew since its last sighting is no longer read as having crossed it.",
+      "protection": "Finding F17: a crossing next to a loop's seam, or longer than half the lap, is still a crossing.",
+      "file": "services/api/src/matching.ts",
+      "edits": [
+        {
+          "file": "services/api/src/matching.ts",
+          "find": "const crossed = loop ? passedOnLoop(seen, row.facts) : seen !== undefined && seen.min <= -1 && offset >= 0;",
+          "replace": "const crossed = loop ? Number.isNaN(0) : seen !== undefined && seen.min <= -1 && offset >= 0;"
+        }
+      ],
+      "testFiles": [
+        "services/api/test/matching.test.ts",
+        "services/api/test/matcherProperties.test.ts"
+      ],
+      "missingTestFiles": [],
+      "outcome": "KILLED",
+      "reason": "4 test(s) newly fail in the listed test files",
+      "failingTestCount": 4,
+      "failingTestCountIncludingBaseline": 4,
+      "killedBy": [
+        {
+          "file": "services/api/test/matcherProperties.test.ts",
+          "test": "P3: a bus seen before the stop and later past it withholds the session for good, across a loop's seam too"
+        },
+        {
+          "file": "services/api/test/matching.test.ts",
+          "test": "loop: a bus seen crossing the stop through the seam withholds (F17)"
+        },
+        {
+          "file": "services/api/test/matching.test.ts",
+          "test": "loop: however short the lap, a bus in the on-board window is never read as one before the stop (F17)"
+        },
+        {
+          "file": "services/api/test/matching.test.ts",
+          "test": "round a loop, a reason a sighting raises is kept before one the time since allows, whatever the order of the rows"
+        }
+      ],
+      "baselineFailuresInListedFiles": [],
+      "loadCheck": "passed",
+      "typecheck": "passed",
+      "testFilesRun": 2,
+      "durationMs": 37608,
+      "killedIn": "listed-test-files"
+    },
+    {
+      "id": "F17-loop-window",
+      "family": "F4",
+      "catalogue": "extra",
+      "description": "Round a loop, a bus leaving the on-board window across half the lap no longer withholds.",
+      "protection": "Finding F17: however short the lap, the rider's bus leaving the window is seen to leave it.",
+      "file": "services/api/src/matching.ts",
+      "edits": [
+        {
+          "file": "services/api/src/matching.ts",
+          "find": "? lastSeen !== undefined && nearWindow(around(lastSeen)) && !nearWindow(row.facts)",
+          "replace": "? Number.isNaN(0)"
+        }
+      ],
+      "testFiles": [
+        "services/api/test/matching.test.ts"
+      ],
+      "missingTestFiles": [],
+      "outcome": "KILLED",
+      "reason": "1 test(s) newly fail in the listed test files",
+      "failingTestCount": 1,
+      "failingTestCountIncludingBaseline": 1,
+      "killedBy": [
+        {
+          "file": "services/api/test/matching.test.ts",
+          "test": "loop: however short the lap, a bus in the on-board window is never read as one before the stop (F17)"
+        }
+      ],
+      "baselineFailuresInListedFiles": [],
+      "loadCheck": "passed",
+      "typecheck": "passed",
+      "testFilesRun": 1,
+      "durationMs": 8035,
+      "killedIn": "listed-test-files"
+    },
+    {
+      "id": "F17-loop-exclusion",
+      "family": "F4",
+      "catalogue": "extra",
+      "description": "Round a short loop, a bus inside the on-board window that is also a few stops before the stop the other way is excluded as not the rider's.",
+      "protection": "Finding F17: a bus that may be in the on-board window is never read as one that reached the stop after the rider boarded.",
+      "file": "services/api/src/matching.ts",
+      "edits": [
+        {
+          "file": "services/api/src/matching.ts",
+          "find": "const beforeStop = (at: Distances) => at.forward !== undefined && at.forward >= 2 && !nearWindow(at);",
+          "replace": "const beforeStop = (at: Distances) => at.forward !== undefined && at.forward >= 2;"
+        }
+      ],
+      "testFiles": [
+        "services/api/test/matching.test.ts",
+        "services/api/test/matcherProperties.test.ts"
+      ],
+      "missingTestFiles": [],
+      "outcome": "KILLED",
+      "reason": "4 test(s) newly fail in the listed test files",
+      "failingTestCount": 4,
+      "failingTestCountIncludingBaseline": 4,
+      "killedBy": [
+        {
+          "file": "services/api/test/matching.test.ts",
+          "test": "loop: however short the lap, a bus in the on-board window is never read as one before the stop (F17)"
+        },
+        {
+          "file": "services/api/test/matching.test.ts",
+          "test": "on board round a loop, a bus seen clear of the stop and later back at it or closer past it is never selected, and still competes (R23)"
+        },
+        {
+          "file": "services/api/test/matching.test.ts",
+          "test": "on board round a loop, a bus seen again after long enough to have gone round through the stop is never selected (R23)"
+        },
+        {
+          "file": "services/api/test/matching.test.ts",
+          "test": "on board, a loop too short to tell the stops just past the boarding stop from those just before it selects nothing (R23)"
+        }
+      ],
+      "baselineFailuresInListedFiles": [],
+      "loadCheck": "passed",
+      "typecheck": "passed",
+      "testFilesRun": 2,
+      "durationMs": 35054,
+      "killedIn": "listed-test-files"
+    },
+    {
+      "id": "F17-reached-after",
+      "family": "F4",
+      "catalogue": "extra",
+      "description": "On board, a bus seen before the stop is no longer recorded as having reached it after the rider boarded; round a loop, the offsets' extremes alone then forget it.",
+      "protection": "Finding F17: a bus that reached the stop after the rider boarded is never theirs, for the rest of the session, on any route shape.",
+      "file": "services/api/src/matching.ts",
+      "edits": [
+        {
+          "file": "services/api/src/matching.ts",
+          "find": "      if (beforeNow) reachedAfterBoarding.add(vehicleId);",
+          "replace": "      if (beforeNow && Number.isNaN(0)) reachedAfterBoarding.add(vehicleId);"
+        }
+      ],
+      "testFiles": [
+        "services/api/test/matching.test.ts",
+        "services/api/test/matcherProperties.test.ts"
+      ],
+      "missingTestFiles": [],
+      "outcome": "KILLED",
+      "reason": "1 test(s) newly fail in the listed test files",
+      "failingTestCount": 1,
+      "failingTestCountIncludingBaseline": 1,
+      "killedBy": [
+        {
+          "file": "services/api/test/matching.test.ts",
+          "test": "on-board rider on a loop: a bus once seen before the stop is never theirs, however it reads later (F17)"
+        }
+      ],
+      "baselineFailuresInListedFiles": [],
+      "loadCheck": "passed",
+      "typecheck": "passed",
+      "testFilesRun": 2,
+      "durationMs": 35294,
+      "killedIn": "listed-test-files"
+    },
+    {
+      "id": "F15-onboard-not-theirs",
+      "family": "F4",
+      "catalogue": "extra",
+      "description": "On board, a bus shown to have reached the stop after the rider boarded competes again once it is out of sight.",
+      "protection": "A bus that cannot be the rider's never competes for the on-board window, seen or not.",
+      "file": "services/api/src/matching.ts",
+      "edits": [
+        {
+          "file": "services/api/src/matching.ts",
+          "find": "      if (!current.has(vehicleId) && reachedEarlier(vehicleId, range)) excluded.set(vehicleId, \"reached_boarding_stop_after_rider_boarded\");",
+          "replace": "      if (!current.has(vehicleId) && reachedEarlier(vehicleId, range) && Number.isNaN(0)) excluded.set(vehicleId, \"reached_boarding_stop_after_rider_boarded\");"
+        }
+      ],
+      "testFiles": [
+        "services/api/test/matching.test.ts"
+      ],
+      "missingTestFiles": [],
+      "outcome": "KILLED",
+      "reason": "1 test(s) newly fail in the listed test files",
+      "failingTestCount": 1,
+      "failingTestCountIncludingBaseline": 1,
+      "killedBy": [
+        {
+          "file": "services/api/test/matching.test.ts",
+          "test": "on-board rider: a bus shown not to be theirs does not compete once it is out of sight"
+        }
+      ],
+      "baselineFailuresInListedFiles": [],
+      "loadCheck": "passed",
+      "typecheck": "passed",
+      "testFilesRun": 1,
+      "durationMs": 7384,
+      "killedIn": "listed-test-files"
+    },
+    {
+      "id": "F15-placed-twice",
+      "family": "F4",
+      "catalogue": "extra",
+      "description": "A bus one snapshot places at two positions is remembered at whichever row came last, as a placed bus.",
+      "protection": "A bus with two positions at once has none that can be trusted; what the session remembers of it never depends on row order.",
+      "file": "services/api/src/matching.ts",
+      "edits": [
+        {
+          "file": "services/api/src/matching.ts",
+          "find": "      lastSeenAt: request.now,\n    });\n    if (new Set(placed).size > 1) sawUnknown.add(vehicleId);",
+          "replace": "      lastSeenAt: request.now,\n    });\n    if (new Set(placed).size > 1 && Number.isNaN(0)) sawUnknown.add(vehicleId);"
+        }
+      ],
+      "testFiles": [
+        "services/api/test/matching.test.ts",
+        "services/api/test/matcherProperties.test.ts"
+      ],
+      "missingTestFiles": [],
+      "outcome": "KILLED",
+      "reason": "1 test(s) newly fail in the listed test files",
+      "failingTestCount": 1,
+      "failingTestCountIncludingBaseline": 1,
+      "killedBy": [
+        {
+          "file": "services/api/test/matching.test.ts",
+          "test": "a bus the snapshot places at two positions is remembered as of unknown progress, whatever the order of its rows"
+        }
+      ],
+      "baselineFailuresInListedFiles": [],
+      "loadCheck": "passed",
+      "typecheck": "passed",
+      "testFilesRun": 2,
+      "durationMs": 43035,
+      "killedIn": "listed-test-files"
+    },
+    {
+      "id": "F15-unplaced-row",
+      "family": "F4",
+      "catalogue": "extra",
+      "description": "A remembered row places a bus even when that bus's latest sighting had no usable position.",
+      "protection": "The evidence window may keep another row of an unplaced sighting; that row is not where the bus is.",
+      "file": "services/api/src/matching.ts",
+      "edits": [
+        {
+          "file": "services/api/src/matching.ts",
+          "find": "  if (since === undefined || Date.parse(row.receivedAt ?? \"\") > Date.parse(since)) return row;",
+          "replace": "  if (since === undefined || Date.parse(row.receivedAt ?? \"\") > Date.parse(since) || !Number.isNaN(0)) return row;"
+        }
+      ],
+      "testFiles": [
+        "services/api/test/matching.test.ts"
+      ],
+      "missingTestFiles": [],
+      "outcome": "KILLED",
+      "reason": "2 test(s) newly fail in the listed test files",
+      "failingTestCount": 2,
+      "failingTestCountIncludingBaseline": 2,
+      "killedBy": [
+        {
+          "file": "services/api/test/matching.test.ts",
+          "test": "a remembered row does not place a bus whose latest sighting had no position"
+        },
+        {
+          "file": "services/api/test/matching.test.ts",
+          "test": "a remembered row of the sighting that left a bus unplaced stays unplaced, though received a moment after now (R28)"
+        }
+      ],
+      "baselineFailuresInListedFiles": [],
+      "loadCheck": "passed",
+      "typecheck": "passed",
+      "testFilesRun": 1,
+      "durationMs": 11107,
+      "killedIn": "listed-test-files"
+    },
+    {
+      "id": "F15-future-sighting",
+      "family": "F4",
+      "catalogue": "extra",
+      "description": "A lost bus whose last sighting, or a rider whose declaration, is dated well after now is taken as seen, or declared, just now.",
+      "protection": "When the clock steps back, the time since a sighting is unknown, never zero.",
+      "file": "services/api/src/matching.ts",
+      "edits": [
+        {
+          "file": "services/api/src/matching.ts",
+          "find": "  if (!Number.isFinite(thenMs) || !Number.isFinite(nowMs) || thenMs > nowMs + CLOCK_SKEW_TOLERANCE_MS) return Number.POSITIVE_INFINITY;",
+          "replace": "  if (!Number.isFinite(thenMs) || !Number.isFinite(nowMs)) return Number.POSITIVE_INFINITY;"
+        }
+      ],
+      "testFiles": [
+        "services/api/test/matching.test.ts"
+      ],
+      "missingTestFiles": [],
+      "outcome": "KILLED",
+      "reason": "1 test(s) newly fail in the listed test files",
+      "failingTestCount": 1,
+      "failingTestCountIncludingBaseline": 1,
+      "killedBy": [
+        {
+          "file": "services/api/test/matching.test.ts",
+          "test": "a sighting or a declaration dated after now gives no bound on the time since"
+        }
+      ],
+      "baselineFailuresInListedFiles": [],
+      "loadCheck": "passed",
+      "typecheck": "passed",
+      "testFilesRun": 1,
+      "durationMs": 9415,
+      "killedIn": "listed-test-files"
+    },
+    {
+      "id": "F17-lost-loop",
+      "family": "F4",
+      "catalogue": "extra",
+      "description": "A lost bus last seen past the stop on a loop can no longer come round to it unobserved.",
+      "protection": "Finding F17: on a loop, a bus past the stop keeps travelling towards it; given time it may reach it unseen.",
+      "file": "services/api/src/matching.ts",
+      "edits": [
+        {
+          "file": "services/api/src/matching.ts",
+          "find": "  if (topology?.loop) return mod(-last, topology.cycleLength);",
+          "replace": "  if (topology?.loop && Number.isNaN(0)) return mod(-last, topology.cycleLength);"
+        }
+      ],
+      "testFiles": [
+        "services/api/test/matching.test.ts"
+      ],
+      "missingTestFiles": [],
+      "outcome": "KILLED",
+      "reason": "1 test(s) newly fail in the listed test files",
+      "failingTestCount": 1,
+      "failingTestCountIncludingBaseline": 1,
+      "killedBy": [
+        {
+          "file": "services/api/test/matching.test.ts",
+          "test": "loop: a bus lost across the seam may reach the stop unobserved (F17)"
+        }
+      ],
+      "baselineFailuresInListedFiles": [],
+      "loadCheck": "passed",
+      "typecheck": "passed",
+      "testFilesRun": 1,
+      "durationMs": 9073,
+      "killedIn": "listed-test-files"
+    },
+    {
+      "id": "F18-lap",
+      "family": "fail-closed",
+      "catalogue": "extra",
+      "description": "A loop's lap is the number of stop rows again, so a missing row moves the seam.",
+      "protection": "Finding F18: the lap is measured in sequences; a missing or repeated row in the stop list cannot move a bus across the stop.",
+      "file": "services/api/src/matching.ts",
+      "edits": [
+        {
+          "file": "services/api/src/matching.ts",
+          "find": "cycleLength: loop ? Math.max(1, last!.sequence - first!.sequence) : Math.max(1, ordered.length),",
+          "replace": "cycleLength: Math.max(1, lap.length),"
+        }
+      ],
+      "testFiles": [
+        "services/api/test/matching.test.ts"
+      ],
+      "missingTestFiles": [],
+      "outcome": "KILLED",
+      "reason": "1 test(s) newly fail in the listed test files",
+      "failingTestCount": 1,
+      "failingTestCountIncludingBaseline": 1,
+      "killedBy": [
+        {
+          "file": "services/api/test/matching.test.ts",
+          "test": "loop: the lap is measured in sequences, so a missing or repeated stop row cannot move the seam (F18)"
+        }
+      ],
+      "baselineFailuresInListedFiles": [],
+      "loadCheck": "passed",
+      "typecheck": "passed",
+      "testFilesRun": 1,
+      "durationMs": 9156,
+      "killedIn": "listed-test-files"
+    },
+    {
+      "id": "F18-conflict",
+      "family": "fail-closed",
+      "catalogue": "extra",
+      "description": "Two different stops listed under one sequence no longer withhold selection.",
+      "protection": "Finding F18: a stop list that puts two stops at one sequence cannot place any bus.",
+      "file": "services/api/src/matching.ts",
+      "edits": [
+        {
+          "file": "services/api/src/matching.ts",
+          "find": "else if (listed.stopId !== stop.stopId) sequenceConflict = true;",
+          "replace": "else if (listed.stopId !== stop.stopId && Number.isNaN(0)) sequenceConflict = true;"
+        }
+      ],
+      "testFiles": [
+        "services/api/test/matching.test.ts"
+      ],
+      "missingTestFiles": [],
+      "outcome": "KILLED",
+      "reason": "1 test(s) newly fail in the listed test files",
+      "failingTestCount": 1,
+      "failingTestCountIncludingBaseline": 1,
+      "killedBy": [
+        {
+          "file": "services/api/test/matching.test.ts",
+          "test": "loop: the lap is measured in sequences, so a missing or repeated stop row cannot move the seam (F18)"
+        }
+      ],
+      "baselineFailuresInListedFiles": [],
+      "loadCheck": "passed",
+      "typecheck": "passed",
+      "testFilesRun": 1,
+      "durationMs": 9169,
+      "killedIn": "listed-test-files"
+    },
+    {
+      "id": "F19-two-routes",
+      "family": "fail-closed",
+      "catalogue": "extra",
+      "description": "A row of the same vehicle under another route no longer counts as a second position.",
+      "protection": "Finding F19: a bus the provider also places on another route has no position that can be trusted.",
+      "file": "services/api/src/matching.ts",
+      "edits": [
+        {
+          "file": "services/api/src/matching.ts",
+          "find": "  for (const row of assessed) {\n    const entry = positionsByVehicle.get(row.ranked.vehicleId)",
+          "replace": "  for (const row of onRoute) {\n    const entry = positionsByVehicle.get(row.ranked.vehicleId)"
+        }
+      ],
+      "testFiles": [
+        "services/api/test/matching.test.ts",
+        "services/api/test/matcherProperties.test.ts"
+      ],
+      "missingTestFiles": [],
+      "outcome": "KILLED",
+      "reason": "4 test(s) newly fail in the listed test files",
+      "failingTestCount": 4,
+      "failingTestCountIncludingBaseline": 4,
+      "killedBy": [
+        {
+          "file": "services/api/test/matcherProperties.test.ts",
+          "test": "P13: a vehicle also reported under another route is never selected and never makes the order matter"
+        },
+        {
+          "file": "services/api/test/matching.test.ts",
+          "test": "on board, a bus the snapshot places twice is never excluded by one of the places, and keeps competing (R27)"
+        },
+        {
+          "file": "services/api/test/matching.test.ts",
+          "test": "on board, a bus in the window listed at two places or under another route keeps competing once out of sight (R30)"
+        },
+        {
+          "file": "services/api/test/matching.test.ts",
+          "test": "a vehicle also reported under another route is a second position, in either order (F19)"
+        }
+      ],
+      "baselineFailuresInListedFiles": [],
+      "loadCheck": "passed",
+      "typecheck": "passed",
+      "testFilesRun": 2,
+      "durationMs": 54287,
+      "killedIn": "listed-test-files"
+    },
+    {
+      "id": "F19-invariant-route",
+      "family": "fail-closed",
+      "catalogue": "extra",
+      "description": "The invariant check reads rows of the selected vehicle under any route again.",
+      "protection": "Finding F19: the invariant judges the rows that were selected, on the request's route, whatever else shares the id.",
+      "file": "services/api/src/matching.ts",
+      "edits": [
+        {
+          "file": "services/api/src/matching.ts",
+          "find": "    && (request.routeId === undefined || candidate.routeId === request.routeId));",
+          "replace": "    && (request.routeId === undefined || candidate.routeId !== undefined));"
+        }
+      ],
+      "testFiles": [
+        "services/api/test/matching.test.ts"
+      ],
+      "missingTestFiles": [],
+      "outcome": "KILLED",
+      "reason": "1 test(s) newly fail in the listed test files",
+      "failingTestCount": 1,
+      "failingTestCountIncludingBaseline": 1,
+      "killedBy": [
+        {
+          "file": "services/api/test/matching.test.ts",
+          "test": "a vehicle also reported under another route is a second position, in either order (F19)"
+        }
+      ],
+      "baselineFailuresInListedFiles": [],
+      "loadCheck": "passed",
+      "typecheck": "passed",
+      "testFilesRun": 1,
+      "durationMs": 9671,
+      "killedIn": "listed-test-files"
+    },
+    {
+      "id": "F20-never-watched",
+      "family": "fail-closed",
+      "catalogue": "extra",
+      "description": "An automatic selection for a waiting rider is no longer watched, however it was stored.",
+      "protection": "Finding F20: until the selected bus is seen at the stop, another bus seen reaching it first may be the rider's.",
+      "file": "services/api/src/journeySession.ts",
+      "edits": [
+        {
+          "file": "services/api/src/journeySession.ts",
+          "find": "      && (record.riderState ?? \"waiting_at_stop\") === \"waiting_at_stop\") {\n      const watch = record.boardingWatch ??=",
+          "replace": "      && (record.riderState ?? \"waiting_at_stop\") === \"waiting_at_stop\" && Number.isNaN(0)) {\n      const watch = record.boardingWatch ??="
+        }
+      ],
+      "testFiles": [
+        "services/api/test/journeySession.test.ts",
+        "services/api/test/matcherProperties.test.ts"
+      ],
+      "missingTestFiles": [],
+      "outcome": "KILLED",
+      "reason": "17 test(s) newly fail in the listed test files",
+      "failingTestCount": 17,
+      "failingTestCountIncludingBaseline": 17,
+      "killedBy": [
+        {
+          "file": "services/api/test/journeySession.test.ts",
+          "test": "an automatic selection is withdrawn when another bus is seen reaching the stop first, and nothing is selected again"
+        },
+        {
+          "file": "services/api/test/journeySession.test.ts",
+          "test": "after a withdrawal the rider may be on the bus that just left the stop, so it is offered"
+        },
+        {
+          "file": "services/api/test/journeySession.test.ts",
+          "test": "the selected bus seen at the stop first ends the watch: a bus behind reaching the stop later withdraws nothing"
+        },
+        {
+          "file": "services/api/test/journeySession.test.ts",
+          "test": "another bus at the stop in the same poll as the selected bus withdraws the selection"
+        },
+        {
+          "file": "services/api/test/journeySession.test.ts",
+          "test": "a bus out of sight that could have reached the stop never withdraws a selection; seen past it, it does"
+        },
+        {
+          "file": "services/api/test/journeySession.test.ts",
+          "test": "a bus first seen past the stop withdraws a selection only if it could have been at the stop since the rider began waiting"
+        },
+        {
+          "file": "services/api/test/journeySession.test.ts",
+          "test": "round a loop, another bus crossing the stop next to the seam withdraws the selection"
+        },
+        {
+          "file": "services/api/test/journeySession.test.ts",
+          "test": "round a loop, the selected bus read one stop back does not end the watch: a bus reaching the stop first still withdraws (R31)"
+        },
+        {
+          "file": "services/api/test/journeySession.test.ts",
+          "test": "round a loop, the selected bus seen again two stops back after a long gap does not end the watch (R31)"
+        },
+        {
+          "file": "services/api/test/journeySession.test.ts",
+          "test": "the selected bus listed at two places, or also under another route, at the stop does not end the watch (R31)"
+        },
+        {
+          "file": "services/api/test/journeySession.test.ts",
+          "test": "the selected bus's remembered row never ends the watch, whichever order its two rows came in (R31)"
+        },
+        {
+          "file": "services/api/test/journeySession.test.ts",
+          "test": "the selected bus out of sight never ends the watch: a bus seen at the stop afterwards withdraws (R31)"
+        }
+      ],
+      "baselineFailuresInListedFiles": [],
+      "loadCheck": "passed",
+      "typecheck": "passed",
+      "testFilesRun": 2,
+      "durationMs": 49636,
+      "killedIn": "listed-test-files"
+    },
+    {
+      "id": "F20-others-ignored",
+      "family": "fail-closed",
+      "catalogue": "extra",
+      "description": "Another bus seen reaching the stop no longer withdraws the selection.",
+      "protection": "Finding F20: the rider boards the first bus of their route to arrive, whichever was selected.",
+      "file": "services/api/src/journeySession.ts",
+      "edits": [
+        {
+          "file": "services/api/src/journeySession.ts",
+          "find": "    if (ANOTHER_BUS_REACHED_THE_STOP.has(others.passage?.withheld?.reason ?? \"\")) return true;",
+          "replace": "    if (ANOTHER_BUS_REACHED_THE_STOP.has(others.passage?.withheld?.reason ?? \"\") && Number.isNaN(0)) return true;"
+        }
+      ],
+      "testFiles": [
+        "services/api/test/journeySession.test.ts",
+        "services/api/test/matcherProperties.test.ts"
+      ],
+      "missingTestFiles": [],
+      "outcome": "KILLED",
+      "reason": "16 test(s) newly fail in the listed test files",
+      "failingTestCount": 16,
+      "failingTestCountIncludingBaseline": 16,
+      "killedBy": [
+        {
+          "file": "services/api/test/journeySession.test.ts",
+          "test": "an automatic selection is withdrawn when another bus is seen reaching the stop first, and nothing is selected again"
+        },
+        {
+          "file": "services/api/test/journeySession.test.ts",
+          "test": "after a withdrawal the rider may be on the bus that just left the stop, so it is offered"
+        },
+        {
+          "file": "services/api/test/journeySession.test.ts",
+          "test": "another bus at the stop in the same poll as the selected bus withdraws the selection"
+        },
+        {
+          "file": "services/api/test/journeySession.test.ts",
+          "test": "a bus out of sight that could have reached the stop never withdraws a selection; seen past it, it does"
+        },
+        {
+          "file": "services/api/test/journeySession.test.ts",
+          "test": "a bus first seen past the stop withdraws a selection only if it could have been at the stop since the rider began waiting"
+        },
+        {
+          "file": "services/api/test/journeySession.test.ts",
+          "test": "round a loop, another bus crossing the stop next to the seam withdraws the selection"
+        },
+        {
+          "file": "services/api/test/journeySession.test.ts",
+          "test": "round a loop, the selected bus read one stop back does not end the watch: a bus reaching the stop first still withdraws (R31)"
+        },
+        {
+          "file": "services/api/test/journeySession.test.ts",
+          "test": "round a loop, the selected bus seen again two stops back after a long gap does not end the watch (R31)"
+        },
+        {
+          "file": "services/api/test/journeySession.test.ts",
+          "test": "the selected bus listed at two places, or also under another route, at the stop does not end the watch (R31)"
+        },
+        {
+          "file": "services/api/test/journeySession.test.ts",
+          "test": "the selected bus's remembered row never ends the watch, whichever order its two rows came in (R31)"
+        },
+        {
+          "file": "services/api/test/journeySession.test.ts",
+          "test": "the selected bus out of sight never ends the watch: a bus seen at the stop afterwards withdraws (R31)"
+        },
+        {
+          "file": "services/api/test/journeySession.test.ts",
+          "test": "the selected bus seen past the stop ends the watch only if it could have got there since it was seen before it (R31)"
+        }
+      ],
+      "baselineFailuresInListedFiles": [],
+      "loadCheck": "passed",
+      "typecheck": "passed",
+      "testFilesRun": 2,
+      "durationMs": 49857,
+      "killedIn": "listed-test-files"
+    },
+    {
+      "id": "F20-selected-first",
+      "family": "fail-closed",
+      "catalogue": "extra",
+      "description": "When the selected bus and another reach the stop in the same poll, the selection stands.",
+      "protection": "Finding F20: two buses at the stop between two polls leave the rider on either.",
+      "file": "services/api/src/journeySession.ts",
+      "edits": [
+        {
+          "file": "services/api/src/journeySession.ts",
+          "find": "    if (ANOTHER_BUS_REACHED_THE_STOP.has(others.passage?.withheld?.reason ?? \"\")) return true;",
+          "replace": "    if (ANOTHER_BUS_REACHED_THE_STOP.has(others.passage?.withheld?.reason ?? \"\")\n      && placeOfSelected(record, vehicles, selectedId)?.zone !== \"boarding_stop_unresolved\") return true;"
+        }
+      ],
+      "testFiles": [
+        "services/api/test/journeySession.test.ts"
+      ],
+      "missingTestFiles": [],
+      "outcome": "KILLED",
+      "reason": "1 test(s) newly fail in the listed test files",
+      "failingTestCount": 1,
+      "failingTestCountIncludingBaseline": 1,
+      "killedBy": [
+        {
+          "file": "services/api/test/journeySession.test.ts",
+          "test": "another bus at the stop in the same poll as the selected bus withdraws the selection"
+        }
+      ],
+      "baselineFailuresInListedFiles": [],
+      "loadCheck": "passed",
+      "typecheck": "passed",
+      "testFilesRun": 1,
+      "durationMs": 12558,
+      "killedIn": "listed-test-files"
+    },
+    {
+      "id": "F20-first-sighting",
+      "family": "fail-closed",
+      "catalogue": "extra",
+      "description": "A bus seen for the first time past the stop no longer withdraws the selection.",
+      "protection": "Finding F20 with F16: a bus first seen past the stop may have been at it while the rider waited.",
+      "file": "services/api/src/journeySession.ts",
+      "edits": [
+        {
+          "file": "services/api/src/journeySession.ts",
+          "find": "  \"boarding_stop_reached_during_session\",\n  \"vehicle_first_seen_past_boarding_stop\",\n]);",
+          "replace": "  \"boarding_stop_reached_during_session\",\n]);"
+        }
+      ],
+      "testFiles": [
+        "services/api/test/journeySession.test.ts"
+      ],
+      "missingTestFiles": [],
+      "outcome": "KILLED",
+      "reason": "1 test(s) newly fail in the listed test files",
+      "failingTestCount": 1,
+      "failingTestCountIncludingBaseline": 1,
+      "killedBy": [
+        {
+          "file": "services/api/test/journeySession.test.ts",
+          "test": "a bus first seen past the stop withdraws a selection only if it could have been at the stop since the rider began waiting"
+        }
+      ],
+      "baselineFailuresInListedFiles": [],
+      "loadCheck": "passed",
+      "typecheck": "passed",
+      "testFilesRun": 1,
+      "durationMs": 13259,
+      "killedIn": "listed-test-files"
+    },
+    {
+      "id": "F20-watch-never-ends",
+      "family": "fail-closed",
+      "catalogue": "extra",
+      "description": "The selected bus seen at the stop no longer ends the boarding watch.",
+      "protection": "Finding F20: once the selected bus reached the stop first, a bus behind it arriving later says nothing about the rider.",
+      "file": "services/api/src/journeySession.ts",
+      "edits": [
+        {
+          "file": "services/api/src/journeySession.ts",
+          "find": "      ...(reached ? { endedAt: now.toISOString() } : {}),",
+          "replace": "      ...(reached && Number.isNaN(0) ? { endedAt: now.toISOString() } : {}),"
+        }
+      ],
+      "testFiles": [
+        "services/api/test/journeySession.test.ts",
+        "services/api/test/matcherProperties.test.ts"
+      ],
+      "missingTestFiles": [],
+      "outcome": "KILLED",
+      "reason": "5 test(s) newly fail in the listed test files",
+      "failingTestCount": 5,
+      "failingTestCountIncludingBaseline": 5,
+      "killedBy": [
+        {
+          "file": "services/api/test/journeySession.test.ts",
+          "test": "the selected bus seen at the stop first ends the watch: a bus behind reaching the stop later withdraws nothing"
+        },
+        {
+          "file": "services/api/test/journeySession.test.ts",
+          "test": "round a loop, the selected bus seen again two stops back after a long gap does not end the watch (R31)"
+        },
+        {
+          "file": "services/api/test/journeySession.test.ts",
+          "test": "the selected bus seen past the stop ends the watch only if it could have got there since it was seen before it (R31)"
+        },
+        {
+          "file": "services/api/test/journeySession.test.ts",
+          "test": "a withdrawal survives a concurrent refresh that saved first, unless that one saw the selected bus at the stop earlier (R33)"
+        },
+        {
+          "file": "services/api/test/matcherProperties.test.ts",
+          "test": "P16: an automatic selection is withdrawn once the feed shows another bus reaching the stop first, and never after the selected bus"
+        }
+      ],
+      "baselineFailuresInListedFiles": [],
+      "loadCheck": "passed",
+      "typecheck": "passed",
+      "testFilesRun": 2,
+      "durationMs": 47011,
+      "killedIn": "listed-test-files"
+    },
+    {
+      "id": "F20-reselect",
+      "family": "fail-closed",
+      "catalogue": "extra",
+      "description": "A withdrawal no longer leaves its own standing reason in the session's memory.",
+      "protection": "Finding F20: after a withdrawal the rider keeps being asked which bus they are on, with the bus that just left the stop offered, for the rest of the session.",
+      "file": "services/api/src/journeySession.ts",
+      "edits": [
+        {
+          "file": "services/api/src/journeySession.ts",
+          "find": "      withheld: { reason: SELECTION_WITHDRAWN, at: now.toISOString() },",
+          "replace": "      ...(Number.isNaN(0) ? { withheld: { reason: SELECTION_WITHDRAWN, at: now.toISOString() } } : {}),"
+        }
+      ],
+      "testFiles": [
+        "services/api/test/journeySession.test.ts",
+        "services/api/test/matcherProperties.test.ts"
+      ],
+      "missingTestFiles": [],
+      "outcome": "KILLED",
+      "reason": "4 test(s) newly fail in the listed test files",
+      "failingTestCount": 4,
+      "failingTestCountIncludingBaseline": 4,
+      "killedBy": [
+        {
+          "file": "services/api/test/journeySession.test.ts",
+          "test": "an automatic selection is withdrawn when another bus is seen reaching the stop first, and nothing is selected again"
+        },
+        {
+          "file": "services/api/test/journeySession.test.ts",
+          "test": "after a withdrawal the rider may be on the bus that just left the stop, so it is offered"
+        },
+        {
+          "file": "services/api/test/journeySession.test.ts",
+          "test": "after a withdrawal round a loop, the bus that just left the stop is offered across the seam too (R34)"
+        },
+        {
+          "file": "services/api/test/journeySession.test.ts",
+          "test": "a withdrawal survives a concurrent refresh that saved first, unless that one saw the selected bus at the stop earlier (R33)"
+        }
+      ],
+      "mustBeKilledBy": [
+        "an automatic selection is withdrawn when another bus is seen reaching the stop first, and nothing is selected again",
+        "after a withdrawal the rider may be on the bus that just left the stop, so it is offered"
+      ],
+      "baselineFailuresInListedFiles": [],
+      "loadCheck": "passed",
+      "typecheck": "passed",
+      "testFilesRun": 2,
+      "durationMs": 55105,
+      "requiredKillerFired": true,
+      "killedIn": "listed-test-files"
+    },
+    {
+      "id": "F20-watch-ends-early",
+      "family": "fail-closed",
+      "catalogue": "extra",
+      "description": "Any reason the selected bus's own look raises ends the boarding watch, as when it is merely out of sight.",
+      "protection": "Findings F20 and R31: only a sighting of the selected bus reaching the stop ends the watch; a bus out of sight only may have.",
+      "file": "services/api/src/journeySession.ts",
+      "edits": [
+        {
+          "file": "services/api/src/journeySession.ts",
+          "find": "    const reached = place !== undefined",
+          "replace": "    const reached = selected.passage?.withheld !== undefined || place !== undefined"
+        }
+      ],
+      "testFiles": [
+        "services/api/test/journeySession.test.ts",
+        "services/api/test/matcherProperties.test.ts"
+      ],
+      "missingTestFiles": [],
+      "outcome": "KILLED",
+      "reason": "6 test(s) newly fail in the listed test files",
+      "failingTestCount": 6,
+      "failingTestCountIncludingBaseline": 6,
+      "killedBy": [
+        {
+          "file": "services/api/test/journeySession.test.ts",
+          "test": "round a loop, the selected bus read one stop back does not end the watch: a bus reaching the stop first still withdraws (R31)"
+        },
+        {
+          "file": "services/api/test/journeySession.test.ts",
+          "test": "round a loop, the selected bus seen again two stops back after a long gap does not end the watch (R31)"
+        },
+        {
+          "file": "services/api/test/journeySession.test.ts",
+          "test": "the selected bus listed at two places, or also under another route, at the stop does not end the watch (R31)"
+        },
+        {
+          "file": "services/api/test/journeySession.test.ts",
+          "test": "the selected bus's remembered row never ends the watch, whichever order its two rows came in (R31)"
+        },
+        {
+          "file": "services/api/test/journeySession.test.ts",
+          "test": "the selected bus out of sight never ends the watch: a bus seen at the stop afterwards withdraws (R31)"
+        },
+        {
+          "file": "services/api/test/journeySession.test.ts",
+          "test": "the selected bus seen past the stop ends the watch only if it could have got there since it was seen before it (R31)"
+        }
+      ],
+      "baselineFailuresInListedFiles": [],
+      "loadCheck": "passed",
+      "typecheck": "passed",
+      "testFilesRun": 2,
+      "durationMs": 60562,
+      "killedIn": "listed-test-files"
+    },
+    {
+      "id": "R31-reason",
+      "family": "fail-closed",
+      "catalogue": "extra",
+      "description": "The matcher's own crossing reason for the selected bus ends the watch again.",
+      "protection": "Finding R31: a reading one stop back round a loop, a bus listed twice, and a remembered row look like an arrival to the matcher's caution, and are none.",
+      "file": "services/api/src/journeySession.ts",
+      "edits": [
+        {
+          "file": "services/api/src/journeySession.ts",
+          "find": "    const reached = place !== undefined",
+          "replace": "    const reached = selected.passage?.withheld?.reason === \"boarding_stop_reached_during_session\" || place !== undefined"
+        }
+      ],
+      "testFiles": [
+        "services/api/test/journeySession.test.ts"
+      ],
+      "missingTestFiles": [],
+      "outcome": "KILLED",
+      "reason": "5 test(s) newly fail in the listed test files",
+      "failingTestCount": 5,
+      "failingTestCountIncludingBaseline": 5,
+      "killedBy": [
+        {
+          "file": "services/api/test/journeySession.test.ts",
+          "test": "round a loop, the selected bus read one stop back does not end the watch: a bus reaching the stop first still withdraws (R31)"
+        },
+        {
+          "file": "services/api/test/journeySession.test.ts",
+          "test": "round a loop, the selected bus seen again two stops back after a long gap does not end the watch (R31)"
+        },
+        {
+          "file": "services/api/test/journeySession.test.ts",
+          "test": "the selected bus listed at two places, or also under another route, at the stop does not end the watch (R31)"
+        },
+        {
+          "file": "services/api/test/journeySession.test.ts",
+          "test": "the selected bus's remembered row never ends the watch, whichever order its two rows came in (R31)"
+        },
+        {
+          "file": "services/api/test/journeySession.test.ts",
+          "test": "the selected bus seen past the stop ends the watch only if it could have got there since it was seen before it (R31)"
+        }
+      ],
+      "baselineFailuresInListedFiles": [],
+      "loadCheck": "passed",
+      "typecheck": "passed",
+      "testFilesRun": 1,
+      "durationMs": 10879,
+      "killedIn": "listed-test-files"
+    },
+    {
+      "id": "R31-one-place",
+      "family": "fail-closed",
+      "catalogue": "extra",
+      "description": "The selected bus listed at two places is placed by its first row.",
+      "protection": "Finding R31: a bus listed at two places is at no place that can be trusted, so it shows no arrival.",
+      "file": "services/api/src/journeySession.ts",
+      "edits": [
+        {
+          "file": "services/api/src/journeySession.ts",
+          "find": "  if (new Set(rows.map((row) => row.stopSequence)).size !== 1) return undefined;",
+          "replace": "  if (new Set(rows.map((row) => row.stopSequence)).size !== 1 && Number.isNaN(0)) return undefined;"
+        }
+      ],
+      "testFiles": [
+        "services/api/test/journeySession.test.ts"
+      ],
+      "missingTestFiles": [],
+      "outcome": "KILLED",
+      "reason": "1 test(s) newly fail in the listed test files",
+      "failingTestCount": 1,
+      "failingTestCountIncludingBaseline": 1,
+      "killedBy": [
+        {
+          "file": "services/api/test/journeySession.test.ts",
+          "test": "the selected bus listed at two places, or also under another route, at the stop does not end the watch (R31)"
+        }
+      ],
+      "baselineFailuresInListedFiles": [],
+      "loadCheck": "passed",
+      "typecheck": "passed",
+      "testFilesRun": 1,
+      "durationMs": 11424,
+      "killedIn": "listed-test-files"
+    },
+    {
+      "id": "R31-other-route",
+      "family": "fail-closed",
+      "catalogue": "extra",
+      "description": "A row of the selected bus under another route places it.",
+      "protection": "Finding R31 with F19: a bus also listed under another route is at no place that can be trusted.",
+      "file": "services/api/src/journeySession.ts",
+      "edits": [
+        {
+          "file": "services/api/src/journeySession.ts",
+          "find": "  if (rows.length === 0 || rows.some((row) => row.routeId !== record.routeId)) return undefined;",
+          "replace": "  if (rows.length === 0) return undefined;"
+        }
+      ],
+      "testFiles": [
+        "services/api/test/journeySession.test.ts"
+      ],
+      "missingTestFiles": [],
+      "outcome": "KILLED",
+      "reason": "1 test(s) newly fail in the listed test files",
+      "failingTestCount": 1,
+      "failingTestCountIncludingBaseline": 1,
+      "killedBy": [
+        {
+          "file": "services/api/test/journeySession.test.ts",
+          "test": "the selected bus listed at two places, or also under another route, at the stop does not end the watch (R31)"
+        }
+      ],
+      "baselineFailuresInListedFiles": [],
+      "loadCheck": "passed",
+      "typecheck": "passed",
+      "testFilesRun": 1,
+      "durationMs": 10195,
+      "killedIn": "listed-test-files"
+    },
+    {
+      "id": "R31-speed",
+      "family": "fail-closed",
+      "catalogue": "extra",
+      "description": "Seen before the stop and later past it, the selected bus ends the watch however fast it would have had to go.",
+      "protection": "Finding R31: a crossing faster than the matcher's motion model is a garbled reading, not an arrival.",
+      "file": "services/api/src/journeySession.ts",
+      "edits": [
+        {
+          "file": "services/api/src/journeySession.ts",
+          "find": "  return toStopThen >= 1 && through <= reach && (!topology.loop || lap - through > 2);",
+          "replace": "  return toStopThen >= 1 && (through <= reach || Number.isFinite(reach)) && (!topology.loop || lap - through > 2);"
+        }
+      ],
+      "testFiles": [
+        "services/api/test/journeySession.test.ts"
+      ],
+      "missingTestFiles": [],
+      "outcome": "KILLED",
+      "reason": "1 test(s) newly fail in the listed test files",
+      "failingTestCount": 1,
+      "failingTestCountIncludingBaseline": 1,
+      "killedBy": [
+        {
+          "file": "services/api/test/journeySession.test.ts",
+          "test": "the selected bus seen past the stop ends the watch only if it could have got there since it was seen before it (R31)"
+        }
+      ],
+      "baselineFailuresInListedFiles": [],
+      "loadCheck": "passed",
+      "typecheck": "passed",
+      "testFilesRun": 1,
+      "durationMs": 10468,
+      "killedIn": "listed-test-files"
+    },
+    {
+      "id": "R31-loop-back",
+      "family": "fail-closed",
+      "catalogue": "extra",
+      "description": "Round a loop, a reading a stop or two back after a long gap counts as the selected bus having gone round through the stop.",
+      "protection": "Finding R31: what a reading up to two stops back would also show is not an arrival.",
+      "file": "services/api/src/journeySession.ts",
+      "edits": [
+        {
+          "file": "services/api/src/journeySession.ts",
+          "find": "  return toStopThen >= 1 && through <= reach && (!topology.loop || lap - through > 2);",
+          "replace": "  return toStopThen >= 1 && through <= reach;"
+        }
+      ],
+      "testFiles": [
+        "services/api/test/journeySession.test.ts"
+      ],
+      "missingTestFiles": [],
+      "outcome": "KILLED",
+      "reason": "1 test(s) newly fail in the listed test files",
+      "failingTestCount": 1,
+      "failingTestCountIncludingBaseline": 1,
+      "killedBy": [
+        {
+          "file": "services/api/test/journeySession.test.ts",
+          "test": "round a loop, the selected bus seen again two stops back after a long gap does not end the watch (R31)"
+        }
+      ],
+      "baselineFailuresInListedFiles": [],
+      "loadCheck": "passed",
+      "typecheck": "passed",
+      "testFilesRun": 1,
+      "durationMs": 12277,
+      "killedIn": "listed-test-files"
+    },
+    {
+      "id": "R33-merge",
+      "family": "fail-closed",
+      "catalogue": "extra",
+      "description": "A withdrawal that loses the compare-and-set to a concurrent refresh is dropped.",
+      "protection": "Finding R33: a concurrent request's row does not unsee the bus this request saw reaching the stop first.",
+      "file": "services/api/src/journeySession.ts",
+      "edits": [
+        {
+          "file": "services/api/src/journeySession.ts",
+          "find": "    if (withdrawal && await this.withdrawOnWinner(outcome.stored, withdrawal)) return view;",
+          "replace": "    if (withdrawal && Number.isNaN(0) && await this.withdrawOnWinner(outcome.stored, withdrawal)) return view;"
+        }
+      ],
+      "testFiles": [
+        "services/api/test/journeySession.test.ts"
+      ],
+      "missingTestFiles": [],
+      "outcome": "KILLED",
+      "reason": "1 test(s) newly fail in the listed test files",
+      "failingTestCount": 1,
+      "failingTestCountIncludingBaseline": 1,
+      "killedBy": [
+        {
+          "file": "services/api/test/journeySession.test.ts",
+          "test": "a withdrawal survives a concurrent refresh that saved first, unless that one saw the selected bus at the stop earlier (R33)"
+        }
+      ],
+      "baselineFailuresInListedFiles": [],
+      "loadCheck": "passed",
+      "typecheck": "passed",
+      "testFilesRun": 1,
+      "durationMs": 12604,
+      "killedIn": "listed-test-files"
+    },
+    {
+      "id": "R33-order",
+      "family": "fail-closed",
+      "catalogue": "extra",
+      "description": "A withdrawal is written onto a concurrent row even when that row saw the selected bus at the stop earlier.",
+      "protection": "Finding R33: the selected bus seen at the stop before the other bus was is the rider's arrival, whichever request saved first.",
+      "file": "services/api/src/journeySession.ts",
+      "edits": [
+        {
+          "file": "services/api/src/journeySession.ts",
+          "find": "      if (endedAt !== undefined && Date.parse(endedAt) < withdrawal.at.getTime()) return false;",
+          "replace": "      if (endedAt !== undefined && Date.parse(endedAt) < withdrawal.at.getTime() && Number.isNaN(0)) return false;"
+        }
+      ],
+      "testFiles": [
+        "services/api/test/journeySession.test.ts"
+      ],
+      "missingTestFiles": [],
+      "outcome": "KILLED",
+      "reason": "1 test(s) newly fail in the listed test files",
+      "failingTestCount": 1,
+      "failingTestCountIncludingBaseline": 1,
+      "killedBy": [
+        {
+          "file": "services/api/test/journeySession.test.ts",
+          "test": "a withdrawal survives a concurrent refresh that saved first, unless that one saw the selected bus at the stop earlier (R33)"
+        }
+      ],
+      "baselineFailuresInListedFiles": [],
+      "loadCheck": "passed",
+      "typecheck": "passed",
+      "testFilesRun": 1,
+      "durationMs": 12994,
+      "killedIn": "listed-test-files"
+    },
+    {
+      "id": "R34-seam",
+      "family": "fail-closed",
+      "catalogue": "extra",
+      "description": "After a withdrawal, how far a bus is past the stop is read from its plain offset again.",
+      "protection": "Finding R34: round a loop, the bus that just left the stop is offered also when it reports the first stop's sequence.",
+      "file": "services/api/src/journeySession.ts",
+      "edits": [
+        {
+          "file": "services/api/src/journeySession.ts",
+          "find": "  const past = (offset: number) => (topology.loop ? around(offset) : offset);",
+          "replace": "  const past = (offset: number) => offset;"
+        }
+      ],
+      "testFiles": [
+        "services/api/test/journeySession.test.ts"
+      ],
+      "missingTestFiles": [],
+      "outcome": "KILLED",
+      "reason": "1 test(s) newly fail in the listed test files",
+      "failingTestCount": 1,
+      "failingTestCountIncludingBaseline": 1,
+      "killedBy": [
+        {
+          "file": "services/api/test/journeySession.test.ts",
+          "test": "after a withdrawal round a loop, the bus that just left the stop is offered across the seam too (R34)"
+        }
+      ],
+      "baselineFailuresInListedFiles": [],
+      "loadCheck": "passed",
+      "typecheck": "passed",
+      "testFilesRun": 1,
+      "durationMs": 12630,
+      "killedIn": "listed-test-files"
+    },
+    {
+      "id": "R23-returned",
+      "family": "fail-closed",
+      "catalogue": "extra",
+      "description": "On board round a loop, a bus that came back to the stop, or had time to, is no longer recorded.",
+      "protection": "Finding R23: on board, a bus seen clear of the stop and later back at it may have reached it after the rider boarded.",
+      "file": "services/api/src/matching.ts",
+      "edits": [
+        {
+          "file": "services/api/src/matching.ts",
+          "find": "        if (back || hadTimeToPass(seen, clearThen ? then.forward! : topology!.cycleLength - 1, row.facts)) returnedToStop.add(vehicleId);",
+          "replace": "        if ((back || hadTimeToPass(seen, clearThen ? then.forward! : topology!.cycleLength - 1, row.facts)) && Number.isNaN(0)) returnedToStop.add(vehicleId);"
+        }
+      ],
+      "testFiles": [
+        "services/api/test/matching.test.ts",
+        "services/api/test/matcherProperties.test.ts"
+      ],
+      "missingTestFiles": [],
+      "outcome": "KILLED",
+      "reason": "3 test(s) newly fail in the listed test files",
+      "failingTestCount": 3,
+      "failingTestCountIncludingBaseline": 3,
+      "killedBy": [
+        {
+          "file": "services/api/test/matcherProperties.test.ts",
+          "test": "P12: on board round a loop, a bus that came back to the stop, or had time to, is never selected later"
+        },
+        {
+          "file": "services/api/test/matching.test.ts",
+          "test": "on board round a loop, a bus seen clear of the stop and later back at it or closer past it is never selected, and still competes (R23)"
+        },
+        {
+          "file": "services/api/test/matching.test.ts",
+          "test": "on board round a loop, a bus seen again after long enough to have gone round through the stop is never selected (R23)"
+        }
+      ],
+      "baselineFailuresInListedFiles": [],
+      "loadCheck": "passed",
+      "typecheck": "passed",
+      "testFilesRun": 2,
+      "durationMs": 61664,
+      "killedIn": "listed-test-files"
+    },
+    {
+      "id": "R23-back",
+      "family": "fail-closed",
+      "catalogue": "extra",
+      "description": "On board round a loop, a bus seen clear of the stop and then closer past it, or at the stop before it, is no longer recorded.",
+      "protection": "Finding R23: a distance past the stop that shrinks is a pass through the stop after the rider boarded, or a stop read back.",
+      "file": "services/api/src/matching.ts",
+      "edits": [
+        {
+          "file": "services/api/src/matching.ts",
+          "find": "        const back = clearThen && (row.facts.forward === 1 || row.facts.backward! < then.backward!);",
+          "replace": "        const back = clearThen && Number.isNaN(0) && (row.facts.forward === 1 || row.facts.backward! < then.backward!);"
+        }
+      ],
+      "testFiles": [
+        "services/api/test/matching.test.ts",
+        "services/api/test/matcherProperties.test.ts"
+      ],
+      "missingTestFiles": [],
+      "outcome": "KILLED",
+      "reason": "2 test(s) newly fail in the listed test files",
+      "failingTestCount": 2,
+      "failingTestCountIncludingBaseline": 2,
+      "killedBy": [
+        {
+          "file": "services/api/test/matcherProperties.test.ts",
+          "test": "P12: on board round a loop, a bus that came back to the stop, or had time to, is never selected later"
+        },
+        {
+          "file": "services/api/test/matching.test.ts",
+          "test": "on board round a loop, a bus seen clear of the stop and later back at it or closer past it is never selected, and still competes (R23)"
+        }
+      ],
+      "baselineFailuresInListedFiles": [],
+      "loadCheck": "passed",
+      "typecheck": "passed",
+      "testFilesRun": 2,
+      "durationMs": 62352,
+      "killedIn": "listed-test-files"
+    },
+    {
+      "id": "R23-lap",
+      "family": "fail-closed",
+      "catalogue": "extra",
+      "description": "On board round a loop, a bus seen again after long enough to have gone round through the stop is no longer recorded.",
+      "protection": "Finding R23: between two sightings far enough apart, a bus may have gone round through the stop.",
+      "file": "services/api/src/matching.ts",
+      "edits": [
+        {
+          "file": "services/api/src/matching.ts",
+          "find": "        if (back || hadTimeToPass(seen, clearThen ? then.forward! : topology!.cycleLength - 1, row.facts)) returnedToStop.add(vehicleId);",
+          "replace": "        if (back || (Number.isNaN(0) && hadTimeToPass(seen, clearThen ? then.forward! : topology!.cycleLength - 1, row.facts))) returnedToStop.add(vehicleId);"
+        }
+      ],
+      "testFiles": [
+        "services/api/test/matching.test.ts",
+        "services/api/test/matcherProperties.test.ts"
+      ],
+      "missingTestFiles": [],
+      "outcome": "KILLED",
+      "reason": "2 test(s) newly fail in the listed test files",
+      "failingTestCount": 2,
+      "failingTestCountIncludingBaseline": 2,
+      "killedBy": [
+        {
+          "file": "services/api/test/matcherProperties.test.ts",
+          "test": "P12: on board round a loop, a bus that came back to the stop, or had time to, is never selected later"
+        },
+        {
+          "file": "services/api/test/matching.test.ts",
+          "test": "on board round a loop, a bus seen again after long enough to have gone round through the stop is never selected (R23)"
+        }
+      ],
+      "baselineFailuresInListedFiles": [],
+      "loadCheck": "passed",
+      "typecheck": "passed",
+      "testFilesRun": 2,
+      "durationMs": 66947,
+      "killedIn": "listed-test-files"
+    },
+    {
+      "id": "R23-unproven",
+      "family": "fail-closed",
+      "catalogue": "extra",
+      "description": "A bus recorded as having come back to the stop may be selected again.",
+      "protection": "Finding R23: such a bus is never selected as the rider's; it still competes.",
+      "file": "services/api/src/matching.ts",
+      "edits": [
+        {
+          "file": "services/api/src/matching.ts",
+          "find": "      if (returnedToStop.has(vehicleId)) unproven.set(",
+          "replace": "      if (returnedToStop.has(vehicleId) && Number.isNaN(0)) unproven.set("
+        }
+      ],
+      "testFiles": [
+        "services/api/test/matching.test.ts",
+        "services/api/test/matcherProperties.test.ts"
+      ],
+      "missingTestFiles": [],
+      "outcome": "KILLED",
+      "reason": "3 test(s) newly fail in the listed test files",
+      "failingTestCount": 3,
+      "failingTestCountIncludingBaseline": 3,
+      "killedBy": [
+        {
+          "file": "services/api/test/matcherProperties.test.ts",
+          "test": "P12: on board round a loop, a bus that came back to the stop, or had time to, is never selected later"
+        },
+        {
+          "file": "services/api/test/matching.test.ts",
+          "test": "on board round a loop, a bus seen clear of the stop and later back at it or closer past it is never selected, and still competes (R23)"
+        },
+        {
+          "file": "services/api/test/matching.test.ts",
+          "test": "on board round a loop, a bus seen again after long enough to have gone round through the stop is never selected (R23)"
+        }
+      ],
+      "baselineFailuresInListedFiles": [],
+      "loadCheck": "passed",
+      "typecheck": "passed",
+      "testFilesRun": 2,
+      "durationMs": 68236,
+      "killedIn": "listed-test-files"
+    },
+    {
+      "id": "R23-short-loop",
+      "family": "fail-closed",
+      "catalogue": "extra",
+      "description": "On board, a loop too short to tell the stops past the boarding stop from those before it no longer withholds.",
+      "protection": "Finding R23: on a loop shorter than two windows and the stop either side, no position says which bus the rider boarded.",
+      "file": "services/api/src/matching.ts",
+      "edits": [
+        {
+          "file": "services/api/src/matching.ts",
+          "find": "topology.cycleLength < 2 * policy.onBoardWindowStops + 2) {",
+          "replace": "topology.cycleLength < 2 * policy.onBoardWindowStops + 2 && Number.isNaN(0)) {"
+        }
+      ],
+      "testFiles": [
+        "services/api/test/matching.test.ts"
+      ],
+      "missingTestFiles": [],
+      "outcome": "KILLED",
+      "reason": "1 test(s) newly fail in the listed test files",
+      "failingTestCount": 1,
+      "failingTestCountIncludingBaseline": 1,
+      "killedBy": [
+        {
+          "file": "services/api/test/matching.test.ts",
+          "test": "on board, a loop too short to tell the stops just past the boarding stop from those just before it selects nothing (R23)"
+        }
+      ],
+      "baselineFailuresInListedFiles": [],
+      "loadCheck": "passed",
+      "typecheck": "passed",
+      "testFilesRun": 1,
+      "durationMs": 12670,
+      "killedIn": "listed-test-files"
+    },
+    {
+      "id": "R24-lap",
+      "family": "fail-closed",
+      "catalogue": "extra",
+      "description": "Waiting round a loop, a bus seen again after long enough to have gone round through the stop no longer withholds.",
+      "protection": "Finding R24: a bus that could have gone round through the stop since it was last seen may have taken the rider.",
+      "file": "services/api/src/matching.ts",
+      "edits": [
+        {
+          "file": "services/api/src/matching.ts",
+          "find": "      if (loop && last !== undefined && hadTimeToPass(seen, around(last).forward!, row.facts)) wentRound = true;",
+          "replace": "      if (loop && last !== undefined && hadTimeToPass(seen, around(last).forward!, row.facts) && Number.isNaN(0)) wentRound = true;"
+        }
+      ],
+      "testFiles": [
+        "services/api/test/matching.test.ts",
+        "services/api/test/matcherProperties.test.ts"
+      ],
+      "missingTestFiles": [],
+      "outcome": "KILLED",
+      "reason": "3 test(s) newly fail in the listed test files",
+      "failingTestCount": 3,
+      "failingTestCountIncludingBaseline": 3,
+      "killedBy": [
+        {
+          "file": "services/api/test/matcherProperties.test.ts",
+          "test": "P3: round a loop, a bus seen again after long enough to have gone round through the stop withholds for good"
+        },
+        {
+          "file": "services/api/test/matching.test.ts",
+          "test": "a sighting the session recorded, dated after now by however little, gives no bound on the time since (R29)"
+        },
+        {
+          "file": "services/api/test/matching.test.ts",
+          "test": "waiting round a loop, a bus seen again after long enough to have gone round through the stop withholds for good (R24)"
+        }
+      ],
+      "baselineFailuresInListedFiles": [],
+      "loadCheck": "passed",
+      "typecheck": "passed",
+      "testFilesRun": 2,
+      "durationMs": 57287,
+      "killedIn": "listed-test-files"
+    },
+    {
+      "id": "R24-order",
+      "family": "fail-closed",
+      "catalogue": "extra",
+      "description": "What the time since allows is withheld in row order, so it can be kept before a crossing a later row shows.",
+      "protection": "Finding R24 with F20: a reason a sighting raises is kept first, so the boarding watch can tell it from a possibility.",
+      "file": "services/api/src/matching.ts",
+      "edits": [
+        {
+          "file": "services/api/src/matching.ts",
+          "find": "      if (loop && last !== undefined && hadTimeToPass(seen, around(last).forward!, row.facts)) wentRound = true;",
+          "replace": "      if (loop && last !== undefined && hadTimeToPass(seen, around(last).forward!, row.facts)) withhold(\"vehicle_may_have_reached_boarding_stop_unobserved\");"
+        },
+        {
+          "file": "services/api/src/matching.ts",
+          "find": "      const crossed = loop ? passedOnLoop(seen, row.facts) : seen !== undefined && seen.min <= -1 && offset >= 0;\n      if (row.facts.zone === \"boarding_stop_unresolved\" || crossed) {\n        withhold(\"boarding_stop_reached_during_session\");\n      }",
+          "replace": "      const crossed = loop ? passedOnLoop(seen, row.facts) : seen !== undefined && seen.min <= -1 && offset >= 0;"
+        },
+        {
+          "file": "services/api/src/matching.ts",
+          "find": "      if (loop && last !== undefined && hadTimeToPass(seen, around(last).forward!, row.facts)) withhold(",
+          "replace": "      if (row.facts.zone === \"boarding_stop_unresolved\" || crossed) withhold(\"boarding_stop_reached_during_session\");\n      if (loop && last !== undefined && hadTimeToPass(seen, around(last).forward!, row.facts)) withhold("
+        }
+      ],
+      "testFiles": [
+        "services/api/test/matching.test.ts"
+      ],
+      "missingTestFiles": [],
+      "outcome": "KILLED",
+      "reason": "1 test(s) newly fail in the listed test files",
+      "failingTestCount": 1,
+      "failingTestCountIncludingBaseline": 1,
+      "killedBy": [
+        {
+          "file": "services/api/test/matching.test.ts",
+          "test": "round a loop, a reason a sighting raises is kept before one the time since allows, whatever the order of the rows"
+        }
+      ],
+      "baselineFailuresInListedFiles": [],
+      "loadCheck": "passed",
+      "typecheck": "passed",
+      "testFilesRun": 1,
+      "durationMs": 11122,
+      "killedIn": "listed-test-files"
+    },
+    {
+      "id": "R25-spread",
+      "family": "fail-closed",
+      "catalogue": "extra",
+      "description": "The walk of a vehicle's possible positions is spread into an argument list again.",
+      "protection": "Finding R25: a long lap walked in full never throws; the matcher answers, and withholds.",
+      "file": "services/api/src/matching.ts",
+      "edits": [
+        {
+          "file": "services/api/src/matching.ts",
+          "find": "  let closestForward: number | undefined;\n  for (let step = 0; step <= reach; step += 1) {",
+          "replace": "  let closestForward: number | undefined;\n  const walked: number[] = [];\n  for (let step = 0; step <= reach; step += 1) {\n    walked.push(step);"
+        },
+        {
+          "file": "services/api/src/matching.ts",
+          "find": "    ...(closestForward === undefined ? {} : { closestForward }),",
+          "replace": "    ...(closestForward === undefined ? {} : { closestForward: Math.min(closestForward, ...walked.map(() => Number.POSITIVE_INFINITY)) }),"
+        }
+      ],
+      "testFiles": [
+        "services/api/test/matching.test.ts"
+      ],
+      "missingTestFiles": [],
+      "outcome": "KILLED",
+      "reason": "1 test(s) newly fail in the listed test files",
+      "failingTestCount": 1,
+      "failingTestCountIncludingBaseline": 1,
+      "killedBy": [
+        {
+          "file": "services/api/test/matching.test.ts",
+          "test": "a loop with a very long sequence span never throws, however long a bus has been out of sight (R25)"
+        }
+      ],
+      "baselineFailuresInListedFiles": [],
+      "loadCheck": "passed",
+      "typecheck": "passed",
+      "testFilesRun": 1,
+      "durationMs": 14762,
+      "killedIn": "listed-test-files"
+    },
+    {
+      "id": "R27-exclusion",
+      "family": "fail-closed",
+      "catalogue": "extra",
+      "description": "On board, a bus the snapshot places twice is excluded again by the place before the stop.",
+      "protection": "Finding R27: an exclusion stops a bus competing, so it takes a sighting that can be trusted.",
+      "file": "services/api/src/matching.ts",
+      "edits": [
+        {
+          "file": "services/api/src/matching.ts",
+          "find": "      const beforeNow = !reportedTwice.has(vehicleId) && (loop ? beforeStop(row.facts) : offset <= -2);",
+          "replace": "      const beforeNow = (loop ? beforeStop(row.facts) : offset <= -2);"
+        }
+      ],
+      "testFiles": [
+        "services/api/test/matching.test.ts"
+      ],
+      "missingTestFiles": [],
+      "outcome": "KILLED",
+      "reason": "1 test(s) newly fail in the listed test files",
+      "failingTestCount": 1,
+      "failingTestCountIncludingBaseline": 1,
+      "killedBy": [
+        {
+          "file": "services/api/test/matching.test.ts",
+          "test": "on board, a bus the snapshot places twice is never excluded by one of the places, and keeps competing (R27)"
+        }
+      ],
+      "baselineFailuresInListedFiles": [],
+      "loadCheck": "passed",
+      "typecheck": "passed",
+      "testFilesRun": 1,
+      "durationMs": 9966,
+      "killedIn": "listed-test-files"
+    },
+    {
+      "id": "R27-memory",
+      "family": "fail-closed",
+      "catalogue": "extra",
+      "description": "On board, a sighting at two places is folded into memory like any other, where a later decision reads an exclusion from it.",
+      "protection": "Finding R27: on board, a sighting at two places never lowers what a bus is remembered by, so no exclusion is read from it.",
+      "file": "services/api/src/matching.ts",
+      "edits": [
+        {
+          "file": "services/api/src/matching.ts",
+          "find": "    if (riderState === \"on_board\" && reportedTwice.has(vehicleId)) {",
+          "replace": "    if (riderState === \"on_board\" && reportedTwice.has(vehicleId) && Number.isNaN(0)) {"
+        }
+      ],
+      "testFiles": [
+        "services/api/test/matching.test.ts"
+      ],
+      "missingTestFiles": [],
+      "outcome": "KILLED",
+      "reason": "2 test(s) newly fail in the listed test files",
+      "failingTestCount": 2,
+      "failingTestCountIncludingBaseline": 2,
+      "killedBy": [
+        {
+          "file": "services/api/test/matching.test.ts",
+          "test": "on board, a bus the snapshot places twice is never excluded by one of the places, and keeps competing (R27)"
+        },
+        {
+          "file": "services/api/test/matching.test.ts",
+          "test": "on board, a bus in the window listed at two places or under another route keeps competing once out of sight (R30)"
+        }
+      ],
+      "baselineFailuresInListedFiles": [],
+      "loadCheck": "passed",
+      "typecheck": "passed",
+      "testFilesRun": 1,
+      "durationMs": 12667,
+      "killedIn": "listed-test-files"
+    },
+    {
+      "id": "R30-unknown",
+      "family": "fail-closed",
+      "catalogue": "extra",
+      "description": "On board, a bus the snapshot places at two places, or also under another route, is no longer marked as of unknown progress.",
+      "protection": "Finding R30: on board, a bus with no trustworthy place withholds once out of sight; it may be the rider's bus.",
+      "file": "services/api/src/matching.ts",
+      "edits": [
+        {
+          "file": "services/api/src/matching.ts",
+          "find": "      sawUnknown.add(vehicleId);\n      continue;\n    }\n    offsets.set(vehicleId, {",
+          "replace": "      if (Number.isNaN(0)) sawUnknown.add(vehicleId);\n      continue;\n    }\n    offsets.set(vehicleId, {"
+        }
+      ],
+      "testFiles": [
+        "services/api/test/matching.test.ts"
+      ],
+      "missingTestFiles": [],
+      "outcome": "KILLED",
+      "reason": "3 test(s) newly fail in the listed test files",
+      "failingTestCount": 3,
+      "failingTestCountIncludingBaseline": 3,
+      "killedBy": [
+        {
+          "file": "services/api/test/matching.test.ts",
+          "test": "on board, a bus the snapshot places twice is never excluded by one of the places, and keeps competing (R27)"
+        },
+        {
+          "file": "services/api/test/matching.test.ts",
+          "test": "on board, the rider's bus listed at two places, or also at none, still withholds when it leaves the window (R30)"
+        },
+        {
+          "file": "services/api/test/matching.test.ts",
+          "test": "on board, a bus in the window listed at two places or under another route keeps competing once out of sight (R30)"
+        }
+      ],
+      "baselineFailuresInListedFiles": [],
+      "loadCheck": "passed",
+      "typecheck": "passed",
+      "testFilesRun": 1,
+      "durationMs": 14567,
+      "killedIn": "listed-test-files"
+    },
+    {
+      "id": "R30-never-placed",
+      "family": "fail-closed",
+      "catalogue": "extra",
+      "description": "On board, a bus seen only at no place, or at two, and then beyond the window no longer withholds.",
+      "protection": "Finding R30: a bus never placed in the session may have been in the window all along, so beyond it, it may be the rider's bus leaving it.",
+      "file": "services/api/src/matching.ts",
+      "edits": [
+        {
+          "file": "services/api/src/matching.ts",
+          "find": "      const neverPlaced = seen === undefined && unknownProgress.has(vehicleId);",
+          "replace": "      const neverPlaced = seen === undefined && unknownProgress.has(vehicleId) && Number.isNaN(0);"
+        }
+      ],
+      "testFiles": [
+        "services/api/test/matching.test.ts"
+      ],
+      "missingTestFiles": [],
+      "outcome": "KILLED",
+      "reason": "2 test(s) newly fail in the listed test files",
+      "failingTestCount": 2,
+      "failingTestCountIncludingBaseline": 2,
+      "killedBy": [
+        {
+          "file": "services/api/test/matching.test.ts",
+          "test": "on board, the rider's bus listed at two places, or also at none, still withholds when it leaves the window (R30)"
+        },
+        {
+          "file": "services/api/test/matching.test.ts",
+          "test": "on board, a bus seen only at no place and then beyond the window may be the rider's bus leaving it (R30)"
+        }
+      ],
+      "baselineFailuresInListedFiles": [],
+      "loadCheck": "passed",
+      "typecheck": "passed",
+      "testFilesRun": 1,
+      "durationMs": 11041,
+      "killedIn": "listed-test-files"
+    },
+    {
+      "id": "R28-mark",
+      "family": "fail-closed",
+      "catalogue": "extra",
+      "description": "The unknown-progress mark is dated by the decision's now again, before its own rows were received.",
+      "protection": "Finding R28: a row the evidence window keeps from the sighting that left a bus unplaced never places it.",
+      "file": "services/api/src/matching.ts",
+      "edits": [
+        {
+          "file": "services/api/src/matching.ts",
+          "find": "      if (Number.isFinite(receivedAt) && receivedAt > latest) latest = receivedAt;",
+          "replace": "      if (Number.isFinite(receivedAt) && receivedAt > latest && Number.isNaN(0)) latest = receivedAt;"
+        }
+      ],
+      "testFiles": [
+        "services/api/test/matching.test.ts"
+      ],
+      "missingTestFiles": [],
+      "outcome": "KILLED",
+      "reason": "1 test(s) newly fail in the listed test files",
+      "failingTestCount": 1,
+      "failingTestCountIncludingBaseline": 1,
+      "killedBy": [
+        {
+          "file": "services/api/test/matching.test.ts",
+          "test": "a remembered row of the sighting that left a bus unplaced stays unplaced, though received a moment after now (R28)"
+        }
+      ],
+      "baselineFailuresInListedFiles": [],
+      "loadCheck": "passed",
+      "typecheck": "passed",
+      "testFilesRun": 1,
+      "durationMs": 12595,
+      "killedIn": "listed-test-files"
+    },
+    {
+      "id": "R29-own",
+      "family": "fail-closed",
+      "catalogue": "extra",
+      "description": "A bus's last sighting dated up to 10 s after now reads as seen just now in the out-of-sight rule.",
+      "protection": "Finding R29: the session's own sighting can only be later than now if the clock stepped back; nothing then bounds the time since.",
+      "file": "services/api/src/matching.ts",
+      "edits": [
+        {
+          "file": "services/api/src/matching.ts",
+          "find": "    const unseenSeconds = secondsSinceOwnSighting(seenAtMs, nowMs);",
+          "replace": "    const unseenSeconds = secondsSince(seenAtMs, nowMs);"
+        }
+      ],
+      "testFiles": [
+        "services/api/test/matching.test.ts"
+      ],
+      "missingTestFiles": [],
+      "outcome": "KILLED",
+      "reason": "1 test(s) newly fail in the listed test files",
+      "failingTestCount": 1,
+      "failingTestCountIncludingBaseline": 1,
+      "killedBy": [
+        {
+          "file": "services/api/test/matching.test.ts",
+          "test": "a sighting the session recorded, dated after now by however little, gives no bound on the time since (R29)"
+        }
+      ],
+      "baselineFailuresInListedFiles": [],
+      "loadCheck": "passed",
+      "typecheck": "passed",
+      "testFilesRun": 1,
+      "durationMs": 11682,
+      "killedIn": "listed-test-files"
+    },
+    {
+      "id": "R29-own-lap",
+      "family": "fail-closed",
+      "catalogue": "extra",
+      "description": "Round a loop, the time since a bus was last seen reads as none when its sighting is dated a little after now.",
+      "protection": "Finding R29 with R24: after a backward clock step, a bus seen again may have gone round through the stop.",
+      "file": "services/api/src/matching.ts",
+      "edits": [
+        {
+          "file": "services/api/src/matching.ts",
+          "find": "    const seconds = secondsSinceOwnSighting(seen.lastSeenAt === undefined ? Number.NaN : Date.parse(seen.lastSeenAt), nowMs);",
+          "replace": "    const seconds = secondsSince(seen.lastSeenAt === undefined ? Number.NaN : Date.parse(seen.lastSeenAt), nowMs);"
+        }
+      ],
+      "testFiles": [
+        "services/api/test/matching.test.ts"
+      ],
+      "missingTestFiles": [],
+      "outcome": "KILLED",
+      "reason": "1 test(s) newly fail in the listed test files",
+      "failingTestCount": 1,
+      "failingTestCountIncludingBaseline": 1,
+      "killedBy": [
+        {
+          "file": "services/api/test/matching.test.ts",
+          "test": "a sighting the session recorded, dated after now by however little, gives no bound on the time since (R29)"
+        }
+      ],
+      "baselineFailuresInListedFiles": [],
+      "loadCheck": "passed",
+      "typecheck": "passed",
+      "testFilesRun": 1,
+      "durationMs": 10082,
       "killedIn": "listed-test-files"
     }
   ],
   "summary": {
-    "total": 48,
-    "killed": 48,
+    "total": 105,
+    "killed": 105,
     "survived": 0,
     "stale": 0,
     "invalid": 0,
@@ -2403,8 +4897,8 @@
       "killed": 18
     },
     "extra": {
-      "total": 30,
-      "killed": 30
+      "total": 87,
+      "killed": 87
     },
     "allKilled": true,
     "baselineGreen": true,
@@ -2414,7 +4908,7 @@
     "invalidIds": [],
     "timeoutIds": [],
     "exitCode": 0,
-    "durationMs": 510376
+    "durationMs": 1556693
   },
   "notes": [
     "Every control ran against a temporary copy of services/api taken once at the start (the snapshot); the working tree was never edited.",

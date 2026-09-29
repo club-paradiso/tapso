@@ -1,6 +1,6 @@
 {
   "policyVersion": "matcher-passive-safety-v4",
-  "generatedAt": "2026-09-29T13:35:46.807Z",
+  "generatedAt": "2026-09-29T19:54:47.621Z",
   "awarded": "READY_FOR_SHADOW",
   "criteria": [
     {
@@ -27,7 +27,7 @@
       "title": "Unit, replay and property suites pass over all 15 invariants",
       "status": "PASS",
       "evidenceClass": "VERIFIED_BY_TEST",
-      "observed": "passed=true, invariants=15, seeds/invariant=2000, regression seeds=9",
+      "observed": "passed=true, invariants=16, seeds/invariant=2000, regression seeds=19",
       "required": "suite green, 15 invariants, ≥ 2000 seeds each"
     },
     {
@@ -36,8 +36,8 @@
       "title": "Every negative control (F1, F3 leak paths, F4, fail-closed rules) is killed",
       "status": "PASS",
       "evidenceClass": "VERIFIED_BY_TEST",
-      "observed": "48/48 killed, 0 survived, 0 stale, 0 invalid, 0 timed out; complete true, baseline green true, tree unchanged true",
-      "required": "a complete run on a green baseline and an unchanged tree: all killed, none survived, stale, invalid or timed out"
+      "observed": "105/105 killed, 0 survived, 0 stale, 0 invalid, 0 timed out; complete true, baseline green true, tree unchanged true; all 105 pinned controls killed",
+      "required": "a complete run on a green baseline and an unchanged tree: all killed, none survived, stale, invalid or timed out, and each of the 105 pinned controls among the killed"
     },
     {
       "id": "SH-5",
@@ -60,11 +60,11 @@
     {
       "id": "CA-1",
       "level": "READY_FOR_CONFIRMATION_ASSISTED",
-      "title": "Full-window blind replay of retained raw live evidence, legacy side reproducing the record",
+      "title": "Full-window blind replay of every retained raw live collection, legacy side reproducing the record",
       "status": "MISSING",
       "evidenceClass": "MISSING",
       "observed": "raw replay has not run",
-      "required": "≥ 1 collection, reproduction ok"
+      "required": "≥ 1 collection, reproduction ok, no retained artifact left out"
     },
     {
       "id": "CA-2",
@@ -87,7 +87,7 @@
     {
       "id": "CA-4",
       "level": "READY_FOR_CONFIRMATION_ASSISTED",
-      "title": "Replay is deterministic across independent runs",
+      "title": "Replay is deterministic across independent runs, case by case",
       "status": "MISSING",
       "evidenceClass": "MISSING",
       "observed": "raw replay has not run",
@@ -109,7 +109,7 @@
       "status": "MISSING",
       "evidenceClass": "MISSING",
       "observed": "raw replay has not run",
-      "required": "≥ 60 trajectories, ≥ 30 vehicles, ≥ 30 contested cases"
+      "required": "≥ 60 trajectories, ≥ 30 vehicles, ≥ 30 contested trajectories"
     },
     {
       "id": "CA-7",
@@ -123,20 +123,20 @@
     {
       "id": "BA-1",
       "level": "READY_FOR_BOUNDED_AUTOMATION",
-      "title": "Independent live sample large enough for a 1 % bound, on the envelope that would be automated",
+      "title": "Independent live sample large enough for a 1 % bound, at session cadence (the envelope that would be automated)",
       "status": "MISSING",
       "evidenceClass": "MISSING",
       "observed": "raw replay has not run",
-      "required": "≥ 300 trajectories, ≥ 100 vehicles, ≥ 100 contested, ≥ 15 routes, ≥ 10 windows, ≥ 3 time bands"
+      "required": "at session cadence: ≥ 300 trajectories, ≥ 100 vehicles, ≥ 100 contested, ≥ 15 routes, ≥ 10 windows, ≥ 3 time bands"
     },
     {
       "id": "BA-2",
       "level": "READY_FOR_BOUNDED_AUTOMATION",
-      "title": "Evidence at session cadence (direct TAGO, uncached), not only the cached public path",
+      "title": "Evidence at session cadence (direct TAGO, uncached) with evaluated cases, not only the cached public path",
       "status": "MISSING",
       "evidenceClass": "MISSING",
       "observed": "raw replay has not run",
-      "required": "includes tago-direct"
+      "required": "session-cadence windows with evaluated cases"
     },
     {
       "id": "BA-3",
@@ -182,7 +182,7 @@
         "id": "CA-1",
         "status": "MISSING",
         "observed": "raw replay has not run",
-        "required": "≥ 1 collection, reproduction ok"
+        "required": "≥ 1 collection, reproduction ok, no retained artifact left out"
       },
       {
         "id": "CA-2",
@@ -212,7 +212,7 @@
         "id": "CA-6",
         "status": "MISSING",
         "observed": "raw replay has not run",
-        "required": "≥ 60 trajectories, ≥ 30 vehicles, ≥ 30 contested cases"
+        "required": "≥ 60 trajectories, ≥ 30 vehicles, ≥ 30 contested trajectories"
       },
       {
         "id": "CA-7",

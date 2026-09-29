@@ -85,14 +85,15 @@ Every failing seed is replayed first on every run
 ## 4. Property suite
 
 `VERIFIED_BY_TEST`. `services/api/test/matcherProperties.test.ts`, seeded and
-reproducible (`TAPSO_PROPERTY_CASES` raises the seed count). Fifteen
-invariants, with four extra forms:
+reproducible (`TAPSO_PROPERTY_CASES` raises the seed count). Sixteen
+invariants, twelve further forms of them and a no-throw check: 29 property
+tests.
 
 | # | Invariant |
 |---|---|
 | P1 | A waiting rider's automatic selection is always 1–4 stops before the stop |
 | P2 | Moving a departed or at-stop bus farther past the stop never makes it selectable or raises its score |
-| P3 | Removing evidence (a row, cadence evidence, topology) never turns a withheld decision into a selection; a withheld session memory is never overridden |
+| P3 | Removing evidence (a row, cadence evidence, topology) never turns a withheld decision into a selection; a withheld session memory is never overridden; nor is one withheld by a vehicle out of sight past the memory window, by a crossing (across a loop's seam too), by a bus seen again after time enough to go round a loop, or after an earlier look that saw nothing |
 | P4 | Older evidence never improves eligibility or score; a remembered vehicle competes at least as hard as its sighting ages |
 | P5 | Server receipt time alone never manufactures freshness |
 | P6 | Repeated unchanged provider content never unlocks automatic matching |
@@ -101,43 +102,51 @@ invariants, with four extra forms:
 | P9 | Once a session selects a vehicle it never switches to another, and a withdrawn selection is never replaced automatically |
 | P10 | The boarded vehicle's identity never changes a replayed decision |
 | P11 | Unknown route progress fails closed |
-| P12 | Two plausible vehicles too close together never produce a selection |
-| P13 | Identical input gives an identical decision in any candidate order |
+| P12 | Two plausible vehicles too close together never produce a selection; nor two in the on-board window on a loop of any length; on board, a bus once seen before the stop, or one that came back to the stop round a loop, is never selected later |
+| P13 | Identical input gives an identical decision in any candidate order; a vehicle also reported under another route is never selected; the order of a snapshot's rows never changes what the session remembers |
 | P14 | A vehicle that is never valid is never committed, however long it is watched |
 | P15 | Whatever is missing from the feed, a selection is always individually valid |
 | P16 | Ground truth (`SIMULATED`, `groundTruthKit.ts`): an automatic selection is withdrawn by the poll that shows another bus reaching the stop first, and never after the selected bus was seen there |
 
 | Run | Seeds per property | Result |
 |---|---|---|
-| Every CI run (`run-suite.ts --property-cases=2000`, `artifacts/matcher-directed-v1/test-suite.json`) | 2 000, after the 9 recorded regression seeds | 19 / 19 pass; the whole suite 593 / 593 (the gate-output test is checked by `gate.ts --check` instead) |
+| Every CI run (`run-suite.ts --property-cases=2000`, `artifacts/matcher-directed-v1/test-suite.json`) | 2 000, after the 19 recorded regression seeds | 29 / 29 property tests pass; the whole suite 658 / 658 (the gate-output test is checked by `gate.ts --check` instead) |
 | Deep run 1 (this work) | 20 000 | found P3 seed 14526 (F7) and P7 seed 12091 (F8) |
 | Deep run 2 | 20 000 | found P3 seed 16661 (F10) |
-| Deep run 3, final matcher | 20 000 | **19 / 19 pass**, no new seed (1 987 s) |
+| Deep run 3, the matcher before F15 | 20 000 | 19 / 19 pass, no new seed (1 987 s) |
+| P16, P3-lap and P12-returned on `61d63be` | 20 000 | 3 / 3 pass, no new seed (440 s) |
 
-The 9 regression seeds (`services/api/test/fixtures/matcher-property-regressions.json`)
-are replayed first on every run: P2 10156 (F5); P3 10165 (the kit's dropout
-model forgot a duplicate row, and a remembered vehicle of unknown progress now
-blocks); P12 10099 (the property's statement was corrected); P6/P7/P10 10008
-(the generator produced stop sequence 0); P3 14526 (F7); P7 12091 (F8); P3
-16661 (F10).
+The 19 regression seeds (`services/api/test/fixtures/matcher-property-regressions.json`)
+are replayed first on every run, each with a note of what it caught: P2 10156
+(F5); P3 10165 (the kit's dropout model forgot a duplicate row, and a
+remembered vehicle of unknown progress now blocks); P12 10099 (the property's
+statement was corrected); P6/P7/P10 10008 (the generator produced stop
+sequence 0); P3 14526 (F7); P7 12091 (F8); P3 16661 (F10); P3-forgotten 10446
+(F15); P3-crossing 10099 (F17) and 10012 (R17); P3-empty-look 10099 (F16);
+P13-routes 10018 (F19); P12-loops 10037 (R17); P12-reached-after 10002 (R18);
+P13-memory-order 10000 (R20); P12-returned 10011 (R23); P3-lap 10001 (R24).
 
 ### Negative controls
 
 `VERIFIED_BY_TEST`. `scripts/negative-controls/run.ts --typecheck`
 (`artifacts/matcher-directed-v1/negative-controls.json`, generated on commit
-`c039653`): **48 of 48 controls killed** (18 required, 30 extra), 0 survived,
-0 stale, 0 invalid, 0 timed out. The baseline was green (593 / 593, no type
-error), every kill was re-confirmed on the unmutated snapshot, and the working
-tree did not change during the run. Each control puts back one answer leak
-(F3, F6, F14), removes one fail-closed rule of the directed matcher, restores
-the legacy symmetric term, or disables one of the gate's own integrity checks,
-in a private copy. A mutant that adds a type error is `INVALID`, not killed:
-the F12 control was rewritten for that reason. CI reruns all 48 on every push
-and pull request.
+`aac505f`): **105 of 105 controls killed** (18 required,
+87 extra), 0 survived, 0 stale, 0 invalid, 0 timed out. The baseline was
+green (658 / 658, no type error), every kill was re-confirmed on the
+unmutated snapshot, and the working tree did not change during the run. Each
+control puts back one answer leak (F3, F6, F14), removes one fail-closed rule
+of the directed matcher or the boarding watch, restores the legacy symmetric
+term, or disables one of the gate's own integrity checks, in a private copy. A
+mutant that adds a type error is `INVALID`, not killed: the F12 control was
+rewritten for that reason. The ordinary suite checks that every control's
+text still occurs in the source it edits, and the runner never counts that
+check as a killer, since every mutant fails it (R32): a control removed from
+under its tests is reported `SURVIVED`. The gate pins every control id; CI
+reruns the whole catalogue on every push and pull request.
 
 ## 5. Counterfactual suite
 
-`SIMULATED`. Thirty-two counterfactual families (50 transformations) in
+`SIMULATED`. Thirty-three counterfactual families (54 transformations) in
 `services/api/src/passiveCounterfactual.ts`: departed and approaching decoys,
 leaders and followers at 1–10 stops, overtaking, dwelling at the stop, the true
 bus or every decoy removed, late appearance, disappearance and reappearance,
@@ -155,16 +164,19 @@ Committed result, `artifacts/matcher-directed-v1/counterfactual-synthetic-summar
 
 | Base | Base cases | Evaluations | Families applied / exercised | Correct | Wrong | Abstain | GT indeterminate | Invariant violations | Expectation failures |
 |---|---:|---:|---|---:|---:|---:|---:|---:|---:|
-| A (30 stops, 10 s polls) | 218 | 7 677 | 32 / 31 | 4 888 | **0** | 1 936 | 741 | **0** | **0** |
-| R (36 stops, 20–40 s receipts) | 669 | 24 778 | 32 / 31 | 8 392 | **0** | 13 003 | 3 122 | **0** | **0** |
+| A (30 stops, 10 s polls) | 218 | 8 040 | 33 / 33 | 4 970 | **0** | 2 057 | 901 | **0** | **0** |
+| R (36 stops, 20–40 s receipts) | 669 | 26 160 | 33 / 33 | 8 373 | **0** | 13 196 | 4 330 | **0** | **0** |
 
 "Exercised" means the family's own expectations could be decided on at least
-one case; `long_polling_gap_120s` never can (a 120 s gap always splits the
-trajectory the model needs), so it is reported and not counted.
+one case. One transformation, `long_polling_gap_120s`, never can (a 120 s gap
+always splits the trajectory the model needs): it is reported, its family is
+exercised by `long_polling_gap_110s_resumed`, and a test fails if any other
+transformation goes unexercised (R26). The committed summary had fallen behind
+that catalogue change and is regenerated with this package (R36).
 
 The checks bite. The legacy matcher on the same bases (control, `SIMULATED`):
-base A 1 010 wrong commits, 2 465 invariant violations, 2 646 expectation
-failures, 31 of 32 families failing; base R 2 581 / 8 686 / 9 647, 31 of 32.
+base A 1 026 wrong commits, 2 489 invariant violations, 2 819 expectation
+failures, 32 of 33 families failing; base R 2 592 / 9 359 / 10 572, 32 of 33.
 A test-only matcher with every protection removed trips each individual
 expectation (`passiveCounterfactual.test.ts`, "every family expectation
 bites"), and a transformation that does not produce the answer it declares is
@@ -174,13 +186,49 @@ What this suite changed: family `follower_overtaking` exposed F9 (the margin at
 the window edge). Before the fix, the run that found it reported 4 wrong
 commits in 20 applicable cases on base R, and 165 in 166 012 evaluations on a
 scratch synthetic five-route hour (not committed); after it, none on either
-committed base.
+committed base. `lost_leader_follower_k3_360s` pinned F15 (the previous
+matcher selected the follower in 4 of 4 applicable base-A cases), and the
+fourth review found two transformations that could never decide their own
+expectations (R26).
 
 **On real bases: `MISSING`.** `scripts/passive-shadow/counterfactual.ts` runs
 the same catalogue over the Passive Shadow v3 raw streams in the evidence
 workflow. Only a complete run (every case, the whole catalogue, the production
 matcher and replay) can feed gate criterion CA-5, and only families actually
 exercised count toward its 30.
+
+## 5a. Ground-truth journey sessions
+
+`SIMULATED`. `scripts/matcher-evidence/ground-truth-sessions.ts` writes
+`artifacts/matcher-directed-v1/ground-truth-sessions.json` (regenerated
+byte-for-byte in CI): 3 000 sessions generated by
+`services/api/test/groundTruthKit.ts`. Buses move continuously at 20–90 s per
+stop; some appear late, some vanish for a while, and any poll may drop one;
+polls come every 10 s and 2 % fail. The rider waits from the first poll and
+boards the first bus to reach the stop. The truth never reaches the session
+coordinator, which runs in automatic mode, a mode no current readiness level
+allows.
+
+| Outcome | Sessions |
+|---|---:|
+| Automatic selections | 1 089 of 3 000 |
+| Right: the bus the rider boards | 917 |
+| Wrong: the boarded bus had not been in the feed before the selection | 157 |
+| Wrong: the boarded bus had been in the feed | 12 |
+| No bus reaches the stop within the session | 3 |
+| Wrong selections withdrawn / kept | 77 / 92 |
+| Right selections withdrawn (what the watch costs) | 38 |
+| Wrong selections where the feed showed the boarded bus reaching the stop no later than the selected one | 67 |
+| … of those not withdrawn by the poll that showed it (P16) | **0** |
+
+Read as a model, not a rate: in this model 169 of 1 089 automatic selections
+pick the wrong bus, 157 of them because the rider's bus had not appeared in
+the feed yet. No matcher can pick a bus the feed does not show, which is why
+automatic matching stays off and the rider confirms. What the feed does show,
+the boarding watch acts on: every overtaking it showed was withdrawn by the
+poll that showed it. The kit's feeds are monotone and list each bus once; the
+jitter, duplicate rows and row orders that R31 is about are pinned by
+deterministic session tests instead.
 
 ## 6. New passive live validation
 
@@ -295,10 +343,11 @@ own two-process byte comparison; anyone with repository access can re-run
 npm install --prefix services/api --omit=optional --no-audit --no-fund
 npm --prefix services/api test
 node --experimental-strip-types scripts/matcher-evidence/run-suite.ts --property-cases=2000
-node --experimental-strip-types scripts/negative-controls/run.ts
+node --experimental-strip-types scripts/negative-controls/run.ts --typecheck
 node --experimental-strip-types scripts/matcher-evidence/redecide-ledger.ts
 node --experimental-strip-types scripts/matcher-evidence/render-instants.ts
 node --experimental-strip-types scripts/matcher-evidence/counterfactual-synthetic.ts
+node --experimental-strip-types scripts/matcher-evidence/ground-truth-sessions.ts
 node --experimental-strip-types scripts/matcher-evidence/gate.ts --check
 # With a raw collection directory (private; never in Git):
 node --experimental-strip-types scripts/passive-shadow/migrate.ts <dir> \
@@ -321,13 +370,14 @@ sha256 of every evidence file this package cites, as committed with it:
 | `artifacts/passive-shadow-validation-v3-summary.json` | `0422f291e59738d82a73d222a522f6b5b743c322efae78ca4b812da4b54f5069` |
 | `artifacts/passive-shadow-validation-v3-wrong-commits.json` | `a960d428caa9d967ddbde0e66f9f1a9963cfd65df519bc6acc58951532fd8773` |
 | `artifacts/matcher-directed-v1/former-wrong-commit-instants.json` | `718b75e82f6cd30abdaadbe5280290309df4c07050f1541370efaf569e40841c` |
-| `artifacts/matcher-directed-v1/counterfactual-synthetic-summary.json` | `bfc921f2bf3fac00526365ec2dbe3b16280adb7b1fb89d876c3191b6e54bed96` |
-| `artifacts/matcher-directed-v1/test-suite.json` | `e4bba06815f4b46f65adc5adb87463acd97d50e6b402b28cd0733034b3420f87` |
-| `artifacts/matcher-directed-v1/negative-controls.json` | `859b35aa92930be3c949fe5feffb862700ecaf2f63012d48ab8ac3f53af24cd5` |
-| `artifacts/matcher-passive-safety-v4/gate-result.json` | `0609c66220119c9d5da374719cf91df53b50b8dd84d160fd884a1c63d1e10c24` |
-| `services/api/test/fixtures/matcher-property-regressions.json` | `30f39c69d9212505e1192c570422323e5e2b059f035e32ea4ddad1b1febed163` |
+| `artifacts/matcher-directed-v1/counterfactual-synthetic-summary.json` | `257dce3cb09169c5ccc91710f14bb77d38046b45cae04d1ab42745084e198132` |
+| `artifacts/matcher-directed-v1/ground-truth-sessions.json` | `b5405f6dc1051d4063e6652a1e338ac8e422846c6a9737f2567388ca0deccf6b` |
+| `artifacts/matcher-directed-v1/test-suite.json` | `a7b7ba9c2b37bd3c77ac02625cbe6f1cb826212dc3916d4214a91816f715118d` |
+| `artifacts/matcher-directed-v1/negative-controls.json` | `9e28775a153a6e3ca05d76bdb3555a808e0acf2645e8758fef89c063c6786e54` |
+| `artifacts/matcher-passive-safety-v4/gate-result.json` | `850c9c4bdb8035cb38f6222fb4e3517ff4a8335f1293b71f1ab147d90ff50316` |
+| `services/api/test/fixtures/matcher-property-regressions.json` | `1f7341f1955d42ef8b1f6873a04d1ff8240127948aa8093e64523c9034f29618` |
 | `fixtures/transit/directed-matcher-invariants.json` | `a74fa7736732c4b9e68c2ede581864a10bec020402d25769a8358c3e1c361b99` |
-| `ops/matcher-evidence/human-only-mitigations.json` | `d2873c6e8a8394cc3c09a11fbbd7ac53e01fe01a64680063b2698490256e0c6c` |
+| `ops/matcher-evidence/human-only-mitigations.json` | `005a4c5c66f73d5103d0aad73ea18c70e0b9e104a919d9903c7975f83fe47ba8` |
 | `ops/matcher-evidence/request.json` | `0495a6e0ab715cb09ebbfd34cee5f9e6ede1029839cf2f3d59f9737f27c5d6e2` |
 
 ## 15. HUMAN LABOR ELIMINATION
