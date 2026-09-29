@@ -26,7 +26,9 @@
  *   4. The control's listed test files run against the mutant. A test that
  *      fails there and did not fail on the unmutated snapshot kills it.
  *   5. Every kill is confirmed: the killing tests are re-run on the unmutated
- *      snapshot and must pass again, so a flaky test cannot pass for a kill.
+ *      snapshot and must pass again, so a test that fails whatever the mutation
+ *      cannot pass for a kill. The mutant itself is not re-run: a test that
+ *      fails only intermittently could still produce a kill by chance.
  *   6. If nothing in the listed files noticed, the rest of the suite runs
  *      (unless `--no-confirm`). A control is SURVIVED only when the whole
  *      suite stayed as green as the baseline: that is a protection with no

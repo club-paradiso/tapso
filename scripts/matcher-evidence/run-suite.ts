@@ -12,6 +12,11 @@
  *   2. `test/matcherProperties.test.ts` with `TAPSO_PROPERTY_CASES` fresh seeds
  *      per property, after every recorded regression seed.
  *
+ * A skipped or todo test is never a pass: TAP prints it as `ok … # SKIP` or
+ * `ok … # TODO`, so those lines are not counted as passing, and any skipped or
+ * todo test fails the run. `--property-cases` must be a positive integer (the
+ * property file would silently fall back to its default otherwise).
+ *
  * The summary holds no timings, so the same code yields the same file.
  * Exit 1 when either run fails; the summary is written either way so the
  * failure can be read.
@@ -27,6 +32,10 @@ const options = new Map(process.argv.slice(2).map((arg) => {
   return [key!, value.join("=")];
 }));
 const propertyCases = Number(options.get("property-cases") || 2_000);
+if (!Number.isSafeInteger(propertyCases) || propertyCases < 1) {
+  console.error("--property-cases must be a positive integer");
+  process.exit(2);
+}
 const outPath = path.resolve(options.get("out") || "artifacts/matcher-directed-v1/test-suite.json");
 const apiRoot = path.resolve("services/api");
 
@@ -47,8 +56,13 @@ function run(args: string[], env: Record<string, string> = {}) {
     tests: count("tests"),
     pass: count("pass"),
     fail: count("fail"),
+    skipped: count("skipped"),
+    todo: count("todo"),
     failing: [...output.matchAll(/^not ok \d+ - (.+)$/gm)].map((match) => match[1]!),
-    passingNames: [...output.matchAll(/^ok \d+ - (.+)$/gm)].map((match) => match[1]!),
+    // Only real passes: a skipped or todo test prints `ok … # SKIP` / `# TODO`.
+    passingNames: [...output.matchAll(/^ok \d+ - (.+)$/gm)]
+      .map((match) => match[1]!)
+      .filter((name) => !/\s#\s*(SKIP|TODO)\b/i.test(name)),
   };
 }
 
@@ -70,8 +84,9 @@ const summary = {
     passingNames: undefined,
   },
   properties: { casesPerProperty: propertyCases, ...properties, passingNames: undefined },
-  passed: suite.exitCode === 0 && properties.exitCode === 0 && suite.fail === 0 && properties.fail === 0,
-  propertySeedsPerInvariant: properties.exitCode === 0 ? propertyCases : 0,
+  passed: suite.exitCode === 0 && properties.exitCode === 0 && suite.fail === 0 && properties.fail === 0
+    && suite.skipped === 0 && suite.todo === 0 && properties.skipped === 0 && properties.todo === 0,
+  propertySeedsPerInvariant: properties.exitCode === 0 && properties.skipped === 0 && properties.todo === 0 ? propertyCases : 0,
   propertyRegressionSeeds: regressions.seeds.length,
   propertyInvariantsCovered: invariants.size,
   /** Every top-level test that passed in either run: what a declared mitigation's named tests are checked against. */

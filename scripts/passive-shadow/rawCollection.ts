@@ -51,9 +51,20 @@ export interface RawTree {
   files: Array<{ file: string; sha256: string }>;
 }
 
+/**
+ * The stream files of a collection. A window that found no vehicle has an empty
+ * `streams/`, and an artifact upload drops empty directories, so a missing
+ * `streams/` reads as empty; the manifest's stream count still has to match.
+ */
+async function streamFiles(root: string): Promise<string[]> {
+  const directory = path.join(root, "streams");
+  if (!existsSync(directory)) return [];
+  return (await readdir(directory)).filter((name) => name.endsWith(".json")).sort();
+}
+
 /** sha256 over the raw evidence files only: manifest.json and streams/*.json. */
 export async function rawTree(root: string): Promise<RawTree> {
-  const names = ["manifest.json", ...(await readdir(path.join(root, "streams"))).filter((name) => name.endsWith(".json")).sort().map((name) => `streams/${name}`)];
+  const names = ["manifest.json", ...(await streamFiles(root)).map((name) => `streams/${name}`)];
   const files: Array<{ file: string; sha256: string }> = [];
   for (const name of names) {
     files.push({ file: name, sha256: createHash("sha256").update(await readFile(path.join(root, name))).digest("hex") });
@@ -93,7 +104,7 @@ export async function loadVerifiedCollection(directory: string): Promise<{
   const expected = new Map(manifest.streams.map((entry) => [entry.streamId, entry.sha256]));
   const streams: PassiveObservationStream[] = [];
   const checks: StreamCheck[] = [];
-  for (const file of (await readdir(path.join(directory, "streams"))).filter((name) => name.endsWith(".json")).sort()) {
+  for (const file of await streamFiles(directory)) {
     const stream = JSON.parse(await readFile(path.join(directory, "streams", file), "utf8")) as PassiveObservationStream;
     validatePassiveStream(stream);
     const recomputed = streamSha256(stream);
