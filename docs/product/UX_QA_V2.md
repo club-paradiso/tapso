@@ -9,7 +9,7 @@ Evidence for Product V2 and what it does not yet prove. Reality labels as in `RE
 | CI job `transit-core` | `RideGuidanceTests`, `RideSetupTests` and every pre-existing core test | `swift test --package-path packages/transit-core` |
 | CI job `ios` › Build and test | App + Live Activity extension build; `TapsoActivityAttributesTests` (unchanged), `RidePresentationTests` | `xcodebuild … -scheme Tapso build test` |
 | CI job `ios` › Render snapshot evidence | Every V2 screen (light, dark), 375/440-pt widths and AX3 text for the densest screens, Lock Screen and island regions for every ride moment, in Korean and English — rendered by `SnapshotEvidenceTests` with SwiftUI `ImageRenderer` on the simulator | Set `TEST_RUNNER_TAPSO_SNAPSHOT_DIR`, run `-only-testing:TapsoTests/SnapshotEvidenceTests -testLanguage ko` (and `en`) |
-| Branch `ci-evidence/feat/product-v2-figma-ios-ux` | JPEG copies of the same images, one orphan commit per push | Published by CI job `ios-evidence` (branch pushes only, after `ios` passes; the build and test job itself has read-only permissions) |
+| CI artifact `ios-snapshot-evidence` | The canonical evidence: PNGs per language, uploaded by the read-only `ios` job | Actions run › Artifacts |
 | Figma `04 iOS` `157:10`, `160:1208` | Designed screens and the Live Activity / island board | — |
 | `scripts/ios/check_localization.py` | Every used key exists in ko and en with matching format arguments | `python3 scripts/ios/check_localization.py` |
 | `services/api/test/crossLanguageAuthority.test.ts` | The app still makes no network request and the Swift matcher still sees only the demo fixture | `npm test --prefix services/api` |
@@ -67,7 +67,7 @@ Walked through the code paths and Figma frames `V2 / 01`–`19`.
 
 ## Pass 5 — implementation vs Figma
 
-Compared the CI snapshots of `367b74a` (`ci-evidence/feat/product-v2-figma-ios-ux`, 98 images per language) with Figma `V2 / 01`–`19`, the dark, English and 375-pt frames and board `160:1208`.
+Compared the CI snapshots of `367b74a` (98 images per language; reviewed from a temporary JPEG copy on a `ci-evidence` branch that CI no longer publishes) with Figma `V2 / 01`–`19`, the dark, English and 375-pt frames and board `160:1208`.
 
 | Check | Result |
 |---|---|
