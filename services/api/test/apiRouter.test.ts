@@ -4,6 +4,8 @@ import { createTransitApiHandler, normalizePath, type TransitApiHandler } from "
 import { readTransitApiConfig, type ServerEnv } from "../src/apiConfig.ts";
 import { CachedTransitProvider } from "../src/cachedTransitProvider.ts";
 import { JourneySessionCoordinator } from "../src/journeySession.ts";
+import { MATCHER_POLICY_VERSION } from "../src/matching.ts";
+import type { ReadinessLevel } from "../src/matcherSafetyGate.ts";
 import { createBurstLimiter } from "../src/rateLimit.ts";
 import { ProviderConfigurationError, ProviderResponseError, type TransitProvider } from "../src/provider.ts";
 import type { RouteRequest, StopOnRoute, VehicleObservation } from "../src/domain.ts";
@@ -11,6 +13,17 @@ import type { RouteRequest, StopOnRoute, VehicleObservation } from "../src/domai
 const CITY = "39";
 const ROUTE = "JEB405136521";
 const EPOCH = new Date(0).toISOString();
+
+/**
+ * Synthetic fixture: the route's stops as every stub provider here publishes
+ * them. The coordinates are invented, evenly spaced points, and every vehicle
+ * number in this file is invented too.
+ */
+const STOPS: StopOnRoute[] = [
+  { stopId: "S1", name: "제주대학교", sequence: 1, latitude: 33.4, longitude: 126.5 },
+  { stopId: "S2", name: "아라초등학교", sequence: 2, latitude: 33.41, longitude: 126.51 },
+  { stopId: "S3", name: "제주한라대학교", sequence: 3, latitude: 33.42, longitude: 126.52 },
+];
 
 class StubProvider implements TransitProvider {
   stopCalls = 0;
@@ -21,11 +34,7 @@ class StubProvider implements TransitProvider {
   async stops(_request: RouteRequest): Promise<StopOnRoute[]> {
     this.stopCalls += 1;
     if (this.stopFailure) throw this.stopFailure;
-    return [
-      { stopId: "S1", name: "제주대학교", sequence: 1, latitude: 33.4, longitude: 126.5 },
-      { stopId: "S2", name: "아라초등학교", sequence: 2, latitude: 33.41, longitude: 126.51 },
-      { stopId: "S3", name: "제주한라대학교", sequence: 3, latitude: 33.42, longitude: 126.52 },
-    ];
+    return STOPS.map((stop) => ({ ...stop }));
   }
 
   async vehicles(request: RouteRequest): Promise<VehicleObservation[]> {
@@ -55,8 +64,14 @@ type Harness = {
   discoveryCalls: { cities: number; routes: number };
 };
 
-function harness(env: ServerEnv = {}, overrides: { discoveryFailure?: Error } = {}): Harness {
-  const config = readTransitApiConfig({ TAGO_SERVICE_KEY: "synthetic-key", ...env }, { nodeVersion: "v22.0.0" });
+function harness(
+  env: ServerEnv = {},
+  overrides: { discoveryFailure?: Error; demonstratedReadiness?: ReadinessLevel } = {},
+): Harness {
+  const config = readTransitApiConfig(
+    { TAGO_SERVICE_KEY: "synthetic-key", ...env },
+    { nodeVersion: "v22.0.0", ...(overrides.demonstratedReadiness ? { demonstratedReadiness: overrides.demonstratedReadiness } : {}) },
+  );
   const upstream = new StubProvider();
   const provider = new CachedTransitProvider(upstream, {
     stopTtlMs: config.cachePolicy.stopTtlMs,
@@ -130,17 +145,24 @@ test("health reports configuration without revealing the credential", async () =
   assert.equal(body.sessionStore, "memory");
   assert.equal(body.freshness.providerObservationTimestamp, "unavailable");
   assert.equal(body.freshness.policy, "server_observed_cadence_v1");
-  assert.equal(body.freshness.automaticMatching, "shadow_only_pending_field_validation");
+  assert.equal(body.freshness.automaticMatching, "shadow_only_pending_matching_readiness");
   assert.equal(body.freshness.cadencePolicy.historyWindowSeconds, 90);
   assert.equal(body.freshness.cadencePolicy.minimumSamples, 3);
   assert.equal(body.freshness.cadencePolicy.requiresProviderContentChange, true);
   assert.equal(body.freshness.cadencePolicy.calibration, "provisional");
-  assert.equal(body.freshness.fieldValidationGate.status, "open");
+  assert.equal(body.freshness.fieldValidationGate.status, "superseded");
+  assert.equal(body.freshness.fieldValidationGate.supersededBy, "matcher-passive-safety-v4");
   assert.equal(body.freshness.fieldValidationGate.requiredBoardings, 30);
-  assert.match(body.freshness.automaticMatchingWithheldBecause, /30 observed real boardings/);
+  assert.equal(body.freshness.matchingReadiness.demonstrated, "READY_FOR_SHADOW");
+  assert.match(body.freshness.automaticMatchingWithheldBecause, /matcher-passive-safety-v4 has demonstrated READY_FOR_SHADOW/);
+  assert.match(body.freshness.automaticMatchingWithheldBecause, /needs READY_FOR_BOUNDED_AUTOMATION/);
   assert.equal(body.matching.automaticMatchingEnabled, false);
+  assert.equal(body.matching.automaticMatchingRequested, false);
   assert.equal(body.matching.mode, "shadow");
-  assert.equal(body.matching.withheldReason, "field_validation_gate_open");
+  assert.equal(body.matching.matcherPolicy, "directed-route-progress-v1");
+  assert.equal(body.matching.withheldReason, "matching_readiness_below_bounded_automation");
+  assert.equal(body.matching.readiness.demonstrated, "READY_FOR_SHADOW");
+  assert.equal(body.matching.readiness.requiredForAutomaticMatching, "READY_FOR_BOUNDED_AUTOMATION");
   assert.equal(body.credential.source, "canonical");
   assert.ok(!JSON.stringify(body).includes("synthetic-key"));
   // The payload reports a category, never a variable name a scraper could use.
@@ -207,15 +229,16 @@ test("vehicles never claim a provider observation timestamp", async () => {
   const body = await response.json();
   assert.equal(body.meta.freshness.providerObservationTimestamp, "unavailable");
   assert.equal(body.meta.freshness.policy, "server_observed_cadence_v1");
-  assert.equal(body.meta.freshness.automaticMatching, "shadow_only_pending_field_validation");
-  assert.equal(body.meta.freshness.fieldValidationGate.status, "open");
+  assert.equal(body.meta.freshness.automaticMatching, "shadow_only_pending_matching_readiness");
+  assert.equal(body.meta.freshness.fieldValidationGate.status, "superseded");
   assert.equal(body.meta.freshness.fieldValidationGate.requiredBoardings, 30);
   assert.equal(body.meta.freshness.cadencePolicy.maximumReceiptGapSeconds, 30);
   assert.equal(body.meta.freshness.cadencePolicy.requiresProviderContentChange, true);
   assert.equal(body.meta.freshness.cadencePolicy.calibration, "provisional");
-  // The blocker is field evidence. Saying "durable storage" here would make the
-  // feature sound one infrastructure task away from shipping to passengers.
-  assert.match(body.meta.freshness.automaticMatchingWithheldBecause, /30 observed real boardings/);
+  // The blocker is matcher evidence. Saying "durable storage" here would make
+  // the feature sound one infrastructure task away from shipping to passengers.
+  assert.match(body.meta.freshness.automaticMatchingWithheldBecause, /demonstrated READY_FOR_SHADOW/);
+  assert.doesNotMatch(body.meta.freshness.automaticMatchingWithheldBecause, /durable|storage|session/i);
   assert.doesNotMatch(JSON.stringify(body.meta.freshness), /durable|session_store/i);
   assert.equal(body.meta.receivedAt, "2026-09-12T00:00:00.000Z");
   assert.equal(body.items[0].observedAt, EPOCH);
@@ -305,21 +328,36 @@ test("session endpoints fail closed when memory-only sessions are disabled", asy
 
 test("an enabled session withholds automatic tracking while freshness is unknown", async () => {
   const { handler } = harness({ TRANSIT_SESSIONS_ENABLED: "true" });
+  // The stub bus reports the stop before the rider's: approaching, the only
+  // zone a waiting rider's bus may be selected from. What stands in the way is
+  // its cadence, which no receipt history has established.
   const created = await postJson(handler, "/v1/sessions", {
     routeId: ROUTE,
     cityCode: CITY,
-    boardingStopSequence: 1,
+    boardingStopSequence: 2,
     destinationStopSequence: 3,
   });
   assert.equal(created.status, 201);
   const session = await created.json();
-  assert.equal(session.state, "awaiting_match");
+  // The bus is offered to the rider for explicit confirmation, never chosen
+  // for them, and the matcher itself would not have chosen it either.
+  assert.equal(session.state, "confirmation_required");
   assert.equal(session.selectedVehicleId, undefined);
   assert.equal(session.matchConfidence, "unknown");
+  assert.equal(session.sourceFreshness?.["제주70자1234"]?.state, "unknown");
+  assert.equal(session.shadowSelection?.status, "unavailable");
+  assert.equal(session.shadowSelection?.wouldSelectVehicleId, undefined);
+  assert.deepEqual(
+    (session.candidates ?? []).map((candidate: { vehicleId: string; rejectedReasons: string[] }) =>
+      [candidate.vehicleId, candidate.rejectedReasons]),
+    [["제주70자1234", ["source_cadence_not_fresh"]]],
+  );
 
   const refreshed = await get(handler, `/v1/sessions/${session.id}`);
   assert.equal(refreshed.status, 200);
-  assert.equal((await refreshed.json()).state, "awaiting_match");
+  const refreshedSession = await refreshed.json();
+  assert.equal(refreshedSession.state, "confirmation_required");
+  assert.equal(refreshedSession.selectedVehicleId, undefined);
 
   const rewritten = await get(handler, `/v1/session?sessionId=${session.id}`);
   assert.equal(rewritten.status, 200, "the production rewrite target resolves the same session");
@@ -356,10 +394,13 @@ test("explicit confirmation stays degraded because TAGO freshness is unknown", a
 
 test("matching withholds selection for candidates without a provider timestamp", async () => {
   const { handler } = harness();
+  // Approaching from the stop before the boarding stop, on a route whose stops
+  // are given: the missing timestamp is the only thing in the way.
   const response = await postJson(handler, "/v1/matches", {
     routeId: ROUTE,
-    boardingStopSequence: 1,
+    boardingStopSequence: 2,
     now: "2026-09-12T00:00:10.000Z",
+    stops: STOPS,
     candidates: [
       { vehicleId: "A", routeId: ROUTE, observedAt: EPOCH, timestampSource: "unavailable", stopSequence: 1 },
     ],
@@ -368,7 +409,100 @@ test("matching withholds selection for candidates without a provider timestamp",
   const body = await response.json();
   assert.equal(body.status, "unavailable");
   assert.equal(body.confidence, "unknown");
+  assert.equal(body.selectedVehicleId, undefined);
   assert.deepEqual(body.ranked[0].rejectedReasons, ["stale_or_invalid_timestamp"]);
+  assert.deepEqual(body.abstentionReasons, []);
+  assert.equal(body.matchingMode, "shadow");
+  assert.equal(body.automaticSelection, "withheld");
+});
+
+test("matching rejects an unknown rider state, and a stateless match stays advisory by default", async () => {
+  const { handler } = harness();
+  // One stop before the boarding stop, with a provider timestamp five seconds
+  // old: everything a waiting rider's match needs except the route's stops,
+  // which each request below adds or leaves out on purpose.
+  const request = {
+    routeId: ROUTE,
+    boardingStopSequence: 2,
+    now: "2026-09-12T00:00:10.000Z",
+    candidates: [
+      { vehicleId: "A", routeId: ROUTE, observedAt: "2026-09-12T00:00:05.000Z", timestampSource: "provider", stopSequence: 1 },
+    ],
+  };
+
+  const sideways = await postJson(handler, "/v1/matches", { ...request, stops: STOPS, riderState: "sideways" });
+  assert.equal(sideways.status, 400);
+  const refusal = await sideways.json();
+  assert.equal(refusal.error, "INVALID_INPUT");
+  assert.match(refusal.message, /riderState/);
+
+  const response = await postJson(handler, "/v1/matches", { ...request, stops: STOPS });
+  assert.equal(response.status, 200);
+  const body = await response.json();
+  assert.equal(body.status, "matched");
+  // Still advice: this deployment never opted in, so the pick is never offered
+  // as a selection. It is published as what the matcher would have chosen.
+  assert.equal(body.selectedVehicleId, undefined);
+  assert.deepEqual(body.shadowSelection, { status: "matched", wouldSelectVehicleId: "A", confidence: body.confidence });
+  assert.equal(body.riderState, "waiting_at_stop", "an absent rider state is a rider waiting at the stop");
+  assert.equal(body.policyVersion, MATCHER_POLICY_VERSION);
+  assert.deepEqual(body.abstentionReasons, []);
+  assert.equal(body.matchingMode, "shadow");
+  assert.equal(body.automaticSelection, "withheld");
+
+  // Without the route's stops a loop seam or a repeated stop cannot be ruled
+  // out, so the same candidate is withheld.
+  const unverified = await (await postJson(handler, "/v1/matches", request)).json();
+  assert.equal(unverified.status, "ambiguous");
+  assert.equal(unverified.selectedVehicleId, undefined);
+  assert.deepEqual(unverified.abstentionReasons, ["route_topology_unverified"]);
+
+  // An operator's opt-in cannot exceed the demonstrated readiness: at
+  // READY_FOR_SHADOW the flag is refused and the answer stays advice.
+  const optedIn = harness({ TRANSIT_AUTOMATIC_MATCHING_ENABLED: "true" });
+  const refused = await (await postJson(optedIn.handler, "/v1/matches", { ...request, stops: STOPS })).json();
+  assert.equal(refused.selectedVehicleId, undefined);
+  assert.equal(refused.shadowSelection.wouldSelectVehicleId, "A");
+  assert.equal(refused.matchingMode, "shadow");
+  assert.equal(refused.automaticSelection, "withheld");
+
+  // Only once the evidence demonstrates bounded automation does the opt-in
+  // take effect. The readiness here is injected; no deployment can do that.
+  const ready = harness({ TRANSIT_AUTOMATIC_MATCHING_ENABLED: "true" }, { demonstratedReadiness: "READY_FOR_BOUNDED_AUTOMATION" });
+  const permitted = await (await postJson(ready.handler, "/v1/matches", { ...request, stops: STOPS })).json();
+  assert.equal(permitted.selectedVehicleId, "A");
+  assert.equal(permitted.shadowSelection, undefined);
+  assert.equal(permitted.matchingMode, "automatic");
+  assert.equal(permitted.automaticSelection, "permitted");
+});
+
+test("a stateless match carries no session memory: passage and declaredAt from a caller are ignored, never a 500", async () => {
+  const { handler } = harness();
+  const request = {
+    routeId: ROUTE,
+    boardingStopSequence: 2,
+    now: "2026-09-12T00:00:10.000Z",
+    stops: STOPS,
+    candidates: [
+      { vehicleId: "A", routeId: ROUTE, observedAt: "2026-09-12T00:00:05.000Z", timestampSource: "provider", stopSequence: 1 },
+    ],
+  };
+  const baseline = await (await postJson(handler, "/v1/matches", request)).json();
+  // A malformed memory used to reach the matcher and crash it; a well-formed
+  // one would have let a caller steer a stateless answer.
+  for (const extra of [
+    { passage: { offsets: { A: null } } },
+    { passage: { offsets: {}, withheld: { reason: "caller_supplied", at: "2026-09-12T00:00:00.000Z" } } },
+    { declaredAt: "not a time" },
+  ]) {
+    const response = await postJson(handler, "/v1/matches", { ...request, ...extra });
+    assert.equal(response.status, 200, JSON.stringify(extra));
+    const body = await response.json();
+    assert.equal(body.status, baseline.status, JSON.stringify(extra));
+    assert.deepEqual(body.shadowSelection, baseline.shadowSelection, JSON.stringify(extra));
+  }
+  const badDirection = await postJson(handler, "/v1/matches", { ...request, directionCode: 7 });
+  assert.equal(badDirection.status, 400);
 });
 
 test("bodies must be JSON, bounded, and well formed", async () => {
@@ -460,6 +594,19 @@ test("a serverless deployment carrying only the retired name fails closed end to
   assert.ok(!JSON.stringify(body).includes("legacy-name-only"));
 });
 
+test("the wired session coordinator runs exactly the matching mode the configuration granted", async () => {
+  // The real composition: an operator's opt-in at READY_FOR_SHADOW is refused,
+  // and the coordinator that decides journey sessions must be told the refusal,
+  // not the request. /health reports what the coordinator actually runs.
+  const { createTransitApi } = await import("../src/apiRuntime.ts");
+  for (const env of [{}, { TRANSIT_AUTOMATIC_MATCHING_ENABLED: "true" }, { VERCEL: "1", TRANSIT_AUTOMATIC_MATCHING_ENABLED: "true" }]) {
+    const api = createTransitApi({ TAGO_SERVICE_KEY: "synthetic-key", ...env });
+    const health = await (await api.handler(new Request("http://api.test/health"))).json();
+    assert.equal(health.matching.automaticMatchingEnabled, false, JSON.stringify(env));
+    assert.equal(health.matching.sessionMatchingMode, "shadow", JSON.stringify(env));
+  }
+});
+
 test("the canonical name reaches the real provider through the wiring", async () => {
   const { createTransitApi } = await import("../src/apiRuntime.ts");
   const api = createTransitApi({ VERCEL: "1", TAGO_SERVICE_KEY: "canonical-key" });
@@ -471,6 +618,24 @@ test("the canonical name reaches the real provider through the wiring", async ()
   assert.ok(!JSON.stringify(health).includes("canonical-key"));
 });
 
+test("the real wiring refuses an automatic-matching opt-in below the readiness it needs, and logs it once", async () => {
+  const { createTransitApi } = await import("../src/apiRuntime.ts");
+  const warnings: string[] = [];
+  const original = console.warn;
+  console.warn = (line: unknown) => { warnings.push(String(line)); };
+  let api: Awaited<ReturnType<typeof createTransitApi>>;
+  try {
+    api = createTransitApi({ VERCEL: "1", TAGO_SERVICE_KEY: "canonical-key", TRANSIT_AUTOMATIC_MATCHING_ENABLED: "true" });
+  } finally {
+    console.warn = original;
+  }
+  assert.equal(api.config.matching.automaticMatchingEnabled, false);
+  const refusals = warnings.map((line) => JSON.parse(line)).filter((entry) => entry.event === "automatic_matching_refused");
+  assert.equal(refusals.length, 1);
+  assert.match(refusals[0].message, /READY_FOR_SHADOW/);
+  assert.ok(!warnings.join("\n").includes("canonical-key"));
+});
+
 
 /* ------------------------------------- the automatic-matching rollout gate */
 
@@ -479,20 +644,23 @@ test("the canonical name reaches the real provider through the wiring", async ()
  * ride sessions on must not turn automatic vehicle selection on with them.
  *
  * Both handlers see the same provider, the same clock, and a candidate whose
- * server-observed cadence is unambiguously fresh. The only difference is
- * `TRANSIT_AUTOMATIC_MATCHING_ENABLED`.
+ * server-observed cadence is unambiguously fresh, approaching the rider's stop
+ * from the stop before it — the only place a waiting rider's bus is ever
+ * selected from. The only difference is `TRANSIT_AUTOMATIC_MATCHING_ENABLED`.
  */
-function cadenceHarness(env: ServerEnv): { handler: TransitApiHandler; tick: () => void } {
+function cadenceHarness(
+  env: ServerEnv,
+  demonstratedReadiness?: ReadinessLevel,
+): { handler: TransitApiHandler; tick: () => void } {
   let now = new Date("2026-09-22T11:00:00Z");
   let latitude = 33.4;
-  const config = readTransitApiConfig({ TAGO_SERVICE_KEY: "synthetic-key", ...env }, { nodeVersion: "v22.0.0" });
+  const config = readTransitApiConfig(
+    { TAGO_SERVICE_KEY: "synthetic-key", ...env },
+    { nodeVersion: "v22.0.0", ...(demonstratedReadiness ? { demonstratedReadiness } : {}) },
+  );
   const provider: TransitProvider = {
     async stops() {
-      return [
-        { stopId: "S1", name: "제주대학교", sequence: 1, latitude: 33.4, longitude: 126.5 },
-        { stopId: "S2", name: "아라초등학교", sequence: 2, latitude: 33.41, longitude: 126.51 },
-        { stopId: "S3", name: "제주한라대학교", sequence: 3, latitude: 33.42, longitude: 126.52 },
-      ];
+      return STOPS.map((stop) => ({ ...stop }));
     },
     async vehicles(request: RouteRequest) {
       return [{
@@ -533,14 +701,18 @@ function cadenceHarness(env: ServerEnv): { handler: TransitApiHandler; tick: () 
 }
 
 async function driveToFreshCadence(handler: TransitApiHandler, tick: () => void) {
+  // The bus reports stop 1 and the rider waits at stop 2. A bus reporting the
+  // rider's own stop may be dwelling there or may have left, so it is never
+  // selected automatically; this one has not reached it yet.
   const created = await postJson(handler, "/v1/sessions", {
     routeId: ROUTE,
     cityCode: CITY,
-    boardingStopSequence: 1,
+    boardingStopSequence: 2,
     destinationStopSequence: 3,
   });
   assert.equal(created.status, 201);
   const session = await created.json();
+  assert.equal(session.riderState, "waiting_at_stop", "no riderState in the body means a rider waiting at the stop");
   let latest = session;
   for (let poll = 0; poll < 3; poll += 1) {
     tick();
@@ -566,11 +738,30 @@ test("enabling sessions alone never enables automatic vehicle selection", async 
   assert.equal(view.state, "confirmation_required");
 });
 
-test("the same evidence does select once an operator opts into automatic matching", async () => {
+test("an operator's opt-in is refused below the readiness automatic selection needs", async () => {
   const { handler, tick } = cadenceHarness({
     TRANSIT_SESSIONS_ENABLED: "true",
     TRANSIT_AUTOMATIC_MATCHING_ENABLED: "true",
   });
+  const view = await driveToFreshCadence(handler, tick);
+
+  assert.equal(view.matchingMode, "shadow");
+  assert.equal(view.selectedVehicleId, undefined, "the flag alone never picks a rider's bus");
+  assert.equal(view.shadowSelection?.wouldSelectVehicleId, "제주70자1234");
+  assert.equal(view.state, "confirmation_required");
+
+  const body = await (await get(handler, "/health")).json();
+  assert.equal(body.matching.automaticMatchingRequested, true);
+  assert.equal(body.matching.automaticMatchingEnabled, false);
+  assert.equal(body.matching.withheldReason, "matching_readiness_below_bounded_automation");
+  assert.equal(body.freshness.automaticMatching, "shadow_only_pending_matching_readiness");
+});
+
+test("the same evidence does select once readiness permits it and an operator opts in", async () => {
+  const { handler, tick } = cadenceHarness({
+    TRANSIT_SESSIONS_ENABLED: "true",
+    TRANSIT_AUTOMATIC_MATCHING_ENABLED: "true",
+  }, "READY_FOR_BOUNDED_AUTOMATION");
   const view = await driveToFreshCadence(handler, tick);
 
   assert.equal(view.matchingMode, "automatic");
@@ -605,6 +796,6 @@ test("health reports the session store by category and never its credentials", a
   assert.ok(!serialized.includes("synthetic.upstash.io"));
   // Durable storage changes where sessions live. It does not change who is
   // allowed to pick a rider's bus.
-  assert.equal(body.freshness.automaticMatching, "shadow_only_pending_field_validation");
+  assert.equal(body.freshness.automaticMatching, "shadow_only_pending_matching_readiness");
   assert.equal(body.matching.automaticMatchingEnabled, false);
 });

@@ -46,10 +46,22 @@ Government-specific DTOs stop inside the TAGO provider adapter:
 
 The API always uses TAGO. `RouteRequest.cityCode` carries the official TAGO city identifier; request parsing deliberately rejects the old `stdgCd` and `regionCode` aliases.
 
+## Passive collection paths
+
+The rider-free passive collector (`scripts/passive-shadow/collect.ts`) reads through one of two paths and records which one as `providerPath` on the manifest and on every stream:
+
+- `tago-direct`: TAGO through the one `TagoTransitProvider`, with `TAGO_SERVICE_KEY` from the environment.
+- `tapso-public-api`: `TapsoPublicApiProvider` (`services/api/src/tapsoPublicApiProvider.ts`), a read-only adapter for TAPSO's own public `/v1/stops`, `/v1/vehicles` and `/v1/routes`. It is not a TAGO client and needs no credential; the deployment it reads reaches TAGO through `TagoTransitProvider`. `/v1/vehicles` is served through a 20 s shared cache, so receipts on this path do not have session cadence. A stream counts as live only when read from the production origin; any other base is recorded as `synthetic`.
+
+The Passive Shadow v3 evidence of record (collection run `36098610702`) came through `tapso-public-api`.
+
 ## Evidence and retention rules
 
 - Fixture files are synthetic and say so in-band.
 - Never commit service keys.
-- Raw vehicle identifiers from live probes remain local; commit only sanitized aggregates or deliberately minimized representative fixtures.
+- Raw vehicle identifiers stay out of Git; commit only sanitized, pseudonymised aggregates or deliberately minimized representative fixtures. Corrected 2026-09-29: raw evidence does not only stay local. Where the code and workflows keep it:
+  - Command-line collectors and ride-capture tools write under ignored `work/` by default.
+  - CI passive collections upload raw streams as private GitHub Actions artifacts: `passive-shadow-v3-raw` (`.github/workflows/passive-shadow-v3.yml`) and `matcher-evidence-raw-*` (`.github/workflows/matcher-evidence.yml`), both with 90-day retention in the current workflows. The raw artifact of run `36098610702` was uploaded with 14-day retention and expires 2026-10-09T06:28:03Z. Once `matcher-evidence.yml` runs on `main`, it also stores each raw collection it handles as an asset of the private draft release `passive-evidence-vault` (best effort; an asset already stored is never replaced).
+  - Field-validation and beta ride captures submitted through the Railway collector are stored raw (gzip + base64, chunked) with their sanitized report in Upstash Redis under `tapso:field-validation:v1:` (`services/api/src/fieldValidation.ts`). A beta ride in progress is journaled in the same database under `tapso:beta-tester:v1:` (`services/api/src/captureJournal.ts`).
 - Capture request parameters, collection time, provider identity, and schema assumptions for live validation.
 - TAGO snapshot acquisition time is not the same as provider update time. Measure cadence from content changes.

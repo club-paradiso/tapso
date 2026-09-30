@@ -3,7 +3,7 @@
 #
 # Read-only provider access. No journey session, no Upstash write, no
 # production configuration. Raw streams (raw vehicle numbers) stay in a private
-# short-retention artifact; only the pseudonymised summary is printed.
+# 90-day artifact; only the pseudonymised summary is printed.
 name: Passive Shadow v3 collection
 
 on:
@@ -143,5 +143,10 @@ jobs:
         with:
           name: passive-shadow-v3-raw
           path: work/passive-shadow/pv3-*
-          retention-days: 14
+          # The raw streams are the evidence of record for every later offline
+          # re-evaluation, so they are kept for the longest retention GitHub
+          # allows here. A matcher-evidence replay request that names this run
+          # (ops/matcher-evidence/request.json) copies them into that
+          # workflow's private draft-release vault, which does not expire.
+          retention-days: 90
           if-no-files-found: ignore

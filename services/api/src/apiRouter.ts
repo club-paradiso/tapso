@@ -38,16 +38,17 @@ import { TAGO_CADENCE_POLICY_V1 } from "./sourceFreshness.ts";
  *    built from repeated server receipts of *changing* provider content. It
  *    never claims to know when TAGO observed the vehicle.
  * 3. `automaticMatching` — whether the server may pick a rider's bus. It is a
- *    product-safety decision gated on field evidence, not on either of the
- *    above being solved.
+ *    product-safety decision gated on the matcher readiness the release gate
+ *    demonstrated, not on either of the above being solved.
  */
 function freshnessPosture(config: TransitApiConfig): Record<string, unknown> {
+  const { readiness } = config.matching;
   return {
     providerObservationTimestamp: "unavailable",
     policy: "server_observed_cadence_v1",
     automaticMatching: config.matching.automaticMatchingEnabled
       ? "enabled_by_explicit_operator_opt_in"
-      : "shadow_only_pending_field_validation",
+      : "shadow_only_pending_matching_readiness",
     /**
      * Why it is withheld, in full, because a one-word status invites the wrong
      * guess. Durable session storage is a real and separate gap; it is not the
@@ -56,7 +57,13 @@ function freshnessPosture(config: TransitApiConfig): Record<string, unknown> {
      */
     ...(config.matching.automaticMatchingEnabled
       ? {}
-      : { automaticMatchingWithheldBecause: config.matching.fieldValidationGate.requirement }),
+      : {
+        automaticMatchingWithheldBecause: config.matching.withheldReason === "automatic_matching_not_requested"
+          ? "no operator has enabled TRANSIT_AUTOMATIC_MATCHING_ENABLED"
+          : `release gate ${readiness.gate} has demonstrated ${readiness.demonstrated}; `
+            + `automatic selection needs ${readiness.requiredForAutomaticMatching} (${readiness.evidence})`,
+      }),
+    matchingReadiness: readiness,
     fieldValidationGate: config.matching.fieldValidationGate,
     /**
      * Seconds, and every one of them a conservative operational gate on TAPSO's
@@ -264,7 +271,7 @@ async function dispatch(
   const { config, provider, discovery } = dependencies;
 
   if (resolved.route === "health") {
-    return { response: json(healthPayload(config, support.now()), 200, { "cache-control": "no-store" }) };
+    return { response: json(healthPayload(config, support.now(), dependencies.sessions), 200, { "cache-control": "no-store" }) };
   }
 
   if (resolved.route === "cities") {
@@ -379,20 +386,37 @@ async function dispatch(
       candidateCount: payload.candidates.length,
     });
     const result = matchVehicle(payload);
+    const automatic = config.matching.automaticMatchingEnabled;
+    // Stateless ranking over caller-supplied candidates. Below the readiness
+    // automatic selection needs, the matcher's pick is never offered as a
+    // selection: like a session's, it moves to `shadowSelection`, so a client
+    // that acts on `selectedVehicleId` has nothing to act on.
+    const { selectedVehicleId, ...ranking } = result;
     logEvent(
       result.status !== "matched"
         ? "vehicle_match_confirmation_required"
-        : result.confidence === "high"
-          ? "vehicle_match_high_confidence"
-          : "vehicle_match_selected",
+        : !automatic
+          ? "vehicle_match_shadow"
+          : result.confidence === "high"
+            ? "vehicle_match_high_confidence"
+            : "vehicle_match_selected",
       {
         routeId: payload.routeId,
         status: result.status,
         confidence: result.confidence,
-        selectedVehicleId: result.selectedVehicleId,
+        ...(automatic ? { selectedVehicleId } : { wouldSelectVehicleId: selectedVehicleId }),
       },
     );
-    return { response: json(result, 200, { "cache-control": "no-store" }) };
+    return {
+      response: json({
+        ...(automatic ? result : ranking),
+        ...(!automatic && selectedVehicleId
+          ? { shadowSelection: { status: result.status, wouldSelectVehicleId: selectedVehicleId, confidence: result.confidence } }
+          : {}),
+        matchingMode: config.matching.mode,
+        automaticSelection: automatic ? "permitted" : "withheld",
+      }, 200, { "cache-control": "no-store" }),
+    };
   }
 
   if (resolved.route === "operator_snapshot") {
@@ -469,7 +493,7 @@ async function dispatch(
 
 /* ------------------------------------------------------------------- health */
 
-function healthPayload(config: TransitApiConfig, now: Date): Record<string, unknown> {
+function healthPayload(config: TransitApiConfig, now: Date, sessions: JourneySessionCoordinator | undefined): Record<string, unknown> {
   return {
     ok: true,
     service: "tapso-transit-api",
@@ -496,7 +520,13 @@ function healthPayload(config: TransitApiConfig, now: Date): Record<string, unkn
     operator: config.operator,
     runtime: config.runtime,
     build: config.build,
-    matching: config.matching,
+    matching: {
+      ...config.matching,
+      // What the session coordinator actually runs, not what the configuration
+      // says: wiring that handed it the requested flag instead of the granted
+      // one would show here as "automatic" while everything else says shadow.
+      sessionMatchingMode: sessions?.matchingMode ?? "none",
+    },
     freshness: freshnessPosture(config),
   };
 }
@@ -584,7 +614,55 @@ function parseMatchRequest(value: unknown): MatchRequest {
       throw apiError("INVALID_INPUT", "candidate vehicleId, routeId, and observedAt are required");
     }
   }
-  return input as unknown as MatchRequest;
+  if (input.riderState !== undefined && input.riderState !== "waiting_at_stop" && input.riderState !== "on_board") {
+    throw apiError("INVALID_INPUT", "riderState must be waiting_at_stop or on_board");
+  }
+  if (input.stops !== undefined) {
+    if (!Array.isArray(input.stops) || input.stops.length > 500) {
+      throw apiError("INVALID_INPUT", "stops must be an array of at most 500 items");
+    }
+    for (const stop of input.stops) {
+      const record = stop as Record<string, unknown> | null;
+      if (!record || typeof record !== "object" || typeof record.stopId !== "string"
+        || typeof record.name !== "string" || typeof record.sequence !== "number" || !Number.isInteger(record.sequence)) {
+        throw apiError("INVALID_INPUT", "each stop needs stopId, name, and an integer sequence");
+      }
+    }
+  }
+  if (input.recentlySeen !== undefined) {
+    if (!Array.isArray(input.recentlySeen) || input.recentlySeen.length > 500) {
+      throw apiError("INVALID_INPUT", "recentlySeen must be an array of at most 500 items");
+    }
+    for (const row of input.recentlySeen) {
+      const record = row as Record<string, unknown> | null;
+      if (!record || typeof record !== "object" || typeof record.vehicleId !== "string" || typeof record.routeId !== "string") {
+        throw apiError("INVALID_INPUT", "each recentlySeen row needs vehicleId and routeId");
+      }
+    }
+  }
+  if (input.directionCode !== undefined && typeof input.directionCode !== "string") {
+    throw apiError("INVALID_INPUT", "directionCode must be a string");
+  }
+  for (const field of ["boardingLatitude", "boardingLongitude"] as const) {
+    if (input[field] !== undefined && (typeof input[field] !== "number" || !Number.isFinite(input[field]))) {
+      throw apiError("INVALID_INPUT", `${field} must be a finite number`);
+    }
+  }
+  // Only what a stateless request can carry. Session memory (`passage`) and the
+  // session's declaration time belong to a journey session, never to a caller.
+  const request: MatchRequest = {
+    routeId: input.routeId,
+    boardingStopSequence: input.boardingStopSequence,
+    now: input.now,
+    candidates: input.candidates as MatchRequest["candidates"],
+  };
+  if (input.directionCode !== undefined) request.directionCode = input.directionCode as string;
+  if (input.boardingLatitude !== undefined) request.boardingLatitude = input.boardingLatitude as number;
+  if (input.boardingLongitude !== undefined) request.boardingLongitude = input.boardingLongitude as number;
+  if (input.riderState !== undefined) request.riderState = input.riderState as MatchRequest["riderState"];
+  if (input.stops !== undefined) request.stops = input.stops as MatchRequest["stops"];
+  if (input.recentlySeen !== undefined) request.recentlySeen = input.recentlySeen as MatchRequest["recentlySeen"];
+  return request;
 }
 
 /* ------------------------------------------------------------------- limits */

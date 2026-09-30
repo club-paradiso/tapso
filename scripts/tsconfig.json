@@ -1,0 +1,9 @@
+{
+  "//": "Typecheck for the offline evidence tooling. These scripts are ES modules run with node --experimental-strip-types; the rest of scripts/ predates this config (scripts/transit-spike is kept only as history, see docs/KNOWN_ISSUES.md).",
+  "extends": "../services/api/tsconfig.json",
+  "compilerOptions": {
+    "module": "ESNext",
+    "moduleResolution": "Bundler"
+  },
+  "include": ["matcher-evidence/*.ts", "passive-shadow/*.ts", "negative-controls/*.ts"]
+}

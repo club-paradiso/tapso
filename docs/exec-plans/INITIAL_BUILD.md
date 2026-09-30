@@ -1,5 +1,19 @@
 # TAPSO initial vertical slice
 
+> **Status, 2026-09-29.** Historical ExecPlan. The Swift `VehicleMatchingEngine`
+> built here drives only the deterministic demo and is not authoritative
+> (`services/api/test/crossLanguageAuthority.test.ts`); real journey sessions
+> are matched on the server by `directed-route-progress-v1`
+> ([`../VEHICLE_MATCHING.md`](../VEHICLE_MATCHING.md)). Human rides are no
+> longer a release requirement: release gate `matcher-passive-safety-v4`
+> decides matcher readiness from machine-produced evidence
+> ([`../validation/MATCHER_SAFETY_EVIDENCE_V4.md`](../validation/MATCHER_SAFETY_EVIDENCE_V4.md),
+> [`HUMAN_LABOR_ELIMINATION.md`](HUMAN_LABOR_ELIMINATION.md)), and the
+> physical-device Live Activity check is a device check, not a ride, needed
+> only for `READY_FOR_BOUNDED_AUTOMATION`. What remains in use: the Swift
+> package, whose tests CI job `transit-core` runs, and the app with its Live
+> Activity demo; no CI job builds the app.
+
 Status: IMPLEMENTED_WITH_EXTERNAL_BLOCKERS
 Started: 2026-08-20 (Asia/Seoul)
 
@@ -30,13 +44,13 @@ General map navigation, accounts, payments, tourism content, Android, production
 - [x] Add the final app icon, coherent release versioning, and distribution metadata.
 - [ ] Produce and validate a signed App Store archive.
 - [ ] Upload the processed build and distribute it to an internal TestFlight group.
-- [ ] Validate real Jeju observations (`BLOCKED_BY_CREDENTIALS`).
+- [ ] Validate real Jeju observations (`BLOCKED_BY_CREDENTIALS`). *Historical: no longer blocked. TAGO credentials exist, and live TAGO reads were verified in production on 2026-09-12 (`../PRODUCTION_TRANSIT_API.md`).*
 - [ ] Validate remote ActivityKit pushes and physical devices (`BLOCKED_BY_CREDENTIALS`).
 
 ## Verified constraints
 
 - Xcode 26.3, Swift 6.2.4, Node 24.14, and iOS simulators are present.
-- Official resource 15157601 describes nationwide route, ordered-stop, and realtime vehicle-location data; authenticated Jeju behavior is still unknown.
+- Official resource 15157601 describes nationwide route, ordered-stop, and realtime vehicle-location data; authenticated Jeju behavior is still unknown. *Historical: resource 15157601 is B551982. Its authenticated route master returned no Jeju data on 2026-09-10, and TAGO replaced it as the only runtime provider (`../DATA_SOURCES.md`, `TAGO_MIGRATION.md`).*
 - ActivityKit is available from iOS 16.1; this project chooses iOS 17 for a stable modern baseline.
 - iOS 26.3 iPhone 17 Pro Simulator renders the compact 8/2/1/0 states, expanded Island, and Lock Screen card. Eight iOS tests pass, including fail-closed phase/freshness behavior and the 4 KB payload guard.
 - The workspace is FileProvider-managed, so sources must remain downloaded and signing output must use an unsynced DerivedData directory.

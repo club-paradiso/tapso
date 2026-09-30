@@ -3,6 +3,7 @@ export type TapsoEvent =
   | "vehicle_candidates_found"
   | "vehicle_match_high_confidence"
   | "vehicle_match_selected"
+  | "vehicle_match_shadow"
   | "vehicle_match_confirmation_required"
   | "vehicle_match_confirmed"
   | "journey_session_created"

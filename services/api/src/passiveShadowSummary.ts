@@ -179,6 +179,7 @@ export interface AdversarialVariantSummary {
   id: string;
   family: PerturbationFamily;
   usesTruthIdentity: boolean;
+  usesTruthTiming: boolean;
   evaluated: number;
   skipped: number;
   buckets: BucketCounts;
@@ -200,6 +201,12 @@ export interface PassiveShadowSummary {
   policyVersion: typeof PASSIVE_SHADOW_POLICY_VERSION;
   campaignId: typeof PASSIVE_SHADOW_CAMPAIGN_ID;
   createdAt: string;
+  /**
+   * The matcher policies the cases were replayed under. Scores, margins and
+   * rejection vocabularies differ between policies, so a summary is only
+   * comparable with one produced under the same policy.
+   */
+  matcherPolicies: string[];
   automaticMatching: "disabled";
   gateClosed: false;
   groundTruthModel: "passive_first_arrival_model";
@@ -580,6 +587,7 @@ export function summarizeAdversarial(
         id,
         family: entry.perturbation.family,
         usesTruthIdentity: entry.perturbation.usesTruthIdentity,
+        usesTruthTiming: entry.perturbation.usesTruthTiming,
         evaluated: 0,
         skipped: 0,
         buckets: emptyBuckets(),
@@ -615,7 +623,8 @@ export function summarizeAdversarial(
   return {
     sourceClass: "SYNTHETIC_OR_PERTURBED",
     note: "Perturbations of real cases. Robustness evidence only; never counted as live evidence. "
-      + "Variants marked usesTruthIdentity were built with knowledge of the answer.",
+      + "Variants marked usesTruthIdentity or usesTruthTiming were built with knowledge of the answer: "
+      + "which bus, or when it boarded.",
     basisCases: perturbed.length,
     variants: [...variants.values()],
   };
@@ -666,6 +675,7 @@ export function buildPassiveShadowSummary(input: SummaryInput): PassiveShadowSum
     policyVersion: PASSIVE_SHADOW_POLICY_VERSION,
     campaignId: PASSIVE_SHADOW_CAMPAIGN_ID,
     createdAt: input.createdAt,
+    matcherPolicies: [...new Set(input.results.map((result) => result.matcherPolicy))].sort(),
     automaticMatching: "disabled",
     gateClosed: false,
     groundTruthModel: "passive_first_arrival_model",

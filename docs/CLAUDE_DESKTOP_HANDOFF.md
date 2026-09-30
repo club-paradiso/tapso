@@ -6,6 +6,8 @@ Copy everything from `BEGIN PROMPT` through `END PROMPT` into a new Claude Deskt
 
 ## BEGIN PROMPT
 
+> **Note, 2026-09-29.** Some facts below are superseded; where this prompt and the repository disagree, the repository wins. The GitHub repository is `club-paradiso/tapso` (`git remote -v`); the bundle identifiers below are unchanged. The test counts under *Verified build and test state* are historical; CI is the authority on what passes now. Transit and matcher validation state lives in `docs/HANDOFF.md` and `docs/exec-plans/HUMAN_LABOR_ELIMINATION.md`, not here; no readiness level up to `READY_FOR_CONFIRMATION_ASSISTED` needs a bus ride.
+
 You are taking over a real, partially completed production-oriented iOS repository named **TAPSO (탑서)**. Work directly in the existing repository; do not start over, create a replacement app, or merely describe next steps.
 
 ### Repository

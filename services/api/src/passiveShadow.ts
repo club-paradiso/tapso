@@ -175,6 +175,40 @@ export const BLIND_INPUT_KEYS: ReadonlySet<string> = new Set([
 
 const BLIND_SNAPSHOT_KEYS: ReadonlySet<string> = new Set(["capturedAt", "vehicles", "error"]);
 
+/**
+ * Every field a provider observation or a route stop may carry, and nothing
+ * else. Typed against the domain interfaces, so a new observation field must
+ * be named here to compile; a field that is not an observation (a truth flag,
+ * a label, a role) is refused at every level of the input, not only the top.
+ */
+const BLIND_VEHICLE_FIELDS: Record<keyof Required<VehicleObservation>, true> = {
+  vehicleId: true,
+  routeId: true,
+  observedAt: true,
+  receivedAt: true,
+  timestampSource: true,
+  stopId: true,
+  stopName: true,
+  stopSequence: true,
+  directionCode: true,
+  latitude: true,
+  longitude: true,
+  speedKph: true,
+  headingDegrees: true,
+  eventCode: true,
+  receiveType: true,
+};
+const BLIND_VEHICLE_KEYS: ReadonlySet<string> = new Set(Object.keys(BLIND_VEHICLE_FIELDS));
+const BLIND_STOP_FIELDS: Record<keyof Required<StopOnRoute>, true> = {
+  stopId: true,
+  name: true,
+  sequence: true,
+  directionCode: true,
+  latitude: true,
+  longitude: true,
+};
+const BLIND_STOP_KEYS: ReadonlySet<string> = new Set(Object.keys(BLIND_STOP_FIELDS));
+
 /** Everything about a case that is not the answer. Safe to hand to anyone. */
 export interface PassiveCaseMeta {
   caseId: string;
@@ -407,7 +441,12 @@ function atStopWhen(trajectory: Trajectory, stopSequence: number, at: number): b
   return latest !== undefined && at - latest.at <= AT_STOP_LOOKBACK_MS && latest.stopSequence === stopSequence;
 }
 
-function qualify(
+/**
+ * Whether `chosen` is established beyond doubt as the arrival in the interval
+ * that starts at `intervalStart`. Exported so counterfactual re-derivation
+ * (`passiveCounterfactual.ts`) applies exactly this rule, never a copy of it.
+ */
+export function qualify(
   trajectories: Trajectory[],
   crossings: Crossing[],
   chosen: Crossing,
@@ -621,6 +660,16 @@ export function assertBlindMatcherInput(input: PassiveMatcherInput): void {
   for (const snapshot of input.snapshots) {
     for (const key of Object.keys(snapshot)) {
       if (!BLIND_SNAPSHOT_KEYS.has(key)) throw new GroundTruthLeakError(`snapshot carries non-blind field "${key}"`);
+    }
+    for (const vehicle of snapshot.vehicles) {
+      for (const key of Object.keys(vehicle)) {
+        if (!BLIND_VEHICLE_KEYS.has(key)) throw new GroundTruthLeakError(`vehicle row carries non-blind field "${key}"`);
+      }
+    }
+  }
+  for (const stop of input.stops) {
+    for (const key of Object.keys(stop)) {
+      if (!BLIND_STOP_KEYS.has(key)) throw new GroundTruthLeakError(`route stop carries non-blind field "${key}"`);
     }
   }
 }

@@ -1,5 +1,18 @@
 # Production live transit backend (Task A / Phase 2)
 
+> **Status, 2026-09-29.** Task A stays closed. Its "next gate", Task B (a
+> controlled ride), is historical: human rides are no longer a release
+> requirement. Automatic matching is governed by release gate
+> `matcher-passive-safety-v4`, which has demonstrated `READY_FOR_SHADOW`, and the
+> configuration refuses `TRANSIT_AUTOMATIC_MATCHING_ENABLED=true` below
+> `READY_FOR_BOUNDED_AUTOMATION`
+> ([`../validation/MATCHER_SAFETY_EVIDENCE_V4.md`](../validation/MATCHER_SAFETY_EVIDENCE_V4.md),
+> [`HUMAN_LABOR_ELIMINATION.md`](HUMAN_LABOR_ELIMINATION.md)). What this plan
+> built is still the transit API: the `tapso-api` Vercel project, verified in
+> production on 2026-09-12; once merged, the scheduled production smoke in
+> `.github/workflows/matcher-evidence.yml` re-checks it. Test counts below are
+> as of 2026-09-12; CI is the current record.
+
 > Status: **CLOSED / VERIFIED** on 2026-09-12. The API is live and verified in
 > production at `https://tapso-api.vercel.app`, build `b59e9e60b863`, including
 > credentialed live TAGO reads. Evidence in `../PRODUCTION_TRANSIT_API.md` →
@@ -192,6 +205,13 @@ Two things were learned late and are worth carrying forward:
 - A Production variable added after a deployment was created still reached that
   running build (`b59e9e60b863` picked up `TAGO_SERVICE_KEY`). `/health` is the
   authority on what the running build actually has; the dashboard is not.
+  *(`INFERRED`, 2026-09-29: "reached that running build" rests only on an
+  unchanged `build.commit`, which names the Git commit
+  (`VERCEL_GIT_COMMIT_SHA`), not the deployment. No recorded observation
+  identifies the deployment.)*
+
+*Historical, 2026-09-29: the next gate below is superseded and not required;
+see the note at the top.*
 
 **Next gate: Task B**, a controlled Route 365 ride capture. It does not depend
 on this deployment — `scripts/ride-capture/capture.ts` drives

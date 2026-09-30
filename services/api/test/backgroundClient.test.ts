@@ -10,6 +10,14 @@ import {
   stopNameForSequence,
 } from "../public/ride-capture/background-client-core.js";
 
+/**
+ * Synthetic test fixtures, not observations: every provider response below is
+ * constructed by the test, and nothing here is evidence that a bus was seen.
+ * Values that look real (public TAGO route and stop ids, stop names and
+ * coordinates, and vehicle numbers carried over from earlier fixtures) are
+ * used only as inputs.
+ */
+
 test("background capture is selected only for an explicitly ready collector", () => {
   assert.equal(collectorHealthReady(undefined), false);
   assert.equal(collectorHealthReady({ ok: true, service: "tapso-ride-collector" }), false);

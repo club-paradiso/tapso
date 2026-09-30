@@ -16,9 +16,16 @@
 
 import type { VehicleObservation } from "./domain.ts";
 import type { RideSnapshot } from "./rideCapture.ts";
+import type { MatcherFunction } from "./matching.ts";
 import { replayMatching } from "./matchReplay.ts";
 import { toBlindCapture, type GroundTruthVault, type PassiveCase, type PassiveMatcherInput } from "./passiveShadow.ts";
-import { blindLabels, classifyPassiveCase, type PassiveCaseResult, type ReplayFunction } from "./passiveShadowEvaluate.ts";
+import {
+  blindLabels,
+  classifyPassiveCase,
+  riderStateFor,
+  type PassiveCaseResult,
+  type ReplayFunction,
+} from "./passiveShadowEvaluate.ts";
 
 export type PerturbationFamily =
   | "poll_dropout"
@@ -40,6 +47,12 @@ export interface Perturbation {
   family: PerturbationFamily;
   /** Whether the variant used the ground truth's identity to build the input. */
   usesTruthIdentity: boolean;
+  /**
+   * Whether it placed its change by the ground-truth boarding instant (an
+   * outage or a freeze "60 s before boarding"): knowledge of when, even where
+   * it does not use who.
+   */
+  usesTruthTiming: boolean;
   /** `undefined` when the variant does not apply to this case (e.g. no competitor exists). */
   apply(input: PassiveMatcherInput, context: PerturbationContext): PassiveMatcherInput | undefined;
 }
@@ -53,6 +66,7 @@ export const PERTURBATIONS: readonly Perturbation[] = [
     id: "dropout_seeded_20pct",
     family: "poll_dropout",
     usesTruthIdentity: false,
+    usesTruthTiming: false,
     apply: (input, context) => {
       const random = mulberry32(context.seed);
       return withSnapshots(input, input.snapshots.filter(() => random() >= 0.2));
@@ -62,6 +76,7 @@ export const PERTURBATIONS: readonly Perturbation[] = [
     id: "dropout_outage_60s_before_boarding",
     family: "poll_dropout",
     usesTruthIdentity: false,
+    usesTruthTiming: true,
     apply: (input, context) => withSnapshots(input, input.snapshots.filter((snapshot) => {
       const at = Date.parse(snapshot.capturedAt);
       return at < context.boardingAt - 60_000 || at >= context.boardingAt;
@@ -79,12 +94,14 @@ export const PERTURBATIONS: readonly Perturbation[] = [
     id: "disappear_ground_truth_60s_before_boarding",
     family: "vehicle_disappearance",
     usesTruthIdentity: true,
+    usesTruthTiming: true,
     apply: (input, context) => removeVehicle(input, context.truthVehicleId, context.boardingAt - 60_000, context.boardingAt),
   },
   {
     id: "disappear_competitor_60s_before_boarding",
     family: "vehicle_disappearance",
     usesTruthIdentity: true,
+    usesTruthTiming: true,
     apply: (input, context) => {
       const competitor = nearestCompetitor(input, context);
       return competitor === undefined
@@ -96,6 +113,7 @@ export const PERTURBATIONS: readonly Perturbation[] = [
     id: "synthetic_competitor_one_stop_behind",
     family: "competitor_pressure",
     usesTruthIdentity: true,
+    usesTruthTiming: false,
     apply: (input, context) => cloneVehicle(input, context.truthVehicleId, `${SYNTHETIC_PREFIX}SHADOW`, (row) => ({
       ...row,
       ...(row.stopSequence === undefined ? {} : { stopSequence: Math.max(1, row.stopSequence - 1) }),
@@ -105,6 +123,7 @@ export const PERTURBATIONS: readonly Perturbation[] = [
     id: "synthetic_opposite_route_twin",
     family: "direction_ambiguity",
     usesTruthIdentity: true,
+    usesTruthTiming: false,
     apply: (input, context) => cloneVehicle(input, context.truthVehicleId, `${SYNTHETIC_PREFIX}OPPOSITE`, (row) => ({
       ...row,
       routeId: `${row.routeId}${SYNTHETIC_PREFIX}OPPOSITE`,
@@ -114,6 +133,7 @@ export const PERTURBATIONS: readonly Perturbation[] = [
     id: "synthetic_reversing_decoy",
     family: "direction_ambiguity",
     usesTruthIdentity: false,
+    usesTruthTiming: false,
     apply: (input) => {
       let step = 0;
       return withSnapshots(input, input.snapshots.map((snapshot) => {
@@ -152,7 +172,12 @@ export interface PerturbedResult {
 export function evaluatePerturbations(
   passiveCase: PassiveCase,
   vault: GroundTruthVault,
-  options: { replay?: ReplayFunction; perturbations?: readonly Perturbation[] } = {},
+  options: {
+    replay?: ReplayFunction;
+    perturbations?: readonly Perturbation[];
+    matcher?: MatcherFunction;
+    matcherPolicy?: string;
+  } = {},
 ): PerturbedResult[] {
   const truth = vault.reveal(passiveCase.meta.caseId);
   const context: PerturbationContext = {
@@ -165,12 +190,18 @@ export function evaluatePerturbations(
     const input = perturbation.apply(passiveCase.input, context);
     if (!input) return { perturbation, skipped: "NOT_APPLICABLE" as const };
     const labels = blindLabels(input);
-    const evidence = replay(toBlindCapture(input), { labels, recordDecisions: true });
+    const evidence = replay(toBlindCapture(input), {
+      labels,
+      recordDecisions: true,
+      riderState: riderStateFor(passiveCase.meta.scenario),
+      ...(options.matcher ? { matcher: options.matcher, matcherPolicy: options.matcherPolicy } : {}),
+    });
     return {
       perturbation,
       result: classifyPassiveCase(passiveCase.meta, input, evidence, labels, truth, {
         perturbation: perturbation.id,
         sourceClass: "SYNTHETIC_OR_PERTURBED",
+        ...(options.matcherPolicy ? { matcherPolicy: options.matcherPolicy } : {}),
       }),
     };
   });
@@ -193,6 +224,7 @@ function dropEvery(id: string, every: number): Perturbation {
     id,
     family: "poll_dropout",
     usesTruthIdentity: false,
+    usesTruthTiming: false,
     apply: (input) => withSnapshots(input, input.snapshots.filter((_, index) => index % every !== every - 1)),
   };
 }
@@ -203,6 +235,7 @@ function contentLag(id: string, lagMs: number): Perturbation {
     id,
     family: "delay",
     usesTruthIdentity: false,
+    usesTruthTiming: false,
     apply: (input) => {
       const successful = input.snapshots.filter((snapshot) => !snapshot.error);
       const lagged: RideSnapshot[] = [];
@@ -230,6 +263,7 @@ function receiptJitter(id: string, delayMs: number): Perturbation {
     id,
     family: "delay",
     usesTruthIdentity: false,
+    usesTruthTiming: false,
     apply: (input) => withSnapshots(input, input.snapshots.map((snapshot, index) => {
       if (index % 2 === 0) return snapshot;
       const shifted = new Date(Date.parse(snapshot.capturedAt) + delayMs).toISOString();
@@ -248,6 +282,7 @@ function frozen(id: string, durationMs: number): Perturbation {
     id,
     family: "stale_repetition",
     usesTruthIdentity: false,
+    usesTruthTiming: true,
     apply: (input, context) => {
       const from = context.boardingAt - durationMs;
       let template: RideSnapshot | undefined;

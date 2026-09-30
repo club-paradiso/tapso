@@ -31,6 +31,8 @@ export interface SyntheticBus {
   offsetMs?: number;
   /** Absent from the feed during [from, until) offsets. */
   hidden?: Array<[number, number]>;
+  /** Rows carry the bus's coordinates but no stop sequence or stop id: its progress along the route cannot be read. */
+  withoutStopSequence?: boolean;
 }
 
 export function syntheticStops(count = 20): StopOnRoute[] {
@@ -77,8 +79,7 @@ export function syntheticStream(options: {
         observedAt: EPOCH,
         receivedAt: at,
         timestampSource: "unavailable",
-        stopId: stop.stopId,
-        stopSequence: sequence,
+        ...(bus.withoutStopSequence ? {} : { stopId: stop.stopId, stopSequence: sequence }),
         latitude: stop.latitude,
         longitude: stop.longitude,
         receiveType: "TAGO_SNAPSHOT",

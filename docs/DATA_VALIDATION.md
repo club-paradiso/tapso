@@ -1,5 +1,16 @@
 # TAGO transit data validation
 
+> **Current status, 2026-09-29.** The release gate for automatic matching is
+> `matcher-passive-safety-v4`; its evidence is
+> [`validation/MATCHER_SAFETY_EVIDENCE_V4.md`](validation/MATCHER_SAFETY_EVIDENCE_V4.md).
+> The readiness it has demonstrated is `READY_FOR_SHADOW`, below the
+> `READY_FOR_BOUNDED_AUTOMATION` that automatic selection needs, so automatic
+> matching stays off. The thirty-boarding gate further down ("Acceptance gate
+> for broad real mode") is historical and superseded: it was never met, with
+> zero observed boardings. The ride procedures kept below are historical and
+> not required: no readiness level up to `READY_FOR_CONFIRMATION_ASSISTED`
+> needs a bus ride, stop marker, capture export or manual script run.
+
 ## Current status
 
 | Question | Result |
@@ -22,7 +33,7 @@
 | Snapshot-content cadence | median `27.52 s`; min `10.01 s`; max observed `83.10 s` / `53.07 s` by direction |
 | Temporary vehicle disappearance/reappearance | none observed in the two-minute bounded probe |
 | Server-side collector holds polling continuity in background | `VERIFIED_IN_ONE_ACCEPTANCE_RUN`; 2026-09-22, max gap `7.94 s` |
-| Enough evidence for automatic passenger matching | `NO`; real boarding acceptance gate remains |
+| Enough evidence for automatic passenger matching | `NO`; release gate `matcher-passive-safety-v4` has demonstrated `READY_FOR_SHADOW`, and automatic selection needs `READY_FOR_BOUNDED_AUTOMATION` |
 
 ## Verified TAGO Route 365 variants
 
@@ -163,13 +174,19 @@ Too few samples fails closed to `unknown`.
 
 Jeju's verified live path is TAGO. The service constructs `TagoTransitProvider` directly and exposes `transitProvider=tago` in health output. B551982 is retained only as validation history in documentation.
 
-One handler in `services/api/src/apiRouter.ts` serves both the local Node server and the production Vercel Functions, so the freshness rules below hold identically in development and in production. `/health`, `/v1/vehicles` and `/operator/snapshot` all publish the same `freshness` object: `providerObservationTimestamp: "unavailable"`, `policy: "server_observed_cadence_v1"`, `automaticMatching: "shadow_only_pending_field_validation"`, plus the open field-validation gate and the provisional cadence thresholds. See `PRODUCTION_TRANSIT_API.md`.
+One handler in `services/api/src/apiRouter.ts` serves both the local Node server and the production Vercel Functions, so the freshness rules below hold identically in development and in production. `/health`, `/v1/vehicles` and `/operator/snapshot` all publish the same `freshness` object: `providerObservationTimestamp: "unavailable"`, `policy: "server_observed_cadence_v1"`, `automaticMatching: "shadow_only_pending_matching_readiness"`, `matchingReadiness` (release gate `matcher-passive-safety-v4`, the level it demonstrated and the level automatic selection needs), `fieldValidationGate` with `status: "superseded"` (the historical thirty-boarding gate), plus the provisional cadence thresholds. See `PRODUCTION_TRANSIT_API.md`.
 
 `RouteRequest.cityCode` carries the official TAGO identifier. API query parsing accepts only `cityCode`, so former B551982 `stdgCd` values cannot be reused accidentally.
 
 TAGO live responses do not expose a provider timestamp. `TagoTransitProvider` stores TAPSO acquisition time in `receivedAt`, marks `timestampSource=unavailable`, and sets `receiveType=TAGO_SNAPSHOT`; cadence analysis must continue to use snapshot-content changes.
 
-## Next validation gate
+## Next validation gate (historical, not required)
+
+> **Historical, 2026-09-29.** This controlled-ride procedure is not required
+> for release or validation. Release gate `matcher-passive-safety-v4` takes its
+> matcher-safety evidence from rider-free passive collection, replay and tests
+> instead (`exec-plans/HUMAN_LABOR_ELIMINATION.md`). The steps are kept as the
+> record of what was planned.
 
 The API-data and HTTP integration gates are complete for the full-length Route 365 directions. The next validation gate is a controlled real ride:
 
@@ -187,12 +204,23 @@ background acceptance run fixed the collection mechanism, not the evidence gap:
 no clean ride capture exists yet. Step 5 is therefore still open, and no number
 in this document is clean real-ride evidence.
 
-## Acceptance gate for broad real mode
+## Acceptance gate for broad real mode (historical, superseded)
+
+> **Historical definition, superseded 2026-09-29.** This gate was never met:
+> zero observed boardings. It no longer decides anything. Release gate
+> `matcher-passive-safety-v4` replaced it, `/health` reports it as
+> `fieldValidationGate.status: "superseded"`, and the risks it was meant to
+> cover are decomposed in `validation/EVIDENCE_SUBSTITUTION_MATRIX.md`. The
+> definition, both campaigns (`broad-real-mode-30-boardings-v1`,
+> `beta-matcher-30-boardings-v2`) and their counts are kept below as recorded.
+> None of the ride, export or script steps in this section is required for
+> release or validation. What code enforces today is under "Enforcement".
 
 Do not enable automatic matching for passengers until a source-freshness rule exists and at least 30 observed boardings across multiple routes demonstrate a clear candidate margin, no silent direction reversal, and bounded stale-data behavior. Unknown route variants or unsupported semantics must fail closed.
 
-**Status: `OPEN`.** Zero of the 30 boardings have been observed (re-counted
-2026-09-23; see "Counting the campaign" below).
+**Status on 2026-09-23: `OPEN`.** Zero of the 30 boardings have been observed
+(re-counted 2026-09-23; see "Counting the campaign" below). **Since
+2026-09-29: superseded, never met.**
 
 ### How each criterion is measured
 
@@ -245,6 +273,12 @@ deliberately left open:
 | `HISTORICAL_CONFOUNDED` | A browser capture that was hidden or offline, so its polling gaps cannot be attributed to TAGO |
 | `HISTORICAL_MATCHER_EVIDENCE` | A usable replay from `local-device`, `cli` or an engine-less capture with no suspension. Marked `UNRESOLVED`: nothing here decides whether such a ride may count, and the tool does not decide it either |
 | `REPORT_ONLY_NO_RAW` | A report without its raw capture. The matcher cannot be replayed from a report, which has no per-snapshot candidates, coordinates or direction codes. Never counts, including a modern Railway report carrying a ride-time `matchGate`, which is shown for reference only |
+
+Note, 2026-09-29: the v1 counter counts `never_committed` rides as clean
+candidates. `classifyReplayedRide` (`services/api/src/rideCampaign.ts`) puts a
+ride whose `selectionVerdict` is `never_committed` in `CLEAN_GATE_CANDIDATE`
+when nothing else excludes it, although the criteria table above asks for
+`correct`. A v1 count is therefore not evidence of correct selection.
 
 **Decided 2026-09-23: every counted ride must keep its raw capture.** The
 Railway collector now exports the raw `RideCapture` of a completed session
@@ -327,6 +361,14 @@ that had already left the rider's stop (finding F1). In all 268 it was the only 
 Details: `validation/PASSIVE_SHADOW_VALIDATION_V3_RESULTS.md`; method:
 `exec-plans/PASSIVE_SHADOW_VALIDATION_V3.md`.
 
+Note, 2026-09-29: that result was measured with the legacy matcher
+`symmetric-stop-distance-v0`. The serving matcher is now
+`directed-route-progress-v1`, which fixes F1: re-decided at each of the 268
+commit instants, it selects nothing (`VERIFIED_BY_REPLAY`, instant level;
+`validation/FORMER_WRONG_COMMITS_UNDER_DIRECTED_POLICY.md`). Its full-window
+replay of the raw streams is `MISSING` until
+`.github/workflows/matcher-evidence.yml` runs after merge.
+
 ### One hypothesis this instrument exists to test
 
 A bus a rider is boarding is, at that instant, stationary at their stop. The
@@ -336,29 +378,39 @@ in its preceding 90-second window is an empirical question that no synthetic
 fixture settles. `matchGate.staleData.boardedCadenceStates` records the boarded
 vehicle's cadence state at every decision point, so real rides answer it.
 
-### Enforcement
+## Enforcement
 
-The gate is enforced in code rather than left to discipline:
+Updated 2026-09-29. Release gate `matcher-passive-safety-v4` now holds
+automatic matching back, and code enforces it: the
+configuration refuses `TRANSIT_AUTOMATIC_MATCHING_ENABLED` below
+`READY_FOR_BOUNDED_AUTOMATION`, and CI ties the readiness the code claims to
+the committed gate result. Before, the flag's `false` default was the only
+control, and an operator's opt-in was honoured.
 
 | Control | Where | Default |
 |---|---|---|
-| `TRANSIT_AUTOMATIC_MATCHING_ENABLED` | `services/api/src/apiConfig.ts` | `false` on every platform, including the local Node server |
-| Shadow mode | `JourneySessionCoordinator` | on whenever the flag is false; ranks candidates and publishes cadence evidence but never assigns `selectedVehicleId` |
+| `TRANSIT_AUTOMATIC_MATCHING_ENABLED` | `services/api/src/apiConfig.ts` | `false` on every platform, including the local Node server. Set to `true` below `READY_FOR_BOUNDED_AUTOMATION`, it is refused: `/health` shows `matching.automaticMatchingRequested: true`, `automaticMatchingEnabled: false` and `withheldReason: "matching_readiness_below_bounded_automation"`, and the runtime logs `automatic_matching_refused` once per process |
+| Demonstrated readiness | `services/api/src/matchingReadiness.ts` | `READY_FOR_SHADOW`, a reviewed constant never read from the environment. `services/api/test/matchingReadiness.test.ts` and `scripts/matcher-evidence/gate.ts --check` (CI job `matcher-evidence`) fail if it differs from the level `artifacts/matcher-passive-safety-v4/gate-result.json` awards |
+| Shadow mode | `JourneySessionCoordinator` | on whenever automatic matching is not enabled, including when the flag is set and refused; ranks candidates and publishes cadence evidence but never assigns `selectedVehicleId` |
 | `TRANSIT_SESSIONS_ENABLED` | `services/api/src/apiConfig.ts` | independent axis; enabling it makes the ride endpoints reachable and nothing more |
 
-Enabling sessions alone cannot enable automatic selection. That is asserted
-end to end in `services/api/test/apiRouter.test.ts`, with a paired test showing
-the same evidence *does* select once an operator opts in explicitly — so the
-gate is demonstrably the only thing holding it back.
+Neither enabling sessions nor setting the flag can enable automatic selection
+below that readiness. Both are asserted end to end in
+`services/api/test/apiRouter.test.ts`, with a paired test showing the same
+evidence *does* select once readiness permits it and an operator opts in.
 
 Explicit rider confirmation remains available in shadow mode, and it creates no
 freshness of its own: a confirmed vehicle whose server-observed cadence is not
 `fresh` reports `degraded` with no progress, exactly as an unconfirmed one
 would.
 
-### What is still missing after this gate closes
+### Session storage is a separate axis
 
-Durable journey-session storage. Sessions live in one process's memory, which
-is why `TRANSIT_SESSIONS_ENABLED` defaults to `false` on serverless. It is a
-real gap and a separate task; it is **not** why automatic matching is withheld,
-and the health payload must never say it is.
+Corrected 2026-09-29. Durable journey-session storage exists and is opt-in:
+`TRANSIT_SESSION_STORE=redis`, with `UPSTASH_REDIS_REST_URL` and
+`UPSTASH_REDIS_REST_TOKEN`, keeps sessions in Upstash Redis
+(`services/api/src/upstashSessionStore.ts`). The default store is still one
+process's memory, and while it is, `TRANSIT_SESSIONS_ENABLED` defaults to
+`false` on serverless; `/health` reports the store in use as `sessions.store`.
+Session storage is **not** why automatic matching is withheld, and the health
+payload must never say it is.

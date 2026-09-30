@@ -16,8 +16,8 @@ import {
 import { buildCampaign, renderCampaignMarkdown, type CampaignInputFile } from "../src/rideCampaign.ts";
 
 /**
- * Synthetic fixtures only. Vehicle numbers are invented, routes are not real,
- * and the coordinates are a grid, not a place.
+ * Synthetic fixtures only. Vehicle numbers are placeholders, routes are not
+ * real, and the coordinates are a synthetic grid, not real stop positions.
  */
 const base = Date.parse("2026-09-22T09:00:00+09:00");
 const stops: StopOnRoute[] = Array.from({ length: 8 }, (_, index) => ({
@@ -51,7 +51,13 @@ function tago(vehicleId: string, seconds: number, stopSequence: number, routeId:
   };
 }
 
-/** The boarded bus moves from the boarding stop, so the matcher commits to it. */
+/**
+ * The boarded bus moves from the boarding stop, so the matcher commits to it.
+ * `capture()` stamps the `boarded` marker at the first snapshot, so the replay
+ * decides for a rider already on board, and the commit comes once the bus is
+ * fresh and one to four stops past the stop, where a bus the rider has just
+ * boarded would be.
+ */
 function correctRide(routeId: string): RideSnapshot[] {
   return [0, 5, 10].map((seconds, index) => ({
     capturedAt: at(seconds),
@@ -59,11 +65,18 @@ function correctRide(routeId: string): RideSnapshot[] {
   }));
 }
 
-/** A decoy sits on the boarding stop while the boarded bus is far away: `wrong`. */
+/**
+ * The rider waits at stop 6 and lets the first bus go: `wrong`. The decoy
+ * approaches, one stop nearer each poll, and ends one stop short of the stop.
+ * The bus the rider actually boards is held at stop 2, three stops behind the
+ * decoy: far enough back that the decoy's lead is clear. The directed matcher
+ * cannot know the rider will skip the leading bus, and it commits to it — a
+ * bus still approaching the stop, never one that has already left it.
+ */
 function wrongRide(routeId: string): RideSnapshot[] {
   return [0, 5, 10].map((seconds, index) => ({
     capturedAt: at(seconds),
-    vehicles: [tago(OTHER, seconds, 3 + index, routeId), tago(BOARDED, seconds, 7, routeId)],
+    vehicles: [tago(OTHER, seconds, 3 + index, routeId), tago(BOARDED, seconds, 2, routeId)],
   }));
 }
 
@@ -88,6 +101,24 @@ function capture(overrides: Partial<RideCapture> = {}): RideCapture {
   };
 }
 
+/**
+ * `wrongRide` captured while the rider was still waiting: the `boarded` marker
+ * is stamped when they step on, after the first snapshot, so the replay decides
+ * for `waiting_at_stop`. The boarding stop is sequence 6 so that all four
+ * approach stops exist behind it.
+ */
+const WAITING_STOP = 6;
+function wrongCapture(overrides: Partial<RideCapture> = {}): RideCapture {
+  const routeId = overrides.routeId ?? "SYN-ROUTE-A";
+  return capture({
+    boardingStopSequence: WAITING_STOP,
+    destinationStopSequence: 8,
+    markers: [{ at: at(40), kind: "boarded", stopSequence: WAITING_STOP }],
+    snapshots: wrongRide(routeId),
+    ...overrides,
+  });
+}
+
 function file(name: string, value: unknown): CampaignInputFile {
   return { name, content: JSON.stringify(value) };
 }
@@ -108,7 +139,7 @@ test("a clean server-collected ride with a correct commit counts toward the thir
 });
 
 test("the per-ride numbers are exactly the analyzer's, not a second implementation", () => {
-  const raw = capture({ snapshots: wrongRide("SYN-ROUTE-A") });
+  const raw = wrongCapture();
   const campaign = buildCampaign([file("SYN-ROUTE-A-1.json", raw)]);
   const expected = analyzeRideCapture(raw).matchGate;
   const got = campaign.rides[0]!.matchGate!;
@@ -121,7 +152,7 @@ test("the per-ride numbers are exactly the analyzer's, not a second implementati
 });
 
 test("a wrong first commit is a gate failure: excluded from the count and surfaced", () => {
-  const campaign = buildCampaign([file("SYN-ROUTE-A-1.json", capture({ snapshots: wrongRide("SYN-ROUTE-A") }))]);
+  const campaign = buildCampaign([file("SYN-ROUTE-A-1.json", wrongCapture())]);
   const [ride] = campaign.rides;
 
   assert.equal(ride!.bucket, "EXCLUDED");
@@ -257,7 +288,7 @@ test("route diversity and verdict totals aggregate across rides", () => {
   const campaign = buildCampaign([
     file("a.json", capture()),
     file("b.json", capture({ routeId: "SYN-ROUTE-B", snapshots: correctRide("SYN-ROUTE-B") })),
-    file("c.json", capture({ routeId: "SYN-ROUTE-B", startedAt: at(1), snapshots: wrongRide("SYN-ROUTE-B") })),
+    file("c.json", wrongCapture({ routeId: "SYN-ROUTE-B", startedAt: at(1) })),
   ]);
 
   assert.equal(campaign.routes.distinctRouteIds, 2);
@@ -271,7 +302,7 @@ test("route diversity and verdict totals aggregate across rides", () => {
 test("aggregate output never carries a vehicle number or a coordinate", () => {
   const campaign = buildCampaign([
     file("a.json", capture()),
-    file("b.json", capture({ startedAt: at(1), snapshots: wrongRide("SYN-ROUTE-A") })),
+    file("b.json", wrongCapture({ startedAt: at(1) })),
   ]);
   const text = JSON.stringify(campaign) + renderCampaignMarkdown(campaign);
 

@@ -1,5 +1,18 @@
 # Background ride-capture client cutover
 
+> **Status, 2026-09-29.** Historical plan for a legacy ride flow. Human rides
+> are no longer a release requirement: release gate
+> `matcher-passive-safety-v4` decides matcher readiness from machine-produced
+> evidence, and no level up to `READY_FOR_CONFIRMATION_ASSISTED` needs a ride,
+> stop marker or capture export
+> ([`../validation/MATCHER_SAFETY_EVIDENCE_V4.md`](../validation/MATCHER_SAFETY_EVIDENCE_V4.md),
+> [`HUMAN_LABOR_ELIMINATION.md`](HUMAN_LABOR_ELIMINATION.md)). The Railway
+> collector and these pages remain, and serve only the legacy flows: an
+> operator ride can count only toward `broad-real-mode-30-boardings-v1` and a
+> beta ride only toward `beta-matcher-30-boardings-v2`, both historical, with
+> zero observed boardings. The cutover criterion at the end is not a release
+> requirement.
+
 ## Goal
 
 Move controlled-ride provider polling off mobile Safari and onto the dedicated Railway collector while preserving rider-entered physical stop markers as the only ground truth.
@@ -7,10 +20,10 @@ Move controlled-ride provider polling off mobile Safari and onto the dedicated R
 ## Reality and constraints
 
 - The Railway collector is process-owned and polls TAGO every 5 seconds independently of browser visibility.
-- Active sessions are memory-only in the first version. A collector process restart invalidates the session; the client must report that loss instead of fabricating continuity.
+- Active sessions are memory-only in the first version. A collector process restart invalidates the session; the client must report that loss instead of fabricating continuity. *(2026-09-29: still true for operator rides only. Beta rides are journaled to Upstash and resumed after a restart, as deterministic restart tests show; the real-iPhone restart path is unverified. See `BETA_FIELD_TESTER.md`, "Restart durability".)*
 - TAGO still exposes no provider observation timestamp. Receipt-side unchanged duration remains evidence for Task C, not a freshness rule.
 - The background collector currently supports only non-wrapping ride segments. Loop seam crossings fail closed to the existing device-owned recorder.
-- The operator token remains in Safari sessionStorage or memory only. It is never placed in a URL, localStorage, IndexedDB, source control, or the sanitized report.
+- The operator token remains in Safari sessionStorage or memory only. It is never placed in a URL, localStorage, IndexedDB, source control, or the sanitized report. *(Open issue, 2026-09-29, not fixed: `background.js` and `quick.js` keep the token in `sessionStorage` or memory, but `services/api/public/ride-capture/acceptance.js` stores it in `localStorage` (`tapso.acceptance.operatorToken`), contrary to this line.)*
 - The collector itself requires `TAGO_SERVICE_KEY` and `RIDE_CAPTURE_OPERATOR_TOKEN` in Railway. Those values are operational secrets and are not copied through Git.
 
 ## Implementation

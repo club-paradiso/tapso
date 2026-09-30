@@ -1,5 +1,21 @@
 # Passive Shadow Validation v3 — ExecPlan
 
+> **Note, 2026-09-29.** This plan's result (`NOT_READY`, 268 wrong commits)
+> was measured with the matcher then serving, `symmetric-stop-distance-v0`,
+> and the recorded numbers below are unchanged. F1 is fixed in
+> `directed-route-progress-v1`, and F3 by `replayBlind`, which has no parameter
+> for the answer. Re-decided at the 268 commit instants from the hash-checked
+> ledger, the directed policy selects nothing (`VERIFIED_BY_REPLAY`, instant
+> level, in the labels of `HUMAN_LABOR_ELIMINATION.md`; per case:
+> `../validation/FORMER_WRONG_COMMITS_UNDER_DIRECTED_POLICY.md`). The
+> full-window replay of these raw streams is `MISSING` until
+> `.github/workflows/matcher-evidence.yml` runs after merge. New raw uploads
+> are kept 90 days; the raw artifact of run `36098610702` (14-day retention)
+> expires 2026-10-09T06:28:03Z, and that workflow's first replay run copies
+> it. Successor plan: `HUMAN_LABOR_ELIMINATION.md`; release gate:
+> `matcher-passive-safety-v4`. Nothing in this plan is a manual step required
+> for release or validation.
+
 Living document for `passive-shadow-validation-v3`. It follows `.agent/PLANS.md`.
 Every phase re-reads the relevant section before it starts. Reality labels:
 `VERIFIED_FROM_SOURCE` (read in this repository), `VERIFIED_LIVE` (observed
@@ -456,6 +472,19 @@ departed buses would legitimise a known failure.
 production configuration was modified.
 
 ### Exact next actions
+
+> Historical, 2026-09-29. Action 1's rule is implemented
+> (`directed-route-progress-v1`); its measurement on these raw streams is the
+> old-vs-new replay in `.github/workflows/matcher-evidence.yml`, not a manual
+> re-evaluation, and it is `MISSING` until that workflow runs. Action 2
+> remains an optional owner authorisation (direct-TAGO evidence is not
+> required below `READY_FOR_BOUNDED_AUTOMATION`);
+> that workflow also collects one bounded window a day on rotating route pools
+> and time bands. Action 3 is superseded: no readiness level up to
+> `READY_FOR_CONFIRMATION_ASSISTED` needs a human ride, the physical-device
+> Live Activity check needed for `READY_FOR_BOUNDED_AUTOMATION` is a device
+> check, not a ride, and `READY_FOR_AUTOMATIC_MATCHING`, which would need rider
+> behaviour measured by people, is not a product target.
 
 1. Decide and implement a matcher rule for candidates at or past the boarding
    stop, then re-run

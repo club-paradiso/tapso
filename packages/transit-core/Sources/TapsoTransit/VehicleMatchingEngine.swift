@@ -139,6 +139,17 @@ public struct VehicleMatchingInput: Sendable {
     }
 }
 
+/// Demo-only and non-authoritative.
+///
+/// This engine drives the deterministic demo ride and nothing else. It models a
+/// boarding tap and provider stop events, scores a vehicle one stop past the
+/// boarding stop as plausible, and has no notion of whether the rider is still
+/// waiting, so it does not implement the backend's `directed-route-progress-v1`
+/// contract (`services/api/src/matching.ts`) and must never decide which bus a
+/// real rider is on. `services/api/test/crossLanguageAuthority.test.ts` fails if
+/// the app gains a network path or calls this engine with anything but demo
+/// fixtures; before either happens, this engine has to pass the language-neutral
+/// cases in `fixtures/transit/directed-matcher-invariants.json`.
 public struct VehicleMatchingEngine: Sendable {
     public let freshnessPolicy: FreshnessPolicy
 

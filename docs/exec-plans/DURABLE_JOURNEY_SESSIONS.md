@@ -1,5 +1,18 @@
 # Durable journey sessions
 
+> **Status, 2026-09-29.** Done; kept as the record. The Upstash store was
+> verified live on 2026-09-23 (store 15/15, preview deployment 12/12; see
+> *Results*), and verification did not switch production. Where this plan says
+> automatic matching is withheld by the field-validation gate (thirty
+> boardings), read release gate `matcher-passive-safety-v4` instead
+> ([`../validation/MATCHER_SAFETY_EVIDENCE_V4.md`](../validation/MATCHER_SAFETY_EVIDENCE_V4.md),
+> [`HUMAN_LABOR_ELIMINATION.md`](HUMAN_LABOR_ELIMINATION.md)): the thirty-boarding
+> gate was superseded without ever being met (zero observed boardings), human
+> rides are no longer a release requirement, and automatic matching stays off
+> because the demonstrated readiness is below `READY_FOR_BOUNDED_AUTOMATION`.
+> The live verifiers below are optional re-checks of this store, not release
+> requirements.
+
 ## User-visible outcome
 
 A rider's journey session survives the process that created it. Today
@@ -29,10 +42,10 @@ losing a ride to a cold start or a scale-out.
 |---|---|---|
 | Sessions are a single in-process `Map<string, SessionRecord>` | `VERIFIED_FROM_SOURCE` | `services/api/src/journeySession.ts:173` |
 | The coordinator has a narrow consumer surface | `VERIFIED_FROM_SOURCE` | 3 call sites in `apiRouter.ts` (create/refresh/confirm), 1 construction in `apiRuntime.ts` |
-| No KV, Redis or database is provisioned anywhere in the repo | `VERIFIED_FROM_SOURCE` | zero hits for `UPSTASH`, `KV_REST`, `REDIS_URL`, `DATABASE_URL`, `VERCEL_KV` |
+| No KV, Redis or database is provisioned anywhere in the repo | `VERIFIED_FROM_SOURCE` | zero hits for `UPSTASH`, `KV_REST`, `REDIS_URL`, `DATABASE_URL`, `VERCEL_KV`. *Superseded:* this plan added the Upstash store, verified live on 2026-09-23 (*Results*) |
 | `services/api` ships exactly one runtime dependency (`web-push`) | `VERIFIED_FROM_SOURCE` | `services/api/package.json` |
 | A second hosting provider, database or queue was rejected once before | `VERIFIED_FROM_DOC` | `docs/DECISIONS.md`: "Four cached reads justify none of them" |
-| Upstash Redis REST accepts a command array over HTTPS with a bearer token | `ASSUMED_FROM_VENDOR_DOCS` | must be confirmed against a real credential before this is called done |
+| Upstash Redis REST accepts a command array over HTTPS with a bearer token | `ASSUMED_FROM_VENDOR_DOCS` | must be confirmed against a real credential before this is called done. *Superseded:* confirmed against the real shared database on 2026-09-23 (*Results*: store 15/15, preview deployment 12/12) |
 
 The last row is the one that cannot be closed from the repository. Everything
 else in this plan is testable without an account.

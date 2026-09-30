@@ -1,0 +1,119 @@
+{
+  "//": "Seeds that once broke a matcher property. Each is replayed before any fresh seed, for ever. Add, never remove. Generators live in test/propertyKit.ts; every case is synthetic.",
+  "seeds": [
+    {
+      "property": "P2",
+      "seed": 10156,
+      "foundAt": "2026-09-29",
+      "note": "A candidate reported at stop sequence 16 on a 13-stop loop was folded modulo the lap into an 'approaching across the seam' competitor. Fixed in src/matching.ts: a stop sequence the route does not have is unknown route progress and blocks. The property now also forbids moving a bus beyond the route's last stop."
+    },
+    {
+      "property": "P3",
+      "seed": 10165,
+      "foundAt": "2026-09-29",
+      "note": "A vehicle reported at two positions in one snapshot was dropped but only one of its rows was remembered, so a stale in-window position vanished and an on-board selection appeared. The dropout model now remembers every row, as the cadence history does. Also added: remembered vehicles with unknown progress block, like current ones."
+    },
+    {
+      "property": "P12",
+      "seed": 10099,
+      "foundAt": "2026-09-29",
+      "note": "Property mis-specified: a third bus three or more stops ahead of a close pair legitimately leads. The property now removes every other in-window vehicle before adding the pair."
+    },
+    {
+      "property": "P6",
+      "seed": 10008,
+      "foundAt": "2026-09-29",
+      "note": "Trajectory generator bug: a frozen bus could compute stop sequence 0. The generator now skips positions before the first stop."
+    },
+    {
+      "property": "P7",
+      "seed": 10008,
+      "foundAt": "2026-09-29",
+      "note": "Same generator bug as P6 seed 10008."
+    },
+    {
+      "property": "P10",
+      "seed": 10008,
+      "foundAt": "2026-09-29",
+      "note": "Same generator bug as P6 seed 10008."
+    },
+    {
+      "property": "P3",
+      "seed": 14526,
+      "foundAt": "2026-09-29",
+      "note": "Deep run (20 000 seeds). A vehicle reported at two positions, both irrelevant to an on-board rider (6 and 4 stops before the stop), withheld the decision; dropping that vehicle released it. Fixed in src/matching.ts: a two-position conflict withholds only when one of its positions is selectable, competing or blocking."
+    },
+    {
+      "property": "P7",
+      "seed": 12091,
+      "foundAt": "2026-09-29",
+      "note": "Deep run (20 000 seeds). Failed polls hid a competitor's advance to the leader's stop; memory placed it where it was last seen, behind the leader, and the leader was committed. Fixed in src/matching.ts: a remembered vehicle may have moved on by one stop plus one per 15 s since its sighting, blocks or competes from any of those positions, and a waiting session is withheld for good once a vehicle that could have reached the stop leaves memory unobserved. Property reformulated to its defensible form: a failed poll counts exactly as a poll never made; a competitor that only ever appeared in failed polls cannot be defended against and is recorded as a limitation."
+    },
+    {
+      "property": "P3",
+      "seed": 16661,
+      "foundAt": "2026-09-29",
+      "note": "20 000-seed run: a remembered vehicle whose last sighting shows it crossed the stop (memory min <= -1, sighting >= 0) was forgotten when its row dropped out, releasing the bus behind it. Fixed: remembered sightings are judged against passage memory like current rows (waiting: crossing; on board: leaving the window)."
+    },
+    {
+      "property": "P3-forgotten",
+      "seed": 10446,
+      "foundAt": "2026-09-29",
+      "note": "Written with the property against the matcher at f3d693a (finding F15): a vehicle that left the 90 s evidence window was dropped from every decision although its possible positions only widen, so a decision its remembered sighting withheld became a selection. Fixed in src/matching.ts: vehicles in session memory that are neither in the snapshot nor remembered compete and block from their last sighting at an uncapped reach, and the unobserved-crossing rule uses the time actually unseen."
+    },
+    {
+      "property": "P3-crossing",
+      "seed": 10099,
+      "foundAt": "2026-09-29",
+      "note": "Written with the property against the matcher at f3d693a (finding F17): on a loop, passage memory compared plain sequence offsets, so a bus seen before the stop and then past it through the seam was not remembered as crossing. Fixed: memory offsets are directed (the shorter way round a loop)."
+    },
+    {
+      "property": "P3-empty-look",
+      "seed": 10099,
+      "foundAt": "2026-09-29",
+      "note": "Written with the property against the matcher at f3d693a (finding F16): the late-first-look check ran only at the session's first decision, so an earlier look that saw nothing switched it off. Fixed: every vehicle's first known sighting past the stop is judged against the time since the rider began waiting, at every decision; on board, a vehicle missing from the first snapshot still competes."
+    },
+    {
+      "property": "P13-routes",
+      "seed": 10018,
+      "foundAt": "2026-09-29",
+      "note": "Written with the property against the matcher at f3d693a (finding F19): a vehicle id also reported under another route made the invariant check read the wrong row, throwing (HTTP 500 on /v1/matches) or not depending on candidate order. Fixed: a row under another route is a second position (withheld), and the invariant checks the rows of the request's route."
+    },
+    {
+      "property": "P3-crossing",
+      "seed": 10012,
+      "foundAt": "2026-09-29",
+      "note": "The widened property (any position the bus can only reach by passing the stop) against 5408311, whose memory stored directed offsets (the shorter way round a loop): a crossing longer than half the lap read as a bus still before the stop. Fixed: memory keeps plain offsets, and round a loop a sighting is compared with the last one by its distance to the stop; a distance that grew is a crossing."
+    },
+    {
+      "property": "P12-loops",
+      "seed": 10037,
+      "foundAt": "2026-09-29",
+      "note": "Against 5408311: on a loop of eight stops, a bus four stops past the boarding stop is also four before it the other way; the directed offset read it as before the stop, excluded it as not the rider's bus, and the other bus in the on-board window was selected. Fixed: a bus that may be in the on-board window is never excluded, and leaving the window is read from its distance past the stop."
+    },
+    {
+      "property": "P12-reached-after",
+      "seed": 10002,
+      "foundAt": "2026-09-29",
+      "note": "Against 2f09032, found with the property and by a session-level differential against the matcher before F15 to F19: round a loop, the on-board exclusion of a bus seen before the stop was read from its last sighting only, so one decision later it was forgotten and the bus, alone in the window, was selected (the earlier matcher excluded it by the minimum offset). Fixed: every such sighting is recorded in passage memory (reachedAfterBoarding) and excludes the bus for the rest of the session."
+    },
+    {
+      "property": "P13-memory-order",
+      "seed": 10000,
+      "foundAt": "2026-09-29",
+      "note": "Against 99605a0, from a review finding: when one snapshot lists a bus twice at different stops, passage memory kept whichever row came last, so what the session remembered (and whether a later decision released) depended on row order. Fixed: such a bus is remembered as of unknown progress, with its last offset the position nearest the stop ahead."
+    },
+    {
+      "property": "P12-returned",
+      "seed": 10011,
+      "foundAt": "2026-09-29",
+      "note": "Against cb9fe42, lap 19, boarding 16, on board: a bus three stops past the stop, clear of it, read two past 55 s later (19 then 18) and was then selected in the window. It went round through the stop, or read a stop back (R23)."
+    },
+    {
+      "property": "P3-lap",
+      "seed": 10001,
+      "foundAt": "2026-09-29",
+      "note": "Against cb9fe42, lap 37, boarding 18, waiting: a bus 33 stops out (four past the stop), seen again 945 s later nine stops out, had time to reach the stop, take the rider and go round, and was not withheld (R24)."
+    }
+  ]
+}

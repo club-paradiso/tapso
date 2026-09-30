@@ -100,3 +100,73 @@ not. Toss sends no signature on `PAYMENT_STATUS_CHANGED`, so the webhook handler
 treats the request body as a notification and re-reads the payment from the Toss
 API before recording anything. The amount is whatever the server stored when the
 intent was created; a value supplied by the browser is only ever compared.
+
+## Directed route progress replaces symmetric stop distance (2026-09-29)
+
+**Decision:** the backend matcher is `directed-route-progress-v1`
+(`services/api/src/matching.ts`). A waiting rider's bus is selected only from
+one to four stops *before* the boarding stop; a bus at the stop or one past it
+blocks every selection; a departed bus is never selected.
+
+Passive Shadow v3 showed the symmetric term `20 − 5·|seq − S|` committing to
+buses that had already left the rider's stop in 268 blind live cases. Tuning
+its thresholds could not fix a term that cannot tell the two directions apart.
+The blocking zone is convention-agnostic because TAGO's `nodeord` semantics are
+unverified: under every reading, a bus reporting S or S + 1 may be dwelling at
+the stop, and one reporting S may have left. Measuring the convention could
+only ever relax coverage, never safety, so the rule does not depend on it. The
+old policy is kept verbatim in `matchingLegacy.ts` for comparison; nothing that
+serves a rider may import it.
+
+## Session memory instead of commit-on-crossing (2026-09-29)
+
+**Decision:** once any bus has been seen at, or crossing, the boarding stop
+during a waiting session — or lost from view while it could have reached it —
+no bus is automatically selected for the rest of that session
+(`PassageMemory`, finding F4).
+
+Found by the old-versus-new migration on synthetic data: the rider's own bus
+reached the stop before its cadence was fresh, so it was (correctly) never
+selected, and the bus behind it then became the "leading approaching vehicle".
+Committing to whichever bus crosses the stop was rejected: it selects a
+departed vehicle with no independent evidence that the rider boarded it.
+
+## Rider state is the rider's declaration (2026-09-29)
+
+**Decision:** `riderState` (`waiting_at_stop` by default, or `on_board`) is
+input from the rider, with a separate rule for each; replays take it from the
+capture's start declaration (a `boarded` marker at the first snapshot), never
+from which vehicle the rider was on.
+
+The default is the rule whose mistake is harmless: a rider who is really
+aboard gets a confirmation prompt, while treating a waiting rider as aboard
+would admit departed buses.
+
+## A readiness gate replaces the thirty-ride count (2026-09-29)
+
+**Decision:** automatic matching is governed by release gate
+`matcher-passive-safety-v4` (`services/api/src/matcherSafetyGate.ts`), which
+awards one of five readiness levels from machine-produced evidence. The
+configuration refuses `TRANSIT_AUTOMATIC_MATCHING_ENABLED=true` below
+`READY_FOR_BOUNDED_AUTOMATION`, and CI fails if the readiness the code claims
+differs from the one the committed gate result awards.
+
+The legacy campaigns (`broad-real-mode-30-boardings-v1`,
+`beta-matcher-30-boardings-v2`) stay as historical definitions with their real
+count of zero. Their risks are decomposed in
+`docs/validation/EVIDENCE_SUBSTITUTION_MATRIX.md`. Minimum sample sizes rest on
+the rule of three at the vehicle-trajectory level, with product tolerances
+stated as choices (5 % for a suggestion the rider confirms, 1 % for an
+unconfirmed commit), and were not fitted to existing evidence.
+
+## Confirmation-assisted, not automatic, is the product target (2026-09-29)
+
+**Decision:** the strongest level TAPSO aims for without new human evidence is
+`READY_FOR_CONFIRMATION_ASSISTED`: the matcher may suggest, the rider's tap
+commits.
+
+Two facts no passive evidence can establish — how far the provider lags the
+physical stop, and whether riders board the first bus to arrive — both matter
+only if the product commits without the rider. Designing them out of the
+safety path is sound; asking people to ride buses to measure them is not
+necessary for the shipped behaviour.

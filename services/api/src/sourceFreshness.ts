@@ -174,12 +174,42 @@ export function appendCadenceObservation(
   policy: TagoCadencePolicy = TAGO_CADENCE_POLICY_V1,
 ): VehicleObservation[] {
   const cutoff = now.getTime() - policy.historyWindowMs;
-  return [...history, { ...observation }]
+  // Receipts only move forward. A row no newer than the latest one already
+  // held (a late, older receipt, or a second row for the same vehicle in one
+  // snapshot) is not new evidence: counting it could manufacture a sample or
+  // a content change the provider never produced, so it is not recorded.
+  const at = receiptMs(observation);
+  const latest = Math.max(Number.NEGATIVE_INFINITY, ...history.map((row) => receiptMs(row) ?? Number.NEGATIVE_INFINITY));
+  const appended = at !== undefined && at > latest ? [...history, { ...observation }] : [...history];
+  return appended
     .filter((row) => {
-      const at = receiptMs(row);
-      return at !== undefined && at >= cutoff;
+      const rowAt = receiptMs(row);
+      return rowAt !== undefined && rowAt >= cutoff;
     })
     .slice(-24);
+}
+
+/**
+ * Memory for the matcher. The last sighting of each vehicle that is in the cadence history, inside the
+ * evidence window, but not in the current snapshot.
+ */
+export function recentlySeenVehicles(
+  cadenceHistory: ReadonlyMap<string, VehicleObservation[]>,
+  current: VehicleObservation[],
+  at: Date,
+  windowMs: number = TAGO_CADENCE_POLICY_V1.historyWindowMs,
+): VehicleObservation[] {
+  const present = new Set(current.map((vehicle) => vehicle.vehicleId));
+  const remembered: VehicleObservation[] = [];
+  for (const [vehicleId, history] of [...cadenceHistory].sort(([left], [right]) => left.localeCompare(right))) {
+    if (present.has(vehicleId)) continue;
+    const last = history.at(-1);
+    const seenAt = last?.receivedAt ? Date.parse(last.receivedAt) : Number.NaN;
+    if (!last || !Number.isFinite(seenAt)) continue;
+    if (at.getTime() - seenAt > windowMs || seenAt > at.getTime()) continue;
+    remembered.push({ ...last });
+  }
+  return remembered;
 }
 
 /**

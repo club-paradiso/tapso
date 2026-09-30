@@ -195,9 +195,10 @@ function decode(raw: string): VersionedJourneySession {
   } catch {
     throw new SessionStoreError("the session store holds a row that is not valid JSON");
   }
-  // A row written by an older, incompatible build is refused rather than
-  // half-read. Sessions are short-lived, so refusing costs one ride and
-  // guessing could cost the wrong bus.
+  // A row that is not a journey session is refused rather than half-read.
+  // Rows written by earlier builds of the same schema are read; a field they
+  // lack is handled where it is used (a polled row with no passage memory is
+  // withheld for good: `toRecord` in journeySession.ts).
   if (!session || typeof session !== "object" || typeof session.id !== "string") {
     throw new SessionStoreError("the session store holds a row that is not a journey session");
   }

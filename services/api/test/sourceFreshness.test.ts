@@ -2,7 +2,15 @@ import test from "node:test";
 import assert from "node:assert/strict";
 
 import type { VehicleObservation } from "../src/domain.ts";
-import { classifyTagoCadenceFreshness } from "../src/sourceFreshness.ts";
+import { appendCadenceObservation, classifyTagoCadenceFreshness, recentlySeenVehicles } from "../src/sourceFreshness.ts";
+
+/**
+ * Synthetic test fixtures, not observations: every provider response below is
+ * constructed by the test, and nothing here is evidence that a bus was seen.
+ * Values that look real (public TAGO route and stop ids, stop names and
+ * coordinates, and vehicle numbers carried over from earlier fixtures) are
+ * used only as inputs.
+ */
 
 const routeId = "JEB405136521";
 const vehicleId = "BUS-A";
@@ -80,4 +88,41 @@ test("old last receipt fails closed even with historical movement", () => {
   ], now);
   assert.equal(result.state, "stale");
   assert.ok((result.latestReceiptAgeSeconds ?? 0) > 30);
+});
+
+/* Receipt order. Every fixture here is synthetic. */
+
+function accumulate(rows: VehicleObservation[], nowSeconds: number): VehicleObservation[] {
+  let history: VehicleObservation[] = [];
+  for (const row of rows) history = appendCadenceObservation(history, row, new Date(base + nowSeconds * 1_000));
+  return history;
+}
+
+test("a late, older receipt is not recorded and cannot manufacture a content change", () => {
+  // A frozen feed: the same row at 0, 10 and 20 s. Then an older receipt with
+  // different content arrives late (another instance, a skewed clock).
+  const frozen = [obs(0), obs(10), obs(20)];
+  const late = obs(5, 10, 33.5009);
+  const history = accumulate([...frozen, late], 20);
+  assert.equal(history.length, 3, "the late receipt is dropped");
+  const result = classifyTagoCadenceFreshness(history, new Date(base + 20_000));
+  assert.equal(result.state, "aging");
+  assert.equal(result.contentChangeCount, 0);
+});
+
+test("a second row for the same vehicle in one snapshot is neither a sample nor a content change", () => {
+  // Two receipts, one of them duplicated at another position. Counting the
+  // duplicate would reach three samples and one content change from two polls.
+  const history = accumulate([obs(0), obs(0, 14, 33.6), obs(12)], 12);
+  assert.equal(history.length, 2);
+  const result = classifyTagoCadenceFreshness(history, new Date(base + 12_000));
+  assert.equal(result.state, "unknown");
+  assert.equal(result.sampleCount, 2);
+});
+
+test("remembered vehicles are the latest receipt of each, because history only moves forward", () => {
+  const history = accumulate([obs(0, 9), obs(10, 10), obs(4, 3)], 10);
+  const remembered = recentlySeenVehicles(new Map([[vehicleId, history]]), [], new Date(base + 20_000));
+  assert.equal(remembered.length, 1);
+  assert.equal(remembered[0]!.stopSequence, 10);
 });

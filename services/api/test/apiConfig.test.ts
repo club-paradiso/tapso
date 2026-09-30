@@ -36,9 +36,19 @@ test("automatic matching is off by default on every platform", () => {
   for (const env of [{}, { VERCEL: "1" }, { VERCEL: "1", VERCEL_ENV: "production" }]) {
     const config = readTransitApiConfig(env, NODE);
     assert.equal(config.matching.automaticMatchingEnabled, false);
+    assert.equal(config.matching.automaticMatchingRequested, false);
     assert.equal(config.matching.mode, "shadow");
-    assert.equal(config.matching.withheldReason, "field_validation_gate_open");
-    assert.equal(config.matching.fieldValidationGate.status, "open");
+    assert.equal(config.matching.matcherPolicy, "directed-route-progress-v1");
+    assert.equal(config.matching.withheldReason, "matching_readiness_below_bounded_automation");
+    assert.deepEqual(config.matching.readiness, {
+      gate: "matcher-passive-safety-v4",
+      demonstrated: "READY_FOR_SHADOW",
+      requiredForAutomaticMatching: "READY_FOR_BOUNDED_AUTOMATION",
+      evidence: "artifacts/matcher-passive-safety-v4/gate-result.json",
+    });
+    // The thirty-boarding gate was never met and no longer decides anything.
+    assert.equal(config.matching.fieldValidationGate.status, "superseded");
+    assert.equal(config.matching.fieldValidationGate.supersededBy, "matcher-passive-safety-v4");
     assert.equal(config.matching.fieldValidationGate.requiredBoardings, 30);
   }
 });
@@ -52,11 +62,49 @@ test("enabling sessions is not enough to enable automatic matching", () => {
   assert.equal(config.matching.mode, "shadow");
 });
 
-test("automatic matching turns on only through its own explicit flag", () => {
-  const config = readTransitApiConfig({ TRANSIT_AUTOMATIC_MATCHING_ENABLED: "true" }, NODE);
-  assert.equal(config.matching.automaticMatchingEnabled, true);
-  assert.equal(config.matching.mode, "automatic");
-  assert.equal(config.matching.withheldReason, undefined);
+test("the flag cannot exceed the demonstrated readiness: below bounded automation it is refused", () => {
+  // The readiness the code claims is the one CI ties to the committed gate
+  // result. Today it is READY_FOR_SHADOW, so an operator's `true` is refused on
+  // every platform, and /health shows both the request and the refusal.
+  for (const env of [
+    { TRANSIT_AUTOMATIC_MATCHING_ENABLED: "true" },
+    { TRANSIT_AUTOMATIC_MATCHING_ENABLED: "true", VERCEL: "1", VERCEL_ENV: "production" },
+    { TRANSIT_AUTOMATIC_MATCHING_ENABLED: "true", TRANSIT_SESSIONS_ENABLED: "true" },
+  ]) {
+    const config = readTransitApiConfig(env, NODE);
+    assert.equal(config.matching.automaticMatchingRequested, true);
+    assert.equal(config.matching.automaticMatchingEnabled, false);
+    assert.equal(config.matching.mode, "shadow");
+    assert.equal(config.matching.withheldReason, "matching_readiness_below_bounded_automation");
+  }
+  for (const demonstratedReadiness of ["NOT_READY", "READY_FOR_SHADOW", "READY_FOR_CONFIRMATION_ASSISTED"] as const) {
+    const config = readTransitApiConfig({ TRANSIT_AUTOMATIC_MATCHING_ENABLED: "true" }, { ...NODE, demonstratedReadiness });
+    assert.equal(config.matching.automaticMatchingEnabled, false, demonstratedReadiness);
+  }
+});
+
+test("at a readiness that permits it, automatic matching still needs its own explicit flag", () => {
+  for (const demonstratedReadiness of ["READY_FOR_BOUNDED_AUTOMATION", "READY_FOR_AUTOMATIC_MATCHING"] as const) {
+    const off = readTransitApiConfig({}, { ...NODE, demonstratedReadiness });
+    assert.equal(off.matching.automaticMatchingEnabled, false);
+    assert.equal(off.matching.withheldReason, "automatic_matching_not_requested");
+
+    const on = readTransitApiConfig({ TRANSIT_AUTOMATIC_MATCHING_ENABLED: "true" }, { ...NODE, demonstratedReadiness });
+    assert.equal(on.matching.automaticMatchingEnabled, true);
+    assert.equal(on.matching.mode, "automatic");
+    assert.equal(on.matching.withheldReason, undefined);
+    assert.equal(on.matching.readiness.demonstrated, demonstratedReadiness);
+  }
+});
+
+test("demonstrated readiness is never read from the environment", () => {
+  const config = readTransitApiConfig({
+    TRANSIT_AUTOMATIC_MATCHING_ENABLED: "true",
+    DEMONSTRATED_MATCHING_READINESS: "READY_FOR_AUTOMATIC_MATCHING",
+    TRANSIT_MATCHING_READINESS: "READY_FOR_AUTOMATIC_MATCHING",
+  }, NODE);
+  assert.equal(config.matching.readiness.demonstrated, "READY_FOR_SHADOW");
+  assert.equal(config.matching.automaticMatchingEnabled, false);
 });
 
 test("an unparseable automatic-matching flag fails loudly rather than defaulting open", () => {

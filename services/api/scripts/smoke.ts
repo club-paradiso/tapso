@@ -6,6 +6,11 @@
  * timestamp semantics. A missing credential is reported as
  * `BLOCKED_BY_CREDENTIALS`, never converted into a pass.
  *
+ * It never writes to the deployment it checks: the one request that could
+ * create state (`POST /v1/sessions`) carries an input the API rejects before
+ * any provider read or store write, which is enough to learn whether sessions
+ * are enabled. The scheduled production smoke relies on that.
+ *
  *   node --experimental-strip-types scripts/smoke.ts https://<api-host>
  *   node --experimental-strip-types scripts/smoke.ts http://127.0.0.1:8787 \
  *     --city 39 --route-no 365 --route-id JEB405136521
@@ -48,6 +53,8 @@ async function run(): Promise<void> {
   const credential = (health.body?.credential ?? {}) as Record<string, unknown>;
   record("credential source", describeCredentialSource(credential));
 
+  record("matching posture", describeMatchingPosture(health.body?.matching as Record<string, unknown> | undefined));
+
   const credentialed = health.body?.liveTransitConfigured === true;
 
   const cities = await get("/v1/cities");
@@ -87,12 +94,11 @@ async function run(): Promise<void> {
 
   const vehicles = await get(`/v1/vehicles?routeId=${routeId}&cityCode=${cityCode}`);
   record("vehicles", evaluateUpstream(vehicles, () => {
-    const meta = (vehicles.body?.meta ?? {}) as Record<string, unknown>;
-    if (meta.providerObservationTimestamp !== "unavailable") {
-      return fail("vehicles meta claims a provider observation timestamp");
-    }
-    if (meta.automaticMatching !== "withheld_pending_source_freshness_rule") {
-      return fail("vehicles meta does not declare matching as withheld");
+    // The freshness posture is one object, published identically by /health,
+    // /v1/vehicles and /operator/snapshot (docs/PRODUCTION_TRANSIT_API.md).
+    const freshness = ((vehicles.body?.meta as Record<string, unknown> | undefined)?.freshness ?? {}) as Record<string, unknown>;
+    if (freshness.providerObservationTimestamp !== "unavailable") {
+      return fail("vehicles meta.freshness does not say the provider observation timestamp is unavailable");
     }
     const items = asArray(vehicles.body?.items) as Array<Record<string, unknown>>;
     for (const vehicle of items) {
@@ -101,7 +107,17 @@ async function run(): Promise<void> {
       if (typeof vehicle.receivedAt !== "string") return fail("receivedAt is missing");
       if (vehicle.routeId !== routeId) return fail("vehicle routeId does not match the request");
     }
-    return pass(`${items.length} vehicles, timestamps honest (observedAt sentinel, receivedAt present)`);
+    const honest = `${items.length} vehicles, timestamps honest (observedAt sentinel, receivedAt present)`;
+    const posture = freshness.automaticMatching;
+    if (posture === "shadow_only_pending_matching_readiness") return pass(`${honest}; matching ${String(posture)}`);
+    if (posture === "shadow_only_pending_field_validation") {
+      // Withheld all the same, under the wording before the readiness gate.
+      return { outcome: "WARN", detail: `${honest}; deployment predates the readiness gate (${String(posture)})` };
+    }
+    // "enabled_by_explicit_operator_opt_in" is judged against the demonstrated
+    // readiness by the "matching posture" check on /health.
+    if (posture === "enabled_by_explicit_operator_opt_in") return pass(`${honest}; matching ${String(posture)}`);
+    return fail(`vehicles meta.freshness.automaticMatching is ${JSON.stringify(posture)}`);
   }, credentialed));
 
   const badCity = await get(`/v1/stops?routeId=${routeId}&cityCode=not-a-city`);
@@ -124,11 +140,13 @@ async function run(): Promise<void> {
     ? pass(String(wrongMethod.status))
     : fail(`status ${wrongMethod.status}`));
 
+  // Write-free on purpose: stop sequence 0 fails input validation before the
+  // provider is read or anything is stored, so no journey session is created.
   const session = await send("POST", "/v1/sessions", JSON.stringify({
     routeId,
     cityCode,
-    boardingStopSequence: 1,
-    destinationStopSequence: 2,
+    boardingStopSequence: 0,
+    destinationStopSequence: 1,
   }));
   record("sessions policy", describeSessionOutcome(session));
 
@@ -161,14 +179,53 @@ function describeCredentialSource(credential: Record<string, unknown>): Omit<Che
   return fail(`unexpected credential source ${JSON.stringify(source)}`);
 }
 
+/**
+ * The posture must match the evidence: automatic selection only when the
+ * deployment itself reports a demonstrated readiness that permits it, and the
+ * directed matcher serving. A deployment built before the directed matcher has
+ * no `matcherPolicy` and is reported as such rather than failed.
+ */
+function describeMatchingPosture(matching: Record<string, unknown> | undefined): Omit<Check, "name"> {
+  if (!matching) return fail("health has no matching block");
+  const readiness = (matching.readiness ?? {}) as Record<string, unknown>;
+  const demonstrated = typeof readiness.demonstrated === "string" ? readiness.demonstrated : "unreported";
+  const automaticPermitted = demonstrated === "READY_FOR_BOUNDED_AUTOMATION" || demonstrated === "READY_FOR_AUTOMATIC_MATCHING";
+  if (matching.automaticMatchingEnabled === true && !automaticPermitted) {
+    return fail(`automatic matching is on while demonstrated readiness is ${demonstrated}`);
+  }
+  // What the session coordinator actually runs. A deployment from before this
+  // field reports none, which says nothing either way.
+  if (matching.sessionMatchingMode === "automatic" && !automaticPermitted) {
+    return fail(`journey sessions match automatically while demonstrated readiness is ${demonstrated}`);
+  }
+  if (matching.matcherPolicy === undefined) {
+    return { outcome: "WARN", detail: "deployment predates the directed matcher: /health reports no matcherPolicy" };
+  }
+  if (matching.matcherPolicy !== "directed-route-progress-v1") {
+    return fail(`unexpected matcher policy ${JSON.stringify(matching.matcherPolicy)}`);
+  }
+  if (matching.automaticMatchingRequested === true && matching.automaticMatchingEnabled !== true) {
+    // Safe, because the configuration refused it, but the flag says something
+    // the evidence does not: worth an operator's attention, not a failure.
+    return {
+      outcome: "WARN",
+      detail: `TRANSIT_AUTOMATIC_MATCHING_ENABLED=true is set and refused at demonstrated readiness ${demonstrated}`,
+    };
+  }
+  return pass(`${String(matching.mode)}; matcher ${String(matching.matcherPolicy)}; demonstrated readiness ${demonstrated}`);
+}
+
 function describeSessionOutcome(result: Awaited<ReturnType<typeof get>>): Omit<Check, "name"> {
   if (result.status === 503 && result.body?.error === "SESSIONS_UNAVAILABLE") {
     return pass("503 SESSIONS_UNAVAILABLE — memory-only sessions correctly disabled");
   }
+  if (result.status === 400 && result.body?.error === "INVALID_INPUT") {
+    return pass("sessions enabled; the write-free probe was rejected by input validation, nothing created");
+  }
   if (result.status === 503 && result.body?.error === "BLOCKED_BY_CREDENTIALS") {
     return { outcome: "BLOCKED_BY_CREDENTIALS", detail: "sessions enabled but no TAGO credential is configured" };
   }
-  if (result.status === 201) return pass("201 created — sessions are enabled on this deployment");
+  if (result.status === 201) return fail("a session request with stop sequence 0 was accepted and created a session");
   return fail(`status ${result.status} body ${preview(result.text)}`);
 }
 

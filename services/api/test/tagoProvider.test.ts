@@ -3,6 +3,14 @@ import assert from "node:assert/strict";
 import { TagoTransitProvider } from "../src/tagoProvider.ts";
 import { ProviderConfigurationError } from "../src/provider.ts";
 
+/**
+ * Synthetic test fixtures, not observations: every provider response below is
+ * constructed by the test, and nothing here is evidence that a bus was seen.
+ * Values that look real (public TAGO route and stop ids, stop names and
+ * coordinates, and vehicle numbers carried over from earlier fixtures) are
+ * used only as inputs.
+ */
+
 test("requires credentials before making a TAGO request", async () => {
   const provider = new TagoTransitProvider({ serviceKey: "" });
   await assert.rejects(

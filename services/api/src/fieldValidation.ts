@@ -95,7 +95,11 @@ export interface FieldValidationStore {
   putRaw(submissionId: string, chunks: string[], meta: { rawSha256: string; rawBytes: number }): Promise<string>;
   readRaw(submissionId: string): Promise<{ chunks: string[]; rawSha256: string } | undefined>;
   putReport(submissionId: string, report: RideCaptureReport): Promise<void>;
-  /** Written last: its presence is what makes a submission committed. */
+  /**
+   * Its presence is what makes a submission committed. Only the campaign
+   * addition follows it, and a retry of a committed submission repeats that
+   * addition, so a failure between the two heals on retry.
+   */
   putSubmission(record: FieldRideSubmission): Promise<void>;
   getSubmission(submissionId: string): Promise<FieldRideSubmission | undefined>;
   addToCampaign(campaignId: string, submissionId: string): Promise<void>;
@@ -218,7 +222,9 @@ export interface SubmitOptions {
  * Idempotent on the raw bytes: the same capture submitted twice returns the
  * first submission with `duplicate: true` and changes no count. A submission
  * interrupted by a storage failure resumes under the same id on retry, because
- * the hash claim is taken first and the record is written last.
+ * the hash claim is taken first and the record is written after everything it
+ * points to; only the campaign addition follows the record, and a retry of a
+ * committed submission repeats that addition.
  */
 export async function submitCompletedCapture(
   raw: RideCapture,
@@ -247,6 +253,10 @@ export async function submitCompletedCapture(
     if (existing.campaignId !== campaignId) {
       throw new FieldValidationError("this capture was already submitted to another campaign", "invalid");
     }
+    // A failure between the last two writes below leaves the submission
+    // committed but not counted. Adding it again heals that on retry, and is
+    // idempotent: the campaign is a set.
+    await store.addToCampaign(campaignId, claim.submissionId);
     return receipt(existing, true, await campaignFor(store, campaignId));
   }
 
@@ -456,7 +466,7 @@ export class MemoryFieldValidationStore implements FieldValidationStore {
  *   campaign:<campaignId>       set of submission ids      (SADD, idempotent)
  *
  * No TTL: this is evidence. The database must not evict keys; see
- * docs/DATA_VALIDATION.md for the one-time setup.
+ * docs/exec-plans/FIELD_VALIDATION_SUBMISSION.md for the one-time setup.
  */
 export class UpstashFieldValidationStore implements FieldValidationStore {
   private readonly connection: UpstashConnection;

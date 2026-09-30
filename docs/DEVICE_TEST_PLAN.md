@@ -1,5 +1,25 @@
 # Device test plan
 
+> **Status, 2026-09-29.** This plan is a device check, not a bus ride. Release
+> gate `matcher-passive-safety-v4` asks only for its Live Activity part on a
+> physical device (criterion BA-5), and only for
+> `READY_FOR_BOUNDED_AUTOMATION`; no lower readiness level needs it
+> ([`validation/MATCHER_SAFETY_EVIDENCE_V4.md`](validation/MATCHER_SAFETY_EVIDENCE_V4.md),
+> [`exec-plans/HUMAN_LABOR_ELIMINATION.md`](exec-plans/HUMAN_LABOR_ELIMINATION.md)).
+> The current app plays a fixed demo timeline (`DemoFixtures.demoTimeline()`
+> in `apps/ios/TapsoApp/TapsoAppModel.swift`) and makes no network request
+> (`services/api/test/crossLanguageAuthority.test.ts`), so "ride" below means
+> the demo, and some checks cannot run against it:
+>
+> - Case 6: the app has no input injection path.
+> - Case 8, the pushes in case 9 and the APNs criterion: the Live Activity is
+>   requested with `pushType: nil` (`apps/ios/TapsoApp/LiveActivityClient.swift`),
+>   so there is no push token and no remote update.
+> - Network bytes in case 9: the app makes no network request.
+>
+> The simulator result at the end is a historical report; no CI job builds the
+> app.
+
 ## Matrix
 
 - Dynamic Island iPhone on the minimum supported iOS and current stable iOS.
