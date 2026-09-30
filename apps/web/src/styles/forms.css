@@ -1,0 +1,370 @@
+/*
+ * Waitlist form and support sheet. Class names are the ones the Figma Code
+ * Connect templates in src/figma/ describe (Button `88:40`, Text Field `89:46`,
+ * Checkbox `93:44`, Waitlist Result `95:29`, Support Dialog `100:132`).
+ */
+
+.waitlist-form-card {
+  padding: clamp(20px, 3vw, 32px);
+  border-radius: var(--radius-hero);
+  background: var(--bg);
+  box-shadow: var(--shadow-card), 0 0 0 1px var(--separator);
+}
+
+.waitlist-form-card form {
+  display: flex;
+  flex-direction: column;
+  gap: var(--space-4);
+}
+
+.waitlist-form-card h3 {
+  font-size: 1.25rem;
+  font-weight: 800;
+  letter-spacing: -0.02em;
+}
+
+.figma-field {
+  display: flex;
+  flex-direction: column;
+  gap: var(--space-2);
+  font-size: var(--fs-xs);
+  font-weight: 700;
+}
+
+.figma-field input,
+.figma-field select {
+  width: 100%;
+  height: 54px;
+  padding: 0 16px;
+  border: 1px solid var(--separator);
+  border-radius: var(--radius-control);
+  outline: 0;
+  color: var(--ink);
+  background: var(--bg);
+  font-size: 1rem;
+  font-weight: 400;
+  transition: border-color var(--dur-fast), box-shadow var(--dur-fast);
+}
+
+.figma-field select {
+  appearance: none;
+  background-image: linear-gradient(45deg, transparent 50%, var(--text-secondary) 50%),
+    linear-gradient(135deg, var(--text-secondary) 50%, transparent 50%);
+  background-position: calc(100% - 22px) 50%, calc(100% - 16px) 50%;
+  background-size: 6px 6px;
+  background-repeat: no-repeat;
+}
+
+.figma-field input::placeholder {
+  color: var(--text-tertiary);
+  opacity: 1;
+}
+
+.figma-field input:focus,
+.figma-field select:focus {
+  border-color: var(--mint-ink);
+  box-shadow: 0 0 0 3px var(--mint-28);
+}
+
+.figma-field input[aria-invalid="true"],
+.figma-field select[aria-invalid="true"] {
+  border-color: var(--coral);
+}
+
+/* Off-screen rather than `display: none`, so a bot's form parser still sees it. */
+.waitlist-honeypot {
+  position: absolute;
+  left: -9999px;
+  width: 1px;
+  height: 1px;
+  overflow: hidden;
+}
+
+.waitlist-consent {
+  display: flex;
+  align-items: flex-start;
+  gap: 10px;
+  min-height: var(--touch-min);
+  padding-top: 2px;
+  color: var(--text-secondary);
+  font-size: var(--fs-xs);
+  line-height: 1.55;
+  cursor: pointer;
+}
+
+.waitlist-consent input {
+  width: 20px;
+  height: 20px;
+  margin: 0;
+  flex: none;
+  accent-color: var(--mint-ink);
+  cursor: pointer;
+}
+
+.waitlist-consent strong {
+  color: var(--ink);
+}
+
+.waitlist-consent-required {
+  color: var(--mint-ink);
+  font-weight: 700;
+}
+
+/* Never colour alone: every error carries a ⚠ mark and its own text. */
+.field-error {
+  color: var(--coral);
+  font-size: var(--fs-xs);
+  font-weight: 700;
+}
+
+.figma-submit,
+.figma-support {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  gap: var(--space-2);
+  min-height: 56px;
+  padding: 0 var(--space-5);
+  border: 1px solid transparent;
+  border-radius: var(--radius-md);
+  color: var(--ink);
+  background: var(--mint);
+  font-size: var(--fs-body);
+  font-weight: 800;
+  white-space: nowrap;
+  transition: transform var(--dur-fast) var(--ease-standard), opacity var(--dur-fast);
+}
+
+.figma-submit:not(:disabled):hover,
+.figma-support:not(:disabled):hover {
+  transform: translateY(-1px);
+}
+
+.figma-submit:not(:disabled):active,
+.figma-support:not(:disabled):active {
+  transform: none;
+  opacity: 0.82;
+}
+
+.figma-submit:disabled,
+.figma-support:disabled {
+  cursor: not-allowed;
+  opacity: 0.45;
+}
+
+.figma-support {
+  border-color: var(--separator);
+  background: var(--bg);
+}
+
+.cta-row {
+  display: flex;
+  gap: var(--space-3);
+}
+
+.cta-row .figma-submit,
+.cta-row .figma-support {
+  flex: 1 1 0;
+  min-width: 0;
+}
+
+.waitlist-privacy {
+  color: var(--text-secondary);
+  font-size: var(--fs-xs);
+  line-height: 1.6;
+}
+
+.waitlist-live:empty {
+  display: none;
+}
+
+.waitlist-result {
+  padding: 12px 14px;
+  border-radius: var(--radius-md);
+  font-size: var(--fs-small);
+}
+
+.waitlist-result-known {
+  background: var(--mist);
+}
+
+.waitlist-result-error {
+  border: 1px solid rgb(201 60 60 / 28%);
+  background: rgb(201 60 60 / 8%);
+}
+
+.waitlist-result-success {
+  display: flex;
+  flex-direction: column;
+  align-items: flex-start;
+  gap: var(--space-3);
+  padding: var(--space-2);
+}
+
+.waitlist-result-mark {
+  font-size: 2.25rem;
+  line-height: 1.2;
+}
+
+.waitlist-result-success strong {
+  font-size: 1.25rem;
+  font-weight: 800;
+}
+
+.waitlist-result-success p {
+  color: var(--text-secondary);
+}
+
+.waitlist-result-success .figma-support {
+  min-height: var(--button-h);
+  font-size: var(--fs-small);
+}
+
+/* Support sheet ------------------------------------------------------------
+ * A native dialog carries the focus trap, Escape handling, the backdrop, and
+ * focus restoration, so none of that is reimplemented here. */
+
+.support-dialog {
+  width: min(460px, calc(100vw - 40px));
+  max-height: min(680px, calc(100dvh - 40px));
+  padding: 0;
+  border: 1px solid var(--separator);
+  border-radius: var(--radius-hero);
+  color: var(--ink);
+  background: var(--bg);
+  overflow: auto;
+}
+
+.support-dialog::backdrop {
+  background: rgb(7 25 35 / 45%);
+}
+
+.support-dialog-body {
+  display: flex;
+  flex-direction: column;
+  gap: var(--space-4);
+  padding: 28px;
+}
+
+.support-dialog-header {
+  display: flex;
+  align-items: flex-start;
+  justify-content: space-between;
+  gap: var(--space-4);
+}
+
+.support-dialog-header h2 {
+  font-size: 1.25rem;
+  font-weight: 800;
+  letter-spacing: -0.02em;
+  line-height: 1.45;
+}
+
+.support-dialog-close {
+  flex: none;
+  width: var(--touch-min);
+  height: var(--touch-min);
+  border: 0;
+  border-radius: 50%;
+  color: var(--text-secondary);
+  background: var(--mist);
+}
+
+.support-dialog-close:hover {
+  color: var(--ink);
+}
+
+.support-dialog-intro,
+.support-dialog-note {
+  color: var(--text-secondary);
+  font-size: var(--fs-xs);
+  line-height: 1.6;
+}
+
+.support-dialog-error {
+  padding: 12px 14px;
+  border: 1px solid rgb(201 60 60 / 28%);
+  border-radius: var(--radius-md);
+  background: rgb(201 60 60 / 8%);
+  font-size: var(--fs-xs);
+}
+
+.support-amounts {
+  display: grid;
+  grid-template-columns: repeat(2, minmax(0, 1fr));
+  gap: 10px;
+  margin: 0;
+  padding: 0;
+  border: 0;
+}
+
+.support-amounts legend {
+  padding: 0 0 10px;
+  font-size: var(--fs-xs);
+  font-weight: 700;
+}
+
+.support-amounts:disabled {
+  opacity: 0.45;
+}
+
+.support-amount {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  min-height: 52px;
+  padding: 0 16px;
+  border: 1px solid var(--separator);
+  border-radius: var(--radius-control);
+  font-size: var(--fs-small);
+  font-weight: 700;
+  cursor: pointer;
+}
+
+.support-amounts:disabled .support-amount {
+  cursor: not-allowed;
+}
+
+.support-amount input {
+  width: 18px;
+  height: 18px;
+  margin: 0;
+  accent-color: var(--mint-ink);
+}
+
+.support-amount:has(input:checked) {
+  border-color: var(--mint-ink);
+  box-shadow: 0 0 0 3px var(--mint-14);
+}
+
+.support-custom .support-range {
+  color: var(--text-secondary);
+  font-size: var(--fs-xs);
+  font-weight: 400;
+}
+
+.support-dialog-actions .figma-submit {
+  width: 100%;
+}
+
+/* support-million.css reads these names. */
+:root {
+  --border: var(--separator);
+  --muted: var(--text-secondary);
+}
+
+@media (max-width: 700px) {
+  /* Bottom sheet, with room for the iPhone home indicator. */
+  .support-dialog {
+    width: 100%;
+    max-width: 100%;
+    max-height: calc(100dvh - 48px);
+    margin: auto auto 0;
+    border-width: 1px 0 0;
+    border-radius: var(--radius-hero) var(--radius-hero) 0 0;
+  }
+
+  .support-dialog-body {
+    padding: 24px 20px calc(24px + env(safe-area-inset-bottom));
+  }
+}

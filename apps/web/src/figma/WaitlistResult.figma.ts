@@ -22,7 +22,7 @@ if (state === 'Duplicate') {
   example = figma.code`<p className="waitlist-result waitlist-result-error">${message}</p>`
 } else {
   const action = showAction
-    ? `\n  <button type="button" className="figma-support">${actionLabel}</button>`
+    ? `\n  <a className="figma-support" href="#support">${actionLabel}</a>`
     : ''
   example = figma.code`<div className="waitlist-result waitlist-result-success">\n  <p className="waitlist-result-mark" aria-hidden="true">🍊</p>\n  <strong role="status">${title}</strong>\n  <p>${message}</p>${action}\n</div>`
 }
