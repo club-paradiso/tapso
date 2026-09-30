@@ -49,14 +49,14 @@ A milestone exists only for `prepare`, `nextStop`, `arrived`. `RideGuidanceTests
 
 ## Ride moments
 
-Colour roles map to `TapsoColor.journey(_:)`; Figma `color/journey/*`. Copy keys are `ride.<moment>.headline|detail|eyebrow|compact`. Haptics play only while the app runs; with the app closed the milestone's Live Activity alert (screen, default sound, expanded island) is the signal — iOS offers no custom vibration for a Live Activity (research, `MAP_APP_HANDOFF_V2.md` sources).
+Colour roles map to `TapsoColor.journey(_:)`; Figma `color/journey/*`. Copy keys are `ride.<moment>.headline|detail|eyebrow|compact`. Haptics play only while the app runs — iOS offers no custom vibration for a Live Activity (research, `MAP_APP_HANDOFF_V2.md` sources). A milestone's Live Activity alert (screen, default sound, expanded island) is sent by the running app: this build has no remote updates (`pushType: nil`, APNs `BLOCKED_BY_CREDENTIALS`), so while the app is suspended nothing advances and every surface turns to "delayed" at the stale date. Each milestone buzzes and alerts at most once per ride; the set of signalled milestones is persisted with the ride (`ActiveRide.alertedMilestones`), so a relaunch or a delayed/lost/offline interruption does not repeat one.
 
 ### riding — ACTIVE
 - **Question:** How is my ride going?
-- **Primary:** remaining stops (live). **Secondary:** destination, "내릴 때 알려드릴게요 · 휴대폰을 내려놓아도 괜찮아요".
+- **Primary:** remaining stops (live). **Secondary:** destination, "내릴 때 알려드릴게요 · 지금은 편하게 가셔도 돼요".
 - **CTA:** none (여정 끝내기 at the bottom). **Colour:** `journeyActive` mint. **Symbol:** `bus.fill`. **Motion:** numeric count transition. **Haptic:** none. **Alert:** none, relevance 50.
 - **App:** big count + "정거장 남았어요" + "…까지", rail, trust badges, stop ladder. **Lock Screen:** basalt, headline, count, rail, 돌이. **Compact:** 돌이 + route · count + 정거장. **Minimal:** count. **Expanded:** route · 타고 가는 중 · count; headline, destination, rail, both trust badges.
-- **VoiceOver:** "365번, 제주출입국·외국인청까지 6정거장 남음. 내릴 때 알려드릴게요. 휴대폰을 내려놓아도 괜찮아요."
+- **VoiceOver:** "365번, 제주출입국·외국인청까지 6정거장 남음. 내릴 때 알려드릴게요. 지금은 편하게 가셔도 돼요."
 - **Recovery:** none needed.
 
 ### prepare — TWO_STOPS
@@ -95,7 +95,7 @@ Colour roles map to `TapsoColor.journey(_:)`; Figma `color/journey/*`. Copy keys
 - Banner "버스를 잠시 찾지 못했어요 · 추적은 유지하고 있어요. 다시 보이면 바로 이어서 알려드릴게요"; vehicle badge "버스 찾는 중"; last-known count; slate; `magnifyingglass`; no haptic or alert. Never switches to another bus silently (server rule; the app never rematches).
 
 ### offline — OFFLINE
-- Banner "인터넷 연결이 끊겼어요 · 연결되면 바로 이어서 추적해요"; data badge "오프라인"; vehicle badge stays "차량 확인됨"; last-known count; slate; `wifi.slash`; no haptic or alert. Outranks every other ride state except `ended`.
+- Banner "인터넷 연결이 끊겼어요 · 연결되면 바로 이어서 추적해요"; data badge "오프라인"; vehicle badge stays "차량 확인됨"; last-known count; slate; `wifi.slash`; no haptic or alert. Outranks every ride state except `ended` and an impossible count (`remaining < 0` → checking), as in the precedence table.
 
 ### checking
 - Blue banner "버스 위치를 다시 확인하고 있어요 · 확실해질 때까지 하차 알림은 보내지 않아요"; count hidden; `arrow.triangle.2.circlepath`. Produced by any phase/count disagreement, unknown freshness or recovery.
@@ -111,7 +111,7 @@ Colour roles map to `TapsoColor.journey(_:)`; Figma `color/journey/*`. Copy keys
 | proposed | 이 버스로 보여요 / 탈 때 번호판 끝자리를 확인해주세요 | vehicle needs-confirmation blue → confirmed mint | 맞아요, 이 버스를 탔어요 · 다른 버스예요 |
 | similarBuses | 비슷한 버스가 있어요 / 탑승한 버스를 골라주세요 | blue | tap a bus · 둘 다 아니에요 |
 | notFoundYet | 아직 오는 버스가 안 보여요 / %@번 버스가 보이면 바로 알려드릴게요 | blue | Cancel |
-| confirmed | 버스를 확인했어요 / 이제 앱을 닫아도 괜찮아요 | mint | — |
+| confirmed | 버스를 확인했어요 / 체험판은 앱을 켜 두면 끝까지 진행돼요 | mint | — |
 
 Two or more proposals are always a question, never a pick (`RideSetupTests.testTwoBusesAreAlwaysARiderQuestionNeverAPick`). No percentage or confidence value is ever shown.
 

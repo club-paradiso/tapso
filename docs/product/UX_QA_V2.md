@@ -9,12 +9,12 @@ Evidence for Product V2 and what it does not yet prove. Reality labels as in `RE
 | CI job `transit-core` | `RideGuidanceTests`, `RideSetupTests` and every pre-existing core test | `swift test --package-path packages/transit-core` |
 | CI job `ios` › Build and test | App + Live Activity extension build; `TapsoActivityAttributesTests` (unchanged), `RidePresentationTests` | `xcodebuild … -scheme Tapso build test` |
 | CI job `ios` › Render snapshot evidence | Every V2 screen (light, dark), 375/440-pt widths and AX3 text for the densest screens, Lock Screen and island regions for every ride moment, in Korean and English — rendered by `SnapshotEvidenceTests` with SwiftUI `ImageRenderer` on the simulator | Set `TEST_RUNNER_TAPSO_SNAPSHOT_DIR`, run `-only-testing:TapsoTests/SnapshotEvidenceTests -testLanguage ko` (and `en`) |
-| Branch `ci-evidence/feat/product-v2-figma-ios-ux` | JPEG copies of the same images, one orphan commit per push | Published by CI on topic-branch pushes |
+| Branch `ci-evidence/feat/product-v2-figma-ios-ux` | JPEG copies of the same images, one orphan commit per push | Published by CI job `ios-evidence` (branch pushes only, after `ios` passes; the build and test job itself has read-only permissions) |
 | Figma `04 iOS` `157:10`, `160:1208` | Designed screens and the Live Activity / island board | — |
 | `scripts/ios/check_localization.py` | Every used key exists in ko and en with matching format arguments | `python3 scripts/ios/check_localization.py` |
 | `services/api/test/crossLanguageAuthority.test.ts` | The app still makes no network request and the Swift matcher still sees only the demo fixture | `npm test --prefix services/api` |
 
-`ImageRenderer` renders SwiftUI only: UIKit-backed controls (the search `TextField`, `PasteButton`) appear as placeholders, and island regions are drawn inside a mock outline. These are layout evidence, not device screenshots.
+`ImageRenderer` renders SwiftUI only: UIKit-backed controls (the search `TextField`, `PasteButton`) appear as placeholders — the English "Paste" label in the Korean images is the test's placeholder, not the system button — horizontal `ScrollView` content (Home's recent-destination chips) renders empty, and island regions are drawn inside a mock outline. These are layout evidence, not device screenshots.
 
 ## Pass 1 — product flow and information architecture
 
@@ -46,8 +46,10 @@ Walked through the code paths and Figma frames `V2 / 01`–`19`.
 |---|---|
 | One source of truth | Pass: app `ActiveRide.signal` and `ContentState.signal` both feed `RideGuidancePolicy` (`testContentStateCarriesTheSameGuidanceAsTheApp`) |
 | Same moment, same colour, same words, same symbol on every surface | Pass by construction (colour role, copy keys and symbol come from `RideGuidance`); board `160:1208` shows all four surfaces per moment |
-| Alerts only on milestones, once each | Pass: `LiveActivityClient` alerts a milestone once per ride; exhaustive policy test |
-| Stale activity never shows a fresh milestone | Pass (`testAStaleActivityNeverShowsAFreshMilestone`) |
+| Alerts only on milestones, once each | Fixed in this pass: the once-per-ride set lived in `LiveActivityClient` memory, so a relaunch or `nextStop → delayed → nextStop` could alert and buzz again. The set is now persisted with the ride (`ActiveRide.alertedMilestones`) and gates both alerts and haptics (`testConfirmedRideWalksToArrival…`, `testARestoredRideIsReagedAgainstTheWallClock…`) |
+| Stale activity never shows a fresh milestone | Fixed in this pass: only the Lock Screen honoured `context.isStale`; the compact, minimal and expanded island regions and the keyline kept the fresh milestone. Every island view now takes `isStale` (`testAStaleActivityNeverShowsAFreshMilestone`; evidence `*-next-stop-stale`) |
+| Restored ride not shown as fresh | Fixed in this pass: a ride restored at launch kept its saved freshness; it is now re-aged against the wall clock, and the Live Activity's stale date uses the wall-clock time of the last observation instead of the faster demo clock |
+| App-closed promise | Fixed in this pass: copy said "이제 앱을 닫아도 돼요", but this build has no background mode or remote push, so a suspended app sends no update. Copy now says the preview plays while the app is open (app and Figma); `KNOWN_ISSUES.md` records it |
 | Coral next-stop Lock Screen readable | Fixed in this pass: the coral rail on the coral surface vanished → removed there |
 
 ## Pass 4 — accessibility and localization
@@ -65,14 +67,28 @@ Walked through the code paths and Figma frames `V2 / 01`–`19`.
 
 ## Pass 5 — implementation vs Figma
 
-See the section filled from the CI snapshots below.
+Compared the CI snapshots of `367b74a` (`ci-evidence/feat/product-v2-figma-ios-ux`, 98 images per language) with Figma `V2 / 01`–`19`, the dark, English and 375-pt frames and board `160:1208`.
+
+| Check | Result |
+|---|---|
+| Screen structure and hierarchy | Pass: Home, search, route, boarding, map intake, the four bus-check stages, all ride moments and both end screens follow their frames — question title, one primary action, hero → trust badges → stop ladder order. The ride toolbar (route badge, destination, menu) and the bottom 여정 끝내기 button live in `RideView`, outside the rendered `RideContent`, as in Figma |
+| Moment colours | Pass: basalt/mint riding, amber prepare, coral next stop (C93C3C light, FF7A6E dark), tangerine arrival, slate delayed/lost/offline, blue checking — app, Lock Screen, compact, minimal and expanded island agree per moment |
+| Lock Screen and island | Pass: counts, word pills (준비 2, 다음 하차, 내려요, 지났어요, 지연, 찾는 중, 오프라인, 확인 중; Next, Offline, 6 stops in English), last-known counts dimmed with 마지막 확인, symbols where the count is withheld; no rail on the coral surface |
+| Large text (AX3) | Fixed in this pass: the route badge truncated to "3…" on the proposal card (now never truncates) and stop-ladder names cut at two lines (now wrap). The Home wordmark splitting ("TAPS/O") and trust badges wrapping into three lines were fixed in `3f71f75`, after these images were rendered |
+| Withheld count | Fixed in `3f71f75`: the `21-ride-checking` image of `367b74a` still shows "2 정거장 남았어요" |
+| Dark mode | Fixed in this pass: on the dark end screens the neutral route badge (basalt) vanished into the navy background; it now uses the route colour as elsewhere |
+| Evidence consistency | Fixed in this pass: the ride and surface images used plate ••0001 while the check proposed ••6639; they now share the proposed bus's plate |
+| Copy | Changed in both: the preview copy above (riding detail, confirmation detail, close-app note) and the offline eyebrow "오프라인" (it read "연결 확인 중", the same words as the data-checking badge) |
+| Figma sample data | Known: `V2 / 10` lists four stops under a count of 6; the app shows three and "2곳 더", which is the implemented rule (`StopLadder`) |
+
+The fixes after `367b74a` are verified by build, unit tests and the next CI render, which replaces the evidence branch.
 
 ## Pass 6 — first launch to arrival
 
 1. First launch: Home with the question, search, map import, "처음이라면" sample card, privacy line; no permission prompt.
 2. 샘플 여정 체험하기 → bus check "이 버스로 보여요 ••xxxx" → 맞아요.
-3. Ride: "6 정거장 남았어요 · 제주출입국·외국인청까지 · 내릴 때 알려드릴게요"; Live Activity starts; "이제 앱을 닫아도 돼요".
-4. Home button: compact island "365 · 6 정거장". Lock: basalt Lock Screen.
+3. Ride: "6 정거장 남았어요 · 제주출입국·외국인청까지 · 내릴 때 알려드릴게요"; Live Activity starts; "체험판은 앱을 켜 둔 동안 진행돼요".
+4. Home button (the app stays running briefly; in this build it must be reopened to keep advancing): compact island "365 · 6 정거장". Lock: basalt Lock Screen.
 5. Two stops: amber hero, pill "준비 2", one alert "2정거장 남았어요", soft haptic.
 6. Next stop: coral hero with destination, coral Lock Screen, "다음 하차", one alert, strong haptic.
 7. Arrival: tangerine hero "여기서 내려요" + 내렸어요, tangerine Lock Screen, one alert.

@@ -97,7 +97,7 @@ Demo controls are behind the menu (…) › 체험 설정.
 
 ## First-time experience
 
-No onboarding carousel. The first ride teaches in order: choose where to get off → choose/confirm the bus → TAPSO checks the actual vehicle ("탑서는 확실하지 않으면 버스를 대신 고르지 않아요") → "이제 앱을 닫아도 돼요" → the surfaces escalate as the stop nears.
+No onboarding carousel. The first ride teaches in order: choose where to get off → choose/confirm the bus → TAPSO checks the actual vehicle ("탑서는 확실하지 않으면 버스를 대신 고르지 않아요") → the Lock Screen and Dynamic Island carry the same guidance (in this preview build, while the app stays open; see `KNOWN_ISSUES.md`) → the surfaces escalate as the stop nears.
 
 ## Temporary: synthetic data
 

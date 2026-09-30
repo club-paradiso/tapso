@@ -21,11 +21,12 @@ Counts are `live` for riding, prepare and next stop, `lastKnown` for delayed, lo
 ## Update policy
 
 - Relevance: riding 50; delayed, lost, offline, checking 75; prepare 85; next stop and passed destination 95; arrival 100.
-- Nonterminal content becomes stale two minutes after its observation time. Arrival and ended content has no stale date. A system-stale activity is presented as delayed data, never as a fresh milestone (`guidanceAccountingForStaleness`).
-- Milestones: `prepare`, `nextStop` and `arrived` each attach one `AlertConfiguration` (localized title/body, default sound), **at most once per ride**. They are emitted only for an exact `(approachingDestination, 2)`, `(nextStopIsDestination, 1)` or `(arrived, 0)` on fresh data with the phone online. Negative counts, unknown or stale freshness, recovery, a lost bus, offline, a passed destination or any phase/count mismatch never alert (`RideGuidanceTests.testMilestonesRequireExactFreshOnlineAgreementForEveryInput`).
+- Nonterminal content becomes stale two minutes after the wall-clock time its last observation reached the app (`ActiveRide.lastObservedAt`; the demo's own clock runs faster and is not used). Arrival and ended content has no stale date. A system-stale activity is presented as delayed data, never as a fresh milestone, on the Lock Screen, every island region and the keyline (`guidanceAccountingForStaleness` with `context.isStale`).
+- Milestones: `prepare`, `nextStop` and `arrived` each attach one `AlertConfiguration` (localized title/body, default sound), **at most once per ride**: the app model keeps the signalled milestones in the persisted ride (`ActiveRide.alertedMilestones`) and passes `LiveActivityClient.update(state:alerting:)` only a milestone not yet signalled, so neither a relaunch nor a delayed/lost/offline interruption repeats one; in-app haptics follow the same set. They are emitted only for an exact `(approachingDestination, 2)`, `(nextStopIsDestination, 1)` or `(arrived, 0)` on fresh data with the phone online. Negative counts, unknown or stale freshness, recovery, a lost bus, offline, a passed destination or any phase/count mismatch never alert (`RideGuidanceTests.testMilestonesRequireExactFreshOnlineAgreementForEveryInput`).
 - Passing the destination is its own moment: no arrival alert, a single attention haptic in the app, a recovery action.
-- Starting a ride ends any existing TAPSO activity first. At launch the app resumes a persisted ride and its activity; an activity left without a ride is ended.
-- Finishing a ride keeps the final state for a one-minute dismissal window; cancelling ends it immediately.
+- Starting a ride ends any existing TAPSO activity first. At launch the app resumes a persisted ride and its activity, re-ageing its data against the wall clock (a ride saved at the next stop and reopened later shows delayed or checking until the next observation); an activity left without a ride is ended.
+- Updates come only from the running app. There is no background mode or remote push in this build, so a suspended app sends nothing and the activity turns to delayed at its stale date (`KNOWN_ISSUES.md`).
+- Finishing a ride ends the activity with the ended state ("여정을 마쳤어요") for a one-minute dismissal window; cancelling ends it immediately.
 
 ## Lifecycle and constraints
 
