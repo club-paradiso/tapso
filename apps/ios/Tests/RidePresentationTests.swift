@@ -114,10 +114,10 @@ final class RidePresentationTests: XCTestCase {
         XCTAssertEqual(model.path.last, .routes(destinationName: "관덕정"))
     }
 
-    func testConfirmedRideWalksToArrivalAndIsRememberedForOneTapRepeat() async {
+    func testConfirmedRideWalksToArrivalAndIsRememberedForOneTapRepeat() async throws {
         let model = makeModel()
         model.startDemo()
-        let proposal = try! XCTUnwrap(model.vehicleCheck.proposals.first)
+        let proposal = try XCTUnwrap(model.vehicleCheck.proposals.first)
         await model.confirmVehicle(proposal)
         XCTAssertEqual(model.guidance?.moment, .riding)
         XCTAssertEqual(model.guidance?.vehicle, .confirmed)

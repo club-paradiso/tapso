@@ -179,7 +179,7 @@ The V1 app and Live Activity each had their own switch over the phase, and they 
 
 ## Destination-first setup, rider-confirmed bus (2026-09-30)
 
-**Decision:** setup asks where the rider gets off, then which bus (only when two directions reach the stop), then the boarding stop — never a trip origin. A bus is selected only by the rider's confirmation of a proposal, in the demo as in production, because automatic selection is withheld below `READY_FOR_BOUNDED_AUTOMATION`. Two or more proposals are always a question.
+**Decision:** setup asks where the rider gets off, then which bus (only when two directions reach the stop), then the boarding stop — never a trip origin. A bus is selected only by the rider's confirmation of a proposal, in the synthetic demo as in real journey sessions (shadow mode), because automatic selection is withheld below `READY_FOR_BOUNDED_AUTOMATION`. Two or more proposals are always a question.
 
 ## Product V2 runs on synthetic data until the app has a server path (2026-09-30)
 

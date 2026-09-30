@@ -5,7 +5,7 @@ File: `TAPSO — Product / Marketing Design System`, key `kkx04GvqOzHje7Dw5ikO9X
 | Figma page | Node | Contents |
 |---|---|---|
 | 02F iOS Ride V2 | `152:2` | V2 components (below) |
-| 04 iOS › iOS / Product V2 | `157:10` | 23 production screens (19 light, 4 dark through the V2 Dark mode) and a header |
+| 04 iOS › iOS / Product V2 | `157:10` | 23 finished screen designs (19 light, 4 dark through the V2 Dark mode) and a header |
 | 04 iOS › Live Activity & Dynamic Island | `160:1208` | One row per ride moment: compact, minimal, expanded, Lock Screen |
 | 06 Handoff › Product V2 mapping | see page | This table, condensed |
 | 07 Playground › Product V2 explorations | see page | Alternatives considered |
