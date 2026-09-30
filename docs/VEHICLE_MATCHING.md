@@ -100,11 +100,14 @@ S + 1, and a bus reporting S may already have left. So:
   not forgotten either: on board it is of unknown progress, withholding once
   out of sight, and a bus seen at no trustworthy place (none, or two) and
   then beyond the window may be the rider's bus leaving it (R30), if the
-  rider's bus could have got there since they said they were aboard: from the
-  window's far edge, as far as the motion model allows since, and a stop more
-  for a misread; round a loop, counted past the stop, so a bus before it only
-  once there was time to go round (R40). Without a declaration time nothing
-  bounds it, and it withholds.
+  rider's bus could have got there since they said they were aboard. The
+  window is a window of readings, and a reading may be a stop off: their bus,
+  read at the window's far edge, may have stood one stop further on, gone as
+  far as the motion model allows since, and be read one stop further still.
+  So a bus beyond the window by no more than the model's reach and two stops
+  may be theirs (R40, R46); round a loop, counted past the stop, so a bus
+  before it only once there was time to go round (R40, R47). Without a
+  declaration time nothing bounds it, and it withholds.
 - **Time.** The session's own sightings are always earlier decisions' `now`;
   one dated after `now` means the clock stepped back, and nothing bounds the
   time since (R29). A mark of unknown progress is dated by the receipts of the
@@ -144,11 +147,16 @@ S + 1, and a bus reporting S may already have left. So:
   From one stop short, two past takes 30 s at the least. A reading one stop
   back, a row listed twice or under another route, a remembered row and a
   bus merely out of sight never end it. What a request that lost a
-  concurrent write saw of the stop is written onto the winning row: a
-  withdrawal, unless that row saw the selected bus at the stop earlier (R33),
-  and an end, the earlier kept, while that row holds the same automatic
-  selection (R44). A selection the rider confirmed, or one made on board, is
-  never watched.
+  concurrent write saw of the stop is written onto the winning row while that
+  row holds the same automatic selection: a withdrawal, unless that row saw
+  the selected bus at the stop earlier (R33), and an end, the earlier kept
+  (R44), but only if the request's snapshot, read against that row's memory
+  of the other buses, shows none of them reaching the stop: the request's own
+  memory may lack a sighting the row's holds, and an end written over it
+  would hide that bus for good. If one did, a withdrawal is written instead
+  (R50). A request whose merge gives up answers from the latest row it read
+  (R54). A selection the rider confirmed, or one made on board, is never
+  watched.
 
 There is no best-available guess, and no score overrides a rule: rules decide
 what may be selected, and the score only orders what they allow.

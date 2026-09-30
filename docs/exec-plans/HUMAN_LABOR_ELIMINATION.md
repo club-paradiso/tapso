@@ -172,12 +172,37 @@ generators, not committed, and are in `KNOWN_ISSUES.md`:
 | R37 | R30's never-placed rule had no test round a loop, across the seam, for a bus listed twice again, or at the window's last stop: dropping its loop half, reading a loop by plain offset, exempting a bus listed twice again, or `>=` at the edge each left the suite green | **Tested** (`eda68f2`): controls R30-never-placed-loop, -plain, -twice, -edge |
 | R38 | R31's motion bound was never tested from the selected bus's latest sighting before the stop, nor from the place the selection read: timing it from the selection, or starting from memory's furthest place, left the suite green | **Tested** (`fe95af1`): controls R31-place-time, R31-watch-start |
 | R39 | R33's edges had no test: an end and a withdrawal read at the same instant, a third write before the merge, and the rider's confirmation saved first | **Tested** (`fe95af1`): controls R33-tie, R33-retry, R33-mode |
-| R40 | R30's never-placed rule had no motion bound: one far bus first listed at no place or at two ended on-board automatic selection for the session, and round a loop it fired on a bus before the stop | **Fixed** (`eda68f2`): only where the rider's bus could have got to since the declaration, from the window's far edge, a stop more for a misread; unbounded without a declaration time. Controls R40-bound, -margin, -unknown-time |
+| R40 | R30's never-placed rule had no motion bound: one far bus first listed at no place or at two ended on-board automatic selection for the session, and round a loop it fired on a bus before the stop | **Fixed** (`eda68f2`), one stop short (R46): only where the rider's bus could have got to since the declaration; unbounded without a declaration time. Controls R40-bound, -margin, -unknown-time |
 | R41 | R34 had no test for a bus four stops past, nor for the order round a loop | **Tested** (`fe95af1`): controls R34-window, R34-sort |
 | R42 | R31: a sighting past the stop too soon to be a crossing became the watch's anchor, so no later crossing could end the watch, and a bus behind reaching the stop later withdrew a right selection | **Fixed** (`fe95af1`): the anchor is the last sighting at one place before the stop. Control R42-anchor |
 | R43 | Round a loop, another bus read one stop back raised the matcher's crossing reason, which withdrew a right selection; R31 left more watches open to it | **Fixed** (`eda68f2`): a distance to the stop grown by one or two stops is a possibility, never a sighting; three or more is a crossing as before. Controls R43-read-back, -possibility, -remembered |
-| R44 | R33 merged only withdrawals: of three concurrent requests, an end seen by one that lost was dropped, and a withdrawal from a later snapshot was merged over a right selection | **Fixed** (`fe95af1`): an end is written onto the winner's row too, the earliest kept; a withdrawal merged first stands (`KNOWN_ISSUES.md`). Controls R44-end-merge, R44-earliest |
-| R45 | Latent in R32: the self-check was excluded from kill accounting by its bare name, so a same-named test elsewhere could not kill, and per-control subtests of the self-check would kill every control | **Fixed** (`4141f38`): named by file and full path, subtests included; shown on scratch copies both ways |
+| R44 | R33 merged only withdrawals: of three concurrent requests, an end seen by one that lost was dropped, and a withdrawal from a later snapshot was merged over a right selection | **Fixed** (`fe95af1`) with a fail-open of its own (R50): an end is written onto the winner's row too, the earliest kept; a withdrawal merged first stands (`KNOWN_ISSUES.md`). Controls R44-end-merge, R44-earliest |
+| R45 | Latent in R32: the self-check was excluded from kill accounting by its bare name, so a same-named test elsewhere could not kill, and per-control subtests of the self-check would kill every control | **Fixed** (`4141f38`): named by file and full path, subtests included; shown on scratch copies both ways. Its path match refused a green baseline behind a symlinked temporary directory (R55) |
+
+Found by the seventh adversarial review (the sixth pass's fixes; each finding
+shown by a probe, or by a mutant the whole suite left green). Its lenses on the
+matcher and on the journey session finished; its third, on the documents and
+the evidence, was lost when the container it ran in was restarted, and was not
+run again: the documents and artifacts were instead regenerated and
+cross-checked against each other here (R56 is from the journey lens). Two
+findings were fail-open, and both were introduced by the sixth pass's own
+fixes. Each was reproduced here before it was fixed; each behavioural fix has
+a test that fails on the commit before it (`1541d3d`). `SIMULATED` figures are
+the reviewers' scratch generators, not committed, and are in `KNOWN_ISSUES.md`:
+
+| Id | Finding | Status |
+|---|---|---|
+| R46 | **High, fail-open.** R40's bound allowed one stop for a misread, at the later reading. The window is a window of readings: the rider's bus, read at its far edge, may stand a stop further on. A rider's bus listed at the far edge and also under another route, then read seven stops past the stop ten seconds on, was not withheld on, and the matcher selected the bus behind it. A reading-premise ground-truth fuzz (`SIMULATED`, reviewer's generator): 11 wrong selections in 6 000 sessions where `ec31f9b` made none | **Fixed** (`7c8d735`): the bound is the motion model's reach and two, a stop at each end; at most 6 of 1 780 right selections cost (`SIMULATED`). Control R46-misread |
+| R47 | R40's bound round a loop had no edge test: counting a never-placed bus one stop further past the stop survived the suite and selected the wrong bus, straight-route edge pinned, loop edge not | **Tested** (`7c8d735`): straight and loop, across the seam. Control R47-loop-edge |
+| R48 | The order of what a sighting shows and what the time allows was untested after R43: raising the read-back possibility before a bus first seen past the stop, or before a remembered crossing, hid the sighting from the boarding watch | **Tested** (`7c8d735`, `9e57427`): matcher and coordinator. Controls R48-order-first-seen, R48-order-remembered |
+| R49 | KNOWN_ISSUES limited R43's lost withdrawals to loops of five stops or fewer; at 15-60 s between polls, loops up to nine stops lose them too | **Documented** (`KNOWN_ISSUES.md`): the scope in general terms |
+| R50 | **High, fail-open.** R44 merged an end judged on the losing request's memory even when the winner's memory, with the same snapshot, shows another bus crossing the stop: the withdrawal was lost for good, and the selection stood for a rider who may be aboard the other bus. Straight and loop schedules, both within the documented models, reproduced here | **Fixed** (`9e57427`): an end is merged only if its snapshot, read against the winner's memory, shows no other bus reaching the stop; otherwise a withdrawal is written. Control R50-stale-end |
+| R51 | The watch's anchor moved to every sighting before the stop only inside the approach window in the tests: restricting it to that zone survived, and kept a wrong bus on a garbled row | **Tested** (`9e57427`). Control R51-anchor-zone |
+| R52 | R44's end merge had no test for its retry, its earliest-kept guard, or a row deleted before the merge | **Tested** (`9e57427`). Controls R52-end-retry, R52-end-vanish (the earlier-end guard is R44-earliest) |
+| R53 | R42's loop half and the anchor kept while the selected bus is out of sight were untested | **Tested** (`9e57427`). Controls R53-anchor-loop, R53-out-of-sight |
+| R54 | A merge that gave up on a newer, withdrawn row answered "tracking" from the first winner's row for a session the server had withdrawn | **Fixed** (`9e57427`): it answers from the latest row it read, a withdrawn one as a withdrawal. Controls R54-latest-row, R54-give-up |
+| R55 | R45's file-and-path match refused a green baseline wherever the temporary directory is reached through a symlink (macOS), and the older name-only match had garbled killers' paths there | **Fixed** (`b46c8c4`): the workspace is resolved, and a test file outside its copy is an explicit error; shown with `TMPDIR` behind a symlink |
+| R56 | KNOWN_ISSUES called R44's residual "Low, fail-closed" and the evidence package claimed withdrawal "across concurrent writes both ways"; R50 contradicted both | **Fixed** (this commit's documents): the classification and the fuzzers' coverage stated as they are |
 
 ## 4. The matcher contract (`directed-route-progress-v1`)
 
@@ -257,9 +282,12 @@ say so gets a confirmation prompt; the reverse would admit departed buses.
 - Done in this branch: everything in §5 marked done. Every behavioural
   finding in §3 has a regression test and a negative control that turns the
   suite red if the fix is removed, and every gap a review found in the
-  tests (R37–R39, R41) is closed by tests that kill the mutants it named;
-  R32, R35, R36 and R45, about the evidence tooling itself, are shown as
-  their rows say.
+  tests (R37–R39, R41, R47, R48, R51–R53) is closed by tests that kill the
+  mutants it named; R32, R35, R36, R45 and R55, about the evidence tooling
+  itself, are shown as their rows say. The seventh review's two fail-opens
+  (R46, R50) were introduced by the sixth pass's fixes; that is the reason
+  the plan keeps a failing-first test for every fix, and why no fix is
+  treated as finished by the review that asked for it.
 - Risks: coverage cost of the fail-closed rules on real routes is unmeasured
   until the full-window replay runs (routes whose stop lists repeat stop names
   withhold at those stops; a bus at the stop withholds the session); the first
@@ -314,20 +342,28 @@ say so gets a confirmation prompt; the reverse would admit departed buses.
   evidence. The cost, accepted: a right selection is withdrawn when the
   selected bus's arrival is shown only ambiguously.
 - **Bound the never-placed rule by the motion model from the declaration
-  (R40).** It rests on the premise the whole on-board rule rests on: the
-  rider's bus was in the window when they said they were aboard. A later
-  declaration is the documented late-declaration case either way. Rejected:
-  firing on any never-placed bus beyond the window, which ended on-board
-  selection for the session on one glitch of a far bus.
+  (R40), with a stop for a misread at each end (R46).** It rests on the
+  premise the whole on-board rule rests on: the rider's bus was in the
+  window when they said they were aboard, and the window is a window of
+  readings. A later declaration is the documented late-declaration case
+  either way. Rejected: firing on any never-placed bus beyond the window,
+  which ended on-board selection for the session on one glitch of a far bus;
+  and allowing a misread at one end only, which a reading-premise fuzz showed
+  selects the wrong bus.
 - **Round a loop, a reading one or two stops back is a possibility (R43).**
   Nothing tells it from a bus that went nearly all the way round, so it
   withholds a selection not yet made and withdraws none, for another bus as
   for the selected one (R31); three stops or more is a crossing, the same
   guard the watch's end uses.
-- **Merge a lost end as a lost withdrawal is merged (R44).** Rejected:
-  undoing a withdrawal when an earlier end arrives after it (restoring a
-  selection is the riskier write); that order stays over-conservative, and
-  documented.
+- **Merge a lost end as a lost withdrawal is merged (R44), after reading it
+  against the winner's memory (R50).** An end judged on the losing request's
+  memory alone can hide a crossing the winner's memory shows; the same
+  snapshot is read again against the winner's row, and a crossing there is
+  written as the withdrawal it is. Rejected: undoing a withdrawal when an
+  earlier end arrives after it (restoring a selection is the riskier write);
+  that order stays over-conservative, and documented. Rejected: dropping the
+  end merge altogether, which would have removed the fail-open but kept the
+  three-request over-conservative case R44 fixed; the re-read costs one look.
 - **On board, a short loop selects nothing (R23), and a bus placed twice is of
   unknown progress (R27, R30).** On a lap under ten stops, the stops just past
   the boarding stop cannot be told from those just before it under every
