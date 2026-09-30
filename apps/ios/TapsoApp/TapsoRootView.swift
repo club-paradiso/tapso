@@ -1,20 +1,49 @@
 import SwiftUI
+import TapsoTransit
 
+/// Home, setup, ride, end. One ride at a time; the ride replaces setup rather
+/// than stacking on it, so there is never a modal over a modal.
 struct TapsoRootView: View {
-    let model: TapsoAppModel
+    @Bindable var model: TapsoAppModel
+    @Environment(\.accessibilityReduceMotion) private var reduceMotion
 
     var body: some View {
-        NavigationStack {
-            Group {
-                if model.hasActiveRide {
-                    ActiveJourneyView(model: model)
-                        .transition(.opacity)
-                } else {
+        Group {
+            if model.hasActiveRide {
+                RideView(model: model)
+            } else if let outcome = model.outcome {
+                RideEndView(model: model, outcome: outcome)
+            } else {
+                NavigationStack(path: $model.path) {
                     HomeView(model: model)
-                        .transition(.opacity)
+                        .navigationDestination(for: SetupStep.self) { step in
+                            destination(for: step)
+                        }
+                }
+                .sheet(isPresented: $model.isDemoPanelPresented) {
+                    DemoControlsView(model: model)
+                        .presentationDetents([.medium])
                 }
             }
-            .animation(.easeInOut(duration: 0.2), value: model.hasActiveRide)
+        }
+        .tint(TapsoColor.mintDeep)
+        .animation(TapsoMotion.animation(TapsoMotion.standard, reduceMotion: reduceMotion), value: model.hasActiveRide)
+        .task { await model.resumeIfNeeded() }
+    }
+
+    @ViewBuilder
+    private func destination(for step: SetupStep) -> some View {
+        switch step {
+        case .search:
+            DestinationSearchView(model: model)
+        case let .routes(destinationName):
+            RouteSelectView(model: model, destinationName: destinationName)
+        case let .boarding(routeID, destinationStopID):
+            BoardingStopView(model: model, routeID: routeID, destinationStopID: destinationStopID)
+        case .mapImport:
+            MapImportView(model: model)
+        case .vehicleCheck:
+            VehicleCheckView(model: model)
         }
     }
 }

@@ -62,3 +62,7 @@ When Web markup or design-system components change:
 2. Keep the matching `*.figma.ts` template synchronized with production JSX/CSS.
 3. Run the Code Connect parse check.
 4. Publish after review when the Figma plan is eligible.
+
+## iOS Product V2
+
+The iOS V2 components live on page `02F iOS Ride V2` (`152:2`), the finished screen designs on `04 iOS` › `iOS / Product V2` (`157:10`) and the Live Activity / Dynamic Island board (`160:1208`), tokens in the `TAPSO V2 Semantic` collection. Swift Code Connect is not set up (same plan requirement as above); `product/FIGMA_IMPLEMENTATION_MAP_V2.md` maps each node to its SwiftUI view, tokens, journey state, localization keys and accessibility behaviour. SF Pro does not render in this Figma runtime, so iOS frames use Inter (and Noto Sans KR for Korean) as stand-ins; SwiftUI uses the system fonts.

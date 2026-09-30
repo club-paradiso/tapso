@@ -17,8 +17,10 @@
 >   so there is no push token and no remote update.
 > - Network bytes in case 9: the app makes no network request.
 >
-> The simulator result at the end is a historical report; no CI job builds the
-> app.
+> Since 2026-09-30 the CI job `ios` builds the app and runs its tests on a
+> simulator, and renders every Product V2 screen and ride surface
+> (`product/UX_QA_V2.md`). The simulator result at the end is the historical
+> V1 report.
 
 ## Matrix
 

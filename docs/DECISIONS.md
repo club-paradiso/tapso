@@ -170,3 +170,21 @@ physical stop, and whether riders board the first bus to arrive — both matter
 only if the product commits without the rider. Designing them out of the
 safety path is sound; asking people to ride buses to measure them is not
 necessary for the shipped behaviour.
+
+## One ride-guidance model for every surface (2026-09-30)
+
+**Decision:** `RideGuidancePolicy` in the Swift core maps a `RideSignal` (phase, remaining stops, freshness, destination passed, offline) to one `RideGuidance`: moment, vehicle identity and data freshness as separate signals, milestone, haptic, colour role, symbol, recovery action, copy keys and relevance. The app, the Lock Screen and every Dynamic Island region read it; none decides on its own.
+
+The V1 app and Live Activity each had their own switch over the phase, and they already disagreed: a passed destination was presented and alerted as an arrival (`product/UX_AUDIT_V2.md` P0-1). The policy keeps every V1 fail-closed rule and its tests, and adds `passedDestination`, `vehicleLost` and `offline` as distinct quiet moments. Journey state machine, session and progress semantics are unchanged; the matcher is not involved.
+
+## Destination-first setup, rider-confirmed bus (2026-09-30)
+
+**Decision:** setup asks where the rider gets off, then which bus (only when two directions reach the stop), then the boarding stop — never a trip origin. A bus is selected only by the rider's confirmation of a proposal, in the synthetic demo as in real journey sessions (shadow mode), because automatic selection is withheld below `READY_FOR_BOUNDED_AUTOMATION`. Two or more proposals are always a question.
+
+## Product V2 runs on synthetic data until the app has a server path (2026-09-30)
+
+**Decision:** the app keeps making no network request. Search, proposals and rides come from `DemoCatalog` and `DemoRideScript`, labelled synthetic in code and on Home. `services/api/test/crossLanguageAuthority.test.ts` stays as it is; the Swift `VehicleMatchingEngine` still ranks only the sample ride's demo fixture.
+
+## CI builds the iOS app and publishes snapshot evidence (2026-09-30)
+
+**Decision:** a macOS `ios` job builds the committed project, runs the app and Live Activity tests, renders every Product V2 screen and ride surface in Korean and English, and checks XcodeGen membership parity. The committed `.xcodeproj` is kept in step by `scripts/ios/sync_xcodeproj.py` so it can be updated without a Mac. The job runs with `contents: read` and no persisted credentials; its only output is the artifact `ios-snapshot-evidence`. A branch-publishing job (`ci-evidence/<branch>`) was tried during Product V2 review and removed: it held a write token while installing an unpinned package from the network, and the artifact is the canonical evidence.
