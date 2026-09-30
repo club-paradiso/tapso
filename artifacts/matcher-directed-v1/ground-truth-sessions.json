@@ -11,8 +11,8 @@
   },
   "counts": {
     "sessions": 3000,
-    "automaticSelections": 1089,
-    "right": 917,
+    "automaticSelections": 1085,
+    "right": 913,
     "wrongBoardedBusSeen": 12,
     "wrongBoardedBusNeverSeen": 157,
     "noArrival": 3,

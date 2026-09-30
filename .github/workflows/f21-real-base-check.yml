@@ -1,0 +1,50 @@
+name: F21 real-base check
+
+on:
+  push:
+    branches: [fix/f21-sticky-approach-regression]
+    paths:
+      - ".github/workflows/f21-real-base-check.yml"
+
+permissions:
+  contents: write
+
+jobs:
+  real-base:
+    runs-on: ubuntu-latest
+    timeout-minutes: 45
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-node@v4
+        with:
+          node-version: 22
+      - run: npm install --prefix services/api --omit=optional --no-audit --no-fund
+      - name: Load v3 evidence-of-record from private draft vault
+        env:
+          GH_TOKEN: ${{ github.token }}
+          GH_REPO: ${{ github.repository }}
+        run: |
+          set -euo pipefail
+          mkdir -p work/raw work/vault work/f21-real
+          id="$(node -e 'console.log(require("./ops/matcher-evidence/request.json").replay.recordCollectionId)')"
+          test "$(gh release view passive-evidence-vault --json isDraft --jq .isDraft)" = "true"
+          gh release download passive-evidence-vault --pattern "$id.zip" --pattern "$id.zip.sha256" --dir work/vault
+          (cd work/vault && sha256sum -c "$id.zip.sha256")
+          unzip -q "work/vault/$id.zip" -d work/raw
+          echo "work/raw/$id" > work/f21-real/collection-dir.txt
+      - name: Run complete real-base counterfactual suite
+        run: |
+          set -euo pipefail
+          node --experimental-strip-types scripts/passive-shadow/counterfactual.ts "$(cat work/f21-real/collection-dir.txt)" --out=work/f21-real/counterfactual-real-summary.json
+          node -e '
+            const s=require("./work/f21-real/counterfactual-real-summary.json");
+            const out={totals:s.totals,follower:s.byFamily?.follower_overtaking,gateEvidence:s.gateEvidence};
+            console.log(JSON.stringify(out,null,2));
+            process.exit(s.totals.wrong===0 && s.totals.expectationFailures===0 && s.totals.invariantViolations===0 ? 0 : 2);
+          '
+      - uses: actions/upload-artifact@v4
+        if: always()
+        with:
+          name: f21-real-base
+          path: work/f21-real/
+          retention-days: 7

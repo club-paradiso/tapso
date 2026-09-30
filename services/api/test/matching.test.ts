@@ -440,6 +440,26 @@ test("three stops of separation is enough to select the leader", () => {
   assertSelected(matchVehicle(request([bus("leader", BOARDING - 1), bus("follower", BOARDING - 4)])), "leader");
 });
 
+test("F21 regression: an approach once contested inside the margin must not become automatically selectable just because the gap later opens", () => {
+  const contested = matchVehicle(request([
+    bus("leader", BOARDING - 4),
+    bus("follower", BOARDING - 6),
+  ]));
+  assertWithheld(contested, "candidates_too_close", "initially contested");
+  assert.ok(contested.passage);
+
+  // The leader has pulled away for the moment, but the session already saw
+  // the follower close enough that instantaneous spacing cannot prove which
+  // one will reach the stop first. The real-base follower_overtaking
+  // counterfactual found 61 wrong commits after exactly this uncertainty was
+  // forgotten.
+  const later = matchVehicle(request([
+    bus("leader", BOARDING - 1),
+    bus("follower", BOARDING - 5),
+  ], { passage: contested.passage }));
+  assertWithheld(later, "approach_contested_during_session", "gap opened after a contested approach");
+});
+
 test("a follower counts against the margin whether stale or only remembered", () => {
   const stale = matchVehicle(request([
     bus("leader", BOARDING - 1),
