@@ -1,7 +1,7 @@
 {
   "//": "Matcher evidence request, read by .github/workflows/matcher-evidence.yml. A change to this file on main (a merge) runs the request once; the scheduled windows read the collect section. Read-only provider access; no Upstash writes; automatic matching stays off. See docs/exec-plans/HUMAN_LABOR_ELIMINATION.md.",
-  "requestId": "2026-09-30-replay-ca5-observable-overtaking-v1",
-  "mode": "replay",
+  "requestId": "2026-09-30-collect-ca6-ca7-window-1",
+  "mode": "collect",
   "replay": {
     "//": "Passive Shadow v3 evidence of record. The raw artifact expires 2026-10-09T06:28:03Z; this job also copies it into a 90-day artifact and the private evidence vault.",
     "rawArtifactRunId": "36098610702",
