@@ -15,10 +15,10 @@ TAPSO uses Figma Code Connect template files (`*.figma.ts`) for the production W
   - Checkbox / TAPSO (`93:44`)
   - Waitlist Result / TAPSO (`95:29`)
   - Return Banner / TAPSO (`95:42`)
-  - Journey Card / TAPSO (`97:23`)
-  - Dynamic Island / TAPSO (`98:35`)
   - Support Amount / TAPSO (`99:17`)
   - Support Dialog / TAPSO (`100:132`)
+
+Journey Card / TAPSO (`97:23`) and Dynamic Island / TAPSO (`98:35`) lost their templates on 2026-09-30: the V1 markup they described was replaced by Marketing Site V2, whose device previews re-draw the iOS Product V2 surfaces (`02F iOS Ride V2`) and are mapped in `docs/product/MARKETING_SITE_V2.md`. The `03 Web` page holds that mapping in section `165:54`; the V1 frames `9:2` and `10:20` are labelled superseded.
 
 The templates live in `apps/web/src/figma/` and are intentionally excluded from `tsconfig.app.json`; they are executed by the Code Connect CLI, not bundled into the production Vite app.
 

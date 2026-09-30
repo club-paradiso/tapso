@@ -4,7 +4,7 @@ import {
   submitWaitlist,
   type RiderType,
 } from "../lib/waitlistClient";
-import type { EmailDelivery } from "../../api/_lib/contract.ts";
+import { waitlistOutcome } from "../lib/waitlistMessages.ts";
 
 /**
  * The production waitlist form.
@@ -17,13 +17,11 @@ import type { EmailDelivery } from "../../api/_lib/contract.ts";
 type WaitlistState =
   | { status: "idle" }
   | { status: "submitting" }
-  | { status: "success"; emailDelivery: EmailDelivery }
+  | { status: "success"; emailSent: boolean }
   | { status: "duplicate" }
   | { status: "error"; message: string };
 
-const GENERIC_ERROR = "지금은 신청을 저장하지 못했어요. 잠시 후 다시 시도해주세요.";
-
-export default function WaitlistForm({ onSupport }: { onSupport: () => void }) {
+export default function WaitlistForm() {
   const formId = useId();
   const [email, setEmail] = useState("");
   const [riderType, setRiderType] = useState<RiderType>("resident");
@@ -68,27 +66,22 @@ export default function WaitlistForm({ onSupport }: { onSupport: () => void }) {
       company,
     });
 
-    switch (result.status) {
-      case "created":
-        setState({ status: "success", emailDelivery: result.emailDelivery });
+    const outcome = waitlistOutcome(result);
+    switch (outcome.kind) {
+      case "success":
+        setState({ status: "success", emailSent: outcome.emailSent });
         return;
-      case "already_registered":
+      case "duplicate":
         setState({ status: "duplicate" });
         return;
-      case "invalid_request":
+      case "invalid":
         // The typed address stays in the field so it can simply be corrected.
-        if (result.field === "email") setEmailError("메일 주소를 다시 확인해주세요.");
-        if (result.field === "privacyConsent") setConsentError("사전예약을 하려면 동의가 필요해요.");
+        if (outcome.field === "email") setEmailError("메일 주소를 다시 확인해주세요.");
+        if (outcome.field === "privacyConsent") setConsentError("사전예약을 하려면 동의가 필요해요.");
         setState({ status: "idle" });
         return;
-      case "rate_limited":
-        setState({
-          status: "error",
-          message: `요청이 너무 잦아요. ${result.retryAfterSeconds}초 뒤에 다시 시도해주세요.`,
-        });
-        return;
-      default:
-        setState({ status: "error", message: GENERIC_ERROR });
+      case "error":
+        setState({ status: "error", message: outcome.message });
     }
   };
 
@@ -101,13 +94,13 @@ export default function WaitlistForm({ onSupport }: { onSupport: () => void }) {
           </p>
           <strong role="status">첫 탑승 명단에 올라갔어요.</strong>
           <p>
-            {state.emailDelivery === "sent"
+            {state.emailSent
               ? "확인 메일을 보냈어요. TestFlight가 준비되면 이 주소로 먼저 알려드릴게요."
               : "신청은 저장됐어요. 확인 메일이 조금 늦을 수 있지만 소식은 이 주소로 꼭 보내드릴게요."}
           </p>
-          <button type="button" className="figma-support" onClick={onSupport} data-figma-node-id="27:35">
-            후원하기
-          </button>
+          <a className="figma-support" href="#support">
+            탑서를 응원하는 다른 방법
+          </a>
         </div>
       </div>
     );
@@ -117,7 +110,7 @@ export default function WaitlistForm({ onSupport }: { onSupport: () => void }) {
     <div className="waitlist-form-card" data-figma-node-id="9:51">
       <form onSubmit={submit} aria-labelledby={`${formId}-title`} noValidate>
         <h3 id={`${formId}-title`} data-figma-node-id="9:52">
-          첫 탑승 소식 받기
+          TestFlight 소식 받기
         </h3>
 
         <label className="figma-field" htmlFor={`${formId}-email`} data-figma-node-id="9:53">
@@ -217,16 +210,8 @@ export default function WaitlistForm({ onSupport }: { onSupport: () => void }) {
             aria-busy={submitting}
             data-figma-node-id="9:61"
           >
-            {submitting ? "보내는 중…" : "사전예약 하기"}
+            {submitting ? "보내는 중…" : "TestFlight 사전예약"}
             {submitting ? null : <span aria-hidden="true">→</span>}
-          </button>
-          <button
-            className="figma-support"
-            type="button"
-            onClick={onSupport}
-            data-figma-node-id="27:35"
-          >
-            후원하기
           </button>
         </div>
 

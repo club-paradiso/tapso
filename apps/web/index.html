@@ -2,26 +2,82 @@
 <html lang="ko">
   <head>
     <meta charset="UTF-8" />
-    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
-    <meta name="theme-color" content="#071923" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, viewport-fit=cover" />
+    <title>탑서 TAPSO — 제주 버스, 내릴 때를 알려주는 iPhone 승차 동반자</title>
     <meta
       name="description"
-      content="TAPSO는 제주 버스의 물리 차량을 확인하고 남은 정류장을 다이나믹 아일랜드에 보여주는 iPhone 승차 동반자입니다."
+      content="어디서 내릴지만 정하세요. 탄 버스를 한 번 확인하면 남은 정거장과 내릴 때를 잠금 화면과 다이나믹 아일랜드가 알려줘요. 위치 권한 없이 버스를 따라가는 제주 버스 승차 동반자, iPhone 앱 개발 중."
     />
-    <meta property="og:title" content="TAPSO 탑서 — 혼저 탑서. 내릴 땐 알려드리쿠다." />
+    <link rel="canonical" href="https://tapso-nu.vercel.app/" />
+    <meta name="theme-color" content="#ffffff" />
+    <meta name="color-scheme" content="light" />
+    <meta name="format-detection" content="telephone=no" />
+
+    <meta property="og:type" content="website" />
+    <meta property="og:locale" content="ko_KR" />
+    <meta property="og:site_name" content="탑서 TAPSO" />
+    <meta property="og:url" content="https://tapso-nu.vercel.app/" />
+    <meta property="og:title" content="탑서 TAPSO — 타고, 폰은 넣어두고, 제때 내리세요." />
     <meta
       property="og:description"
-      content="차량을 확인하고, 남은 정류장을 다이나믹 아일랜드에 또렷하게."
+      content="내가 탄 제주 버스를 확인하고, 남은 정거장과 내릴 때를 잠금 화면과 다이나믹 아일랜드에 알려주는 iPhone 앱. 지금 개발 중이에요. TestFlight 사전예약을 받고 있어요."
     />
-    <meta property="og:type" content="website" />
+    <meta property="og:image" content="https://tapso-nu.vercel.app/og.png" />
+    <meta property="og:image:width" content="1200" />
+    <meta property="og:image:height" content="630" />
+    <meta property="og:image:alt" content="탑서: 타고, 폰은 넣어두고, 제때 내리세요. 잠금 화면에 365번 버스 6정거장 남음이 보이는 제품 미리보기." />
+    <meta name="twitter:card" content="summary_large_image" />
+    <meta name="twitter:title" content="탑서 TAPSO — 타고, 폰은 넣어두고, 제때 내리세요." />
+    <meta
+      name="twitter:description"
+      content="제주 버스, 내릴 때를 알려주는 iPhone 승차 동반자. 개발 중 · TestFlight 사전예약."
+    />
+    <meta name="twitter:image" content="https://tapso-nu.vercel.app/og.png" />
+
+    <link rel="icon" href="/favicon.svg" type="image/svg+xml" />
+    <link rel="icon" href="/media/app-icon.png" type="image/png" sizes="256x256" />
+    <link rel="apple-touch-icon" href="/media/app-icon.png" />
+
+    <!--
+      Pretendard is loaded without blocking the first paint: the prerendered page
+      shows in the system Korean font first and swaps when the subset arrives.
+    -->
+    <link rel="preconnect" href="https://cdn.jsdelivr.net" crossorigin />
     <link
-      rel="stylesheet"
+      rel="preload"
       as="style"
       crossorigin
       href="https://cdn.jsdelivr.net/gh/orioncactus/pretendard@v1.3.9/dist/web/variable/pretendardvariable-dynamic-subset.min.css"
     />
-    <link rel="icon" type="image/png" href="/media/app-icon.png" />
-    <title>TAPSO 탑서 — 제주 버스 승차 동반자</title>
+    <link
+      rel="stylesheet"
+      crossorigin
+      media="print"
+      onload="this.media='all'"
+      href="https://cdn.jsdelivr.net/gh/orioncactus/pretendard@v1.3.9/dist/web/variable/pretendardvariable-dynamic-subset.min.css"
+    />
+    <noscript>
+      <link
+        rel="stylesheet"
+        crossorigin
+        href="https://cdn.jsdelivr.net/gh/orioncactus/pretendard@v1.3.9/dist/web/variable/pretendardvariable-dynamic-subset.min.css"
+      />
+    </noscript>
+
+    <script type="application/ld+json">
+      {
+        "@context": "https://schema.org",
+        "@type": "SoftwareApplication",
+        "name": "탑서 TAPSO",
+        "alternateName": "TAPSO",
+        "applicationCategory": "TravelApplication",
+        "operatingSystem": "iOS",
+        "inLanguage": "ko",
+        "url": "https://tapso-nu.vercel.app/",
+        "description": "제주 버스를 탄 뒤 남은 정거장과 내릴 때를 잠금 화면과 다이나믹 아일랜드로 알려주는 iPhone 승차 동반자. 개발 중이며 아직 배포되지 않았어요.",
+        "image": "https://tapso-nu.vercel.app/og.png"
+      }
+    </script>
   </head>
   <body>
     <div id="root"></div>

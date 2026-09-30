@@ -1,0 +1,176 @@
+/*
+ * TAPSO web tokens.
+ *
+ * Colour values are the Product V2 semantic tokens (docs/product/DESIGN_SYSTEM_V2.md,
+ * Figma collection "TAPSO V2 Semantic", apps/ios/Shared/TapsoTokens.swift). The
+ * web adds only layout, type and motion scales and one warm paper tone. No
+ * other file in src/styles may introduce a raw hex value.
+ */
+
+:root {
+  color-scheme: light;
+
+  /* Product V2 · text and backgrounds (light) */
+  --ink: #071923;
+  --text-secondary: #566973;
+  --text-tertiary: #5f7079;
+  --bg: #ffffff;
+  --mist: #f5fafb;
+  --separator: #dfe8eb;
+
+  /* Product V2 · journey roles */
+  --mint: #2fc7aa;
+  --mint-ink: #0b7f6d;
+  --amber: #f4b84a;
+  --coral: #c93c3c;
+  --coral-on-dark: #ff7a6e;
+  --tangerine: #f7972f;
+  --blue: #4389ef;
+  --blue-on-dark: #5b9bff;
+  --slate: #8a9aa3;
+  --slate-on-dark: #9fb0b8;
+
+  /* Product V2 · identity */
+  --basalt: #0f171a;
+  --basalt-raised: #1a2528;
+  --night: #071923;
+  --night-raised: #0e222c;
+  --night-elevated: #16303d;
+  --night-separator: #274452;
+  --night-text-secondary: #b4c4cb;
+
+  /* Drawn hardware: the phone edge and the island are black glass. */
+  --device-edge-light: #2a3438;
+  --device-edge-dark: #0b1012;
+  --device-edge-mid: #1c2427;
+  --island-black: #000000;
+
+  /* Web only: warm Jeju paper for editorial bands. */
+  --sand: #fbf7f1;
+  --sand-deep: #f4ece0;
+
+  /* Translucent helpers derived from the tokens above. */
+  --ink-04: rgb(7 25 35 / 4%);
+  --ink-08: rgb(7 25 35 / 8%);
+  --ink-12: rgb(7 25 35 / 12%);
+  --white-08: rgb(255 255 255 / 8%);
+  --white-16: rgb(255 255 255 / 16%);
+  --white-70: rgb(255 255 255 / 70%);
+  --mint-14: rgb(47 199 170 / 14%);
+  --mint-28: rgb(47 199 170 / 28%);
+  --tangerine-16: rgb(247 151 47 / 16%);
+
+  /* Type */
+  --font: "Pretendard Variable", Pretendard, -apple-system, BlinkMacSystemFont, system-ui,
+    "Apple SD Gothic Neo", "Noto Sans KR", "Segoe UI", sans-serif;
+  --fs-display: clamp(2.5rem, 1.35rem + 5vw, 5.25rem);
+  --fs-h2: clamp(1.95rem, 1.25rem + 2.8vw, 3.4rem);
+  --fs-h3: clamp(1.15rem, 1.05rem + 0.4vw, 1.375rem);
+  --fs-lede: clamp(1.05rem, 0.98rem + 0.32vw, 1.25rem);
+  --fs-body: 1rem;
+  --fs-small: 0.9375rem;
+  --fs-xs: 0.8125rem;
+  --lh-tight: 1.12;
+  --lh-body: 1.65;
+  --tracking-display: -0.04em;
+  --tracking-heading: -0.03em;
+
+  /* Space (4-based, matching TapsoSpace) */
+  --space-1: 4px;
+  --space-2: 8px;
+  --space-3: 12px;
+  --space-4: 16px;
+  --space-5: 20px;
+  --space-6: 24px;
+  --space-8: 32px;
+  --space-10: 40px;
+  --space-12: 48px;
+  --space-16: 64px;
+  --section-y: clamp(72px, 5rem + 5vw, 160px);
+  --gutter: clamp(16px, 4vw, 40px);
+  --container: 1200px;
+
+  /* Radius (TapsoRadius) */
+  --radius-sm: 12px;
+  --radius-control: 14px;
+  --radius-md: 18px;
+  --radius-lg: 24px;
+  --radius-hero: 28px;
+  --radius-pill: 999px;
+
+  /* Size */
+  --touch-min: 44px;
+  --button-h: 52px;
+  --button-h-lg: 58px;
+
+  /* Elevation */
+  --shadow-card: 0 1px 2px var(--ink-04), 0 12px 32px -12px var(--ink-12);
+  --shadow-device: 0 2px 4px rgb(7 25 35 / 10%), 0 32px 80px -24px rgb(7 25 35 / 45%);
+
+  /* Motion (TapsoMotion: standard 250 ms, emphasis spring) */
+  --ease-standard: cubic-bezier(0.4, 0, 0.2, 1);
+  --ease-emphasis: cubic-bezier(0.22, 1.2, 0.36, 1);
+  --dur-fast: 160ms;
+  --dur-standard: 250ms;
+  --dur-emphasis: 420ms;
+}
+
+/* Journey role → fill and text. Views never choose a journey colour by hand. */
+.role-active {
+  --role: var(--mint);
+  --on-role: var(--ink);
+}
+.role-prepare {
+  --role: var(--amber);
+  --on-role: var(--ink);
+}
+.role-next {
+  --role: var(--coral);
+  --on-role: var(--bg);
+}
+.role-arrival {
+  --role: var(--tangerine);
+  --on-role: var(--ink);
+}
+.role-checking {
+  --role: var(--blue);
+  --on-role: var(--ink);
+}
+.role-degraded {
+  --role: var(--slate);
+  --on-role: var(--ink);
+}
+.role-neutral {
+  --role: var(--white-16);
+  --on-role: var(--bg);
+}
+
+/* On basalt and on the black island, coral, blue and slate use their dark values. */
+.on-dark .role-next,
+.on-dark.role-next,
+.island .role-next,
+.island.role-next,
+.surface-basalt .role-next {
+  --role: var(--coral-on-dark);
+  --on-role: var(--ink);
+}
+.on-dark .role-checking,
+.island.role-checking,
+.island .role-checking,
+.surface-basalt.role-checking,
+.surface-basalt .role-checking {
+  --role: var(--blue-on-dark);
+}
+.on-dark .role-degraded,
+.island.role-degraded,
+.island .role-degraded,
+.surface-basalt.role-degraded,
+.surface-basalt .role-degraded {
+  --role: var(--slate-on-dark);
+}
+
+/* On the tangerine arrival surface the neutral badge is ink on a light tint. */
+.surface-tangerine .role-neutral {
+  --role: var(--ink-12);
+  --on-role: var(--ink);
+}
