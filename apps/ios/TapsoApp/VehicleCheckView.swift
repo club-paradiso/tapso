@@ -196,8 +196,10 @@ private struct SearchingIndicator: View {
 
     var body: some View {
         HStack(spacing: TapsoSpace.sm) {
-            ProgressView()
-                .tint(TapsoColor.journeyChecking)
+            Image(systemName: "arrow.triangle.2.circlepath")
+                .font(.headline)
+                .foregroundStyle(TapsoColor.journeyChecking)
+                .symbolEffect(.pulse, options: .repeating, isActive: !reduceMotion)
             Text("check.searching.live")
                 .font(.subheadline.weight(.semibold))
                 .foregroundStyle(TapsoColor.journeyChecking)

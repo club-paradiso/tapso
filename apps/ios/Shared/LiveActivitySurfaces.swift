@@ -106,8 +106,9 @@ struct LockScreenRideView: View {
         )))
     }
 
+    /// Not on the coral next-stop surface, where a coral rail would vanish; the destination name carries it there.
     private var showsRail: Bool {
-        [.riding, .prepare, .nextStop, .delayed, .vehicleLost, .offline].contains(moment)
+        [.riding, .prepare, .delayed, .vehicleLost, .offline].contains(moment)
     }
 
     private var badgeRole: RideColorRole {
