@@ -27,7 +27,7 @@ export function supportStatus(config: SupportConfigResponse | undefined): Suppor
     open: false,
     label: config ? "결제 준비 중" : "결제 상태 확인 중",
     detail:
-      "결제 계약이 끝나기 전에는 후원을 받지 않아요. 준비되면 이 자리에서 바로 열려요.",
+      "아직 Toss Payments 상점 연결이 끝나지 않았어요. 연결 전에는 결제를 받지 않습니다.",
     action: "후원 안내 보기",
   };
 }

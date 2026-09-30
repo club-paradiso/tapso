@@ -123,7 +123,7 @@ export default function SupportDialog({ onClose }: { onClose: () => void }) {
     >
       <div className="support-dialog-body">
         <div className="support-dialog-header">
-          <h2 id={titleId}>TAPSO를 응원해주실래요? 🍊</h2>
+          <h2 id={titleId}>탑서 개발에 힘을 보태주세요 🍊</h2>
           <button
             type="button"
             className="support-dialog-close"
@@ -135,7 +135,7 @@ export default function SupportDialog({ onClose }: { onClose: () => void }) {
         </div>
 
         <p className="support-dialog-intro">
-          작은 후원은 서버·테스트·개발 비용에 씁니다. 후원하지 않아도 TAPSO는 그대로 쓸 수 있어요.
+          후원금은 서버비, 실제 기기 테스트, 출시 준비에 씁니다. 후원하지 않아도 탑서는 그대로 쓸 수 있어요.
         </p>
 
         {state.status === "loading" ? (
@@ -252,8 +252,7 @@ export default function SupportDialog({ onClose }: { onClose: () => void }) {
         */}
         {config && !live ? (
           <p className="support-dialog-note" id={`${titleId}-blocked`}>
-            결제 준비가 아직 끝나지 않아 지금은 후원을 받을 수 없어요. 준비되면 이 화면에서 바로
-            열립니다. 그동안은 사전예약이 가장 큰 힘이 됩주.
+            아직 Toss Payments 상점 연결이 끝나지 않아 카드 결제를 받을 수 없어요. 연결 전에는 결제가 시작되지 않습니다. 지금은 TestFlight 사전예약이 제일 큰 도움이 됩주.
           </p>
         ) : null}
       </div>

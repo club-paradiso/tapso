@@ -66,10 +66,9 @@ export function RideStory() {
   return (
     <section className="section story" id="how" aria-labelledby="how-title" ref={sectionRef}>
       <div className="container">
-        <SectionHead index="01" eyebrow="이렇게 작동해요" title="정하고, 확인하고, 잊으세요." titleId="how-title">
+        <SectionHead index="01" eyebrow="이렇게 써요" title="내릴 곳 고르고, 버스만 한 번 확인하면 돼요." titleId="how-title">
           <p>
-            탑서의 한 번의 여정이에요. 단계를 누르거나 재생해 보세요. 화면은 iOS 앱 디자인을 그대로
-            옮긴 미리보기예요.
+            아래 단계를 눌러 탑서를 쓰는 흐름을 미리 볼 수 있어요. 실제 iOS 앱 화면을 바탕으로 만든 데모예요.
           </p>
         </SectionHead>
 

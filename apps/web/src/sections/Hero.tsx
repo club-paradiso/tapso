@@ -9,18 +9,18 @@ export function Hero() {
         <div className="hero-copy">
           <p className="hero-kicker">
             <span className="kicker-dot" aria-hidden="true" />
-            제주 버스 승차 동반자 · iPhone 앱 개발 중
+            제주 버스에서 내릴 때까지 · iPhone 앱 개발 중
           </p>
           <h1 id="hero-title">
-            타고,
+            버스 탔으면,
             <br />
-            폰은 넣어두고,
+            정거장 그만 세세요.
             <br />
-            <em>제때 내리세요.</em>
+            <em>내릴 때만 다시 보면 돼요.</em>
           </h1>
           <p className="hero-lede">
-            어디서 내릴지만 정하세요. 탄 버스를 한 번 함께 확인하면, 남은 정거장과 내릴 때를 잠금
-            화면과 다이나믹 아일랜드가 알려드려요.
+            내릴 곳을 고르고, 탄 버스만 한 번 확인하세요. 그다음부터는 남은 정거장과 내릴 때를 잠금
+            화면과 다이나믹 아일랜드에서 바로 볼 수 있어요.
           </p>
           <div className="hero-actions">
             <a className="btn btn-primary btn-lg" href="#waitlist">
@@ -32,9 +32,9 @@ export function Hero() {
             </a>
           </div>
           <ul className="hero-facts" aria-label="탑서의 약속">
-            <li>위치 권한 없이</li>
-            <li>내가 탄 버스를 기준으로</li>
-            <li>애매하면 대신 고르지 않아요</li>
+            <li>내 위치 안 받아요</li>
+            <li>탄 버스만 한 번 확인해요</li>
+            <li>확실하지 않으면 모른다고 해요</li>
           </ul>
         </div>
 

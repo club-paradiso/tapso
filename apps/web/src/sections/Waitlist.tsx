@@ -15,7 +15,7 @@ export function Waitlist() {
           <h2 id="waitlist-title">
             혼저 탑서.
             <br />
-            첫 탑승 소식을 먼저 보내드릴게요.
+            TestFlight가 열리면 가장 먼저 알려드릴게요.
           </h2>
           <p className="waitlist-translate">‘혼저 탑서’는 제주어로 ‘어서 타세요’예요.</p>
 
@@ -23,15 +23,15 @@ export function Waitlist() {
             <li>
               <CheckIcon />
               <span>
-                <b>신청 확인 메일 한 통</b>
-                신청이 저장되면 확인 메일을 보내요.
+                <b>신청되면 바로 확인</b>
+                신청이 정상적으로 저장되면 확인 메일을 보내요.
               </span>
             </li>
             <li>
               <CheckIcon />
               <span>
-                <b>TestFlight가 열리면 참여 안내</b>
-                날짜가 정해지면 이 주소로 먼저 알려드려요.
+                <b>TestFlight 오픈 소식</b>
+                베타가 열리면 이 이메일로 먼저 알려드려요.
               </span>
             </li>
             <li>

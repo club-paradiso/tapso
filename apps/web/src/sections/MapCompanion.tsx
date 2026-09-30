@@ -75,8 +75,7 @@ export function MapCompanion() {
           titleId="maps-title"
         >
           <p>
-            버스에서는 길보다 내릴 순간이 중요하니까요. 탑서는 지도 앱을 대신하지 않아요. 버스에 탄
-            뒤부터 내릴 때까지만 맡아요.
+            길찾기는 카카오맵이나 네이버 지도가 더 잘해요. 탑서는 버스에 탄 다음부터 맡습니다. 지금 탄 버스와 남은 정거장, 내릴 순간에만 집중해요.
           </p>
         </SectionHead>
 
@@ -99,7 +98,7 @@ export function MapCompanion() {
         </ol>
 
         <div className="links-block">
-          <h3>지금 되는 연결, 아직인 연결</h3>
+          <h3>지금 되는 것과 아직 안 되는 것</h3>
           <ul className="links-list">
             {LINKS.map((l) => (
               <li key={l.title}>
