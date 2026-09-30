@@ -52,7 +52,7 @@
  */
 
 import type { RiderState, StopOnRoute, VehicleObservation } from "./domain.ts";
-import { MATCHER_POLICY_VERSION, MatcherInvariantError, type MatcherFunction } from "./matching.ts";
+import { DIRECTED_MATCHER_POLICY_V1, MATCHER_POLICY_VERSION, MatcherInvariantError, type MatcherFunction } from "./matching.ts";
 import { replayMatching, type MatchGateEvidence, type ReplayDecision } from "./matchReplay.ts";
 import type { RideSnapshot } from "./rideCapture.ts";
 import { TAGO_CADENCE_POLICY_V1 } from "./sourceFreshness.ts";
@@ -713,8 +713,40 @@ function followerOvertaking(): Counterfactual {
       if (reachesStopAt <= first.at) return undefined;
       const msPerStop = (reachesStopAt - first.at) / (stop - startPosition);
       if (msPerStop < context.policy.minPhantomMsPerStop) return undefined;
+      const id = injectedId("follower_overtaking", 1);
       const motion = linearMotion(first.at, startPosition, msPerStop);
-      return withPhantoms(world, [{ id: injectedId("follower_overtaking", 1), motion }], route, passiveCase.meta.routeId);
+      const next = withPhantoms(world, [{ id, motion }], route, passiveCase.meta.routeId);
+      if (!next) return undefined;
+
+      // This family is meant to test the matcher's observable follower-margin
+      // protection, not clairvoyance about a bus that is unseen or already far
+      // enough back to satisfy that protection and only accelerates later.
+      //
+      // Sparse real streams exposed cases where the true bus jumped forward
+      // several stops between receipts while the synthetic follower's smooth
+      // motion did not. At those instants the matcher saw either no follower or
+      // one at least marginStops behind, so a later overtake was not knowable
+      // from the blind input. Scoring those cases as wrong made CA-5 demand
+      // prediction of invented future acceleration rather than safety under the
+      // evidence actually presented.
+      for (const snapshot of next.world.window) {
+        const at = timeOf(snapshot);
+        if (snapshot.error || at < world.sessionStartAt || at > reachesStopAt) continue;
+        const truth = snapshot.vehicles.find((row) => row.vehicleId === context.truth.vehicleId);
+        if (truth?.stopSequence === undefined) continue;
+        const truthForward = stop - truth.stopSequence;
+        if (truthForward < 1 || truthForward > DIRECTED_MATCHER_POLICY_V1.approachWindowStops) continue;
+        const follower = snapshot.vehicles.find((row) => row.vehicleId === id);
+        if (follower?.stopSequence === undefined) return undefined;
+        const followerForward = stop - follower.stopSequence;
+        // If the injected bus is still behind the true bus, it must be inside
+        // the observed exclusion margin at every instant the true bus could be
+        // selected. Same-position or already-ahead rows are also safe tests:
+        // they necessarily block or become the leader.
+        if (followerForward > truthForward
+          && followerForward >= truthForward + DIRECTED_MATCHER_POLICY_V1.marginStops) return undefined;
+      }
+      return next;
     }),
   };
 }
