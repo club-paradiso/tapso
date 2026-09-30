@@ -44,7 +44,7 @@ export const STATUS_ITEMS: readonly StatusItem[] = [
   {
     title: "버스 확인 안전성 검증",
     state: "active",
-    body: "실제 운행 기록으로 계속 검증하고 있어요. 아직은 버스를 자동으로 골라주지 않고, 탈 때 직접 한 번 확인합니다.",
+    body: "실제 운행 기록으로 계속 검증하고 있어요. 버스 자동 선택 기능은 꺼 둔 상태라, 탈 때 직접 한 번 확인합니다.",
   },
   {
     title: "실제 iPhone 테스트",
