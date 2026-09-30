@@ -10,5 +10,6 @@
   "directMaxRoutes": 3,
   "publicMaxRoutes": 5,
   "//reevaluate": "Re-evaluates the raw streams collected by run 36098610702 (commit 0ec57f9) under the current PR head. No provider calls.",
-  "reevaluateRunId": "36098610702"
+  "reevaluateRunId": "36098610702",
+  "reevaluateCollectionId": "pv3-20260925T052712Z-f096de91"
 }
