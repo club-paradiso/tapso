@@ -1,6 +1,6 @@
 {
   "//": "Matcher evidence request, read by .github/workflows/matcher-evidence.yml. A change to this file on main (a merge) runs the request once; the scheduled windows read the collect section. Read-only provider access; no Upstash writes; automatic matching stays off. See docs/exec-plans/HUMAN_LABOR_ELIMINATION.md.",
-  "requestId": "2026-09-30-validate-vault-backed-replay-after-public-cutover",
+  "requestId": "2026-09-30-replay-ca5-observable-overtaking-v1",
   "mode": "replay",
   "replay": {
     "//": "Passive Shadow v3 evidence of record. The raw artifact expires 2026-10-09T06:28:03Z; this job also copies it into a 90-day artifact and the private evidence vault.",
@@ -22,13 +22,34 @@
     "directMinutes": 30,
     "directMaxRoutes": 3,
     "pools": [
-      { "routes": "JEB405136521,JEB405136522,JEB405136523,JEB405136524,JEB405136525,JEB405136530,JEB405136001,JEB405136002,JEB405320111,JEB405320112", "routeNumbers": "" },
-      { "routes": "", "routeNumbers": "101,102,111,112,121,122,131,132,181,182" },
-      { "routes": "", "routeNumbers": "201,202,211,212,221,222,231,232,251,252" },
-      { "routes": "", "routeNumbers": "260,281,282,291,292,295,240,300,315,316" },
-      { "routes": "", "routeNumbers": "325,326,331,332,340,341,342,343,350,351" },
-      { "routes": "", "routeNumbers": "355,356,357,358,360,365,370,380,410,420" },
-      { "routes": "", "routeNumbers": "430,440,450,510,520,530,610,620,710,720" }
+      {
+        "routes": "JEB405136521,JEB405136522,JEB405136523,JEB405136524,JEB405136525,JEB405136530,JEB405136001,JEB405136002,JEB405320111,JEB405320112",
+        "routeNumbers": ""
+      },
+      {
+        "routes": "",
+        "routeNumbers": "101,102,111,112,121,122,131,132,181,182"
+      },
+      {
+        "routes": "",
+        "routeNumbers": "201,202,211,212,221,222,231,232,251,252"
+      },
+      {
+        "routes": "",
+        "routeNumbers": "260,281,282,291,292,295,240,300,315,316"
+      },
+      {
+        "routes": "",
+        "routeNumbers": "325,326,331,332,340,341,342,343,350,351"
+      },
+      {
+        "routes": "",
+        "routeNumbers": "355,356,357,358,360,365,370,380,410,420"
+      },
+      {
+        "routes": "",
+        "routeNumbers": "430,440,450,510,520,530,610,620,710,720"
+      }
     ]
   }
 }
