@@ -322,7 +322,10 @@ jobs:
     runs-on: ubuntu-latest
     timeout-minutes: 350
     permissions:
-      contents: read
+      # GitHub hides draft releases from read-only tokens even in the same
+      # repository. Write scope is required here only to make the private
+      # draft vault visible; this job performs no writes.
+      contents: write
       actions: read
     steps:
       - uses: actions/checkout@v4
