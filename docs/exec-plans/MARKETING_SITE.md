@@ -1,5 +1,7 @@
 # TAPSO marketing site
 
+> Superseded on 2026-09-30 by Marketing Site V2: `docs/exec-plans/MARKETING_SITE_V2.md` and `docs/product/MARKETING_SITE_V2.md`. Kept as history.
+
 ## Outcome and non-goals
 
 Build and publish a responsive Korean-first product website for TAPSO under `apps/web`. The public page must explain the narrow bus-companion promise, the Dynamic Island experience, vehicle matching, privacy boundary, and current demo status. It must be deployable to Vercel from the GitHub repository.

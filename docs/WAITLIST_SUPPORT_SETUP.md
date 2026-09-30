@@ -3,7 +3,8 @@
 Everything in this document is operator work that code cannot do for you. Until
 it is done, the site still builds, deploys, and renders — the waitlist endpoint
 answers `503 unavailable` and the form tells the visitor so rather than
-pretending a registration was stored.
+pretending a registration was stored ("지금은 사전예약을 받을 수 없어요. 입력한 내용은
+저장되지 않았어요.", `apps/web/src/lib/waitlistMessages.ts`).
 
 Reality labels:
 
@@ -116,7 +117,9 @@ Nothing below has been done, and none of it is required to ship the waitlist.
    The code deliberately uses the neutral word "support" and promises no
    receipt, no tax deduction, and no charitable status, because none has been
    established. Do not add that language to the UI without verified advice.
-   `SupportDialog.tsx` is the only place user-facing wording lives.
+   User-facing wording lives in `SupportDialog.tsx` (the sheet) and
+   `apps/web/src/sections/Support.tsx` with `src/lib/supportStatus.ts` (the
+   page section, which says outright that no receipt or deduction is issued).
 3. Set `TOSS_CLIENT_KEY` and `TOSS_SECRET_KEY` to **test** keys, set
    `SUPPORT_ENABLED=true` on a Preview deployment only, and complete one test
    payment. Confirm a `support_payments` row reaches `status = 'paid'`.
@@ -128,8 +131,9 @@ Nothing below has been done, and none of it is required to ship the waitlist.
    Toss feature.
 5. Only after a test payment works end to end, swap in live keys.
 
-Until step 3, `후원하기` opens a sheet whose continue button is disabled with an
-explanation. That is intentional: the site must never invite a payment it cannot
+Until step 3, the page's support section reads "결제 준비 중" (it asks
+`/api/support/config`, and anything but `live` counts as not open) and its
+button opens a sheet whose continue button is disabled with an explanation. That is intentional: the site must never invite a payment it cannot
 take.
 
 ## Data handling
