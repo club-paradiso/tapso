@@ -9,8 +9,7 @@ export function Privacy() {
         <div>
           <SectionHead index="07" eyebrow="개인정보" title="사람이 아니라, 버스를 따라가요." titleId="privacy-title">
             <p>
-              탑서가 지켜보는 건 공공 버스의 위치예요. 승객의 위치를 계속 추적하는 방식은 처음부터
-              택하지 않았어요.
+              내 위치를 계속 보내는 대신 공공 버스 위치를 봐요. 그래서 기본 기능에는 위치 권한이 필요하지 않아요.
             </p>
           </SectionHead>
           <div className="privacy-visual" aria-hidden="true">
