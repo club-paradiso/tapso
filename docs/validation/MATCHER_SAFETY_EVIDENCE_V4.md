@@ -24,8 +24,8 @@ matcher result.
 | Margin | 12 position points among eligible buses in the ±4 window | three stops over every vehicle heading for the stop, wherever it is (F9) |
 | Vehicle missing from one poll | forgotten | remembered 90 s, competing from wherever it could have reached; a crossing it showed is not forgotten (F10); past 90 s still competing from session memory, its reach growing with the time since (F15) |
 | A bus reached the stop during the session | irrelevant | withholds for the rest of the session (F4), also when first seen already past it at any look (F12, F16), when lost while it could by now have reached it (F15), across a loop's seam (F17), and for a session stored without memory (F11) |
-| Rider already aboard | same rule as waiting | separate rule: +1…+4, only one vehicle; a bus missing from the first snapshot never selected, still competing (F16); round a loop, a bus that came back to the stop or had time to never selected, and a lap under ten stops selects nothing (R23); a bus placed twice never excluded by it (R27) nor forgotten for it (R30); one never placed, next seen beyond the window where the rider's bus could have got to since the declaration, withholds (R30, R40) |
-| After an automatic selection | tracked to the end, whatever happens | until the selected bus is seen reaching the stop (a sighting, never a reason memory raises: R31; a crossing timed from its last sighting before the stop: R42), another bus seen reaching it first withdraws the selection for good and the rider is asked (F20; round a loop a reading a stop or two back is no sighting: R43), across concurrent writes both ways (R33, R44) |
+| Rider already aboard | same rule as waiting | separate rule: +1…+4, only one vehicle; a bus missing from the first snapshot never selected, still competing (F16); round a loop, a bus that came back to the stop or had time to never selected, and a lap under ten stops selects nothing (R23); a bus placed twice never excluded by it (R27) nor forgotten for it (R30); one never placed, next seen beyond the window where the rider's bus could have got to since the declaration (the motion model's reach and a stop for a misread at each end), withholds (R30, R40, R46) |
+| After an automatic selection | tracked to the end, whatever happens | until the selected bus is seen reaching the stop (a sighting, never a reason memory raises: R31; a crossing timed from its last sighting before the stop: R42), another bus seen reaching it first withdraws the selection for good and the rider is asked (F20; round a loop a reading a stop or two back is no sighting: R43), and across concurrent writes: what a request that lost saw of the stop is written onto the winner's row, an end only after its snapshot is read against the winner's memory of the other buses (R33, R44, R50) |
 | Missing topology / repeated stop name / two stops under one sequence | not checked | withholds (F18) |
 | Invariant | none | `assertDirectedInvariant` on every result |
 
@@ -70,7 +70,7 @@ wrong commit or any correct→wrong regression.
 | F19 | Review, probes; property P13-routes, seed 10018 | The invariant read another route's row with the selected id (HTTP 500, order-dependent) | Two-route id withholds; invariant reads the request's route |
 | F20 | Ground-truth fuzzing (`SIMULATED`): every wrong selection of a bus the feed had shown was an overtaking after the selection | A session kept tracking an automatically selected bus after another bus reached the stop first | The boarding watch: another bus seen at, crossing or first past the stop withdraws the selection for good; property P16 |
 
-Findings of the adversarial reviews of this work itself (R1–R45: evidence
+Findings of the adversarial reviews of this work itself (R1–R56: evidence
 workflow, gate integrity, and the F15–F20 fixes, among them R23 a bus coming
 back round a loop on board, R24 a lap between two sightings, R27 a bus placed
 twice excluded by one place, R28–R29 receipt and clock timing, R30 a bus
@@ -79,7 +79,12 @@ that shows no arrival, R32 a self-check that killed every control; from the
 sixth review, R37–R39 and R41 tests the fifth pass lacked, R40 the
 never-placed rule bounded by the motion model, R42 the watch's anchor, R43 a
 loop read-back as a possibility, R44 a lost end merged, R45 the self-check
-named by file and path) are listed with their fixes in the ExecPlan §3. Each
+named by file and path; from the seventh, which found two fail-opens the
+sixth pass's own fixes introduced, R46 the never-placed bound one stop short
+and R50 an end merged over a crossing the winner's memory shows, with R47,
+R48 and R51–R53 tests the sixth pass lacked, R54 a stale answer after a
+merge gave up, R55 the runner behind a symlinked temporary directory, R49 and
+R56 documentation) are listed with their fixes in the ExecPlan §3. Each
 behavioural fix has a test that fails on the commit before it.
 
 Every failing seed is replayed first on every run
@@ -113,13 +118,14 @@ tests.
 
 | Run | Seeds per property | Result |
 |---|---|---|
-| Every CI run (`run-suite.ts --property-cases=2000`, `artifacts/matcher-directed-v1/test-suite.json`) | 2 000, after the 19 recorded regression seeds | 29 / 29 property tests pass; the whole suite 667 / 667 (the gate-output test is checked by `gate.ts --check` instead) |
+| Every CI run (`run-suite.ts --property-cases=2000`, `artifacts/matcher-directed-v1/test-suite.json`) | 2 000, after the 19 recorded regression seeds | 29 / 29 property tests pass; the whole suite 675 / 675 (the gate-output test is checked by `gate.ts --check` instead) |
 | Deep run 1 (this work) | 20 000 | found P3 seed 14526 (F7) and P7 seed 12091 (F8) |
 | Deep run 2 | 20 000 | found P3 seed 16661 (F10) |
 | Deep run 3, the matcher before F15 | 20 000 | 19 / 19 pass, no new seed (1 987 s) |
 | P16, P3-lap and P12-returned on `61d63be` | 20 000 | 3 / 3 pass, no new seed (440 s) |
 | Deep run 4, the code of `aac505f` (before the sixth review) | 20 000 | 29 / 29 pass, no new seed (2 879 s) |
-| Deep run 5, the final code (`4141f38`) | 20 000 | 29 / 29 pass, no new seed (2 429 s) |
+| Deep run 5, the code of `4141f38` (before the seventh review) | 20 000 | 29 / 29 pass, no new seed (2 429 s) |
+| Deep run 6, the final code (`b46c8c4`) | 20 000 | 29 / 29 pass, no new seed (four parallel shards, longest shard 828 s) |
 
 The 19 regression seeds (`services/api/test/fixtures/matcher-property-regressions.json`)
 are replayed first on every run, each with a note of what it caught: P2 10156
@@ -135,9 +141,9 @@ P13-memory-order 10000 (R20); P12-returned 10011 (R23); P3-lap 10001 (R24).
 
 `VERIFIED_BY_TEST`. `scripts/negative-controls/run.ts --typecheck`
 (`artifacts/matcher-directed-v1/negative-controls.json`, generated on commit
-`f1fe79e`): **125 of 125 controls killed** (18 required,
-107 extra), 0 survived, 0 stale, 0 invalid, 0 timed out, each by tests in
-its own listed files. The baseline was green (667 / 667, no type error),
+`b46c8c4`): **137 of 137 controls killed** (18 required,
+119 extra), 0 survived, 0 stale, 0 invalid, 0 timed out, each by tests in
+its own listed files. The baseline was green (675 / 675, no type error),
 every kill was re-confirmed on the unmutated snapshot, and the working tree
 did not change during the run. Each
 control puts back one answer leak (F3, F6, F14), removes one fail-closed rule
@@ -381,9 +387,9 @@ sha256 of every evidence file this package cites, as committed with it:
 | `artifacts/matcher-directed-v1/former-wrong-commit-instants.json` | `718b75e82f6cd30abdaadbe5280290309df4c07050f1541370efaf569e40841c` |
 | `artifacts/matcher-directed-v1/counterfactual-synthetic-summary.json` | `257dce3cb09169c5ccc91710f14bb77d38046b45cae04d1ab42745084e198132` |
 | `artifacts/matcher-directed-v1/ground-truth-sessions.json` | `b5405f6dc1051d4063e6652a1e338ac8e422846c6a9737f2567388ca0deccf6b` |
-| `artifacts/matcher-directed-v1/test-suite.json` | `a355da6bc26849a08a1fb4cba962a346fedc3a361bd26f7486fea4d7b9627cd2` |
-| `artifacts/matcher-directed-v1/negative-controls.json` | `a28a24ccc4457715ed9fa162232a1282922f5be08fa90fc9312dbd1d4530857a` |
-| `artifacts/matcher-passive-safety-v4/gate-result.json` | `c4590d49120c93f5873b63814107b3d2f57a6930624236f1af2a702b5b834132` |
+| `artifacts/matcher-directed-v1/test-suite.json` | `1433b347abc6e8a569559479c3e5c210359fb0fa5ce246c253f0b1b55a6fd6b8` |
+| `artifacts/matcher-directed-v1/negative-controls.json` | `dcaf972718abfd4a32a665125dd552dd10876e2505709293cbd38d6092ebdf05` |
+| `artifacts/matcher-passive-safety-v4/gate-result.json` | `8d208273d9c4c4fb274dedbc6a69a3be6b31d8efacaf33630013124eac77547b` |
 | `services/api/test/fixtures/matcher-property-regressions.json` | `1f7341f1955d42ef8b1f6873a04d1ff8240127948aa8093e64523c9034f29618` |
 | `fixtures/transit/directed-matcher-invariants.json` | `a74fa7736732c4b9e68c2ede581864a10bec020402d25769a8358c3e1c361b99` |
 | `ops/matcher-evidence/human-only-mitigations.json` | `005a4c5c66f73d5103d0aad73ea18c70e0b9e104a919d9903c7975f83fe47ba8` |
