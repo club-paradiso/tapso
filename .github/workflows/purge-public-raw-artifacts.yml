@@ -13,7 +13,9 @@ on:
   workflow_dispatch:
 
 permissions:
-  contents: read
+  # Draft releases are invisible to a read-only GITHUB_TOKEN. This workflow
+  # needs write scope to verify the private vault before deleting artifacts.
+  contents: write
   actions: write
 
 jobs:
