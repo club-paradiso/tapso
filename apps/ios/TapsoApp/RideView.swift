@@ -298,7 +298,7 @@ struct RideHeroCard: View {
 
     private var countLabels: some View {
         VStack(alignment: .leading, spacing: 0) {
-            Text(guidance.count == .lastKnown ? LocalizedStringKey("count.lastKnown.long") : LocalizedStringKey("count.unit.long"))
+            Text(LocalizedStringKey(RideText.countKey(guidance.count == .lastKnown ? "count.lastKnown.long" : "count.unit.long", snapshot.remainingStops)))
                 .font(.title3.weight(.bold))
                 .foregroundStyle(TapsoColor.textSecondary)
             Text(String(format: RideText.string("ride.toDestination"), snapshot.destinationName))
@@ -499,7 +499,7 @@ struct StopLadder: View {
             Text(verbatim: name)
                 .font(kind == .destination || kind == .current ? .body.weight(.semibold) : .subheadline)
                 .foregroundStyle(kind == .gap ? TapsoColor.textTertiary : TapsoColor.textPrimary)
-                .lineLimit(2)
+                .fixedSize(horizontal: false, vertical: true)
             Spacer(minLength: 0)
             if kind == .current {
                 Text("ride.now").font(.caption.weight(.bold)).foregroundStyle(TapsoColor.textSecondary)

@@ -22,6 +22,8 @@ struct RouteBadge: View {
         .padding(.horizontal, compact ? 6 : 10)
         .frame(minHeight: compact ? 18 : TapsoSize.routeBadgeHeight)
         .background(TapsoColor.journey(role), in: Capsule())
+        // The route number is how a rider recognises the bus: never truncate it.
+        .fixedSize()
         .accessibilityElement(children: .ignore)
         .accessibilityLabel(Text(String(format: String(localized: "a11y.route"), number)))
     }
@@ -197,7 +199,14 @@ struct TrustBadge: View {
                     .foregroundStyle(onDark ? Color.white.opacity(0.6) : TapsoColor.textTertiary)
             }
         }
-        .accessibilityElement(children: .combine)
+        .accessibilityElement(children: .ignore)
+        .accessibilityLabel(Text(accessibilityText))
+    }
+
+    /// The plate is read as its digits ("plate ending 0001"), not the mask characters.
+    private var accessibilityText: String {
+        guard case let .vehicle(_, plate?) = kind else { return label }
+        return label + ", " + String(format: RideText.string("a11y.trust.plate"), plate.filter(\.isNumber))
     }
 
     private var label: String {
@@ -238,6 +247,11 @@ enum RideText {
         String(localized: String.LocalizationValue(key))
     }
 
+    /// The singular variant (`<key>.one`) for a count of one, so English never says "1 stops".
+    static func countKey(_ key: String, _ count: Int) -> String {
+        count == 1 ? key + ".one" : key
+    }
+
     /// VoiceOver sentence for a ride: the count only when it is safe to act on.
     static func accessibilitySummary(
         guidance: RideGuidance,
@@ -249,9 +263,9 @@ enum RideText {
         let detail = string(guidance.copy.detail)
         switch guidance.count {
         case .live:
-            return String(format: string("a11y.ride.live"), routeNumber, destination, remainingStops, headline, detail)
+            return String(format: string(countKey("a11y.ride.live", remainingStops)), routeNumber, destination, remainingStops, headline, detail)
         case .lastKnown:
-            return String(format: string("a11y.ride.lastKnown"), routeNumber, destination, remainingStops, headline, detail)
+            return String(format: string(countKey("a11y.ride.lastKnown", remainingStops)), routeNumber, destination, remainingStops, headline, detail)
         case .hidden:
             return String(format: string("a11y.ride.hidden"), routeNumber, destination, headline, detail)
         }

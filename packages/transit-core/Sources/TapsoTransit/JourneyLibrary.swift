@@ -128,8 +128,10 @@ public struct JourneyLibrary: Codable, Hashable, Sendable {
     public mutating func toggleFavorite(id: String) -> Bool {
         guard let index = journeys.firstIndex(where: { $0.id == id }) else { return false }
         journeys[index].isFavorite.toggle()
+        // Read before trimming: an un-favourited journey past the history limit is removed.
+        let isFavorite = journeys[index].isFavorite
         trimHistory()
-        return journeys[index].isFavorite
+        return isFavorite
     }
 
     public mutating func remove(id: String) {

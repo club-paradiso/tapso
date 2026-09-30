@@ -184,7 +184,7 @@ struct ConfirmationCard: View {
     private var position: String {
         switch proposal.stopsAway {
         case 0?: RideText.string("check.position.atStop")
-        case let count?: String(format: RideText.string("check.position.away"), count)
+        case let count?: String(format: RideText.string(RideText.countKey("check.position.away", count)), count)
         case nil: RideText.string("check.position.unknown")
         }
     }

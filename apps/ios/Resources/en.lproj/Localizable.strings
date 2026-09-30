@@ -37,6 +37,7 @@
 "boarding.question" = "Where will you board?";
 "boarding.explain" = "Just the stop where you'll board. We don't need where your trip began.";
 "boarding.stopsToDestination" = "%ld stops to your stop";
+"boarding.stopsToDestination.one" = "%ld stop to your stop";
 "mapImport.title" = "Import from map app";
 "mapImport.question" = "Getting off at a place from your map app?";
 "mapImport.step1" = "Open the stop or place in KakaoMap or NAVER Map";
@@ -58,7 +59,7 @@
 "check.notFoundYet.headline" = "No bus in sight yet";
 "check.notFoundYet.detail" = "We'll show route %@ as soon as one appears";
 "check.confirmed.headline" = "Bus confirmed";
-"check.confirmed.detail" = "You can close the app now";
+"check.confirmed.detail" = "In the preview, keep TAPSO open to play the ride through";
 "check.confirm" = "Yes, I'm on this bus";
 "check.reject" = "It's a different bus";
 "check.noneOfThese" = "Neither of these";
@@ -66,11 +67,12 @@
 "check.plateHint" = "Last digits of the bus's plate";
 "check.position.atStop" = "At your stop";
 "check.position.away" = "%ld stops away";
+"check.position.away.one" = "%ld stop away";
 "check.position.unknown" = "Locating";
 "check.why" = "TAPSO never guesses your bus. Confirm it once and TAPSO takes it from there.";
 "ride.riding.eyebrow" = "On board";
 "ride.riding.headline" = "We'll tell you when to get off";
-"ride.riding.detail" = "You can put your phone away";
+"ride.riding.detail" = "Sit back for now";
 "ride.prepare.eyebrow" = "Get ready";
 "ride.prepare.headline" = "2 stops to go";
 "ride.prepare.detail" = "Get ready to get off";
@@ -95,7 +97,7 @@
 "ride.vehicleLost.headline" = "Can't see your bus right now";
 "ride.vehicleLost.detail" = "Tracking continues. We'll pick up as soon as it reappears";
 "ride.vehicleLost.compact" = "Finding";
-"ride.offline.eyebrow" = "Checking connection";
+"ride.offline.eyebrow" = "Offline";
 "ride.offline.headline" = "You're offline";
 "ride.offline.detail" = "Tracking resumes when you reconnect. Check the bus's display too";
 "ride.offline.compact" = "Offline";
@@ -116,7 +118,7 @@
 "ride.gotOff" = "I'm off";
 "ride.passed.destination" = "Your stop: %@";
 "ride.passed.end" = "End ride";
-"ride.closeApp" = "You can close the app. The Lock Screen and Dynamic Island keep you posted.";
+"ride.closeApp" = "The preview plays while TAPSO is open. The Lock Screen and Dynamic Island show the same guidance.";
 "ride.liveActivityOff.title" = "Lock Screen updates are off";
 "ride.liveActivityOff.body" = "Turn on Live Activities in Settings › TAPSO to follow along on the Lock Screen and Dynamic Island. The app keeps guiding you.";
 "ride.resumed.title" = "Ride resumed";
@@ -128,9 +130,12 @@
 "ride.menu.demo" = "Preview settings";
 "ride.menu.end" = "End ride";
 "count.unit" = "stops";
+"count.unit.one" = "stop";
 "count.unit.long" = "stops to go";
+"count.unit.long.one" = "stop to go";
 "count.lastKnown" = "last seen";
 "count.lastKnown.long" = "stops · last seen";
+"count.lastKnown.long.one" = "stop · last seen";
 "trust.vehicle.confirmed" = "Bus confirmed";
 "trust.vehicle.rechecking" = "Checking bus";
 "trust.vehicle.lost" = "Finding bus";
@@ -182,8 +187,12 @@
 "a11y.route" = "Route %@";
 "a11y.island.hint" = "Touch and hold for ride details";
 "a11y.compact.count" = "%ld stops left.";
+"a11y.compact.count.one" = "%ld stop left.";
 "a11y.stopPair" = "Board at %1$@, get off at %2$@";
 "a11y.proposal" = "Route %1$@, plate ending %2$@, %3$@";
+"a11y.trust.plate" = "plate ending %@";
 "a11y.ride.live" = "Route %1$@ to %2$@, %3$ld stops left. %4$@. %5$@.";
+"a11y.ride.live.one" = "Route %1$@ to %2$@, %3$ld stop left. %4$@. %5$@.";
 "a11y.ride.lastKnown" = "Route %1$@ to %2$@. %3$ld stops left when last seen. %4$@. %5$@.";
+"a11y.ride.lastKnown.one" = "Route %1$@ to %2$@. %3$ld stop left when last seen. %4$@. %5$@.";
 "a11y.ride.hidden" = "Route %1$@, %2$@. %3$@. %4$@.";

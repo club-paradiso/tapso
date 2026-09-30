@@ -19,25 +19,25 @@ struct TapsoLiveActivityWidget: Widget {
         } dynamicIsland: { context in
             DynamicIsland {
                 DynamicIslandExpandedRegion(.leading) {
-                    IslandExpandedLeading(attributes: context.attributes, state: context.state)
+                    IslandExpandedLeading(attributes: context.attributes, state: context.state, isStale: context.isStale)
                 }
                 DynamicIslandExpandedRegion(.trailing) {
-                    IslandExpandedTrailing(state: context.state)
+                    IslandExpandedTrailing(state: context.state, isStale: context.isStale)
                 }
                 DynamicIslandExpandedRegion(.center) {
-                    IslandExpandedCenter(state: context.state)
+                    IslandExpandedCenter(state: context.state, isStale: context.isStale)
                 }
                 DynamicIslandExpandedRegion(.bottom, priority: 1) {
-                    IslandExpandedBottom(attributes: context.attributes, state: context.state)
+                    IslandExpandedBottom(attributes: context.attributes, state: context.state, isStale: context.isStale)
                 }
             } compactLeading: {
-                IslandCompactLeading(attributes: context.attributes, state: context.state)
+                IslandCompactLeading(attributes: context.attributes, state: context.state, isStale: context.isStale)
             } compactTrailing: {
-                IslandCompactTrailing(state: context.state)
+                IslandCompactTrailing(state: context.state, isStale: context.isStale)
             } minimal: {
-                IslandMinimal(state: context.state)
+                IslandMinimal(state: context.state, isStale: context.isStale)
             }
-            .keylineTint(TapsoColor.journey(context.state.guidance.colorRole))
+            .keylineTint(TapsoColor.journey(guidanceAccountingForStaleness(context.state, isStale: context.isStale).colorRole))
             .widgetURL(URL(string: "tapso://ride"))
         }
     }

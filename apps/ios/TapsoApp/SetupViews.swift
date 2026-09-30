@@ -208,7 +208,7 @@ struct BoardingStopContent: View {
                 ForEach(Array(route.stops.filter { $0.sequence < destination.sequence }.reversed()), id: \.stop.id) { routeStop in
                     StopRow(
                         name: routeStop.stop.name,
-                        detail: String(format: RideText.string("boarding.stopsToDestination"), destination.sequence - routeStop.sequence),
+                        detail: String(format: RideText.string(RideText.countKey("boarding.stopsToDestination", destination.sequence - routeStop.sequence)), destination.sequence - routeStop.sequence),
                         systemImage: "figure.stand",
                         tint: TapsoColor.mintDeep
                     ) { onChoose(routeStop.stop) }

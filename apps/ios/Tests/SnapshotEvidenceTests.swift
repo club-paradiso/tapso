@@ -71,26 +71,28 @@ final class SnapshotEvidenceTests: XCTestCase {
 
     func testRenderRideSurfaces() throws {
         let directory = try outputDirectory()
-        let states: [(String, TapsoActivityAttributes.ContentState)] = [
-            ("riding", state(.active, 6)),
-            ("prepare", state(.approachingDestination, 2)),
-            ("next-stop", state(.nextStopIsDestination, 1)),
-            ("arrived", state(.arrived, 0)),
-            ("passed", state(.arrived, 0, passed: true)),
-            ("delayed", state(.active, 4, freshness: .aging)),
-            ("vehicle-lost", state(.vehicleTemporarilyLost, 4)),
-            ("offline", state(.active, 4, offline: true)),
-            ("checking", state(.nextStopIsDestination, 2))
+        let states: [(String, TapsoActivityAttributes.ContentState, Bool)] = [
+            ("riding", state(.active, 6), false),
+            ("prepare", state(.approachingDestination, 2), false),
+            ("next-stop", state(.nextStopIsDestination, 1), false),
+            ("arrived", state(.arrived, 0), false),
+            ("passed", state(.arrived, 0, passed: true), false),
+            ("delayed", state(.active, 4, freshness: .aging), false),
+            ("vehicle-lost", state(.vehicleTemporarilyLost, 4), false),
+            ("offline", state(.active, 4, offline: true), false),
+            ("checking", state(.nextStopIsDestination, 2), false),
+            // Fresh next-stop content past its stale date (app suspended): every surface shows delayed.
+            ("next-stop-stale", state(.nextStopIsDestination, 1), true)
         ]
-        for (name, state) in states {
+        for (name, state, isStale) in states {
             try render(in: directory,
-                AnyView(LockScreenRideView(attributes: attributes, state: state, drawsBackground: true)
+                AnyView(LockScreenRideView(attributes: attributes, state: state, isStale: isStale, drawsBackground: true)
                     .clipShape(RoundedRectangle(cornerRadius: 22, style: .continuous))),
                 name: "la-lockscreen-\(name)", width: 370, scheme: .dark, background: .black
             )
-            try render(in: directory, AnyView(IslandCompactMock(attributes: attributes, state: state)), name: "di-compact-\(name)", width: 300, scheme: .dark, background: .white)
-            try render(in: directory, AnyView(IslandMinimalMock(state: state)), name: "di-minimal-\(name)", width: 60, scheme: .dark, background: .white)
-            try render(in: directory, AnyView(IslandExpandedMock(attributes: attributes, state: state)), name: "di-expanded-\(name)", width: 380, scheme: .dark, background: .white)
+            try render(in: directory, AnyView(IslandCompactMock(attributes: attributes, state: state, isStale: isStale)), name: "di-compact-\(name)", width: 300, scheme: .dark, background: .white)
+            try render(in: directory, AnyView(IslandMinimalMock(state: state, isStale: isStale)), name: "di-minimal-\(name)", width: 60, scheme: .dark, background: .white)
+            try render(in: directory, AnyView(IslandExpandedMock(attributes: attributes, state: state, isStale: isStale)), name: "di-expanded-\(name)", width: 380, scheme: .dark, background: .white)
         }
     }
 
@@ -102,7 +104,8 @@ final class SnapshotEvidenceTests: XCTestCase {
         boardingStopName: "제주버스터미널",
         destinationName: "제주출입국·외국인청",
         totalStops: 8,
-        vehiclePlate: "••0001"
+        // The plate of the bus the sample check proposes, so check, ride and surfaces agree.
+        vehiclePlate: DemoCatalog.proposals(for: .smooth, route: DemoCatalog.outbound)[0].maskedPlate
     )
 
     private var pastePlaceholder: some View {
@@ -155,7 +158,7 @@ final class SnapshotEvidenceTests: XCTestCase {
                 totalStops: 8,
                 currentStopName: names[min(current, 8)],
                 upcomingStops: current < 8 ? Array(names[(current + 1)...8]) : [],
-                plate: "••0001",
+                plate: attributes.vehiclePlate,
                 liveActivityUnavailable: liveActivityOff,
                 resumed: resumed
             ),
@@ -230,13 +233,14 @@ private extension View {
 private struct IslandCompactMock: View {
     let attributes: TapsoActivityAttributes
     let state: TapsoActivityAttributes.ContentState
+    let isStale: Bool
 
     var body: some View {
         HStack(spacing: 0) {
-            IslandCompactLeading(attributes: attributes, state: state)
+            IslandCompactLeading(attributes: attributes, state: state, isStale: isStale)
                 .padding(.leading, 10)
             Spacer(minLength: 126)
-            IslandCompactTrailing(state: state)
+            IslandCompactTrailing(state: state, isStale: isStale)
                 .padding(.trailing, 10)
         }
         .frame(height: 37)
@@ -247,9 +251,10 @@ private struct IslandCompactMock: View {
 
 private struct IslandMinimalMock: View {
     let state: TapsoActivityAttributes.ContentState
+    let isStale: Bool
 
     var body: some View {
-        IslandMinimal(state: state)
+        IslandMinimal(state: state, isStale: isStale)
             .frame(width: 37, height: 37)
             .background(Color.black, in: Circle())
             .padding(10)
@@ -260,17 +265,18 @@ private struct IslandMinimalMock: View {
 private struct IslandExpandedMock: View {
     let attributes: TapsoActivityAttributes
     let state: TapsoActivityAttributes.ContentState
+    let isStale: Bool
 
     var body: some View {
         VStack(spacing: 8) {
             HStack(alignment: .top) {
-                IslandExpandedLeading(attributes: attributes, state: state)
+                IslandExpandedLeading(attributes: attributes, state: state, isStale: isStale)
                 Spacer()
-                IslandExpandedCenter(state: state)
+                IslandExpandedCenter(state: state, isStale: isStale)
                 Spacer()
-                IslandExpandedTrailing(state: state)
+                IslandExpandedTrailing(state: state, isStale: isStale)
             }
-            IslandExpandedBottom(attributes: attributes, state: state)
+            IslandExpandedBottom(attributes: attributes, state: state, isStale: isStale)
         }
         .padding(.horizontal, 16)
         .padding(.vertical, 14)

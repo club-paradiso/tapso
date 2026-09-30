@@ -4,9 +4,11 @@ import UIKit
 
 /// Foreground haptics and VoiceOver announcements for a change of ride moment.
 ///
-/// Haptics play only while the app is running; with the app closed, the Live
-/// Activity's alert (screen, sound, expanded Island) is the signal. iOS offers
-/// a Live Activity no custom vibration pattern, so none is promised.
+/// Haptics play only while the app is running. The Live Activity's milestone
+/// alert (screen, sound, expanded Island) is sent by the running app too: this
+/// build has no remote updates, so a suspended app sends nothing and the
+/// activity turns to "delayed" at its stale date. iOS offers a Live Activity no
+/// custom vibration pattern, so none is promised.
 @MainActor
 enum RideFeedback {
     static func play(_ haptic: RideHaptic) {

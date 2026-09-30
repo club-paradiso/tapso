@@ -5,7 +5,6 @@ import TapsoTransit
 @MainActor
 final class LiveActivityClient {
     private var activity: Activity<TapsoActivityAttributes>?
-    private var alertedMilestones: Set<TapsoLiveActivityMilestone> = []
 
     init() {
         activity = Activity<TapsoActivityAttributes>.activities.first {
@@ -15,9 +14,6 @@ final class LiveActivityClient {
             default:
                 false
             }
-        }
-        if let activity, let milestone = TapsoLiveActivityPolicy.milestone(for: activity.content.state) {
-            alertedMilestones = [milestone]
         }
     }
 
@@ -37,13 +33,14 @@ final class LiveActivityClient {
         )
     }
 
-    /// Updates the activity. Each milestone alerts at most once per ride, and
-    /// only milestones alert: delayed, lost, offline and checking stay quiet.
-    func update(state: TapsoActivityAttributes.ContentState) async {
+    /// Updates the activity, alerting only for `milestone`. The app model decides
+    /// it from the ride's persisted `alertedMilestones`, so each milestone alerts at
+    /// most once per ride, and delayed, lost, offline and checking stay quiet. A
+    /// milestone the state does not itself carry is ignored.
+    func update(state: TapsoActivityAttributes.ContentState, alerting milestone: TapsoLiveActivityMilestone?) async {
         guard let activity else { return }
         var alert: AlertConfiguration?
-        if let milestone = TapsoLiveActivityPolicy.milestone(for: state), !alertedMilestones.contains(milestone) {
-            alertedMilestones.insert(milestone)
+        if let milestone, milestone == TapsoLiveActivityPolicy.milestone(for: state) {
             alert = alertConfiguration(for: milestone)
         }
         await activity.update(content(for: state), alertConfiguration: alert)
@@ -64,7 +61,6 @@ final class LiveActivityClient {
             : .after(Date().addingTimeInterval(60))
         await activity.end(content, dismissalPolicy: policy)
         self.activity = nil
-        alertedMilestones = []
     }
 
     /// Ends every TAPSO activity, including one left by a ride the app no longer has.
@@ -73,7 +69,6 @@ final class LiveActivityClient {
             await existing.end(nil, dismissalPolicy: .immediate)
         }
         activity = nil
-        alertedMilestones = []
     }
 
     private func content(

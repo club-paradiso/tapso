@@ -129,6 +129,7 @@ final class RidePresentationTests: XCTestCase {
             moments.append(model.guidance!.moment)
         }
         XCTAssertEqual(Array(moments.suffix(3)), [.prepare, .nextStop, .arrived])
+        XCTAssertEqual(model.activeRide?.alertedMilestones, [.prepare, .nextStop, .arrived])
 
         await model.finishRide()
         XCTAssertFalse(model.hasActiveRide)
@@ -151,6 +152,50 @@ final class RidePresentationTests: XCTestCase {
         XCTAssertTrue(relaunched.hasActiveRide)
         XCTAssertTrue(relaunched.resumedAfterRelaunch)
         XCTAssertEqual(relaunched.remainingStops, remaining)
+    }
+
+    func testARestoredRideIsReagedAgainstTheWallClockAndKeepsItsSignalledMilestones() async throws {
+        let defaults = UserDefaults(suiteName: "tapso.tests.\(UUID().uuidString)")!
+        let first = makeModel(defaults: defaults)
+        first.startDemo()
+        await first.confirmVehicle(first.vehicleCheck.proposals[0])
+        while first.guidance?.moment != .nextStop, first.canAdvanceDemo {
+            await first.advanceDemo()
+        }
+        XCTAssertEqual(first.guidance?.moment, .nextStop)
+
+        // Reopened ten minutes after the last observation reached the phone.
+        let store = JourneyStore(defaults: defaults)
+        var saved = try XCTUnwrap(store.loadActiveRide())
+        saved.lastObservedAt = Date().addingTimeInterval(-600)
+        store.saveActiveRide(saved)
+
+        let relaunched = makeModel(defaults: defaults)
+        XCTAssertEqual(relaunched.guidance?.moment, .delayed, "old data is never a fresh next-stop")
+        XCTAssertNil(relaunched.guidance?.milestone)
+        XCTAssertEqual(relaunched.activeRide?.alertedMilestones, [.prepare, .nextStop])
+    }
+
+    func testConfirmingTwiceStartsOneRide() async {
+        let model = makeModel()
+        model.startDemo()
+        let proposal = model.vehicleCheck.proposals[0]
+        await model.confirmVehicle(proposal)
+        let session = model.activeRide?.session.id
+        await model.confirmVehicle(proposal)
+        XCTAssertEqual(model.activeRide?.session.id, session)
+    }
+
+    func testTheSampleRideKeepsTheScenarioChosenInDemoSettings() {
+        let model = makeModel()
+        model.scenario = .delayedData
+        model.startDemo()
+        XCTAssertEqual(model.scenario, .delayedData)
+    }
+
+    func testEnglishCountsUseTheSingularForOne() {
+        XCTAssertEqual(RideText.countKey("count.unit", 1), "count.unit.one")
+        XCTAssertEqual(RideText.countKey("count.unit", 2), "count.unit")
     }
 
     func testRejectingTheOnlyBusKeepsWatchingInsteadOfSwitching() {

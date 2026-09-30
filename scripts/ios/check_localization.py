@@ -19,6 +19,8 @@ PREFIXES = (
     "alert", "live_activity", "shortcut",
 )
 LITERAL = re.compile(r'"((?:%s)\.[A-Za-z0-9_.]+)"' % "|".join(PREFIXES))
+# `RideText.countKey("<key>", n)` also reads "<key>.one" for a count of one.
+COUNT_KEY = re.compile(r'countKey\(\s*(?:[^()]*\?\s*)?"([^"]+)"(?:\s*:\s*"([^"]+)")?')
 STRINGS_LINE = re.compile(r'^"((?:[^"\\]|\\.)*)"\s*=\s*"((?:[^"\\]|\\.)*)";\s*$')
 
 
@@ -47,7 +49,10 @@ def main() -> int:
     for path in list(IOS.rglob("*.swift")):
         if "/Tests/" in str(path):
             continue
-        used.update(LITERAL.findall(path.read_text()))
+        source = path.read_text()
+        used.update(LITERAL.findall(source))
+        for keys in COUNT_KEY.findall(source):
+            used.update(f"{key}.one" for key in keys if key)
 
     moments = enum_cases(CORE / "RideGuidance.swift", "RideMoment")
     for moment in moments:

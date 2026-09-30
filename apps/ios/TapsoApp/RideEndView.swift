@@ -45,7 +45,7 @@ struct RideEndContent: View {
                     .fixedSize(horizontal: false, vertical: true)
                     .accessibilityAddTraits(.isHeader)
                 HStack(spacing: TapsoSpace.xs) {
-                    RouteBadge(number: outcome.routeNumber, role: .neutral)
+                    RouteBadge(number: outcome.routeNumber)
                     Text(verbatim: outcome.destination.name)
                         .font(.headline)
                         .foregroundStyle(TapsoColor.textPrimary)

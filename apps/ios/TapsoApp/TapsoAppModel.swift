@@ -80,6 +80,15 @@ struct ActiveRide: Codable, Hashable {
     var isOffline: Bool
     /// Freshness re-read after silence, until the next observation.
     var freshnessOverride: DataFreshness?
+    /// Wall-clock time the last observation reached the app. The Live Activity's
+    /// stale date and relaunch ageing use it; the demo clock runs faster than real time.
+    var lastObservedAt: Date?
+    /// Milestones already signalled this ride, so each alerts and buzzes at most once,
+    /// across relaunches and through delayed/lost/offline interruptions.
+    var alertedMilestones: Set<RideMilestone>?
+
+    /// When the ride's data last reached the app, in real time.
+    var lastUpdateAt: Date { lastObservedAt ?? session.startedAt }
 
     var beats: [DemoRideBeat] {
         guard let route = draft.route else { return [] }
@@ -135,7 +144,13 @@ final class TapsoAppModel {
         self.store = store
         self.liveActivity = liveActivity
         library = store.loadLibrary()
-        if let saved = store.loadActiveRide(), Date().timeIntervalSince(saved.clock) < 8 * 3_600 {
+        if var saved = store.loadActiveRide(), Date().timeIntervalSince(saved.lastUpdateAt) < 8 * 3_600 {
+            // Re-age restored data against the wall clock: a ride saved at the next stop and
+            // reopened later is shown as delayed (or checking), never as a fresh milestone.
+            let age = FreshnessPolicy.conservativeDefault.classify(observedAt: saved.lastObservedAt, relativeTo: Date())
+            if age != .fresh {
+                saved.freshnessOverride = age
+            }
             activeRide = saved
             resumedAfterRelaunch = true
             lastMoment = saved.guidance.moment
@@ -247,7 +262,6 @@ final class TapsoAppModel {
         let proposals = ranking.selectedVehicle.map {
             [VehicleProposal(vehicleID: $0.vehicleID, plate: DemoCatalog.plate(for: $0.vehicleID), stopsAway: 0)]
         } ?? []
-        scenario = .smooth
         draft = RideDraft(
             routeID: DemoFixtures.route.id,
             boardingStopID: DemoFixtures.plan.boardingStopID,
@@ -309,6 +323,7 @@ final class TapsoAppModel {
     /// The rider's tap is what selects a bus; nothing is selected without it.
     func confirmVehicle(_ proposal: VehicleProposal) async {
         guard
+            activeRide == nil,
             let draft,
             let route = draft.route,
             let boarding = draft.boarding,
@@ -332,19 +347,31 @@ final class TapsoAppModel {
             beatIndex: -1,
             clock: now,
             isOffline: false,
-            freshnessOverride: nil
+            freshnessOverride: nil,
+            lastObservedAt: nil,
+            alertedMilestones: []
         )
         outcome = nil
         resumedAfterRelaunch = false
         lastMoment = nil
         applyNextBeat()
         lastMoment = activeRide?.guidance.moment
+        // A short ride can open at a milestone; the rider is looking at it, so it counts as signalled.
+        if let milestone = activeRide?.guidance.milestone {
+            activeRide?.alertedMilestones = [milestone]
+            store.saveActiveRide(activeRide)
+        }
 
         library.recordRide(SavedJourney(route: route, boarding: boarding, destination: destination, at: now), at: now)
         store.saveLibrary(library)
         path = []
 
         await startLiveActivity()
+        // The rider may have cancelled while the activity was being requested.
+        guard activeRide != nil else {
+            await liveActivity?.endAll()
+            return
+        }
         beginPlayback()
     }
 
@@ -370,7 +397,7 @@ final class TapsoAppModel {
             if liveActivity?.activityID == nil {
                 await startLiveActivity()
             } else {
-                await liveActivity?.update(state: state)
+                await liveActivity?.update(state: state, alerting: nil)
             }
         }
         beginPlayback()
@@ -378,12 +405,16 @@ final class TapsoAppModel {
 
     func finishRide() async {
         playbackTask?.cancel()
-        guard let ride = activeRide, let destination = ride.draft.destination else { return }
+        guard var ride = activeRide, let destination = ride.draft.destination else { return }
+        let finalMoment = ride.guidance.moment
+        // The activity's last minute on screen reads "ride ended", not the last milestone.
+        ride.session.complete()
+        activeRide = ride
         if let final = contentState() {
             await liveActivity?.end(state: final)
         }
         outcome = RideOutcome(
-            moment: ride.guidance.moment,
+            moment: finalMoment,
             routeNumber: ride.draft.route?.number ?? "",
             destination: destination
         )
@@ -437,6 +468,7 @@ final class TapsoAppModel {
         case let .observe(sequence):
             ride.clock = ride.clock.addingTimeInterval(20)
             ride.freshnessOverride = nil
+            ride.lastObservedAt = Date()
             if let vehicle = ride.session.matchedVehicleID,
                let observation = DemoCatalog.observation(route: route, vehicleID: vehicle, stopSequence: sequence, at: ride.clock) {
                 _ = ride.session.apply(observation: observation, route: route, now: ride.clock)
@@ -458,15 +490,25 @@ final class TapsoAppModel {
     }
 
     private func rideDidChange() async {
-        guard let ride = activeRide else { return }
+        guard var ride = activeRide else { return }
         let guidance = ride.guidance
+        // A milestone signals once per ride: nextStop → delayed → nextStop does not buzz or alert twice.
+        var newMilestone: RideMilestone?
+        if let milestone = guidance.milestone, !(ride.alertedMilestones ?? []).contains(milestone) {
+            newMilestone = milestone
+            ride.alertedMilestones = (ride.alertedMilestones ?? []).union([milestone])
+            activeRide = ride
+            store.saveActiveRide(ride)
+        }
         if guidance.moment != lastMoment {
             lastMoment = guidance.moment
-            RideFeedback.play(guidance.haptic)
+            if guidance.milestone == nil || newMilestone != nil {
+                RideFeedback.play(guidance.haptic)
+            }
             RideFeedback.announce(guidance)
         }
         if let state = contentState() {
-            await liveActivity?.update(state: state)
+            await liveActivity?.update(state: state, alerting: newMilestone)
         }
     }
 
@@ -511,7 +553,7 @@ final class TapsoAppModel {
             nextStopName: next,
             remainingStops: signal.remainingStops,
             freshness: signal.freshness,
-            updatedAt: progress?.observedAt ?? ride.clock,
+            updatedAt: ride.lastUpdateAt,
             destinationPassed: signal.destinationPassed,
             isOffline: signal.isOffline
         )

@@ -137,7 +137,7 @@ struct RemainingOrSymbol: View {
                     .foregroundStyle(color)
                     .opacity(guidance.count == .lastKnown ? 0.55 : 1)
                     .contentTransition(.numericText())
-                Text(guidance.count == .lastKnown ? LocalizedStringKey("count.lastKnown") : LocalizedStringKey("count.unit"))
+                Text(guidance.count == .lastKnown ? LocalizedStringKey("count.lastKnown") : LocalizedStringKey(RideText.countKey("count.unit", remaining)))
                     .font(.caption2.weight(.bold))
                     .foregroundStyle(color.opacity(0.8))
             }
@@ -156,9 +156,12 @@ struct RemainingOrSymbol: View {
 struct IslandCompactLeading: View {
     let attributes: TapsoActivityAttributes
     let state: TapsoActivityAttributes.ContentState
+    /// ActivityKit's `context.isStale`: past the stale date, the island shows aged data like the Lock Screen.
+    var isStale = false
+
+    private var guidance: RideGuidance { guidanceAccountingForStaleness(state, isStale: isStale) }
 
     var body: some View {
-        let guidance = state.guidance
         HStack(spacing: 4) {
             DolBuddy(moment: guidance.moment, size: 18)
             Text(verbatim: attributes.routeNumber)
@@ -174,9 +177,12 @@ struct IslandCompactLeading: View {
 
 struct IslandCompactTrailing: View {
     let state: TapsoActivityAttributes.ContentState
+    /// ActivityKit's `context.isStale`: past the stale date, the island shows aged data like the Lock Screen.
+    var isStale = false
+
+    private var guidance: RideGuidance { guidanceAccountingForStaleness(state, isStale: isStale) }
 
     var body: some View {
-        let guidance = state.guidance
         let color = TapsoColor.journey(guidance.colorRole)
         Group {
             if let compact = guidance.copy.compact {
@@ -201,22 +207,25 @@ struct IslandCompactTrailing: View {
                         .font(.system(.subheadline, design: .rounded, weight: .black))
                         .monospacedDigit()
                         .contentTransition(.numericText())
-                    Text("count.unit")
+                    Text(LocalizedStringKey(RideText.countKey("count.unit", state.remainingStops)))
                         .font(.caption2.weight(.bold))
                 }
             }
         }
         .foregroundStyle(color)
         .accessibilityElement(children: .ignore)
-        .accessibilityLabel(Text(compactAccessibilityLabel(state)))
+        .accessibilityLabel(Text(compactAccessibilityLabel(state, guidance)))
     }
 }
 
 struct IslandMinimal: View {
     let state: TapsoActivityAttributes.ContentState
+    /// ActivityKit's `context.isStale`: past the stale date, the island shows aged data like the Lock Screen.
+    var isStale = false
+
+    private var guidance: RideGuidance { guidanceAccountingForStaleness(state, isStale: isStale) }
 
     var body: some View {
-        let guidance = state.guidance
         Group {
             if guidance.count == .live {
                 Text(state.remainingStops, format: .number)
@@ -229,18 +238,22 @@ struct IslandMinimal: View {
         }
         .foregroundStyle(TapsoColor.journey(guidance.colorRole))
         .accessibilityElement(children: .ignore)
-        .accessibilityLabel(Text(compactAccessibilityLabel(state)))
+        .accessibilityLabel(Text(compactAccessibilityLabel(state, guidance)))
     }
 }
 
 struct IslandExpandedLeading: View {
     let attributes: TapsoActivityAttributes
     let state: TapsoActivityAttributes.ContentState
+    /// ActivityKit's `context.isStale`: past the stale date, the island shows aged data like the Lock Screen.
+    var isStale = false
+
+    private var guidance: RideGuidance { guidanceAccountingForStaleness(state, isStale: isStale) }
 
     var body: some View {
         HStack(spacing: 6) {
-            DolBuddy(moment: state.guidance.moment, size: 26)
-            RouteBadge(number: attributes.routeNumber, role: state.guidance.colorRole, compact: true)
+            DolBuddy(moment: guidance.moment, size: 26)
+            RouteBadge(number: attributes.routeNumber, role: guidance.colorRole, compact: true)
         }
         .padding(.leading, 4)
     }
@@ -248,9 +261,12 @@ struct IslandExpandedLeading: View {
 
 struct IslandExpandedTrailing: View {
     let state: TapsoActivityAttributes.ContentState
+    /// ActivityKit's `context.isStale`: past the stale date, the island shows aged data like the Lock Screen.
+    var isStale = false
+
+    private var guidance: RideGuidance { guidanceAccountingForStaleness(state, isStale: isStale) }
 
     var body: some View {
-        let guidance = state.guidance
         RemainingOrSymbol(
             guidance: guidance,
             remaining: state.remainingStops,
@@ -262,9 +278,12 @@ struct IslandExpandedTrailing: View {
 
 struct IslandExpandedCenter: View {
     let state: TapsoActivityAttributes.ContentState
+    /// ActivityKit's `context.isStale`: past the stale date, the island shows aged data like the Lock Screen.
+    var isStale = false
+
+    private var guidance: RideGuidance { guidanceAccountingForStaleness(state, isStale: isStale) }
 
     var body: some View {
-        let guidance = state.guidance
         Text(LocalizedStringKey(guidance.copy.eyebrow))
             .font(.caption.weight(.bold))
             .foregroundStyle(TapsoColor.journey(guidance.colorRole))
@@ -275,9 +294,12 @@ struct IslandExpandedCenter: View {
 struct IslandExpandedBottom: View {
     let attributes: TapsoActivityAttributes
     let state: TapsoActivityAttributes.ContentState
+    /// ActivityKit's `context.isStale`: past the stale date, the island shows aged data like the Lock Screen.
+    var isStale = false
+
+    private var guidance: RideGuidance { guidanceAccountingForStaleness(state, isStale: isStale) }
 
     var body: some View {
-        let guidance = state.guidance
         VStack(alignment: .leading, spacing: 8) {
             VStack(alignment: .leading, spacing: 2) {
                 Text(LocalizedStringKey(guidance.copy.headline))
@@ -339,11 +361,10 @@ func guidanceAccountingForStaleness(
     ))
 }
 
-private func compactAccessibilityLabel(_ state: TapsoActivityAttributes.ContentState) -> String {
-    let guidance = state.guidance
+private func compactAccessibilityLabel(_ state: TapsoActivityAttributes.ContentState, _ guidance: RideGuidance) -> String {
     switch guidance.count {
     case .live:
-        return String(format: RideText.string("a11y.compact.count"), state.remainingStops) + " " + RideText.string(guidance.copy.headline)
+        return String(format: RideText.string(RideText.countKey("a11y.compact.count", state.remainingStops)), state.remainingStops) + " " + RideText.string(guidance.copy.headline)
     case .lastKnown, .hidden:
         return RideText.string(guidance.copy.headline)
     }

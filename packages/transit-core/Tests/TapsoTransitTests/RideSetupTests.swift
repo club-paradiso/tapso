@@ -179,6 +179,11 @@ final class RideSetupTests: XCTestCase {
         XCTAssertNotNil(library.journey(id: favorite.id))
         XCTAssertEqual(library.favorites.map(\.id), [favorite.id])
         XCTAssertEqual(library.journeys.filter { !$0.isFavorite }.count, JourneyLibrary.historyLimit)
+
+        // Un-favouriting the oldest journey with history full forgets it; the result is read before trimming.
+        XCTAssertFalse(library.toggleFavorite(id: favorite.id))
+        XCTAssertNil(library.journey(id: favorite.id))
+        XCTAssertEqual(library.journeys.count, JourneyLibrary.historyLimit)
     }
 
     func testLibraryRoundTripsThroughJSON() throws {
