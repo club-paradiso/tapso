@@ -1,0 +1,75 @@
+# One-time/defensive cleanup for a public repository.
+# Raw vehicle streams are sensitive evidence and must live only in the private
+# draft-release vault. This workflow deletes legacy plaintext Actions artifacts
+# only after proving that every contained collection has an immutable vault copy.
+name: Purge public raw evidence artifacts
+
+on:
+  push:
+    branches: [main]
+    paths:
+      - ".github/workflows/matcher-evidence.yml"
+      - ".github/workflows/purge-public-raw-artifacts.yml"
+  workflow_dispatch:
+
+permissions:
+  contents: read
+  actions: write
+
+jobs:
+  purge:
+    runs-on: ubuntu-latest
+    timeout-minutes: 15
+    steps:
+      - uses: actions/checkout@v4
+      - name: Verify private vault coverage and delete plaintext raw artifacts
+        env:
+          GH_TOKEN: ${{ github.token }}
+          GH_REPO: ${{ github.repository }}
+        run: |
+          set -euo pipefail
+          mkdir -p work
+          test "$(gh release view passive-evidence-vault --json isDraft --jq .isDraft)" = "true"
+          gh release view passive-evidence-vault --json assets --jq '.assets[].name' | sort -u > work/vault-assets.txt
+
+          record_id="$(node -e 'console.log(require("./ops/matcher-evidence/request.json").replay.recordCollectionId)')"
+          grep -qx "$record_id.zip" work/vault-assets.txt
+          grep -qx "$record_id.zip.sha256" work/vault-assets.txt
+
+          repo_id="$(gh api "repos/${{ github.repository }}" --jq .id)"
+          : > work/raw-artifact-ids.txt
+          for name in passive-shadow-v3-raw matcher-evidence-raw-replayed matcher-evidence-raw-window; do
+            gh api --paginate "repos/${{ github.repository }}/actions/artifacts?name=$name&per_page=100" \
+              --jq ".artifacts[] | select(.expired == false and .workflow_run.head_repository_id == $repo_id) | .id" \
+              >> work/raw-artifact-ids.txt
+          done
+          sort -u work/raw-artifact-ids.txt -o work/raw-artifact-ids.txt
+
+          deleted=0
+          while read -r id; do
+            [ -n "$id" ] || continue
+            rm -rf work/inspect "work/$id.zip"
+            mkdir -p work/inspect
+            gh api "repos/${{ github.repository }}/actions/artifacts/$id/zip" > "work/$id.zip"
+            unzip -q "work/$id.zip" -d work/inspect
+            mapfile -t collections < <(find work/inspect -type d -name 'pv3-*' -printf '%f\n' | sort -u)
+            if [ "${#collections[@]}" -eq 0 ]; then
+              echo "artifact $id contains no pv3 collection; refusing to delete it"
+              exit 1
+            fi
+            for collection in "${collections[@]}"; do
+              grep -qx "$collection.zip" work/vault-assets.txt || {
+                echo "artifact $id has $collection but the private vault has no matching zip; refusing deletion"
+                exit 1
+              }
+              grep -qx "$collection.zip.sha256" work/vault-assets.txt || {
+                echo "artifact $id has $collection but the private vault has no checksum; refusing deletion"
+                exit 1
+              }
+            done
+            gh api --method DELETE "repos/${{ github.repository }}/actions/artifacts/$id"
+            echo "deleted plaintext raw artifact $id after vault coverage verification"
+            deleted=$((deleted + 1))
+          done < work/raw-artifact-ids.txt
+
+          echo "deleted=$deleted"
