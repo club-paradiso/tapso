@@ -19,7 +19,8 @@ enum RideSurfacePalette {
     static func primaryText(for moment: RideMoment) -> Color {
         switch moment {
         case .arrived: TapsoColor.textOnAccent
-        default: .white
+        case .nextStop, .passedDestination: TapsoColor.textOnUrgent
+        default: TapsoColor.textOnDarkSurface
         }
     }
 
@@ -281,7 +282,7 @@ struct IslandExpandedBottom: View {
             VStack(alignment: .leading, spacing: 2) {
                 Text(LocalizedStringKey(guidance.copy.headline))
                     .font(.headline.weight(.heavy))
-                    .foregroundStyle(.white)
+                    .foregroundStyle(TapsoColor.textOnDarkSurface)
                     .lineLimit(1)
                     .minimumScaleFactor(0.8)
                 HStack(spacing: 4) {
@@ -290,7 +291,7 @@ struct IslandExpandedBottom: View {
                         .lineLimit(1)
                 }
                 .font(.caption.weight(.medium))
-                .foregroundStyle(.white.opacity(0.7))
+                .foregroundStyle(TapsoColor.textOnDarkSurface.opacity(0.7))
             }
             if [.riding, .prepare, .nextStop].contains(guidance.moment) {
                 JourneyRail(
@@ -302,7 +303,7 @@ struct IslandExpandedBottom: View {
             } else {
                 Text(LocalizedStringKey(guidance.copy.detail))
                     .font(.caption)
-                    .foregroundStyle(.white.opacity(0.75))
+                    .foregroundStyle(TapsoColor.textOnDarkSurface.opacity(0.75))
                     .lineLimit(2)
             }
             HStack(spacing: 12) {

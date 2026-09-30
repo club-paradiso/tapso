@@ -13,10 +13,13 @@ enum TapsoColor {
     // MARK: Text
     static let textPrimary = dynamic(light: 0x071923, dark: 0xFFFFFF)
     static let textSecondary = dynamic(light: 0x566973, dark: 0xB4C4CB)
-    static let textTertiary = dynamic(light: 0x7A8C95, dark: 0x8599A2)
+    static let textTertiary = dynamic(light: 0x5F7079, dark: 0x8599A2)
     /// Text drawn on a journey fill. Ink everywhere except the coral next-stop fill.
     static let textOnAccent = Color(hex: 0x071923)
-    static let textOnUrgent = Color.white
+    /// Text on the coral next-stop fill: white on the deep light-mode coral, ink on the bright dark-mode coral.
+    static let textOnUrgent = dynamic(light: 0xFFFFFF, dark: 0x071923)
+    /// Text on basalt and the Dynamic Island, which are dark in every appearance.
+    static let textOnDarkSurface = Color.white
 
     // MARK: Lines
     static let separator = dynamic(light: 0xDFE8EB, dark: 0x274452)
@@ -24,7 +27,8 @@ enum TapsoColor {
     // MARK: Journey
     static let journeyActive = Color(hex: 0x2FC7AA)
     static let journeyPrepare = Color(hex: 0xF4B84A)
-    static let journeyNext = dynamic(light: 0xD64545, dark: 0xF2685C)
+    /// Deep enough for white text in light mode (5.0:1), bright enough for ink text and for use on black in dark mode.
+    static let journeyNext = dynamic(light: 0xC93C3C, dark: 0xFF7A6E)
     static let journeyArrival = Color(hex: 0xF7972F)
     static let journeyChecking = dynamic(light: 0x4389EF, dark: 0x5B9BFF)
     static let journeyDegraded = dynamic(light: 0x8A9AA3, dark: 0x9FB0B8)
@@ -49,13 +53,17 @@ enum TapsoColor {
         case .journeyArrival: journeyArrival
         case .journeyChecking: journeyChecking
         case .journeyDegraded: journeyDegraded
-        case .neutral: textSecondary
+        case .neutral: basalt
         }
     }
 
     /// Foreground for text placed on a `journey(_:)` fill.
     static func onJourney(_ role: RideColorRole) -> Color {
-        role == .journeyNext ? textOnUrgent : textOnAccent
+        switch role {
+        case .journeyNext: textOnUrgent
+        case .neutral: textOnDarkSurface
+        default: textOnAccent
+        }
     }
 
     private static func dynamic(light: UInt32, dark: UInt32) -> Color {
