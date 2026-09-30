@@ -4,7 +4,7 @@
  *
  * A collection directory is exactly what `collect.ts` writes: `manifest.json`
  * and `streams/<streamId>.json`. It holds raw vehicle numbers, so it lives in
- * ignored `work/` storage or a private artifact, never in Git.
+ * ignored `work/` storage or the private draft-release evidence vault, never in Git or a public Actions artifact.
  */
 
 import { createHash } from "node:crypto";
