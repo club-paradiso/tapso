@@ -18,7 +18,8 @@ struct HomeView: View {
                 onRideAgain: { model.rideAgain($0) },
                 onToggleFavorite: { model.toggleFavorite($0) },
                 onMapImport: { model.openMapImport() },
-                onSample: { model.startDemo() }
+                onSample: { model.startDemo() },
+                onDemoSettings: { model.isDemoPanelPresented = true }
             )
         }
         .scrollBounceBehavior(.basedOnSize)
@@ -35,6 +36,7 @@ struct HomeContent: View {
     let onToggleFavorite: (SavedJourney) -> Void
     let onMapImport: () -> Void
     let onSample: () -> Void
+    var onDemoSettings: () -> Void = {}
 
     var body: some View {
         VStack(alignment: .leading, spacing: TapsoSpace.xl) {
@@ -93,19 +95,40 @@ struct HomeContent: View {
     }
 
     private var header: some View {
-        HStack(alignment: .center) {
-            HStack(spacing: TapsoSpace.xs) {
-                DolBuddy(moment: .riding, size: 28)
-                Text(verbatim: "TAPSO")
-                    .font(.system(.title3, design: .rounded, weight: .black))
-                    .tracking(1.2)
-                    .foregroundStyle(TapsoColor.textPrimary)
+        ViewThatFits(in: .horizontal) {
+            HStack(alignment: .center) {
+                brand
+                Spacer()
+                demoChip
             }
-            .accessibilityElement(children: .ignore)
-            .accessibilityLabel(Text("brand.name"))
-            Spacer()
+            VStack(alignment: .leading, spacing: TapsoSpace.xs) {
+                brand
+                demoChip
+            }
+        }
+    }
+
+    private var brand: some View {
+        HStack(spacing: TapsoSpace.xs) {
+            DolBuddy(moment: .riding, size: 28)
+            Text(verbatim: "TAPSO")
+                .font(.system(.title3, design: .rounded, weight: .black))
+                .tracking(1.2)
+                .foregroundStyle(TapsoColor.textPrimary)
+        }
+        .accessibilityElement(children: .ignore)
+        .accessibilityLabel(Text("brand.name"))
+    }
+
+    /// The synthetic-data label doubles as the way into the demo settings.
+    private var demoChip: some View {
+        Button(action: onDemoSettings) {
             DemoDataChip()
         }
+        .buttonStyle(.plain)
+        .frame(minHeight: TapsoSize.minimumTouch)
+        .accessibilityHint(Text("demo.chip.hint"))
+        .accessibilityIdentifier("demo-settings")
     }
 
     private var recentDestinations: some View {

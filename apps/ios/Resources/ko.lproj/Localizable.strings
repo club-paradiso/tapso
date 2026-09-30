@@ -169,6 +169,8 @@
 "demo.scenario.passedDestination" = "목적지 지나침";
 "demo.playback" = "재생";
 "demo.speed" = "속도";
+"demo.chip.hint" = "체험 설정을 열어요";
+"demo.speed.manual" = "단계별";
 "demo.step" = "한 단계 진행";
 "common.cancel" = "취소";
 "common.done" = "완료";

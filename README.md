@@ -11,9 +11,10 @@ Public product site: [tapso-nu.vercel.app](https://tapso-nu.vercel.app)
 | Area | Status | Evidence |
 |---|---|---|
 | Swift transit core | `VERIFIED` | Swift tests (CI job `transit-core`) cover progress, freshness, journey transitions, debug evidence, and the demo-only `VehicleMatchingEngine` |
-| Native iOS app | `VERIFIED` | Xcode simulator build includes the app and WidgetKit extension |
-| Local 8 → 0 demo | `IMPLEMENTED` | 1×, 5×, 10×, and manual stepping use production domain types |
-| Lock Screen / Dynamic Island | `VERIFIED` | iOS 26.3 iPhone 17 Pro Simulator on the build host, not in CI: compact 8/2/1/0, expanded, Lock Screen, request/update/end, and the iOS tests |
+| Native iOS app | `VERIFIED` | CI job `ios` builds the committed project (app + WidgetKit extension) and runs its tests on an iPhone simulator on every push |
+| Product V2 ride-companion UX | `IMPLEMENTED` on synthetic data | Destination-first setup, one-tap repeat rides, rider-confirmed vehicle check, distinct riding / two-stop / next-stop / arrival / passed layouts, calm delayed / lost / offline / checking states, relaunch recovery, paste intake from map apps, NAVER Map hand-off. One `RideGuidancePolicy` in the Swift core drives the app, Lock Screen and Dynamic Island. Simulator snapshot evidence in Korean and English from CI. See [docs/product](docs/product/) |
+| Local demo scenarios | `IMPLEMENTED` | Synthetic scripts (smooth, similar buses, no bus yet, delayed data, bus lost, offline, passed destination) at 1×, 5× or manual steps, applied through `RideSession` |
+| Lock Screen / Dynamic Island | `VERIFIED` (simulator) | V2 surfaces rendered for every ride moment by `SnapshotEvidenceTests` in CI (island regions inside a drawn outline); the V1 surfaces were checked on an iOS 26.3 iPhone 17 Pro Simulator on the build host. Physical device `UNVERIFIED` |
 | TypeScript API scaffold | `VERIFIED` | Native Node tests cover matching and official-schema normalization |
 | Live-transit orchestration | `IMPLEMENTED` | Route-scoped read-through cache, concurrent-miss coalescing, short-lived ride sessions, ambiguity confirmation, monotonic progress, and bounded missing-data handling are covered by deterministic Node tests |
 | Production-shaped transit API | `IMPLEMENTED` | One request handler in `services/api/src/apiRouter.ts` with a local Node transport and a Vercel Functions transport; identifier validation, deny-by-default CORS, per-caller burst limits, CDN cache windows, and structured logging; Node tests (CI job `api`) plus an end-to-end HTTP run of the credentialed, uncredentialed, and serverless-shaped configurations |
@@ -46,7 +47,9 @@ xcodebuild -project apps/ios/Tapso.xcodeproj -scheme Tapso \
   -destination 'platform=iOS Simulator,name=iPhone 17' build
 ```
 
-Open `apps/ios/Tapso.xcodeproj`, run the `Tapso` scheme, then choose **Start demo ride** and allow Live Activities when iOS asks. The demo begins at eight stops remaining and supports accelerated or manual progression. Press Home to inspect compact mode and touch and hold the Island for the expanded journey surface.
+Open `apps/ios/Tapso.xcodeproj` and run the `Tapso` scheme. Search for where you get off (or tap **샘플 여정 체험하기**), confirm the proposed bus, then press Home to watch the Dynamic Island and lock the phone for the Lock Screen. The **체험 설정** sheet picks a synthetic scenario and playback speed. Everything the app shows is synthetic: it makes no network request.
+
+After adding or removing a Swift file under `apps/ios`, run `python3 scripts/ios/sync_xcodeproj.py` (or regenerate with XcodeGen) and `python3 scripts/ios/check_localization.py`.
 
 To probe official TAGO data, store the new **Decoding** key in ignored `.env.local` as `TAGO_SERVICE_KEY`, with permissions `0600`. Never put it on the command line or in the iOS/web client. See [data validation](docs/DATA_VALIDATION.md).
 

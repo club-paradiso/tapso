@@ -156,7 +156,7 @@ struct RideContent: View {
 
             RideHeroCard(snapshot: snapshot, onFinish: onFinish, onMapSearch: onMapSearch)
 
-            HStack(spacing: TapsoSpace.lg) {
+            AdaptiveStack(spacing: TapsoSpace.lg) {
                 TrustBadge(kind: .vehicle(guidance.vehicle, plate: snapshot.plate))
                 TrustBadge(kind: .data(guidance.data))
                 Spacer(minLength: 0)
@@ -236,21 +236,22 @@ struct RideHeroCard: View {
             Label(LocalizedStringKey(guidance.copy.eyebrow), systemImage: guidance.symbolName)
                 .font(.subheadline.weight(.bold))
                 .foregroundStyle(guidance.count == .live ? TapsoColor.mintDeep : TapsoColor.textSecondary)
-            HStack(alignment: .firstTextBaseline, spacing: TapsoSpace.xs) {
-                Text(snapshot.remainingStops, format: .number)
-                    .font(TapsoType.numeral(min(numeralSize, TapsoType.heroNumeralMax)))
-                    .monospacedDigit()
+            if guidance.count == .hidden {
+                // Signals disagree: no number to act on until they agree again.
+                Text(String(format: RideText.string("ride.toDestination"), snapshot.destinationName))
+                    .font(.title2.weight(.bold))
                     .foregroundStyle(TapsoColor.textPrimary)
-                    .opacity(guidance.count == .lastKnown ? 0.45 : 1)
-                    .contentTransition(.numericText())
-                VStack(alignment: .leading, spacing: 0) {
-                    Text(guidance.count == .lastKnown ? LocalizedStringKey("count.lastKnown.long") : LocalizedStringKey("count.unit.long"))
-                        .font(.title3.weight(.bold))
-                        .foregroundStyle(TapsoColor.textSecondary)
-                    Text(String(format: RideText.string("ride.toDestination"), snapshot.destinationName))
-                        .font(.subheadline.weight(.semibold))
-                        .foregroundStyle(TapsoColor.textPrimary)
-                        .lineLimit(2)
+                    .fixedSize(horizontal: false, vertical: true)
+            } else {
+                ViewThatFits(in: .horizontal) {
+                    HStack(alignment: .firstTextBaseline, spacing: TapsoSpace.xs) {
+                        numeral
+                        countLabels
+                    }
+                    VStack(alignment: .leading, spacing: 0) {
+                        numeral
+                        countLabels
+                    }
                 }
             }
             if guidance.moment == .riding {
@@ -284,6 +285,27 @@ struct RideHeroCard: View {
             remainingStops: snapshot.remainingStops
         )))
         .accessibilityIdentifier("remaining-stops")
+    }
+
+    private var numeral: some View {
+        Text(snapshot.remainingStops, format: .number)
+            .font(TapsoType.numeral(min(numeralSize, TapsoType.heroNumeralMax)))
+            .monospacedDigit()
+            .foregroundStyle(TapsoColor.textPrimary)
+            .opacity(guidance.count == .lastKnown ? 0.45 : 1)
+            .contentTransition(.numericText())
+    }
+
+    private var countLabels: some View {
+        VStack(alignment: .leading, spacing: 0) {
+            Text(guidance.count == .lastKnown ? LocalizedStringKey("count.lastKnown.long") : LocalizedStringKey("count.unit.long"))
+                .font(.title3.weight(.bold))
+                .foregroundStyle(TapsoColor.textSecondary)
+            Text(String(format: RideText.string("ride.toDestination"), snapshot.destinationName))
+                .font(.subheadline.weight(.semibold))
+                .foregroundStyle(TapsoColor.textPrimary)
+                .fixedSize(horizontal: false, vertical: true)
+        }
     }
 
     /// "Should I start preparing?" Amber, a fixed two, and what comes before your stop.

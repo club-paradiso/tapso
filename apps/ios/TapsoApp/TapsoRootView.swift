@@ -19,11 +19,6 @@ struct TapsoRootView: View {
                         .navigationDestination(for: SetupStep.self) { step in
                             destination(for: step)
                         }
-                        .toolbar {
-                            ToolbarItem(placement: .topBarTrailing) {
-                                Button("ride.menu.demo", systemImage: "testtube.2") { model.isDemoPanelPresented = true }
-                            }
-                        }
                 }
                 .sheet(isPresented: $model.isDemoPanelPresented) {
                     DemoControlsView(model: model)

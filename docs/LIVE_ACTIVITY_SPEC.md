@@ -1,32 +1,34 @@
 # Live Activity specification
 
+Product V2 (2026-09-30). Layout: `apps/ios/Shared/LiveActivitySurfaces.swift` (plain views, also rendered by the app's snapshot tests); wiring: `apps/ios/LiveActivity/TapsoLiveActivityWidget.swift`; every decision: `RideGuidancePolicy` in the Swift core. Figma: `02F iOS Ride V2` Lock Screen / Dynamic Island V2 sets and the `04 iOS` state board. Per-moment detail: `product/JOURNEY_STATE_MODEL_V2.md`.
+
 ## Model
 
-Static attributes hold route ID/number, boarding and destination stops, and the trip's total stop count. Dynamic content holds remaining stops, current and next stop, phase, freshness, and observation time. An iOS test encodes both objects together and enforces Apple's 4 KB update-payload limit.
+Static attributes hold route ID/number, boarding and destination stops, the trip's total stop count and the masked plate of the rider-confirmed bus. Dynamic content holds the journey phase, remaining stops, current and next stop, freshness, observation time, and — new in V2, optional so older payloads decode — whether the destination was passed and whether the phone is offline. `ContentState.signal` builds the same `RideSignal` the app builds from its session, so the app and every surface read one `RideGuidance`. iOS tests encode both objects together and enforce the 4 KB payload limit, and check that a V1 payload still decodes.
+
+The activity starts only after the rider confirms the bus; there is no Live Activity for setup or the vehicle check.
 
 ## Surfaces
 
-- Lock Screen: route, live-data status, phase instruction, destination, strong remaining-stop number, and a state-tinted progress rail with a moving bus marker.
-- Dynamic Island compact leading: a tiny original basalt companion with a journey-state expression, route number, and tangerine route marker, tinted for the current milestone.
-- Compact trailing: normal riding uses an always-visible circular journey gauge with the remaining count and a tangerine destination point. Action states become bordered pills—`준비 2`, `다음 하차`, `내려요`, an explicit delayed-data warning, or a blue `확인 중` state when signals disagree. The compact surface includes a VoiceOver hint that touch-and-hold reveals full journey details.
-- Minimal: count, arrival walk symbol, or stale-data warning inside a basalt-to-state gradient with a tiny tangerine marker when another activity also needs the Island.
-- Expanded leading/trailing: route and count.
-- Expanded center: state instruction.
-- Expanded bottom: a 제주 postcard-inspired basalt card containing the original “돌이” status companion, whose expression shifts from calm to alert to celebratory, plus destination, data status, sea-foam horizon, and a moving bus rail that ends at a tangerine marker.
+- **Lock Screen:** route badge and destination; the moment's headline and detail; the count (or, when withheld, the moment's symbol); a progress rail ending at the tangerine destination. A data badge appears only when data is not live; 돌이 appears while riding. The surface is basalt while riding and in every uncertain state, turns **coral at the next stop** and **tangerine on arrival** (`activityBackgroundTint`). The coral surface has no rail, which would vanish coral-on-coral; the destination name carries it.
+- **Compact leading:** 돌이 (expression by moment) and the route number in the moment colour. VoiceOver hint: touch and hold for details.
+- **Compact trailing:** while riding, the count and "정거장"; otherwise a pill with symbol and word — 준비 2, 다음 하차, 내려요, 지났어요, 지연, 찾는 중, 오프라인, 확인 중.
+- **Minimal:** the live count, else the moment symbol.
+- **Expanded:** leading 돌이 + route; centre the eyebrow; trailing the count (dimmed and labelled 마지막 확인 when last-known) or symbol; bottom the headline, destination, rail or detail, and both trust badges (vehicle identity and data freshness, never merged).
 
-At 2 stops the surface changes from mint to amber and says prepare; at 1 stop it changes to coral with a bell and next-stop instruction; at 0 it shows a walk symbol and get-off instruction. These action states require an exact agreement between journey phase, remaining-stop count, and fresh-enough vehicle data. Any disagreement fails closed into a blue checking state; aging or stale data becomes an amber delayed state. Neither uncertain state sends a get-off alert. Delayed and checking data use explicit text and iconography, not color alone. This escalation is derived from the reference product's public user problem—remaining useful while other apps are open—without copying its brand assets, illustration, or composition.
+Counts are `live` for riding, prepare and next stop, `lastKnown` for delayed, lost and offline, and hidden for arrival, passed destination, checking and ended.
 
 ## Update policy
 
-- Normal updates use relevance score `50`; stale/aging data uses `75`; prepare uses `85`; next stop uses `95`; arrival uses `100`.
-- Nonterminal content becomes stale two minutes after its observation time. Terminal content has no stale date.
-- The first 2-stop, 1-stop, and arrival transitions each attach one `AlertConfiguration` with localized title/body and the default system sound. Repeated observations in the same milestone do not alert again. On supported systems an important update can briefly present the expanded Island (or a banner on devices without it).
-- Milestones are emitted only for exact `(approachingDestination, 2)`, `(nextStopIsDestination, 1)`, and `(arrived, 0)` pairs with fresh data. Negative counts, unknown freshness, recovery, stale data, or phase/count mismatch never emit a milestone alert.
-- Starting a trip ends any existing TAPSO activity before requesting the new one, preventing duplicate Islands. Launching the app reattaches to the first active or stale TAPSO activity.
-- Ending a completed ride preserves the final arrival state for the one-minute dismissal window.
+- Relevance: riding 50; delayed, lost, offline, checking 75; prepare 85; next stop and passed destination 95; arrival 100.
+- Nonterminal content becomes stale two minutes after its observation time. Arrival and ended content has no stale date. A system-stale activity is presented as delayed data, never as a fresh milestone (`guidanceAccountingForStaleness`).
+- Milestones: `prepare`, `nextStop` and `arrived` each attach one `AlertConfiguration` (localized title/body, default sound), **at most once per ride**. They are emitted only for an exact `(approachingDestination, 2)`, `(nextStopIsDestination, 1)` or `(arrived, 0)` on fresh data with the phone online. Negative counts, unknown or stale freshness, recovery, a lost bus, offline, a passed destination or any phase/count mismatch never alert (`RideGuidanceTests.testMilestonesRequireExactFreshOnlineAgreementForEveryInput`).
+- Passing the destination is its own moment: no arrival alert, a single attention haptic in the app, a recovery action.
+- Starting a ride ends any existing TAPSO activity first. At launch the app resumes a persisted ride and its activity; an activity left without a ride is ended.
+- Finishing a ride keeps the final state for a one-minute dismissal window; cancelling ends it immediately.
 
 ## Lifecycle and constraints
 
-The app starts, locally updates, and ends an ActivityKit activity. The extension performs no network or location work. Per current [Apple ActivityKit documentation](https://developer.apple.com/documentation/activitykit/displaying-live-data-with-live-activities), compact leading and trailing content form one cohesive Island, the minimal region is used when multiple activities compete, and touch-and-hold opens the expanded presentation. Remote updates use APNs, `apns-push-type: liveactivity`, the live-activity topic, timestamps, stale dates, and push tokens that can rotate. Priority and frequency must respect system budgets; frequent updates require the appropriate plist capability and product justification.
+The app starts, locally updates and ends the activity; the extension performs no network or location work. Per Apple's ActivityKit documentation, compact leading and trailing form one island, the minimal region is used when several activities compete, touch-and-hold opens the expanded view, an activity stays up to 8 hours active and up to 4 more on the Lock Screen, the system ignores animation modifiers except built-in transitions and `numericText`, and an update's `AlertConfiguration` lights the screen, plays the sound and shows the expanded island (a banner on devices without one). No custom vibration pattern is available to a Live Activity, so haptics are promised only while the app runs.
 
-Production APNs is `BLOCKED_BY_CREDENTIALS`. The interface exists, but no push success is claimed. Background haptics are also not promised: the app uses local haptic feedback while active, and a future push alert must follow ActivityKit notification rules.
+Remote updates would use APNs with `apns-push-type: liveactivity`; that path is `BLOCKED_BY_CREDENTIALS` and the activity is requested with `pushType: nil`.

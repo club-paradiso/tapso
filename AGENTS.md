@@ -21,6 +21,8 @@ TAPSO (탑서) is an iPhone-first Jeju bus companion. A rider starts a trip, TAP
 swift test --package-path packages/transit-core
 npm --prefix services/api test
 python3 -m unittest discover -s scripts/tago -p 'test_*.py'
+python3 scripts/ios/check_localization.py
+python3 scripts/ios/sync_xcodeproj.py --check
 npm --prefix apps/web test
 npm --prefix apps/web run typecheck:vercel
 # The transit API ships no dependencies, so it borrows the one TypeScript install.

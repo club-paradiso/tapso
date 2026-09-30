@@ -287,8 +287,8 @@ final class TapsoAppModel {
         let remaining = vehicleCheck.proposals.filter { !rejectedVehicles.contains($0.vehicleID) }
         vehicleCheck = VehicleCheck.evaluate(proposals: remaining, hasSearched: true)
         guard remaining.isEmpty, let route = draft?.route else { return }
-        let follower = VehicleIdentifier(rawValue: "demo-bus-\(route.number)-B")
-        guard !rejectedVehicles.contains(follower) else { return }
+        let followers = ["B", "C", "D"].map { VehicleIdentifier(rawValue: "demo-bus-\(route.number)-\($0)") }
+        guard let follower = followers.first(where: { !rejectedVehicles.contains($0) }) else { return }
         searchTask?.cancel()
         searchTask = Task { [weak self] in
             try? await Task.sleep(for: .seconds(3))

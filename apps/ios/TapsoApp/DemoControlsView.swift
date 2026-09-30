@@ -22,7 +22,14 @@ struct DemoControlsView: View {
                 Section {
                     Picker("demo.speed", selection: $model.speed) {
                         ForEach(DemoSpeed.allCases) { speed in
-                            Text(verbatim: speed.rawValue).tag(speed)
+                            Group {
+                                if speed == .manual {
+                                    Text("demo.speed.manual")
+                                } else {
+                                    Text(verbatim: speed.rawValue)
+                                }
+                            }
+                            .tag(speed)
                         }
                     }
                     .pickerStyle(.segmented)

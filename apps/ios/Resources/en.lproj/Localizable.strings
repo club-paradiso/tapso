@@ -169,6 +169,8 @@
 "demo.scenario.passedDestination" = "Passed destination";
 "demo.playback" = "Playback";
 "demo.speed" = "Speed";
+"demo.chip.hint" = "Opens preview settings";
+"demo.speed.manual" = "Step";
 "demo.step" = "Advance one step";
 "common.cancel" = "Cancel";
 "common.done" = "Done";
