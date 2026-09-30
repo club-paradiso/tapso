@@ -91,7 +91,7 @@ import {
 import { mulberry32, seedFor } from "./passiveShadowPerturb.ts";
 import { assertNoRawVehicleIds, vehiclePseudonyms } from "./passiveShadowSummary.ts";
 
-export const PASSIVE_COUNTERFACTUAL_POLICY_VERSION = "passive-counterfactual-v2";
+export const PASSIVE_COUNTERFACTUAL_POLICY_VERSION = "passive-counterfactual-v1";
 export const PASSIVE_COUNTERFACTUAL_SCHEMA_VERSION = 1;
 /** Every vehicle a counterfactual invents carries this prefix, and nothing real does. */
 export const INJECTED_ID_PREFIX = "SYNTHETIC-CF-";
