@@ -408,6 +408,43 @@ test("follower_overtaking: no wrong commit when a bus overtakes from just beyond
   }))));
 });
 
+test("follower_overtaking: do not score an overtake that becomes knowable only after a clear observed margin", () => {
+  const stream = baseSlow();
+  const generated = generatePassiveCases([stream]);
+  const snapshots = sortedSnapshots(stream);
+  const cf = counterfactual("follower_overtaking");
+  let demonstrated = false;
+
+  for (const passiveCase of generated.cases.filter((item) => item.meta.scenario === "WAIT_AT_STOP")) {
+    const truth = generated.vault.reveal(passiveCase.meta.caseId);
+    const context = counterfactualContext(passiveCase, truth, snapshots);
+    if (!cf.apply(passiveCase, context)) continue;
+
+    for (let index = 1; index < passiveCase.input.snapshots.length; index += 1) {
+      const variant = structuredClone(passiveCase);
+      const snapshot = variant.input.snapshots[index]!;
+      if (snapshot.error) continue;
+      const truthRow = snapshot.vehicles.find((vehicle) => vehicle.vehicleId === truth.vehicleId);
+      if (!truthRow?.stopSequence) continue;
+      if (truthRow.stopSequence >= passiveCase.meta.boardingSequence - 1) continue;
+
+      // Simulate the sparse-feed shape found in the live collection: the real
+      // bus suddenly reports much closer to the stop while the injected bus
+      // remains on its smooth synthetic motion. At that instant the follower is
+      // no longer inside the observed exclusion margin, so a later synthetic
+      // overtake is not something the matcher could have known.
+      truthRow.stopSequence = passiveCase.meta.boardingSequence - 1;
+      if (cf.apply(variant, context) === undefined) {
+        demonstrated = true;
+        break;
+      }
+    }
+    if (demonstrated) break;
+  }
+
+  assert.equal(demonstrated, true, "the family must reject an unobservable future-acceleration overtake");
+});
+
 /* ------------------------------------------------------------- honesty */
 
 test("a counterfactual of a LIVE_PASSIVE case is SYNTHETIC_OR_PERTURBED, labelled COUNTERFACTUAL_OF_LIVE_PASSIVE, and kept out of every live count", () => {
