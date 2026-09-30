@@ -49,7 +49,10 @@
  * - Only the leading approaching vehicle can be selected, and only when every
  *   other vehicle heading for the stop is at least three stops further back
  *   (`marginStops`), wherever it is: the approach window bounds what may be
- *   selected, not which buses may overtake the leader (finding F9).
+ *   selected, not which buses may overtake the leader (finding F9). If a
+ *   waiting session ever observed a follower inside that margin, the approach
+ *   remains contested for the session; a temporarily wider later gap does not
+ *   prove the follower cannot still overtake (finding F21).
  * - Without the route's stops, when the boarding stop appears twice on the
  *   route, or when two stops are listed under one sequence, automatic
  *   selection is withheld. A loop's lap is measured in sequences, never by
@@ -457,6 +460,9 @@ function decide(
   const reportedTwice = new Set([...positionsByVehicle].filter(([, entry]) => entry.positions.size > 1).map(([vehicleId]) => vehicleId));
   const passage = rememberPassage(request, onRoute, riderState, topology, policy, reportedTwice);
   if (passage.memory.withheld) abstentions.add(passage.memory.withheld.reason);
+  if (riderState === "waiting_at_stop" && topology?.loop !== true && request.passage?.contestedApproach) {
+    abstentions.add("approach_contested_during_session");
+  }
   for (const row of onRoute) {
     const excluded = passage.excluded.get(row.ranked.vehicleId);
     const reason = excluded ?? passage.unproven.get(row.ranked.vehicleId);
@@ -493,6 +499,10 @@ function decide(
         abstentions.add("leading_vehicle_not_selectable");
       } else if (others.some((forward) => forward < leaderForward + policy.marginStops)) {
         abstentions.add("candidates_too_close");
+        // F21: a close follower can later fall back and then overtake. A later
+        // snapshot whose gap happens to be wider does not undo the uncertainty
+        // already observed in this waiting session.
+        if (topology?.loop !== true) passage.memory.contestedApproach ??= { at: request.now };
       }
     }
   }

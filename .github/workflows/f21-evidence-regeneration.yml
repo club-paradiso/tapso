@@ -1,0 +1,68 @@
+name: F21 evidence regeneration
+
+on:
+  push:
+    branches: [fix/f21-sticky-approach-regression]
+    paths:
+      - ".github/workflows/f21-evidence-regeneration.yml"
+      - "services/api/src/**"
+      - "services/api/test/**"
+      - "scripts/**"
+
+permissions:
+  contents: write
+  actions: read
+
+jobs:
+  regenerate:
+    runs-on: ubuntu-latest
+    timeout-minutes: 120
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-node@v4
+        with:
+          node-version: 22
+      - run: npm install --prefix services/api --omit=optional --no-audit --no-fund
+      - name: Deterministic matcher artifacts
+        run: |
+          set -euo pipefail
+          mkdir -p work/f21
+          node --experimental-strip-types scripts/matcher-evidence/redecide-ledger.ts --out=work/f21/former-wrong-commit-instants.json
+          node --experimental-strip-types scripts/matcher-evidence/counterfactual-synthetic.ts --out=work/f21/counterfactual-synthetic-summary.json
+          node --experimental-strip-types scripts/matcher-evidence/ground-truth-sessions.ts --out=work/f21/ground-truth-sessions.json
+          node --experimental-strip-types scripts/matcher-evidence/run-suite.ts --property-cases=2000 --out=work/f21/test-suite.json
+          node --experimental-strip-types scripts/negative-controls/run.ts --out=work/f21/negative-controls.json
+      - name: Fetch evidence-of-record from private draft vault
+        env:
+          GH_TOKEN: ${{ github.token }}
+          GH_REPO: ${{ github.repository }}
+        run: |
+          set -euo pipefail
+          mkdir -p work/raw work/vault
+          id="$(node -e 'console.log(require("./ops/matcher-evidence/request.json").replay.recordCollectionId)')"
+          test "$(gh release view passive-evidence-vault --json isDraft --jq .isDraft)" = "true"
+          gh release download passive-evidence-vault --pattern "$id.zip" --pattern "$id.zip.sha256" --dir work/vault
+          (cd work/vault && sha256sum -c "$id.zip.sha256")
+          unzip -q "work/vault/$id.zip" -d work/raw
+          echo "work/raw/$id" > work/f21/collection-dir.txt
+      - name: Real-base counterfactual under F21 candidate fix
+        run: |
+          set -euo pipefail
+          dir="$(cat work/f21/collection-dir.txt)"
+          node --experimental-strip-types scripts/passive-shadow/counterfactual.ts "$dir" --out=work/f21/counterfactual-real-summary.json
+          node -e '
+            const s=require("./work/f21/counterfactual-real-summary.json");
+            console.log(JSON.stringify({
+              totals:s.totals,
+              follower:s.byFamily?.follower_overtaking,
+              gateEvidence:s.gateEvidence
+            }, null, 2));
+            process.exit(s.totals.wrong === 0 && s.totals.expectationFailures === 0 && s.totals.invariantViolations === 0 ? 0 : 2);
+          '
+      - uses: actions/upload-artifact@v4
+        if: always()
+        with:
+          name: f21-evidence-regeneration
+          path: work/f21/
+          retention-days: 7
+          if-no-files-found: error

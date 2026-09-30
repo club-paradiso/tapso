@@ -148,6 +148,13 @@ export interface PassageMemory {
    * (or read a stop back), so none of them is ever selected; they still compete.
    */
   returnedToStop?: string[];
+  /**
+   * Waiting rider: the session has already seen another same-route vehicle
+   * close enough behind a candidate leader that instantaneous spacing could
+   * not establish which one would arrive first. Once seen, that uncertainty
+   * is never cleared merely because the gap later opens (F21).
+   */
+  contestedApproach?: { at: string };
   /** Set once and never cleared. */
   withheld?: { reason: string; at: string };
 }
