@@ -2,8 +2,9 @@
 # its blind evaluation. See docs/exec-plans/PASSIVE_SHADOW_VALIDATION_V3.md.
 #
 # Read-only provider access. No journey session, no Upstash write, no
-# production configuration. Raw streams (raw vehicle numbers) stay in a private
-# 90-day artifact; only the pseudonymised summary is printed.
+# production configuration. This repository is public: raw streams (raw vehicle
+# numbers) are stored only in the private draft-release evidence vault. Actions
+# artifacts contain sanitized outputs only.
 name: Passive Shadow v3 collection
 
 on:
@@ -17,8 +18,9 @@ concurrency:
   cancel-in-progress: false
 
 permissions:
-  contents: read
-  # Re-evaluation reads a previous run's raw artifact.
+  # Draft releases require push-level access to be visible to the workflow.
+  contents: write
+  # Kept only for migration fallback from a legacy raw artifact.
   actions: read
 
 jobs:
@@ -39,7 +41,7 @@ jobs:
           node -e '
             const r = require("./ops/passive-shadow-v3/collection-request.json");
             const out = [];
-            for (const k of ["requestId","provider","cityCode","routes","routeNumbers","directMinutes","publicMinutes","directMaxRoutes","publicMaxRoutes","reevaluateRunId"]) out.push(`${k}=${r[k] ?? ""}`);
+            for (const k of ["requestId","provider","cityCode","routes","routeNumbers","directMinutes","publicMinutes","directMaxRoutes","publicMaxRoutes","reevaluateRunId","reevaluateCollectionId"]) out.push(`${k}=${r[k] ?? ""}`);
             require("fs").appendFileSync(process.env.GITHUB_OUTPUT, out.join("\n") + "\n");
             console.log(out.join("\n"));'
       - name: Collect (bounded, read-only)
@@ -87,12 +89,24 @@ jobs:
           exit $status
       - name: Fetch an earlier collection for re-evaluation (no provider calls)
         if: steps.request.outputs.reevaluateRunId != ''
-        uses: actions/download-artifact@v4
-        with:
-          name: passive-shadow-v3-raw
-          path: work/passive-shadow
-          run-id: ${{ steps.request.outputs.reevaluateRunId }}
-          github-token: ${{ github.token }}
+        env:
+          GH_TOKEN: ${{ github.token }}
+          COLLECTION_ID: ${{ steps.request.outputs.reevaluateCollectionId }}
+          LEGACY_RUN_ID: ${{ steps.request.outputs.reevaluateRunId }}
+        run: |
+          set -euo pipefail
+          mkdir -p work/passive-shadow work/vault-source
+          if [ -n "$COLLECTION_ID" ] \
+            && gh release view passive-evidence-vault --json isDraft --jq .isDraft 2>/dev/null | grep -qx true \
+            && gh release download passive-evidence-vault --pattern "$COLLECTION_ID.zip" --pattern "$COLLECTION_ID.zip.sha256" --dir work/vault-source 2>/dev/null; then
+            (cd work/vault-source && sha256sum -c "$COLLECTION_ID.zip.sha256")
+            unzip -q "work/vault-source/$COLLECTION_ID.zip" -d work/passive-shadow
+            echo "re-evaluation source: private draft-release vault"
+          else
+            echo "vault copy unavailable; trying legacy artifact run $LEGACY_RUN_ID"
+            gh run download "$LEGACY_RUN_ID" -n passive-shadow-v3-raw -D work/passive-shadow
+            echo "re-evaluation source: legacy workflow artifact"
+          fi
       - name: Locate the re-evaluated collection
         if: steps.request.outputs.reevaluateRunId != ''
         run: |
@@ -108,6 +122,32 @@ jobs:
           echo "----- MANIFEST (as collected; providerPath is authoritative) -----"
           node -e 'const m=require(process.argv[1]); console.log(JSON.stringify(m))' "$(pwd)/$dir/manifest.json"
           echo "----- END MANIFEST -----"
+      - name: Preserve raw collection in the private draft-release vault
+        if: always()
+        env:
+          GH_TOKEN: ${{ github.token }}
+          GH_REPO: ${{ github.repository }}
+        run: |
+          set -euo pipefail
+          dir="$(cat collection-dir.txt 2>/dev/null || true)"
+          if [ -z "$dir" ] || [ ! -d "$dir" ]; then
+            echo "no raw collection available; nothing to preserve"
+            exit 0
+          fi
+          name="$(basename "$dir")"
+          parent="$(dirname "$dir")"
+          (cd "$parent" && zip -qr "$GITHUB_WORKSPACE/$name.zip" "$name")
+          sha256sum "$name.zip" > "$name.zip.sha256"
+          gh release view passive-evidence-vault >/dev/null 2>&1 || gh release create passive-evidence-vault --draft \
+            --title "Passive evidence vault (private raw streams)" \
+            --notes "Raw passive collections (raw vehicle numbers). Private draft, never published. Checksums alongside each asset."
+          test "$(gh release view passive-evidence-vault --json isDraft --jq .isDraft)" = "true"
+          existing="$(gh release view passive-evidence-vault --json assets --jq '.assets[].name')"
+          if printf '%s\n' "$existing" | grep -qx "$name.zip"; then
+            echo "$name.zip already exists in the vault; keeping the immutable first copy"
+          else
+            gh release upload passive-evidence-vault "$name.zip" "$name.zip.sha256"
+          fi
       - name: Blind evaluation (offline, network-guarded, raw read-only)
         env:
           COLLECTION_RUN_ID: ${{ steps.request.outputs.reevaluateRunId || github.run_id }}
@@ -137,16 +177,3 @@ jobs:
             work/passive-shadow/passive-shadow-validation-v3-summary.json
             work/passive-shadow/passive-shadow-validation-v3-wrong-commits.json
           retention-days: 30
-      - name: Upload raw collection (private, raw vehicle numbers)
-        if: always() && steps.request.outputs.reevaluateRunId == ''
-        uses: actions/upload-artifact@v4
-        with:
-          name: passive-shadow-v3-raw
-          path: work/passive-shadow/pv3-*
-          # The raw streams are the evidence of record for every later offline
-          # re-evaluation, so they are kept for the longest retention GitHub
-          # allows here. A matcher-evidence replay request that names this run
-          # (ops/matcher-evidence/request.json) copies them into that
-          # workflow's private draft-release vault, which does not expire.
-          retention-days: 90
-          if-no-files-found: ignore
