@@ -419,7 +419,7 @@ analysis is `STILL_REQUIRED`.**
 | H06 | Rides separating provider from collector lag, to calibrate cadence thresholds | `NON-BLOCKING_UNVERIFIED` | The thresholds are fail-closed (a non-fresh bus is never selected and still competes), so calibration moves coverage, not safety. Session-cadence (direct-TAGO) windows run automatically once the owner adds a `TAGO_SERVICE_KEY` secret (BA-2) |
 | H07 | Acceptance rides (submission receipt, suspension, restart) | `ELIMINATED` | The phone capture pipeline is off the release path |
 | H10–H12 | Phone controller checks; keep the screen on | `ELIMINATED` | Same |
-| H13–H15 | Submit within 2 h; backup exports; send reports by hand | `ELIMINATED` | No ride is needed. Passive raw evidence is kept by the workflow (90-day artifact and private vault) |
+| H13–H15 | Submit within 2 h; backup exports; send reports by hand | `ELIMINATED` | No ride is needed. Passive raw evidence is checksum-verified into the private draft-release vault; the public repository retains only sanitized Actions artifacts |
 | H23 | Measure how often riders board the first arriving bus | `NON-BLOCKING_UNVERIFIED` | Needed only for `READY_FOR_AUTOMATIC_MATCHING` (AM-1), which is not a product target |
 | H40 | Pre-boarding production curls | `ELIMINATED` | No boarding |
 
