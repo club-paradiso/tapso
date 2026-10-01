@@ -40,7 +40,7 @@ The page is one synthetic ride on 365 from 제주버스터미널 to 제주시청
 Rules pinned by `test/islandStory.test.ts`:
 
 - the story starts with where to get off, and chapters never go back;
-- no Live Activity before the rider confirms the bus, and the app starts one only from `confirmVehicle` (or resumes it in `resumeIfNeeded`), read from `TapsoAppModel.swift`;
+- no Live Activity before the rider confirms the bus, and the app starts one only from `confirmVehicle` (for a live ride through the private `confirmLiveVehicle`, once the server has accepted the rider's confirmation) or resumes it in `resumeIfNeeded`, read from `TapsoAppModel.swift`;
 - the app in front never shows its own activity in the island;
 - stops only count down: 2 at prepare, 1 at the next stop, 0 at arrival, riding only with 3 or more;
 - each milestone is told once, and only milestones alert;
