@@ -1,0 +1,114 @@
+# F21 ablation on real bases (temporary investigation workflow).
+#
+# Issue #61 is closed only on evidence. Two changes landed between the failing
+# run and the passing one:
+#   - #63 (0a68c2f) narrowed the follower_overtaking counterfactual so it only
+#     applies while the injected follower stays inside the observed margin;
+#   - #62 (d8a81e1) made a contested approach sticky in the matcher.
+# This workflow separates their effects by replaying the real-base
+# counterfactual suite under each combination, on every retained raw
+# collection in the private vault. Read-only, offline after the vault fetch,
+# sanitized output only (the report refuses to write any raw vehicle id).
+name: F21 ablation
+
+on:
+  push:
+    branches: [claude/fervent-babbage-driy3p]
+    paths: [".github/workflows/f21-ablation.yml"]
+
+permissions:
+  # Draft releases are hidden from read-only tokens; nothing here writes.
+  contents: write
+  actions: read
+
+env:
+  TRANSIT_AUTOMATIC_MATCHING_ENABLED: "false"
+
+jobs:
+  ablation:
+    runs-on: ubuntu-latest
+    timeout-minutes: 90
+    strategy:
+      fail-fast: false
+      matrix:
+        variant: [current, original-family, pre-f21-matcher, pre-f21-original-family]
+        collection: [record, others]
+    steps:
+      - uses: actions/checkout@v4
+        with:
+          fetch-depth: 0
+      - uses: actions/setup-node@v4
+        with:
+          node-version: 22
+      - run: npm install --prefix services/api --omit=optional --no-audit --no-fund
+      - name: Apply the variant (reverse patches, source files only)
+        env:
+          VARIANT: ${{ matrix.variant }}
+        run: |
+          set -euo pipefail
+          git diff 0a68c2f^ 0a68c2f -- services/api/src/passiveCounterfactual.ts > /tmp/f63.patch
+          git diff d8a81e1^ d8a81e1 -- services/api/src/matching.ts services/api/src/domain.ts > /tmp/f62.patch
+          case "$VARIANT" in
+            current) ;;
+            original-family) git apply -R /tmp/f63.patch ;;
+            pre-f21-matcher) git apply -R /tmp/f62.patch ;;
+            pre-f21-original-family) git apply -R /tmp/f63.patch; git apply -R /tmp/f62.patch ;;
+            *) echo "unknown variant $VARIANT"; exit 2 ;;
+          esac
+          git diff --stat
+          echo "variant $VARIANT applied on $(git rev-parse --short HEAD)"
+      - name: Fetch every retained raw collection from the private vault
+        env:
+          GH_TOKEN: ${{ github.token }}
+          GH_REPO: ${{ github.repository }}
+        run: |
+          set -euo pipefail
+          mkdir -p work/vault work/raw
+          test "$(gh release view passive-evidence-vault --json isDraft --jq .isDraft)" = "true"
+          gh release download passive-evidence-vault --pattern 'pv3-*.zip' --pattern 'pv3-*.zip.sha256' --dir work/vault
+          for zip in work/vault/pv3-*.zip; do
+            (cd work/vault && sha256sum -c "$(basename "$zip").sha256")
+            unzip -q "$zip" -d work/raw
+          done
+          ls work/raw
+      - name: Real-base counterfactual suite
+        env:
+          WHICH: ${{ matrix.collection }}
+          VARIANT: ${{ matrix.variant }}
+        run: |
+          set -uo pipefail
+          record="$(node -e 'console.log(require("./ops/matcher-evidence/request.json").replay.recordCollectionId)')"
+          mkdir -p work/out
+          for dir in work/raw/pv3-*; do
+            id="$(basename "$dir")"
+            if [ "$WHICH" = "record" ] && [ "$id" != "$record" ]; then continue; fi
+            if [ "$WHICH" = "others" ] && [ "$id" = "$record" ]; then continue; fi
+            status=0
+            node --experimental-strip-types scripts/passive-shadow/counterfactual.ts "$dir" --out="work/out/$id.json" > "work/out/$id.log" 2>&1 || status=$?
+            echo "::group::$VARIANT $id (exit $status)"
+            tail -n 3 "work/out/$id.log"
+            echo "::endgroup::"
+            if [ ! -f "work/out/$id.json" ]; then echo "RESULT $VARIANT $id no-report exit=$status"; continue; fi
+            node -e '
+              const s = require(process.argv[1]);
+              const f = s.byFamily?.follower_overtaking ?? null;
+              const failingRows = (s.counterfactuals ?? [])
+                .filter((row) => row.expectationFailures.count > 0 || row.wrong > 0 || row.invariantViolations > 0)
+                .map((row) => ({ id: row.id, expectationFailures: row.expectationFailures.byExpectation, wrong: row.wrong, invariantViolations: row.invariantViolations }));
+              s.failing = failingRows;
+              const failing = failingRows.slice(0, 25);
+              // Notable records are pseudonymised (veh-NN, SYNTHETIC-CF ids); summarise the wrong ones.
+              const wrong = (s.records ?? []).filter((r) => r.outcome === "wrong" || (r.expectationFailures ?? []).length > 0);
+              const tally = (key) => wrong.reduce((m, r) => { const k = String(r[key]); m[k] = (m[k] ?? 0) + 1; return m; }, {});
+              const byCf = wrong.reduce((m, r) => { m[r.counterfactualId] = (m[r.counterfactualId] ?? 0) + 1; return m; }, {});
+              const route = wrong.reduce((m, r) => { const k = r.caseId.split(":")[0].split("-").slice(-1)[0]; m[k] = (m[k] ?? 0) + 1; return m; }, {});
+              console.log("RESULT " + JSON.stringify({
+                variant: process.env.VARIANT, collection: process.argv[2],
+                totals: s.totals, families: s.families, familiesExercised: s.familiesExercised, gateEvidence: s.gateEvidence,
+                followerOvertaking: f, failingCount: (s.failing ?? []).length, failingSample: failing,
+                notable: { recordsKept: (s.records ?? []).length, recordsOmitted: s.recordsOmitted, wrongOrFailing: wrong.length,
+                  byCounterfactual: byCf, byRoute: route, committedStopOffset: tally("committedStopOffset"),
+                  commitSecondsBeforeBoarding: wrong.map((r) => r.commitRelativeToBoardingSeconds).filter((v) => typeof v === "number").sort((a, b) => a - b) },
+              }));
+            ' "$(pwd)/work/out/$id.json" "$id"
+          done
