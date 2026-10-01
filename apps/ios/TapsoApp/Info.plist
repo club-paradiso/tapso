@@ -37,6 +37,8 @@
 	<true/>
 	<key>NSSupportsLiveActivities</key>
 	<true/>
+	<key>TAPSOAPIBaseURL</key>
+	<string>$(TAPSO_API_BASE_URL)</string>
 	<key>UIApplicationSceneManifest</key>
 	<dict>
 		<key>UIApplicationSupportsMultipleScenes</key>

@@ -1,0 +1,74 @@
+{
+  "synthetic": true,
+  "request": "POST /v1/sessions",
+  "status": 201,
+  "body": {
+    "id": "synthetic-session-1",
+    "routeId": "JEB405136521",
+    "cityCode": "39",
+    "boardingStop": {
+      "stopId": "SYN-1",
+      "name": "제주버스터미널",
+      "sequence": 1,
+      "latitude": 33.5,
+      "longitude": 126.52
+    },
+    "destinationStop": {
+      "stopId": "SYN-9",
+      "name": "제주시청(아라방면)",
+      "sequence": 9,
+      "latitude": 33.516,
+      "longitude": 126.536
+    },
+    "riderState": "waiting_at_stop",
+    "matchConfidence": "unknown",
+    "state": "confirmation_required",
+    "candidates": [
+      {
+        "vehicleId": "제주70자0001",
+        "score": 50,
+        "evidence": [
+          "route_id",
+          "boarding_stop_offset_0",
+          "zone_boarding_stop_unresolved"
+        ],
+        "rejectedReasons": [
+          "source_cadence_not_fresh",
+          "boarding_stop_position_unresolved"
+        ],
+        "stopOffset": 0,
+        "zone": "boarding_stop_unresolved"
+      }
+    ],
+    "explanation": "Automatic selection is withheld until the matcher's demonstrated readiness permits it. Ranked candidates and server-observed cadence evidence are published for explicit confirmation only.",
+    "matchingMode": "shadow",
+    "shadowSelection": {
+      "status": "unavailable",
+      "confidence": "unknown",
+      "explanation": "No fresh vehicle of this route is approaching the boarding stop."
+    },
+    "sourceFreshness": {
+      "제주70자0001": {
+        "state": "unknown",
+        "sampleCount": 1,
+        "spanSeconds": 0,
+        "latestReceiptAgeSeconds": 0,
+        "contentChangeCount": 0,
+        "sequenceDecreaseCount": 0,
+        "reason": "More server-observed TAGO samples are required before freshness can be inferred."
+      },
+      "제주70자0417": {
+        "state": "unknown",
+        "sampleCount": 1,
+        "spanSeconds": 0,
+        "latestReceiptAgeSeconds": 0,
+        "contentChangeCount": 0,
+        "sequenceDecreaseCount": 0,
+        "reason": "More server-observed TAGO samples are required before freshness can be inferred."
+      }
+    },
+    "createdAt": "2026-10-01T08:00:00.000Z",
+    "updatedAt": "2026-10-01T08:00:00.000Z",
+    "expiresAt": "2026-10-01T12:00:00.000Z"
+  }
+}

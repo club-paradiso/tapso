@@ -1,0 +1,95 @@
+{
+  "synthetic": true,
+  "request": "GET /v1/stops?routeId=JEB405136521&cityCode=39",
+  "status": 200,
+  "body": {
+    "items": [
+      {
+        "stopId": "SYN-1",
+        "name": "제주버스터미널",
+        "sequence": 1,
+        "latitude": 33.5,
+        "longitude": 126.52
+      },
+      {
+        "stopId": "SYN-2",
+        "name": "용문마을",
+        "sequence": 2,
+        "latitude": 33.502,
+        "longitude": 126.52199999999999
+      },
+      {
+        "stopId": "SYN-3",
+        "name": "용담사거리",
+        "sequence": 3,
+        "latitude": 33.504,
+        "longitude": 126.524
+      },
+      {
+        "stopId": "SYN-4",
+        "name": "서문시장",
+        "sequence": 4,
+        "latitude": 33.506,
+        "longitude": 126.526
+      },
+      {
+        "stopId": "SYN-5",
+        "name": "관덕정",
+        "sequence": 5,
+        "latitude": 33.508,
+        "longitude": 126.52799999999999
+      },
+      {
+        "stopId": "SYN-6",
+        "name": "중앙로",
+        "sequence": 6,
+        "latitude": 33.51,
+        "longitude": 126.53
+      },
+      {
+        "stopId": "SYN-7",
+        "name": "동문로터리",
+        "sequence": 7,
+        "latitude": 33.512,
+        "longitude": 126.532
+      },
+      {
+        "stopId": "SYN-8",
+        "name": "제주여자상업고등학교",
+        "sequence": 8,
+        "latitude": 33.514,
+        "longitude": 126.53399999999999
+      },
+      {
+        "stopId": "SYN-9",
+        "name": "제주시청(아라방면)",
+        "sequence": 9,
+        "latitude": 33.516,
+        "longitude": 126.536
+      },
+      {
+        "stopId": "SYN-10",
+        "name": "국립제주박물관",
+        "sequence": 10,
+        "latitude": 33.518,
+        "longitude": 126.538
+      }
+    ],
+    "meta": {
+      "provider": "tago",
+      "cityCode": "39",
+      "routeId": "JEB405136521",
+      "count": 10,
+      "directionScope": "route_id",
+      "sequenceSource": "provider_node_order",
+      "topology": {
+        "kind": "linear",
+        "stopCount": 10,
+        "cycleLength": 10,
+        "sequenceAscending": true,
+        "duplicateStopIdCount": 0,
+        "duplicateStopNameCount": 0
+      }
+    }
+  }
+}

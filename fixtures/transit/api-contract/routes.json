@@ -1,0 +1,28 @@
+{
+  "synthetic": true,
+  "request": "GET /v1/routes?cityCode=39&routeNo=365",
+  "status": 200,
+  "body": {
+    "items": [
+      {
+        "routeId": "JEB405136521",
+        "routeNumber": "365",
+        "startStopName": "제주버스터미널",
+        "endStopName": "국립제주박물관"
+      },
+      {
+        "routeId": "JEB405136522",
+        "routeNumber": "365",
+        "startStopName": "국립제주박물관",
+        "endStopName": "제주버스터미널"
+      }
+    ],
+    "meta": {
+      "provider": "tago",
+      "cityCode": "39",
+      "routeNo": "365",
+      "count": 2,
+      "variantsPreserved": true
+    }
+  }
+}

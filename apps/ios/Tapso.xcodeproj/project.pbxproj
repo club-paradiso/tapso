@@ -44,6 +44,10 @@
 		8B90D8B60EB405B8C1974DFA /* TapsoTokens.swift in Sources */ = {isa = PBXBuildFile; fileRef = 4D67654E6A9412B2253E65FB /* TapsoTokens.swift */; };
 		F0FCB5D5AF2DDFA92C6AD18C /* RidePresentationTests.swift in Sources */ = {isa = PBXBuildFile; fileRef = 4F3242CAC95098615B71E4AF /* RidePresentationTests.swift */; };
 		3BFE146D78987331ED4016E5 /* SnapshotEvidenceTests.swift in Sources */ = {isa = PBXBuildFile; fileRef = C3C7708182ABA376B17A2322 /* SnapshotEvidenceTests.swift */; };
+		C0F1755759CFDEE1375ADC70 /* LiveRideModel.swift in Sources */ = {isa = PBXBuildFile; fileRef = B7D7C8DF6B72C2AE5769290E /* LiveRideModel.swift */; };
+		25ED66F0547D1F2E9A528761 /* LiveRideSurfaces.swift in Sources */ = {isa = PBXBuildFile; fileRef = 88ED9DE8D449F25DDFC0A68F /* LiveRideSurfaces.swift */; };
+		D95013B6D4511C473A5E857D /* LiveRideViews.swift in Sources */ = {isa = PBXBuildFile; fileRef = 93ED41A7D45954E2129EE5C2 /* LiveRideViews.swift */; };
+		7EFF7A17FDB2E3D4A9FF6F28 /* LiveRideModelTests.swift in Sources */ = {isa = PBXBuildFile; fileRef = F4C61B12DB1E85FBA207714A /* LiveRideModelTests.swift */; };
 /* End PBXBuildFile section */
 
 /* Begin PBXContainerItemProxy section */
@@ -111,6 +115,10 @@
 		4D67654E6A9412B2253E65FB /* TapsoTokens.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = TapsoTokens.swift; sourceTree = "<group>"; };
 		4F3242CAC95098615B71E4AF /* RidePresentationTests.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = RidePresentationTests.swift; sourceTree = "<group>"; };
 		C3C7708182ABA376B17A2322 /* SnapshotEvidenceTests.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = SnapshotEvidenceTests.swift; sourceTree = "<group>"; };
+		B7D7C8DF6B72C2AE5769290E /* LiveRideModel.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = LiveRideModel.swift; sourceTree = "<group>"; };
+		88ED9DE8D449F25DDFC0A68F /* LiveRideSurfaces.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = LiveRideSurfaces.swift; sourceTree = "<group>"; };
+		93ED41A7D45954E2129EE5C2 /* LiveRideViews.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = LiveRideViews.swift; sourceTree = "<group>"; };
+		F4C61B12DB1E85FBA207714A /* LiveRideModelTests.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = LiveRideModelTests.swift; sourceTree = "<group>"; };
 /* End PBXFileReference section */
 
 /* Begin PBXFrameworksBuildPhase section */
@@ -144,6 +152,7 @@
 		062A2546A85E60F33E64530A /* Tests */ = {
 			isa = PBXGroup;
 			children = (
+				F4C61B12DB1E85FBA207714A /* LiveRideModelTests.swift */,
 				4F3242CAC95098615B71E4AF /* RidePresentationTests.swift */,
 				C3C7708182ABA376B17A2322 /* SnapshotEvidenceTests.swift */,
 				E7108E508389781AD30FB5E4 /* TapsoActivityAttributesTests.swift */,
@@ -204,6 +213,9 @@
 				E290A938229D4273F0D4BF5D /* Info.plist */,
 				A8E46B25EF26064102482B49 /* JourneyStore.swift */,
 				6BF30D970AD35EAC3FE1308C /* LiveActivityClient.swift */,
+				B7D7C8DF6B72C2AE5769290E /* LiveRideModel.swift */,
+				88ED9DE8D449F25DDFC0A68F /* LiveRideSurfaces.swift */,
+				93ED41A7D45954E2129EE5C2 /* LiveRideViews.swift */,
 				1BA1E189F8D5241F18ABD214 /* RideEndView.swift */,
 				857A4229A2F4867FB62DD336 /* RideFeedback.swift */,
 				B71E19ABC4E943435650D65F /* RideView.swift */,
@@ -380,6 +392,9 @@
 				C072DFB6007261AB2C4AC702 /* JourneyStore.swift in Sources */,
 				353C5AEA2F4ED35FBF1207BC /* LiveActivityClient.swift in Sources */,
 				216C1DAF60AA1BF258CBA512 /* LiveActivitySurfaces.swift in Sources */,
+				C0F1755759CFDEE1375ADC70 /* LiveRideModel.swift in Sources */,
+				25ED66F0547D1F2E9A528761 /* LiveRideSurfaces.swift in Sources */,
+				D95013B6D4511C473A5E857D /* LiveRideViews.swift in Sources */,
 				E90C569F723A43A0F30ED146 /* RideEndView.swift in Sources */,
 				3D1562DEB72025EBE17ABDCD /* RideFeedback.swift in Sources */,
 				BB8FAE7699DAE3EAEA47D888 /* RideSurfaceComponents.swift in Sources */,
@@ -414,6 +429,7 @@
 			isa = PBXSourcesBuildPhase;
 			buildActionMask = 2147483647;
 			files = (
+				7EFF7A17FDB2E3D4A9FF6F28 /* LiveRideModelTests.swift in Sources */,
 				F0FCB5D5AF2DDFA92C6AD18C /* RidePresentationTests.swift in Sources */,
 				3BFE146D78987331ED4016E5 /* SnapshotEvidenceTests.swift in Sources */,
 				B2EE311E1A81511BB21CF237 /* TapsoActivityAttributesTests.swift in Sources */,

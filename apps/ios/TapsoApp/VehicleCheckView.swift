@@ -184,13 +184,14 @@ struct ConfirmationCard: View {
     private var position: String {
         switch proposal.stopsAway {
         case 0?: RideText.string("check.position.atStop")
+        case let count? where count < 0: RideText.string("check.position.departed")
         case let count?: String(format: RideText.string(RideText.countKey("check.position.away", count)), count)
         case nil: RideText.string("check.position.unknown")
         }
     }
 }
 
-private struct SearchingIndicator: View {
+struct SearchingIndicator: View {
     let reduceMotion: Bool
     @State private var pulse = false
 

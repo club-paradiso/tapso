@@ -1,0 +1,9 @@
+{
+  "synthetic": true,
+  "request": "POST /v1/sessions",
+  "status": 400,
+  "body": {
+    "error": "INVALID_INPUT",
+    "message": "boardingStopSequence must be a positive integer"
+  }
+}

@@ -9,9 +9,11 @@
  * boarding stop as plausible, and has no rider state. It is not equivalent and
  * does not pretend to be: it only drives the deterministic demo.
  *
- * These tests keep it that way. If the iOS app ever gains a network path, or
- * calls the Swift engine with anything but demo fixtures, they fail — at which
- * point the Swift engine has to pass `fixtures/transit/directed-matcher-invariants.json`
+ * These tests keep it that way. The live client (`packages/transit-core/Sources/TapsoTransit/Live/`)
+ * talks to this server, which stays the only matcher: it may hold network code,
+ * no other Swift source may, and no live type ever reaches the Swift engine. If
+ * the app calls the Swift engine with anything but demo fixtures, these fail —
+ * at which point the Swift engine has to pass `fixtures/transit/directed-matcher-invariants.json`
  * (below, run against the backend today) before it decides anything.
  */
 
@@ -39,14 +41,37 @@ function swiftFiles(directory: string): string[] {
 
 const appSources = [...swiftFiles(join(repo, "apps/ios")), ...swiftFiles(join(repo, "packages/transit-core/Sources"))];
 
-test("the iOS app and the Swift core make no network request, so no real vehicle can reach the Swift matcher", () => {
+/** The only Swift sources allowed to speak HTTP: the live client, which reads from and confirms to this server. */
+const LIVE_CLIENT = "packages/transit-core/Sources/TapsoTransit/Live/";
+const NETWORK_FILES = new Set([`${LIVE_CLIENT}URLSessionTransport.swift`, `${LIVE_CLIENT}LiveEnvironment.swift`]);
+
+test("only the live client speaks HTTP, so no real vehicle can reach the Swift matcher another way", () => {
   assert.ok(appSources.length > 0, "Swift sources were found");
   for (const file of appSources) {
+    const path = relative(repo, file);
+    if (NETWORK_FILES.has(path)) continue;
     const source = readFileSync(file, "utf8");
     for (const pattern of [/URLSession/, /URLRequest/, /NWConnection/, /https?:\/\//]) {
-      assert.doesNotMatch(source, pattern, `${relative(repo, file)} contains ${pattern}; a network path would let real data reach a non-authoritative matcher`);
+      assert.doesNotMatch(source, pattern, `${path} contains ${pattern}; network code belongs in ${LIVE_CLIENT} and nowhere else`);
     }
   }
+});
+
+test("the live client never touches the Swift matcher or its inputs", () => {
+  const live = appSources.filter((file) => relative(repo, file).startsWith(LIVE_CLIENT));
+  assert.ok(live.length >= 2, "the live client was found");
+  for (const file of live) {
+    assert.doesNotMatch(readFileSync(file, "utf8"), /VehicleMatchingEngine|VehicleCandidate|MatchDecision/, relative(repo, file));
+  }
+  // Nor does the app's live ride: it lists raw positions, and the rider picks.
+  const liveApp = appSources.filter((file) => /apps\/ios\/TapsoApp\/LiveRide\w*\.swift$/.test(relative(repo, file)));
+  assert.ok(liveApp.length >= 3, "the app's live ride was found");
+  for (const file of liveApp) {
+    assert.doesNotMatch(readFileSync(file, "utf8"), /VehicleMatchingEngine|VehicleCandidate|MatchDecision|DemoCatalog|DemoFixtures/, relative(repo, file));
+  }
+  // What the client decodes from a session: no ranking, no would-be pick.
+  const models = readFileSync(join(repo, LIVE_CLIENT, "LiveModels.swift"), "utf8");
+  assert.doesNotMatch(models, /\blet (candidates|shadowSelection|wouldSelectVehicleId)\b/);
 });
 
 test("the Swift VehicleMatchingEngine is called only by the demo, with demo fixtures", () => {

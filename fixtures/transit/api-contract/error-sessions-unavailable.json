@@ -1,0 +1,9 @@
+{
+  "synthetic": true,
+  "request": "POST /v1/sessions",
+  "status": 503,
+  "body": {
+    "error": "SESSIONS_UNAVAILABLE",
+    "message": "ride sessions are held in one process's memory and are disabled on this deployment"
+  }
+}

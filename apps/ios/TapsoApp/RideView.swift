@@ -84,6 +84,8 @@ struct RideSnapshot {
     let liveActivityUnavailable: Bool
     let resumed: Bool
     let mapHandoffFailed: MapApp?
+    /// A ride on real buses through the transit API, not the sample.
+    let isLive: Bool
 
     @MainActor
     init(model: TapsoAppModel, guidance: RideGuidance) {
@@ -113,7 +115,8 @@ struct RideSnapshot {
         plate: String?,
         liveActivityUnavailable: Bool = false,
         resumed: Bool = false,
-        mapHandoffFailed: MapApp? = nil
+        mapHandoffFailed: MapApp? = nil,
+        isLive: Bool = false
     ) {
         self.guidance = guidance
         self.routeNumber = routeNumber
@@ -126,6 +129,7 @@ struct RideSnapshot {
         self.liveActivityUnavailable = liveActivityUnavailable
         self.resumed = resumed
         self.mapHandoffFailed = mapHandoffFailed
+        self.isLive = isLive
     }
 }
 
@@ -197,7 +201,7 @@ struct RideContent: View {
                 tint: TapsoColor.journeyDegraded
             )
         } else if guidance.moment == .riding {
-            Label("ride.closeApp", systemImage: "iphone.gen3.radiowaves.left.and.right")
+            Label(LocalizedStringKey(snapshot.isLive ? "live.ride.foreground" : "ride.closeApp"), systemImage: "iphone.gen3.radiowaves.left.and.right")
                 .font(.footnote)
                 .foregroundStyle(TapsoColor.textSecondary)
                 .fixedSize(horizontal: false, vertical: true)

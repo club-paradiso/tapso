@@ -5,6 +5,7 @@ import TapsoTransit
 /// repeat ride one tap. No map, no feed, no dashboard. Figma: `04 iOS` › Home V2.
 struct HomeView: View {
     @Bindable var model: TapsoAppModel
+    var live: LiveRideModel?
 
     var body: some View {
         ScrollView {
@@ -19,7 +20,8 @@ struct HomeView: View {
                 onToggleFavorite: { model.toggleFavorite($0) },
                 onMapImport: { model.openMapImport() },
                 onSample: { model.startDemo() },
-                onDemoSettings: { model.isDemoPanelPresented = true }
+                onDemoSettings: { model.isDemoPanelPresented = true },
+                onLive: live.map { live in { live.open() } }
             )
         }
         .scrollBounceBehavior(.basedOnSize)
@@ -37,6 +39,8 @@ struct HomeContent: View {
     let onMapImport: () -> Void
     let onSample: () -> Void
     var onDemoSettings: () -> Void = {}
+    /// Opens a live ride on real buses; no entry when absent.
+    var onLive: (() -> Void)?
 
     var body: some View {
         VStack(alignment: .leading, spacing: TapsoSpace.xl) {
@@ -48,6 +52,10 @@ struct HomeContent: View {
                 if !library.recentDestinationNames.isEmpty {
                     recentDestinations
                 }
+            }
+
+            if let onLive {
+                LiveEntryCard(action: onLive)
             }
 
             if let recent = library.recents.first {

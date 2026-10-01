@@ -1,0 +1,56 @@
+{
+  "synthetic": true,
+  "request": "GET /v1/sessions/synthetic-session-1",
+  "status": 200,
+  "body": {
+    "id": "synthetic-session-1",
+    "routeId": "JEB405136521",
+    "cityCode": "39",
+    "boardingStop": {
+      "stopId": "SYN-1",
+      "name": "제주버스터미널",
+      "sequence": 1,
+      "latitude": 33.5,
+      "longitude": 126.52
+    },
+    "destinationStop": {
+      "stopId": "SYN-9",
+      "name": "제주시청(아라방면)",
+      "sequence": 9,
+      "latitude": 33.516,
+      "longitude": 126.536
+    },
+    "riderState": "waiting_at_stop",
+    "selectedVehicleId": "제주70자0001",
+    "selectionMode": "explicit",
+    "matchConfidence": "low",
+    "state": "tracking",
+    "progress": {
+      "currentStopSequence": 7,
+      "currentStopId": "SYN-7",
+      "remainingStops": 2,
+      "phase": "approaching",
+      "source": "provider_stop_sequence",
+      "observedAt": "1970-01-01T00:00:00.000Z",
+      "evidenceAt": "2026-10-01T08:00:40.000Z",
+      "evidenceAtIs": "tapso_server_receipt"
+    },
+    "explanation": "Selected vehicle advanced with provider stop-sequence evidence.",
+    "matchingMode": "shadow",
+    "sourceFreshness": {
+      "제주70자0001": {
+        "state": "fresh",
+        "sampleCount": 5,
+        "spanSeconds": 40,
+        "latestReceiptAgeSeconds": 0,
+        "maxReceiptGapSeconds": 10,
+        "contentChangeCount": 3,
+        "sequenceDecreaseCount": 0,
+        "reason": "Repeated server receipts contain forward, changing TAGO content inside the bounded evidence window."
+      }
+    },
+    "createdAt": "2026-10-01T08:00:00.000Z",
+    "updatedAt": "2026-10-01T08:00:40.000Z",
+    "expiresAt": "2026-10-01T12:00:00.000Z"
+  }
+}

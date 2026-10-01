@@ -1,0 +1,56 @@
+{
+  "synthetic": true,
+  "request": "POST /v1/sessions/synthetic-session-1/confirm",
+  "status": 200,
+  "body": {
+    "id": "synthetic-session-1",
+    "routeId": "JEB405136521",
+    "cityCode": "39",
+    "boardingStop": {
+      "stopId": "SYN-1",
+      "name": "제주버스터미널",
+      "sequence": 1,
+      "latitude": 33.5,
+      "longitude": 126.52
+    },
+    "destinationStop": {
+      "stopId": "SYN-9",
+      "name": "제주시청(아라방면)",
+      "sequence": 9,
+      "latitude": 33.516,
+      "longitude": 126.536
+    },
+    "riderState": "waiting_at_stop",
+    "selectedVehicleId": "제주70자0001",
+    "selectionMode": "explicit",
+    "matchConfidence": "low",
+    "state": "degraded",
+    "explanation": "Selected TAGO vehicle lacks fresh server-observed cadence evidence: More server-observed TAGO samples are required before freshness can be inferred.",
+    "matchingMode": "shadow",
+    "sourceFreshness": {
+      "제주70자0001": {
+        "state": "unknown",
+        "sampleCount": 2,
+        "spanSeconds": 10,
+        "latestReceiptAgeSeconds": 0,
+        "maxReceiptGapSeconds": 10,
+        "contentChangeCount": 0,
+        "sequenceDecreaseCount": 0,
+        "reason": "More server-observed TAGO samples are required before freshness can be inferred."
+      },
+      "제주70자0417": {
+        "state": "unknown",
+        "sampleCount": 2,
+        "spanSeconds": 10,
+        "latestReceiptAgeSeconds": 0,
+        "maxReceiptGapSeconds": 10,
+        "contentChangeCount": 0,
+        "sequenceDecreaseCount": 0,
+        "reason": "More server-observed TAGO samples are required before freshness can be inferred."
+      }
+    },
+    "createdAt": "2026-10-01T08:00:00.000Z",
+    "updatedAt": "2026-10-01T08:00:10.000Z",
+    "expiresAt": "2026-10-01T12:00:00.000Z"
+  }
+}

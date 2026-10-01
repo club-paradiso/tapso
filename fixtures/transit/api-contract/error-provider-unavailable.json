@@ -1,0 +1,9 @@
+{
+  "synthetic": true,
+  "request": "GET /v1/vehicles?routeId=JEB405136521&cityCode=39",
+  "status": 503,
+  "body": {
+    "error": "BLOCKED_BY_CREDENTIALS",
+    "message": "synthetic outage"
+  }
+}

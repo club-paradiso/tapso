@@ -5,6 +5,7 @@ import TapsoTransit
 /// than stacking on it, so there is never a modal over a modal.
 struct TapsoRootView: View {
     @Bindable var model: TapsoAppModel
+    @Bindable var live: LiveRideModel
     @Environment(\.accessibilityReduceMotion) private var reduceMotion
 
     var body: some View {
@@ -15,7 +16,7 @@ struct TapsoRootView: View {
                 RideEndView(model: model, outcome: outcome)
             } else {
                 NavigationStack(path: $model.path) {
-                    HomeView(model: model)
+                    HomeView(model: model, live: live)
                         .navigationDestination(for: SetupStep.self) { step in
                             destination(for: step)
                         }
@@ -24,11 +25,18 @@ struct TapsoRootView: View {
                     DemoControlsView(model: model)
                         .presentationDetents([.medium])
                 }
+                .fullScreenCover(isPresented: $live.isPresented) {
+                    LiveRideFlowView(live: live)
+                }
             }
         }
         .tint(TapsoColor.mintDeep)
         .animation(TapsoMotion.animation(TapsoMotion.standard, reduceMotion: reduceMotion), value: model.hasActiveRide)
-        .task { await model.resumeIfNeeded() }
+        .task {
+            // A live ride first: the sample would otherwise end its Live Activity as an orphan.
+            await live.resumeIfNeeded()
+            await model.resumeIfNeeded(keepingActivities: live.hasRide)
+        }
     }
 
     @ViewBuilder

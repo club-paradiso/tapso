@@ -36,6 +36,7 @@ targets:
         ITSAppUsesNonExemptEncryption: false
         LSRequiresIPhoneOS: true
         NSSupportsLiveActivities: true
+        TAPSOAPIBaseURL: $(TAPSO_API_BASE_URL)
         UIApplicationSceneManifest:
           UIApplicationSupportsMultipleScenes: false
         UILaunchScreen: {}
@@ -44,6 +45,8 @@ targets:
     settings:
       base:
         PRODUCT_BUNDLE_IDENTIFIER: com.lucanomics.tapso
+        # The transit API the live ride talks to; a staging build may point elsewhere.
+        TAPSO_API_BASE_URL: https://tapso-api.vercel.app
         ASSETCATALOG_COMPILER_APPICON_NAME: AppIcon
         TARGETED_DEVICE_FAMILY: "1"
         SUPPORTS_MACCATALYST: NO

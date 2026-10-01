@@ -1,0 +1,70 @@
+{
+  "synthetic": true,
+  "request": "GET /v1/vehicles?routeId=JEB405136521&cityCode=39",
+  "status": 200,
+  "body": {
+    "items": [
+      {
+        "vehicleId": "제주70자0001",
+        "routeId": "JEB405136521",
+        "observedAt": "1970-01-01T00:00:00.000Z",
+        "receivedAt": "2026-10-01T08:00:00.000Z",
+        "timestampSource": "unavailable",
+        "stopId": "SYN-1",
+        "stopName": "제주버스터미널",
+        "stopSequence": 1,
+        "latitude": 33.5,
+        "longitude": 126.52,
+        "receiveType": "TAGO_SNAPSHOT"
+      },
+      {
+        "vehicleId": "제주70자0417",
+        "routeId": "JEB405136521",
+        "observedAt": "1970-01-01T00:00:00.000Z",
+        "receivedAt": "2026-10-01T08:00:00.000Z",
+        "timestampSource": "unavailable",
+        "stopId": "SYN-4",
+        "stopName": "서문시장",
+        "stopSequence": 4,
+        "latitude": 33.506,
+        "longitude": 126.526,
+        "receiveType": "TAGO_SNAPSHOT"
+      }
+    ],
+    "meta": {
+      "provider": "tago",
+      "cityCode": "39",
+      "routeId": "JEB405136521",
+      "count": 2,
+      "receivedAt": "2026-10-01T08:00:00.000Z",
+      "freshness": {
+        "providerObservationTimestamp": "unavailable",
+        "policy": "server_observed_cadence_v1",
+        "automaticMatching": "shadow_only_pending_matching_readiness",
+        "automaticMatchingWithheldBecause": "release gate matcher-passive-safety-v4 has demonstrated READY_FOR_SHADOW; automatic selection needs READY_FOR_BOUNDED_AUTOMATION (artifacts/matcher-passive-safety-v4/gate-result.json)",
+        "matchingReadiness": {
+          "gate": "matcher-passive-safety-v4",
+          "demonstrated": "READY_FOR_SHADOW",
+          "requiredForAutomaticMatching": "READY_FOR_BOUNDED_AUTOMATION",
+          "evidence": "artifacts/matcher-passive-safety-v4/gate-result.json"
+        },
+        "fieldValidationGate": {
+          "status": "superseded",
+          "supersededBy": "matcher-passive-safety-v4",
+          "requiredBoardings": 30,
+          "requirement": "at least 30 observed real boardings across multiple routes, with a clear candidate margin, no silent direction reversal, and bounded stale-data behaviour"
+        },
+        "cadencePolicy": {
+          "historyWindowSeconds": 90,
+          "minimumSamples": 3,
+          "minimumSpanSeconds": 10,
+          "maximumReceiptAgeSeconds": 30,
+          "maximumReceiptGapSeconds": 30,
+          "requiresProviderContentChange": true,
+          "calibration": "provisional"
+        }
+      },
+      "snapshotCacheTtlSeconds": 20
+    }
+  }
+}

@@ -1,0 +1,9 @@
+{
+  "synthetic": true,
+  "request": "GET /v1/sessions/synthetic-session-1",
+  "status": 404,
+  "body": {
+    "error": "SESSION_NOT_FOUND",
+    "message": "journey session not found"
+  }
+}

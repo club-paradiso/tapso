@@ -1,0 +1,48 @@
+{
+  "synthetic": true,
+  "request": "GET /v1/sessions/synthetic-session-1",
+  "status": 200,
+  "body": {
+    "id": "synthetic-session-1",
+    "routeId": "JEB405136521",
+    "cityCode": "39",
+    "boardingStop": {
+      "stopId": "SYN-1",
+      "name": "제주버스터미널",
+      "sequence": 1,
+      "latitude": 33.5,
+      "longitude": 126.52
+    },
+    "destinationStop": {
+      "stopId": "SYN-9",
+      "name": "제주시청(아라방면)",
+      "sequence": 9,
+      "latitude": 33.516,
+      "longitude": 126.536
+    },
+    "riderState": "waiting_at_stop",
+    "selectedVehicleId": "제주70자0001",
+    "selectionMode": "explicit",
+    "matchConfidence": "low",
+    "state": "degraded",
+    "progress": {
+      "currentStopSequence": 9,
+      "currentStopId": "SYN-9",
+      "remainingStops": 0,
+      "phase": "arrived",
+      "source": "retained_last_known",
+      "observedAt": "1970-01-01T00:00:00.000Z",
+      "evidenceAt": "2026-10-01T08:01:00.000Z",
+      "evidenceAtIs": "tapso_server_receipt"
+    },
+    "explanation": "The provider read failed. The last accepted progress is retained, no freshness was inferred, and no vehicle was rematched.",
+    "matchingMode": "shadow",
+    "providerRead": {
+      "state": "failed",
+      "consecutiveFailures": 1
+    },
+    "createdAt": "2026-10-01T08:00:00.000Z",
+    "updatedAt": "2026-10-01T08:01:20.000Z",
+    "expiresAt": "2026-10-01T12:00:00.000Z"
+  }
+}

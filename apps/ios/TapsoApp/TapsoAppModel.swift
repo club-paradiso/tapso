@@ -387,10 +387,13 @@ final class TapsoAppModel {
         beginPlayback()
     }
 
-    /// Resumes a ride restored at launch.
-    func resumeIfNeeded() async {
+    /// Resumes a ride restored at launch. Without one, a TAPSO activity left
+    /// on screen is an orphan and is ended, unless a live ride owns it.
+    func resumeIfNeeded(keepingActivities: Bool = false) async {
         guard activeRide != nil else {
-            await liveActivity?.endAll()
+            if !keepingActivities {
+                await liveActivity?.endAll()
+            }
             return
         }
         if let state = contentState() {
