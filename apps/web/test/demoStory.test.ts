@@ -41,10 +41,33 @@ test("step navigation clamps at both ends", () => {
   assert.equal(clampStep(RIDE_STORY.length + 3), RIDE_STORY.length - 1);
 });
 
-test("the synthetic trip uses the app's demo route", () => {
-  assert.equal(DEMO_ROUTE.stops[DEMO_TRIP.boardingIndex], "제주버스터미널");
+test("the marketing trip uses the verified full-length Route 365 direction", () => {
+  assert.equal(DEMO_ROUTE.sourceRouteId, "JEB405136522");
+  assert.equal(DEMO_ROUTE.stops.length, 41);
+  assert.equal(DEMO_ROUTE.stops[DEMO_TRIP.boardingIndex], "제주국제공항3(용담,시청)[북]");
   assert.equal(DEMO_ROUTE.stops[DEMO_TRIP.destinationIndex], "제주시청(아라방면)");
-  assert.equal(TRIP_TOTAL_STOPS, 8);
+  assert.deepEqual(
+    DEMO_ROUTE.stops.slice(DEMO_TRIP.boardingIndex, DEMO_TRIP.destinationIndex + 1),
+    [
+      "제주국제공항3(용담,시청)[북]",
+      "월성마을/선사유적지",
+      "용문마을회관[동]",
+      "용문마을[동]",
+      "용문사거리[동]",
+      "용담1동주민센터[남]",
+      "제주중학교/제주향교",
+      "서문시장[남]",
+      "관덕정[남]",
+      "중앙로 제민신협본점[서]",
+      "시민회관[서]",
+      "삼성초등학교",
+      "광양[서]",
+      "제주시청(아라방면)",
+    ],
+  );
+  assert.equal(TRIP_TOTAL_STOPS, 13);
+  assert.equal(positionFor(6).current, "서문시장[남]");
+  assert.equal(positionFor(2).next, "광양[서]");
   assert.equal(positionFor(1).next, "제주시청(아라방면)");
   assert.equal(positionFor(0).next, undefined);
   assert.equal(railProgress(TRIP_TOTAL_STOPS), 0);
