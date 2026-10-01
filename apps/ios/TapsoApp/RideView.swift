@@ -3,7 +3,7 @@ import TapsoTransit
 
 /// The ride. Remaining stops first, then the destination, then what to do.
 /// Riding, two stops, next stop and arrival are four different layouts, not
-/// one counter. Figma: `04 iOS` › Active Ride V2 and its state frames.
+/// one counter. Figma: `04 iOS — RIDE` › `iOS — RIDE · Product V2` (`157:10`).
 struct RideView: View {
     @Bindable var model: TapsoAppModel
     @State private var confirmingEnd = false
@@ -232,7 +232,7 @@ struct RideContent: View {
     }
 }
 
-/// The moment-specific hero. Figma: `JourneyActionCard / V2` variants.
+/// The moment-specific hero. Figma: `RideHero / V2` variants.
 struct RideHeroCard: View {
     let snapshot: RideSnapshot
     let onFinish: () -> Void
@@ -479,7 +479,8 @@ struct RideHeroCard: View {
 
 /// The Rescue plan's options in its order; the first is the suggestion when there is a
 /// choice. A walk shows its straight-line distance, never minutes: the real walk is longer.
-/// Figma: `04 iOS` › Product V3 › `V3 / 26 Passed stop` (`195:3021`).
+/// Figma: `09 Return / Rescue` › `V3 / 26 Passed stop` (`195:3021`); component
+/// `RescueOption / V3` on `02G iOS Product V3`.
 struct RescueOptionList: View {
     let advice: PassedStopAdvice
 
@@ -544,7 +545,7 @@ struct RescueOptionList: View {
     }
 }
 
-/// The stops ahead, nearest first, ending at the destination. Figma: `StopRail / V2`.
+/// The stops ahead, nearest first, ending at the destination. Figma: `StopLadder / V2`.
 struct StopLadder: View {
     let current: String
     let upcoming: [String]

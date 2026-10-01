@@ -357,11 +357,12 @@ async function dispatch(
       async () => (await read.call(discovery, route.cityCode, route.routeId)) ?? null,
     );
     if (!result.value) throw apiError("NOT_FOUND", "the provider has no route with that routeId");
+    const { undocumented, ...item } = result.value;
     return {
       cache: result.cache,
       response: json(
         {
-          item: result.value,
+          item,
           meta: {
             provider: config.transitProvider,
             cityCode: route.cityCode,
@@ -370,6 +371,8 @@ async function dispatch(
             // later stop is passed after that. Headways are the published averages.
             timeReference: "starting_stop_departure",
             headway: "published_average_minutes",
+            // What TAGO sent outside its documented shape, verbatim; the item never uses it.
+            ...(undocumented ? { undocumentedFields: undocumented } : {}),
           },
         },
         200,

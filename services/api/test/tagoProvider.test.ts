@@ -362,6 +362,24 @@ test("service hours stay absent when TAGO leaves them out or sends what it does 
   }
 });
 
+test("a service-day value TAGO sends outside its documented shape is kept verbatim for diagnosis, never used", async () => {
+  const read = (item: Record<string, unknown>) =>
+    new TagoTransitProvider({ serviceKey: "test-key", fetchImplementation: routeInfoFetch({ routeid: "R1", ...item }) })
+      .routeServiceHours("39", "R1");
+
+  const hours = await read({ startvehicletime: "05:30", endvehicletime: "223000", intervaltime: "15~20", intervalsattime: 20, intervalsuntime: "" });
+  assert.equal(hours?.firstDeparture, undefined);
+  assert.equal(hours?.lastDeparture, undefined);
+  assert.deepEqual(hours?.headwayMinutes, { saturday: 20 });
+  assert.deepEqual(
+    hours?.undocumented,
+    { startvehicletime: "05:30", endvehicletime: "223000", intervaltime: "15~20" },
+    "an empty value is absent, not undocumented",
+  );
+  assert.equal((await read({ endvehicletime: "x".repeat(40) }))?.undocumented?.endvehicletime, "x".repeat(16), "cut to 16 characters");
+  assert.equal((await read({ startvehicletime: "0600", intervaltime: 29 }))?.undocumented, undefined, "documented values are not reported");
+});
+
 test("a route TAGO does not know has no service day", async () => {
   const empty = new TagoTransitProvider({ serviceKey: "test-key", fetchImplementation: routeInfoFetch(undefined) });
   assert.equal(await empty.routeServiceHours("39", "R1"), undefined);

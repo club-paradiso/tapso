@@ -26,7 +26,7 @@ Times are minutes on one clock where the caller's "now" is 0. A range
 | Input | Where it comes from today | Label |
 |---|---|---|
 | Return departures (a full list) | **No verified source.** TAGO publishes no timetable in the services TAPSO uses (`DATA_VALIDATION.md`) | `MISSING` → evaluates to `unknown` |
-| Last departure of a route variant | TAGO `getRouteInfoIem` through `GET /v1/route-info`: first and last departure (`HHMM`) from the route's **starting stop**, and average headways (data.go.kr dataset 15098529) | `REPORTED-OFFICIAL`; live values `UNVERIFIED` until the post-deploy probe reads them. Used as one conservative departure (`LastBus`): a bus passes later stops after it leaves the starting stop |
+| Last departure of a route variant | TAGO `getRouteInfoIem` through `GET /v1/route-info`: first and last departure (`HHMM`) from the route's **starting stop**, and average headways (data.go.kr dataset 15098529) | Shape `REPORTED-OFFICIAL`. Live, `VERIFIED` 2026-10-01: production returned HTTP 200 with no first or last departure and no headway for all 50 variants of routes 102, 202, 282, 365 and 800, so every Jeju variant evaluates to `unknown` today; `meta.undocumentedFields` tells whether TAGO sends nothing or a shape it does not document. Used as one conservative departure (`LastBus`): a bus passes later stops after it leaves the starting stop |
 | Feeder arrival range | Remaining stops on the live route × an assumed per-stop band, until an arrival-prediction source is verified | `ASSUMED` band, labelled as an estimate |
 | Connecting bus range | Same as above for a live connecting bus | `ASSUMED` band |
 | Walking metres | Haversine between surveyed stop coordinates (TAGO `gpslati`/`gpslong`) | `VERIFIED` coordinates, straight-line distance (a lower bound) |
@@ -36,7 +36,8 @@ Times are minutes on one clock where the caller's "now" is 0. A range
 
 So in live use today Safe Return honestly answers `unknown` for most places,
 with one exception since V2.4b: after a live ride the end screen shows each
-variant's last departure (`ReturnTripCard`), evaluated with `departures: [last]`,
+variant's last departure where TAGO publishes one (for Jeju routes it published
+none on 2026-10-01) (`ReturnTripCard`), evaluated with `departures: [last]`,
 `arrival: 0`, `minimumStay: 0`, so the rider sees "be at the stop by" the last
 departure minus the 10-minute margin, never a time the bus passes their stop.
 That is the intended behaviour, not a gap to paper over: `unknown` is never

@@ -4,12 +4,20 @@ File: `TAPSO — Product / Marketing Design System`, key `kkx04GvqOzHje7Dw5ikO9X
 
 | Figma page | Node | Contents |
 |---|---|---|
+| 00 Cover / Index | `46:2` | Page map and editing rules; the Handoff boards (`13:2` reality labels and rules, `162:2` this table, condensed) |
 | 02F iOS Ride V2 | `152:2` | V2 components (below) |
-| 04 iOS › iOS / Product V2 | `157:10` | 23 finished screen designs (19 light, 4 dark through the V2 Dark mode) and a header |
-| 04 iOS › Live Activity & Dynamic Island | `160:1208` | One row per ride moment: compact, minimal, expanded, Lock Screen |
-| 06 Handoff › Product V2 mapping | see page | This table, condensed |
-| 07 Playground › Product V2 explorations | see page | Alternatives considered |
+| 02G iOS Product V3 | `212:2` | V3 components: `ReturnTripRow / V3` (`212:123`), `RescueOption / V3` (`212:139`), `ReturnCountdown / Lock Screen V3` (`212:162`), `ReturnCountdown / Island V3` (`212:193`) |
+| 03 iOS — GO › iOS — GO · Product V2 + V3 | `205:3310` | Home to the rider's confirmation: V2 01–09 with Dark · 02, Dark · 08 and EN · 02, and the map hand-off V3 20–24 |
+| 04 iOS — RIDE › iOS — RIDE · Product V2 | `157:10` | The ride: V2 10–19 with their dark, EN and SE 375 variants |
+| 05 Live Activity · Dynamic Island | `160:1208` | One row per ride moment: compact, minimal, expanded, Lock Screen |
+| 07 Discover, 08 Eat, 10 Passport / Share | `205:4`, `205:5`, `205:7` | Status cards only: not designed, and why |
+| 09 Return / Rescue › Return / Rescue · Product V3 | `193:2956` | V3 25–27: the way back, rescue past your stop, the countdown |
+| 11 Marketing Web | `3:4` | Marketing V2 board (`165:54`) |
+| 12 Prototype | `205:8` | Clickable flows A (map hand-off → ride), B (confirmation → island → arrival), D (passed stop → rescue), built from labelled copies |
+| 13 Archive | `102:2` | Superseded boards in dated sections, nothing deleted: Web legacy and V1, iOS V1 workbench and the live-ride trial, Android workbench, Playground and the Product V2 explorations |
 | Variables › TAPSO V2 Semantic | `VariableCollectionId:151:14` | Semantic tokens, Light/Dark |
+
+Pages follow the Product V3 structure since 2026-10-01. There is no separate `06 Dynamic Island` page: one `ContentState` draws the Lock Screen and every island region, so `05` keeps them on one row per moment, where a mismatch shows. Node IDs did not change when boards moved between pages.
 
 Keep this file current when either side changes. Code Connect for Swift is not set up: publishing needs an Organization/Enterprise Figma plan (`docs/FIGMA_CODE_CONNECT.md`), so node IDs here are the mapping.
 
@@ -70,10 +78,12 @@ App-only pieces drawn inline in Figma screens: DemoDataChip (`DemoDataChip`, `de
 
 ## Product V3 board (2026-10-01)
 
-`04 iOS` › `iOS / Product V3 · Hand-off, Way back & Rescue` (`193:2956`), built from the
+The hand-off frames V3 20–24 are on `03 iOS — GO` (`205:3310`); V3 25–27 on
+`09 Return / Rescue` › `Return / Rescue · Product V3` (`193:2956`). All are built from the
 V2 components (`Icon / V2`, `Button / V2`, `RouteBadge / V2`, `StopRow / V2`,
-`돌이 / V2`) and bound to the `TAPSO V2 Semantic` variables. Sample data is
-synthetic and labelled so on the board.
+`돌이 / V2`) and bound to the `TAPSO V2 Semantic` variables; in 25–27 the last-bus rows,
+the rescue options and the countdown surfaces are instances of the `02G iOS Product V3`
+components. Sample data is synthetic and labelled so on the boards.
 
 | Figma frame | SwiftUI | Snapshot |
 |---|---|---|

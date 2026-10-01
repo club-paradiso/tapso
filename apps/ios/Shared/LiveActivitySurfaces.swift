@@ -3,7 +3,7 @@ import TapsoTransit
 
 // The Lock Screen and Dynamic Island surfaces as plain views over the activity's
 // attributes and state, so the widget extension and the app's snapshot tests
-// render the same code. Figma: `04 iOS` › Live Activity V2.
+// render the same code. Figma: `05 Live Activity · Dynamic Island` (`160:1208`); components on `02F iOS Ride V2`.
 
 /// Lock Screen and banner background for a moment. Escalates with the ride:
 /// basalt while riding, coral at the next stop, tangerine on arrival.

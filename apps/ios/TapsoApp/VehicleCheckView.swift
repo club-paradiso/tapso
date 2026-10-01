@@ -2,7 +2,8 @@ import SwiftUI
 import TapsoTransit
 
 /// Finds the physical bus and asks the rider to confirm it. Nothing is
-/// selected without the rider's tap. Figma: `04 iOS` › Matching / Vehicle Confirmation V2.
+/// selected without the rider's tap. Figma: `03 iOS — GO` › `V2 / 07 Matching (searching)`
+/// (`158:214`), `V2 / 08 Vehicle confirmation` (`158:277`), `V2 / 09 Multiple candidates` (`158:353`).
 struct VehicleCheckView: View {
     @Bindable var model: TapsoAppModel
 

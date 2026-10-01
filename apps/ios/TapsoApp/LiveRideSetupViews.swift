@@ -4,9 +4,10 @@ import TapsoTransit
 // Live ride setup: route number → official variant → boarding and destination
 // on the real stop list → the vehicle check against a server session. Every
 // list here is what TAPSO's API returned just now; nothing is synthetic.
-// Figma: `03 iOS — GO` › Live setup.
+// Figma: the live setup has no current frames (the V1 trial, `191:2708`, is on `13 Archive`);
+// the stop list near a shared place is `03 iOS — GO` › `V3 / 23` (`193:3049`).
 
-/// Home's entry to a live ride. Figma: `LiveRideEntryCard / V3`.
+/// Home's entry to a live ride. Figma: no Figma component yet; drawn inside the screens.
 struct LiveRideEntryCard: View {
     let action: () -> Void
 
@@ -45,7 +46,7 @@ struct LiveRideEntryCard: View {
     }
 }
 
-/// "실시간 · 베타": live data, and an honest stage label. Figma: `LiveBadge / V3`.
+/// "실시간 · 베타": live data, and an honest stage label. Figma: no Figma component yet; drawn inside the screens.
 struct LiveBadge: View {
     var body: some View {
         Text("live.badge")
@@ -58,7 +59,7 @@ struct LiveBadge: View {
 }
 
 /// A live request that did not answer, explained by what kind of failure it was.
-/// Figma: `RecoveryCard / V2` (live failure variants).
+/// Figma: no Figma component yet; drawn inside the screens.
 struct LiveFailureNotice: View {
     let failure: TransitAPIFailure
     var retry: (() -> Void)?
@@ -84,7 +85,7 @@ struct LiveFailureNotice: View {
     }
 }
 
-/// "몇 번 버스 타요?" The route number, then its official variants. Figma: `03 iOS — GO` › Live route.
+/// "몇 번 버스 타요?" The route number, then its official variants. Figma: no current frame.
 struct LiveRouteSearchView: View {
     @Bindable var model: TapsoAppModel
     @State private var number = ""
@@ -198,7 +199,7 @@ struct LiveRouteSearchView: View {
     }
 }
 
-/// One official variant: number, first stop, last stop. Figma: `RouteCard / V3` (live).
+/// One official variant: number, first stop, last stop. Figma: no Figma component yet; drawn inside the screens.
 struct LiveRouteRow: View {
     let route: TransitAPIRoute
 
@@ -229,7 +230,7 @@ struct LiveRouteRow: View {
     }
 }
 
-/// "어디서 타요? 어디서 내려요?" on the variant's real stop list. Figma: `03 iOS — GO` › Live stops.
+/// "어디서 타요? 어디서 내려요?" on the variant's real stop list. Figma: `03 iOS — GO` › `V3 / 23 Live stops · near the shared place` (`193:3049`).
 struct LiveStopPickerView: View {
     @Bindable var model: TapsoAppModel
     let routeID: String
@@ -412,7 +413,7 @@ struct LiveStopPickerContent: View {
     }
 }
 
-/// The place the rider shared, kept in view while the ride is set up for it. Figma: `SharedPlaceCard / V3` (compact).
+/// The place the rider shared, kept in view while the ride is set up for it. Figma: no Figma component yet; drawn inside the screens.
 struct HandoffPlaceLine: View {
     let place: SharedPlace
 

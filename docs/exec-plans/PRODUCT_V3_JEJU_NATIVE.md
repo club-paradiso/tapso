@@ -135,6 +135,20 @@ swift test --package-path packages/transit-core   # macOS / CI
   Activity type the rider starts from the last-bus card; the system runs its
   countdown (`Text(timerInterval:)`), so it needs no push. Bounds from Apple's
   eight-hour limit (VERIFIED) and a 5-minute floor (ASSUMED).
+- 2026-10-01 18:24–18:31 UTC — #82, #83 and #84 merged (`9e46e39`, `93cfad3`,
+  `a5ab514`), each with green CI on a head that already contained the one
+  before it. GitHub merged `main` into #82 from a single merge base (`156d656`)
+  although the histories share two, and from that base both sides added
+  `JEJU_SAFETY_LAYER_V3.md`: the file was held at `main`'s text, `main` merged
+  in on the server, and the rows restored (`dc76346`, `2b33517`, `67a6955`); the
+  resulting tree equals git's recursive merge.
+- 2026-10-01 18:24–18:26 UTC — the route-info probe against production:
+  production returned HTTP 200 with no first or last departure and no headway for all 50 variants of routes 102, 202, 282, 365 and 800. The way back reads `unknown` everywhere in Jeju until that
+  changes; this PR adds `meta.undocumentedFields` to tell "nothing" from
+  "another shape".
+- The Figma file now follows the V3 page structure, with `02G iOS Product V3`
+  components for the way back and rescue; repository references follow in #85.
+  The site's status and map sections follow the app in #86.
 - Transfer Guardian in a live ride stays unbuilt: `/v1/vehicles` can place the
   connecting bus, but without TAGO arrival predictions (dataset 15098530,
   `vehicletp` and `arrtime`, awaiting the owner's data.go.kr authorization) the
@@ -147,10 +161,19 @@ swift test --package-path packages/transit-core   # macOS / CI
   `transit-core` check until the fix lands.
 - Production sessions cannot be enabled from this environment: the Upstash
   credentials are Sensitive values only the owner holds.
+- TAGO's `getRouteInfoIem` gives no service day for Jeju routes in production
+  (`VERIFIED` 2026-10-01, 50 variants). Unless TAGO sends it in another shape,
+  the last bus needs another official source (the Jeju bus information
+  system's timetables), whose terms must be checked before any use.
+- GitHub merges criss-cross histories from one merge base; a branch that merges
+  cleanly with local `git merge` can still conflict on the server. Check with
+  `git merge-tree --merge-base=<GitHub's base>` before trusting a local merge.
 
 ## Exact next action
 
-Merge #78 (PR D) once CI is green on its `main` merge; retarget #82 (PR E) to
-`main`, update it from `main`, merge; then PR F (Rescue) the same way. After
-that: Live Activity V3 states from `resolveSurface` (recovery on the Lock
-Screen), then Discovery once a verified place source exists.
+Merge #85 (Figma references) and #86 (site) when green. Deploy this change and
+run the data-source probe: if `meta.undocumentedFields` shows another shape,
+parse that shape with a test built from the observed values; if TAGO sends
+nothing, look for an official Jeju timetable source and record its terms
+before using it. Then Live Activity V3 states from `resolveSurface` (recovery
+on the Lock Screen), then Discovery once a verified place source exists.

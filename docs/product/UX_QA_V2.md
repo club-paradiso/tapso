@@ -10,7 +10,7 @@ Evidence for Product V2 and what it does not yet prove. Reality labels as in `RE
 | CI job `ios` › Build and test | App + Live Activity extension build; `TapsoActivityAttributesTests` (unchanged), `RidePresentationTests` | `xcodebuild … -scheme Tapso build test` |
 | CI job `ios` › Render snapshot evidence | Every V2 screen (light, dark), 375/440-pt widths and AX3 text for the densest screens, Lock Screen and island regions for every ride moment, in Korean and English — rendered by `SnapshotEvidenceTests` with SwiftUI `ImageRenderer` on the simulator | Set `TEST_RUNNER_TAPSO_SNAPSHOT_DIR`, run `-only-testing:TapsoTests/SnapshotEvidenceTests -testLanguage ko` (and `en`) |
 | CI artifact `ios-snapshot-evidence` | The canonical evidence: PNGs per language, uploaded by the read-only `ios` job | Actions run › Artifacts |
-| Figma `04 iOS` `157:10`, `160:1208` | Designed screens and the Live Activity / island board | — |
+| Figma `03 iOS — GO` `205:3310`, `04 iOS — RIDE` `157:10`, `05 Live Activity · Dynamic Island` `160:1208` | Designed screens and the Live Activity / island board | — |
 | `scripts/ios/check_localization.py` | Every used key exists in ko and en with matching format arguments | `python3 scripts/ios/check_localization.py` |
 | `services/api/test/crossLanguageAuthority.test.ts` | The app still makes no network request and the Swift matcher still sees only the demo fixture | `npm test --prefix services/api` |
 
