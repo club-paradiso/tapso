@@ -1,5 +1,7 @@
 # Marketing site V2
 
+> 2026-10-01: the hero and sections 01–05 are superseded by Marketing Site V3 (`MARKETING_SITE_V3.md`): one ride told by a persistent Dynamic Island. Sections 06–11, the waitlist and support backends and the claim guard described here are unchanged.
+
 The public page at [tapso-nu.vercel.app](https://tapso-nu.vercel.app), built from `apps/web`. It presents TAPSO; it is not TAPSO. The native iOS app is the product. Every phone, Lock Screen and Dynamic Island on the page is a labelled re-drawing on synthetic data, and the page says so where each one appears.
 
 ## Purpose and audience

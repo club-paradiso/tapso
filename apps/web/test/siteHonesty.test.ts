@@ -11,6 +11,7 @@ import { fileURLToPath } from "node:url";
 import type { WaitlistResponse } from "../api/_lib/contract.ts";
 import { FORBIDDEN_CLAIMS } from "../src/content/forbiddenClaims.ts";
 import { FAQ_ITEMS, NAV_ITEMS, STATUS_ITEMS } from "../src/content/site.ts";
+import { CHAPTERS } from "../src/story/beats.ts";
 import { supportStatus } from "../src/lib/supportStatus.ts";
 import { UNAVAILABLE_MESSAGE, waitlistOutcome } from "../src/lib/waitlistMessages.ts";
 
@@ -104,8 +105,13 @@ test("status never claims TestFlight or the App Store is here", () => {
 
 test("every navigation target exists on the page", () => {
   const sources = files(join(src, "sections")).map((p) => readFileSync(p, "utf8")).join("\n");
+  // The journey's chapters take their anchors from the story model.
+  assert.match(sources, /<section[^>]*\n?\s*id=\{chapter\.id\}/, "journey chapters render their ids");
+  const chapterIds = new Set<string>(CHAPTERS.map((c) => c.id));
   for (const item of NAV_ITEMS) {
-    assert.match(sources, new RegExp(`id="${item.href.slice(1)}"`), item.href);
+    const id = item.href.slice(1);
+    if (chapterIds.has(id)) continue;
+    assert.match(sources, new RegExp(`id="${id}"`), item.href);
   }
 });
 

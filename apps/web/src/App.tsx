@@ -2,11 +2,7 @@ import { Suspense, lazy, useCallback, useEffect, useState } from "react";
 import { confirmSupportPayment, formatKrw } from "./lib/supportClient";
 import { Header } from "./sections/Header";
 import { Hero } from "./sections/Hero";
-import { RideStory } from "./sections/RideStory";
-import { BusIdentity } from "./sections/BusIdentity";
-import { LiveSurfaces } from "./sections/LiveSurfaces";
-import { PhoneAway } from "./sections/PhoneAway";
-import { TrustStates } from "./sections/TrustStates";
+import { Journey } from "./sections/Journey";
 import { MapCompanion } from "./sections/MapCompanion";
 import { Privacy } from "./sections/Privacy";
 import { Status } from "./sections/Status";
@@ -14,6 +10,7 @@ import { Waitlist } from "./sections/Waitlist";
 import { Support } from "./sections/Support";
 import { Faq } from "./sections/Faq";
 import { Footer } from "./sections/Footer";
+import { IslandDock } from "./components/IslandDock";
 
 // Kept out of the initial chunk: the marketing page must not pay for a
 // secondary action most visitors never open.
@@ -108,16 +105,13 @@ export default function App() {
   return (
     <div className="page">
       <Header />
+      <IslandDock />
       <main id="main" tabIndex={-1}>
         {supportReturn ? (
           <SupportReturnBanner result={supportReturn} onDismiss={dismissSupportReturn} />
         ) : null}
         <Hero />
-        <RideStory />
-        <BusIdentity />
-        <LiveSurfaces />
-        <PhoneAway />
-        <TrustStates />
+        <Journey />
         <MapCompanion />
         <Privacy />
         <Status />
