@@ -15,7 +15,8 @@
  * Output lines:
  *   ## <source>: HTTP <status>; <page title>
  *   DATASETS <search>: <id> <id> ...
- *   META <label>: <value>       data.go.kr's dataset table, verbatim
+ *   META <text>                 data.go.kr's description and metadata, verbatim
+ *   CONTRACT <id> <op> …        an Open API dataset's operations, parameters and response fields
  *   LINK <text> → <href>        links that name a timetable, a download or terms
  *   NEAR <word>: <text>         the page's own words around <word>
  */
@@ -44,7 +45,8 @@ async function get(url: string): Promise<{ status: number; body: string }> {
     }
     return { status: response.status, body: decoder.decode(bytes) };
   } catch (error) {
-    return { status: 0, body: String(error) };
+    const cause = (error as { cause?: { code?: string; message?: string } }).cause;
+    return { status: 0, body: `${String(error)}${cause ? ` (cause: ${cause.code ?? ""} ${cause.message ?? ""})` : ""}` };
   }
 }
 
@@ -91,17 +93,51 @@ function printLinks(html: string, base: string, pattern: RegExp, limit = 25): st
   return [...found];
 }
 
-/** data.go.kr shows a dataset's metadata as a table of <th> labels and <td> values. */
+/**
+ * data.go.kr lays a dataset's description and metadata (provider, dates,
+ * format, update cycle, licence) out as text after the dataset's name, which
+ * the page repeats below its menus; print that text as the portal gives it.
+ */
 function printMeta(html: string): void {
-  let rows = 0;
-  for (const match of html.matchAll(/<th[^>]*>([\s\S]*?)<\/th>\s*<td[^>]*>([\s\S]*?)<\/td>/gi)) {
-    const label = plain(match[1] ?? "");
-    const value = plain(match[2] ?? "");
-    if (!label || label.length > 40) continue;
-    console.log(`META ${label}: ${value.slice(0, 400)}`);
-    if (++rows >= 40) break;
+  const name = title(html).split("|")[0]!.trim();
+  const text = plain(html);
+  const first = text.indexOf(name);
+  const at = first < 0 ? -1 : text.indexOf(name, first + name.length);
+  console.log(`META ${at < 0 ? "(dataset text not found)" : text.slice(at, at + 2_000)}`);
+}
+
+/** The portal's machine-readable contract for an Open API dataset: every operation with its parameters and response fields. */
+type OpenApi = { paths?: Record<string, Record<string, { summary?: string; parameters?: Array<{ name?: string; required?: boolean }>; responses?: unknown }>> };
+
+function fieldNames(node: unknown, out = new Set<string>()): Set<string> {
+  if (Array.isArray(node)) node.forEach((child) => fieldNames(child, out));
+  else if (node && typeof node === "object") {
+    for (const [key, value] of Object.entries(node)) {
+      if (key === "properties" && value && typeof value === "object") Object.keys(value).forEach((name) => out.add(name));
+      fieldNames(value, out);
+    }
   }
-  if (rows === 0) console.log("META (no label/value table found)");
+  return out;
+}
+
+async function printContract(id: string): Promise<void> {
+  const spec = await get(`${PORTAL}/catalog/${id}/openapi.json`);
+  let parsed: OpenApi | undefined;
+  try {
+    parsed = JSON.parse(spec.body) as OpenApi;
+  } catch {
+    console.log(`CONTRACT ${id}: HTTP ${spec.status}, not JSON: ${plain(spec.body).slice(0, 200)}`);
+    return;
+  }
+  const paths = Object.entries(parsed.paths ?? {});
+  if (paths.length === 0) console.log(`CONTRACT ${id}: HTTP ${spec.status}, no operations`);
+  for (const [path, methods] of paths) {
+    for (const [method, operation] of Object.entries(methods)) {
+      const parameters = (operation.parameters ?? []).map((p) => `${p.name}${p.required ? "*" : ""}`).join(", ");
+      const fields = [...fieldNames(operation.responses)].join(", ");
+      console.log(`CONTRACT ${id} ${method.toUpperCase()} ${path} — ${operation.summary ?? ""}\n   params: ${parameters}\n   fields: ${fields}`);
+    }
+  }
 }
 
 const PORTAL = "https://www.data.go.kr";
@@ -124,7 +160,8 @@ async function portalDataset(id: string): Promise<void> {
     console.log(`\n## data.go.kr ${id} (${kind}): HTTP ${page.status}; ${title(page.body)}`);
     printMeta(page.body);
     printLinks(page.body, PORTAL, /시간표|timetable|schedule|bus\.jeju|jejudatahub|download|다운로드/i);
-    printNear(text, ["시간표", "첫차", "막차", "이용허락범위", "출처"], 300);
+    printNear(text, ["시간표", "첫차", "막차", "출처"], 300);
+    if (kind === "openapi") await printContract(id);
     return;
   }
   console.log(`\n## data.go.kr ${id}: no Jeju dataset page answered (${statuses.join(", ")})`);
