@@ -162,7 +162,7 @@ export default function SupportDialog({ onClose }: { onClose: () => void }) {
                 <p className="support-channel-kicker">대한민국 · KRW</p>
                 <h3 id={`${titleId}-bank`}>원화 계좌이체</h3>
               </div>
-              <span className="support-channel-badge">수수료 없음</span>
+              <span className="support-channel-badge">KRW 송금</span>
             </div>
             <p className="support-channel-copy">
               국내에서 가장 단순한 방법이에요. 아래 전용 계좌로 원하는 금액을
