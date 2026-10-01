@@ -1,6 +1,6 @@
 # Marketing site V2
 
-The public page at [tapso-nu.vercel.app](https://tapso-nu.vercel.app), built from `apps/web`. It presents TAPSO; it is not TAPSO. The native iOS app is the product. Every phone, Lock Screen and Dynamic Island on the page is a labelled re-drawing on synthetic data, and the page says so where each one appears.
+The public page at [tapso-nu.vercel.app](https://tapso-nu.vercel.app), built from `apps/web`. It presents TAPSO; it is not TAPSO. The native iOS app is the product. Every phone, Lock Screen and Dynamic Island on the page is a labelled re-drawing. The Route 365 stop topology is the verified provider topology; vehicle identity, plate, timing and playback state are synthetic, and the page labels the preview accordingly.
 
 ## Purpose and audience
 
@@ -21,7 +21,7 @@ Severity as in `UX_AUDIT_V2.md`: **P0** misrepresents the product; **P1** blocks
 |---|---|---|
 | P0-1 | Hero body said TAPSO "제주 버스의 물리 차량을 확인하고" — reads as automatic identification. Automatic selection is off (`KNOWN_ISSUES.md`); the rider confirms the bus | `FIXED`: "탄 버스를 한 번 함께 확인하면"; the bus-check section and FAQ state that the rider confirms |
 | P0-2 | Island copy "제주 바람 따라 잘 가고 있어요." — the V1 line Product V2 removed as copy that answers nothing (`UX_AUDIT_V2.md` P2-4); "정류장" where the app says "정거장" | `FIXED`: every quoted product string now comes from `ko.lproj/Localizable.strings`, enforced by a test |
-| P0-3 | Stop names differed between desktop and mobile (용문사거리/서문시장 vs 관덕정/광양), and 용문사거리 is not a stop on the demo route | `FIXED`: one synthetic trip from `DemoFixtures.route` everywhere |
+| P0-3 | Stop names differed between desktop and mobile, and the old hand-written Route 365 sequence did not match the provider topology | `FIXED`: marketing demos use the verified `JEB405136522` ordered topology; the showcased trip is 제주국제공항3(용담,시청)[북] → 제주시청(아라방면) |
 | P1-1 | The page was Header → Hero → three feature cards → Waitlist: no explanation of how a ride works, the physical-bus problem, the Lock Screen, trust states, privacy, status or FAQ | `FIXED`: twelve-part story (below) |
 | P1-2 | `IslandExperience.tsx` (an interactive island demo) and `Icons.tsx` were never rendered; `styles.css` (2,010 lines) was not imported; three V1 simulator JPEGs were unused | `FIXED`: removed; replaced by V2 components |
 | P1-3 | A 1.2 MB PNG (`dori.png`) loaded above the fold | `FIXED`: a 60 KB WebP, lazy, below the fold; the source moved to `docs/design/marketing/dori-source.png` |
@@ -60,7 +60,7 @@ CTA rhythm: header (always), hero, the waitlist section, and the footer. No sect
 - **Copy.** Product strings are quoted, not paraphrased: `src/demo/rideCopy.ts` holds only keys from `apps/ios/Resources/ko.lproj/Localizable.strings`, and `test/productParity.test.ts` fails on any drift.
 - **States.** `src/demo/rideMoments.ts` mirrors `RideGuidancePolicy`: colour role, count presentation (live / last known / hidden), symbol, milestone, Lock Screen surface (basalt → coral → tangerine), and the two trust signals. The test parses `RideGuidance.swift` and compares.
 - **Surfaces.** `NativeSurfaces.tsx` re-draws `LiveActivitySurfaces.swift` (Lock Screen, compact leading/trailing, minimal, expanded) and `RideParts.tsx` the V2 components (돌이, RouteBadge, JourneyRail, TrustBadge, count or symbol). `AppScreens.tsx` re-draws Home, route, boarding, vehicle check and ride screens.
-- **Data.** One synthetic trip: route 365, 제주버스터미널 → 제주시청(아라방면), 8 stops, from `DemoFixtures.route`; plates such as `••0001` are invented.
+- **Data.** Route 365 uses the verified full-length TAGO direction `JEB405136522` (41 ordered stops, checked 2026-10-01 through TAPSO's production `/v1/stops` path). The showcased segment is 제주국제공항3(용담,시청)[북] → 제주시청(아라방면), 13 stops. Stop names/order are provider data; plates such as `••0001`, vehicle identity and playback timing are synthetic.
 - **Tokens.** `src/styles/tokens.css` carries the `TAPSO V2 Semantic` colours with the same names; web-only additions are layout, type, motion and one warm paper tone (`--sand`). No other stylesheet introduces a raw hex value.
 
 The web does not redefine the product. It changes nothing under `apps/ios`, `packages/transit-core` or `services/api`.
