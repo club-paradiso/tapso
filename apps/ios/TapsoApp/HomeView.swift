@@ -18,6 +18,7 @@ struct HomeView: View {
                 onRideAgain: { model.rideAgain($0) },
                 onToggleFavorite: { model.toggleFavorite($0) },
                 onMapImport: { model.openMapImport() },
+                onLive: { model.openLiveSearch() },
                 onSample: { model.startDemo() },
                 onDemoSettings: { model.isDemoPanelPresented = true }
             )
@@ -35,6 +36,7 @@ struct HomeContent: View {
     let onRideAgain: (SavedJourney) -> Void
     let onToggleFavorite: (SavedJourney) -> Void
     let onMapImport: () -> Void
+    var onLive: () -> Void = {}
     let onSample: () -> Void
     var onDemoSettings: () -> Void = {}
 
@@ -79,6 +81,8 @@ struct HomeContent: View {
             }
 
             MapHandoffIntakeCard(action: onMapImport)
+
+            LiveRideEntryCard(action: onLive)
 
             if library.recents.isEmpty {
                 firstRideCard

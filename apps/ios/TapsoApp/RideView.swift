@@ -12,6 +12,23 @@ struct RideView: View {
     var body: some View {
         NavigationStack {
             ScrollView {
+                if model.isLiveRide, let failure = model.liveFailure {
+                    LiveFailureNotice(failure: failure)
+                        .padding(.horizontal, TapsoSpace.gutter)
+                        .padding(.top, TapsoSpace.md)
+                }
+                if model.liveRideEndedByServer {
+                    NoticeCard(
+                        systemImage: "stop.circle",
+                        title: "live.ride.ended.title",
+                        message: "live.ride.ended.body",
+                        tint: TapsoColor.journeyDegraded,
+                        actionTitle: "ride.end.action",
+                        action: { Task { await model.cancelRide() } }
+                    )
+                    .padding(.horizontal, TapsoSpace.gutter)
+                    .padding(.top, TapsoSpace.md)
+                }
                 if let guidance = model.guidance {
                     RideContent(
                         snapshot: RideSnapshot(model: model, guidance: guidance),
@@ -40,7 +57,9 @@ struct RideView: View {
                 }
                 ToolbarItem(placement: .topBarTrailing) {
                     Menu {
-                        Button("ride.menu.demo", systemImage: "testtube.2") { model.isDemoPanelPresented = true }
+                        if !model.isLiveRide {
+                            Button("ride.menu.demo", systemImage: "testtube.2") { model.isDemoPanelPresented = true }
+                        }
                         Button("ride.menu.end", systemImage: "xmark.circle", role: .destructive) { confirmingEnd = true }
                     } label: {
                         Image(systemName: "ellipsis.circle")

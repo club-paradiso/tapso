@@ -53,10 +53,10 @@ return, transfer, rescue, handoff, discovery, eat, passport/share, mystery.
 | V2.1b | Reliability taxonomy | `PROVIDER_TIMEOUT` 504, `PROVIDER_UNAVAILABLE` 502, `PROVIDER_RESPONSE_INVALID` 502, `INTERNAL_ERROR` 500 and an empty list are distinct; tests in `tagoProvider.test.ts`, `apiRouter.test.ts` | `DONE` in PR A |
 | V2.1c | Journey Contract v1 | Same specification passes in Node and Swift (`JOURNEY_CONTRACT_V3.md`) | `DONE` in PR A (Swift pending CI) |
 | V2.1d | Production durable sessions | `/health` reports `sessions.store=redis`, namespace `production`; post-deploy session smoke passes | `BLOCKED_BY_CREDENTIALS`: four Production variables on `tapso-api` (runbook in `PRODUCTION_TRANSIT_API.md`) |
-| V2.1e | iOS real Journey Session integration | Live mode creates, refreshes, confirms and ends a session against the API; demo stays synthetic; guard test proves no real data reaches the Swift matcher | `PENDING` (PR C) |
+| V2.1e | iOS real Journey Session integration | Live mode creates, refreshes, confirms and ends a session against the API; demo stays synthetic; guard test proves no real data reaches the Swift matcher | `IMPLEMENTED` (PR C), app side pending CI; production `BLOCKED_BY_CREDENTIALS` (V2.1d) |
 | V2.2 | Map Handoff | Share Extension accepts KakaoMap, NAVER Map, Apple Maps, URLs, coordinates, addresses and names; parser tests; Journey Contract created from a handoff | `PENDING` (PR D) |
 | V2.3 | Core riding | Live Activity V3 states from `resolveSurface`; push-token registration endpoint; Transfer Guardian in the ride | `PENDING` (PR E) |
-| V2.4 | Jeju safety layer | Safe Return, Rescue engines with deterministic tests (no-return rejection, long headway, expired data) | `PENDING` (PR B) |
+| V2.4 | Jeju safety layer | Safe Return, Rescue engines with deterministic tests (no-return rejection, long headway, expired data) | `IMPLEMENTED` (PR B #73): engines in both languages; wiring into surfaces pending |
 | V3.0 | Jeju discovery | 오늘 뭐하젠?, 그냥 탑서 (filtered before randomisation), route experiences grounded in live route data | `PENDING` (PR F) |
 | V3.1 | Transit Fit | Semantic accessibility summary, no fake scores | `PENDING` (PR F) |
 | V3.2 | Eat | Transit-aware food situations | `PENDING` |
@@ -91,8 +91,18 @@ swift test --package-path packages/transit-core   # macOS / CI
 
 - 2026-10-01 15:00 UTC — inspection complete (repository, PRs #70 #71, issue
   #61, Vercel projects and environment names, CI history, code and docs).
-- PR A (`claude/v21-production-foundation`): transit-core test fix ported,
-  provider error taxonomy, Journey Contract v1.
+- PR A #72 (`claude/v21-production-foundation`): transit-core test fix ported,
+  provider error taxonomy, Journey Contract v1. CI `transit-core` green
+  (Swift contract compiles and passes).
+- PR B #73 (`claude/v24-jeju-safety-core`, on #72): Safe Return, Transfer
+  Guardian, Rescue — 38 specification cases and generated properties, Node and
+  Swift.
+- PR C (`claude/v21-ios-live-journey`, on #72): live rides through
+  `TapsoAPIClient`; server-generated session payloads
+  (`scripts/journey/session-views.ts`, checked current by
+  `sessionViews.test.ts`); network guard rewritten and shown to fail on a
+  violation (a network API added to `HomeView.swift`, the client's host
+  changed: both turned the suite red, then reverted).
 
 ## Risks and unexpected findings
 
@@ -103,5 +113,5 @@ swift test --package-path packages/transit-core   # macOS / CI
 
 ## Exact next action
 
-Push PR A, then build the Safe Return / Transfer Guardian / Rescue engines (PR B)
-while CI runs.
+Get PR C through the `ios` CI job (no local Swift toolchain), then the map
+hand-off (PR D).

@@ -17,6 +17,14 @@ public struct SavedJourney: Codable, Hashable, Identifiable, Sendable {
     public var isFavorite: Bool
     public var rideCount: Int
     public var lastRiddenAt: Date
+    /// TAGO city code of a live ride; `nil` for a demo ride. Optional so earlier libraries still decode.
+    public var cityCode: String?
+    /// Provider sequences of a live ride. Stop ids repeat round a loop; sequences do not.
+    public var boardingSequence: Int?
+    public var destinationSequence: Int?
+
+    /// A live ride is started again from the server's current stop list, never from a stored one.
+    public var isLive: Bool { cityCode != nil }
 
     public init(
         routeID: RouteID,
@@ -28,7 +36,10 @@ public struct SavedJourney: Codable, Hashable, Identifiable, Sendable {
         destinationStopName: String,
         isFavorite: Bool = false,
         rideCount: Int = 0,
-        lastRiddenAt: Date
+        lastRiddenAt: Date,
+        cityCode: String? = nil,
+        boardingSequence: Int? = nil,
+        destinationSequence: Int? = nil
     ) {
         self.routeID = routeID
         self.routeNumber = routeNumber
@@ -40,6 +51,9 @@ public struct SavedJourney: Codable, Hashable, Identifiable, Sendable {
         self.isFavorite = isFavorite
         self.rideCount = rideCount
         self.lastRiddenAt = lastRiddenAt
+        self.cityCode = cityCode
+        self.boardingSequence = boardingSequence
+        self.destinationSequence = destinationSequence
     }
 
     public init(route: TransitRoute, boarding: Stop, destination: Stop, at date: Date) {
@@ -52,6 +66,23 @@ public struct SavedJourney: Codable, Hashable, Identifiable, Sendable {
             destinationStopID: destination.id,
             destinationStopName: destination.name,
             lastRiddenAt: date
+        )
+    }
+
+    /// A live ride, remembered by provider sequence as well as stop id.
+    public init(liveRoute route: TransitRoute, cityCode: String, boarding: RouteStop, destination: RouteStop, at date: Date) {
+        self.init(
+            routeID: route.id,
+            routeNumber: route.number,
+            headsign: route.destinationName,
+            boardingStopID: boarding.stop.id,
+            boardingStopName: boarding.stop.name,
+            destinationStopID: destination.stop.id,
+            destinationStopName: destination.stop.name,
+            lastRiddenAt: date,
+            cityCode: cityCode,
+            boardingSequence: boarding.sequence,
+            destinationSequence: destination.sequence
         )
     }
 

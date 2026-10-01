@@ -16,7 +16,7 @@ CORE = ROOT / "packages/transit-core/Sources/TapsoTransit"
 PREFIXES = (
     "a11y", "brand", "home", "search", "setup", "route", "boarding", "recap", "mapImport",
     "check", "ride", "count", "trust", "favorite", "demo", "end", "handoff", "common",
-    "alert", "live_activity", "shortcut",
+    "alert", "live_activity", "shortcut", "live",
 )
 LITERAL = re.compile(r'"((?:%s)\.[A-Za-z0-9_.]+)"' % "|".join(PREFIXES))
 # `RideText.countKey("<key>", n)` also reads "<key>.one" for a count of one.
@@ -71,6 +71,14 @@ def main() -> int:
         used.add(f"demo.scenario.{scenario}")
     for app in enum_cases(CORE / "MapHandoff.swift", "MapApp"):
         used.add(f"handoff.failed.{app}")
+    # `TransitAPIFailure.copyKey` + ".title" / ".body", built at runtime.
+    failures = re.findall(r'case \.(\w+): "(\w+)"', (CORE / "TransitAPIModels.swift").read_text())
+    if not failures:
+        sys.exit("no TransitAPIFailure names found in TransitAPIModels.swift")
+    for case, name in failures:
+        if case != name:
+            sys.exit(f"TransitAPIFailure.{case} names itself {name}")
+        used.update({f"live.error.{name}.title", f"live.error.{name}.body"})
     # Prefixes built by concatenation in Swift, not literal keys themselves.
     used -= {"trust.vehicle.", "trust.data.", "demo.scenario.", "handoff.failed.", "alert."}
     used = {key for key in used if not key.endswith(".")}

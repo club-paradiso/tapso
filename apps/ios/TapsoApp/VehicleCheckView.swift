@@ -9,11 +9,17 @@ struct VehicleCheckView: View {
     var body: some View {
         ScrollView {
             if let draft = model.draft, let route = draft.route {
+                if draft.isLive, let failure = model.liveFailure {
+                    LiveFailureNotice(failure: failure)
+                        .padding(.horizontal, TapsoSpace.gutter)
+                        .padding(.top, TapsoSpace.lg)
+                }
                 VehicleCheckContent(
                     check: model.vehicleCheck,
                     routeNumber: route.number,
                     boardingName: draft.boarding?.name ?? "",
                     destinationName: draft.destination?.name ?? "",
+                    isLive: draft.isLive,
                     onConfirm: { proposal in Task { await model.confirmVehicle(proposal) } },
                     onReject: { model.rejectProposal($0) }
                 )
@@ -35,6 +41,8 @@ struct VehicleCheckContent: View {
     let routeNumber: String
     let boardingName: String
     let destinationName: String
+    /// Live: the buses come from TAPSO's server. Demo: synthetic.
+    var isLive = false
     let onConfirm: (VehicleProposal) -> Void
     let onReject: (VehicleProposal) -> Void
 
@@ -96,7 +104,7 @@ struct VehicleCheckContent: View {
                 }
             }
 
-            Label("check.why", systemImage: "info.circle")
+            Label(LocalizedStringKey(isLive ? "check.why.live" : "check.why"), systemImage: "info.circle")
                 .font(.footnote)
                 .foregroundStyle(TapsoColor.textSecondary)
                 .fixedSize(horizontal: false, vertical: true)

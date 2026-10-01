@@ -6,16 +6,19 @@
 > `READY_FOR_BOUNDED_AUTOMATION`; no lower readiness level needs it
 > ([`validation/MATCHER_SAFETY_EVIDENCE_V4.md`](validation/MATCHER_SAFETY_EVIDENCE_V4.md),
 > [`exec-plans/HUMAN_LABOR_ELIMINATION.md`](exec-plans/HUMAN_LABOR_ELIMINATION.md)).
-> The current app plays a fixed demo timeline (`DemoFixtures.demoTimeline()`
-> in `apps/ios/TapsoApp/TapsoAppModel.swift`) and makes no network request
-> (`services/api/test/crossLanguageAuthority.test.ts`), so "ride" below means
-> the demo, and some checks cannot run against it:
+> The demo plays a fixed timeline (`DemoFixtures.demoTimeline()` in
+> `apps/ios/TapsoApp/TapsoAppModel.swift`) and makes no network request. Live
+> rides (beta, since 2026-10-01) read TAPSO's API through
+> `TapsoAPIClient.swift` and need production journey sessions, which answer
+> `503 SESSIONS_UNAVAILABLE` until they are enabled. Where "ride" below means
+> the demo, some checks cannot run against it:
 >
 > - Case 6: the app has no input injection path.
 > - Case 8, the pushes in case 9 and the APNs criterion: the Live Activity is
 >   requested with `pushType: nil` (`apps/ios/TapsoApp/LiveActivityClient.swift`),
 >   so there is no push token and no remote update.
-> - Network bytes in case 9: the app makes no network request.
+> - Network bytes in case 9: the demo makes no network request; a live ride
+>   reads one session every 15 s while the app runs.
 >
 > Since 2026-09-30 the CI job `ios` builds the app and runs its tests on a
 > simulator, and renders every Product V2 screen and ride surface

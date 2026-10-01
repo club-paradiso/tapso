@@ -44,6 +44,9 @@
 		8B90D8B60EB405B8C1974DFA /* TapsoTokens.swift in Sources */ = {isa = PBXBuildFile; fileRef = 4D67654E6A9412B2253E65FB /* TapsoTokens.swift */; };
 		F0FCB5D5AF2DDFA92C6AD18C /* RidePresentationTests.swift in Sources */ = {isa = PBXBuildFile; fileRef = 4F3242CAC95098615B71E4AF /* RidePresentationTests.swift */; };
 		3BFE146D78987331ED4016E5 /* SnapshotEvidenceTests.swift in Sources */ = {isa = PBXBuildFile; fileRef = C3C7708182ABA376B17A2322 /* SnapshotEvidenceTests.swift */; };
+		16CBA37E2A09BAAB0168A223 /* LiveRideSetupViews.swift in Sources */ = {isa = PBXBuildFile; fileRef = 01DE7451FA463336C39A13CA /* LiveRideSetupViews.swift */; };
+		2664941987948A2833A62902 /* TapsoAPIClient.swift in Sources */ = {isa = PBXBuildFile; fileRef = DA0A54842582C43E01555CBD /* TapsoAPIClient.swift */; };
+		CC9DD2029F37F718EB7CEBA5 /* TapsoAPIClientTests.swift in Sources */ = {isa = PBXBuildFile; fileRef = 882BE9396F38A304F46668C5 /* TapsoAPIClientTests.swift */; };
 /* End PBXBuildFile section */
 
 /* Begin PBXContainerItemProxy section */
@@ -111,6 +114,9 @@
 		4D67654E6A9412B2253E65FB /* TapsoTokens.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = TapsoTokens.swift; sourceTree = "<group>"; };
 		4F3242CAC95098615B71E4AF /* RidePresentationTests.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = RidePresentationTests.swift; sourceTree = "<group>"; };
 		C3C7708182ABA376B17A2322 /* SnapshotEvidenceTests.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = SnapshotEvidenceTests.swift; sourceTree = "<group>"; };
+		01DE7451FA463336C39A13CA /* LiveRideSetupViews.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = LiveRideSetupViews.swift; sourceTree = "<group>"; };
+		DA0A54842582C43E01555CBD /* TapsoAPIClient.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = TapsoAPIClient.swift; sourceTree = "<group>"; };
+		882BE9396F38A304F46668C5 /* TapsoAPIClientTests.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = TapsoAPIClientTests.swift; sourceTree = "<group>"; };
 /* End PBXFileReference section */
 
 /* Begin PBXFrameworksBuildPhase section */
@@ -147,6 +153,7 @@
 				4F3242CAC95098615B71E4AF /* RidePresentationTests.swift */,
 				C3C7708182ABA376B17A2322 /* SnapshotEvidenceTests.swift */,
 				E7108E508389781AD30FB5E4 /* TapsoActivityAttributesTests.swift */,
+				882BE9396F38A304F46668C5 /* TapsoAPIClientTests.swift */,
 			);
 			path = Tests;
 			sourceTree = "<group>";
@@ -204,10 +211,12 @@
 				E290A938229D4273F0D4BF5D /* Info.plist */,
 				A8E46B25EF26064102482B49 /* JourneyStore.swift */,
 				6BF30D970AD35EAC3FE1308C /* LiveActivityClient.swift */,
+				01DE7451FA463336C39A13CA /* LiveRideSetupViews.swift */,
 				1BA1E189F8D5241F18ABD214 /* RideEndView.swift */,
 				857A4229A2F4867FB62DD336 /* RideFeedback.swift */,
 				B71E19ABC4E943435650D65F /* RideView.swift */,
 				004C91C027949523F56247EA /* SetupViews.swift */,
+				DA0A54842582C43E01555CBD /* TapsoAPIClient.swift */,
 				BCE2DF2EA2CB13C5D00C238B /* TapsoApp.swift */,
 				83BA005BA10C083AB2853B37 /* TapsoAppModel.swift */,
 				836F8A50043BC87B45E4FA71 /* TapsoRootView.swift */,
@@ -380,12 +389,14 @@
 				C072DFB6007261AB2C4AC702 /* JourneyStore.swift in Sources */,
 				353C5AEA2F4ED35FBF1207BC /* LiveActivityClient.swift in Sources */,
 				216C1DAF60AA1BF258CBA512 /* LiveActivitySurfaces.swift in Sources */,
+				16CBA37E2A09BAAB0168A223 /* LiveRideSetupViews.swift in Sources */,
 				E90C569F723A43A0F30ED146 /* RideEndView.swift in Sources */,
 				3D1562DEB72025EBE17ABDCD /* RideFeedback.swift in Sources */,
 				BB8FAE7699DAE3EAEA47D888 /* RideSurfaceComponents.swift in Sources */,
 				FC181FC49F83051C0EF18002 /* RideView.swift in Sources */,
 				8CA644A203D52AA38D49E70F /* SetupViews.swift in Sources */,
 				E3F7A3852EAB2CEF59630AC9 /* TapsoActivityAttributes.swift in Sources */,
+				2664941987948A2833A62902 /* TapsoAPIClient.swift in Sources */,
 				F6C551D45E737E795E1AA04C /* TapsoApp.swift in Sources */,
 				56BD6AD4BCC45377E0CE741D /* TapsoAppModel.swift in Sources */,
 				0680D4D7CF8A696EB6E160B8 /* TapsoLiveActivityPolicy.swift in Sources */,
@@ -417,6 +428,7 @@
 				F0FCB5D5AF2DDFA92C6AD18C /* RidePresentationTests.swift in Sources */,
 				3BFE146D78987331ED4016E5 /* SnapshotEvidenceTests.swift in Sources */,
 				B2EE311E1A81511BB21CF237 /* TapsoActivityAttributesTests.swift in Sources */,
+				CC9DD2029F37F718EB7CEBA5 /* TapsoAPIClientTests.swift in Sources */,
 			);
 			runOnlyForDeploymentPostprocessing = 0;
 		};
