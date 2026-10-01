@@ -60,7 +60,7 @@ CTA rhythm: header (always), hero, the waitlist section, and the footer. No sect
 - **Copy.** Product strings are quoted, not paraphrased: `src/demo/rideCopy.ts` holds only keys from `apps/ios/Resources/ko.lproj/Localizable.strings`, and `test/productParity.test.ts` fails on any drift.
 - **States.** `src/demo/rideMoments.ts` mirrors `RideGuidancePolicy`: colour role, count presentation (live / last known / hidden), symbol, milestone, Lock Screen surface (basalt → coral → tangerine), and the two trust signals. The test parses `RideGuidance.swift` and compares.
 - **Surfaces.** `NativeSurfaces.tsx` re-draws `LiveActivitySurfaces.swift` (Lock Screen, compact leading/trailing, minimal, expanded) and `RideParts.tsx` the V2 components (돌이, RouteBadge, JourneyRail, TrustBadge, count or symbol). `AppScreens.tsx` re-draws Home, route, boarding, vehicle check and ride screens.
-- **Data.** One synthetic trip: route 365, 제주버스터미널 → 제주출입국·외국인청, 8 stops, from `DemoFixtures.route`; plates such as `••0001` are invented.
+- **Data.** One synthetic trip: route 365, 제주버스터미널 → 제주시청(아라방면), 8 stops, from `DemoFixtures.route`; plates such as `••0001` are invented.
 - **Tokens.** `src/styles/tokens.css` carries the `TAPSO V2 Semantic` colours with the same names; web-only additions are layout, type, motion and one warm paper tone (`--sand`). No other stylesheet introduces a raw hex value.
 
 The web does not redefine the product. It changes nothing under `apps/ios`, `packages/transit-core` or `services/api`.

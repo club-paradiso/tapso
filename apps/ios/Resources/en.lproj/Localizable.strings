@@ -14,7 +14,7 @@
 "home.mapImport.title" = "Import from a map app";
 "home.mapImport.body" = "Start from a place shared from KakaoMap or NAVER Map";
 "home.sample.title" = "New to TAPSO?";
-"home.sample.body" = "Ride from 제주버스터미널 to 제주출입국·외국인청 and follow every step, from finding the bus to getting off.";
+"home.sample.body" = "Ride from 제주버스터미널 to 제주시청(아라방면) and follow every step, from finding the bus to getting off.";
 "home.sample.action" = "Try the sample ride";
 "home.privacy" = "TAPSO tracks the bus, not you. No location permission needed.";
 "favorite.add" = "Add to favorites";

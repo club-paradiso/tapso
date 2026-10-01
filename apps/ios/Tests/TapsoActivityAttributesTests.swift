@@ -112,7 +112,7 @@ final class TapsoActivityAttributesTests: XCTestCase {
                 routeNumber: "365",
                 routeID: "demo-route-365-outbound",
                 boardingStopName: "제주버스터미널",
-                destinationName: "제주출입국·외국인청",
+                destinationName: "제주시청(아라방면)",
                 totalStops: 8
             ),
             state: makeState(phase: .approachingDestination, remainingStops: 2)

@@ -35,7 +35,7 @@ final class SnapshotEvidenceTests: XCTestCase {
             ("05-route-select", AnyView(RouteSelectContent(destinationName: "관덕정", options: DemoCatalog.routeOptions(toDestinationNamed: "관덕정"), onChoose: { _ in }))),
             ("06-boarding-stop", AnyView(BoardingStopContent(route: DemoCatalog.outbound, destination: DemoCatalog.outbound.stops[8], onChoose: { _ in }))),
             ("07-map-import", AnyView(MapImportContent(matches: nil, paste: AnyView(pastePlaceholder), onChoose: { _ in }, onSearch: {}))),
-            ("08-map-import-found", AnyView(MapImportContent(matches: ["제주출입국·외국인청"], paste: AnyView(pastePlaceholder), onChoose: { _ in }, onSearch: {}))),
+            ("08-map-import-found", AnyView(MapImportContent(matches: ["제주시청(아라방면)"], paste: AnyView(pastePlaceholder), onChoose: { _ in }, onSearch: {}))),
             ("09-check-searching", check(.evaluate(proposals: [], hasSearched: false))),
             ("10-check-proposed", check(.evaluate(proposals: DemoCatalog.proposals(for: .smooth, route: DemoCatalog.outbound), hasSearched: true))),
             ("11-check-similar-buses", check(.evaluate(proposals: DemoCatalog.proposals(for: .similarBuses, route: DemoCatalog.outbound), hasSearched: true))),
@@ -102,7 +102,7 @@ final class SnapshotEvidenceTests: XCTestCase {
         routeNumber: "365",
         routeID: "demo-route-365-outbound",
         boardingStopName: "제주버스터미널",
-        destinationName: "제주출입국·외국인청",
+        destinationName: "제주시청(아라방면)",
         totalStops: 8,
         // The plate of the bus the sample check proposes, so check, ride and surfaces agree.
         vehiclePlate: DemoCatalog.proposals(for: .smooth, route: DemoCatalog.outbound)[0].maskedPlate
@@ -129,7 +129,7 @@ final class SnapshotEvidenceTests: XCTestCase {
             check: check,
             routeNumber: "365",
             boardingName: "제주버스터미널",
-            destinationName: "제주출입국·외국인청",
+            destinationName: "제주시청(아라방면)",
             onConfirm: { _ in },
             onReject: { _ in }
         ))

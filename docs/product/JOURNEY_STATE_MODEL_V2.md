@@ -56,7 +56,7 @@ Colour roles map to `TapsoColor.journey(_:)`; Figma `color/journey/*`. Copy keys
 - **Primary:** remaining stops (live). **Secondary:** destination, "내릴 때 알려드릴게요 · 지금은 편하게 가셔도 돼요".
 - **CTA:** none (여정 끝내기 at the bottom). **Colour:** `journeyActive` mint. **Symbol:** `bus.fill`. **Motion:** numeric count transition. **Haptic:** none. **Alert:** none, relevance 50.
 - **App:** big count + "정거장 남았어요" + "…까지", rail, trust badges, stop ladder. **Lock Screen:** basalt, headline, count, rail, 돌이. **Compact:** 돌이 + route · count + 정거장. **Minimal:** count. **Expanded:** route · 타고 가는 중 · count; headline, destination, rail, both trust badges.
-- **VoiceOver:** "365번, 제주출입국·외국인청까지 6정거장 남음. 내릴 때 알려드릴게요. 지금은 편하게 가셔도 돼요."
+- **VoiceOver:** "365번, 제주시청(아라방면)까지 6정거장 남음. 내릴 때 알려드릴게요. 지금은 편하게 가셔도 돼요."
 - **Recovery:** none needed.
 
 ### prepare — TWO_STOPS

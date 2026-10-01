@@ -246,7 +246,7 @@ final class TapsoAppModel {
         StopNameMatcher.matches(in: text, among: DemoCatalog.destinationNames)
     }
 
-    /// The sample ride: 365 from 제주버스터미널 to 제주출입국·외국인청, synthetic data.
+    /// The sample ride: 365 from 제주버스터미널 to 제주시청(아라방면), synthetic data.
     /// The demo-only Swift engine ranks the demo fixture; the rider still confirms the bus.
     func startDemo() {
         let now = DemoFixtures.referenceDate
