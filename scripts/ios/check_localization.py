@@ -16,7 +16,7 @@ CORE = ROOT / "packages/transit-core/Sources/TapsoTransit"
 PREFIXES = (
     "a11y", "brand", "home", "search", "setup", "route", "boarding", "recap", "mapImport",
     "check", "ride", "count", "trust", "favorite", "demo", "end", "handoff", "common",
-    "alert", "live_activity", "shortcut", "live", "share",
+    "alert", "live_activity", "shortcut", "live", "share", "returnTrip",
 )
 LITERAL = re.compile(r'"((?:%s)\.[A-Za-z0-9_.]+)"' % "|".join(PREFIXES))
 # `RideText.countKey("<key>", n)` also reads "<key>.one" for a count of one.

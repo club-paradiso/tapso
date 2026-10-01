@@ -57,7 +57,7 @@ return, transfer, rescue, handoff, discovery, eat, passport/share, mystery.
 | V2.1e | iOS real Journey Session integration | Live mode creates, refreshes, confirms and ends a session against the API; demo stays synthetic; guard test proves no real data reaches the Swift matcher | `IMPLEMENTED` (PR C), app side pending CI; production `BLOCKED_BY_CREDENTIALS` (V2.1d) |
 | V2.2 | Map Handoff | Share Extension accepts KakaoMap, NAVER Map, Apple Maps, URLs, coordinates, addresses and names; parser tests; Journey Contract created from a handoff | `IMPLEMENTED` (PR D, `MAP_HANDOFF_V3.md`); device run `UNVERIFIED` |
 | V2.3 | Core riding | Live Activity V3 states from `resolveSurface`; push-token registration endpoint; Transfer Guardian in the ride | `PENDING` (PR E) |
-| V2.4 | Jeju safety layer | Safe Return, Rescue engines with deterministic tests (no-return rejection, long headway, expired data) | `DONE` for the engines (#73 merged); wiring into surfaces pending |
+| V2.4 | Jeju safety layer | Safe Return, Rescue engines with deterministic tests (no-return rejection, long headway, expired data) | `DONE` for the engines (#73 merged); last-bus data path and end-screen card `IMPLEMENTED` (PR E); Rescue and Transfer wiring pending |
 | V3.0 | Jeju discovery | 오늘 뭐하젠?, 그냥 탑서 (filtered before randomisation), route experiences grounded in live route data | `PENDING` (PR F) |
 | V3.1 | Transit Fit | Semantic accessibility summary, no fake scores | `PENDING` (PR F) |
 | V3.2 | Eat | Transit-aware food situations | `PENDING` |
@@ -114,6 +114,15 @@ swift test --package-path packages/transit-core   # macOS / CI
   suggestions in live setup, the walk to the shared place through NAVER Map,
   KakaoMap and Apple Maps. Found on the way: the V2 end screen never showed its
   KakaoMap button even when coordinates were real (fixed).
+
+- PR E (`claude/v24-safe-return-service-hours`, on PR D): `GET /v1/route-info`
+  from TAGO `getRouteInfoIem` (fields REPORTED-OFFICIAL from the probe), `LastBus`
+  through the Safe Return engine, and the end screen's "돌아갈 때 막차" card.
+- `git fetch` is refused by this session's permission classifier since
+  2026-10-01 ~15:50 UTC. Integration is verified by rebuilding `main` locally
+  from heads fetched before that (#72, #73 = `aeacb17`, #75 = `f1b3e16`, #76 =
+  `a811855`); the islandStory blob matched `main`. #75 and #76 together turned
+  `main`'s `web` job red; #79 fixes the test.
 
 ## Risks and unexpected findings
 

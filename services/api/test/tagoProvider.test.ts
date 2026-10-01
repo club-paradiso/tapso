@@ -301,3 +301,70 @@ test("a TAGO HTTP error that persists is PROVIDER_UNAVAILABLE, a malformed body 
     },
   );
 });
+
+/**
+ * `getRouteInfoIem` in the shape data.go.kr documents for dataset 15098529
+ * (REPORTED-OFFICIAL). SYNTHETIC values; route ids reuse the earlier fixtures.
+ */
+function routeInfoFetch(item: Record<string, unknown> | undefined, seen: URL[] = []): typeof fetch {
+  return async (input) => {
+    const url = new URL(String(input));
+    seen.push(url);
+    return new Response(JSON.stringify({ response: {
+      header: { resultCode: "00", resultMsg: "OK" },
+      body: { items: item === undefined ? "" : { item } },
+    } }));
+  };
+}
+
+test("reads a route's published service day: first and last departure from the starting stop, and headways", async () => {
+  const seen: URL[] = [];
+  const provider = new TagoTransitProvider({
+    serviceKey: "test-key",
+    fetchImplementation: routeInfoFetch({
+      routeid: "JEB405136521", routeno: 365, routetp: "간선버스",
+      startnodenm: "제주대학교", endnodenm: "제주한라대학교(종점)",
+      startvehicletime: "0600", endvehicletime: "2230",
+      intervaltime: 29, intervalsattime: "23", intervalsuntime: 29,
+    }, seen),
+  });
+  assert.deepEqual(await provider.routeServiceHours("39", "JEB405136521"), {
+    routeId: "JEB405136521",
+    routeNumber: "365",
+    routeType: "간선버스",
+    startStopName: "제주대학교",
+    endStopName: "제주한라대학교(종점)",
+    firstDeparture: "06:00",
+    lastDeparture: "22:30",
+    headwayMinutes: { weekday: 29, saturday: 23, sunday: 29 },
+  });
+  const url = seen[0]!;
+  assert.ok(url.pathname.endsWith("/BusRouteInfoInqireService/getRouteInfoIem"));
+  assert.equal(url.searchParams.get("cityCode"), "39");
+  assert.equal(url.searchParams.get("routeId"), "JEB405136521");
+  assert.equal(url.searchParams.get("pageNo"), null, "the operation is not paged");
+});
+
+test("service hours stay absent when TAGO leaves them out or sends what it does not document", async () => {
+  const read = (item: Record<string, unknown>) =>
+    new TagoTransitProvider({ serviceKey: "test-key", fetchImplementation: routeInfoFetch({ routeid: "R1", ...item }) })
+      .routeServiceHours("39", "R1");
+
+  assert.deepEqual(await read({}), { routeId: "R1", headwayMinutes: {} }, "every field is optional");
+  // A number loses its leading zero in JSON; it is still HHMM.
+  assert.equal((await read({ startvehicletime: 600, endvehicletime: 30 }))?.firstDeparture, "06:00");
+  assert.equal((await read({ endvehicletime: 30 }))?.lastDeparture, "00:30");
+  for (const time of ["2510", "2460", "1260", "6:00", "06:00", "", "abc", 12345]) {
+    assert.equal((await read({ endvehicletime: time }))?.lastDeparture, undefined, `${time} is not a documented HHMM`);
+  }
+  for (const interval of [0, -5, "0", "x", 1441, 12.5]) {
+    assert.deepEqual((await read({ intervaltime: interval }))?.headwayMinutes, {}, `${interval} is not a headway`);
+  }
+});
+
+test("a route TAGO does not know has no service day", async () => {
+  const empty = new TagoTransitProvider({ serviceKey: "test-key", fetchImplementation: routeInfoFetch(undefined) });
+  assert.equal(await empty.routeServiceHours("39", "R1"), undefined);
+  const other = new TagoTransitProvider({ serviceKey: "test-key", fetchImplementation: routeInfoFetch({ routeid: "R2", endvehicletime: "2200" }) });
+  assert.equal(await other.routeServiceHours("39", "R1"), undefined, "another route's hours are never borrowed");
+});

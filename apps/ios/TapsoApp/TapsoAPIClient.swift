@@ -40,6 +40,12 @@ struct TapsoAPIClient: Sendable {
         return try await send(request, as: TransitAPIStopList.self)
     }
 
+    /// One variant's published service day: first and last departure from its starting stop, and headways.
+    func routeInfo(routeID: String, cityCode: String = TapsoAPIClient.jejuCityCode) async throws -> TransitAPIRouteServiceHours {
+        let request = makeRequest(path: "/v1/route-info", query: [("routeId", routeID), ("cityCode", cityCode)])
+        return try await send(request, as: TransitAPIRouteInfo.self).item
+    }
+
     // MARK: Journey sessions
 
     /// Starts a session for a rider waiting at the boarding stop.

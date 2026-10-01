@@ -29,6 +29,10 @@
       "destination": "/api/v1/stops"
     },
     {
+      "source": "/v1/route-info",
+      "destination": "/api/v1/route-info"
+    },
+    {
       "source": "/v1/vehicles",
       "destination": "/api/v1/vehicles"
     },

@@ -43,3 +43,16 @@ jobs:
           node-version: 22
       - name: Jeju route topology from TAPSO's production API (stops only)
         run: node --experimental-strip-types scripts/data-sources/jeju-routes.ts
+
+  route-info:
+    runs-on: ubuntu-latest
+    timeout-minutes: 10
+    steps:
+      - uses: actions/checkout@v4
+        with:
+          persist-credentials: false
+      - uses: actions/setup-node@v4
+        with:
+          node-version: 22
+      - name: Published service days from TAPSO's production API (GET /v1/route-info)
+        run: node --experimental-strip-types scripts/data-sources/route-info.ts

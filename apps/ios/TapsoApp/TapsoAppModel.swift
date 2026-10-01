@@ -216,6 +216,34 @@ struct RideOutcome: Hashable {
     let destination: Stop
     /// The shared place the walk after the bus goes to, if the ride started from one.
     var place: SharedPlace? = nil
+    /// Live rides only: TAGO's city code and the variant ridden, for reading the way back.
+    var cityCode: String? = nil
+    var routeID: RouteID? = nil
+}
+
+/// The way back after a live ride: each official variant of the route number with
+/// today's last bus (`LastBus`), as TAPSO's API publishes it.
+enum ReturnService: Equatable {
+    case idle
+    case loading
+    case loaded([ReturnServiceRow])
+    case failed(TransitAPIFailure)
+
+    var isFailed: Bool {
+        switch self {
+        case .failed: true
+        default: false
+        }
+    }
+}
+
+struct ReturnServiceRow: Equatable, Identifiable {
+    let route: TransitAPIRoute
+    let advice: LastBusAdvice
+    /// The variant the rider just rode.
+    let ridden: Bool
+
+    var id: String { route.routeId }
 }
 
 @Observable
@@ -248,6 +276,8 @@ final class TapsoAppModel {
     /// The last paste held nothing TAPSO could read as a place.
     private(set) var sharedPlaceUnreadable = false
     private(set) var appleMapsFailed = false
+    /// After a live ride: today's last buses of the route number, for the way back.
+    private(set) var returnService: ReturnService = .idle
 
     @ObservationIgnored private let store: JourneyStore
     @ObservationIgnored private let liveActivity: LiveActivityClient?
@@ -630,8 +660,11 @@ final class TapsoAppModel {
             moment: finalMoment,
             routeNumber: ride.draft.route?.number ?? "",
             destination: destination,
-            place: ride.draft.finalPlace
+            place: ride.draft.finalPlace,
+            cityCode: ride.draft.cityCode,
+            routeID: ride.draft.routeID
         )
+        returnService = .idle
         activeRide = nil
         store.saveActiveRide(nil)
     }
@@ -653,7 +686,35 @@ final class TapsoAppModel {
     func dismissOutcome() {
         outcome = nil
         draft = nil
+        returnService = .idle
     }
+
+    /// Live rides: the route number's variants and today's last bus of each. A
+    /// variant without a published service day reads `unknown`, never safe.
+    func loadReturnService(for outcome: RideOutcome, now: Date = Date()) async {
+        guard let cityCode = outcome.cityCode, returnService == .idle || returnService.isFailed else { return }
+        returnService = .loading
+        do {
+            // The provider's number search can list other numbers too (7 rows for 800, 5 of them 800: data-source probe, 2026-10-01).
+            let variants = try await api.routes(number: outcome.routeNumber, cityCode: cityCode)
+                .filter { $0.routeNumber == outcome.routeNumber }
+            var rows: [ReturnServiceRow] = []
+            for variant in variants.prefix(Self.returnVariantLimit) {
+                let hours = try? await api.routeInfo(routeID: variant.routeId, cityCode: cityCode)
+                rows.append(ReturnServiceRow(
+                    route: variant,
+                    advice: LastBus.advice(for: hours, now: now),
+                    ridden: variant.routeId == outcome.routeID?.rawValue
+                ))
+            }
+            returnService = .loaded(rows)
+        } catch {
+            returnService = .failed(Self.failure(error))
+        }
+    }
+
+    /// Each variant costs one cached route-info read; a route number has a handful.
+    static let returnVariantLimit = 6
 
     func dismissResumeNotice() {
         resumedAfterRelaunch = false
