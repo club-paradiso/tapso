@@ -9,6 +9,7 @@ import { readFileSync } from "node:fs";
 import { fileURLToPath } from "node:url";
 import { IOS_COPY, t } from "../src/demo/rideCopy.ts";
 import { RIDE_MOMENTS, presentMoment, spokenSummary, type RideMoment } from "../src/demo/rideMoments.ts";
+import { MAP_LINKS } from "../src/content/site.ts";
 
 const repo = (path: string) => fileURLToPath(new URL(`../../../${path}`, import.meta.url));
 
@@ -98,4 +99,35 @@ test("the spoken summary follows the app's a11y.ride shapes", () => {
   );
   assert.match(spokenSummary(presentMoment("delayed"), "365", "X", 5), /마지막 확인 기준 5정거장 남음/);
   assert.doesNotMatch(spokenSummary(presentMoment("checking"), "365", "X", 5), /정거장 남음/);
+});
+
+test("the map section claims what the app's code does, no more and no less", () => {
+  const read = (path: string) => readFileSync(repo(path), "utf8");
+  const handoff = read("packages/transit-core/Sources/TapsoTransit/MapHandoff.swift");
+  const appModel = read("apps/ios/TapsoApp/TapsoAppModel.swift");
+  const share = read("apps/ios/ShareExtension/ShareViewController.swift");
+  const knownIssues = read("docs/KNOWN_ISSUES.md");
+  const evidence: Record<string, () => void> = {
+    "지도 앱에서 공유한 장소로 시작": () => {
+      assert.match(share, /SharedPlaceParser/, "the share extension reads the shared place");
+      assert.match(appModel, /SharedPlaceParser\.parse\(text:/, "pasted text is read the same way");
+    },
+    "내린 뒤 지도 앱으로 넘기기": () => {
+      assert.match(handoff, /path: "route\/walk"/, "NAVER Map walking route");
+      assert.match(handoff, /\("by", "FOOT"\)/, "KakaoMap walking route");
+      assert.match(appModel, /openInMaps/, "Apple Maps shows the place");
+    },
+    "카카오맵에서 이름으로 찾기": () => {
+      assert.match(handoff, /case \(\.kakaoMap, false\):[^}]*?return nil/, "no KakaoMap hand-off without a coordinate");
+    },
+    "실제 iPhone에서 공유 메뉴 확인": () => {
+      assert.match(knownIssues, /share extension has run only in CI builds \(`UNVERIFIED` on a device\)/, "still unchecked on a device");
+    },
+  };
+  for (const link of MAP_LINKS) {
+    const check = evidence[link.title];
+    assert.ok(check, `${link.title}: name the code that backs this claim`);
+    check();
+  }
+  assert.equal(MAP_LINKS.length, Object.keys(evidence).length);
 });
