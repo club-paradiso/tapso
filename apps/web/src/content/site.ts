@@ -11,30 +11,6 @@ export const LINKS = {
   site: "https://tapso-nu.vercel.app/",
 } as const;
 
-/**
- * Public support destinations.
- *
- * These values are intentionally client-safe: a Buy Me a Coffee URL and bank
- * transfer details are displayed to visitors. Never place secrets in VITE_
- * variables. Leaving a field empty simply hides that support method.
- */
-export const SUPPORT_CHANNELS = {
-  buyMeACoffeeUrl: (import.meta.env?.VITE_BUY_ME_A_COFFEE_URL ?? "").trim(),
-  bank: {
-    name: (import.meta.env?.VITE_SUPPORT_BANK_NAME ?? "").trim(),
-    account: (import.meta.env?.VITE_SUPPORT_BANK_ACCOUNT ?? "").trim(),
-    holder: (import.meta.env?.VITE_SUPPORT_BANK_HOLDER ?? "").trim(),
-  },
-} as const;
-
-export const SUPPORT_CHANNEL_AVAILABILITY = {
-  buyMeACoffee: SUPPORT_CHANNELS.buyMeACoffeeUrl.length > 0,
-  bankTransfer:
-    SUPPORT_CHANNELS.bank.name.length > 0 &&
-    SUPPORT_CHANNELS.bank.account.length > 0 &&
-    SUPPORT_CHANNELS.bank.holder.length > 0,
-} as const;
-
 export const NAV_ITEMS = [
   { href: "#how", label: "작동 방식" },
   { href: "#bus", label: "버스 확인" },
