@@ -68,3 +68,52 @@ for (const name of DATASETS) {
 }
 
 export {};
+
+/*
+ * Each dataset page links its machine-readable OpenAPI document
+ * (`/catalog/<id>/openapi.json`). Print every operation with its parameters
+ * and response fields, so the full contract is on record, not only the first
+ * operation the HTML page shows.
+ */
+type OpenApi = { paths?: Record<string, Record<string, { summary?: string; parameters?: Array<{ name?: string; required?: boolean; description?: string }>; responses?: Record<string, unknown> }>> };
+
+function fieldNames(node: unknown, out = new Set<string>()): Set<string> {
+  if (Array.isArray(node)) node.forEach((child) => fieldNames(child, out));
+  else if (node && typeof node === "object") {
+    for (const [key, value] of Object.entries(node)) {
+      if (key === "properties" && value && typeof value === "object") Object.keys(value).forEach((name) => out.add(name));
+      fieldNames(value, out);
+    }
+  }
+  return out;
+}
+
+for (const id of ["15098534", "15098529", "15098530"]) {
+  await pause(1_000);
+  const spec = await get(`https://www.data.go.kr/catalog/${id}/openapi.json`);
+  console.log(`\n## openapi.json ${id}: HTTP ${spec.status}`);
+  let parsed: OpenApi | undefined;
+  try {
+    parsed = JSON.parse(spec.body) as OpenApi;
+  } catch {
+    console.log(spec.body.slice(0, 400));
+    continue;
+  }
+  for (const [path, methods] of Object.entries(parsed.paths ?? {})) {
+    for (const [method, operation] of Object.entries(methods)) {
+      const parameters = (operation.parameters ?? []).map((p) => `${p.name}${p.required ? "*" : ""}`).join(", ");
+      const fields = [...fieldNames(operation.responses)].filter((name) => !["response", "header", "body", "items", "item"].includes(name));
+      console.log(`OP ${method.toUpperCase()} ${path} — ${operation.summary ?? ""}\n   params: ${parameters}\n   fields: ${fields.join(", ")}`);
+    }
+  }
+}
+
+/* Kakao Maps' published web guide, for the map link URL shapes TAPSO parses. */
+await pause(1_000);
+const kakao = await get("https://apis.map.kakao.com/web/guide/");
+const kakaoText = plain(kakao.body);
+console.log(`\n## Kakao Maps web guide: HTTP ${kakao.status}`);
+for (const needle of ["link/map", "link/to", "link/search", "link/roadview"]) {
+  const at = kakaoText.indexOf(needle);
+  console.log(`--- ${needle}: ${at < 0 ? "(not found)" : kakaoText.slice(Math.max(0, at - 300), at + 500)}`);
+}
