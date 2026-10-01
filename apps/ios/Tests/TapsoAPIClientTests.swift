@@ -367,14 +367,16 @@ private enum Payload {
 
 /// Answers every request in-process; nothing reaches the network.
 final class StubURLProtocol: URLProtocol {
-    nonisolated(unsafe) private static var handler: ((URLRequest) -> (Int, Data))?
+    nonisolated(unsafe) private static var handler: (@Sendable (URLRequest) -> (Int, Data))?
     nonisolated(unsafe) private static var failure: URLError?
     nonisolated(unsafe) private(set) static var recorded: [URLRequest] = []
     nonisolated(unsafe) private(set) static var bodies: [Data] = []
     private static let lock = NSLock()
 
     /// Answers every request with `handler`, forgetting what earlier tests recorded.
-    static func respond(_ handler: @escaping (URLRequest) -> (Int, Data)) {
+    /// The handler runs on URLSession's loading thread, never the main actor, so it is
+    /// `@Sendable` and cannot inherit the calling test's main-actor isolation.
+    static func respond(_ handler: @escaping @Sendable (URLRequest) -> (Int, Data)) {
         lock.withLock {
             self.handler = handler
             failure = nil
@@ -398,7 +400,7 @@ final class StubURLProtocol: URLProtocol {
 
     override func startLoading() {
         let body = Self.readBody(of: request)
-        let (handler, failure) = Self.lock.withLock { () -> (((URLRequest) -> (Int, Data))?, URLError?) in
+        let (handler, failure) = Self.lock.withLock { () -> ((@Sendable (URLRequest) -> (Int, Data))?, URLError?) in
             Self.recorded.append(request)
             if let body { Self.bodies.append(body) }
             return (Self.handler, Self.failure)
