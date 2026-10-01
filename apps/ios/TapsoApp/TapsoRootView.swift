@@ -6,6 +6,7 @@ import TapsoTransit
 struct TapsoRootView: View {
     @Bindable var model: TapsoAppModel
     @Environment(\.accessibilityReduceMotion) private var reduceMotion
+    @Environment(\.scenePhase) private var scenePhase
 
     var body: some View {
         Group {
@@ -32,6 +33,10 @@ struct TapsoRootView: View {
         .tint(TapsoColor.mintDeep)
         .animation(TapsoMotion.animation(TapsoMotion.standard, reduceMotion: reduceMotion), value: model.hasActiveRide)
         .task { await model.resumeIfNeeded() }
+        .onChange(of: scenePhase, initial: true) { _, phase in
+            // A place left by the share extension is picked up when TAPSO comes forward.
+            if phase == .active { model.collectHandoff() }
+        }
     }
 
     @ViewBuilder

@@ -47,6 +47,14 @@
 		16CBA37E2A09BAAB0168A223 /* LiveRideSetupViews.swift in Sources */ = {isa = PBXBuildFile; fileRef = 01DE7451FA463336C39A13CA /* LiveRideSetupViews.swift */; };
 		2664941987948A2833A62902 /* TapsoAPIClient.swift in Sources */ = {isa = PBXBuildFile; fileRef = DA0A54842582C43E01555CBD /* TapsoAPIClient.swift */; };
 		CC9DD2029F37F718EB7CEBA5 /* TapsoAPIClientTests.swift in Sources */ = {isa = PBXBuildFile; fileRef = 882BE9396F38A304F46668C5 /* TapsoAPIClientTests.swift */; };
+		9451EF849588FF0EADF755FC /* TapsoTransit in Frameworks */ = {isa = PBXBuildFile; productRef = F536A4E0A68B0B38648F8397 /* TapsoTransit */; };
+		475A092787C1701844B9FCB3 /* TapsoShare.appex in Embed Foundation Extensions */ = {isa = PBXBuildFile; fileRef = 4C57AFEC8C9C87857CBD0C09 /* TapsoShare.appex */; settings = {ATTRIBUTES = (RemoveHeadersOnCopy, ); }; };
+		E1D9CBB280C029E1C60C756D /* Assets.xcassets in Resources */ = {isa = PBXBuildFile; fileRef = 25F8D8F9725AF79DC9F83B2B /* Assets.xcassets */; };
+		B17CE88DC78FF832C6AEE2EE /* Localizable.strings in Resources */ = {isa = PBXBuildFile; fileRef = 2436CA0171BFA7890857165A /* Localizable.strings */; };
+		74BD126939816D3AFF1CC528 /* TapsoTokens.swift in Sources */ = {isa = PBXBuildFile; fileRef = 4D67654E6A9412B2253E65FB /* TapsoTokens.swift */; };
+		9B0B7C3D8D7B164B3D39EE9B /* ShareSheetView.swift in Sources */ = {isa = PBXBuildFile; fileRef = 342359D136468006D05DB4BA /* ShareSheetView.swift */; };
+		2D38E55EBC33EF8E1A5CD659 /* ShareViewController.swift in Sources */ = {isa = PBXBuildFile; fileRef = FAAB40DF9ECB2977B9B44C62 /* ShareViewController.swift */; };
+		6C7EC458E60617F296856254 /* MapHandoffFlowTests.swift in Sources */ = {isa = PBXBuildFile; fileRef = 0254DEF030E85E3CF7322DF3 /* MapHandoffFlowTests.swift */; };
 /* End PBXBuildFile section */
 
 /* Begin PBXContainerItemProxy section */
@@ -64,6 +72,13 @@
 			remoteGlobalIDString = F1F3285F5689927EC2C69AFA;
 			remoteInfo = Tapso;
 		};
+		31F264A1F98F322EC6D94E96 /* PBXContainerItemProxy */ = {
+			isa = PBXContainerItemProxy;
+			containerPortal = 3F0C841FD6A24F8E32B2863D /* Project object */;
+			proxyType = 1;
+			remoteGlobalIDString = 61DC851E0C6B84D63F9AEF36;
+			remoteInfo = TapsoShare;
+		};
 /* End PBXContainerItemProxy section */
 
 /* Begin PBXCopyFilesBuildPhase section */
@@ -74,6 +89,7 @@
 			dstSubfolderSpec = 13;
 			files = (
 				55C07EC2DA1DBADEE79DDDFF /* TapsoLiveActivity.appex in Embed Foundation Extensions */,
+				475A092787C1701844B9FCB3 /* TapsoShare.appex in Embed Foundation Extensions */,
 			);
 			name = "Embed Foundation Extensions";
 			runOnlyForDeploymentPostprocessing = 0;
@@ -117,6 +133,13 @@
 		01DE7451FA463336C39A13CA /* LiveRideSetupViews.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = LiveRideSetupViews.swift; sourceTree = "<group>"; };
 		DA0A54842582C43E01555CBD /* TapsoAPIClient.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = TapsoAPIClient.swift; sourceTree = "<group>"; };
 		882BE9396F38A304F46668C5 /* TapsoAPIClientTests.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = TapsoAPIClientTests.swift; sourceTree = "<group>"; };
+		4C57AFEC8C9C87857CBD0C09 /* TapsoShare.appex */ = {isa = PBXFileReference; includeInIndex = 0; lastKnownFileType = "wrapper.app-extension"; path = TapsoShare.appex; sourceTree = BUILT_PRODUCTS_DIR; };
+		3850C076191C897830471588 /* Info.plist */ = {isa = PBXFileReference; lastKnownFileType = text.plist; path = Info.plist; sourceTree = "<group>"; };
+		286E73970E8E6D04090B1AFF /* TapsoShare.entitlements */ = {isa = PBXFileReference; lastKnownFileType = text.plist.entitlements; path = TapsoShare.entitlements; sourceTree = "<group>"; };
+		6BBD1C360D871CE9BD6C1F6E /* Tapso.entitlements */ = {isa = PBXFileReference; lastKnownFileType = text.plist.entitlements; path = Tapso.entitlements; sourceTree = "<group>"; };
+		342359D136468006D05DB4BA /* ShareSheetView.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = ShareSheetView.swift; sourceTree = "<group>"; };
+		FAAB40DF9ECB2977B9B44C62 /* ShareViewController.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = ShareViewController.swift; sourceTree = "<group>"; };
+		0254DEF030E85E3CF7322DF3 /* MapHandoffFlowTests.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = MapHandoffFlowTests.swift; sourceTree = "<group>"; };
 /* End PBXFileReference section */
 
 /* Begin PBXFrameworksBuildPhase section */
@@ -144,12 +167,21 @@
 			);
 			runOnlyForDeploymentPostprocessing = 0;
 		};
+		C1024AF5578BB90C83C3B355 /* Frameworks */ = {
+			isa = PBXFrameworksBuildPhase;
+			buildActionMask = 2147483647;
+			files = (
+				9451EF849588FF0EADF755FC /* TapsoTransit in Frameworks */,
+			);
+			runOnlyForDeploymentPostprocessing = 0;
+		};
 /* End PBXFrameworksBuildPhase section */
 
 /* Begin PBXGroup section */
 		062A2546A85E60F33E64530A /* Tests */ = {
 			isa = PBXGroup;
 			children = (
+				0254DEF030E85E3CF7322DF3 /* MapHandoffFlowTests.swift */,
 				4F3242CAC95098615B71E4AF /* RidePresentationTests.swift */,
 				C3C7708182ABA376B17A2322 /* SnapshotEvidenceTests.swift */,
 				E7108E508389781AD30FB5E4 /* TapsoActivityAttributesTests.swift */,
@@ -186,6 +218,7 @@
 				D5FE3B55CE102612AAAF3D63 /* Packages */,
 				23C53EF5D72C5A874A2E6E41 /* Resources */,
 				2DD9A96AC488A534FCCDC0DD /* Shared */,
+				5EE3A8D76407D1DF9BAD6C89 /* ShareExtension */,
 				CAAA87E4928CDF78676CD392 /* TapsoApp */,
 				062A2546A85E60F33E64530A /* Tests */,
 				EF9013E356AC9BCDDE6A5BA8 /* Products */,
@@ -216,6 +249,7 @@
 				857A4229A2F4867FB62DD336 /* RideFeedback.swift */,
 				B71E19ABC4E943435650D65F /* RideView.swift */,
 				004C91C027949523F56247EA /* SetupViews.swift */,
+				6BBD1C360D871CE9BD6C1F6E /* Tapso.entitlements */,
 				DA0A54842582C43E01555CBD /* TapsoAPIClient.swift */,
 				BCE2DF2EA2CB13C5D00C238B /* TapsoApp.swift */,
 				83BA005BA10C083AB2853B37 /* TapsoAppModel.swift */,
@@ -240,8 +274,20 @@
 				185322C93CB8D33570D783DF /* Tapso.app */,
 				7A67F62B287BF76427EBBE2E /* TapsoLiveActivity.appex */,
 				83252D93D32FBAE7E1F13250 /* TapsoTests.xctest */,
+				4C57AFEC8C9C87857CBD0C09 /* TapsoShare.appex */,
 			);
 			name = Products;
+			sourceTree = "<group>";
+		};
+		5EE3A8D76407D1DF9BAD6C89 /* ShareExtension */ = {
+			isa = PBXGroup;
+			children = (
+				3850C076191C897830471588 /* Info.plist */,
+				342359D136468006D05DB4BA /* ShareSheetView.swift */,
+				FAAB40DF9ECB2977B9B44C62 /* ShareViewController.swift */,
+				286E73970E8E6D04090B1AFF /* TapsoShare.entitlements */,
+			);
+			path = ShareExtension;
 			sourceTree = "<group>";
 		};
 /* End PBXGroup section */
@@ -300,6 +346,7 @@
 			);
 			dependencies = (
 				96BC6D6B469483CE81ED9748 /* PBXTargetDependency */,
+				BC2E789002C19BE6F91B46F0 /* PBXTargetDependency */,
 			);
 			name = Tapso;
 			packageProductDependencies = (
@@ -308,6 +355,26 @@
 			productName = Tapso;
 			productReference = 185322C93CB8D33570D783DF /* Tapso.app */;
 			productType = "com.apple.product-type.application";
+		};
+		61DC851E0C6B84D63F9AEF36 /* TapsoShare */ = {
+			isa = PBXNativeTarget;
+			buildConfigurationList = A5679AD165922902A5EBA926 /* Build configuration list for PBXNativeTarget "TapsoShare" */;
+			buildPhases = (
+				9070D4E8E5B9F0930C1303EB /* Sources */,
+				19D49238A14C3E8181619493 /* Resources */,
+				C1024AF5578BB90C83C3B355 /* Frameworks */,
+			);
+			buildRules = (
+			);
+			dependencies = (
+			);
+			name = TapsoShare;
+			packageProductDependencies = (
+				F536A4E0A68B0B38648F8397 /* TapsoTransit */,
+			);
+			productName = TapsoShare;
+			productReference = 4C57AFEC8C9C87857CBD0C09 /* TapsoShare.appex */;
+			productType = "com.apple.product-type.app-extension";
 		};
 /* End PBXNativeTarget section */
 
@@ -327,6 +394,10 @@
 						ProvisioningStyle = Automatic;
 					};
 					F1F3285F5689927EC2C69AFA = {
+						DevelopmentTeam = 89CGFQ24U5;
+						ProvisioningStyle = Automatic;
+					};
+					61DC851E0C6B84D63F9AEF36 = {
 						DevelopmentTeam = 89CGFQ24U5;
 						ProvisioningStyle = Automatic;
 					};
@@ -352,6 +423,7 @@
 			targets = (
 				F1F3285F5689927EC2C69AFA /* Tapso */,
 				9CFE9F18504DCF17CBC7BB06 /* TapsoLiveActivity */,
+				61DC851E0C6B84D63F9AEF36 /* TapsoShare */,
 				066EEA5E4A9F938FC213D627 /* TapsoTests */,
 			);
 		};
@@ -373,6 +445,15 @@
 			files = (
 				9DF797D657D259EB1CC12E82 /* Assets.xcassets in Resources */,
 				DD911FC6501FE330D9D8A2BF /* Localizable.strings in Resources */,
+			);
+			runOnlyForDeploymentPostprocessing = 0;
+		};
+		19D49238A14C3E8181619493 /* Resources */ = {
+			isa = PBXResourcesBuildPhase;
+			buildActionMask = 2147483647;
+			files = (
+				E1D9CBB280C029E1C60C756D /* Assets.xcassets in Resources */,
+				B17CE88DC78FF832C6AEE2EE /* Localizable.strings in Resources */,
 			);
 			runOnlyForDeploymentPostprocessing = 0;
 		};
@@ -425,10 +506,21 @@
 			isa = PBXSourcesBuildPhase;
 			buildActionMask = 2147483647;
 			files = (
+				6C7EC458E60617F296856254 /* MapHandoffFlowTests.swift in Sources */,
 				F0FCB5D5AF2DDFA92C6AD18C /* RidePresentationTests.swift in Sources */,
 				3BFE146D78987331ED4016E5 /* SnapshotEvidenceTests.swift in Sources */,
 				B2EE311E1A81511BB21CF237 /* TapsoActivityAttributesTests.swift in Sources */,
 				CC9DD2029F37F718EB7CEBA5 /* TapsoAPIClientTests.swift in Sources */,
+			);
+			runOnlyForDeploymentPostprocessing = 0;
+		};
+		9070D4E8E5B9F0930C1303EB /* Sources */ = {
+			isa = PBXSourcesBuildPhase;
+			buildActionMask = 2147483647;
+			files = (
+				9B0B7C3D8D7B164B3D39EE9B /* ShareSheetView.swift in Sources */,
+				2D38E55EBC33EF8E1A5CD659 /* ShareViewController.swift in Sources */,
+				74BD126939816D3AFF1CC528 /* TapsoTokens.swift in Sources */,
 			);
 			runOnlyForDeploymentPostprocessing = 0;
 		};
@@ -444,6 +536,11 @@
 			isa = PBXTargetDependency;
 			target = 9CFE9F18504DCF17CBC7BB06 /* TapsoLiveActivity */;
 			targetProxy = 378E415C766018470D37037E /* PBXContainerItemProxy */;
+		};
+		BC2E789002C19BE6F91B46F0 /* PBXTargetDependency */ = {
+			isa = PBXTargetDependency;
+			target = 61DC851E0C6B84D63F9AEF36 /* TapsoShare */;
+			targetProxy = 31F264A1F98F322EC6D94E96 /* PBXContainerItemProxy */;
 		};
 /* End PBXTargetDependency section */
 
@@ -464,6 +561,7 @@
 			isa = XCBuildConfiguration;
 			buildSettings = {
 				ASSETCATALOG_COMPILER_APPICON_NAME = AppIcon;
+				CODE_SIGN_ENTITLEMENTS = TapsoApp/Tapso.entitlements;
 				CODE_SIGN_IDENTITY = "iPhone Developer";
 				INFOPLIST_FILE = TapsoApp/Info.plist;
 				LD_RUNPATH_SEARCH_PATHS = (
@@ -565,6 +663,7 @@
 			isa = XCBuildConfiguration;
 			buildSettings = {
 				ASSETCATALOG_COMPILER_APPICON_NAME = AppIcon;
+				CODE_SIGN_ENTITLEMENTS = TapsoApp/Tapso.entitlements;
 				CODE_SIGN_IDENTITY = "iPhone Developer";
 				INFOPLIST_FILE = TapsoApp/Info.plist;
 				LD_RUNPATH_SEARCH_PATHS = (
@@ -691,6 +790,44 @@
 			};
 			name = Release;
 		};
+		6B93C422A7772D6EF6C772C8 /* Debug */ = {
+			isa = XCBuildConfiguration;
+			buildSettings = {
+				APPLICATION_EXTENSION_API_ONLY = YES;
+				CODE_SIGN_ENTITLEMENTS = ShareExtension/TapsoShare.entitlements;
+				INFOPLIST_FILE = ShareExtension/Info.plist;
+				LD_RUNPATH_SEARCH_PATHS = (
+					"$(inherited)",
+					"@executable_path/Frameworks",
+					"@executable_path/../../Frameworks",
+				);
+				PRODUCT_BUNDLE_IDENTIFIER = com.lucanomics.tapso.Share;
+				PRODUCT_NAME = TapsoShare;
+				SDKROOT = iphoneos;
+				SKIP_INSTALL = YES;
+				TARGETED_DEVICE_FAMILY = 1;
+			};
+			name = Debug;
+		};
+		837ED2A8A9AB9A46E9AE0EC9 /* Release */ = {
+			isa = XCBuildConfiguration;
+			buildSettings = {
+				APPLICATION_EXTENSION_API_ONLY = YES;
+				CODE_SIGN_ENTITLEMENTS = ShareExtension/TapsoShare.entitlements;
+				INFOPLIST_FILE = ShareExtension/Info.plist;
+				LD_RUNPATH_SEARCH_PATHS = (
+					"$(inherited)",
+					"@executable_path/Frameworks",
+					"@executable_path/../../Frameworks",
+				);
+				PRODUCT_BUNDLE_IDENTIFIER = com.lucanomics.tapso.Share;
+				PRODUCT_NAME = TapsoShare;
+				SDKROOT = iphoneos;
+				SKIP_INSTALL = YES;
+				TARGETED_DEVICE_FAMILY = 1;
+			};
+			name = Release;
+		};
 /* End XCBuildConfiguration section */
 
 /* Begin XCConfigurationList section */
@@ -730,6 +867,15 @@
 			defaultConfigurationIsVisible = 0;
 			defaultConfigurationName = Debug;
 		};
+		A5679AD165922902A5EBA926 /* Build configuration list for PBXNativeTarget "TapsoShare" */ = {
+			isa = XCConfigurationList;
+			buildConfigurations = (
+				6B93C422A7772D6EF6C772C8 /* Debug */,
+				837ED2A8A9AB9A46E9AE0EC9 /* Release */,
+			);
+			defaultConfigurationIsVisible = 0;
+			defaultConfigurationName = Debug;
+		};
 /* End XCConfigurationList section */
 
 /* Begin XCLocalSwiftPackageReference section */
@@ -749,6 +895,10 @@
 			productName = TapsoTransit;
 		};
 		D955D5E21D25DFC7D7609008 /* TapsoTransit */ = {
+			isa = XCSwiftPackageProductDependency;
+			productName = TapsoTransit;
+		};
+		F536A4E0A68B0B38648F8397 /* TapsoTransit */ = {
 			isa = XCSwiftPackageProductDependency;
 			productName = TapsoTransit;
 		};

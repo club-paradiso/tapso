@@ -34,8 +34,8 @@ final class SnapshotEvidenceTests: XCTestCase {
             ("04-destination-results", AnyView(DestinationSearchContent(query: "제주", recentNames: [], onChoose: { _ in }))),
             ("05-route-select", AnyView(RouteSelectContent(destinationName: "관덕정", options: DemoCatalog.routeOptions(toDestinationNamed: "관덕정"), onChoose: { _ in }))),
             ("06-boarding-stop", AnyView(BoardingStopContent(route: DemoCatalog.outbound, destination: DemoCatalog.outbound.stops[8], onChoose: { _ in }))),
-            ("07-map-import", AnyView(MapImportContent(matches: nil, paste: AnyView(pastePlaceholder), onChoose: { _ in }, onSearch: {}))),
-            ("08-map-import-found", AnyView(MapImportContent(matches: ["제주시청(아라방면)"], paste: AnyView(pastePlaceholder), onChoose: { _ in }, onSearch: {}))),
+            ("07-map-import", AnyView(MapImportContent(place: nil, paste: AnyView(pastePlaceholder), onChooseDemo: { _ in }, onSearch: {}))),
+            ("08-map-import-found", AnyView(MapImportContent(place: sharedPlace, demoMatches: ["제주시청(아라방면)"], paste: AnyView(pastePlaceholder), onChooseDemo: { _ in }, onSearch: {}))),
             ("09-check-searching", check(.evaluate(proposals: [], hasSearched: false))),
             ("10-check-proposed", check(.evaluate(proposals: DemoCatalog.proposals(for: .smooth, route: DemoCatalog.outbound), hasSearched: true))),
             ("11-check-similar-buses", check(.evaluate(proposals: DemoCatalog.proposals(for: .similarBuses, route: DemoCatalog.outbound), hasSearched: true))),
@@ -52,7 +52,24 @@ final class SnapshotEvidenceTests: XCTestCase {
             ("22-ride-resumed", ride(.active, 5, resumed: true)),
             ("23-ride-live-activity-off", ride(.active, 6, liveActivityOff: true)),
             ("24-end-arrived", end(.arrived)),
-            ("25-end-passed", end(.passedDestination))
+            ("25-end-passed", end(.passedDestination)),
+            ("26-map-import-outside-jeju", AnyView(MapImportContent(
+                place: SharedPlace(source: .appleMaps, name: "합성 장소", coordinate: Coordinate(latitude: 37.5665, longitude: 126.9780)),
+                paste: AnyView(pastePlaceholder), onChooseDemo: { _ in }, onSearch: {}
+            ))),
+            ("27-map-import-link-only", AnyView(MapImportContent(
+                place: SharedPlace(source: .kakaoMap, unresolvedLink: "kakaomap://place?id=SynThetic"),
+                paste: AnyView(pastePlaceholder), onChooseDemo: { _ in }, onSearch: {}
+            ))),
+            ("28-end-walk-to-place", AnyView(RideEndContent(
+                outcome: RideOutcome(moment: .arrived, routeNumber: "202", destination: DemoCatalog.outbound.stops[8].stop, place: sharedPlace),
+                naverAvailable: true,
+                kakaoAvailable: true,
+                handoffFailed: nil,
+                onMap: { _ in },
+                onDone: {},
+                appleMapsAvailable: true
+            )))
         ]
         for (name, view) in screens {
             for scheme in [ColorScheme.light, .dark] {
@@ -166,6 +183,16 @@ final class SnapshotEvidenceTests: XCTestCase {
             onMapSearch: { _ in },
             onDismissResume: {}
         ))
+    }
+
+    /// SYNTHETIC: a place as KakaoMap's share text would describe it (`MAP_HANDOFF_V3.md`).
+    private var sharedPlace: SharedPlace {
+        SharedPlace(
+            source: .kakaoMap,
+            name: "협재해수욕장",
+            address: "제주특별자치도 제주시 한림읍 협재리 2497-1",
+            coordinate: Coordinate(latitude: 33.3940, longitude: 126.2397)
+        )
     }
 
     private func end(_ moment: RideMoment) -> AnyView {
