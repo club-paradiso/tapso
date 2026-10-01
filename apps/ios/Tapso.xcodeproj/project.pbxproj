@@ -47,6 +47,8 @@
 		16CBA37E2A09BAAB0168A223 /* LiveRideSetupViews.swift in Sources */ = {isa = PBXBuildFile; fileRef = 01DE7451FA463336C39A13CA /* LiveRideSetupViews.swift */; };
 		2664941987948A2833A62902 /* TapsoAPIClient.swift in Sources */ = {isa = PBXBuildFile; fileRef = DA0A54842582C43E01555CBD /* TapsoAPIClient.swift */; };
 		CC9DD2029F37F718EB7CEBA5 /* TapsoAPIClientTests.swift in Sources */ = {isa = PBXBuildFile; fileRef = 882BE9396F38A304F46668C5 /* TapsoAPIClientTests.swift */; };
+		901ED55A886FE33A92009E7E /* PrivacyInfo.xcprivacy in Resources */ = {isa = PBXBuildFile; fileRef = F1AB819C471FE37B33ADB3E4 /* PrivacyInfo.xcprivacy */; };
+		85AEE919B98FC2B4F142ADF3 /* PrivacyInfo.xcprivacy in Resources */ = {isa = PBXBuildFile; fileRef = F1AB819C471FE37B33ADB3E4 /* PrivacyInfo.xcprivacy */; };
 /* End PBXBuildFile section */
 
 /* Begin PBXContainerItemProxy section */
@@ -117,6 +119,7 @@
 		01DE7451FA463336C39A13CA /* LiveRideSetupViews.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = LiveRideSetupViews.swift; sourceTree = "<group>"; };
 		DA0A54842582C43E01555CBD /* TapsoAPIClient.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = TapsoAPIClient.swift; sourceTree = "<group>"; };
 		882BE9396F38A304F46668C5 /* TapsoAPIClientTests.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = TapsoAPIClientTests.swift; sourceTree = "<group>"; };
+		F1AB819C471FE37B33ADB3E4 /* PrivacyInfo.xcprivacy */ = {isa = PBXFileReference; lastKnownFileType = text.xml; path = PrivacyInfo.xcprivacy; sourceTree = "<group>"; };
 /* End PBXFileReference section */
 
 /* Begin PBXFrameworksBuildPhase section */
@@ -163,6 +166,7 @@
 			children = (
 				25F8D8F9725AF79DC9F83B2B /* Assets.xcassets */,
 				2436CA0171BFA7890857165A /* Localizable.strings */,
+				F1AB819C471FE37B33ADB3E4 /* PrivacyInfo.xcprivacy */,
 			);
 			path = Resources;
 			sourceTree = "<group>";
@@ -364,6 +368,7 @@
 			files = (
 				593B1456AA2D7A490909919B /* Assets.xcassets in Resources */,
 				C2176B27F64CF25CB4B735B1 /* Localizable.strings in Resources */,
+				901ED55A886FE33A92009E7E /* PrivacyInfo.xcprivacy in Resources */,
 			);
 			runOnlyForDeploymentPostprocessing = 0;
 		};
@@ -373,6 +378,7 @@
 			files = (
 				9DF797D657D259EB1CC12E82 /* Assets.xcassets in Resources */,
 				DD911FC6501FE330D9D8A2BF /* Localizable.strings in Resources */,
+				85AEE919B98FC2B4F142ADF3 /* PrivacyInfo.xcprivacy in Resources */,
 			);
 			runOnlyForDeploymentPostprocessing = 0;
 		};
