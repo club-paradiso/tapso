@@ -64,7 +64,7 @@ return, transfer, rescue, handoff, discovery, eat, passport/share, mystery.
 | V3.3 | Drop, Passport, Share | Editorial 1–3 picks; on-device passport; share card | `PENDING` |
 | V3.4 | Roulette / Mystery Ride | Experimental | `PENDING` |
 | WEB | Marketing site V3 | GO/RIDE/DISCOVER/RETURN story, semantic Dynamic Island engine, availability labels, reduced-motion static, 4-width visual QA | `IMPLEMENTED` (#75; status and map sections #86). Four-width QA done 2026-10-01 (see Progress) |
-| FIGMA | Product V3 file | Pages 00–13, variables synced to code tokens, V3 components | `IMPLEMENTED`: V3 pages, `02G` components, prototype flows; repository references #85. V3 web frames `BLOCKED` (uploads to figma.com are refused by this environment's egress proxy) |
+| FIGMA | Product V3 file | Pages 00–13, variables synced to code tokens, V3 components | `IMPLEMENTED`: V3 pages, `02G` components, prototype flows; repository references #85. V3 web frames `IMPLEMENTED` 2026-10-01: the site as built at 1440, 1280, 390 and 360 (`11 Marketing Web` › `218:2`), editable layers bound to the V2 variables; the V2 web board is archived |
 
 ## Decisions
 
@@ -188,6 +188,21 @@ swift test --package-path packages/transit-core   # macOS / CI
 - 2026-10-01 19:58 and 20:02 UTC — #90 (`d7c6ecd`) and #88 (`98c5013`) merged.
   #88 edited the `KNOWN_ISSUES.md` item next to the way-back one, so `main` was
   merged into #89 (`423f9f0`).
+- 2026-10-01 20:38 and 21:05 UTC — #92 (`e779a4c`) and #89 (`c73e247`) merged.
+- Figma V3 web frames. Figma's upload host is still unreachable from here, so
+  the page was rebuilt rather than captured: `apps/web` as of `main@55c648e`
+  (the last change under `apps/web/src`), rendered in Chromium with reduced
+  motion at 1440, 1280, 390 and 360, read back as boxes, styled text runs and
+  inline SVGs, and written into `11 Marketing Web` › `Web / Marketing V3`
+  (`218:2`) through the plugin API: four frames, 4,655 layers. Deviations:
+  Noto Sans KR instead of Pretendard, so wrapped Korean breaks only between
+  words (hard line breaks, as `word-break: keep-all` does) and a few
+  paragraphs run one line longer; chapter backgrounds the site paints with a
+  box-shadow are `band ·` rectangles; repeating-gradient dashes are dashed
+  strokes. Every solid colour is bound to `TAPSO V2 Semantic` or
+  `TAPSO Primitives`, which gained `jeju/sand` and `jeju/sand-deep` (`--sand`,
+  `--sand-deep` in `tokens.css`). 돌이 is the site's `dori-480.webp` as a 200 px
+  palette PNG. The V2 web board (`165:54`) moved to `13 Archive`.
 
 ## Risks and unexpected findings
 
@@ -207,6 +222,8 @@ swift test --package-path packages/transit-core   # macOS / CI
   landed as `47112f5`). #91 was based on one of them, so #92 replaced it, built
   on `main` itself. Edits to adjacent lines conflict in git's merge (#88 and #89
   in `KNOWN_ISSUES.md`): hold one side at the base, merge, then re-apply it.
+- The Figma web frames are a rebuild of the code, not a source: they go stale
+  when `apps/web` changes and must be regenerated (`FIGMA_IMPLEMENTATION_MAP_V2.md`).
 
 ## Exact next action
 
