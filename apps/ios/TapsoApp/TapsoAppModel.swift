@@ -278,9 +278,14 @@ final class TapsoAppModel {
     private(set) var appleMapsFailed = false
     /// After a live ride: today's last buses of the route number, for the way back.
     private(set) var returnService: ReturnService = .idle
+    /// The way back pinned to the Lock Screen as a countdown, if one is running.
+    private(set) var pinnedReturn: PinnedReturn?
+    /// The countdown could not start: Live Activities are off for TAPSO.
+    private(set) var returnReminderUnavailable = false
 
     @ObservationIgnored private let store: JourneyStore
     @ObservationIgnored private let liveActivity: LiveActivityClient?
+    @ObservationIgnored private let returnReminders: ReturnReminderClient?
     @ObservationIgnored private let api: TapsoAPIClient
     @ObservationIgnored private var searchTask: Task<Void, Never>?
     @ObservationIgnored private var playbackTask: Task<Void, Never>?
@@ -297,10 +302,12 @@ final class TapsoAppModel {
     init(
         store: JourneyStore = JourneyStore(),
         liveActivity: LiveActivityClient? = LiveActivityClient(),
+        returnReminders: ReturnReminderClient? = ReturnReminderClient(),
         api: TapsoAPIClient = TapsoAPIClient()
     ) {
         self.store = store
         self.liveActivity = liveActivity
+        self.returnReminders = returnReminders
         self.api = api
         library = store.loadLibrary()
         if var saved = store.loadActiveRide(), Date().timeIntervalSince(saved.lastUpdateAt) < 8 * 3_600 {
@@ -732,6 +739,94 @@ final class TapsoAppModel {
 
     /// Each variant costs one cached route-info read; a route number has a handful.
     static let returnVariantLimit = 6
+
+    // MARK: The way back on the Lock Screen
+
+    struct PinnedReturn: Equatable {
+        let routeID: String
+        let beAtStopBy: Date
+    }
+
+    enum ReturnPinAvailability: Equatable {
+        /// The countdown for this variant is on the Lock Screen.
+        case pinned
+        case available
+        /// More than a Live Activity's eight hours away.
+        case tooEarly
+        /// Nothing to count down to: gone, unknown, or a matter of minutes.
+        case notOffered
+    }
+
+    func pinAvailability(for row: ReturnServiceRow, now: Date = Date()) -> ReturnPinAvailability {
+        if pinnedReturn?.routeID == row.route.routeId { return .pinned }
+        if Self.returnReminder(for: row, now: now) != nil { return .available }
+        if let date = row.advice.beAtStopByDate, date.timeIntervalSince(now) > Self.returnReminderMaximumLead { return .tooEarly }
+        return .notOffered
+    }
+
+    /// Starts the countdown for one variant, replacing any other.
+    func pinReturnReminder(_ row: ReturnServiceRow, now: Date = Date()) async {
+        guard let reminder = Self.returnReminder(for: row, now: now), let returnReminders else { return }
+        do {
+            try await returnReminders.start(attributes: reminder.attributes, state: reminder.state)
+            pinnedReturn = PinnedReturn(routeID: row.route.routeId, beAtStopBy: reminder.state.beAtStopBy)
+            returnReminderUnavailable = false
+        } catch {
+            returnReminderUnavailable = true
+        }
+    }
+
+    func unpinReturnReminder() async {
+        await returnReminders?.end()
+        pinnedReturn = nil
+    }
+
+    /// When the app comes to the front: picks up a countdown started before a relaunch, and
+    /// clears one whose time to be at the stop is long past.
+    func refreshReturnReminder(now: Date = Date()) async {
+        guard let current = returnReminders?.current else {
+            pinnedReturn = nil
+            return
+        }
+        if now.timeIntervalSince(current.state.beAtStopBy) > Self.returnReminderGrace {
+            await unpinReturnReminder()
+        } else {
+            pinnedReturn = PinnedReturn(routeID: current.attributes.routeID, beAtStopBy: current.state.beAtStopBy)
+        }
+    }
+
+    /// What the countdown for `row` would show, or `nil` when there is nothing worth counting down to.
+    static func returnReminder(
+        for row: ReturnServiceRow,
+        now: Date
+    ) -> (attributes: TapsoReturnAttributes, state: TapsoReturnAttributes.ContentState)? {
+        let advice = row.advice
+        guard
+            [.comfortable, .leaveBy, .tight].contains(advice.level),
+            let date = advice.beAtStopByDate,
+            let text = advice.beAtStopBy,
+            let last = advice.lastDeparture
+        else { return nil }
+        let lead = date.timeIntervalSince(now)
+        guard lead >= returnReminderMinimumLead, lead <= returnReminderMaximumLead else { return nil }
+        let attributes = TapsoReturnAttributes(
+            routeID: row.route.routeId,
+            routeNumber: row.route.routeNumber,
+            startStopName: row.route.startStopName ?? "—",
+            endStopName: row.route.endStopName ?? "—",
+            beAtStopByText: text,
+            lastDeparture: last
+        )
+        return (attributes, TapsoReturnAttributes.ContentState(startedAt: now, beAtStopBy: date))
+    }
+
+    /// The system ends a Live Activity after eight hours (ActivityKit, "Displaying live data with
+    /// Live Activities", read 2026-10-01): a longer countdown is not offered.
+    static let returnReminderMaximumLead: TimeInterval = 8 * 3_600
+    /// `ASSUMED`: with less than five minutes left there is no time to watch a countdown; the card's own line is enough.
+    static let returnReminderMinimumLead: TimeInterval = 5 * 60
+    /// `ASSUMED`: half an hour after the time to be at the stop, the countdown has nothing left to say.
+    static let returnReminderGrace: TimeInterval = 30 * 60
 
     func dismissResumeNotice() {
         resumedAfterRelaunch = false

@@ -84,6 +84,7 @@ synthetic and labelled so on the board.
 | V3 / 24 Share sheet · place found (`193:3098`) | `ShareExtension` › `ShareSheetView` | (extension; no snapshot target yet) |
 | V3 / 25 End · walk to the place, last buses (`193:3125`) | `RideEndContent` + `ReturnTripCard` | `28-end-walk-to-place`, `29-end-return-trip` |
 | V3 / 26 Passed stop · next stop, walk back (`195:3021`) | `RideHeroCard` › `passed` + `RescueOptionList` | `17-ride-passed` (demo: no distance), `30-ride-passed-walk-back` |
+| V3 / 27 Return countdown · Lock Screen, island, end card (`199:3046`) | `ReturnLockScreenView`, `ReturnIsland*`, `ReturnTripRow` › `pinControl` | `la-lockscreen-return-countdown`, `la-lockscreen-return-late`, `di-*-return-*`, `31-end-return-countdown` |
 
 The `RideHero / V2` › `moment=passed` variant (`155:230`) now matches the code:
 `color/journey/next` at 8 % behind a 2 pt `color/journey/next` stroke. It was a

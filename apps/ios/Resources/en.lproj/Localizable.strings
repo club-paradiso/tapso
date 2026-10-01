@@ -326,3 +326,11 @@
 "returnTrip.headway.saturday" = "Saturdays every %ld min on average";
 "returnTrip.headway.sunday" = "Sundays every %ld min on average";
 "returnTrip.note" = "Last bus times are when it leaves the route's first stop. It passes other stops after that, so being at your stop by the time shown gets you there before it. Headways are averages, not a timetable.";
+"returnTrip.pin" = "Count down on the Lock Screen";
+"returnTrip.pinned" = "Counting down on the Lock Screen";
+"returnTrip.unpin" = "Turn off";
+"returnTrip.pin.unavailable" = "Turn on Live Activities for TAPSO in Settings to count down on the Lock Screen.";
+"returnTrip.pin.window" = "The Lock Screen countdown can start eight hours before you need to be at the stop.";
+"returnTrip.activity.late.title" = "Time to be at the stop has passed";
+"returnTrip.activity.late.body" = "The last bus leaves its first stop at %@. Look for another way in a map app.";
+"returnTrip.activity.late.short" = "Passed";

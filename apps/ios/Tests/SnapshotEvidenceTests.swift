@@ -81,7 +81,17 @@ final class SnapshotEvidenceTests: XCTestCase {
                 onDone: {},
                 returnService: .loaded(returnRows)
             ))),
-            ("30-ride-passed-walk-back", ride(.arrived, 0, passed: true, rescue: walkBackAdvice, kakaoAvailable: true))
+            ("30-ride-passed-walk-back", ride(.arrived, 0, passed: true, rescue: walkBackAdvice, kakaoAvailable: true)),
+            ("31-end-return-countdown", AnyView(RideEndContent(
+                outcome: RideOutcome(moment: .arrived, routeNumber: "202", destination: DemoCatalog.outbound.stops[8].stop),
+                naverAvailable: true,
+                kakaoAvailable: true,
+                handoffFailed: nil,
+                onMap: { _ in },
+                onDone: {},
+                returnService: .loaded(returnRows),
+                returnPin: { $0.route.routeId == "SYN-202-W" ? .pinned : .available }
+            )))
         ]
         for (name, view) in screens {
             for scheme in [ColorScheme.light, .dark] {
@@ -123,7 +133,29 @@ final class SnapshotEvidenceTests: XCTestCase {
             try render(in: directory, AnyView(IslandMinimalMock(state: state, isStale: isStale)), name: "di-minimal-\(name)", width: 60, scheme: .dark, background: .white)
             try render(in: directory, AnyView(IslandExpandedMock(attributes: attributes, state: state, isStale: isStale)), name: "di-expanded-\(name)", width: 380, scheme: .dark, background: .white)
         }
+        // "돌아갈 시간": counting down, then past the time to be at the stop. The timer runs from now.
+        let countdown = TapsoReturnAttributes.ContentState(startedAt: Date(), beAtStopBy: Date().addingTimeInterval(83 * 60))
+        for (name, isStale) in [("return-countdown", false), ("return-late", true)] {
+            try render(in: directory,
+                AnyView(ReturnLockScreenView(attributes: returnAttributes, state: countdown, isStale: isStale, drawsBackground: true)
+                    .clipShape(RoundedRectangle(cornerRadius: 22, style: .continuous))),
+                name: "la-lockscreen-\(name)", width: 370, scheme: .dark, background: .black
+            )
+            try render(in: directory, AnyView(ReturnIslandCompactMock(attributes: returnAttributes, state: countdown, isStale: isStale)), name: "di-compact-\(name)", width: 300, scheme: .dark, background: .white)
+            try render(in: directory, AnyView(ReturnIslandMinimal(isStale: isStale).frame(width: 37, height: 37).background(Color.black, in: Circle()).padding(10)), name: "di-minimal-\(name)", width: 60, scheme: .dark, background: .white)
+            try render(in: directory, AnyView(ReturnIslandExpandedMock(attributes: returnAttributes, state: countdown, isStale: isStale)), name: "di-expanded-\(name)", width: 380, scheme: .dark, background: .white)
+        }
     }
+
+    /// SYNTHETIC: the way back as the end screen would pin it.
+    private let returnAttributes = TapsoReturnAttributes(
+        routeID: "SYN-202-E",
+        routeNumber: "202",
+        startStopName: "협재",
+        endStopName: "제주버스터미널",
+        beAtStopByText: "21:40",
+        lastDeparture: "21:50"
+    )
 
     // MARK: Builders
 
@@ -306,6 +338,45 @@ private extension View {
 }
 
 /// The compact island: leading and trailing either side of the camera cut-out.
+private struct ReturnIslandCompactMock: View {
+    let attributes: TapsoReturnAttributes
+    let state: TapsoReturnAttributes.ContentState
+    let isStale: Bool
+
+    var body: some View {
+        HStack(spacing: 0) {
+            ReturnIslandCompactLeading(attributes: attributes, isStale: isStale)
+                .padding(.leading, 10)
+            Spacer(minLength: 126)
+            ReturnIslandCompactTrailing(state: state, isStale: isStale)
+                .padding(.trailing, 10)
+        }
+        .frame(height: 37)
+        .background(Color.black, in: Capsule())
+        .padding(12)
+    }
+}
+
+private struct ReturnIslandExpandedMock: View {
+    let attributes: TapsoReturnAttributes
+    let state: TapsoReturnAttributes.ContentState
+    let isStale: Bool
+
+    var body: some View {
+        VStack(spacing: 8) {
+            HStack(alignment: .top) {
+                ReturnIslandExpandedLeading(attributes: attributes, isStale: isStale)
+                Spacer()
+                ReturnIslandExpandedTrailing(state: state, isStale: isStale)
+            }
+            ReturnIslandExpandedBottom(attributes: attributes, isStale: isStale)
+        }
+        .padding(16)
+        .background(Color.black, in: RoundedRectangle(cornerRadius: 44, style: .continuous))
+        .padding(12)
+    }
+}
+
 private struct IslandCompactMock: View {
     let attributes: TapsoActivityAttributes
     let state: TapsoActivityAttributes.ContentState

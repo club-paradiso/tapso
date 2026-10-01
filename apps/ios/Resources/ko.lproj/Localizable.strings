@@ -326,3 +326,11 @@
 "returnTrip.headway.saturday" = "토요일 평균 %ld분 간격";
 "returnTrip.headway.sunday" = "일요일 평균 %ld분 간격";
 "returnTrip.note" = "막차 시각은 노선의 첫 정류장(기점)에서 떠나는 시각이에요. 버스는 그 뒤에 다른 정류장을 지나니, 표시한 시각까지 정류장에 나가 있으면 막차보다 먼저 도착해요. 배차 간격은 평균이라 시간표가 아니에요.";
+"returnTrip.pin" = "잠금 화면에 남은 시간 띄우기";
+"returnTrip.pinned" = "잠금 화면에서 남은 시간을 세고 있어요";
+"returnTrip.unpin" = "끄기";
+"returnTrip.pin.unavailable" = "설정에서 탑서의 실시간 현황을 켜면 잠금 화면에 띄울 수 있어요.";
+"returnTrip.pin.window" = "남은 시간은 정류장에 나가야 할 시각 8시간 전부터 잠금 화면에 띄울 수 있어요.";
+"returnTrip.activity.late.title" = "정류장에 나갈 시각이 지났어요";
+"returnTrip.activity.late.body" = "막차는 %@ 기점 출발이에요. 다른 길은 지도 앱에서 찾아보세요.";
+"returnTrip.activity.late.short" = "지남";

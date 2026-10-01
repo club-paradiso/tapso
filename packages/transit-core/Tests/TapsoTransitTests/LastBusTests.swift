@@ -45,6 +45,16 @@ final class LastBusTests: XCTestCase {
         XCTAssertTrue(LastBus.advice(for: late, now: seoul(2, 0, 30)).isGone)
     }
 
+    func testTheCountdownTargetIsTheSameInstantAsTheClockTime() {
+        let advice = LastBus.advice(for: evening, now: seoul(1, 19, 0).addingTimeInterval(42))
+        XCTAssertEqual(advice.beAtStopBy, "22:20")
+        XCTAssertEqual(advice.beAtStopByDate, seoul(1, 22, 20), "seconds past the minute do not move it")
+        let late = TransitAPIRouteServiceHours(routeId: "SYN-LATE", firstDeparture: "05:40", lastDeparture: "00:20")
+        XCTAssertEqual(LastBus.advice(for: late, now: seoul(1, 23, 50)).beAtStopByDate, seoul(2, 0, 10), "past midnight it is the next calendar day")
+        XCTAssertNil(LastBus.advice(for: evening, now: seoul(1, 22, 40)).beAtStopByDate, "nothing to count down to once the bus is gone")
+        XCTAssertNil(LastBus.advice(for: nil, now: seoul(1, 12, 0)).beAtStopByDate)
+    }
+
     func testNoPublishedLastDepartureIsUnknownNeverSafe() {
         XCTAssertEqual(LastBus.advice(for: nil, now: seoul(1, 12, 0)).level, .unknown)
         let noLast = TransitAPIRouteServiceHours(routeId: "SYN", firstDeparture: "06:00")
