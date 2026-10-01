@@ -5,6 +5,8 @@ import "./styles/tokens.css";
 import "./styles/base.css";
 import "./styles/surfaces.css";
 import "./styles/sections.css";
+import "./styles/island.css";
+import "./styles/journey.css";
 import "./styles/forms.css";
 import "./support-million.css";
 
