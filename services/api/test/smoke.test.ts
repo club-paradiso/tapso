@@ -70,13 +70,13 @@ function deployment(env: ServerEnv, events: string[] = []): Server {
   });
 }
 
-async function smoke(env: ServerEnv, events: string[] = []): Promise<{ code: number | null; output: string }> {
+async function smoke(env: ServerEnv, events: string[] = [], script = "scripts/smoke.ts", extra: string[] = []): Promise<{ code: number | null; output: string }> {
   const server = deployment(env, events);
   await new Promise<void>((resolve) => server.listen(0, "127.0.0.1", resolve));
   const { port } = server.address() as AddressInfo;
   try {
     return await new Promise((resolve, reject) => {
-      const child = spawn(process.execPath, ["--experimental-strip-types", "scripts/smoke.ts", `http://127.0.0.1:${port}`], {
+      const child = spawn(process.execPath, ["--experimental-strip-types", script, `http://127.0.0.1:${port}`, ...extra], {
         cwd: new URL("../", import.meta.url),
         stdio: ["ignore", "pipe", "pipe"],
       });
@@ -94,7 +94,8 @@ async function smoke(env: ServerEnv, events: string[] = []): Promise<{ code: num
 test("the production smoke test passes end to end against the current API contract", async () => {
   const { code, output } = await smoke({});
   assert.equal(code, 0, output);
-  assert.match(output, /16 passed, 0 warned, 0 blocked by credentials, 0 failed/);
+  assert.match(output, /17 passed, 0 warned, 0 blocked by credentials, 0 failed/);
+  assert.match(output, /PASS +session store +memory store; sessions disabled because a serverless deployment would lose rides on scale-out/);
   assert.match(output, /PASS +matching posture +shadow; matcher directed-route-progress-v1; demonstrated readiness READY_FOR_SHADOW/);
   assert.match(output, /PASS +vehicles .*matching shadow_only_pending_matching_readiness/);
 });
@@ -111,4 +112,26 @@ test("the smoke test never creates a journey session, even where sessions are en
   assert.equal(code, 0, output);
   assert.match(output, /PASS +sessions policy +sessions enabled; the write-free probe was rejected by input validation, nothing created/);
   assert.equal(events.includes("journey_session_created"), false, events.join(", "));
+});
+
+test("the session smoke creates one session, reads it, confirms a bus, ends it and leaves nothing behind", async () => {
+  const events: string[] = [];
+  const { code, output } = await smoke({ TRANSIT_SESSIONS_ENABLED: "true" }, events, "scripts/session-smoke.ts", ["--interval-ms", "0"]);
+  assert.equal(code, 0, output);
+  for (const name of ["preconditions", "route", "create", "reads persist", "concurrent reads", "confirm", "end", "unknown and malformed ids"]) {
+    assert.match(output, new RegExp(`PASS +${name} `), `${name}\n${output}`);
+  }
+  assert.match(output, /0 failed/);
+  // Each request is logged through the handler; one create and one end, and the end really removed the row.
+  assert.ok(events.length > 0);
+  assert.match(output, /PASS +end +DELETE 204, then the session reads 404 and a second DELETE is 404/);
+  assert.ok(!output.includes("SYNTHETIC-1"), "no vehicle id is printed");
+});
+
+test("the session smoke skips a deployment whose sessions are disabled, and fails it when told they must be on", async () => {
+  const skipped = await smoke({}, [], "scripts/session-smoke.ts", ["--interval-ms", "0"]);
+  assert.equal(skipped.code, 0, skipped.output);
+  assert.match(skipped.output, /SKIP +sessions enabled +sessions are disabled on this deployment/);
+  const required = await smoke({}, [], "scripts/session-smoke.ts", ["--interval-ms", "0", "--require-enabled"]);
+  assert.equal(required.code, 3, required.output);
 });

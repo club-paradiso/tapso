@@ -122,6 +122,7 @@ accepts both so local and production paths are identical.
 | POST | `/v1/matches` | Rank caller-supplied candidates; no upstream call |
 | POST | `/v1/sessions` | Create a ride session |
 | GET | `/v1/sessions/:id` | Refresh a ride session |
+| DELETE | `/v1/sessions/:id` | End a ride session: the row is deleted, `204`; an unknown or already ended id is `404` |
 | POST | `/v1/sessions/:id/confirm` | Confirm a vehicle explicitly |
 
 Two further paths exist for controlled ride evidence only, a legacy flow that
@@ -318,15 +319,51 @@ use the same primitive with a six-hour window.
 |---|---|
 | What is the session store? | A `JourneySessionStore` (`src/sessionStore.ts`) chosen by `TRANSIT_SESSION_STORE`: `memory`, the default, is a `Map` in one process; `redis` is Upstash Redis over its REST API (`src/upstashSessionStore.ts`), with every key under `TRANSIT_SESSION_KEY_PREFIX`. Every save is a compare-and-set on a version, so a stale writer cannot move a rider backward. |
 | Is the memory store safe on serverless? | **No.** Vercel Functions scale horizontally and recycle instances. A session created on one instance is absent from the next, so `GET /v1/sessions/:id` would return `404` unpredictably. |
-| What is done about it? | The endpoints fail closed. `TRANSIT_SESSIONS_ENABLED` defaults to `false` whenever `VERCEL` is set and the store is `memory`, and the three session routes answer `503 SESSIONS_UNAVAILABLE` with the reason. `/health` reports `sessions.store`, `sessions.enabled` and `sessions.durableStoreConfigured` honestly. |
+| What is done about it? | The endpoints fail closed. `TRANSIT_SESSIONS_ENABLED` defaults to `false` whenever `VERCEL` is set and the store is `memory`, and the session routes answer `503 SESSIONS_UNAVAILABLE` with the reason. `/health` reports `sessions.store`, `sessions.enabled` and `sessions.durableStoreConfigured` honestly. |
+| Can production and a preview share the Upstash database? | Only by namespace, so the namespace is enforced (`src/sessionKeyPrefix.ts`, 2026-10-01). A deployment with `VERCEL_ENV=production` serves sessions only from `tapso:prod:journey-session:`; nothing else (preview, development, a local process) may use that namespace; the `verify` namespace is never served. A violation does not stop the deployment booting: sessions are disabled, the session routes answer `503 SESSIONS_UNAVAILABLE` naming the namespace rule, and `/health` reports `sessions.namespace` (the category: `production`, `preview`, `default`, `verification` or `custom`, never the prefix) and `sessions.problem`. |
+| How does a ride end? | `DELETE /v1/sessions/:id` deletes the row instead of leaving it to its 4-hour TTL: a finished ride stops costing provider reads, and its stop history stops existing. A refresh racing the delete loses its compare-and-set and answers `410`. |
 | Is the Upstash store verified? | Against the live service on 2026-09-23 (`VERIFIED_LIVE_INFRASTRUCTURE`): store 15/15 and a preview deployment 12/12 (`exec-plans/DURABLE_JOURNEY_SESSIONS.md`). Production was left on the memory store: the operator's record of 2026-09-23 (`HISTORICAL_REPORT_ONLY`), not an observation; `/health` `sessions.store` is the authority. Moving production is a separate decision that needs `TRANSIT_SESSION_KEY_PREFIX=tapso:prod:journey-session:` (`KNOWN_ISSUES.md`). |
 | Does a durable store enable automatic matching? | **No.** Sessions and automatic selection are separate flags. Automatic selection is withheld by release gate `matcher-passive-safety-v4`, not by the store, and the configuration refuses `TRANSIT_AUTOMATIC_MATCHING_ENABLED` below `READY_FOR_BOUNDED_AUTOMATION`. |
 | Does validation need sessions? | **No.** Matcher evidence comes from rider-free passive collection, which reads the stateless read endpoints or TAGO directly, and from offline replay; neither calls the session API (`.github/workflows/matcher-evidence.yml`). |
 
 Task C's freshness rule now exists (`server_observed_cadence_v1`) and the
 durable store is built. A production ride feature still needs production moved
-onto that store, and a queue or scheduled worker for APNs, which is not built
-yet (`ARCHITECTURE.md`).
+onto that store (*Enabling durable sessions in production* below), and a queue
+or scheduled worker for APNs (`ARCHITECTURE.md`).
+
+### Enabling durable sessions in production
+
+Status 2026-10-01: production answers `503 SESSIONS_UNAVAILABLE` from the memory
+store (scheduled smoke, run `36804898273`). The code is ready; what is missing
+is four environment variables on the `tapso-api` Vercel project, which only an
+account with access to that project can set. In the Vercel dashboard →
+`tapso-api` → Settings → Environment Variables, add for **Production** only:
+
+| Name | Value | Sensitive |
+|---|---|---|
+| `TRANSIT_SESSION_STORE` | `redis` | no |
+| `TRANSIT_SESSION_KEY_PREFIX` | `tapso:prod:journey-session:` | no |
+| `UPSTASH_REDIS_REST_URL` | the same Upstash database's REST URL the preview used on 2026-09-23 | yes |
+| `UPSTASH_REDIS_REST_TOKEN` | its REST token | yes |
+
+Leave `TRANSIT_SESSIONS_ENABLED` and `TRANSIT_AUTOMATIC_MATCHING_ENABLED` unset:
+the first defaults to `true` with the durable store, the second stays `false`
+and would be refused anyway. Then redeploy production (Deployments → latest
+production → Redeploy). Nothing else is manual:
+
+1. `.github/workflows/post-deploy.yml` (dispatch it, or wait for its daily run)
+   runs the read-only smoke, which must now report `PASS session store durable
+   store (redis), namespace production, sessions enabled`, and
+   `scripts/session-smoke.ts`, which creates one ride session through the public
+   API, reads it back across requests and concurrently, confirms a bus if one
+   is offered, ends it with `DELETE` and checks it is gone. It prints no vehicle
+   number and leaves nothing behind.
+2. A wrong namespace (the preview's, or the shared default) is caught by the
+   API itself: sessions stay off and `/health` says why. Correct the variable
+   and redeploy.
+
+Rollback: delete `TRANSIT_SESSION_STORE` (or set it to `memory`) and redeploy;
+sessions return to `503`, and rows already written expire on their own TTL.
 
 ## Running locally
 
@@ -436,6 +473,31 @@ unknown-path, and wrong-method requests are rejected. It also checks:
   provider read or store write): `503 SESSIONS_UNAVAILABLE` or
   `400 INVALID_INPUT` passes, and a `201` is a failure. `/operator/snapshot`
   without a token must answer `401` or `503`.
+- **Session store.** From the `/health` `sessions` block: the memory store with
+  sessions off on serverless passes; a durable store must report its namespace,
+  and on a production deployment that namespace must be `production`; a
+  `sessions.problem` (the API refusing a namespace) is a failure.
+
+The `health` line also prints the build commit and deployment environment the
+deployment reports, which is how a merge is confirmed live.
+
+### Session lifecycle smoke
+
+```bash
+node --experimental-strip-types services/api/scripts/session-smoke.ts https://<base-url> \
+  [--city 39] [--route-numbers 365,202,201] [--interval-ms 6000] [--require-enabled]
+```
+
+Unlike `smoke.ts` it writes, exactly once: one ride session, created, read three
+times across requests and four times at once, confirmed with the first bus the
+session offers, ended with `DELETE`, and checked gone (`404`, and `404` again on
+a second `DELETE`). It runs only where `/health` says sessions are enabled and
+automatic matching is off, and on a production deployment only from the durable
+store's production namespace; elsewhere it reports `SKIP` and writes nothing
+(`--require-enabled` turns that into exit `3`). It never reaches Redis directly,
+deletes its session even when a check fails, and masks every vehicle number to
+its last four digits. `services/api/test/smoke.test.ts` runs it against the real
+handler over a synthetic provider.
 
 A deployment without a credential is reported as `BLOCKED_BY_CREDENTIALS`, never
 converted into a pass. A warning is not a failure. It exits non-zero only on a
@@ -453,6 +515,10 @@ No release or validation step requires running it by hand:
   `.github/workflows/matcher-evidence.yml` runs it against
   `https://tapso-api.vercel.app` on every scheduled run (and on a manual
   dispatch) and keeps its output as a 90-day artifact.
+- `.github/workflows/post-deploy.yml` runs on every push to `main` that touches
+  `services/api`: it waits (up to 20 minutes) until `/health` reports the merged
+  commit, then runs `smoke.ts` and `session-smoke.ts` against production. It
+  also runs daily and on dispatch.
 
 ### Rollback
 

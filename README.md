@@ -74,10 +74,11 @@ GET  /v1/vehicles?routeId=…&cityCode=…
 POST /v1/matches
 POST /v1/sessions
 GET  /v1/sessions/:id
+DELETE /v1/sessions/:id
 POST /v1/sessions/:id/confirm
 ```
 
-The canonical production base URL is `https://tapso-api.vercel.app`. The same paths are served locally and in production. Session creation takes `cityCode` in its JSON body; sessions are short-lived and, by default, held in one process's memory, so serverless deployments disable them and answer `503 SESSIONS_UNAVAILABLE` unless a durable Upstash store is configured (`TRANSIT_SESSION_STORE=redis`; see [ARCHITECTURE.md](docs/ARCHITECTURE.md)). The full contract, configuration, deployment, smoke-test, and rollback procedure is in [PRODUCTION_TRANSIT_API.md](docs/PRODUCTION_TRANSIT_API.md).
+The canonical production base URL is `https://tapso-api.vercel.app`. The same paths are served locally and in production. Session creation takes `cityCode` in its JSON body; sessions are short-lived and, by default, held in one process's memory, so serverless deployments disable them and answer `503 SESSIONS_UNAVAILABLE` unless a durable Upstash store is configured (`TRANSIT_SESSION_STORE=redis`; see [ARCHITECTURE.md](docs/ARCHITECTURE.md)). A production deployment serves sessions only from the `tapso:prod:journey-session:` namespace, and `DELETE` ends a ride. Enabling them in production is four environment variables on the `tapso-api` project ([PRODUCTION_TRANSIT_API.md](docs/PRODUCTION_TRANSIT_API.md) → *Enabling durable sessions in production*). The full contract, configuration, deployment, smoke-test, and rollback procedure is in [PRODUCTION_TRANSIT_API.md](docs/PRODUCTION_TRANSIT_API.md).
 
 ```bash
 node --experimental-strip-types services/api/scripts/smoke.ts http://127.0.0.1:8787

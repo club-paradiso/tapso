@@ -38,6 +38,16 @@ export const DEFAULT_SESSION_KEY_PREFIX = "tapso:journey-session:";
 /** Where the live verification script writes, apart from any runtime namespace. */
 export const VERIFY_SESSION_KEY_PREFIX = "tapso:verify:journey-session:";
 
+/** Production's namespace, and only production's. See `sessionNamespaceProblem`. */
+export const PRODUCTION_SESSION_KEY_PREFIX = "tapso:prod:journey-session:";
+
+/**
+ * What a namespace is for, by category. `/health` publishes this category and
+ * never the prefix itself, so an operator can confirm which namespace a
+ * deployment writes under without the key layout leaving the server.
+ */
+export type SessionNamespaceClass = "production" | "preview" | "verification" | "default" | "custom";
+
 export const SESSION_KEY_PREFIX_ENV = "TRANSIT_SESSION_KEY_PREFIX";
 
 export const MAX_SESSION_KEY_PREFIX_LENGTH = 96;
@@ -109,4 +119,50 @@ export function resolveVerificationKeyPrefix(
     throw new RangeError("the verification key prefix must differ from every runtime session namespace");
   }
   return prefix;
+}
+
+/** The category of an already validated namespace. */
+export function classifySessionKeyPrefix(prefix: string): SessionNamespaceClass {
+  if (prefix === PRODUCTION_SESSION_KEY_PREFIX) return "production";
+  if (prefix === DEFAULT_SESSION_KEY_PREFIX) return "default";
+  const middle = prefix.split(":").slice(1, -2);
+  if (middle.includes("verify")) return "verification";
+  if (middle.includes("preview")) return "preview";
+  return "custom";
+}
+
+/**
+ * Why a deployment must not serve journey sessions from a namespace, or
+ * `undefined` when it may.
+ *
+ * Production and preview deployments share one Upstash database, so the
+ * namespace is the only thing keeping a preview's test rides out of real
+ * riders' sessions, and the reverse. The rules make the production namespace
+ * and the production deployment imply each other:
+ *
+ *  - a production deployment (`VERCEL_ENV=production`) serves sessions only
+ *    from `PRODUCTION_SESSION_KEY_PREFIX`, never from the shared default or a
+ *    preview namespace someone forgot to change;
+ *  - nothing else, preview, development or a local process, may use the
+ *    production namespace;
+ *  - the verification namespace belongs to `scripts/upstash`, which deletes
+ *    what it writes, and is never a runtime namespace.
+ *
+ * A violation disables sessions and says why in `/health`. It does not stop
+ * the deployment booting: the read endpoints have nothing to do with it.
+ */
+export function sessionNamespaceProblem(
+  deploymentEnvironment: string | undefined,
+  namespace: SessionNamespaceClass,
+): string | undefined {
+  if (namespace === "verification") {
+    return "the verification session namespace is reserved for scripts/upstash and is never served";
+  }
+  if (deploymentEnvironment === "production" && namespace !== "production") {
+    return "a production deployment serves sessions only from the production namespace";
+  }
+  if (deploymentEnvironment !== "production" && namespace === "production") {
+    return "only a production deployment may use the production session namespace";
+  }
+  return undefined;
 }

@@ -227,10 +227,17 @@ exists to prevent. The branch was restored and all 219 tests pass.
 
 ## Exact next action
 
-None for this plan. Moving production to `redis` would be a separate decision
-under `TRANSIT_SESSION_KEY_PREFIX=tapso:prod:journey-session:`. Automatic
-matching stays behind its own field-validation gate. The live checks below
-remain the way to re-verify after any change to the store.
+Production. Since 2026-10-01 the API refuses to serve sessions from any
+namespace but `tapso:prod:journey-session:` on a production deployment (and
+refuses that namespace everywhere else), `DELETE /v1/sessions/:id` ends a ride,
+and `.github/workflows/post-deploy.yml` runs `services/api/scripts/session-smoke.ts`
+against production after every API deploy and daily. What remains is setting
+`TRANSIT_SESSION_STORE=redis`, `TRANSIT_SESSION_KEY_PREFIX=tapso:prod:journey-session:`
+and the two Upstash variables on the `tapso-api` project for Production and
+redeploying (`../PRODUCTION_TRANSIT_API.md` → *Enabling durable sessions in
+production*). Automatic matching stays behind release gate
+`matcher-passive-safety-v4`. The live checks below remain the way to re-verify
+the store itself after any change to it.
 
 ### Step 1 — the store, against a real database
 

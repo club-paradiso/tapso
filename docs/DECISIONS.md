@@ -188,3 +188,13 @@ The V1 app and Live Activity each had their own switch over the phase, and they 
 ## CI builds the iOS app and publishes snapshot evidence (2026-09-30)
 
 **Decision:** a macOS `ios` job builds the committed project, runs the app and Live Activity tests, renders every Product V2 screen and ride surface in Korean and English, and checks XcodeGen membership parity. The committed `.xcodeproj` is kept in step by `scripts/ios/sync_xcodeproj.py` so it can be updated without a Mac. The job runs with `contents: read` and no persisted credentials; its only output is the artifact `ios-snapshot-evidence`. A branch-publishing job (`ci-evidence/<branch>`) was tried during Product V2 review and removed: it held a write token while installing an unpinned package from the network, and the artifact is the canonical evidence.
+
+## The production session namespace belongs to production alone (2026-10-01)
+
+**Decision:** the API decides at boot whether a deployment may serve journey sessions from its Redis namespace. A deployment with `VERCEL_ENV=production` serves them only from `tapso:prod:journey-session:`; no other deployment or process may use that namespace; the `verify` namespace is never served. A violation disables sessions with the reason in `/health` and in the `503`, rather than failing the boot, because the read endpoints have nothing to do with it.
+
+Production and preview share one Upstash database (`exec-plans/DURABLE_JOURNEY_SESSIONS.md`), so a namespace typo is the one mistake that would mix test rides into real ones or the reverse. `/health` now reports the namespace's category (`sessions.namespace`), never the prefix, so the rule can be checked from outside: the scheduled and post-deploy smokes fail a production deployment that reports any other category.
+
+## Ending a ride deletes its session (2026-10-01)
+
+**Decision:** `DELETE /v1/sessions/:id` deletes the row. A finished ride stops costing provider reads (journey sessions read TAGO uncached), its stop history stops existing, and a post-deploy check can leave production as it found it. The session id stays the only credential, as for reading and confirming: a UUID that only the rider's device holds.

@@ -397,6 +397,28 @@ export class JourneySessionCoordinator {
   }
 
   /**
+   * The rider is done: off the bus, or never boarded. The row is deleted
+   * outright rather than left to its TTL, so a finished ride stops costing a
+   * provider read and its stop history stops existing.
+   *
+   * An expired session can be ended too; only an unknown id is an error. A
+   * refresh racing this delete loses its compare-and-set and answers `410`,
+   * because the store never recreates a row a save cannot find.
+   */
+  async end(id: string): Promise<{ id: string; routeId: string; expired: boolean; selectionMode?: "automatic" | "explicit" }> {
+    const stored = await this.store.load(id);
+    if (!stored) throw new SessionNotFoundError();
+    await this.store.delete(id);
+    const { session } = stored;
+    return {
+      id: session.id,
+      routeId: session.routeId,
+      expired: session.expiresAtMs <= this.now().getTime(),
+      ...(session.selectionMode === undefined ? {} : { selectionMode: session.selectionMode }),
+    };
+  }
+
+  /**
    * Persist the work of one request, or yield to whoever beat us to it.
    *
    * A lost compare-and-set is not retried. A retry would re-read TAGO and

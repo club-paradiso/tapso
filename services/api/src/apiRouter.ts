@@ -140,6 +140,7 @@ type Route =
   | "matches"
   | "session_create"
   | "session_read"
+  | "session_end"
   | "session_confirm"
   | "operator_snapshot"
   | "operator_analyze";
@@ -159,7 +160,7 @@ export function createTransitApiHandler(dependencies: TransitApiDependencies): T
     const path = url ? normalizePath(url.pathname) : "/";
     const origin = request.headers.get("origin");
     const cors = corsHeaders(config, origin);
-    const resolved = url ? resolve(path) : undefined;
+    const resolved = url ? resolve(path, request.method) : undefined;
 
     if (request.method === "OPTIONS") {
       return preflight(config, resolved, cors);
@@ -215,7 +216,15 @@ export function normalizePath(pathname: string): string {
   return path === "" ? "/" : path;
 }
 
-function resolve(path: string): Resolved | undefined {
+function resolve(path: string, method: string): Resolved | undefined {
+  const resolved = resolvePath(path);
+  // One path, two routes: reading a session and ending it share an address,
+  // and are logged, limited and dispatched as what they are.
+  if (resolved?.route === "session_read" && method === "DELETE") return { ...resolved, route: "session_end" };
+  return resolved;
+}
+
+function resolvePath(path: string): Resolved | undefined {
   if (path === "/health") return { route: "health", methods: ["GET"] };
   if (path === "/v1/cities") return { route: "cities", methods: ["GET"] };
   if (path === "/v1/routes") return { route: "routes", methods: ["GET"] };
@@ -230,14 +239,14 @@ function resolve(path: string): Resolved | undefined {
   if (path === "/operator/analyze") return { route: "operator_analyze", methods: ["POST"] };
 
   // Rewrite targets: the session identifier arrives as a query parameter.
-  if (path === "/v1/session") return { route: "session_read", methods: ["GET"] };
+  if (path === "/v1/session") return { route: "session_read", methods: ["GET", "DELETE"] };
   if (path === "/v1/session-confirm") return { route: "session_confirm", methods: ["POST"] };
 
   const confirm = /^\/v1\/sessions\/([^/]+)\/confirm$/.exec(path);
   if (confirm) return { route: "session_confirm", methods: ["POST"], sessionId: decodeSegment(confirm[1]) };
 
   const read = /^\/v1\/sessions\/([^/]+)$/.exec(path);
-  if (read) return { route: "session_read", methods: ["GET"], sessionId: decodeSegment(read[1]) };
+  if (read) return { route: "session_read", methods: ["GET", "DELETE"], sessionId: decodeSegment(read[1]) };
 
   return undefined;
 }
@@ -482,6 +491,17 @@ async function dispatch(
     return { response: json(await sessions.refresh(sessionId), 200, { "cache-control": "no-store" }) };
   }
 
+  if (resolved.route === "session_end") {
+    const ended = await sessions.end(sessionId);
+    logEvent("journey_session_ended", {
+      sessionId: ended.id,
+      routeId: ended.routeId,
+      expired: ended.expired,
+      selectionMode: ended.selectionMode,
+    });
+    return { response: new Response(null, { status: 204, headers: { ...baseHeaders(), "cache-control": "no-store" } }) };
+  }
+
   const session = await sessions.confirm(sessionId, await readJsonBody(request));
   logEvent("vehicle_match_confirmed", {
     sessionId: session.id,
@@ -709,9 +729,15 @@ function requireOperator(dependencies: TransitApiDependencies, request: Request)
 function requireSessions(dependencies: TransitApiDependencies): JourneySessionCoordinator {
   const { sessions, config } = dependencies;
   if (sessions && config.sessions.enabled) return sessions;
+  // The reason, as the configuration knows it: a client and an operator act
+  // differently on "not durable here", "wrong namespace" and "switched off".
   throw apiError(
     "SESSIONS_UNAVAILABLE",
-    "ride sessions are held in one process's memory and are disabled on this deployment",
+    config.sessions.problem
+      ? `ride sessions are disabled on this deployment: ${config.sessions.problem}`
+      : config.sessions.store === "memory"
+        ? "ride sessions are held in one process's memory and are disabled on this deployment"
+        : "ride sessions are disabled on this deployment by configuration",
   );
 }
 
@@ -736,7 +762,7 @@ function corsHeaders(config: TransitApiConfig, origin: string | null): Record<st
   return {
     vary: "Origin",
     "access-control-allow-origin": origin,
-    "access-control-allow-methods": "GET, POST, OPTIONS",
+    "access-control-allow-methods": "GET, POST, DELETE, OPTIONS",
     "access-control-allow-headers": "content-type, authorization",
     "access-control-max-age": "600",
   };

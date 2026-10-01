@@ -42,8 +42,10 @@ report();
 
 async function run(): Promise<void> {
   const health = await get("/health");
+  const build = (health.body?.build ?? {}) as Record<string, unknown>;
   record("health", health.status === 200 && health.body?.ok === true && health.body?.transitProvider === "tago"
-    ? pass(`status 200, provider ${String(health.body?.transitProvider)}, live=${String(health.body?.liveTransitConfigured)}`)
+    ? pass(`status 200, provider ${String(health.body?.transitProvider)}, live=${String(health.body?.liveTransitConfigured)}`
+      + `, build ${String(build.commit ?? "unknown")} (${String(build.environment ?? "no deployment environment")})`)
     : fail(`status ${health.status} body ${preview(health.text)}`));
 
   record("health hides credentials", /serviceKey|TAGO_SERVICE_KEY|PUBLIC_DATA_SERVICE_KEY|RIDE_CAPTURE_OPERATOR_TOKEN|"key"|"token"/i.test(health.text)
@@ -149,6 +151,10 @@ async function run(): Promise<void> {
     destinationStopSequence: 1,
   }));
   record("sessions policy", describeSessionOutcome(session));
+  record("session store", describeSessionStore(
+    health.body?.sessions as Record<string, unknown> | undefined,
+    typeof build.environment === "string" ? build.environment : undefined,
+  ));
 
   // No token is sent, so a 200 here would mean the operator ride-capture path
   // is answering the whole internet with uncached upstream reads. That is the
@@ -227,6 +233,30 @@ function describeSessionOutcome(result: Awaited<ReturnType<typeof get>>): Omit<C
   }
   if (result.status === 201) return fail("a session request with stop sequence 0 was accepted and created a session");
   return fail(`status ${result.status} body ${preview(result.text)}`);
+}
+
+/**
+ * Where rides live, from `/health` alone. Production and preview share one
+ * Upstash database, so a durable production deployment must say it writes to
+ * the production namespace; the API refuses any other combination, and a
+ * refusal here is an operator misconfiguration worth a red run.
+ */
+function describeSessionStore(sessions: Record<string, unknown> | undefined, environment: string | undefined): Omit<Check, "name"> {
+  if (!sessions) return fail("health has no sessions block");
+  const store = String(sessions.store);
+  if (store === "memory") {
+    return sessions.enabled === true
+      ? pass("memory store, one process (local server)")
+      : pass("memory store; sessions disabled because a serverless deployment would lose rides on scale-out");
+  }
+  if (store !== "redis") return fail(`unknown session store ${store}`);
+  if (sessions.namespace === undefined) return { outcome: "WARN", detail: "durable store; deployment predates the namespace guard" };
+  if (typeof sessions.problem === "string") return fail(`durable store, sessions refused: ${sessions.problem}`);
+  if (sessions.enabled !== true) return pass(`durable store (namespace ${String(sessions.namespace)}); sessions switched off by configuration`);
+  if (environment === "production" && sessions.namespace !== "production") {
+    return fail(`production serves sessions from the ${String(sessions.namespace)} namespace`);
+  }
+  return pass(`durable store (redis), namespace ${String(sessions.namespace)}, sessions enabled`);
 }
 
 function evaluateUpstream(

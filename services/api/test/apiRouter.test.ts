@@ -799,3 +799,94 @@ test("health reports the session store by category and never its credentials", a
   assert.equal(body.freshness.automaticMatching, "shadow_only_pending_matching_readiness");
   assert.equal(body.matching.automaticMatchingEnabled, false);
 });
+
+function del(handler: TransitApiHandler, path: string): Promise<Response> {
+  return handler(new Request(`http://api.test${path}`, { method: "DELETE" }));
+}
+
+test("a rider ends a session: the row is gone, a second end is 404, and the rewrite target ends it too", async () => {
+  const { handler } = harness({ TRANSIT_SESSIONS_ENABLED: "true" });
+  const create = () => postJson(handler, "/v1/sessions", {
+    routeId: ROUTE,
+    cityCode: CITY,
+    boardingStopSequence: 2,
+    destinationStopSequence: 3,
+  });
+
+  const session = await (await create()).json();
+  const ended = await del(handler, `/v1/sessions/${session.id}`);
+  assert.equal(ended.status, 204);
+  assert.equal(ended.headers.get("cache-control"), "no-store");
+  assert.equal(await ended.text(), "");
+
+  const afterwards = await get(handler, `/v1/sessions/${session.id}`);
+  assert.equal(afterwards.status, 404, "an ended session is gone, not expired");
+  assert.equal((await afterwards.json()).error, "SESSION_NOT_FOUND");
+
+  const again = await del(handler, `/v1/sessions/${session.id}`);
+  assert.equal(again.status, 404);
+  assert.equal((await again.json()).error, "SESSION_NOT_FOUND");
+
+  const rewritten = await (await create()).json();
+  const viaRewrite = await del(handler, `/v1/session?sessionId=${rewritten.id}`);
+  assert.equal(viaRewrite.status, 204, "the production rewrite target ends the same session");
+  assert.equal((await get(handler, `/v1/sessions/${rewritten.id}`)).status, 404);
+
+  assert.equal((await del(handler, "/v1/sessions/not%2Fa%2Fvalid%20id")).status, 400);
+  assert.equal((await del(handler, "/v1/sessions")).status, 405, "the collection itself cannot be deleted");
+  const confirm = await handler(new Request(`http://api.test/v1/sessions/${rewritten.id}/confirm`, { method: "DELETE" }));
+  assert.equal(confirm.status, 405);
+});
+
+test("ending a session fails closed like every session route when sessions are disabled", async () => {
+  const { handler } = harness({ TRANSIT_SESSIONS_ENABLED: "false" });
+  const response = await del(handler, "/v1/sessions/abc");
+  assert.equal(response.status, 503);
+  assert.equal((await response.json()).error, "SESSIONS_UNAVAILABLE");
+});
+
+test("a browser origin an operator listed may end a session; the preflight names DELETE", async () => {
+  const { handler } = harness({ TRANSIT_SESSIONS_ENABLED: "true", TRANSIT_ALLOWED_ORIGINS: "https://tapso-nu.vercel.app" });
+  const preflight = await handler(new Request("http://api.test/v1/sessions/abc", {
+    method: "OPTIONS",
+    headers: { origin: "https://tapso-nu.vercel.app", "access-control-request-method": "DELETE" },
+  }));
+  assert.equal(preflight.status, 204);
+  assert.match(preflight.headers.get("access-control-allow-methods") ?? "", /\bDELETE\b/);
+  assert.match(preflight.headers.get("allow") ?? "", /\bDELETE\b/);
+});
+
+test("a production deployment serves sessions only from the production namespace, and says why when it cannot", async () => {
+  const durable = {
+    VERCEL: "1",
+    TRANSIT_SESSION_STORE: "redis",
+    UPSTASH_REDIS_REST_URL: "https://synthetic.upstash.io",
+    UPSTASH_REDIS_REST_TOKEN: "synthetic-upstash-token",
+  };
+  const cases: Array<{ env: ServerEnv; enabled: boolean; namespace: string }> = [
+    { env: { ...durable, VERCEL_ENV: "production", TRANSIT_SESSION_KEY_PREFIX: "tapso:prod:journey-session:" }, enabled: true, namespace: "production" },
+    { env: { ...durable, VERCEL_ENV: "production" }, enabled: false, namespace: "default" },
+    { env: { ...durable, VERCEL_ENV: "production", TRANSIT_SESSION_KEY_PREFIX: "tapso:preview:journey-session:" }, enabled: false, namespace: "preview" },
+    { env: { ...durable, VERCEL_ENV: "preview", TRANSIT_SESSION_KEY_PREFIX: "tapso:prod:journey-session:" }, enabled: false, namespace: "production" },
+    { env: { ...durable, VERCEL_ENV: "preview", TRANSIT_SESSION_KEY_PREFIX: "tapso:preview:journey-session:" }, enabled: true, namespace: "preview" },
+    { env: { ...durable, VERCEL_ENV: "preview", TRANSIT_SESSION_KEY_PREFIX: "tapso:verify:journey-session:" }, enabled: false, namespace: "verification" },
+  ];
+  for (const { env, enabled, namespace } of cases) {
+    const label = `${env.VERCEL_ENV} ${env.TRANSIT_SESSION_KEY_PREFIX ?? "(default)"}`;
+    const { handler } = harness(env);
+    const health = await (await get(handler, "/health")).json();
+    assert.equal(health.sessions.enabled, enabled, label);
+    assert.equal(health.sessions.namespace, namespace, label);
+    assert.equal(health.sessions.problem === undefined, enabled, label);
+    assert.ok(!JSON.stringify(health).includes("journey-session:"), `${label}: the prefix itself never reaches /health`);
+    const response = await postJson(handler, "/v1/sessions", { routeId: ROUTE, cityCode: CITY, boardingStopSequence: 2, destinationStopSequence: 3 });
+    if (enabled) {
+      assert.notEqual(response.status, 503, label);
+    } else {
+      assert.equal(response.status, 503, label);
+      const body = await response.json();
+      assert.equal(body.error, "SESSIONS_UNAVAILABLE", label);
+      assert.match(body.message, /namespace/, label);
+    }
+  }
+});

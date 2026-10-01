@@ -1,0 +1,76 @@
+# Post-deploy verification of the production transit API.
+#
+# The tapso-api Vercel project deploys main from Git. This workflow waits for
+# production to report the merged commit in /health, then runs the read-only
+# smoke and the journey-session lifecycle smoke against it. The lifecycle smoke
+# creates exactly one short-lived ride session through the public API and
+# deletes it (DELETE /v1/sessions/:id); where sessions are disabled it reports
+# SKIP and writes nothing. It never reaches Redis directly and never prints a
+# vehicle number. A daily run keeps checking that the durable store answers.
+name: Post-deploy verification
+
+on:
+  push:
+    branches: [main]
+    paths: ["services/api/**", ".github/workflows/post-deploy.yml"]
+  schedule:
+    - cron: "23 1 * * *"  # 10:23 KST
+  workflow_dispatch:
+
+concurrency:
+  group: post-deploy
+  cancel-in-progress: false
+
+permissions:
+  contents: read
+
+env:
+  API_BASE: https://tapso-api.vercel.app
+  TRANSIT_AUTOMATIC_MATCHING_ENABLED: "false"
+
+jobs:
+  transit-api:
+    runs-on: ubuntu-latest
+    timeout-minutes: 30
+    steps:
+      - uses: actions/checkout@v4
+        with:
+          fetch-depth: 2
+      - uses: actions/setup-node@v4
+        with:
+          node-version: 22
+      - name: Wait for production to serve this commit
+        if: github.event_name == 'push'
+        run: |
+          # The project skips builds when services/api is unchanged (vercel.json
+          # ignoreCommand), so only a change there is waited for.
+          if git diff --quiet HEAD^ HEAD -- services/api; then
+            echo "services/api unchanged in this push; checking the deployment already serving"
+            exit 0
+          fi
+          want="${GITHUB_SHA:0:12}"
+          for attempt in $(seq 1 80); do
+            got="$(curl -sf --max-time 15 "$API_BASE/health" | node -e 'let t="";process.stdin.on("data",(c)=>{t+=c}).on("end",()=>{try{console.log(JSON.parse(t).build?.commit??"")}catch{console.log("")}})' || true)"
+            echo "attempt $attempt: production build ${got:-unknown}, waiting for $want"
+            if [ "$got" = "$want" ]; then exit 0; fi
+            sleep 15
+          done
+          echo "::error::production did not report commit $want within 20 minutes"
+          exit 1
+      - name: Read-only production smoke
+        run: |
+          set -o pipefail
+          node --experimental-strip-types services/api/scripts/smoke.ts "$API_BASE" | tee smoke.txt
+      - name: Journey-session lifecycle (one session, deleted at the end; SKIP where sessions are disabled)
+        run: |
+          set -o pipefail
+          node --experimental-strip-types services/api/scripts/session-smoke.ts "$API_BASE" | tee session-smoke.txt
+      - uses: actions/upload-artifact@v4
+        if: always()
+        with:
+          name: post-deploy-verification
+          path: |
+            smoke.txt
+            session-smoke.txt
+          retention-days: 30
+          if-no-files-found: ignore
