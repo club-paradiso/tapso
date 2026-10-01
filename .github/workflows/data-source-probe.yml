@@ -1,8 +1,10 @@
 name: Data source probe
 
 # Read-only evidence the agent environment cannot fetch itself: what
-# data.go.kr documents about the TAGO services, and the topology of named Jeju
-# routes from TAPSO's own production API. No secret, no write, no vehicle data.
+# data.go.kr documents about the TAGO services, what Jeju's official sources
+# publish about bus timetables and on what terms, and the topology and service
+# days of named Jeju routes from TAPSO's own production API. No secret, no
+# write, no vehicle data.
 on:
   workflow_dispatch:
   push:
@@ -30,6 +32,40 @@ jobs:
           node-version: 22
       - name: Official TAGO documentation on data.go.kr (public pages, no key)
         run: node --experimental-strip-types scripts/data-sources/tago-docs.ts
+
+  jeju-timetable-docs:
+    runs-on: ubuntu-latest
+    timeout-minutes: 10
+    steps:
+      - uses: actions/checkout@v4
+        with:
+          persist-credentials: false
+      - uses: actions/setup-node@v4
+        with:
+          node-version: 22
+      # bus.jeju.go.kr sends its certificate without the intermediate, which browsers fetch
+      # themselves and Node does not ("unable to verify the first certificate"). Fetch that
+      # intermediate from the certificate's own CA Issuers URL and use it only if it and the
+      # site's certificate verify against the runner's system roots: verification stays on.
+      - name: Complete bus.jeju.go.kr's certificate chain (verified against the system roots)
+        continue-on-error: true
+        run: |
+          set -euo pipefail
+          openssl s_client -connect bus.jeju.go.kr:443 -servername bus.jeju.go.kr -showcerts </dev/null 2>/dev/null > chain.txt || true
+          echo "certificates sent: $(grep -c 'BEGIN CERTIFICATE' chain.txt || true)"
+          openssl x509 -in chain.txt -out leaf.pem
+          openssl x509 -in leaf.pem -noout -subject -issuer -enddate
+          uri=$(openssl x509 -in leaf.pem -noout -ext authorityInfoAccess | sed -n 's/.*CA Issuers - URI:\(.*\)/\1/p' | head -1)
+          echo "CA Issuers: ${uri:-none}"
+          curl -fsS --max-time 20 "$uri" -o issuer.raw
+          openssl x509 -inform DER -in issuer.raw -out issuer.pem 2>/dev/null || openssl x509 -in issuer.raw -out issuer.pem
+          openssl x509 -in issuer.pem -noout -subject -issuer
+          openssl verify -CAfile /etc/ssl/certs/ca-certificates.crt issuer.pem
+          openssl verify -CAfile /etc/ssl/certs/ca-certificates.crt -untrusted issuer.pem leaf.pem
+          cp issuer.pem "$RUNNER_TEMP/bis-intermediate.pem"
+          echo "NODE_EXTRA_CA_CERTS=$RUNNER_TEMP/bis-intermediate.pem" >> "$GITHUB_ENV"
+      - name: Jeju's official bus timetable sources and their terms (public pages, no key, no download)
+        run: node --experimental-strip-types scripts/data-sources/jeju-timetable-docs.ts
 
   jeju-routes:
     runs-on: ubuntu-latest
