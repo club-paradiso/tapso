@@ -1,10 +1,8 @@
 import { useEffect, useState } from "react";
 import { GitHubIcon } from "../components/Icons";
 import { SectionHead } from "../components/SectionHead";
-import {
-  LINKS,
-  SUPPORT_CHANNEL_AVAILABILITY,
-} from "../content/site.ts";
+import { LINKS } from "../content/site.ts";
+import { SUPPORT_CHANNEL_AVAILABILITY } from "../lib/supportChannels.ts";
 import { fetchSupportConfig, type SupportConfigResponse } from "../lib/supportClient";
 import { supportStatus } from "../lib/supportStatus.ts";
 import { useInView } from "../lib/useInView";
