@@ -51,7 +51,7 @@ npx --yes --package=@figma/code-connect@2.0.0 figma connect parse --config figma
 - [x] Rendered QA at eight widths, interactive states, keyboard order, dialog focus, Reduced Motion, axe (0 violations across all states), Lighthouse (local).
 - [x] Figma `03 Web` board; V1 frames labelled superseded; Code Connect parse passes.
 - [ ] Vercel Preview: confirm build, `/api/waitlist` 503 path in the browser, `/api/support/config` `unavailable`, social card, fonts. Not reachable from the authoring environment.
-- [ ] Place 1440/390 captures from the Preview in Figma section `165:54`.
+- [x] ~~Place 1440/390 captures from the Preview in Figma section `165:54`.~~ Superseded on 2026-10-01 by the V3 frames (`docs/product/MARKETING_SITE_V3.md`); `165:54` is archived.
 
 ## Risks and next action
 
