@@ -506,6 +506,19 @@ function decide(
       }
     }
   }
+  // F22: the same contest is seen when nothing is selectable yet. A session's
+  // first polls rarely have fresh cadence, and a bus four or more stops out is
+  // outside the approach window, so the check above never ran while the
+  // follower was closest; the leader then pulled three stops clear, turned
+  // selectable, and was selected although the session had seen the two inside
+  // the margin (issue #61: 50 of its 61 real-base wrong commits survived F21).
+  // Any decision of a waiting session that sees the two vehicles nearest the
+  // stop heading for it, current or remembered, fresh or not, inside the
+  // margin of each other contests the approach for the rest of the session.
+  if (riderState === "waiting_at_stop" && topology?.loop !== true && !passage.memory.contestedApproach
+    && nearestPairInsideMargin(onRoute, remembered, passage.excluded, policy.marginStops)) {
+    passage.memory.contestedApproach = { at: request.now };
+  }
 
   const abstentionReasons = [...abstentions].sort();
   const base = { ranked, policyVersion: MATCHER_POLICY_VERSION, riderState, abstentionReasons, passage: passage.memory };
@@ -997,6 +1010,29 @@ function rememberedPosition(
     positionScore: score,
     ...(closestForward === undefined ? {} : { closestForward }),
   };
+}
+
+/**
+ * F22: whether the two vehicles nearest the boarding stop that are heading for
+ * it, current or remembered (from the closest place they may by now be), are
+ * fewer than `marginStops` apart. A vehicle shown not to be the rider's bus is
+ * left out; a vehicle reported twice counts once, at its nearer place.
+ */
+function nearestPairInsideMargin(
+  onRoute: readonly Assessed[],
+  remembered: readonly Remembered[],
+  excluded: { has(vehicleId: string): boolean },
+  marginStops: number,
+): boolean {
+  const nearest = new Map<string, number>();
+  const consider = (vehicleId: string, forward: number | undefined): void => {
+    if (forward === undefined || forward < 1 || excluded.has(vehicleId)) return;
+    nearest.set(vehicleId, Math.min(forward, nearest.get(vehicleId) ?? Number.POSITIVE_INFINITY));
+  };
+  for (const row of onRoute) consider(row.ranked.vehicleId, row.facts.forward);
+  for (const row of remembered) consider(row.vehicleId, row.closestForward);
+  const [first, second] = [...nearest.values()].sort((left, right) => left - right);
+  return first !== undefined && second !== undefined && second - first < marginStops;
 }
 
 function pickLeader(selectable: Assessed[], riderState: RiderState): Assessed | undefined {

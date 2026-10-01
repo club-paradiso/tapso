@@ -2018,6 +2018,40 @@ export const NEGATIVE_CONTROLS: readonly NegativeControl[] = [
     }],
     testFiles: [T.session],
   },
+  /* --------------------------------------------------- F21, F22 (issue #61) */
+  {
+    id: "F21-sticky-contest",
+    family: "fail-closed",
+    catalogue: "required",
+    description: "A contest the session has already seen no longer withholds: the approach is judged on the instantaneous gap alone again.",
+    protection: "Finding F21 (issue #61): once a waiting session has seen a follower inside the margin, a later wider gap does not make the leader selectable.",
+    edits: [{
+      file: MATCHING,
+      find: '    abstentions.add("approach_contested_during_session");',
+      replace: "    { /* Negative control F21: a remembered contest is ignored. */ }",
+    }],
+    testFiles: [T.matching],
+    mustBeKilledBy: [
+      "F21 regression: an approach once contested inside the margin must not become automatically selectable just because the gap later opens",
+    ],
+  },
+  {
+    id: "F22-contest-before-selectable",
+    family: "fail-closed",
+    catalogue: "required",
+    description: "A pair seen inside the margin while nothing is selectable yet (cadence not fresh, or beyond the approach window) is no longer remembered as a contest.",
+    protection: "Finding F22 (issue #61): the two vehicles nearest the stop seen inside the margin contest the approach whether or not a leader was selectable at that look.",
+    edits: [{
+      file: MATCHING,
+      find: "    passage.memory.contestedApproach = { at: request.now };\n  }",
+      replace: "    { /* Negative control F22: a contest seen before any leader was selectable is forgotten. */ }\n  }",
+    }],
+    testFiles: [T.matching],
+    mustBeKilledBy: [
+      "F22 regression: a follower seen inside the margin while nothing was selectable yet still contests the approach",
+      "F22 regression: a pair inside the margin beyond the approach window contests the approach",
+    ],
+  },
 ];
 
 /**

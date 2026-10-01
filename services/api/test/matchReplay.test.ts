@@ -147,18 +147,27 @@ test("a lone boarded vehicle is selected once its cadence becomes fresh", () => 
   assert.deepEqual(evidence.warnings, []);
 });
 
-test("a capture where the matcher would have picked the wrong bus fails the gate", () => {
-  // The rider waits at stop 6 and lets the first bus go. The decoy approaches,
-  // one stop nearer each poll, and ends one stop short of the stop; the bus the
-  // rider actually boards is four stops back. The matcher has no way to know
-  // the rider will skip the leading bus, and it commits to it.
-  const snapshots: RideSnapshot[] = [0, 5, 10].map((seconds, index) => ({
+/**
+ * The rider waits at stop 6 and lets the first bus go. The decoy is two stops
+ * short of the stop, then one, moving all the while; the bus the rider actually
+ * boards sits at stop 1, three stops behind the decoy at the first look and
+ * four after, a lead clear by the margin at every decision. The matcher has no
+ * way to know the rider will skip the leading bus, and it commits to it. (A
+ * decoy that began inside the margin of the boarded bus would contest the
+ * approach for the session and never be selected: finding F22.)
+ */
+function letTheLeaderGo(): RideSnapshot[] {
+  return [0, 5, 10].map((seconds, index) => ({
     capturedAt: at(seconds),
     vehicles: [
-      tago(OTHER, seconds, 3 + index),
-      tago(BOARDED, seconds, 2),
+      tago(OTHER, seconds, [4, 5, 5][index]!, { latitude: 33.53 + index * 0.0005 }),
+      tago(BOARDED, seconds, 1),
     ],
   }));
+}
+
+test("a capture where the matcher would have picked the wrong bus fails the gate", () => {
+  const snapshots = letTheLeaderGo();
   const evidence = replay(snapshots, waitingAtStop, { recordDecisions: true });
 
   assert.equal(evidence.riderState, "waiting_at_stop");
@@ -326,10 +335,7 @@ test("the gate evidence reaches the sanitized report and carries no vehicle numb
 
 test("a report whose matcher picked another vehicle still refuses to name it", () => {
   // The rider lets the leading bus go, as in the gate-failure test above.
-  const snapshots: RideSnapshot[] = [0, 5, 10].map((seconds, index) => ({
-    capturedAt: at(seconds),
-    vehicles: [tago(OTHER, seconds, 3 + index), tago(BOARDED, seconds, 2)],
-  }));
+  const snapshots = letTheLeaderGo();
   const report = analyzeRideCapture(capture(snapshots, waitingAtStop));
 
   assert.equal(report.matchGate.selectionVerdict, "wrong");
@@ -436,8 +442,8 @@ function directionScenario(): RideSnapshot[] {
   return [0, 5, 10].map((seconds, index) => ({
     capturedAt: at(seconds),
     vehicles: [
-      tago(OTHER, seconds, 3 + index, { directionCode: "2" }),
-      tago(BOARDED, seconds, 2, { latitude: 33.51 + index * 0.0005 }),
+      tago(OTHER, seconds, [4, 5, 5][index]!, { directionCode: "2", latitude: 33.53 + index * 0.0005 }),
+      tago(BOARDED, seconds, 1, { latitude: 33.5 + index * 0.0005 }),
     ],
   }));
 }

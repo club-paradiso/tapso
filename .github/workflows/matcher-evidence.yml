@@ -316,7 +316,9 @@ jobs:
     # It never raises readiness: that is a reviewed change that commits these
     # files. It does fail when fresh evidence awards less than the code claims.
     # Runtime grows with the number of retained windows (each evaluated twice,
-    # in two processes, for determinism); shard it before it nears the limit.
+    # in two processes, for determinism, and each now also through the whole
+    # counterfactual catalogue, roughly 5-12 minutes a window per pass); shard
+    # it before it nears the limit.
     needs: [plan, replay, collect]
     if: always() && (needs.replay.result == 'success' || needs.collect.result == 'success')
     runs-on: ubuntu-latest
@@ -359,8 +361,11 @@ jobs:
           recordId="${record%%,*}"
           dirs="$(find work/collections -mindepth 2 -maxdepth 4 -type d -name 'pv3-*' | sort)"
           test -n "$dirs"
-          flags="--no-counterfactuals"
-          if printf '%s\n' $dirs | grep -q "/$recordId\$"; then flags="--record=$record --counterfactual-on=$recordId"; fi
+          # The counterfactual suite runs on every retained real base, not only
+          # the evidence of record: CA-5 reads "real bases", and the 2026-09-30
+          # window exposed a family the record never did (issue #61 follow-up).
+          flags=""
+          if printf '%s\n' $dirs | grep -q "/$recordId\$"; then flags="--record=$record"; fi
           # The failures of every window recorded before outlive its raw.
           if [ -f artifacts/matcher-directed-v1/live-replay-evidence.json ]; then flags="$flags --previous=artifacts/matcher-directed-v1/live-replay-evidence.json"; fi
           omitted="$(paste -sd, work/gate/omitted-artifacts.txt)"
