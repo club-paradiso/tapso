@@ -5,6 +5,8 @@ import {
   DEMO_ROUTE,
   DEMO_TRIP,
   DESTINATION_STOP,
+  ROUTE_BOARDING_COUNT,
+  TRIP_TOTAL_STOPS,
   positionFor,
   railProgress,
   stopName,
@@ -46,8 +48,8 @@ function SearchScreen() {
           <CitrusDot size={7} />
           {DESTINATION_STOP}
         </span>
-        <span className="app-chip">{stopName(4)}</span>
-        <span className="app-chip">{stopName(6)}</span>
+        <span className="app-chip">{stopName(20)}</span>
+        <span className="app-chip">{stopName(34)}</span>
       </div>
       <p className="app-section-label">{IOS_COPY["home.recentJourney"]}</p>
       <div className="app-recent">
@@ -77,15 +79,7 @@ function RouteScreen() {
           <RouteBadge number={DEMO_ROUTE.number} role="active" />
           <span>
             <b>{t("route.headsign", DEMO_ROUTE.outboundHeadsign)}</b>
-            <small>{t("route.boardingCount", 8)}</small>
-          </span>
-          <ChevronIcon />
-        </li>
-        <li>
-          <RouteBadge number={DEMO_ROUTE.number} role="active" />
-          <span>
-            <b>{t("route.headsign", DEMO_ROUTE.inboundHeadsign)}</b>
-            <small>{t("route.boardingCount", 1)}</small>
+            <small>{t("route.boardingCount", ROUTE_BOARDING_COUNT)}</small>
           </span>
           <ChevronIcon />
         </li>
@@ -95,7 +89,7 @@ function RouteScreen() {
 }
 
 function BoardingScreen() {
-  const rows = [3, 4, 5, 8].map((stops) => ({
+  const rows = [3, 5, 8, 13].map((stops) => ({
     name: stopName(DEMO_TRIP.destinationIndex - stops),
     stops,
   }));
@@ -315,7 +309,7 @@ export function screenLabel(screen: StoryScreen): string {
     case "route":
       return `앱 화면 미리보기. ${IOS_COPY["route.question"]} ${DEMO_ROUTE.number}번 ${t("route.headsign", DEMO_ROUTE.outboundHeadsign)} 선택.`;
     case "boarding":
-      return `앱 화면 미리보기. ${IOS_COPY["boarding.question"]} ${BOARDING_STOP} 선택, ${t("boarding.stopsToDestination", DEMO_TRIP.destinationIndex)}.`;
+      return `앱 화면 미리보기. ${IOS_COPY["boarding.question"]} ${BOARDING_STOP} 선택, ${t("boarding.stopsToDestination", TRIP_TOTAL_STOPS)}.`;
     case "check":
       if (screen.stage === "searching") return `앱 화면 미리보기. ${IOS_COPY["check.searching.headline"]}.`;
       if (screen.stage === "proposed")
