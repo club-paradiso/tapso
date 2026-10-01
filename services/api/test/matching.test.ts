@@ -460,6 +460,28 @@ test("F21 regression: an approach once contested inside the margin must not beco
   assertWithheld(later, "approach_contested_during_session", "gap opened after a contested approach");
 });
 
+test("F24 regression: a contested approach stays contested for the rest of the session, not only at the next decision", () => {
+  // Issue #61, trace run 36833268557: each of the 43 follower_overtaking
+  // failures F22 left on the evidence of record had the contest in force at an
+  // earlier decision. The passage memory was rebuilt without it, so the
+  // decision after next no longer knew and committed to the leader.
+  const contested = matchVehicle(request([bus("leader", BOARDING - 4), bus("follower", BOARDING - 6)]));
+  assertWithheld(contested, "candidates_too_close", "initially contested");
+  const first = contested.passage?.contestedApproach;
+  assert.ok(first);
+
+  // The gap opens to the margin or more and stays open, so neither F21 nor
+  // F22 sees the contest again; the session must still remember it.
+  let passage = contested.passage;
+  const polls: Array<[number, number]> = [[BOARDING - 2, BOARDING - 5], [BOARDING - 1, BOARDING - 5], [BOARDING - 1, BOARDING - 4]];
+  for (const [index, [leader, follower]] of polls.entries()) {
+    const result = matchVehicle(request([bus("leader", leader), bus("follower", follower)], { passage }));
+    assertWithheld(result, "approach_contested_during_session", `poll ${index + 1} after the contest`);
+    assert.deepEqual(result.passage?.contestedApproach, first, "dated by the decision that first saw it");
+    passage = result.passage;
+  }
+});
+
 test("F22 regression: a follower seen inside the margin while nothing was selectable yet still contests the approach", () => {
   // The first look: the leader's cadence is not fresh yet, as in a session's
   // first polls, so there is no selectable leader and the F21 check never ran.

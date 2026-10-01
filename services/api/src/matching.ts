@@ -865,6 +865,9 @@ function rememberPassage(
       : {}),
     ...(reachedAfterBoarding.size > 0 ? { reachedAfterBoarding: [...reachedAfterBoarding].sort() } : {}),
     ...(returnedToStop.size > 0 ? { returnedToStop: [...returnedToStop].sort() } : {}),
+    // F24: a contest, once seen, is kept for the rest of the session (F21, F22).
+    // Rebuilt without it, the memory forgot the contest after one decision.
+    ...(prior?.contestedApproach ? { contestedApproach: prior.contestedApproach } : {}),
     ...(withheld ? { withheld } : {}),
   };
   return { memory, excluded, unproven };

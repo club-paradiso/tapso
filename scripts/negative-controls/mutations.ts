@@ -2052,6 +2052,22 @@ export const NEGATIVE_CONTROLS: readonly NegativeControl[] = [
       "F22 regression: a pair inside the margin beyond the approach window contests the approach",
     ],
   },
+  {
+    id: "F24-contest-kept-for-session",
+    family: "fail-closed",
+    catalogue: "required",
+    description: "The passage memory is rebuilt without the contest it carried: a contest withholds at the next decision only, and the decision after it may commit.",
+    protection: "Finding F24 (issue #61): a contested approach, once seen by a waiting session, stays in its memory for the rest of the session.",
+    edits: [{
+      file: MATCHING,
+      find: "    ...(prior?.contestedApproach ? { contestedApproach: prior.contestedApproach } : {}),",
+      replace: "    /* Negative control F24: the contest is not carried to the next decision. */",
+    }],
+    testFiles: [T.matching],
+    mustBeKilledBy: [
+      "F24 regression: a contested approach stays contested for the rest of the session, not only at the next decision",
+    ],
+  },
 ];
 
 /**

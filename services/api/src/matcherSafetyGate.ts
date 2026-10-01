@@ -136,7 +136,7 @@ export const PINNED_NEGATIVE_CONTROLS = [
   "R44-end-merge", "R44-earliest",
   "R46-misread", "R47-loop-edge", "R48-order-first-seen", "R48-order-remembered", "R50-stale-end", "R51-anchor-zone",
   "R52-end-retry", "R52-end-vanish", "R53-anchor-loop", "R53-out-of-sight", "R54-latest-row", "R54-give-up",
-  "F21-sticky-contest", "F22-contest-before-selectable",
+  "F21-sticky-contest", "F22-contest-before-selectable", "F24-contest-kept-for-session",
 ] as const;
 
 /** The criterion each human-only mitigation answers, and the only kind of evidence that can show it. */
