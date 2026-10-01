@@ -1,0 +1,76 @@
+{
+  "//": "SPECIFICATION, SYNTHETIC times. Safe Return v1 cases, written by hand from docs/product/JEJU_SAFETY_LAYER_V3.md (Safe Return). Times are minutes after the case's 'now'. Both services/api (src/journeySafety.ts) and the Swift core (JourneySafety.swift) run every case.",
+  "policy": { "safetyMarginMinutes": 10, "comfortableSlackMinutes": 90, "tightSlackMinutes": 20, "longWaitMinutes": 40, "estimatedDataMaxAgeMinutes": 15 },
+  "cases": [
+    {
+      "id": "R1", "why": "plenty of buses back and hours to spare",
+      "input": { "arrival": 40, "minimumStay": 60, "walkToReturnStop": 5, "departures": [180, 210, 240, 270, 300, 330, 360], "quality": "scheduled" },
+      "expect": { "level": "comfortable", "leaveBy": 345, "lastDeparture": 360, "longestWait": 30, "reasons": [] }
+    },
+    {
+      "id": "R2", "why": "enough time, but the last bus sets a leave-by time",
+      "input": { "arrival": 40, "minimumStay": 60, "walkToReturnStop": 5, "departures": [150, 175], "quality": "scheduled" },
+      "expect": { "level": "leaveBy", "leaveBy": 160, "lastDeparture": 175, "longestWait": 25, "reasons": [] }
+    },
+    {
+      "id": "R3", "why": "a visit fits, with almost nothing to spare",
+      "input": { "arrival": 40, "minimumStay": 60, "walkToReturnStop": 5, "departures": [125], "quality": "scheduled" },
+      "expect": { "level": "tight", "leaveBy": 110, "lastDeparture": 125, "longestWait": null, "reasons": [] }
+    },
+    {
+      "id": "R4", "why": "the last bus leaves before a useful visit ends: rejected",
+      "input": { "arrival": 40, "minimumStay": 60, "walkToReturnStop": 5, "departures": [90, 100], "quality": "scheduled" },
+      "expect": { "level": "notRecommended", "leaveBy": 85, "lastDeparture": 100, "longestWait": null, "reasons": ["noTimeForVisit"] }
+    },
+    {
+      "id": "R5", "why": "a known timetable with no bus back at all: rejected, not unknown",
+      "input": { "arrival": 40, "minimumStay": 60, "walkToReturnStop": 5, "departures": [], "quality": "scheduled" },
+      "expect": { "level": "notRecommended", "leaveBy": null, "lastDeparture": null, "longestWait": null, "reasons": ["noReturnService"] }
+    },
+    {
+      "id": "R6", "why": "no return data is unknown, never safe",
+      "input": { "arrival": 40, "minimumStay": 60, "walkToReturnStop": 5, "departures": null, "quality": "unknown" },
+      "expect": { "level": "unknown", "leaveBy": null, "lastDeparture": null, "longestWait": null, "reasons": ["returnUnknown"] }
+    },
+    {
+      "id": "R7", "why": "an unknown arrival time is unknown",
+      "input": { "arrival": null, "minimumStay": 60, "walkToReturnStop": 5, "departures": [180, 240], "quality": "scheduled" },
+      "expect": { "level": "unknown", "leaveBy": null, "lastDeparture": null, "longestWait": null, "reasons": ["arrivalUnknown"] }
+    },
+    {
+      "id": "R8", "why": "hours to spare, but a long gap between buses makes it a leave-by",
+      "input": { "arrival": 40, "minimumStay": 60, "walkToReturnStop": 5, "departures": [180, 234, 300, 360], "quality": "scheduled" },
+      "expect": { "level": "leaveBy", "leaveBy": 345, "lastDeparture": 360, "longestWait": 66, "reasons": ["longWait"] }
+    },
+    {
+      "id": "R9", "why": "a service disruption on the way back lowers the level by one",
+      "input": { "arrival": 40, "minimumStay": 60, "walkToReturnStop": 5, "departures": [180, 210, 240, 270, 300, 330, 360], "quality": "scheduled", "disruption": true },
+      "expect": { "level": "leaveBy", "leaveBy": 345, "lastDeparture": 360, "longestWait": 30, "reasons": ["disruption"] }
+    },
+    {
+      "id": "R10", "why": "estimated times are labelled as estimates",
+      "input": { "arrival": 40, "minimumStay": 60, "walkToReturnStop": 5, "departures": [150, 175], "quality": "estimated", "dataAgeMinutes": 3 },
+      "expect": { "level": "leaveBy", "leaveBy": 160, "lastDeparture": 175, "longestWait": 25, "reasons": ["estimatedTimes"] }
+    },
+    {
+      "id": "R11", "why": "expired estimates are unknown",
+      "input": { "arrival": 40, "minimumStay": 60, "walkToReturnStop": 5, "departures": [150, 175], "quality": "estimated", "dataAgeMinutes": 16 },
+      "expect": { "level": "unknown", "leaveBy": null, "lastDeparture": null, "longestWait": null, "reasons": ["dataExpired"] }
+    },
+    {
+      "id": "R12", "why": "an explicit last practical departure overrides a later bus that does not get home",
+      "input": { "arrival": 40, "minimumStay": 60, "walkToReturnStop": 0, "departures": [180, 240, 300, 420], "quality": "scheduled", "lastPracticalDeparture": 300 },
+      "expect": { "level": "leaveBy", "leaveBy": 290, "lastDeparture": 300, "longestWait": 60, "reasons": ["longWait"] }
+    },
+    {
+      "id": "R13", "why": "a disruption cannot lower tight below tight: the visit still fits",
+      "input": { "arrival": 40, "minimumStay": 60, "walkToReturnStop": 5, "departures": [125], "quality": "scheduled", "disruption": true },
+      "expect": { "level": "tight", "leaveBy": 110, "lastDeparture": 125, "longestWait": null, "reasons": ["disruption"] }
+    },
+    {
+      "id": "R14", "why": "a long wait that only starts after the leave-by time is not the rider's problem",
+      "input": { "arrival": 40, "minimumStay": 60, "walkToReturnStop": 5, "departures": [150, 175, 260], "quality": "scheduled", "lastPracticalDeparture": 175 },
+      "expect": { "level": "leaveBy", "leaveBy": 160, "lastDeparture": 175, "longestWait": 25, "reasons": [] }
+    }
+  ]
+}
