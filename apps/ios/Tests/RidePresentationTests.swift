@@ -1,3 +1,4 @@
+import SwiftUI
 import XCTest
 import TapsoTransit
 @testable import Tapso
@@ -238,7 +239,56 @@ final class RidePresentationTests: XCTestCase {
         XCTAssertNil(model.mapRequest(for: .kakaoMap, to: stop))
     }
 
+    // MARK: Contrast
+
+    /// WCAG 2.x contrast of the Lock Screen's text on its surface, for every moment in light and dark
+    /// appearance, from the tokens as drawn: a dimmed colour is composited over the surface in sRGB.
+    /// Text needs 4.5:1; the 40 pt count numeral, large text, needs 3:1.
+    func testLockScreenTextReadsOnEverySurface() throws {
+        for style in [UIUserInterfaceStyle.light, .dark] {
+            let traits = UITraitCollection(userInterfaceStyle: style)
+            for moment in RideMoment.allCases {
+                let name = "\(moment) in \(style == .dark ? "dark" : "light") appearance"
+                let surface = try srgb(RideSurfacePalette.background(for: moment), traits)
+                let text = try srgb(RideSurfacePalette.primaryText(for: moment), traits)
+                XCTAssertGreaterThanOrEqual(contrast(text, on: surface), 4.5, "\(name): headline")
+                let secondary = composite(text, opacity: RideSurfacePalette.secondaryOpacity(for: moment), over: surface)
+                XCTAssertGreaterThanOrEqual(contrast(secondary, on: surface), 4.5, "\(name): destination and detail")
+
+                let count = RideGuidancePolicy.countPresentation(for: moment)
+                guard count != .hidden else { continue }
+                let accent = try srgb(RideSurfacePalette.accent(for: moment), traits)
+                let numeral = composite(accent, opacity: count == .lastKnown ? RemainingOrSymbol.lastKnownOpacity : 1, over: surface)
+                XCTAssertGreaterThanOrEqual(contrast(numeral, on: surface), 3, "\(name): count")
+                let label = composite(accent, opacity: RideSurfacePalette.countLabelOpacity, over: surface)
+                XCTAssertGreaterThanOrEqual(contrast(label, on: surface), 4.5, "\(name): count label")
+            }
+        }
+    }
+
     // MARK: Helpers
+
+    /// A token's sRGB components in an appearance. Tokens are opaque; dimming is applied by `composite`.
+    private func srgb(_ color: Color, _ traits: UITraitCollection) throws -> [Double] {
+        var red: CGFloat = 0, green: CGFloat = 0, blue: CGFloat = 0, alpha: CGFloat = 0
+        let resolved = UIColor(color).resolvedColor(with: traits)
+        XCTAssertTrue(resolved.getRed(&red, green: &green, blue: &blue, alpha: &alpha), "\(resolved) has RGB components")
+        XCTAssertEqual(Double(alpha), 1, accuracy: 0.001, "\(resolved) is opaque")
+        return [red, green, blue].map { Double($0) }
+    }
+
+    private func composite(_ color: [Double], opacity: Double, over surface: [Double]) -> [Double] {
+        zip(color, surface).map { opacity * $0 + (1 - opacity) * $1 }
+    }
+
+    private func contrast(_ first: [Double], on second: [Double]) -> Double {
+        func luminance(_ components: [Double]) -> Double {
+            let linear = components.map { $0 <= 0.04045 ? $0 / 12.92 : pow(($0 + 0.055) / 1.055, 2.4) }
+            return 0.2126 * linear[0] + 0.7152 * linear[1] + 0.0722 * linear[2]
+        }
+        let (a, b) = (luminance(first), luminance(second))
+        return (max(a, b) + 0.05) / (min(a, b) + 0.05)
+    }
 
     private func makeModel(defaults: UserDefaults? = nil) -> TapsoAppModel {
         let model = TapsoAppModel(
