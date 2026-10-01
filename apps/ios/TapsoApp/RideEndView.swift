@@ -2,7 +2,8 @@ import SwiftUI
 import TapsoTransit
 
 /// After the ride: a short close, and the walk handed to a map app.
-/// Figma: `04 iOS` › End Journey V2.
+/// Figma: `04 iOS — RIDE` › `V2 / 19 End journey` (`159:1076`); with a shared place and the last
+/// buses, `09 Return / Rescue` › `V3 / 25` (`193:3125`).
 struct RideEndView: View {
     @Bindable var model: TapsoAppModel
     let outcome: RideOutcome
@@ -167,7 +168,7 @@ struct RideEndContent: View {
 }
 
 /// Today's last buses of the route number, for the way back after a live ride.
-/// Figma: `ReturnTripCard / V3`. Times are departures from each variant's starting
+/// Figma: `ReturnTripRow / V3` on `02G iOS Product V3`. Times are departures from each variant's starting
 /// stop; the card says so, and never turns a published headway into a timetable.
 struct ReturnTripCard: View {
     let service: ReturnService

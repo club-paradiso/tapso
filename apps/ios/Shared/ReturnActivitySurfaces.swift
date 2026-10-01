@@ -3,7 +3,8 @@ import TapsoTransit
 
 // The "돌아갈 시간" Live Activity (`TapsoReturnAttributes`) as plain views, so the widget
 // extension and the app's snapshot tests render the same code.
-// Figma: `04 iOS` › Product V3 › `V3 / 27 Return countdown`.
+// Figma: `09 Return / Rescue` › `V3 / 27 Return countdown` (`199:3046`); components
+// `ReturnCountdown / Lock Screen V3` and `ReturnCountdown / Island V3` on `02G iOS Product V3`.
 //
 // Colours are fixed values that read on basalt in light and dark mode alike: amber while
 // there is time, tangerine once the time to be at the stop has passed.

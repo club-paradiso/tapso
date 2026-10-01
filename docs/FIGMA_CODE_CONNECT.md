@@ -6,7 +6,7 @@ TAPSO uses Figma Code Connect template files (`*.figma.ts`) for the production W
 
 - File: `TAPSO — Product / Marketing Design System`
 - File key: `kkx04GvqOzHje7Dw5ikO9X`
-- Production page: `03 Web` (`3:4`)
+- Production page: `11 Marketing Web` (`3:4`, named `03 Web` until 2026-10-01)
 - Component families:
   - Button / TAPSO (`88:40`)
   - Text Field / TAPSO (`89:46`)
@@ -18,7 +18,7 @@ TAPSO uses Figma Code Connect template files (`*.figma.ts`) for the production W
   - Support Amount / TAPSO (`99:17`)
   - Support Dialog / TAPSO (`100:132`)
 
-Journey Card / TAPSO (`97:23`) and Dynamic Island / TAPSO (`98:35`) lost their templates on 2026-09-30: the V1 markup they described was replaced by Marketing Site V2, whose device previews re-draw the iOS Product V2 surfaces (`02F iOS Ride V2`) and are mapped in `docs/product/MARKETING_SITE_V2.md`. The `03 Web` page holds that mapping in section `165:54`; the V1 frames `9:2` and `10:20` are labelled superseded.
+Journey Card / TAPSO (`97:23`) and Dynamic Island / TAPSO (`98:35`) lost their templates on 2026-09-30: the V1 markup they described was replaced by Marketing Site V2, whose device previews re-draw the iOS Product V2 surfaces (`02F iOS Ride V2`) and are mapped in `docs/product/MARKETING_SITE_V2.md`. The `11 Marketing Web` page holds that mapping in section `165:54`; the V1 frames `9:2` and `10:20` are on `13 Archive`.
 
 The templates live in `apps/web/src/figma/` and are intentionally excluded from `tsconfig.app.json`; they are executed by the Code Connect CLI, not bundled into the production Vite app.
 
@@ -65,4 +65,4 @@ When Web markup or design-system components change:
 
 ## iOS Product V2
 
-The iOS V2 components live on page `02F iOS Ride V2` (`152:2`), the finished screen designs on `04 iOS` › `iOS / Product V2` (`157:10`) and the Live Activity / Dynamic Island board (`160:1208`), tokens in the `TAPSO V2 Semantic` collection. Swift Code Connect is not set up (same plan requirement as above); `product/FIGMA_IMPLEMENTATION_MAP_V2.md` maps each node to its SwiftUI view, tokens, journey state, localization keys and accessibility behaviour. SF Pro does not render in this Figma runtime, so iOS frames use Inter (and Noto Sans KR for Korean) as stand-ins; SwiftUI uses the system fonts.
+The iOS V2 components live on page `02F iOS Ride V2` (`152:2`), the V3 components on `02G iOS Product V3` (`212:2`), the finished screens on `03 iOS — GO` (`205:3310`), `04 iOS — RIDE` (`157:10`) and `09 Return / Rescue` (`193:2956`), the Live Activity / Dynamic Island board on `05` (`160:1208`), tokens in the `TAPSO V2 Semantic` collection. Swift Code Connect is not set up (same plan requirement as above); `product/FIGMA_IMPLEMENTATION_MAP_V2.md` maps each node to its SwiftUI view, tokens, journey state, localization keys and accessibility behaviour. SF Pro does not render in this Figma runtime, so iOS frames use Inter (and Noto Sans KR for Korean) as stand-ins; SwiftUI uses the system fonts.

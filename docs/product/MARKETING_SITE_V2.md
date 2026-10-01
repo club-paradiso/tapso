@@ -129,7 +129,7 @@ Korean title and description, canonical URL, Open Graph and Twitter card with a 
 
 ## Figma
 
-`03 Web` (`3:4`) now holds a section **Web / Marketing V2 · 2026-09-30** (`165:54`) with the information architecture and its code mapping; the V1 frames `9:2` and `10:20` are renamed as superseded. Visual captures of the built page could not be uploaded from the authoring environment (Figma's upload host was not reachable); place 1440 and 390 captures from the Vercel Preview in that section. Code Connect: `JourneyCard.figma.ts` and `DynamicIsland.figma.ts` were removed with the V1 markup they described; the form, button, result, dialog and banner templates remain valid.
+`03 Web` (`3:4`, renamed `11 Marketing Web` on 2026-10-01) holds a section **Web / Marketing V2 · 2026-09-30** (`165:54`) with the information architecture and its code mapping; the V1 frames `9:2` and `10:20` were renamed as superseded and, on 2026-10-01, moved to `13 Archive`. Visual captures of the built page could not be uploaded from the authoring environment (Figma's upload host was not reachable); place 1440 and 390 captures from the Vercel Preview in that section. Code Connect: `JourneyCard.figma.ts` and `DynamicIsland.figma.ts` were removed with the V1 markup they described; the form, button, result, dialog and banner templates remain valid.
 
 ## Known limitations
 

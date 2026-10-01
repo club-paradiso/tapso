@@ -2,7 +2,7 @@ import SwiftUI
 import TapsoTransit
 
 // Components shared by the app, the Lock Screen and the Dynamic Island, so the
-// three surfaces draw one product. Figma: `02D Journey` V2 components.
+// three surfaces draw one product. Figma: `02F iOS Ride V2`.
 
 /// Route number in a rounded capsule. Figma: `RouteBadge / V2`.
 struct RouteBadge: View {
@@ -135,7 +135,7 @@ private struct SmileShape: Shape {
 }
 
 /// Progress from boarding to destination: a moving bus that ends at the
-/// tangerine destination. Figma: `JourneyProgressRail / V2`.
+/// tangerine destination. Figma: `JourneyRail / V2`.
 struct JourneyRail: View {
     /// 0 at boarding, 1 at the destination.
     let progress: Double
@@ -178,7 +178,7 @@ struct JourneyRail: View {
 }
 
 /// Vehicle identity and data freshness, side by side and never merged.
-/// Figma: `VehicleConfidenceStatus / V2` and `DataFreshnessStatus / V2`.
+/// Figma: `TrustBadge / V2` (`signal=vehicle-*` and `signal=data-*`).
 struct TrustBadge: View {
     enum Kind { case vehicle(VehicleIdentityStatus, plate: String?), data(DataLinkStatus) }
 

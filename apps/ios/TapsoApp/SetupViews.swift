@@ -4,7 +4,7 @@ import TapsoTransit
 // Destination-first setup: where you get off → which bus → where you board.
 // Each screen asks one question; a step is skipped when it has only one answer.
 
-/// "어디서 내릴까요?" Figma: `04 iOS` › Destination Search V2.
+/// "어디서 내릴까요?" Figma: `03 iOS — GO` › `V2 / 03 Destination search` (`157:179`).
 struct DestinationSearchView: View {
     @Bindable var model: TapsoAppModel
     @State private var query = ""
@@ -103,7 +103,7 @@ struct DestinationSearchContent: View {
 }
 
 /// "어떤 버스를 탈까요?" Shown only when more than one route direction reaches the destination.
-/// Figma: `04 iOS` › Route Select V2.
+/// Figma: `03 iOS — GO` › `V2 / 04 Route select` (`157:245`).
 struct RouteSelectView: View {
     @Bindable var model: TapsoAppModel
     let destinationName: String
@@ -165,7 +165,7 @@ struct RouteSelectContent: View {
     }
 }
 
-/// "어디서 타나요?" The boarding stop, not a trip origin. Figma: `04 iOS` › Boarding Stop V2.
+/// "어디서 타나요?" The boarding stop, not a trip origin. Figma: `03 iOS — GO` › `V2 / 05 Boarding stop` (`157:289`).
 struct BoardingStopView: View {
     @Bindable var model: TapsoAppModel
     let routeID: RouteID
@@ -222,7 +222,7 @@ struct BoardingStopContent: View {
     }
 }
 
-/// The destination chosen so far. Figma: `DestinationChip / V2`.
+/// The destination chosen so far. Figma: no Figma component yet; drawn inside the screens.
 struct DestinationRecap: View {
     let destinationName: String
 
@@ -245,7 +245,8 @@ struct DestinationRecap: View {
 
 /// Start from a place shared by a map app: pasted here, or sent from the share
 /// sheet by TAPSO's share extension. Read on the device; nothing is fetched or sent.
-/// Figma: `04 iOS` › Map-App Handoff Intake V3.
+/// Figma: `03 iOS — GO` › `V2 / 06 Map-app handoff intake` (`157:379`) and `V3 / 20–22`
+/// (`193:2961`, `193:2990`, `193:3019`).
 struct MapImportView: View {
     @Bindable var model: TapsoAppModel
     @State private var pasted: String?
@@ -394,7 +395,7 @@ struct MapImportContent: View {
 }
 
 /// What TAPSO read from a shared place, and what it could not: a name, an
-/// address, whether the location is known and in Jeju. Figma: `SharedPlaceCard / V3`.
+/// address, whether the location is known and in Jeju. Figma: no Figma component yet; drawn inside the screens.
 struct SharedPlaceCard: View {
     let place: SharedPlace
     var onClear: (() -> Void)?
