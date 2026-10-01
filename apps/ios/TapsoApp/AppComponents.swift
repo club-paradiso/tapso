@@ -1,9 +1,9 @@
 import SwiftUI
 import TapsoTransit
 
-// App-only components. Figma: `02D Journey` V2 and `02A Button`.
+// App-only components. Figma: `02F iOS Ride V2`.
 
-/// One primary action per screen. 56 pt tall for a moving bus. Figma: `PrimaryButton / V2`.
+/// One primary action per screen. 56 pt tall for a moving bus. Figma: `Button / V2` (`kind=primary`).
 struct PrimaryButtonStyle: ButtonStyle {
     var fill: Color = TapsoColor.journeyActive
     var foreground: Color = TapsoColor.textOnAccent
@@ -20,7 +20,7 @@ struct PrimaryButtonStyle: ButtonStyle {
     }
 }
 
-/// Figma: `SecondaryButton / V2`.
+/// Figma: `Button / V2` (`kind=secondary`).
 struct SecondaryButtonStyle: ButtonStyle {
     var foreground: Color = TapsoColor.textPrimary
 
@@ -40,7 +40,7 @@ struct SecondaryButtonStyle: ButtonStyle {
     }
 }
 
-/// A surface card. Figma: `Card / V2`.
+/// A surface card. Figma: no Figma component yet; drawn inside the screens.
 struct TapsoCard<Content: View>: View {
     var padding: CGFloat = TapsoSpace.md
     @ViewBuilder var content: Content
@@ -85,7 +85,7 @@ struct QuestionTitle: View {
     }
 }
 
-/// States plainly that the app runs on synthetic data. Figma: `DemoDataChip / V2`.
+/// States plainly that the app runs on synthetic data. Figma: no Figma component yet; drawn inside the screens.
 struct DemoDataChip: View {
     var body: some View {
         Label("demo.chip", systemImage: "testtube.2")
@@ -162,7 +162,7 @@ struct RecentJourneyCard: View {
     }
 }
 
-/// A compact favourite. Figma: `FavoriteJourneyRow / V2`.
+/// A compact favourite. Figma: no Figma component yet; drawn inside the screens.
 struct FavoriteJourneyRow: View {
     let journey: SavedJourney
     let onRide: () -> Void
@@ -266,7 +266,7 @@ struct StatusBanner: View {
     }
 }
 
-/// A notice with an optional action. Figma: `RecoveryCard / V2`.
+/// A notice with an optional action. Figma: no Figma component yet; drawn inside the screens.
 struct NoticeCard: View {
     let systemImage: String
     let title: LocalizedStringKey

@@ -1,6 +1,6 @@
 # Live Activity specification
 
-Product V2 (2026-09-30). Layout: `apps/ios/Shared/LiveActivitySurfaces.swift` (plain views, also rendered by the app's snapshot tests); wiring: `apps/ios/LiveActivity/TapsoLiveActivityWidget.swift`; every decision: `RideGuidancePolicy` in the Swift core. Figma: `02F iOS Ride V2` Lock Screen / Dynamic Island V2 sets and the `04 iOS` state board. Per-moment detail: `product/JOURNEY_STATE_MODEL_V2.md`.
+Product V2 (2026-09-30). Layout: `apps/ios/Shared/LiveActivitySurfaces.swift` (plain views, also rendered by the app's snapshot tests); wiring: `apps/ios/LiveActivity/TapsoLiveActivityWidget.swift`; every decision: `RideGuidancePolicy` in the Swift core. Figma: `02F iOS Ride V2` Lock Screen / Dynamic Island V2 sets, the `05 Live Activity · Dynamic Island` state board (`160:1208`), and for the way back the `02G iOS Product V3` sets. Per-moment detail: `product/JOURNEY_STATE_MODEL_V2.md`.
 
 ## Model
 
