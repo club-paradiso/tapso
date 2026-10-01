@@ -100,7 +100,7 @@ Captures (local build, Chromium, Pretendard installed locally): `docs/design/mar
 
 ## Known limitations
 
-- Figma has no V3 frames yet; the V2 marketing frames are superseded (`FIGMA_IMPLEMENTATION_MAP_V2.md`).
+- Figma's V3 frames (`11 Marketing Web` › `218:2`, four widths) are rebuilt from the code at `main@55c648e` and set Noto Sans KR instead of Pretendard (`FIGMA_IMPLEMENTATION_MAP_V2.md`); they go stale when the page changes.
 - The device pictures are drawings: real island size, truncation and alert presentation need hardware.
 - Light theme only; Pretendard still loads from jsDelivr.
 - The Vercel preview was not opened from the authoring environment.
