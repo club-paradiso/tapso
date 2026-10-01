@@ -19,11 +19,11 @@ export const LINKS = {
  * variables. Leaving a field empty simply hides that support method.
  */
 export const SUPPORT_CHANNELS = {
-  buyMeACoffeeUrl: (import.meta.env.VITE_BUY_ME_A_COFFEE_URL ?? "").trim(),
+  buyMeACoffeeUrl: (import.meta.env?.VITE_BUY_ME_A_COFFEE_URL ?? "").trim(),
   bank: {
-    name: (import.meta.env.VITE_SUPPORT_BANK_NAME ?? "").trim(),
-    account: (import.meta.env.VITE_SUPPORT_BANK_ACCOUNT ?? "").trim(),
-    holder: (import.meta.env.VITE_SUPPORT_BANK_HOLDER ?? "").trim(),
+    name: (import.meta.env?.VITE_SUPPORT_BANK_NAME ?? "").trim(),
+    account: (import.meta.env?.VITE_SUPPORT_BANK_ACCOUNT ?? "").trim(),
+    holder: (import.meta.env?.VITE_SUPPORT_BANK_HOLDER ?? "").trim(),
   },
 } as const;
 
