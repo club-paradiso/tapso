@@ -1,0 +1,69 @@
+{
+  "//": "SPECIFICATION, SYNTHETIC places and distances. Rescue v1 cases, written by hand from docs/product/JEJU_SAFETY_LAYER_V3.md (Rescue). Options are ordered; the first is the recommendation. Both services/api (src/journeySafety.ts) and the Swift core (JourneySafety.swift) run every case.",
+  "policy": { "walkingMetersPerMinute": 70, "maxWalkBackMeters": 1200, "comfortableWalkMinutes": 15, "longWaitMinutes": 30 },
+  "cases": [
+    { "id": "X1", "why": "a short walk back beats waiting for a bus",
+      "input": { "kind": "passedDestination", "nextStopName": "곽지", "walkBackMeters": 650, "oppositeDirection": true, "oppositeWaitMinutes": null },
+      "expect": { "exitAt": "곽지", "options": [
+        { "action": "walkBack", "minutes": 10, "routeNumber": null, "longWait": false },
+        { "action": "rideBack", "minutes": null, "routeNumber": null, "longWait": false },
+        { "action": "openMapApp", "minutes": null, "routeNumber": null, "longWait": false } ] } },
+    { "id": "X2", "why": "too far to walk back: ride back",
+      "input": { "kind": "passedDestination", "nextStopName": "곽지", "walkBackMeters": 1500, "oppositeDirection": true, "oppositeWaitMinutes": 12 },
+      "expect": { "exitAt": "곽지", "options": [
+        { "action": "rideBack", "minutes": 12, "routeNumber": null, "longWait": false },
+        { "action": "openMapApp", "minutes": null, "routeNumber": null, "longWait": false } ] } },
+    { "id": "X3", "why": "a longer walk still wins when the bus back is a longer wait",
+      "input": { "kind": "passedDestination", "nextStopName": "곽지", "walkBackMeters": 1100, "oppositeDirection": true, "oppositeWaitMinutes": 25 },
+      "expect": { "exitAt": "곽지", "options": [
+        { "action": "walkBack", "minutes": 16, "routeNumber": null, "longWait": false },
+        { "action": "rideBack", "minutes": 25, "routeNumber": null, "longWait": false },
+        { "action": "openMapApp", "minutes": null, "routeNumber": null, "longWait": false } ] } },
+    { "id": "X4", "why": "a bus back that comes sooner than a long walk takes is recommended",
+      "input": { "kind": "passedDestination", "nextStopName": "곽지", "walkBackMeters": 1100, "oppositeDirection": true, "oppositeWaitMinutes": 8 },
+      "expect": { "exitAt": "곽지", "options": [
+        { "action": "rideBack", "minutes": 8, "routeNumber": null, "longWait": false },
+        { "action": "walkBack", "minutes": 16, "routeNumber": null, "longWait": false },
+        { "action": "openMapApp", "minutes": null, "routeNumber": null, "longWait": false } ] } },
+    { "id": "X5", "why": "with nothing measured, TAPSO hands over to a map app instead of guessing",
+      "input": { "kind": "passedDestination", "nextStopName": null, "walkBackMeters": null, "oppositeDirection": false, "oppositeWaitMinutes": null },
+      "expect": { "exitAt": null, "options": [
+        { "action": "openMapApp", "minutes": null, "routeNumber": null, "longWait": false } ] } },
+    { "id": "X6", "why": "a short wait for the next connection is the simplest recovery",
+      "input": { "kind": "missedConnection", "nextConnectionWaitMinutes": 12, "alternativeRoutes": ["202"] },
+      "expect": { "exitAt": null, "options": [
+        { "action": "waitForNextConnection", "minutes": 12, "routeNumber": null, "longWait": false },
+        { "action": "takeAlternativeRoute", "minutes": null, "routeNumber": "202", "longWait": false },
+        { "action": "openMapApp", "minutes": null, "routeNumber": null, "longWait": false } ] } },
+    { "id": "X7", "why": "a long wait puts known alternatives first, and says it is long",
+      "input": { "kind": "missedConnection", "nextConnectionWaitMinutes": 54, "alternativeRoutes": ["202", "102"] },
+      "expect": { "exitAt": null, "options": [
+        { "action": "takeAlternativeRoute", "minutes": null, "routeNumber": "202", "longWait": false },
+        { "action": "takeAlternativeRoute", "minutes": null, "routeNumber": "102", "longWait": false },
+        { "action": "waitForNextConnection", "minutes": 54, "routeNumber": null, "longWait": true },
+        { "action": "openMapApp", "minutes": null, "routeNumber": null, "longWait": false } ] } },
+    { "id": "X8", "why": "no known wait and no known alternative",
+      "input": { "kind": "missedConnection", "nextConnectionWaitMinutes": null, "alternativeRoutes": null },
+      "expect": { "exitAt": null, "options": [
+        { "action": "openMapApp", "minutes": null, "routeNumber": null, "longWait": false } ] } },
+    { "id": "X9", "why": "the wrong direction: get off and cross",
+      "input": { "kind": "wrongDirection", "nextStopName": "애월", "oppositeDirection": true, "oppositeWaitMinutes": null },
+      "expect": { "exitAt": "애월", "options": [
+        { "action": "rideBack", "minutes": null, "routeNumber": null, "longWait": false },
+        { "action": "openMapApp", "minutes": null, "routeNumber": null, "longWait": false } ] } },
+    { "id": "X10", "why": "the wrong direction with no bus back on this route",
+      "input": { "kind": "wrongDirection", "nextStopName": "애월", "oppositeDirection": false, "oppositeWaitMinutes": null },
+      "expect": { "exitAt": "애월", "options": [
+        { "action": "openMapApp", "minutes": null, "routeNumber": null, "longWait": false } ] } },
+    { "id": "X11", "why": "exactly the longest walk TAPSO proposes",
+      "input": { "kind": "passedDestination", "nextStopName": "협재", "walkBackMeters": 1200, "oppositeDirection": false, "oppositeWaitMinutes": null },
+      "expect": { "exitAt": "협재", "options": [
+        { "action": "walkBack", "minutes": 18, "routeNumber": null, "longWait": false },
+        { "action": "openMapApp", "minutes": null, "routeNumber": null, "longWait": false } ] } },
+    { "id": "X12", "why": "a long wait with no alternative is still offered, marked long",
+      "input": { "kind": "missedConnection", "nextConnectionWaitMinutes": 41, "alternativeRoutes": [] },
+      "expect": { "exitAt": null, "options": [
+        { "action": "waitForNextConnection", "minutes": 41, "routeNumber": null, "longWait": true },
+        { "action": "openMapApp", "minutes": null, "routeNumber": null, "longWait": false } ] } }
+  ]
+}
