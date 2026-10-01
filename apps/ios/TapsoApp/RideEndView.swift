@@ -23,7 +23,11 @@ struct RideEndView: View {
                 appleMapsFailed: model.appleMapsFailed,
                 onAppleMaps: { model.openAppleMaps(for: outcome) },
                 returnService: model.returnService,
-                onRetryReturn: { Task { await model.loadReturnService(for: outcome) } }
+                onRetryReturn: { Task { await model.loadReturnService(for: outcome) } },
+                returnPin: { model.pinAvailability(for: $0) },
+                onPinReturn: { row in Task { await model.pinReturnReminder(row) } },
+                onUnpinReturn: { Task { await model.unpinReturnReminder() } },
+                returnReminderUnavailable: model.returnReminderUnavailable
             )
         }
         .background(TapsoColor.backgroundPrimary)
@@ -44,6 +48,11 @@ struct RideEndContent: View {
     /// Live rides: today's last buses for the way back.
     var returnService: ReturnService = .idle
     var onRetryReturn: () -> Void = {}
+    /// Whether each variant's last bus can count down on the Lock Screen.
+    var returnPin: (ReturnServiceRow) -> TapsoAppModel.ReturnPinAvailability = { _ in .notOffered }
+    var onPinReturn: (ReturnServiceRow) -> Void = { _ in }
+    var onUnpinReturn: () -> Void = {}
+    var returnReminderUnavailable = false
 
     private var passed: Bool { outcome.moment == .passedDestination }
     /// The shared place the walk goes to, when the ride started from one.
@@ -138,7 +147,14 @@ struct RideEndContent: View {
                 }
             }
 
-            ReturnTripCard(service: returnService, onRetry: onRetryReturn)
+            ReturnTripCard(
+                service: returnService,
+                onRetry: onRetryReturn,
+                pin: returnPin,
+                onPin: onPinReturn,
+                onUnpin: onUnpinReturn,
+                unavailable: returnReminderUnavailable
+            )
 
             Button("end.done", action: onDone)
                 .buttonStyle(PrimaryButtonStyle())
@@ -156,6 +172,11 @@ struct RideEndContent: View {
 struct ReturnTripCard: View {
     let service: ReturnService
     var onRetry: () -> Void = {}
+    var pin: (ReturnServiceRow) -> TapsoAppModel.ReturnPinAvailability = { _ in .notOffered }
+    var onPin: (ReturnServiceRow) -> Void = { _ in }
+    var onUnpin: () -> Void = {}
+    /// The last countdown could not start: Live Activities are off for TAPSO.
+    var unavailable = false
 
     var body: some View {
         switch service {
@@ -179,10 +200,22 @@ struct ReturnTripCard: View {
                         .font(.headline)
                         .foregroundStyle(TapsoColor.textPrimary)
                     ForEach(rows) { row in
-                        ReturnTripRow(row: row)
+                        ReturnTripRow(row: row, pin: pin(row), onPin: { onPin(row) }, onUnpin: onUnpin)
                         if row.id != rows.last?.id {
                             Divider().overlay(TapsoColor.separator)
                         }
+                    }
+                    if unavailable {
+                        Text("returnTrip.pin.unavailable")
+                            .font(.footnote)
+                            .foregroundStyle(TapsoColor.journeyNext)
+                            .fixedSize(horizontal: false, vertical: true)
+                    }
+                    if rows.contains(where: { pin($0) == .tooEarly }) {
+                        Text("returnTrip.pin.window")
+                            .font(.footnote)
+                            .foregroundStyle(TapsoColor.textTertiary)
+                            .fixedSize(horizontal: false, vertical: true)
                     }
                     Text("returnTrip.note")
                         .font(.footnote)
@@ -196,8 +229,47 @@ struct ReturnTripCard: View {
 
 struct ReturnTripRow: View {
     let row: ReturnServiceRow
+    var pin: TapsoAppModel.ReturnPinAvailability = .notOffered
+    var onPin: () -> Void = {}
+    var onUnpin: () -> Void = {}
 
     var body: some View {
+        VStack(alignment: .leading, spacing: 6) {
+            summary
+                .accessibilityElement(children: .combine)
+            pinControl
+        }
+        .padding(.vertical, TapsoSpace.xxs)
+        .frame(maxWidth: .infinity, alignment: .leading)
+    }
+
+    /// The countdown on the Lock Screen: offered while it fits a Live Activity's eight hours.
+    @ViewBuilder
+    private var pinControl: some View {
+        switch pin {
+        case .pinned:
+            HStack(spacing: TapsoSpace.xs) {
+                Label("returnTrip.pinned", systemImage: "lock.fill")
+                    .font(.footnote.weight(.semibold))
+                    .foregroundStyle(TapsoColor.mintDeep)
+                Spacer(minLength: 0)
+                Button("returnTrip.unpin", action: onUnpin)
+                    .font(.footnote.weight(.semibold))
+                    .frame(minHeight: TapsoSize.minimumTouch)
+            }
+        case .available:
+            Button(action: onPin) {
+                Label("returnTrip.pin", systemImage: "moon.stars")
+                    .font(.footnote.weight(.semibold))
+                    .frame(minHeight: TapsoSize.minimumTouch)
+            }
+            .foregroundStyle(TapsoColor.mintDeep)
+        case .tooEarly, .notOffered:
+            EmptyView()
+        }
+    }
+
+    private var summary: some View {
         VStack(alignment: .leading, spacing: 4) {
             HStack(spacing: TapsoSpace.xs) {
                 RouteBadge(number: row.route.routeNumber)
@@ -223,9 +295,6 @@ struct ReturnTripRow: View {
                     .foregroundStyle(TapsoColor.textSecondary)
             }
         }
-        .padding(.vertical, TapsoSpace.xxs)
-        .frame(maxWidth: .infinity, alignment: .leading)
-        .accessibilityElement(children: .combine)
     }
 
     private var advice: LastBusAdvice { row.advice }

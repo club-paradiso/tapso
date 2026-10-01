@@ -34,8 +34,11 @@ struct TapsoRootView: View {
         .animation(TapsoMotion.animation(TapsoMotion.standard, reduceMotion: reduceMotion), value: model.hasActiveRide)
         .task { await model.resumeIfNeeded() }
         .onChange(of: scenePhase, initial: true) { _, phase in
-            // A place left by the share extension is picked up when TAPSO comes forward.
-            if phase == .active { model.collectHandoff() }
+            guard phase == .active else { return }
+            // A place left by the share extension is picked up when TAPSO comes forward,
+            // and a last-bus countdown long past its time is cleared.
+            model.collectHandoff()
+            Task { await model.refreshReturnReminder() }
         }
     }
 

@@ -42,6 +42,11 @@ departure minus the 10-minute margin, never a time the bus passes their stop.
 That is the intended behaviour, not a gap to paper over: `unknown` is never
 shown as safe, and Discover never presents an `unknown` return as "다녀오기 좋아요".
 
+Since V2.4d the rider can put one variant's "be at the stop by" on the Lock Screen
+and in the Dynamic Island as a countdown the system runs (`TapsoReturnAttributes`,
+`LIVE_ACTIVITY_SPEC.md`): the leave-by warning of "I'm going home", with no push
+and no location.
+
 Rescue is in the ride since V2.4c for one situation, the passed destination
 (`PassedStopRescue`, below). Missed connections and wrong direction wait for a
 ride with a planned transfer and for a verified opposite-direction pairing.

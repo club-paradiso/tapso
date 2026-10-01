@@ -57,7 +57,7 @@ return, transfer, rescue, handoff, discovery, eat, passport/share, mystery.
 | V2.1e | iOS real Journey Session integration | Live mode creates, refreshes, confirms and ends a session against the API; demo stays synthetic; guard test proves no real data reaches the Swift matcher | `IMPLEMENTED` (PR C), app side pending CI; production `BLOCKED_BY_CREDENTIALS` (V2.1d) |
 | V2.2 | Map Handoff | Share Extension accepts KakaoMap, NAVER Map, Apple Maps, URLs, coordinates, addresses and names; parser tests; Journey Contract created from a handoff | `IMPLEMENTED` (PR D, `MAP_HANDOFF_V3.md`); device run `UNVERIFIED` |
 | V2.3 | Core riding | Live Activity V3 states from `resolveSurface`; push-token registration endpoint; Transfer Guardian in the ride | `PENDING`; remote updates `BLOCKED_BY_PAID_MEMBERSHIP` (APNs); Transfer Guardian needs a planned transfer (no source) |
-| V2.4 | Jeju safety layer | Safe Return, Rescue engines with deterministic tests (no-return rejection, long headway, expired data) | `DONE` for the engines (#73 merged); last-bus data path and end-screen card `IMPLEMENTED` (PR E); Rescue for a passed destination `IMPLEMENTED` (PR F, `PassedStopRescue`); missed-connection and wrong-direction rescue and Transfer Guardian wait on planned transfers (no route planner or transfer data) |
+| V2.4 | Jeju safety layer | Safe Return, Rescue engines with deterministic tests (no-return rejection, long headway, expired data) | `DONE` for the engines (#73 merged); last-bus data path and end-screen card `IMPLEMENTED` (PR E); Rescue for a passed destination `IMPLEMENTED` (#83, `PassedStopRescue`); the last-bus countdown on the Lock Screen `IMPLEMENTED` (PR G, `TapsoReturnAttributes`); missed-connection and wrong-direction rescue and Transfer Guardian wait on planned transfers (no route planner or transfer data) |
 | V3.0 | Jeju discovery | 오늘 뭐하젠?, 그냥 탑서 (filtered before randomisation), route experiences grounded in live route data | `PENDING`: no verified place source yet |
 | V3.1 | Transit Fit | Semantic accessibility summary, no fake scores | `PENDING` |
 | V3.2 | Eat | Transit-aware food situations | `PENDING` |
@@ -130,6 +130,16 @@ swift test --package-path packages/transit-core   # macOS / CI
   Rescue engine for the passed destination — the next stop after the bus's last
   position, straight-line metres only between surveyed stops, map app last, no
   ride back without a verified opposite direction — and the ride screen shows it.
+  The Lock Screen, island and VoiceOver name the exit too (#83).
+- PR G (`claude/v24-return-countdown`, on #83): "돌아갈 시간", a second Live
+  Activity type the rider starts from the last-bus card; the system runs its
+  countdown (`Text(timerInterval:)`), so it needs no push. Bounds from Apple's
+  eight-hour limit (VERIFIED) and a 5-minute floor (ASSUMED).
+- Transfer Guardian in a live ride stays unbuilt: `/v1/vehicles` can place the
+  connecting bus, but without TAGO arrival predictions (dataset 15098530,
+  `vehicletp` and `arrtime`, awaiting the owner's data.go.kr authorization) the
+  connection window would come from an assumed per-stop band and mostly read
+  `unknown`. Transit Fit's low-floor field lives in the same dataset.
 
 ## Risks and unexpected findings
 

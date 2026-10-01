@@ -5,5 +5,6 @@ import WidgetKit
 struct TapsoLiveActivityBundle: WidgetBundle {
     var body: some Widget {
         TapsoLiveActivityWidget()
+        TapsoReturnActivityWidget()
     }
 }

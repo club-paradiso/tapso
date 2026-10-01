@@ -25,14 +25,25 @@ public struct LastBusAdvice: Hashable, Sendable {
     /// Today's published average minutes between buses.
     public let headwayMinutes: Int?
     public let day: ServiceDay
+    /// The instant of `beAtStopBy`, which may fall after midnight: what a countdown runs to.
+    public let beAtStopByDate: Date?
 
-    public init(level: SafeReturnLevel, reasons: [SafeReturnReason], lastDeparture: String?, beAtStopBy: String?, headwayMinutes: Int?, day: ServiceDay) {
+    public init(
+        level: SafeReturnLevel,
+        reasons: [SafeReturnReason],
+        lastDeparture: String?,
+        beAtStopBy: String?,
+        headwayMinutes: Int?,
+        day: ServiceDay,
+        beAtStopByDate: Date? = nil
+    ) {
         self.level = level
         self.reasons = reasons
         self.lastDeparture = lastDeparture
         self.beAtStopBy = beAtStopBy
         self.headwayMinutes = headwayMinutes
         self.day = day
+        self.beAtStopByDate = beAtStopByDate
     }
 
     /// The last bus has already left its starting stop today.
@@ -72,13 +83,16 @@ public enum LastBus {
             SafeReturnInput(arrival: 0, minimumStay: 0, departures: [last - current], quality: .scheduled),
             policy: policy
         )
+        // The clock minute `current` stands for, so the instant and the `HH:MM` agree.
+        let minuteStart = Date(timeIntervalSinceReferenceDate: (now.timeIntervalSinceReferenceDate / 60).rounded(.down) * 60)
         return LastBusAdvice(
             level: status.level,
             reasons: status.reasons,
             lastDeparture: hours.lastDeparture,
             beAtStopBy: status.leaveBy.map { clock(current + $0) },
             headwayMinutes: headway,
-            day: day
+            day: day,
+            beAtStopByDate: status.leaveBy.map { minuteStart.addingTimeInterval($0 * 60) }
         )
     }
 

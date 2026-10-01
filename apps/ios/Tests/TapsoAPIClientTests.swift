@@ -295,6 +295,22 @@ final class TapsoAPIClientTests: XCTestCase {
         XCTAssertEqual(rows[0].advice.beAtStopBy, "22:20")
         XCTAssertEqual(rows[1].advice.level, .unknown, "no published service day is unknown, never safe")
 
+        // The countdown on the Lock Screen is fixed when it starts: the same instant as the card's "22:20".
+        let reminder = try XCTUnwrap(TapsoAppModel.returnReminder(for: rows[0], now: evening))
+        XCTAssertEqual(reminder.attributes.routeNumber, "202")
+        XCTAssertEqual(reminder.attributes.routeID, "SYN-202-W")
+        XCTAssertEqual(reminder.attributes.beAtStopByText, "22:20")
+        XCTAssertEqual(reminder.attributes.lastDeparture, "22:30")
+        XCTAssertEqual(reminder.state.startedAt, evening)
+        XCTAssertEqual(reminder.state.beAtStopBy, calendar.date(from: DateComponents(year: 2026, month: 10, day: 1, hour: 22, minute: 20)))
+        XCTAssertNil(TapsoAppModel.returnReminder(for: rows[1], now: evening), "an unknown last bus is never counted down")
+        XCTAssertEqual(model.pinAvailability(for: rows[0], now: evening), .available)
+        XCTAssertEqual(model.pinAvailability(for: rows[1], now: evening), .notOffered)
+        let morning = calendar.date(from: DateComponents(year: 2026, month: 10, day: 1, hour: 9, minute: 0))!
+        XCTAssertEqual(model.pinAvailability(for: rows[0], now: morning), .tooEarly, "a Live Activity lasts at most eight hours")
+        let threeMinutesOut = calendar.date(from: DateComponents(year: 2026, month: 10, day: 1, hour: 22, minute: 17))!
+        XCTAssertNil(TapsoAppModel.returnReminder(for: rows[0], now: threeMinutesOut), "minutes out, the card's own words are enough")
+
         let demo = RideOutcome(moment: .arrived, routeNumber: "365", destination: outcome.destination)
         model.dismissOutcome()
         StubURLProtocol.respond { _ in (500, Data()) }

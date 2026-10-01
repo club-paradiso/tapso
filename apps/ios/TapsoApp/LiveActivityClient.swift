@@ -91,6 +91,53 @@ final class LiveActivityClient {
     }
 }
 
+/// The "돌아갈 시간" countdown (`TapsoReturnAttributes`): at most one, started and ended by the
+/// rider. Its content never changes after it starts, so it needs no update and no push.
+@MainActor
+final class ReturnReminderClient {
+    private var activity: Activity<TapsoReturnAttributes>?
+
+    init() {
+        activity = Activity<TapsoReturnAttributes>.activities.first {
+            switch $0.activityState {
+            case .active, .stale:
+                true
+            default:
+                false
+            }
+        }
+    }
+
+    var activitiesEnabled: Bool { ActivityAuthorizationInfo().areActivitiesEnabled }
+
+    /// The pinned variant and its countdown, while one is on screen.
+    var current: (attributes: TapsoReturnAttributes, state: TapsoReturnAttributes.ContentState)? {
+        guard let activity else { return nil }
+        return (activity.attributes, activity.content.state)
+    }
+
+    func start(attributes: TapsoReturnAttributes, state: TapsoReturnAttributes.ContentState) async throws {
+        guard activitiesEnabled else { throw LiveActivityError.disabled }
+        await end()
+        // Stale from the moment to be at the stop: the surfaces then say so instead of counting.
+        activity = try Activity.request(
+            attributes: attributes,
+            content: ActivityContent(state: state, staleDate: state.beAtStopBy, relevanceScore: Self.relevance),
+            pushType: nil
+        )
+    }
+
+    func end() async {
+        for existing in Activity<TapsoReturnAttributes>.activities {
+            await existing.end(nil, dismissalPolicy: .immediate)
+        }
+        activity = nil
+    }
+
+    /// Below every ride moment (`TapsoLiveActivityPolicy`), so a ride under way keeps the Dynamic Island.
+    static let relevance: Double = 10
+}
+
 enum LiveActivityError: LocalizedError {
     case disabled
 
