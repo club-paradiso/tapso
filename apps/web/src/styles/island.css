@@ -1,0 +1,354 @@
+/*
+ * The Dynamic Island as one morphing shape (src/components/NativeSurfaces.tsx
+ * › Island). Sizes are in em so one island fits a drawn phone and the page's
+ * persistent dock. Proportions follow the drawn phone: the bare island is
+ * 7.7 × 2.3 em on a 24.6 em wide screen, as the hardware is on iPhone.
+ */
+
+.isle-group {
+  --isle-w: 7.7em;
+  --isle-h: 2.3em;
+  --isle-r: 1.15em;
+  position: relative;
+  display: inline-flex;
+  justify-content: center;
+  line-height: 1.2;
+}
+
+.isle {
+  position: relative;
+  display: block;
+  width: var(--isle-w);
+  height: var(--isle-h);
+  overflow: hidden;
+  border-radius: var(--isle-r);
+  color: var(--bg);
+  background: var(--island-black);
+  transition:
+    width var(--dur-emphasis) var(--ease-emphasis),
+    height var(--dur-emphasis) var(--ease-emphasis),
+    border-radius var(--dur-emphasis) var(--ease-emphasis),
+    box-shadow var(--dur-standard) var(--ease-standard);
+}
+
+.form-compact {
+  --isle-w: 15.5em;
+}
+
+.form-minimal {
+  --isle-w: 9.4em;
+}
+
+.form-expanded {
+  --isle-w: 23em;
+  --isle-h: 10.9em;
+  --isle-r: 2.6em;
+}
+
+/* On the black island, coral, blue and slate use their dark-surface values
+   (tokens.css does the same for the older .island class). */
+.isle-group.role-next {
+  --role: var(--coral-on-dark);
+  --on-role: var(--ink);
+}
+
+.isle-group.role-checking {
+  --role: var(--blue-on-dark);
+}
+
+.isle-group.role-degraded {
+  --role: var(--slate-on-dark);
+}
+
+/* The camera lens: barely there, as on the hardware. */
+.isle-lens {
+  position: absolute;
+  top: 50%;
+  right: 1.05em;
+  width: 0.62em;
+  height: 0.62em;
+  border-radius: 50%;
+  background: radial-gradient(circle at 35% 35%, var(--night-elevated), var(--island-black) 70%);
+  transform: translateY(-50%);
+}
+
+.isle-content {
+  position: absolute;
+  inset: 0;
+  display: flex;
+  animation: isle-content-in 300ms var(--ease-standard) 90ms both;
+}
+
+@keyframes isle-content-in {
+  from {
+    opacity: 0;
+    filter: blur(3px);
+  }
+}
+
+.isle-compact-row {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 0.5em;
+  width: 100%;
+  padding: 0 0.6em 0 0.45em;
+}
+
+.isle-expanded-body {
+  display: flex;
+  flex-direction: column;
+  gap: 0.7em;
+  width: 100%;
+  padding: 0.95em 1.05em 1.05em;
+}
+
+/* A stop passed: the count rolls in rather than flickering. */
+.isle-tick {
+  display: inline-block;
+  animation: isle-tick 360ms var(--ease-emphasis) both;
+}
+
+@keyframes isle-tick {
+  from {
+    opacity: 0;
+    transform: translateY(45%);
+  }
+}
+
+/* Two activities at once: another app keeps the island, TAPSO steps outside it. */
+.isle-other {
+  display: grid;
+  place-items: center;
+  width: 2.3em;
+  height: 2.3em;
+  color: var(--slate-on-dark);
+}
+
+.isle-other svg {
+  width: 1.05em;
+  height: 1.05em;
+}
+
+.isle-orb {
+  position: absolute;
+  top: 0;
+  left: calc(50% + var(--isle-w) / 2 + 0.4em);
+  display: grid;
+  place-items: center;
+  width: 2.3em;
+  height: 2.3em;
+  border-radius: 50%;
+  color: var(--role, var(--bg));
+  background: var(--island-black);
+  font-weight: 900;
+  font-variant-numeric: tabular-nums;
+  opacity: 0;
+  transform: translateX(-1.6em) scale(0.3);
+  transition:
+    opacity var(--dur-standard) var(--ease-standard),
+    transform var(--dur-emphasis) var(--ease-emphasis),
+    left var(--dur-emphasis) var(--ease-emphasis);
+}
+
+.isle-orb svg {
+  width: 1.1em;
+  height: 1.1em;
+}
+
+.form-minimal .isle-orb {
+  opacity: 1;
+  transform: none;
+}
+
+/* A milestone alert: the island opens and glows once in the moment's colour. */
+.is-signalling .isle {
+  box-shadow: 0 0 0 0.18em color-mix(in srgb, var(--role) 55%, transparent), 0 0.6em 2em -0.4em color-mix(in srgb, var(--role) 45%, transparent);
+}
+
+/* In a drawn phone ---------------------------------------------------------- */
+
+.phone-isle-slot {
+  position: absolute;
+  top: 0.68em;
+  left: 50%;
+  z-index: 4;
+  transform: translateX(-50%);
+}
+
+/* Home Screen of another app: generic tiles, TAPSO's own icon among them. */
+.home-wallpaper {
+  position: absolute;
+  inset: 0;
+  background:
+    radial-gradient(120% 70% at 20% 0%, color-mix(in srgb, var(--mint) 22%, transparent), transparent 60%),
+    radial-gradient(90% 60% at 100% 100%, color-mix(in srgb, var(--tangerine) 18%, transparent), transparent 65%),
+    linear-gradient(180deg, var(--night-raised), var(--basalt));
+}
+
+.home-grid {
+  position: absolute;
+  inset: 5.2em 1.55em auto;
+  display: grid;
+  grid-template-columns: repeat(4, 1fr);
+  gap: 1.55em 1.3em;
+}
+
+.home-app {
+  display: block;
+  aspect-ratio: 1;
+  border-radius: 24%;
+  background: var(--white-16);
+}
+
+.home-app:nth-child(3n) {
+  background: rgb(255 255 255 / 11%);
+}
+
+.home-app:nth-child(4n + 1) {
+  background: rgb(255 255 255 / 20%);
+}
+
+.home-app-tapso {
+  display: grid;
+  place-items: center;
+  overflow: hidden;
+  background: var(--bg);
+}
+
+.home-app-tapso .brand-mark {
+  width: 78%;
+  height: 78%;
+}
+
+.home-dock {
+  position: absolute;
+  inset: auto 0.9em 0.9em;
+  display: grid;
+  grid-template-columns: repeat(4, 1fr);
+  gap: 1.3em;
+  padding: 0.85em 1em;
+  border-radius: 2.1em;
+  background: rgb(255 255 255 / 12%);
+}
+
+/* Lock Screen alert: the screen lights up once for a milestone. */
+.lock-activity.is-alerting .la-lock {
+  box-shadow: 0 0 0 0.16em color-mix(in srgb, var(--role) 70%, transparent), 0 1em 2.6em -0.6em color-mix(in srgb, var(--role) 55%, transparent);
+}
+
+.lock-alert {
+  display: inline-flex;
+  align-items: center;
+  gap: 0.3em;
+  margin: 0 auto 0.55em;
+  padding: 0.22em 0.65em;
+  border-radius: var(--radius-pill);
+  color: var(--ink);
+  background: var(--bg);
+  font-size: 0.72em;
+  font-weight: 800;
+}
+
+.lock-alert svg {
+  width: 1.05em;
+  height: 1.05em;
+}
+
+/* Persistent dock ------------------------------------------------------------- */
+
+.dock {
+  position: fixed;
+  top: 13px;
+  left: 50%;
+  z-index: 60;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 6px;
+  font-size: 15px;
+  pointer-events: none;
+  opacity: 0;
+  transform: translate(-50%, -8px) scale(0.86);
+  transform-origin: 50% 0;
+  transition:
+    opacity var(--dur-standard) var(--ease-standard),
+    transform var(--dur-emphasis) var(--ease-emphasis);
+}
+
+.dock.is-visible {
+  pointer-events: auto;
+  opacity: 1;
+  transform: translate(-50%, 0);
+}
+
+.dock-button {
+  display: block;
+  padding: 0;
+  border: 0;
+  border-radius: 1.4em;
+  background: none;
+  -webkit-tap-highlight-color: transparent;
+}
+
+.dock-button:focus-visible {
+  outline-offset: 4px;
+  border-radius: 1.4em;
+}
+
+.dock .isle {
+  box-shadow: 0 0.5em 1.4em -0.5em rgb(7 25 35 / 55%);
+}
+
+.dock-note {
+  padding: 2px 9px;
+  border-radius: var(--radius-pill);
+  color: var(--text-secondary);
+  background: rgb(255 255 255 / 92%);
+  box-shadow: 0 1px 2px var(--ink-08);
+  font-size: var(--fs-xs);
+  font-weight: 700;
+  opacity: 0;
+  transform: translateY(-4px);
+  transition:
+    opacity var(--dur-fast) var(--ease-standard),
+    transform var(--dur-fast) var(--ease-standard);
+}
+
+.dock.is-open .dock-note {
+  opacity: 1;
+  transform: none;
+}
+
+/* Wide screens: the island sits in the middle of the header, where the
+   hardware sits on a phone. The nav makes room for it (sections.css). */
+@media (max-width: 899px) {
+  /* Phones: the browser's own UI owns the top edge (and the real island, on
+     an iPhone), so the dock floats above the bottom toolbar instead. */
+  .dock {
+    top: auto;
+    bottom: max(14px, env(safe-area-inset-bottom));
+    flex-direction: column-reverse;
+    font-size: 15px;
+    transform: translate(-50%, 10px) scale(0.86);
+    transform-origin: 50% 100%;
+  }
+
+  .dock.is-visible {
+    transform: translate(-50%, 0);
+  }
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .isle,
+  .isle-orb,
+  .dock,
+  .dock-note {
+    transition: none;
+  }
+
+  .isle-content,
+  .isle-tick {
+    animation: none;
+  }
+}

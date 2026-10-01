@@ -12,11 +12,10 @@ export const LINKS = {
 } as const;
 
 export const NAV_ITEMS = [
-  { href: "#how", label: "작동 방식" },
-  { href: "#bus", label: "버스 확인" },
-  { href: "#live", label: "잠금 화면" },
+  { href: "#how", label: "타는 법" },
+  { href: "#trust", label: "흔들릴 때" },
   { href: "#status", label: "개발 현황" },
-  { href: "#faq", label: "자주 묻는 질문" },
+  { href: "#faq", label: "FAQ" },
 ] as const;
 
 export type StatusState = "done" | "active" | "next" | "later";

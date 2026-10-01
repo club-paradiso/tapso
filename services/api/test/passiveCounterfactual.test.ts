@@ -408,12 +408,23 @@ test("follower_overtaking: no wrong commit when a bus overtakes from just beyond
   }))));
 });
 
-test("follower_overtaking: do not score an overtake that becomes knowable only after a clear observed margin", () => {
+/**
+ * Issue #61 (findings F21, F22). #63 once made this family refuse every case in
+ * which the true bus, read sparsely, jumps three or more stops clear of the
+ * smoothly moving phantom before the phantom overtakes it, calling the
+ * overtake unknowable. It was knowable: the phantom starts inside the margin,
+ * and the session sees it there. Refusing those cases hid all 61 real-base
+ * wrong commits the issue reported (ablation run 36823397781). The family keeps
+ * them. On this synthetic base the matcher commits no wrong bus on them with or
+ * without F22; the regressions that fail without F21 and F22 are in
+ * matching.test.ts, and the real-base runs are the evidence.
+ */
+test("follower_overtaking keeps the gap-opens-then-closes shape of issue #61, and the matcher withholds on it", () => {
   const stream = baseSlow();
   const generated = generatePassiveCases([stream]);
   const snapshots = sortedSnapshots(stream);
   const cf = counterfactual("follower_overtaking");
-  let demonstrated = false;
+  let exercised = 0;
 
   for (const passiveCase of generated.cases.filter((item) => item.meta.scenario === "WAIT_AT_STOP")) {
     const truth = generated.vault.reveal(passiveCase.meta.caseId);
@@ -428,21 +439,21 @@ test("follower_overtaking: do not score an overtake that becomes knowable only a
       if (!truthRow?.stopSequence) continue;
       if (truthRow.stopSequence >= passiveCase.meta.boardingSequence - 1) continue;
 
-      // Simulate the sparse-feed shape found in the live collection: the real
-      // bus suddenly reports much closer to the stop while the injected bus
-      // remains on its smooth synthetic motion. At that instant the follower is
-      // no longer inside the observed exclusion margin, so a later synthetic
-      // overtake is not something the matcher could have known.
+      // The sparse-feed shape found in the live collection: the real bus
+      // suddenly reports one stop short of the stop while the phantom keeps
+      // its smooth motion, three or more stops behind it at that instant.
       truthRow.stopSequence = passiveCase.meta.boardingSequence - 1;
-      if (cf.apply(variant, context) === undefined) {
-        demonstrated = true;
-        break;
-      }
+      const application = cf.apply(variant, context);
+      assert.ok(application, "the family applies: the phantom was seen inside the margin before the gap opened");
+      const evaluation = evaluateCounterfactual(variant, context, cf, application);
+      assert.deepEqual(evaluation.expectationFailures, [], `${passiveCase.meta.caseId}: committed ${String(evaluation.committedStopOffset)}`);
+      exercised += 1;
+      break;
     }
-    if (demonstrated) break;
+    if (exercised >= 5) break;
   }
 
-  assert.equal(demonstrated, true, "the family must reject an unobservable future-acceleration overtake");
+  assert.ok(exercised > 0, "the shape was constructed at least once");
 });
 
 /* ------------------------------------------------------------- honesty */

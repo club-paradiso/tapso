@@ -9,7 +9,9 @@
 #   - push to main that changes ops/matcher-evidence/request.json (a merged
 #     request): runs that request once — by default the offline replay of the
 #     Passive Shadow v3 evidence of record under the current matcher;
-#   - workflow_dispatch: the same request, on demand.
+#   - workflow_dispatch: the same request, on demand; or, with `trace` set,
+#     diagnostics only: the role-only decision traces of one counterfactual's
+#     failing cases on one retained real base (no replay, no gate evidence).
 #
 # Scheduled workflows only run from the default branch, so nothing here runs
 # before the owner merges it.
@@ -33,12 +35,22 @@ on:
     - cron: "7 8 * * 6"    # Sat 17:07 KST  weekend evening
     - cron: "53 1 * * 0"   # Sun 10:53 KST  weekend morning
   workflow_dispatch:
+    inputs:
+      trace:
+        description: "Diagnostics only: a counterfactual id (e.g. follower_overtaking) to trace, role-only, instead of running the request"
+        required: false
+        default: ""
+      collection:
+        description: "With trace: the vault collection id (pv3-...); empty means the evidence of record"
+        required: false
+        default: ""
   push:
     branches: [main]
     paths: ["ops/matcher-evidence/request.json"]
 
 concurrency:
-  group: matcher-evidence
+  # A trace only reads the vault, so it need not wait behind a long gate run.
+  group: ${{ inputs.trace && 'matcher-evidence-trace' || 'matcher-evidence' }}
   cancel-in-progress: false
 
 permissions:
@@ -61,6 +73,7 @@ jobs:
       - id: plan
         env:
           EVENT: ${{ github.event_name }}
+          TRACE: ${{ inputs.trace }}
         run: |
           node -e '
             const r = require("./ops/matcher-evidence/request.json");
@@ -68,8 +81,9 @@ jobs:
             // The KST weekday: the seven schedules fall on seven different KST
             // days (07:37-18:11, far from midnight), so each pool runs once a week.
             const weekday = new Date(Date.now() + 9 * 60 * 60 * 1000).getUTCDay();
-            const mode = process.env.EVENT === "schedule" ? "collect" : r.mode;
-            if (!["replay", "collect"].includes(mode)) throw new Error(`unknown mode ${mode}`);
+            const trace = process.env.EVENT === "workflow_dispatch" && process.env.TRACE;
+            const mode = process.env.EVENT === "schedule" ? "collect" : trace ? "trace" : r.mode;
+            if (!["replay", "collect", "trace"].includes(mode)) throw new Error(`unknown mode ${mode}`);
             const out = [`mode=${mode}`, `pool=${weekday % pools}`, `requestId=${r.requestId}`];
             require("fs").appendFileSync(process.env.GITHUB_OUTPUT, out.join("\n") + "\n");
             console.log(out.join("\n"));'
@@ -286,7 +300,7 @@ jobs:
     # nothing (its session probe is rejected by input validation). A failed
     # check fails the scheduled run.
     needs: plan
-    if: github.event_name == 'schedule' || github.event_name == 'workflow_dispatch'
+    if: (github.event_name == 'schedule' || github.event_name == 'workflow_dispatch') && needs.plan.outputs.mode != 'trace'
     runs-on: ubuntu-latest
     timeout-minutes: 10
     steps:
@@ -308,6 +322,60 @@ jobs:
           retention-days: 90
           if-no-files-found: ignore
 
+  trace:
+    # Diagnostics for a failing counterfactual family on a real base: every
+    # failing case replayed blind, decision by decision, with vehicles named
+    # by role only (TRUTH, COMMITTED, INJECTED, BASE_TRUTH, OTHER-n). The tool
+    # checks its output against every raw vehicle id before printing, makes no
+    # network call, and refuses to report if the raw tree changed. Read-only:
+    # it changes no evidence, artifact or readiness.
+    needs: plan
+    if: needs.plan.outputs.mode == 'trace'
+    runs-on: ubuntu-latest
+    timeout-minutes: 60
+    permissions:
+      # Write scope only makes the private draft vault visible; nothing is written.
+      contents: write
+      actions: read
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-node@v4
+        with:
+          node-version: 22
+      - name: Fetch one collection from the private draft-release vault
+        env:
+          GH_TOKEN: ${{ github.token }}
+          COLLECTION: ${{ inputs.collection }}
+        run: |
+          set -euo pipefail
+          id="${COLLECTION:-$(node -e 'console.log(require("./ops/matcher-evidence/request.json").replay.recordCollectionId)')}"
+          [[ "$id" =~ ^pv3-[0-9]{8}T[0-9]{6}Z-[0-9a-f]{8}$ ]] || { echo "not a collection id"; exit 2; }
+          mkdir -p work/raw work/vault work/trace
+          test "$(gh release view passive-evidence-vault --json isDraft --jq .isDraft)" = "true"
+          gh release download passive-evidence-vault --pattern "$id.zip" --pattern "$id.zip.sha256" --dir work/vault
+          (cd work/vault && sha256sum -c "$id.zip.sha256")
+          unzip -q "work/vault/$id.zip" -d work/raw
+          test -d "work/raw/$id"
+          echo "work/raw/$id" > work/trace/collection-dir.txt
+      - name: Trace the failing cases (offline, role-only)
+        env:
+          TRACE: ${{ inputs.trace }}
+        run: |
+          set -euo pipefail
+          [[ "$TRACE" =~ ^[a-z0-9_]{1,64}$ ]] || { echo "not a counterfactual id"; exit 2; }
+          node --experimental-strip-types scripts/matcher-evidence/trace-counterfactual.ts "$(cat work/trace/collection-dir.txt)" \
+            --counterfactual="$TRACE" --limit=200 --window-s=7200 > work/trace/trace.json
+          # One case per line, so a long trace stays readable in the job log.
+          node -e '
+            const t = require(process.argv[1]);
+            console.log(JSON.stringify({ counterfactual: t.counterfactual, applicable: t.applicable, failing: t.failing, traced: t.traced }));
+            for (const c of t.traces) console.log(JSON.stringify(c));' "$(pwd)/work/trace/trace.json"
+      - uses: actions/upload-artifact@v4
+        with:
+          name: matcher-trace
+          path: work/trace/trace.json
+          retention-days: 30
+
   gate-evidence:
     # Everything the live criteria of release gate matcher-passive-safety-v4
     # read, recomputed offline from every raw collection main has produced and
@@ -316,7 +384,9 @@ jobs:
     # It never raises readiness: that is a reviewed change that commits these
     # files. It does fail when fresh evidence awards less than the code claims.
     # Runtime grows with the number of retained windows (each evaluated twice,
-    # in two processes, for determinism); shard it before it nears the limit.
+    # in two processes, for determinism, and each now also through the whole
+    # counterfactual catalogue, roughly 5-12 minutes a window per pass); shard
+    # it before it nears the limit.
     needs: [plan, replay, collect]
     if: always() && (needs.replay.result == 'success' || needs.collect.result == 'success')
     runs-on: ubuntu-latest
@@ -359,8 +429,11 @@ jobs:
           recordId="${record%%,*}"
           dirs="$(find work/collections -mindepth 2 -maxdepth 4 -type d -name 'pv3-*' | sort)"
           test -n "$dirs"
-          flags="--no-counterfactuals"
-          if printf '%s\n' $dirs | grep -q "/$recordId\$"; then flags="--record=$record --counterfactual-on=$recordId"; fi
+          # The counterfactual suite runs on every retained real base, not only
+          # the evidence of record: CA-5 reads "real bases", and the 2026-09-30
+          # window exposed a family the record never did (issue #61 follow-up).
+          flags=""
+          if printf '%s\n' $dirs | grep -q "/$recordId\$"; then flags="--record=$record"; fi
           # The failures of every window recorded before outlive its raw.
           if [ -f artifacts/matcher-directed-v1/live-replay-evidence.json ]; then flags="$flags --previous=artifacts/matcher-directed-v1/live-replay-evidence.json"; fi
           omitted="$(paste -sd, work/gate/omitted-artifacts.txt)"

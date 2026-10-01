@@ -1,0 +1,923 @@
+/*
+ * Marketing Site V3: the hero and the journey (src/sections/Hero.tsx,
+ * src/sections/Journey.tsx). One ride, read top to bottom; the phone beside
+ * it and the island in the header follow the step being read.
+ */
+
+/* Hero --------------------------------------------------------------------- */
+
+.hero {
+  position: relative;
+  padding-block: clamp(32px, 5vw, 72px) clamp(56px, 7vw, 112px);
+  background: var(--bg);
+}
+
+.hero-grid {
+  display: grid;
+  grid-template-columns: minmax(0, 1.05fr) minmax(0, 0.95fr);
+  align-items: center;
+  gap: clamp(24px, 4vw, 72px);
+  min-height: min(780px, calc(100svh - 64px));
+}
+
+.hero-copy {
+  display: flex;
+  flex-direction: column;
+  align-items: flex-start;
+}
+
+.hero-chips {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 6px;
+}
+
+.hero-chips span {
+  display: inline-flex;
+  align-items: center;
+  gap: 6px;
+  min-height: 30px;
+  padding: 0 12px;
+  border: 1px solid var(--separator);
+  border-radius: var(--radius-pill);
+  color: var(--text-secondary);
+  font-size: var(--fs-xs);
+  font-weight: 800;
+}
+
+.hero-chips .is-status {
+  border-color: transparent;
+  color: var(--ink);
+  background: var(--tangerine-16);
+}
+
+.hero-chips .is-status::before {
+  content: "";
+  width: 7px;
+  height: 7px;
+  border-radius: 50%;
+  background: var(--tangerine);
+}
+
+.hero h1 {
+  margin-top: clamp(16px, 2vw, 28px);
+  font-size: clamp(3.1rem, 1.2rem + 6.4vw, 6.75rem);
+  font-weight: 850;
+  letter-spacing: -0.05em;
+  line-height: 1.02;
+}
+
+.hero-gloss {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  margin-top: clamp(12px, 1.4vw, 18px);
+  color: var(--text-secondary);
+  font-size: var(--fs-lede);
+  font-weight: 600;
+}
+
+.hero-gloss-tag {
+  padding: 2px 8px;
+  border-radius: 6px;
+  color: var(--bg);
+  background: var(--basalt);
+  font-size: 0.75rem;
+  font-weight: 800;
+  letter-spacing: 0.02em;
+}
+
+/* The three steps are three stops on a short route. */
+.hero-steps {
+  position: relative;
+  display: flex;
+  flex-direction: column;
+  margin-top: clamp(24px, 3vw, 36px);
+}
+
+.hero-steps::before {
+  content: "";
+  position: absolute;
+  top: 22px;
+  bottom: 22px;
+  left: 6px;
+  width: 2px;
+  background: linear-gradient(to bottom, var(--mint), var(--mint) 60%, var(--tangerine));
+}
+
+.hero-steps li {
+  position: relative;
+  display: flex;
+  align-items: center;
+  gap: 16px;
+  padding-block: 7px;
+  font-size: clamp(1.05rem, 0.98rem + 0.35vw, 1.3rem);
+  font-weight: 700;
+  letter-spacing: -0.015em;
+}
+
+.hero-step-dot {
+  flex: none;
+  width: 14px;
+  height: 14px;
+  border: 3px solid var(--mint);
+  border-radius: 50%;
+  background: var(--bg);
+}
+
+.hero-step-dot.is-destination {
+  border-color: var(--tangerine);
+  background: var(--tangerine);
+}
+
+.hero-actions {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 10px;
+  margin-top: clamp(28px, 3vw, 40px);
+}
+
+.hero-status {
+  max-width: 34em;
+  margin-top: 18px;
+  color: var(--text-secondary);
+  font-size: var(--fs-small);
+  line-height: 1.6;
+}
+
+.hero-visual {
+  position: relative;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 18px;
+}
+
+.hero-devices {
+  position: relative;
+  width: min(100%, 540px);
+  height: clamp(480px, 44vw, 640px);
+}
+
+.hero-phone-back {
+  --pw: clamp(200px, 17vw, 246px);
+  position: absolute;
+  top: 0;
+  left: 2%;
+  z-index: 1;
+}
+
+.hero-phone-front {
+  --pw: clamp(236px, 21vw, 296px);
+  position: absolute;
+  right: 2%;
+  bottom: 0;
+  z-index: 2;
+}
+
+/* The glow is the moment's own colour: it changes only when the state does. */
+.hero-glow,
+.stage-glow {
+  position: absolute;
+  z-index: 0;
+  border-radius: 50%;
+  background-color: var(--role, var(--mint));
+  opacity: 0.22;
+  -webkit-mask-image: radial-gradient(closest-side, #000, transparent);
+  mask-image: radial-gradient(closest-side, #000, transparent);
+  transition: background-color 700ms var(--ease-standard);
+  pointer-events: none;
+}
+
+.hero-glow {
+  inset: 12% -6% -4% 8%;
+}
+
+.hero-rail {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+}
+
+.hero-rail ol {
+  display: flex;
+  gap: 2px;
+  padding: 3px;
+  border-radius: var(--radius-pill);
+  background: var(--mist);
+  box-shadow: inset 0 0 0 1px var(--separator);
+}
+
+.hero-rail-step {
+  display: inline-flex;
+  align-items: center;
+  gap: 8px;
+  min-height: var(--touch-min);
+  padding: 0 14px;
+  border: 0;
+  border-radius: var(--radius-pill);
+  color: var(--text-secondary);
+  background: transparent;
+  font-size: var(--fs-small);
+  font-weight: 700;
+  white-space: nowrap;
+  transition: background-color var(--dur-fast), color var(--dur-fast);
+}
+
+.hero-rail-step:hover {
+  color: var(--ink);
+}
+
+.hero-rail-step.is-active {
+  color: var(--ink);
+  background: var(--bg);
+  box-shadow: 0 1px 3px var(--ink-12);
+}
+
+.hero-rail-node {
+  width: 9px;
+  height: 9px;
+  border-radius: 50%;
+  background: var(--separator);
+}
+
+.hero-rail-step.is-active .hero-rail-node,
+.hero-rail-step.is-done .hero-rail-node {
+  background: var(--role);
+}
+
+.hero-play {
+  flex: none;
+}
+
+/* Journey -------------------------------------------------------------------- */
+
+.journey {
+  position: relative;
+}
+
+.journey-grid {
+  display: grid;
+  grid-template-columns: minmax(0, 1fr) minmax(300px, 0.78fr);
+  gap: clamp(32px, 5vw, 96px);
+}
+
+.journey-flow {
+  min-width: 0;
+}
+
+/* Each chapter paints its own band, edge to edge, behind both columns. */
+.chapter {
+  --step-gap: clamp(112px, 20vh, 220px);
+  position: relative;
+  padding-block: var(--section-y) calc(var(--section-y) * 0.6);
+  background: var(--bg);
+  box-shadow: 0 0 0 100vmax var(--bg);
+  clip-path: inset(0 -100vmax);
+}
+
+.chapter.on-dark {
+  background: var(--night);
+  box-shadow: 0 0 0 100vmax var(--night);
+}
+
+.chapter-arrive {
+  padding-bottom: max(var(--section-y), 34vh);
+}
+
+.chapter-confirm {
+  background: var(--sand);
+  box-shadow: 0 0 0 100vmax var(--sand);
+}
+
+.chapter-head {
+  display: flex;
+  flex-direction: column;
+  gap: var(--space-4);
+  max-width: 620px;
+}
+
+.chapter-head h2 {
+  font-size: var(--fs-h2);
+  font-weight: 800;
+  letter-spacing: var(--tracking-heading);
+  line-height: var(--lh-tight);
+}
+
+.chapter-lede {
+  color: var(--text-secondary);
+  font-size: var(--fs-lede);
+  line-height: 1.7;
+}
+
+.on-dark .chapter-lede {
+  color: var(--night-text-secondary);
+}
+
+/* Steps are stops on one route: dashed ahead, solid where the ride has been. */
+.step {
+  --rail: color-mix(in srgb, var(--slate) 55%, transparent);
+  --rail-done: var(--mint);
+  position: relative;
+  display: flex;
+  flex-direction: column;
+  gap: var(--space-3);
+  max-width: 600px;
+  margin-top: var(--step-gap);
+  padding-left: 48px;
+}
+
+.chapter-head + .step {
+  margin-top: calc(var(--step-gap) * 0.62);
+}
+
+.on-dark .step {
+  --rail: color-mix(in srgb, var(--slate-on-dark) 45%, transparent);
+}
+
+.step::before {
+  content: "";
+  position: absolute;
+  top: calc(var(--step-gap) * -1);
+  bottom: 0;
+  left: 12px;
+  width: 3px;
+  border-radius: 2px;
+  background: repeating-linear-gradient(to bottom, var(--rail) 0 9px, transparent 9px 16px);
+}
+
+.chapter-head + .step::before {
+  top: 0.5em;
+}
+
+.step.is-past::before,
+.step.is-active::before {
+  background: var(--rail-done);
+}
+
+.chapter-head + .step.is-active::before {
+  background: transparent;
+}
+
+.step-stop {
+  position: absolute;
+  top: 0.18em;
+  left: 4px;
+  z-index: 1;
+  width: 19px;
+  height: 19px;
+  border: 3px solid var(--rail);
+  border-radius: 50%;
+  background: var(--bg);
+  transition:
+    background-color var(--dur-standard) var(--ease-standard),
+    border-color var(--dur-standard) var(--ease-standard),
+    box-shadow var(--dur-standard) var(--ease-standard);
+}
+
+.on-dark .step-stop {
+  background: var(--night);
+}
+
+.step.is-past .step-stop {
+  border-color: var(--rail-done);
+  background: var(--rail-done);
+}
+
+.step.is-active .step-stop {
+  border-color: var(--role, var(--mint));
+  background: var(--role, var(--mint));
+  box-shadow: 0 0 0 7px color-mix(in srgb, var(--role, var(--mint)) 24%, transparent);
+}
+
+.step[data-beat="arrived"] .step-stop {
+  border-color: var(--tangerine);
+}
+
+.step-label {
+  color: var(--text-tertiary);
+  font-size: var(--fs-xs);
+  font-weight: 800;
+  letter-spacing: 0.01em;
+  font-variant-numeric: tabular-nums;
+}
+
+.on-dark .step-label {
+  color: var(--night-text-secondary);
+}
+
+.step.is-active .step-label {
+  color: var(--mint-ink);
+}
+
+.on-dark .step.is-active .step-label {
+  color: var(--role, var(--mint));
+}
+
+.step h3 {
+  font-size: clamp(1.5rem, 1.05rem + 1.4vw, 2.3rem);
+  font-weight: 800;
+  letter-spacing: -0.035em;
+  line-height: 1.22;
+}
+
+.step-body {
+  max-width: 34em;
+  color: var(--text-secondary);
+  font-size: var(--fs-lede);
+  line-height: 1.72;
+}
+
+.on-dark .step-body {
+  color: var(--night-text-secondary);
+}
+
+.step-note {
+  max-width: 34em;
+  padding: 12px 14px;
+  border-left: 3px solid var(--amber);
+  border-radius: 4px 12px 12px 4px;
+  color: var(--bg);
+  background: var(--white-08);
+  font-size: var(--fs-small);
+  line-height: 1.6;
+}
+
+.step-variant-note {
+  max-width: 34em;
+  min-height: 3.2em;
+  color: var(--bg);
+  font-size: var(--fs-body);
+  font-weight: 600;
+  line-height: 1.6;
+}
+
+.variant-picker {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 8px;
+  margin-top: var(--space-2);
+}
+
+.variant-chip {
+  display: inline-flex;
+  align-items: center;
+  gap: 8px;
+  min-height: var(--touch-min);
+  padding: 0 16px;
+  border: 1px solid var(--night-separator);
+  border-radius: var(--radius-pill);
+  color: var(--bg);
+  background: transparent;
+  font-size: var(--fs-small);
+  font-weight: 700;
+  transition: background-color var(--dur-fast), color var(--dur-fast), border-color var(--dur-fast);
+}
+
+.variant-chip::before {
+  content: "";
+  width: 8px;
+  height: 8px;
+  border-radius: 50%;
+  background: var(--role, var(--mint));
+}
+
+.variant-chip:hover {
+  border-color: var(--night-text-secondary);
+}
+
+.variant-chip.is-active {
+  border-color: transparent;
+  color: var(--ink);
+  background: var(--bg);
+}
+
+/* Narrow screens draw the picture in the step itself. */
+.step-visual {
+  display: none;
+}
+
+/* Trust table (on the dark band). */
+.trust-table {
+  display: grid;
+  max-width: 34em;
+  margin-top: var(--space-2);
+  border-top: 1px solid var(--night-separator);
+}
+
+.trust-table > div {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: var(--space-4);
+  min-height: 52px;
+  border-bottom: 1px solid var(--night-separator);
+}
+
+.trust-table dt {
+  color: var(--night-text-secondary);
+  font-size: var(--fs-small);
+  font-weight: 600;
+}
+
+.trust-table dd {
+  font-size: var(--fs-small);
+  font-weight: 800;
+  text-align: right;
+}
+
+.trust-table .trust-badge {
+  font-size: 0.875rem;
+}
+
+.trust-no::before {
+  content: "";
+  display: inline-block;
+  width: 8px;
+  height: 8px;
+  margin-right: 8px;
+  border-radius: 50%;
+  background: var(--coral-on-dark);
+  vertical-align: 1px;
+}
+
+.trust-count.count-lastKnown {
+  color: var(--amber);
+}
+
+.trust-count.count-hidden {
+  color: var(--slate-on-dark);
+}
+
+/* When does the rider look? (on the dark band) */
+.glance {
+  display: flex;
+  flex-direction: column;
+  gap: var(--space-6);
+  max-width: 600px;
+  margin-top: var(--space-4);
+  padding: clamp(18px, 2.2vw, 28px);
+  border: 1px solid var(--night-separator);
+  border-radius: var(--radius-lg);
+  background: var(--night-raised);
+}
+
+.glance-row {
+  display: grid;
+  grid-template-columns: 128px minmax(0, 1fr);
+  align-items: end;
+  gap: var(--space-4);
+}
+
+.glance-row-label {
+  display: flex;
+  flex-direction: column;
+  padding-bottom: 2px;
+}
+
+.glance-row-label b {
+  font-size: var(--fs-small);
+  font-weight: 800;
+}
+
+.glance-row-label span {
+  color: var(--night-text-secondary);
+  font-size: var(--fs-xs);
+}
+
+.glance-track {
+  position: relative;
+  height: 52px;
+  margin-inline: 10px;
+  border-bottom: 2px solid var(--night-separator);
+}
+
+.glance-after .glance-track {
+  margin-bottom: 28px;
+}
+
+.glance-mark {
+  position: absolute;
+  bottom: -8px;
+  width: 14px;
+  height: 14px;
+  border-radius: 50%;
+  transform: translateX(-50%);
+}
+
+.glance-mark.is-anxious {
+  background: var(--slate-on-dark);
+  box-shadow: 0 -16px 0 -3px rgb(159 176 184 / 45%), 0 -29px 0 -4px rgb(159 176 184 / 22%);
+}
+
+.glance-mark.is-confirm {
+  background: var(--mint);
+}
+
+.glance-mark.is-prepare {
+  background: var(--amber);
+}
+
+.glance-mark.is-next {
+  background: var(--coral-on-dark);
+}
+
+.glance-mark.is-arrive {
+  background: var(--tangerine);
+}
+
+.glance-mark-label {
+  position: absolute;
+  bottom: 22px;
+  left: 50%;
+  padding: 2px 8px;
+  border-radius: var(--radius-pill);
+  color: var(--bg);
+  background: var(--night-elevated);
+  font-size: 0.75rem;
+  font-weight: 800;
+  white-space: nowrap;
+  transform: translateX(-50%);
+}
+
+/* Close marks alternate above and below the line so their labels never overlap. */
+.glance-mark.is-confirm .glance-mark-label {
+  left: 0;
+  transform: none;
+}
+
+.glance-mark.is-prepare .glance-mark-label,
+.glance-mark.is-arrive .glance-mark-label {
+  top: 20px;
+  bottom: auto;
+}
+
+.glance-mark.is-arrive .glance-mark-label {
+  left: auto;
+  right: 0;
+  transform: none;
+}
+
+.glance-pocket {
+  position: absolute;
+  bottom: 8px;
+  display: grid;
+  place-items: center;
+  height: 26px;
+  border-radius: var(--radius-pill);
+  color: var(--bg);
+  background: color-mix(in srgb, var(--mint) 20%, transparent);
+  font-size: var(--fs-xs);
+  font-weight: 800;
+}
+
+.glance figcaption {
+  color: var(--night-text-secondary);
+  font-size: var(--fs-xs);
+}
+
+/* Stage ---------------------------------------------------------------------- */
+
+.journey-stage {
+  position: relative;
+  z-index: 1;
+}
+
+.stage {
+  position: sticky;
+  top: 64px;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  gap: 14px;
+  height: calc(100vh - 64px);
+  height: calc(100svh - 64px);
+  min-height: 560px;
+}
+
+.stage-glow {
+  inset: 18% 6% 22%;
+}
+
+.stage-device {
+  position: relative;
+  z-index: 1;
+  animation: stage-in 460ms var(--ease-emphasis) both;
+}
+
+.stage-device .phone {
+  --pw: clamp(250px, 20vw, 292px);
+}
+
+.stage-screen {
+  position: absolute;
+  inset: 0;
+  animation: stage-screen-in 320ms var(--ease-standard) both;
+}
+
+@keyframes stage-in {
+  from {
+    opacity: 0;
+    transform: translateY(14px) scale(0.98);
+  }
+}
+
+@keyframes stage-screen-in {
+  from {
+    opacity: 0;
+    transform: translateY(8px);
+  }
+}
+
+.stage-caption {
+  position: relative;
+  z-index: 1;
+  padding: 4px 12px;
+  border-radius: var(--radius-pill);
+  color: var(--ink);
+  background: var(--bg);
+  box-shadow: 0 1px 2px var(--ink-08);
+  font-size: var(--fs-xs);
+  font-weight: 800;
+}
+
+.stage .preview-tag {
+  position: relative;
+  z-index: 1;
+  color: var(--text-secondary);
+  background: var(--bg);
+}
+
+/* The Lock Screen surface changes colour in place when the moment escalates. */
+.la-lock {
+  transition: background-color var(--dur-emphasis) var(--ease-standard);
+}
+
+/* Header with the island --------------------------------------------------------- */
+
+@media (max-width: 1279px) and (min-width: 900px) {
+  .site-header.has-island .site-nav {
+    visibility: hidden;
+    opacity: 0;
+  }
+}
+
+.site-nav {
+  transition: opacity var(--dur-fast) var(--ease-standard), visibility var(--dur-fast);
+}
+
+/* Narrow screens ---------------------------------------------------------------- */
+
+@media (max-width: 1023px) {
+  .hero-grid {
+    grid-template-columns: minmax(0, 1fr);
+    min-height: 0;
+  }
+
+  .hero-visual {
+    margin-top: var(--space-6);
+  }
+}
+
+@media (max-width: 899px) {
+  .journey-grid {
+    grid-template-columns: minmax(0, 1fr);
+  }
+
+  .journey-stage {
+    display: none;
+  }
+
+  .chapter {
+    --step-gap: 72px;
+  }
+
+  .step {
+    padding-left: 40px;
+  }
+
+  .step::before {
+    left: 9px;
+  }
+
+  .step-stop {
+    left: 1px;
+  }
+
+  .step-visual {
+    display: flex;
+    flex-direction: column;
+    align-items: flex-start;
+    gap: 8px;
+    margin-top: var(--space-3);
+  }
+
+  .step-visual-caption {
+    color: var(--text-tertiary);
+    font-size: var(--fs-xs);
+    font-weight: 700;
+  }
+
+  .on-dark .step-visual-caption {
+    color: var(--night-text-secondary);
+  }
+
+  .step-phone-crop {
+    height: 330px;
+    overflow: hidden;
+    -webkit-mask-image: linear-gradient(to bottom, #000 78%, transparent);
+    mask-image: linear-gradient(to bottom, #000 78%, transparent);
+  }
+
+  .step-phone {
+    --pw: 232px;
+  }
+
+  .mini-lock {
+    display: flex;
+    flex-direction: column;
+    width: min(100%, 360px);
+    padding: 14px;
+    border-radius: 28px;
+    background: linear-gradient(180deg, var(--night-elevated), var(--basalt));
+    font-size: 13.5px;
+  }
+
+  .mini-home {
+    display: flex;
+    justify-content: center;
+    align-items: flex-start;
+    width: min(100%, 360px);
+    min-height: 64px;
+    padding: 14px 0;
+    border-radius: 24px;
+    background: linear-gradient(180deg, var(--night-elevated), var(--basalt));
+    font-size: 13.5px;
+  }
+
+  .mini-home.form-expanded {
+    min-height: 180px;
+  }
+
+  .mini-home.form-minimal {
+    justify-content: flex-start;
+    padding-left: calc(50% - 6em);
+  }
+
+  .hero-devices {
+    height: clamp(420px, 108vw, 560px);
+  }
+
+  .hero-phone-back {
+    --pw: clamp(160px, 42vw, 220px);
+  }
+
+  .hero-phone-front {
+    --pw: clamp(190px, 50vw, 260px);
+  }
+}
+
+@media (max-width: 560px) {
+  .hero h1 {
+    font-size: clamp(2.75rem, 1rem + 9vw, 3.6rem);
+  }
+
+  .glance-row {
+    grid-template-columns: minmax(0, 1fr);
+    gap: var(--space-2);
+  }
+
+  .hero-actions .btn {
+    flex: 1 1 100%;
+  }
+
+  .hero-rail {
+    flex-wrap: wrap;
+    justify-content: center;
+  }
+
+  .hero-rail ol {
+    max-width: 100%;
+    overflow-x: auto;
+    scrollbar-width: none;
+  }
+
+  .hero-rail-step {
+    padding: 0 11px;
+  }
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .stage-device,
+  .stage-screen {
+    animation: none;
+  }
+
+  .hero-glow,
+  .stage-glow,
+  .step-stop,
+  .la-lock {
+    transition: none;
+  }
+}
