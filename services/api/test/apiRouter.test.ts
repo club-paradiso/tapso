@@ -915,3 +915,76 @@ test("a production deployment serves sessions only from the production namespace
     }
   }
 });
+
+/** A discovery stub that publishes a service day for `ROUTE` only. SYNTHETIC values. */
+function serviceHoursHandler(read: (cityCode: string, routeId: string) => Promise<unknown>): TransitApiHandler {
+  const config = readTransitApiConfig({ TAGO_SERVICE_KEY: "synthetic-key" }, { nodeVersion: "v22.0.0" });
+  const provider = new CachedTransitProvider(new StubProvider(), {
+    stopTtlMs: config.cachePolicy.stopTtlMs,
+    vehicleTtlMs: config.cachePolicy.vehicleTtlMs,
+  });
+  return createTransitApiHandler({
+    config,
+    provider,
+    log: () => {},
+    discovery: {
+      async cities() { return []; },
+      async routes() { return []; },
+      routeServiceHours: read as never,
+    },
+  });
+}
+
+test("route info: a route's published service day, read once per discovery window, with its reference stated", async () => {
+  let calls = 0;
+  const handler = serviceHoursHandler(async (_cityCode, routeId) => {
+    calls += 1;
+    return routeId === ROUTE
+      ? { routeId, routeNumber: "365", firstDeparture: "06:00", lastDeparture: "22:30", headwayMinutes: { weekday: 29 } }
+      : undefined;
+  });
+  const response = await get(handler, `/v1/route-info?cityCode=${CITY}&routeId=${ROUTE}`);
+  assert.equal(response.status, 200);
+  const body = await response.json() as { item: unknown; meta: Record<string, unknown> };
+  assert.deepEqual(body.item, {
+    routeId: ROUTE,
+    routeNumber: "365",
+    firstDeparture: "06:00",
+    lastDeparture: "22:30",
+    headwayMinutes: { weekday: 29 },
+  });
+  assert.equal(body.meta.timeReference, "starting_stop_departure", "the times are departures from the starting stop");
+  assert.equal(body.meta.headway, "published_average_minutes");
+  assert.match(response.headers.get("cache-control") ?? "", /max-age=/);
+
+  await get(handler, `/v1/route-info?cityCode=${CITY}&routeId=${ROUTE}`);
+  assert.equal(calls, 1, "one provider read per route per discovery window");
+
+  const unknown = await get(handler, `/v1/route-info?cityCode=${CITY}&routeId=JEB000000000`);
+  assert.equal(unknown.status, 404);
+  assert.equal((await unknown.json() as { error: string }).error, "NOT_FOUND");
+
+  for (const path of [`/v1/route-info?cityCode=${CITY}`, `/v1/route-info?routeId=${ROUTE}`, `/v1/route-info?cityCode=${CITY}&routeId=../x`]) {
+    assert.equal((await get(handler, path)).status, 400, path);
+  }
+  assert.equal((await get(handler, `/v1/route-info?cityCode=${CITY}&routeId=${ROUTE}`, { method: "POST" })).status, 405);
+});
+
+test("route info: no published service day is NOT_FOUND, and provider failures keep their meaning", async () => {
+  const { handler } = harness();
+  assert.equal((await get(handler, `/v1/route-info?cityCode=${CITY}&routeId=${ROUTE}`)).status, 404, "a provider without the operation invents nothing");
+
+  const timeout = serviceHoursHandler(async () => { throw new ProviderTimeoutError("TAGO request timed out"); });
+  const slow = await get(timeout, `/v1/route-info?cityCode=${CITY}&routeId=${ROUTE}`);
+  assert.equal(slow.status, 504);
+  assert.equal((await slow.json() as { error: string }).error, "PROVIDER_TIMEOUT");
+
+  let failures = 0;
+  const flaky = serviceHoursHandler(async (_cityCode, routeId) => {
+    failures += 1;
+    if (failures === 1) throw new ProviderUnavailableError("TAGO provider returned HTTP 503");
+    return { routeId, headwayMinutes: {} };
+  });
+  assert.equal((await get(flaky, `/v1/route-info?cityCode=${CITY}&routeId=${ROUTE}`)).status, 502);
+  assert.equal((await get(flaky, `/v1/route-info?cityCode=${CITY}&routeId=${ROUTE}`)).status, 200, "a failure is never cached");
+});

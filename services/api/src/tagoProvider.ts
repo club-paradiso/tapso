@@ -36,6 +36,30 @@ export interface TagoRoute {
   routeType?: string;
 }
 
+/**
+ * What `getRouteInfoIem` publishes about one route's service day
+ * (REPORTED-OFFICIAL, data.go.kr dataset 15098529, read 2026-10-01): the first
+ * and last departure as HHMM and the average headway in minutes for weekdays,
+ * Saturdays and Sundays. All five are optional in the documentation, so an
+ * absent or malformed value stays absent rather than becoming a guess.
+ *
+ * The times are departures from the route's starting stop (기점). A bus reaches
+ * every later stop after that, so "be at your stop by the last departure" is a
+ * conservative rule, never a promise about when the bus passes it.
+ */
+export interface TagoRouteServiceHours {
+  routeId: string;
+  routeNumber?: string;
+  routeType?: string;
+  startStopName?: string;
+  endStopName?: string;
+  /** `HH:MM`, Korean local time, from the starting stop. */
+  firstDeparture?: string;
+  lastDeparture?: string;
+  /** Average minutes between buses, as published; never a timetable. */
+  headwayMinutes: { weekday?: number; saturday?: number; sunday?: number };
+}
+
 /** Official Ministry of Land, Infrastructure and Transport TAGO adapter. */
 export class TagoTransitProvider implements TransitProvider {
   private readonly serviceKey: string;
@@ -92,6 +116,34 @@ export class TagoTransitProvider implements TransitProvider {
         ...(routeType === undefined ? {} : { routeType }),
       };
     });
+  }
+
+  /** `undefined` when TAGO knows no such route. */
+  async routeServiceHours(cityCode: string, routeId: string): Promise<TagoRouteServiceHours | undefined> {
+    const items = await this.request(this.routeBaseURL, "/getRouteInfoIem", { cityCode, routeId }, false);
+    const item = items.find((row) => stringField(row, "routeid", "routeId") === routeId);
+    if (!item) return undefined;
+    // Absent stays absent: an explicit `undefined` would claim TAGO answered and said nothing.
+    const hours: TagoRouteServiceHours = { routeId, headwayMinutes: {} };
+    const routeNumber = stringField(item, "routeno", "routeNo");
+    if (routeNumber !== undefined) hours.routeNumber = routeNumber;
+    const routeType = stringField(item, "routetp", "routeTp");
+    if (routeType !== undefined) hours.routeType = routeType;
+    const startStopName = stringField(item, "startnodenm", "startNodeNm");
+    if (startStopName !== undefined) hours.startStopName = startStopName;
+    const endStopName = stringField(item, "endnodenm", "endNodeNm");
+    if (endStopName !== undefined) hours.endStopName = endStopName;
+    const firstDeparture = serviceTime(stringField(item, "startvehicletime", "startVehicleTime"));
+    if (firstDeparture !== undefined) hours.firstDeparture = firstDeparture;
+    const lastDeparture = serviceTime(stringField(item, "endvehicletime", "endVehicleTime"));
+    if (lastDeparture !== undefined) hours.lastDeparture = lastDeparture;
+    const weekday = headway(stringField(item, "intervaltime", "intervalTime"));
+    if (weekday !== undefined) hours.headwayMinutes.weekday = weekday;
+    const saturday = headway(stringField(item, "intervalsattime", "intervalSatTime"));
+    if (saturday !== undefined) hours.headwayMinutes.saturday = saturday;
+    const sunday = headway(stringField(item, "intervalsuntime", "intervalSunTime"));
+    if (sunday !== undefined) hours.headwayMinutes.sunday = sunday;
+    return hours;
   }
 
   async stops(request: RouteRequest): Promise<StopOnRoute[]> {
@@ -307,6 +359,27 @@ function numberField(item: UnknownRecord, ...keys: string[]): number | undefined
   if (raw === undefined) return undefined;
   const value = Number(raw);
   return Number.isFinite(value) ? value : undefined;
+}
+
+/**
+ * `HHMM` (documented) → `HH:MM`. A number loses its leading zero in JSON (`600`),
+ * so it is padded back. Anything outside 00:00–23:59 is not documented and is
+ * dropped: an undocumented "after midnight" encoding must not be guessed at.
+ */
+function serviceTime(raw: string | undefined): string | undefined {
+  if (raw === undefined || !/^\d{1,4}$/.test(raw)) return undefined;
+  const padded = raw.padStart(4, "0");
+  const hours = Number(padded.slice(0, 2));
+  const minutes = Number(padded.slice(2));
+  if (hours > 23 || minutes > 59) return undefined;
+  return `${padded.slice(0, 2)}:${padded.slice(2)}`;
+}
+
+/** Minutes between buses: a positive whole number of at most a day, or nothing. */
+function headway(raw: string | undefined): number | undefined {
+  if (raw === undefined || !/^\d{1,4}$/.test(raw)) return undefined;
+  const minutes = Number(raw);
+  return minutes > 0 && minutes <= 1_440 ? minutes : undefined;
 }
 
 function requiredNumber(item: UnknownRecord, ...keys: string[]): number {

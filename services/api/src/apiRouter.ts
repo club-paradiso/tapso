@@ -18,7 +18,7 @@ import { analyzeRideCapture, classifyTopology, RideCaptureInputError, type RideC
 import { operatorTokenMatches, readBearerToken } from "./operatorAuth.ts";
 import type { CachedTransitProvider } from "./cachedTransitProvider.ts";
 import type { TransitProvider } from "./provider.ts";
-import type { TagoCity, TagoRoute, TagoTransitProvider } from "./tagoProvider.ts";
+import type { TagoCity, TagoRoute, TagoRouteServiceHours, TagoTransitProvider } from "./tagoProvider.ts";
 import type { JourneySessionCoordinator } from "./journeySession.ts";
 import type { TransitApiConfig } from "./apiConfig.ts";
 import type { BurstLimiter } from "./rateLimit.ts";
@@ -110,8 +110,11 @@ export interface TransitApiDependencies {
    * Discovery calls (`cities`, `routes`) are not part of `TransitProvider`.
    * `allRoutes` is optional because whether the provider will list a whole city
    * is the provider's answer to give, not this module's to assume.
+   * `routeServiceHours` is optional for the same reason: a provider without a
+   * published service day answers `NOT_FOUND`, never an invented one.
    */
-  discovery: Pick<TagoTransitProvider, "cities" | "routes"> & Partial<Pick<TagoTransitProvider, "allRoutes">>;
+  discovery: Pick<TagoTransitProvider, "cities" | "routes">
+    & Partial<Pick<TagoTransitProvider, "allRoutes" | "routeServiceHours">>;
   provider: CachedTransitProvider;
   /**
    * The uncached upstream, used only by the operator ride-capture path. Task B
@@ -135,6 +138,7 @@ type Route =
   | "health"
   | "cities"
   | "routes"
+  | "route_info"
   | "stops"
   | "vehicles"
   | "matches"
@@ -153,6 +157,8 @@ export function createTransitApiHandler(dependencies: TransitApiDependencies): T
   const log = dependencies.log ?? defaultLog;
   const cityCache = new TtlCache<TagoCity[]>({ ttlMs: config.cachePolicy.discoveryTtlMs });
   const routeCache = new TtlCache<TagoRoute[]>({ ttlMs: config.cachePolicy.discoveryTtlMs });
+  // A route's published service day changes rarely; one read per route per discovery window.
+  const routeInfoCache = new TtlCache<TagoRouteServiceHours | null>({ ttlMs: config.cachePolicy.discoveryTtlMs });
 
   return async function handle(request: Request, context: RequestContext = {}): Promise<Response> {
     const startedAt = Date.now();
@@ -178,7 +184,7 @@ export function createTransitApiHandler(dependencies: TransitApiDependencies): T
       enforceRateLimit(dependencies, clientAddress(request, context), resolved.route);
       if (isOperatorRoute(resolved.route)) requireOperator(dependencies, request);
 
-      const result = await dispatch(dependencies, { cityCache, routeCache, now }, resolved, request, url);
+      const result = await dispatch(dependencies, { cityCache, routeCache, routeInfoCache, now }, resolved, request, url);
       cache = result.cache ?? "none";
       response = withHeaders(result.response, cors);
     } catch (error) {
@@ -228,6 +234,7 @@ function resolvePath(path: string): Resolved | undefined {
   if (path === "/health") return { route: "health", methods: ["GET"] };
   if (path === "/v1/cities") return { route: "cities", methods: ["GET"] };
   if (path === "/v1/routes") return { route: "routes", methods: ["GET"] };
+  if (path === "/v1/route-info") return { route: "route_info", methods: ["GET"] };
   if (path === "/v1/stops") return { route: "stops", methods: ["GET"] };
   if (path === "/v1/vehicles") return { route: "vehicles", methods: ["GET"] };
   if (path === "/v1/matches") return { route: "matches", methods: ["POST"] };
@@ -265,6 +272,7 @@ function decodeSegment(value: string | undefined): string | undefined {
 type Support = {
   cityCache: TtlCache<TagoCity[]>;
   routeCache: TtlCache<TagoRoute[]>;
+  routeInfoCache: TtlCache<TagoRouteServiceHours | null>;
   now: () => Date;
 };
 
@@ -321,6 +329,36 @@ async function dispatch(
             // One route number is several official routes. Collapsing them
             // would destroy direction and endpoint identity.
             variantsPreserved: true,
+          },
+        },
+        200,
+        sharedCacheControl(config.cachePolicy.discoveryTtlMs),
+      ),
+    };
+  }
+
+  if (resolved.route === "route_info") {
+    const route = routeRequestFrom(url);
+    const read = discovery.routeServiceHours;
+    if (!read) throw apiError("NOT_FOUND", "this provider publishes no service hours");
+    const result = await support.routeInfoCache.readThrough(
+      `${route.cityCode}:${route.routeId}`,
+      async () => (await read.call(discovery, route.cityCode, route.routeId)) ?? null,
+    );
+    if (!result.value) throw apiError("NOT_FOUND", "the provider has no route with that routeId");
+    return {
+      cache: result.cache,
+      response: json(
+        {
+          item: result.value,
+          meta: {
+            provider: config.transitProvider,
+            cityCode: route.cityCode,
+            routeId: route.routeId,
+            // `firstDeparture` / `lastDeparture` leave the route's starting stop; every
+            // later stop is passed after that. Headways are the published averages.
+            timeReference: "starting_stop_departure",
+            headway: "published_average_minutes",
           },
         },
         200,

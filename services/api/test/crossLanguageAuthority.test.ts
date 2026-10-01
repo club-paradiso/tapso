@@ -75,7 +75,7 @@ test("the network client talks only to TAPSO's own API, through documented endpo
   }
   const paths = [...client.matchAll(/path: "([^"]+)"/g)].map((match) => match[1]!.replace(/\\\([^)]*\)\)?/g, ":id"));
   assert.ok(paths.length > 0);
-  const documented = new Set(["/v1/routes", "/v1/stops", "/v1/sessions", "/v1/sessions/:id", "/v1/sessions/:id/confirm"]);
+  const documented = new Set(["/v1/routes", "/v1/stops", "/v1/route-info", "/v1/sessions", "/v1/sessions/:id", "/v1/sessions/:id/confirm"]);
   for (const path of paths) assert.ok(documented.has(path), `${path} is not a documented TAPSO endpoint`);
 });
 

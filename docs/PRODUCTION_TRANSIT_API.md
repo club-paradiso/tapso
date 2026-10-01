@@ -118,6 +118,7 @@ accepts both so local and production paths are identical.
 | GET | `/v1/cities` | Official TAGO city discovery |
 | GET | `/v1/routes?cityCode=&routeNo=` | Every official route ID for a route number. `routeNo` is optional: without it the provider is asked to list the whole city, and a provider that will not is reported as such rather than invented |
 | GET | `/v1/stops?routeId=&cityCode=` | Ordered, direction-specific stop topology |
+| GET | `/v1/route-info?routeId=&cityCode=` | A route's published service day from TAGO `getRouteInfoIem` (REPORTED-OFFICIAL, dataset 15098529): `firstDeparture` / `lastDeparture` as `HH:MM` and `headwayMinutes` for weekday, Saturday and Sunday, each present only when TAGO publishes a valid value. The times are departures from the route's **starting stop** (`meta.timeReference: "starting_stop_departure"`); headways are published averages, never a timetable. `404 NOT_FOUND` when the provider knows no such route or publishes no service day |
 | GET | `/v1/vehicles?routeId=&cityCode=` | Normalized live vehicle snapshot |
 | POST | `/v1/matches` | Rank caller-supplied candidates; no upstream call |
 | POST | `/v1/sessions` | Create a ride session |
@@ -323,7 +324,9 @@ Two layers now share those numbers:
    data is exactly the failure this product must not have.
 
 `/v1/cities` and `/v1/routes` previously reached TAGO on every request. They now
-use the same primitive with a six-hour window.
+use the same primitive with a six-hour window. `/v1/route-info` uses the same
+six-hour window per route: a route's service day changes rarely, and one read
+per route per window keeps it off the vehicle budget.
 
 ## Sessions and the serverless persistence risk
 
