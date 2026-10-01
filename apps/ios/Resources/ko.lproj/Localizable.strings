@@ -14,7 +14,7 @@
 "home.mapImport.title" = "지도 앱에서 가져오기";
 "home.mapImport.body" = "카카오맵·네이버 지도에서 공유한 장소로 시작";
 "home.sample.title" = "처음이라면";
-"home.sample.body" = "제주버스터미널에서 제주출입국·외국인청까지, 버스 확인부터 하차까지 그대로 따라가 보세요.";
+"home.sample.body" = "제주버스터미널에서 제주시청(아라방면)까지, 버스 확인부터 하차까지 그대로 따라가 보세요.";
 "home.sample.action" = "샘플 여정 체험하기";
 "home.privacy" = "탑서는 버스를 따라가요. 내 위치 권한은 필요 없어요.";
 "favorite.add" = "즐겨찾기에 추가";
