@@ -13,7 +13,7 @@ public enum DemoFixtures {
             "중앙로",
             "동문로터리",
             "제주여자상업고등학교",
-            "제주출입국·외국인청",
+            "제주시청(아라방면)",
             "국립제주박물관"
         ]
         let stops = names.enumerated().map { index, name in
