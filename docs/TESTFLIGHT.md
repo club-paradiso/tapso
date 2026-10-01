@@ -7,6 +7,8 @@
 - Primary language: Korean
 - Bundle ID: `com.lucanomics.tapso`
 - Live Activity extension: `com.lucanomics.tapso.LiveActivity`
+- Share extension: `com.lucanomics.tapso.Share`
+- App Group (app and share extension): `group.com.lucanomics.tapso` — available to a free Personal Team as well (`VERIFIED`, Account Help › Supported capabilities (iOS)), so device builds keep working without the paid team
 - SKU: `tapso-ios-demo-2026`
 - Version: `0.1.0`
 - Build: increment `CURRENT_PROJECT_VERSION` for every upload
@@ -64,7 +66,7 @@ Set this to an address monitored by the release owner in App Store Connect. Do n
 
 1. Satisfy the **Team prerequisite** above and confirm the latest Apple Developer agreements are accepted for that exact team.
 2. Confirm the signing account can reach Certificates, Identifiers & Profiles for that team, and update `DEVELOPMENT_TEAM` in `apps/ios/project.yml` if the verified paid Team ID differs from the value currently checked in.
-3. Register the app and extension bundle identifiers, then select that paid team in Xcode.
+3. Register the app and both extension bundle identifiers and the App Group, then select that paid team in Xcode.
 4. Create the App Store Connect record using the values above.
 5. Archive with `Release`, validate, and upload through Xcode Organizer.
 6. Confirm build processing and export-compliance status. The app declares `ITSAppUsesNonExemptEncryption = NO` because this demo contains no encryption implementation.

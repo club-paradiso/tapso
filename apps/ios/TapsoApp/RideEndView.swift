@@ -11,14 +11,17 @@ struct RideEndView: View {
         ScrollView {
             RideEndContent(
                 outcome: outcome,
-                naverAvailable: model.mapRequest(for: .naverMap, to: outcome.destination) != nil,
-                kakaoAvailable: model.mapRequest(for: .kakaoMap, to: outcome.destination) != nil,
+                naverAvailable: model.mapRequest(for: .naverMap, outcome: outcome) != nil,
+                kakaoAvailable: model.mapRequest(for: .kakaoMap, outcome: outcome) != nil,
                 handoffFailed: model.mapHandoffFailed,
                 onMap: { app in
-                    guard let request = model.mapRequest(for: app, to: outcome.destination) else { return }
+                    guard let request = model.mapRequest(for: app, outcome: outcome) else { return }
                     Task { await model.openMapApp(request) }
                 },
-                onDone: { model.dismissOutcome() }
+                onDone: { model.dismissOutcome() },
+                appleMapsAvailable: model.appleMapsTarget(for: outcome) != nil,
+                appleMapsFailed: model.appleMapsFailed,
+                onAppleMaps: { model.openAppleMaps(for: outcome) }
             )
         }
         .background(TapsoColor.backgroundPrimary)
@@ -32,8 +35,13 @@ struct RideEndContent: View {
     let handoffFailed: MapApp?
     let onMap: (MapApp) -> Void
     let onDone: () -> Void
+    var appleMapsAvailable = false
+    var appleMapsFailed = false
+    var onAppleMaps: () -> Void = {}
 
     private var passed: Bool { outcome.moment == .passedDestination }
+    /// The shared place the walk goes to, when the ride started from one.
+    private var placeName: String? { outcome.place.flatMap { $0.name ?? $0.address } }
 
     var body: some View {
         VStack(alignment: .leading, spacing: TapsoSpace.xl) {
@@ -58,27 +66,65 @@ struct RideEndContent: View {
 
             TapsoCard {
                 VStack(alignment: .leading, spacing: TapsoSpace.sm) {
-                    Label("handoff.title", systemImage: "figure.walk")
+                    if let placeName {
+                        Label {
+                            Text(String(format: RideText.string("handoff.place.title"), placeName))
+                        } icon: {
+                            Image(systemName: "figure.walk")
+                        }
                         .font(.headline)
                         .foregroundStyle(TapsoColor.textPrimary)
-                    Text("handoff.body")
-                        .font(.subheadline)
-                        .foregroundStyle(TapsoColor.textSecondary)
-                        .fixedSize(horizontal: false, vertical: true)
+                        Text("handoff.place.body")
+                            .font(.subheadline)
+                            .foregroundStyle(TapsoColor.textSecondary)
+                            .fixedSize(horizontal: false, vertical: true)
+                    } else {
+                        Label("handoff.title", systemImage: "figure.walk")
+                            .font(.headline)
+                            .foregroundStyle(TapsoColor.textPrimary)
+                        Text("handoff.body")
+                            .font(.subheadline)
+                            .foregroundStyle(TapsoColor.textSecondary)
+                            .fixedSize(horizontal: false, vertical: true)
+                    }
                     if naverAvailable {
                         Button { onMap(.naverMap) } label: {
-                            Label("handoff.naver.findDestination", systemImage: "map")
+                            Label("handoff.continue.naverMap", systemImage: "map")
                         }
                         .buttonStyle(SecondaryButtonStyle())
                     }
-                    if !kakaoAvailable {
+                    if kakaoAvailable {
+                        Button { onMap(.kakaoMap) } label: {
+                            Label("handoff.continue.kakaoMap", systemImage: "map")
+                        }
+                        .buttonStyle(SecondaryButtonStyle())
+                    }
+                    if appleMapsAvailable {
+                        Button(action: onAppleMaps) {
+                            Label("handoff.show.appleMaps", systemImage: "map")
+                        }
+                        .buttonStyle(SecondaryButtonStyle())
+                    }
+                    if outcome.place == nil && !kakaoAvailable {
                         Text("handoff.kakao.unavailable")
+                            .font(.footnote)
+                            .foregroundStyle(TapsoColor.textTertiary)
+                            .fixedSize(horizontal: false, vertical: true)
+                    }
+                    if let place = outcome.place, place.coordinate == nil {
+                        Text("handoff.place.nameOnly")
                             .font(.footnote)
                             .foregroundStyle(TapsoColor.textTertiary)
                             .fixedSize(horizontal: false, vertical: true)
                     }
                     if let handoffFailed {
                         Text(LocalizedStringKey("handoff.failed." + handoffFailed.rawValue))
+                            .font(.footnote)
+                            .foregroundStyle(TapsoColor.journeyNext)
+                            .fixedSize(horizontal: false, vertical: true)
+                    }
+                    if appleMapsFailed {
+                        Text("handoff.failed.appleMaps")
                             .font(.footnote)
                             .foregroundStyle(TapsoColor.journeyNext)
                             .fixedSize(horizontal: false, vertical: true)

@@ -17,12 +17,14 @@ ROOT = pathlib.Path(__file__).resolve().parents[2]
 IOS = ROOT / "apps/ios"
 PROJECT = IOS / "Tapso.xcodeproj/project.pbxproj"
 
-# Folder → the Sources phases that compile it (app, Live Activity, tests).
-APP, EXTENSION, TESTS = "779B7B7365A3FD895ED6DC44", "A7E097169D131746FC0B4825", "CB0AEBFC243A761C86835658"
+# Folder → the Sources phases that compile it (app, Live Activity, share extension, tests).
+# The share extension also compiles Shared/TapsoTokens.swift, listed by hand in its phase.
+APP, EXTENSION, SHARE, TESTS = "779B7B7365A3FD895ED6DC44", "A7E097169D131746FC0B4825", "9070D4E8E5B9F0930C1303EB", "CB0AEBFC243A761C86835658"
 GROUPS = {
     "TapsoApp": ("CAAA87E4928CDF78676CD392", [APP]),
     "Shared": ("2DD9A96AC488A534FCCDC0DD", [APP, EXTENSION]),
     "LiveActivity": ("B2BE8F29DB0AEF7B3F86029C", [EXTENSION]),
+    "ShareExtension": ("5EE3A8D76407D1DF9BAD6C89", [SHARE]),
     "Tests": ("062A2546A85E60F33E64530A", [TESTS]),
 }
 

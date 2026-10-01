@@ -1,4 +1,5 @@
 import Foundation
+import MapKit
 import Observation
 import TapsoTransit
 import UIKit
@@ -47,6 +48,9 @@ struct RideDraft: Codable, Hashable {
     let destinationSequence: Int?
     /// Whether stop coordinates are real (TAGO) rather than synthetic.
     let coordinatesAreSurveyed: Bool?
+    /// The place the rider shared from a map app, when the ride was set up from one:
+    /// the last mile after the bus (`HandoffJourney`) and the end-of-ride walk go there.
+    var finalPlace: SharedPlace?
 
     init(routeID: RouteID, boardingStopID: StopID, destinationStopID: StopID) {
         self.routeID = routeID
@@ -108,6 +112,16 @@ struct RideDraft: Codable, Hashable {
             let to = destinationRouteStop?.sequence
         else { return 1 }
         return max(1, to - from)
+    }
+
+    /// The journey in the Journey Contract's vocabulary: the ride, then the walk to a shared place.
+    var journeySegments: [JourneySegmentSpec] {
+        HandoffJourney.segments(
+            routeNumber: route?.number ?? "",
+            boardSequence: boardingRouteStop?.sequence ?? 0,
+            alightSequence: destinationRouteStop?.sequence ?? 0,
+            place: finalPlace
+        )
     }
 }
 
@@ -200,6 +214,8 @@ struct RideOutcome: Hashable {
     let moment: RideMoment
     let routeNumber: String
     let destination: Stop
+    /// The shared place the walk after the bus goes to, if the ride started from one.
+    var place: SharedPlace? = nil
 }
 
 @Observable
@@ -226,6 +242,12 @@ final class TapsoAppModel {
     private(set) var liveFailure: TransitAPIFailure?
     /// A saved live journey no longer matched the route's current stop list.
     private(set) var liveSavedJourneyChanged = false
+    /// A place the rider brought from a map app: pasted, or left by the share extension.
+    /// Read on the device only; it reaches a ride only through a setup that started from it.
+    private(set) var sharedPlace: SharedPlace?
+    /// The last paste held nothing TAPSO could read as a place.
+    private(set) var sharedPlaceUnreadable = false
+    private(set) var appleMapsFailed = false
 
     @ObservationIgnored private let store: JourneyStore
     @ObservationIgnored private let liveActivity: LiveActivityClient?
@@ -315,6 +337,55 @@ final class TapsoAppModel {
         path = [.mapImport]
     }
 
+    // MARK: Map hand-off in (`docs/product/MAP_HANDOFF_V3.md`)
+
+    /// Reads pasted map-app text on the device. Nothing is fetched or sent.
+    func importSharedText(_ text: String) {
+        let place = SharedPlaceParser.parse(text: text)
+        sharedPlace = place
+        sharedPlaceUnreadable = place == nil
+    }
+
+    /// Picks up a place TAPSO's share extension left in the App Group, once.
+    func collectHandoff(from inbox: HandoffInbox? = HandoffInbox.shared(), now: Date = Date()) {
+        guard let place = inbox?.take(now: now) else { return }
+        receiveSharedPlace(place)
+    }
+
+    /// A shared place opens the map-import screen from Home. During a ride, or in
+    /// another setup, it waits on Home's map card instead of interrupting.
+    func receiveSharedPlace(_ place: SharedPlace) {
+        sharedPlace = place
+        sharedPlaceUnreadable = false
+        guard activeRide == nil, outcome == nil, path.isEmpty || path.first == .mapImport else { return }
+        path = [.mapImport]
+    }
+
+    func dismissSharedPlace() {
+        sharedPlace = nil
+        sharedPlaceUnreadable = false
+    }
+
+    /// Live: the rider names the bus that goes there; the stop list then suggests where to get off.
+    func continueWithLiveRoute() {
+        searchTask?.cancel()
+        liveRouteSearch = .idle
+        liveFailure = nil
+        liveSavedJourneyChanged = false
+        path.append(.liveRoutes)
+    }
+
+    /// The shared place, while the setup on screen started from it.
+    var handoffPlace: SharedPlace? {
+        path.first == .mapImport ? sharedPlace : nil
+    }
+
+    /// Hands the setup's shared place to the draft being created, and only then.
+    private func attachHandoffPlace(to draft: inout RideDraft) {
+        guard let place = handoffPlace, !place.isLinkOnly, place.isInJeju != false else { return }
+        draft.finalPlace = place
+    }
+
     func chooseDestination(named name: String) {
         let options = DemoCatalog.routeOptions(toDestinationNamed: name)
         if options.count == 1, let only = options.first {
@@ -329,7 +400,9 @@ final class TapsoAppModel {
     }
 
     func chooseBoarding(_ stop: Stop, routeID: RouteID, destinationStopID: StopID) {
-        draft = RideDraft(routeID: routeID, boardingStopID: stop.id, destinationStopID: destinationStopID)
+        var chosen = RideDraft(routeID: routeID, boardingStopID: stop.id, destinationStopID: destinationStopID)
+        attachHandoffPlace(to: &chosen)
+        draft = chosen
         path.append(.vehicleCheck)
         beginVehicleCheck()
     }
@@ -497,6 +570,7 @@ final class TapsoAppModel {
 
         library.recordRide(SavedJourney(route: route, boarding: boarding, destination: destination, at: now), at: now)
         store.saveLibrary(library)
+        if draft.finalPlace != nil { sharedPlace = nil }
         path = []
 
         await startLiveActivity()
@@ -555,7 +629,8 @@ final class TapsoAppModel {
         outcome = RideOutcome(
             moment: finalMoment,
             routeNumber: ride.draft.route?.number ?? "",
-            destination: destination
+            destination: destination,
+            place: ride.draft.finalPlace
         )
         activeRide = nil
         store.saveActiveRide(nil)
@@ -593,11 +668,44 @@ final class TapsoAppModel {
         return MapHandoff.walkingRequest(to: stop, in: app, coordinatesAreSurveyed: surveyed)
     }
 
+    /// The walk after the ride: to the shared place when the ride started from one
+    /// (and only through apps that can take it there), otherwise to the stop.
+    func mapRequest(for app: MapApp, outcome: RideOutcome) -> MapHandoffRequest? {
+        if let place = outcome.place {
+            return MapHandoff.walkingRequest(to: place, in: app)
+        }
+        return mapRequest(for: app, to: outcome.destination)
+    }
+
+    /// Where Apple Maps can show the rider: a real coordinate only, never a synthetic stop.
+    func appleMapsTarget(for outcome: RideOutcome) -> (coordinate: Coordinate, name: String)? {
+        if let place = outcome.place {
+            guard let coordinate = place.coordinate, place.isInJeju == true else { return nil }
+            return (coordinate, place.name ?? place.address ?? outcome.destination.name)
+        }
+        let surveyed = (activeRide?.draft ?? draft)?.coordinatesAreSurveyed ?? false
+        guard surveyed else { return nil }
+        return (outcome.destination.coordinate, outcome.destination.name)
+    }
+
     func openMapApp(_ request: MapHandoffRequest) async {
         mapHandoffFailed = nil
+        appleMapsFailed = false
         guard let url = URL(string: request.urlString) else { return }
         let opened = await UIApplication.shared.open(url)
         if !opened { mapHandoffFailed = request.app }
+    }
+
+    /// Shows the place in Apple Maps through MapKit's own API (`MKMapItem.openInMaps`), so no URL
+    /// shape is assumed. It asks for no directions mode: walking directions in Korea are UNVERIFIED
+    /// (`docs/product/MAP_HANDOFF_V3.md`), and the rider can ask Apple Maps for them there.
+    func openAppleMaps(for outcome: RideOutcome) {
+        mapHandoffFailed = nil
+        guard let target = appleMapsTarget(for: outcome) else { return }
+        let location = CLLocationCoordinate2D(latitude: target.coordinate.latitude, longitude: target.coordinate.longitude)
+        let item = MKMapItem(placemark: MKPlacemark(coordinate: location))
+        item.name = target.name
+        appleMapsFailed = !item.openInMaps(launchOptions: nil)
     }
 
     // MARK: Live rides (TAPSO API)
@@ -658,13 +766,15 @@ final class TapsoAppModel {
     /// Boarding and destination chosen on a real stop list: the server session starts here.
     func chooseLiveStops(boarding: RouteStop, destination: RouteStop, on stops: LiveRouteStops) {
         guard boarding.sequence < destination.sequence else { return }
-        draft = RideDraft(
+        var chosen = RideDraft(
             live: stops.route,
             cityCode: TapsoAPIClient.jejuCityCode,
             boarding: boarding,
             destination: destination,
             coordinatesAreSurveyed: stops.coordinatesAreSurveyed
         )
+        attachHandoffPlace(to: &chosen)
+        draft = chosen
         path.append(.vehicleCheck)
         beginLiveVehicleCheck()
     }
@@ -843,6 +953,7 @@ final class TapsoAppModel {
             at: now
         )
         store.saveLibrary(library)
+        if draft.finalPlace != nil { sharedPlace = nil }
         path = []
 
         await startLiveActivity()

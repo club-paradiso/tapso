@@ -44,6 +44,14 @@
 8. Rotate push token and confirm the server replaces it without logging full token data.
 9. Measure update latency, dropped pushes, CPU, network bytes, and battery during a full representative ride.
 
+## Map hand-off cases (`product/MAP_HANDOFF_V3.md`)
+
+10. From KakaoMap, NAVER Map and Apple Maps, share a Jeju place to TAPSO; record the share text and links the extension receives (no personal places), and check that name, address and location status match the place.
+11. Share a place outside Jeju and a bare short link: "제주 밖 장소예요" and "링크만 받았어요", and nothing is kept.
+12. "탑서에 남기기", then open TAPSO within 30 minutes: the import screen opens once with the place; reopening does not show it again; after 30 minutes nothing appears.
+13. On a build without the App Group provisioned, the extension offers "복사하기"; pasting in TAPSO gives the same place.
+14. Live: after naming the bus, the stops nearest the place are suggested after boarding; the end screen opens NAVER Map and KakaoMap walking routes to the place and shows it in Apple Maps.
+
 ## Pass criteria
 
 - No false confident arrival or silent vehicle switch.
