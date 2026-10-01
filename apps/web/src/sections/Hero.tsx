@@ -11,13 +11,7 @@ export function Hero() {
             <span className="kicker-dot" aria-hidden="true" />
             제주 버스에서 내릴 때까지 · iPhone 앱 개발 중
           </p>
-          <h1 id="hero-title">
-            버스 탔으면,
-            <br />
-            정거장 그만 세세요.
-            <br />
-            <em>내릴 때만 다시 보면 돼요.</em>
-          </h1>
+          <h1 id="hero-title">와리지 말앙 혼저 탑서.</h1>
           <p className="hero-lede">
             내릴 곳을 고르고, 탄 버스만 한 번 확인하세요. 그다음부터는 남은 정거장과 내릴 때를 잠금
             화면과 다이나믹 아일랜드에서 바로 볼 수 있어요.
