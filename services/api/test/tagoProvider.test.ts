@@ -1,7 +1,12 @@
 import test from "node:test";
 import assert from "node:assert/strict";
 import { TagoTransitProvider } from "../src/tagoProvider.ts";
-import { ProviderConfigurationError } from "../src/provider.ts";
+import {
+  ProviderConfigurationError,
+  ProviderResponseError,
+  ProviderTimeoutError,
+  ProviderUnavailableError,
+} from "../src/provider.ts";
 
 /**
  * Synthetic test fixtures, not observations: every provider response below is
@@ -231,5 +236,68 @@ test("rejects a TAGO response without a result code", async () => {
   await assert.rejects(
     provider.vehicles({ routeId: "JEB405136521", cityCode: "39" }),
     /TAGO resultCode is missing/,
+  );
+});
+
+/*
+ * Reliability taxonomy (Product V3, section 37): a timeout, an unreachable or
+ * erroring provider and a malformed answer are three different situations for
+ * a rider, and none of them is "no bus". Each stays a ProviderResponseError so
+ * every existing failure path (session degradation, collectors) still catches
+ * it.
+ */
+
+test("a TAGO request that times out twice is PROVIDER_TIMEOUT, never 'no bus'", async () => {
+  let calls = 0;
+  const fakeFetch: typeof fetch = async () => {
+    calls += 1;
+    throw new DOMException("The operation was aborted due to timeout", "TimeoutError");
+  };
+  const provider = new TagoTransitProvider({ serviceKey: "test-key", fetchImplementation: fakeFetch });
+  await assert.rejects(
+    provider.vehicles({ routeId: "JEB405136521", cityCode: "39" }),
+    (error: Error) => {
+      assert.ok(error instanceof ProviderTimeoutError);
+      assert.ok(error instanceof ProviderResponseError, "existing catch paths still see a provider failure");
+      assert.equal((error as ProviderTimeoutError).code, "PROVIDER_TIMEOUT");
+      assert.match(error.message, /^TAGO request timed out$/);
+      return true;
+    },
+  );
+  assert.equal(calls, 2, "a timeout is transient and retried once");
+});
+
+test("a TAGO transport failure is PROVIDER_UNAVAILABLE", async () => {
+  const fakeFetch: typeof fetch = async () => {
+    throw new TypeError("fetch failed");
+  };
+  const provider = new TagoTransitProvider({ serviceKey: "test-key", fetchImplementation: fakeFetch });
+  await assert.rejects(
+    provider.stops({ routeId: "JEB405136521", cityCode: "39" }),
+    (error: Error) => {
+      assert.ok(error instanceof ProviderUnavailableError);
+      assert.equal((error as ProviderUnavailableError).code, "PROVIDER_UNAVAILABLE");
+      return true;
+    },
+  );
+});
+
+test("a TAGO HTTP error that persists is PROVIDER_UNAVAILABLE, a malformed body is PROVIDER_RESPONSE_INVALID", async () => {
+  const httpError: typeof fetch = async () => new Response("down", { status: 503 });
+  const unavailable = new TagoTransitProvider({ serviceKey: "test-key", fetchImplementation: httpError });
+  await assert.rejects(
+    unavailable.vehicles({ routeId: "JEB405136521", cityCode: "39" }),
+    (error: Error) => (error as ProviderUnavailableError).code === "PROVIDER_UNAVAILABLE",
+  );
+
+  const malformed: typeof fetch = async () => new Response(JSON.stringify({ response: { header: { resultCode: "00" } } }));
+  const invalid = new TagoTransitProvider({ serviceKey: "test-key", fetchImplementation: malformed });
+  await assert.rejects(
+    invalid.vehicles({ routeId: "JEB405136521", cityCode: "39" }),
+    (error: Error) => {
+      assert.equal(error.constructor, ProviderResponseError);
+      assert.equal((error as ProviderResponseError).code, "PROVIDER_RESPONSE_INVALID");
+      return true;
+    },
   );
 });

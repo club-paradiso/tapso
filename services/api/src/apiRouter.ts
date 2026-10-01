@@ -867,6 +867,11 @@ const STATUS_BY_CODE: Record<string, number> = {
   PAYLOAD_TOO_LARGE: 413,
   RATE_LIMITED: 429,
   PROVIDER_RESPONSE_INVALID: 502,
+  // The upstream feed could not be reached or answered with an HTTP error.
+  PROVIDER_UNAVAILABLE: 502,
+  // The upstream feed did not answer within TAPSO's deadline. Distinct from
+  // INTERNAL_ERROR (TAPSO broke) and from an empty vehicle list (no bus).
+  PROVIDER_TIMEOUT: 504,
   BLOCKED_BY_CREDENTIALS: 503,
   SESSIONS_UNAVAILABLE: 503,
   // The store is reachable or it is not. A session that cannot be read is

@@ -199,13 +199,25 @@ stay disabled unless that token is configured. They are documented in full in
 | `SESSION_EXPIRED` | 410 | Session past its TTL |
 | `PAYLOAD_TOO_LARGE` | 413 | Body over 64 KiB |
 | `RATE_LIMITED` | 429 | Burst limit; `retry-after` is set |
-| `PROVIDER_RESPONSE_INVALID` | 502 | TAGO answered with an unusable payload |
+| `PROVIDER_RESPONSE_INVALID` | 502 | TAGO answered, but with an unusable payload (malformed envelope, missing field, logical error code) |
+| `PROVIDER_UNAVAILABLE` | 502 | TAGO could not be reached, or answered with an HTTP error status after the one transient retry |
+| `PROVIDER_TIMEOUT` | 504 | TAGO did not answer within the 8-second deadline, twice |
 | `BLOCKED_BY_CREDENTIALS` | 503 | No TAGO service key is configured |
 | `SESSIONS_UNAVAILABLE` | 503 | Ride sessions are disabled on this deployment |
 | `INTERNAL_ERROR` | 500 | Unexpected failure; the message is always `internal error` |
 
 An unmapped failure never echoes its thrown message to the caller. It is logged
 server-side and answered generically.
+
+The three provider codes, `INTERNAL_ERROR` and a successful empty list are five
+different situations for a rider, and a client must not collapse them (Product
+V3, `docs/exec-plans/PRODUCT_V3_JEJU_NATIVE.md`): an empty `items` array means
+the route reports no bus right now; `PROVIDER_TIMEOUT` and `PROVIDER_UNAVAILABLE`
+mean the feed is slow or down, so try again shortly; `PROVIDER_RESPONSE_INVALID`
+means the feed sent something unusable; `INTERNAL_ERROR` means TAPSO itself
+failed. A journey session absorbs a bounded run of any of the three provider
+failures as `degraded` (keeping its last accepted progress) before surfacing the
+error. None of them is ever turned into a statement about a bus.
 
 ## Configuration
 
