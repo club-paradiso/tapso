@@ -355,3 +355,28 @@ test("the preview verification script never enumerates, flushes or writes, and r
   assert.match(source, /posture\.matching\?\.automaticMatchingEnabled === false/);
   assert.match(source, /--yes/);
 });
+
+test("namespaces are classified by purpose, and the production namespace and deployment imply each other", async () => {
+  const { classifySessionKeyPrefix, sessionNamespaceProblem, PRODUCTION_SESSION_KEY_PREFIX } = await import("../src/sessionKeyPrefix.ts");
+  assert.equal(classifySessionKeyPrefix(PRODUCTION_SESSION_KEY_PREFIX), "production");
+  assert.equal(classifySessionKeyPrefix("tapso:journey-session:"), "default");
+  assert.equal(classifySessionKeyPrefix("tapso:preview:journey-session:"), "preview");
+  assert.equal(classifySessionKeyPrefix("tapso:verify:journey-session:"), "verification");
+  assert.equal(classifySessionKeyPrefix("tapso:verify:run-1:journey-session:"), "verification");
+  assert.equal(classifySessionKeyPrefix("tapso:staging:journey-session:"), "custom");
+  // A production-looking namespace that is not exactly the production one is not production.
+  assert.equal(classifySessionKeyPrefix("tapso:prod:extra:journey-session:"), "custom");
+
+  assert.equal(sessionNamespaceProblem("production", "production"), undefined);
+  for (const other of ["default", "preview", "custom"] as const) {
+    assert.ok(sessionNamespaceProblem("production", other), `production must refuse ${other}`);
+  }
+  for (const environment of ["preview", "development", undefined]) {
+    assert.ok(sessionNamespaceProblem(environment, "production"), `${environment ?? "local"} must refuse the production namespace`);
+    assert.equal(sessionNamespaceProblem(environment, "preview"), undefined);
+    assert.equal(sessionNamespaceProblem(environment, "default"), undefined);
+  }
+  for (const environment of ["production", "preview", undefined]) {
+    assert.ok(sessionNamespaceProblem(environment, "verification"), "the verification namespace is never served");
+  }
+});
