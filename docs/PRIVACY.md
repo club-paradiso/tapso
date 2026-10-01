@@ -3,7 +3,17 @@
 TAPSO's default architecture tracks a public transit vehicle, not continuous passenger location. A future one-shot boarding location may be optional and must work only with explicit permission; it is not required by the current core.
 
 - Government and APNs keys remain server-side and are excluded by `.gitignore`.
-- The iOS demo collects no user data and makes no network request.
+- The iOS sample ride collects no user data and makes no network request.
+- The live ride trial (Home › 실제 버스로 타 보기) sends the TAPSO transit API
+  only what a ride needs: route ID, boarding and destination stop sequences,
+  and the bus the rider picks. No location, account, name or device
+  identifier. The server keeps the session at most four hours and deletes it
+  when the rider ends the ride; the phone keeps it only until then.
+- `apps/ios/Resources/PrivacyInfo.xcprivacy`: no tracking, no collected data
+  types, `UserDefaults` for the app's own state (reason `CA92.1`). Whether the
+  live trial's session data counts as "collected" for App Store Connect's
+  privacy label is the owner's call at submission; this repository's reading
+  is that it is used only to serve the ride in progress and then deleted.
 - The marketing site collects an email address, a coarse rider type, and a
   consent record, only after an explicit unchecked consent box is ticked. It
   stores no name, phone number, address, demographics, location, or IP address,

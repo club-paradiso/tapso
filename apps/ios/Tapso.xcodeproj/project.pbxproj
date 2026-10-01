@@ -48,6 +48,8 @@
 		25ED66F0547D1F2E9A528761 /* LiveRideSurfaces.swift in Sources */ = {isa = PBXBuildFile; fileRef = 88ED9DE8D449F25DDFC0A68F /* LiveRideSurfaces.swift */; };
 		D95013B6D4511C473A5E857D /* LiveRideViews.swift in Sources */ = {isa = PBXBuildFile; fileRef = 93ED41A7D45954E2129EE5C2 /* LiveRideViews.swift */; };
 		7EFF7A17FDB2E3D4A9FF6F28 /* LiveRideModelTests.swift in Sources */ = {isa = PBXBuildFile; fileRef = F4C61B12DB1E85FBA207714A /* LiveRideModelTests.swift */; };
+		901ED55A886FE33A92009E7E /* PrivacyInfo.xcprivacy in Resources */ = {isa = PBXBuildFile; fileRef = F1AB819C471FE37B33ADB3E4 /* PrivacyInfo.xcprivacy */; };
+		85AEE919B98FC2B4F142ADF3 /* PrivacyInfo.xcprivacy in Resources */ = {isa = PBXBuildFile; fileRef = F1AB819C471FE37B33ADB3E4 /* PrivacyInfo.xcprivacy */; };
 /* End PBXBuildFile section */
 
 /* Begin PBXContainerItemProxy section */
@@ -119,6 +121,7 @@
 		88ED9DE8D449F25DDFC0A68F /* LiveRideSurfaces.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = LiveRideSurfaces.swift; sourceTree = "<group>"; };
 		93ED41A7D45954E2129EE5C2 /* LiveRideViews.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = LiveRideViews.swift; sourceTree = "<group>"; };
 		F4C61B12DB1E85FBA207714A /* LiveRideModelTests.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = LiveRideModelTests.swift; sourceTree = "<group>"; };
+		F1AB819C471FE37B33ADB3E4 /* PrivacyInfo.xcprivacy */ = {isa = PBXFileReference; lastKnownFileType = text.xml; path = PrivacyInfo.xcprivacy; sourceTree = "<group>"; };
 /* End PBXFileReference section */
 
 /* Begin PBXFrameworksBuildPhase section */
@@ -165,6 +168,7 @@
 			children = (
 				25F8D8F9725AF79DC9F83B2B /* Assets.xcassets */,
 				2436CA0171BFA7890857165A /* Localizable.strings */,
+				F1AB819C471FE37B33ADB3E4 /* PrivacyInfo.xcprivacy */,
 			);
 			path = Resources;
 			sourceTree = "<group>";
@@ -367,6 +371,7 @@
 			files = (
 				593B1456AA2D7A490909919B /* Assets.xcassets in Resources */,
 				C2176B27F64CF25CB4B735B1 /* Localizable.strings in Resources */,
+				901ED55A886FE33A92009E7E /* PrivacyInfo.xcprivacy in Resources */,
 			);
 			runOnlyForDeploymentPostprocessing = 0;
 		};
@@ -376,6 +381,7 @@
 			files = (
 				9DF797D657D259EB1CC12E82 /* Assets.xcassets in Resources */,
 				DD911FC6501FE330D9D8A2BF /* Localizable.strings in Resources */,
+				85AEE919B98FC2B4F142ADF3 /* PrivacyInfo.xcprivacy in Resources */,
 			);
 			runOnlyForDeploymentPostprocessing = 0;
 		};
