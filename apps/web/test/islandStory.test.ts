@@ -162,10 +162,12 @@ test("every beat and chapter has words", () => {
   for (const chapter of CHAPTERS) assert.ok(CHAPTER_COPY[chapter.id].title, chapter.id);
 });
 
-test("while the app has no push path, the page says the Lock Screen updates only with the app open", () => {
-  const client = readFileSync(repo("apps/ios/TapsoApp/LiveActivityClient.swift"), "utf8");
-  const pushPath = !/pushType:\s*nil/.test(client);
-  if (pushPath) return; // The claim below must then be revisited with the push path's real status.
+test("until pushed updates are shown on a device, the page says the Lock Screen updates only with the app open", () => {
+  // The app can ask for a push token, but nothing pushes until a scheduler runs and a device
+  // has shown it (`LIVE_ACTIVITY_PUSH.md`, milestone 6). Only that evidence lifts the claim.
+  const plan = readFileSync(repo("docs/exec-plans/LIVE_ACTIVITY_PUSH.md"), "utf8");
+  const shownOnDevice = /6\. \*\*Device evidence\*\* — `DONE`/.test(plan);
+  if (shownOnDevice) return; // The claim below must then be revisited with the push path's real status.
   assert.match(STEP_COPY.pocket.note ?? "", /앱이 켜져 있는 동안만/);
   const faq = FAQ_ITEMS.find((f) => f.q.includes("앱을 닫아도"));
   assert.ok(faq && /켜져 있을 때만/.test(faq.a), "the FAQ keeps the same honesty");

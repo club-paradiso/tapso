@@ -37,11 +37,12 @@ Started 2026-10-01. Living document; update it as milestones land.
    - The session's TTL (4 h) bounds the token's life.
    - Tests: `journeySession.test.ts` (round trip, rotation, clear, end, refusal without echo, both race orders, bounded retry) and `apiRouter.test.ts` (push off, sessions off, rewrite, no token in any answer or log line, preflight). Two mutations (dropping the field on read, no retry) each fail a test.
    - Moved to milestone 5: the index of sessions with a token. Only the scheduler reads it, so it is built with the scheduler, inside the session namespace.
-3. **App side** — `NEXT`, after 2. In the live ride of club-paradiso/tapso#76 (`TapsoAppModel`, `LiveActivityClient`):
-   - Ask for `pushType: .token` only when the server reports push enabled (`/health` → `liveActivityPush.enabled`); otherwise keep `pushType: nil`, as today.
-   - Observe `pushTokenUpdates` and register every new token: rotation is a re-registration.
-   - On the end of the ride, the server clears the token.
-   - Tests use a recording transport, as in `TapsoAPIClientTests`, and the session fixture `fixtures/journey/session-views-v1.json`.
+3. **App side** — `DONE` in code; on a device `UNVERIFIED` (milestone 6). In the live ride (`TapsoAppModel`, `LiveActivityClient`, `TapsoAPIClient`):
+   - A live ride asks for `pushType: .token` only when the server reports push enabled (`/health` → `liveActivityPush.enabled`; any failure reads as off). A demo ride never asks.
+   - If ActivityKit refuses the push request (a build without the push entitlement, which a Personal Team cannot have), the activity starts with `pushType: nil`, as before.
+   - Every token from `pushTokenUpdates` is registered with `PUT /v1/sessions/:id/live-activity`: rotation is a re-registration. A relaunch with the activity still running observes it again. Finishing or cancelling the ride stops the observation; ending the session on the server deletes the token.
+   - Tests: `TapsoAPIClientTests` (`/health` read as on, off, absent, failed, offline; the PUT and its hex body; a refused registration). The API client also typechecks under Swift 6 on Linux against transit-core. The `ActivityKit` calls compile only in the iOS job.
+   - The app target has no `aps-environment` entitlement yet: adding it needs the paid team (`BLOCKED_BY_APPLE_ACCOUNT`).
 4. **Push on change** — `NEXT`, after 2.
    - When a session refresh changes the content state, push it (priority 5).
    - When a milestone is first reached, push it with its alert (priority 10).
@@ -76,4 +77,5 @@ xcodebuild ... test   # TapsoActivityAttributesTests.testServerPushContentStateD
 
 - 2026-10-01: milestone 1 done. Milestones 2–4 need no Apple account and come next. Milestones 5 and 6 are blocked as labelled.
 - 2026-10-01: milestone 2 done (token route, storage, rewrite, health). The push index moved to milestone 5.
-- Exact next action: milestone 3. In `TapsoAppModel`, read `/health` → `liveActivityPush.enabled`; request `pushType: .token` only then; register every token from `pushTokenUpdates` with the PUT route.
+- 2026-10-01: milestone 3 done in code (device `UNVERIFIED`). The marketing page's "only with the app open" claim is now pinned to milestone 6, not to `pushType: nil`.
+- Exact next action: milestone 4. Compute the content state on the server from the session (a port of `RideGuidancePolicy` checked against the Swift one through a shared fixture), push on change, and record what was last pushed.

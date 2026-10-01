@@ -87,7 +87,40 @@ struct TapsoAPIClient: Sendable {
         try check(data, response)
     }
 
+    // MARK: Live Activity push (`docs/exec-plans/LIVE_ACTIVITY_PUSH.md`)
+
+    /// Whether the server can push Live Activity updates. Any failure reads as no: the app then
+    /// asks ActivityKit for no push token, exactly as before push existed.
+    func liveActivityPushEnabled() async -> Bool {
+        guard let health = try? await send(makeRequest(path: "/health"), as: HealthResponse.self) else { return false }
+        return health.liveActivityPush?.enabled == true
+    }
+
+    /// Hands the ride's Live Activity push token to the server, which is the only side that pushes.
+    /// A rotated token is registered the same way and replaces the old one.
+    func registerLiveActivityToken(sessionID: String, token: Data) async throws {
+        let request = try makeRequest(
+            path: "/v1/sessions/\(escaped(sessionID))/live-activity",
+            method: "PUT",
+            body: PushTokenRequest(pushToken: token.map { String(format: "%02x", $0) }.joined())
+        )
+        let (data, response) = try await perform(request)
+        try check(data, response)
+    }
+
     // MARK: Private
+
+    private struct HealthResponse: Decodable {
+        struct LiveActivityPush: Decodable {
+            let enabled: Bool
+        }
+
+        let liveActivityPush: LiveActivityPush?
+    }
+
+    private struct PushTokenRequest: Encodable {
+        let pushToken: String
+    }
 
     private struct SessionRequest: Encodable {
         let routeId: String

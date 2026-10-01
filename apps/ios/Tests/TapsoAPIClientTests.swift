@@ -78,6 +78,50 @@ final class TapsoAPIClientTests: XCTestCase {
         XCTAssertEqual(StubURLProtocol.recorded.first?.url?.path, "/v1/sessions/syn-session")
     }
 
+    // MARK: Live Activity push
+
+    func testPushIsOnOnlyWhenTheServerSaysSo() async {
+        StubURLProtocol.respond { _ in (200, Data(#"{"ok":true,"liveActivityPush":{"enabled":true,"environment":"development"}}"#.utf8)) }
+        let enabled = await makeClient().liveActivityPushEnabled()
+        XCTAssertTrue(enabled)
+        XCTAssertEqual(StubURLProtocol.recorded.first?.url?.path, "/health")
+
+        StubURLProtocol.respond { _ in (200, Data(#"{"ok":true,"liveActivityPush":{"enabled":false,"missing":["APNS_KEY_ID"]}}"#.utf8)) }
+        let disabled = await makeClient().liveActivityPushEnabled()
+        XCTAssertFalse(disabled)
+
+        // A server from before push existed, a failure, and no network all read as off.
+        StubURLProtocol.respond { _ in (200, Data(#"{"ok":true}"#.utf8)) }
+        let older = await makeClient().liveActivityPushEnabled()
+        XCTAssertFalse(older)
+        StubURLProtocol.respond { _ in (500, Data(#"{"error":"INTERNAL_ERROR","message":"internal error"}"#.utf8)) }
+        let failed = await makeClient().liveActivityPushEnabled()
+        XCTAssertFalse(failed)
+        StubURLProtocol.fail(with: URLError(.notConnectedToInternet))
+        let offline = await makeClient().liveActivityPushEnabled()
+        XCTAssertFalse(offline)
+    }
+
+    func testAPushTokenIsRegisteredOnTheRidesSessionAsHex() async throws {
+        // SYNTHETIC: invented token bytes.
+        StubURLProtocol.respond { _ in (200, Data(#"{"sessionId":"syn-session","liveActivityPush":{"registered":true,"fingerprint":"0123456789ab","registeredAt":"2026-10-01T09:00:00.000Z"}}"#.utf8)) }
+        try await makeClient().registerLiveActivityToken(sessionID: "syn-session", token: Data([0x0a, 0x1b, 0xff, 0x00] + Array(repeating: 0x2c, count: 28)))
+        let request = try XCTUnwrap(StubURLProtocol.recorded.first)
+        XCTAssertEqual(request.httpMethod, "PUT")
+        XCTAssertEqual(request.url?.path, "/v1/sessions/syn-session/live-activity")
+        let body = try XCTUnwrap(StubURLProtocol.bodies.first)
+        let json = try XCTUnwrap(JSONSerialization.jsonObject(with: body) as? [String: String])
+        XCTAssertEqual(json, ["pushToken": "0a1bff00" + String(repeating: "2c", count: 28)])
+
+        StubURLProtocol.respond { _ in (503, Data(#"{"error":"LIVE_ACTIVITY_PUSH_UNAVAILABLE","message":"x"}"#.utf8)) }
+        do {
+            try await makeClient().registerLiveActivityToken(sessionID: "syn-session", token: Data([0x01]))
+            XCTFail("a refused registration did not throw")
+        } catch {
+            XCTAssertNotNil(error as? TransitAPIFailure)
+        }
+    }
+
     // MARK: Live ride flow
 
     /// Route number → variant → stops → server session → the rider's confirmation → ride → end.

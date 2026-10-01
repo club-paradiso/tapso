@@ -46,7 +46,7 @@ Rules pinned by `test/islandStory.test.ts`:
 - each milestone is told once, and only milestones alert;
 - shaky data never alerts and never shows a fresh count;
 - the persistent island signals each milestone once however the visitor scrolls (the web mirror of `alertedMilestones`);
-- while `LiveActivityClient` requests `pushType: nil`, the page says the Lock Screen updates only with the app open (step note and FAQ).
+- until pushed updates are shown on a device (`docs/exec-plans/LIVE_ACTIVITY_PUSH.md`, milestone 6 `DONE`), the page says the Lock Screen updates only with the app open (step note and FAQ).
 
 ## Information architecture
 
