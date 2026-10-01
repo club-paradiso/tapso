@@ -67,6 +67,28 @@ final class SharedPlaceTests: XCTestCase {
         XCTAssertEqual(geo.coordinate, Coordinate(latitude: 33.2, longitude: 126.3))
     }
 
+    func testEveryKakaoWebLinkShapeInItsGuide() throws {
+        let base = "https://map.kakao.com/link/"
+        let gwakji = "%EA%B3%BD%EC%A7%80%ED%95%B4%EB%B3%80"
+        let point = Coordinate(latitude: 33.4500, longitude: 126.3050)
+
+        XCTAssertEqual(SharedPlaceParser.parse(text: nil, urls: [base + "map/33.4500,126.3050"])?.coordinate, point)
+        XCTAssertEqual(SharedPlaceParser.parse(text: nil, urls: [base + "roadview/33.4500,126.3050"])?.coordinate, point)
+
+        let from = try XCTUnwrap(SharedPlaceParser.parse(text: nil, urls: [base + "from/SYN,33.5000,126.5000/to/\(gwakji),33.4500,126.3050"]))
+        XCTAssertEqual(from.name, "곽지해변", "the destination, not the origin")
+        XCTAssertEqual(from.coordinate, point)
+
+        let walk = try XCTUnwrap(SharedPlaceParser.parse(text: nil, urls: [base + "by/walk/SYN,33.5000,126.5000/\(gwakji),33.4500,126.3050"]))
+        XCTAssertEqual(walk.name, "곽지해변")
+        XCTAssertEqual(walk.coordinate, point)
+
+        let placeID = try XCTUnwrap(SharedPlaceParser.parse(text: nil, urls: [base + "map/18577297"]))
+        XCTAssertTrue(placeID.isLinkOnly, "a place id needs the network, which TAPSO never uses for this")
+
+        XCTAssertEqual(SharedPlaceParser.parse(text: nil, urls: [base + "search/\(gwakji)"])?.name, "곽지해변")
+    }
+
     func testCoordinatesInTextEvenWhenWrittenLongitudeFirst() throws {
         XCTAssertEqual(SharedPlaceParser.parse(text: "33.4996, 126.5312")?.coordinate, Coordinate(latitude: 33.4996, longitude: 126.5312))
         XCTAssertEqual(SharedPlaceParser.parse(text: "126.5312,33.4996")?.coordinate, Coordinate(latitude: 33.4996, longitude: 126.5312))

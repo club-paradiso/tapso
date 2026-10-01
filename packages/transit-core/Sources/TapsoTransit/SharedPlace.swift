@@ -69,7 +69,8 @@ public enum JejuRegion {
 /// - `geo:lat,lng` — RFC 5870.
 /// - NAVER Map `nmap://place|search|route/*` — REPORTED-OFFICIAL (NAVER Cloud URL scheme guide).
 /// - KakaoMap `kakaomap://route?ep=` — REPORTED-OFFICIAL (Kakao URL scheme guide);
-///   `map.kakao.com/link/map|to/<name>,<lat>,<lng>` — REPORTED (Kakao Maps web guide).
+///   `map.kakao.com/link/map|to|roadview|from|by|search/…` — REPORTED-OFFICIAL (Kakao Maps web
+///   guide, quoted by `scripts/data-sources/tago-docs.ts` on 2026-10-01).
 /// - Share text `[카카오맵] …` / `[네이버 지도] …` with a short link — REPORTED.
 public enum SharedPlaceParser {
     public static func parse(text: String?, urls: [String] = []) -> SharedPlace? {
@@ -204,18 +205,39 @@ public enum SharedPlaceParser {
         }
     }
 
-    /// `/link/map/<name>,<lat>,<lng>` and `/link/to/<name>,<lat>,<lng>` (REPORTED).
+    /// Kakao Maps web links (REPORTED-OFFICIAL, Kakao Maps web guide): `/link/map|to|roadview/<target>`,
+    /// `/link/from/<origin>/to/<target>`, `/link/by/<mode>/<origin>/…/<target>` and `/link/search/<query>`,
+    /// where a target is `<name>,<lat>,<lng>`, `<lat>,<lng>` or a place id.
     private static func kakaoWeb(path: String, link: String) -> Partial {
-        for prefix in ["/link/map/", "/link/to/"] where path.hasPrefix(prefix) {
-            let parts = path.dropFirst(prefix.count).split(separator: ",", omittingEmptySubsequences: false).map(String.init)
-            if parts.count >= 3, let point = pair(parts[parts.count - 2], parts[parts.count - 1]) {
-                let name = parts.dropLast(2).joined(separator: ",")
-                return Partial(source: .kakaoMap, name: clean(name), coordinate: point)
+        let segments = path.split(separator: "/").map(String.init)
+        guard segments.count >= 3, segments[0] == "link" else { return Partial(source: .kakaoMap, unresolvedLink: link) }
+        switch segments[1] {
+        case "map", "to", "roadview":
+            return kakaoTarget(segments[2], link: link)
+        case "from":
+            guard let to = segments.firstIndex(of: "to"), to + 1 < segments.count else {
+                return Partial(source: .kakaoMap, unresolvedLink: link)
             }
+            return kakaoTarget(segments[to + 1], link: link)
+        case "by":
+            // The last segment is the destination; the ones before it are the origin and any waypoints.
+            guard segments.count >= 4 else { return Partial(source: .kakaoMap, unresolvedLink: link) }
+            return kakaoTarget(segments[segments.count - 1], link: link)
+        case "search":
+            return Partial(source: .kakaoMap, name: clean(segments[2...].joined(separator: "/")))
+        default:
             return Partial(source: .kakaoMap, unresolvedLink: link)
         }
-        if path.hasPrefix("/link/search/") {
-            return Partial(source: .kakaoMap, name: clean(String(path.dropFirst("/link/search/".count))))
+    }
+
+    /// `<name>,<lat>,<lng>` or `<lat>,<lng>`. Anything else is a place id that only the network could resolve.
+    private static func kakaoTarget(_ segment: String, link: String) -> Partial {
+        let parts = segment.split(separator: ",", omittingEmptySubsequences: false).map(String.init)
+        if parts.count >= 3, let point = pair(parts[parts.count - 2], parts[parts.count - 1]) {
+            return Partial(source: .kakaoMap, name: clean(parts.dropLast(2).joined(separator: ",")), coordinate: point)
+        }
+        if parts.count == 2, let point = pair(parts[0], parts[1]) {
+            return Partial(source: .kakaoMap, coordinate: point)
         }
         return Partial(source: .kakaoMap, unresolvedLink: link)
     }

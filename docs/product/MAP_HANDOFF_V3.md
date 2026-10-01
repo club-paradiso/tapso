@@ -26,7 +26,7 @@ TAPSO  end: "협재해수욕장까지 걸어서" → NAVER route/walk · KakaoMa
 | `geo:` URI | `geo:<lat>,<lng>` | coordinate | RFC 5870 |
 | NAVER Map scheme | `nmap://place?lat=&lng=&name=`, `nmap://search?query=`, `nmap://route/*?dlat=&dlng=&dname=` | name, coordinate | `REPORTED-OFFICIAL` (NAVER Cloud URL scheme guide) |
 | KakaoMap scheme | `kakaomap://route?ep=<lat>,<lng>` | coordinate | `REPORTED-OFFICIAL` (Kakao URL scheme guide) |
-| Kakao Maps web link | `map.kakao.com/link/map|to/<name>,<lat>,<lng>`, `/link/search/<query>` | name, coordinate | `REPORTED` (Kakao Maps web guide; this environment cannot reach it, so `scripts/data-sources/tago-docs.ts` quotes it from a GitHub runner) |
+| Kakao Maps web link | `map.kakao.com/link/map\|to\|roadview/<name>,<lat>,<lng>` or `<lat>,<lng>`, `/link/from/<origin>/to/<target>`, `/link/by/<car\|traffic\|walk\|bicycle>/<origin>/…/<target>`, `/link/search/<query>`; a place id stays a link | name, coordinate of the destination | `REPORTED-OFFICIAL` (Kakao Maps web guide, quoted from a GitHub runner by `scripts/data-sources/tago-docs.ts`, 2026-10-01) |
 | Share text | `[카카오맵] <name>` / `[네이버 지도] <name>`, an address line, a short link | name, address | `REPORTED` — formats observed in public descriptions, not captured from a device |
 | Short links | `kko.to/…`, `naver.me/…`, `place.map.kakao.com/…`, NAVER place pages | kept as `unresolvedLink` | never fetched (see below) |
 | Plain text | a place name, a Jeju road or lot address, `lat, lng` (either order) | name, address, coordinate | parser rules |
