@@ -2,16 +2,16 @@
   "schemaVersion": 1,
   "kind": "tapso-negative-controls",
   "evidenceClass": "VERIFIED_BY_TEST",
-  "createdAt": "2026-09-30T00:25:28.273Z",
-  "command": "node --experimental-strip-types scripts/negative-controls/run.ts --typecheck",
-  "node": "v22.22.2",
+  "createdAt": "2026-10-01T07:25:29.425Z",
+  "command": "node --experimental-strip-types scripts/negative-controls/run.ts --typecheck --out=/tmp/claude-0/-home-user-tapso/5460bef6-92b3-5eb3-816a-68609decf3f5/scratchpad/regen/negative-controls-typecheck.json",
+  "node": "v22.22.0",
   "platform": "linux-x64",
   "matcherPolicy": "directed-route-progress-v1",
   "source": {
-    "gitHead": "b46c8c478311428295d67c2879edc8d75bc3843d",
+    "gitHead": "76ee8d8e328d01aa1106823e63cf647e4ceecdb5",
     "servicesApiUncommittedChanges": false,
-    "servicesApiSrcSha256": "40dfc7321435ed00cc4367a4ad0d9bc0f530a0ffa9f44d93cfadca53a600bd56",
-    "servicesApiTestSha256": "1a381224e890959e1f8f4dbc35bade8b848a3cbda193607caec28bc9a7b8a738",
+    "servicesApiSrcSha256": "5f06451af6c6dbc26fd54b5f128df5570d902ed8d5cbf3e293779c89d73a6b05",
+    "servicesApiTestSha256": "d684cf37326c80741a88aca4c84dbe2c39094f4bfe93608a841b32bbb2b65d97",
     "realTreeUnchanged": true,
     "repositoryStatusUnchanged": true,
     "changedDuringRun": [],
@@ -25,17 +25,17 @@
   },
   "baseline": {
     "testFiles": 35,
-    "tests": 675,
-    "passed": 675,
+    "tests": 689,
+    "passed": 689,
     "failed": 0,
     "skipped": 0,
     "green": true,
     "failingTests": [],
     "typeErrors": 0,
-    "durationMs": 61935
+    "durationMs": 54249
   },
   "killConfirmation": {
-    "killingTestFilesRerunOnSnapshot": 12,
+    "killingTestFilesRerunOnSnapshot": 11,
     "flakyTestsExcluded": []
   },
   "mutations": [
@@ -120,7 +120,7 @@
       "loadCheck": "passed",
       "typecheck": "passed",
       "testFilesRun": 6,
-      "durationMs": 37300,
+      "durationMs": 28688,
       "killedIn": "listed-test-files"
     },
     {
@@ -209,7 +209,7 @@
       "loadCheck": "passed",
       "typecheck": "passed",
       "testFilesRun": 6,
-      "durationMs": 39259,
+      "durationMs": 30783,
       "killedIn": "listed-test-files"
     },
     {
@@ -291,7 +291,7 @@
       "loadCheck": "passed",
       "typecheck": "passed",
       "testFilesRun": 4,
-      "durationMs": 26708,
+      "durationMs": 22321,
       "killedIn": "listed-test-files"
     },
     {
@@ -341,7 +341,7 @@
       "loadCheck": "passed",
       "typecheck": "passed",
       "testFilesRun": 4,
-      "durationMs": 34911,
+      "durationMs": 28365,
       "killedIn": "listed-test-files"
     },
     {
@@ -378,7 +378,7 @@
       "loadCheck": "passed",
       "typecheck": "passed",
       "testFilesRun": 3,
-      "durationMs": 33483,
+      "durationMs": 27669,
       "killedIn": "listed-test-files"
     },
     {
@@ -416,7 +416,7 @@
       "loadCheck": "passed",
       "typecheck": "passed",
       "testFilesRun": 4,
-      "durationMs": 35681,
+      "durationMs": 30598,
       "killedIn": "listed-test-files"
     },
     {
@@ -495,7 +495,7 @@
       "loadCheck": "passed",
       "typecheck": "passed",
       "testFilesRun": 1,
-      "durationMs": 5156,
+      "durationMs": 4688,
       "killedIn": "listed-test-files"
     },
     {
@@ -530,7 +530,7 @@
       "loadCheck": "passed",
       "typecheck": "passed",
       "testFilesRun": 1,
-      "durationMs": 20142,
+      "durationMs": 16791,
       "killedIn": "listed-test-files"
     },
     {
@@ -565,7 +565,7 @@
       "loadCheck": "passed",
       "typecheck": "passed",
       "testFilesRun": 1,
-      "durationMs": 20052,
+      "durationMs": 17240,
       "killedIn": "listed-test-files"
     },
     {
@@ -600,7 +600,7 @@
       "loadCheck": "passed",
       "typecheck": "passed",
       "testFilesRun": 1,
-      "durationMs": 19780,
+      "durationMs": 16664,
       "killedIn": "listed-test-files"
     },
     {
@@ -644,7 +644,7 @@
       "loadCheck": "passed",
       "typecheck": "passed",
       "testFilesRun": 1,
-      "durationMs": 20299,
+      "durationMs": 16527,
       "killedIn": "listed-test-files"
     },
     {
@@ -683,7 +683,7 @@
       "loadCheck": "passed",
       "typecheck": "passed",
       "testFilesRun": 1,
-      "durationMs": 19732,
+      "durationMs": 15348,
       "killedIn": "listed-test-files"
     },
     {
@@ -718,17 +718,13 @@
       ],
       "missingTestFiles": [],
       "outcome": "KILLED",
-      "reason": "3 test(s) newly fail in the listed test files",
-      "failingTestCount": 3,
-      "failingTestCountIncludingBaseline": 3,
+      "reason": "2 test(s) newly fail in the listed test files",
+      "failingTestCount": 2,
+      "failingTestCountIncludingBaseline": 2,
       "killedBy": [
         {
           "file": "services/api/test/matchReplay.test.ts",
           "test": "a bus that drops out of one poll still competes in the replay"
-        },
-        {
-          "file": "services/api/test/matchReplay.test.ts",
-          "test": "only a declared direction constrains the replay"
         },
         {
           "file": "services/api/test/matcherProperties.test.ts",
@@ -739,7 +735,7 @@
       "loadCheck": "passed",
       "typecheck": "passed",
       "testFilesRun": 4,
-      "durationMs": 30512,
+      "durationMs": 21799,
       "killedIn": "listed-test-files"
     },
     {
@@ -821,7 +817,7 @@
       "loadCheck": "passed",
       "typecheck": "passed",
       "testFilesRun": 4,
-      "durationMs": 31433,
+      "durationMs": 23717,
       "killedIn": "listed-test-files"
     },
     {
@@ -875,7 +871,7 @@
       "loadCheck": "passed",
       "typecheck": "passed",
       "testFilesRun": 4,
-      "durationMs": 32081,
+      "durationMs": 27603,
       "killedIn": "listed-test-files"
     },
     {
@@ -956,7 +952,7 @@
       "loadCheck": "passed",
       "typecheck": "passed",
       "testFilesRun": 3,
-      "durationMs": 32074,
+      "durationMs": 26797,
       "killedIn": "listed-test-files"
     },
     {
@@ -1013,7 +1009,7 @@
       "loadCheck": "passed",
       "typecheck": "passed",
       "testFilesRun": 3,
-      "durationMs": 31980,
+      "durationMs": 27227,
       "killedIn": "listed-test-files"
     },
     {
@@ -1058,7 +1054,7 @@
       "loadCheck": "passed",
       "typecheck": "passed",
       "testFilesRun": 3,
-      "durationMs": 31815,
+      "durationMs": 27931,
       "killedIn": "listed-test-files"
     },
     {
@@ -1099,7 +1095,7 @@
       "loadCheck": "passed",
       "typecheck": "passed",
       "testFilesRun": 3,
-      "durationMs": 32275,
+      "durationMs": 26411,
       "killedIn": "listed-test-files"
     },
     {
@@ -1169,7 +1165,7 @@
       "loadCheck": "passed",
       "typecheck": "passed",
       "testFilesRun": 4,
-      "durationMs": 32023,
+      "durationMs": 26335,
       "killedIn": "listed-test-files"
     },
     {
@@ -1215,7 +1211,7 @@
       "loadCheck": "passed",
       "typecheck": "passed",
       "testFilesRun": 4,
-      "durationMs": 33455,
+      "durationMs": 27459,
       "killedIn": "listed-test-files"
     },
     {
@@ -1239,9 +1235,9 @@
       ],
       "missingTestFiles": [],
       "outcome": "KILLED",
-      "reason": "8 test(s) newly fail in the listed test files",
-      "failingTestCount": 8,
-      "failingTestCountIncludingBaseline": 8,
+      "reason": "9 test(s) newly fail in the listed test files",
+      "failingTestCount": 9,
+      "failingTestCountIncludingBaseline": 9,
       "killedBy": [
         {
           "file": "services/api/test/journeySession.test.ts",
@@ -1265,6 +1261,10 @@
         },
         {
           "file": "services/api/test/matching.test.ts",
+          "test": "F21 regression: an approach once contested inside the margin must not become automatically selectable just because the gap later opens"
+        },
+        {
+          "file": "services/api/test/matching.test.ts",
           "test": "a follower counts against the margin whether stale or only remembered"
         },
         {
@@ -1280,7 +1280,7 @@
       "loadCheck": "passed",
       "typecheck": "passed",
       "testFilesRun": 3,
-      "durationMs": 32749,
+      "durationMs": 27314,
       "killedIn": "listed-test-files"
     },
     {
@@ -1341,7 +1341,7 @@
       "loadCheck": "passed",
       "typecheck": "passed",
       "testFilesRun": 3,
-      "durationMs": 35637,
+      "durationMs": 28114,
       "killedIn": "listed-test-files"
     },
     {
@@ -1367,9 +1367,9 @@
       ],
       "missingTestFiles": [],
       "outcome": "KILLED",
-      "reason": "20 test(s) newly fail in the listed test files",
-      "failingTestCount": 20,
-      "failingTestCountIncludingBaseline": 20,
+      "reason": "19 test(s) newly fail in the listed test files",
+      "failingTestCount": 19,
+      "failingTestCountIncludingBaseline": 19,
       "killedBy": [
         {
           "file": "services/api/test/journeySession.test.ts",
@@ -1401,10 +1401,6 @@
         },
         {
           "file": "services/api/test/matchReplay.test.ts",
-          "test": "a capture where the matcher would have picked the wrong bus fails the gate"
-        },
-        {
-          "file": "services/api/test/matchReplay.test.ts",
           "test": "a ride the matcher never commits to is safe, not correct"
         },
         {
@@ -1418,13 +1414,17 @@
         {
           "file": "services/api/test/matcherProperties.test.ts",
           "test": "P4: older evidence never improves a candidate's eligibility or score"
+        },
+        {
+          "file": "services/api/test/matcherProperties.test.ts",
+          "test": "P7: a failed provider poll counts exactly as nothing — never as a sample, an absence or a decision"
         }
       ],
       "baselineFailuresInListedFiles": [],
       "loadCheck": "passed",
       "typecheck": "passed",
       "testFilesRun": 5,
-      "durationMs": 35062,
+      "durationMs": 25615,
       "killedIn": "listed-test-files"
     },
     {
@@ -1499,7 +1499,7 @@
       "loadCheck": "passed",
       "typecheck": "passed",
       "testFilesRun": 5,
-      "durationMs": 34637,
+      "durationMs": 28554,
       "killedIn": "listed-test-files"
     },
     {
@@ -1541,7 +1541,7 @@
       "loadCheck": "passed",
       "typecheck": "passed",
       "testFilesRun": 4,
-      "durationMs": 33945,
+      "durationMs": 28251,
       "killedIn": "listed-test-files"
     },
     {
@@ -1591,7 +1591,7 @@
       "loadCheck": "passed",
       "typecheck": "passed",
       "testFilesRun": 4,
-      "durationMs": 34426,
+      "durationMs": 25594,
       "killedIn": "listed-test-files"
     },
     {
@@ -1616,9 +1616,9 @@
       ],
       "missingTestFiles": [],
       "outcome": "KILLED",
-      "reason": "12 test(s) newly fail in the listed test files",
-      "failingTestCount": 12,
-      "failingTestCountIncludingBaseline": 12,
+      "reason": "15 test(s) newly fail in the listed test files",
+      "failingTestCount": 15,
+      "failingTestCountIncludingBaseline": 15,
       "killedBy": [
         {
           "file": "services/api/test/crossLanguageAuthority.test.ts",
@@ -1654,26 +1654,26 @@
         },
         {
           "file": "services/api/test/matching.test.ts",
+          "test": "F21 regression: an approach once contested inside the margin must not become automatically selectable just because the gap later opens"
+        },
+        {
+          "file": "services/api/test/matching.test.ts",
+          "test": "F22 regression: a follower seen inside the margin while nothing was selectable yet still contests the approach"
+        },
+        {
+          "file": "services/api/test/matching.test.ts",
+          "test": "F22 regression: a pair inside the margin beyond the approach window contests the approach"
+        },
+        {
+          "file": "services/api/test/matching.test.ts",
           "test": "a follower counts against the margin whether stale or only remembered"
-        },
-        {
-          "file": "services/api/test/matching.test.ts",
-          "test": "loop: a bus approaching across the seam still competes"
-        },
-        {
-          "file": "services/api/test/matching.test.ts",
-          "test": "waiting rider: a bus seen crossing the stop withholds every later selection"
-        },
-        {
-          "file": "services/api/test/matching.test.ts",
-          "test": "loop: a bus seen crossing the stop through the seam withholds (F17)"
         }
       ],
       "baselineFailuresInListedFiles": [],
       "loadCheck": "passed",
       "typecheck": "passed",
       "testFilesRun": 4,
-      "durationMs": 34572,
+      "durationMs": 27802,
       "killedIn": "listed-test-files"
     },
     {
@@ -1714,7 +1714,7 @@
       "loadCheck": "passed",
       "typecheck": "passed",
       "testFilesRun": 3,
-      "durationMs": 33017,
+      "durationMs": 28054,
       "killedIn": "listed-test-files"
     },
     {
@@ -1754,7 +1754,7 @@
       "loadCheck": "passed",
       "typecheck": "passed",
       "testFilesRun": 2,
-      "durationMs": 32284,
+      "durationMs": 28130,
       "killedIn": "listed-test-files"
     },
     {
@@ -1815,7 +1815,7 @@
       "loadCheck": "passed",
       "typecheck": "passed",
       "testFilesRun": 3,
-      "durationMs": 31966,
+      "durationMs": 30760,
       "killedIn": "listed-test-files"
     },
     {
@@ -1892,7 +1892,7 @@
       "loadCheck": "passed",
       "typecheck": "passed",
       "testFilesRun": 3,
-      "durationMs": 32728,
+      "durationMs": 28623,
       "killedIn": "listed-test-files"
     },
     {
@@ -1981,7 +1981,7 @@
       "loadCheck": "passed",
       "typecheck": "passed",
       "testFilesRun": 3,
-      "durationMs": 25624,
+      "durationMs": 20148,
       "requiredKillerFired": true,
       "killedIn": "listed-test-files"
     },
@@ -2017,7 +2017,7 @@
       "loadCheck": "passed",
       "typecheck": "passed",
       "testFilesRun": 1,
-      "durationMs": 19528,
+      "durationMs": 16749,
       "killedIn": "listed-test-files"
     },
     {
@@ -2052,7 +2052,7 @@
       "loadCheck": "passed",
       "typecheck": "passed",
       "testFilesRun": 1,
-      "durationMs": 19438,
+      "durationMs": 16134,
       "killedIn": "listed-test-files"
     },
     {
@@ -2087,7 +2087,7 @@
       "loadCheck": "passed",
       "typecheck": "passed",
       "testFilesRun": 1,
-      "durationMs": 19383,
+      "durationMs": 15626,
       "killedIn": "listed-test-files"
     },
     {
@@ -2131,7 +2131,7 @@
       "loadCheck": "passed",
       "typecheck": "passed",
       "testFilesRun": 1,
-      "durationMs": 17354,
+      "durationMs": 13590,
       "killedIn": "listed-test-files"
     },
     {
@@ -2155,28 +2155,24 @@
       ],
       "missingTestFiles": [],
       "outcome": "KILLED",
-      "reason": "3 test(s) newly fail in the listed test files",
-      "failingTestCount": 3,
-      "failingTestCountIncludingBaseline": 3,
+      "reason": "2 test(s) newly fail in the listed test files",
+      "failingTestCount": 2,
+      "failingTestCountIncludingBaseline": 2,
       "killedBy": [
         {
           "file": "services/api/test/matching.test.ts",
           "test": "the three-stop margin holds at the edge of the approach window (F9)"
         },
         {
-          "file": "services/api/test/passiveCounterfactual.test.ts",
-          "test": "real-cadence base R: every family applies and holds"
-        },
-        {
-          "file": "services/api/test/passiveCounterfactual.test.ts",
-          "test": "follower_overtaking: no wrong commit when a bus overtakes from just beyond the approach window"
+          "file": "services/api/test/matching.test.ts",
+          "test": "F21 regression: an approach once contested inside the margin must not become automatically selectable just because the gap later opens"
         }
       ],
       "baselineFailuresInListedFiles": [],
       "loadCheck": "passed",
       "typecheck": "passed",
       "testFilesRun": 3,
-      "durationMs": 62006,
+      "durationMs": 53694,
       "killedIn": "listed-test-files"
     },
     {
@@ -2220,7 +2216,7 @@
       "loadCheck": "passed",
       "typecheck": "passed",
       "testFilesRun": 2,
-      "durationMs": 35347,
+      "durationMs": 29094,
       "killedIn": "listed-test-files"
     },
     {
@@ -2256,7 +2252,7 @@
       "loadCheck": "passed",
       "typecheck": "passed",
       "testFilesRun": 2,
-      "durationMs": 32436,
+      "durationMs": 28206,
       "killedIn": "listed-test-files"
     },
     {
@@ -2291,7 +2287,7 @@
       "loadCheck": "passed",
       "typecheck": "passed",
       "testFilesRun": 1,
-      "durationMs": 4849,
+      "durationMs": 3743,
       "killedIn": "listed-test-files"
     },
     {
@@ -2335,7 +2331,7 @@
       "loadCheck": "passed",
       "typecheck": "passed",
       "testFilesRun": 2,
-      "durationMs": 5136,
+      "durationMs": 3774,
       "killedIn": "listed-test-files"
     },
     {
@@ -2379,7 +2375,7 @@
       "loadCheck": "passed",
       "typecheck": "passed",
       "testFilesRun": 2,
-      "durationMs": 32166,
+      "durationMs": 26785,
       "killedIn": "listed-test-files"
     },
     {
@@ -2414,7 +2410,7 @@
       "loadCheck": "passed",
       "typecheck": "passed",
       "testFilesRun": 1,
-      "durationMs": 19160,
+      "durationMs": 16319,
       "killedIn": "listed-test-files"
     },
     {
@@ -2449,7 +2445,7 @@
       "loadCheck": "passed",
       "typecheck": "passed",
       "testFilesRun": 1,
-      "durationMs": 19345,
+      "durationMs": 16968,
       "killedIn": "listed-test-files"
     },
     {
@@ -2484,7 +2480,7 @@
       "loadCheck": "passed",
       "typecheck": "passed",
       "testFilesRun": 1,
-      "durationMs": 4802,
+      "durationMs": 3818,
       "killedIn": "listed-test-files"
     },
     {
@@ -2519,7 +2515,7 @@
       "loadCheck": "passed",
       "typecheck": "passed",
       "testFilesRun": 1,
-      "durationMs": 19124,
+      "durationMs": 16678,
       "killedIn": "listed-test-files"
     },
     {
@@ -2575,7 +2571,7 @@
       "loadCheck": "passed",
       "typecheck": "passed",
       "testFilesRun": 2,
-      "durationMs": 4635,
+      "durationMs": 3967,
       "killedIn": "listed-test-files"
     },
     {
@@ -2615,7 +2611,7 @@
       "loadCheck": "passed",
       "typecheck": "passed",
       "testFilesRun": 2,
-      "durationMs": 4491,
+      "durationMs": 3853,
       "killedIn": "listed-test-files"
     },
     {
@@ -2650,7 +2646,7 @@
       "loadCheck": "passed",
       "typecheck": "passed",
       "testFilesRun": 1,
-      "durationMs": 4912,
+      "durationMs": 4255,
       "killedIn": "listed-test-files"
     },
     {
@@ -2690,7 +2686,7 @@
       "loadCheck": "passed",
       "typecheck": "passed",
       "testFilesRun": 2,
-      "durationMs": 5168,
+      "durationMs": 4312,
       "killedIn": "listed-test-files"
     },
     {
@@ -2725,7 +2721,7 @@
       "loadCheck": "passed",
       "typecheck": "passed",
       "testFilesRun": 1,
-      "durationMs": 5121,
+      "durationMs": 4080,
       "killedIn": "listed-test-files"
     },
     {
@@ -2760,7 +2756,7 @@
       "loadCheck": "passed",
       "typecheck": "passed",
       "testFilesRun": 1,
-      "durationMs": 4864,
+      "durationMs": 3939,
       "killedIn": "listed-test-files"
     },
     {
@@ -2795,7 +2791,7 @@
       "loadCheck": "passed",
       "typecheck": "passed",
       "testFilesRun": 1,
-      "durationMs": 5261,
+      "durationMs": 5030,
       "killedIn": "listed-test-files"
     },
     {
@@ -2830,7 +2826,7 @@
       "loadCheck": "passed",
       "typecheck": "passed",
       "testFilesRun": 1,
-      "durationMs": 5400,
+      "durationMs": 5546,
       "killedIn": "listed-test-files"
     },
     {
@@ -2865,7 +2861,7 @@
       "loadCheck": "passed",
       "typecheck": "passed",
       "testFilesRun": 1,
-      "durationMs": 5497,
+      "durationMs": 5837,
       "killedIn": "listed-test-files"
     },
     {
@@ -2905,7 +2901,7 @@
       "loadCheck": "passed",
       "typecheck": "passed",
       "testFilesRun": 2,
-      "durationMs": 5569,
+      "durationMs": 5864,
       "killedIn": "listed-test-files"
     },
     {
@@ -2950,7 +2946,7 @@
       "loadCheck": "passed",
       "typecheck": "passed",
       "testFilesRun": 3,
-      "durationMs": 59592,
+      "durationMs": 55041,
       "killedIn": "listed-test-files"
     },
     {
@@ -2990,7 +2986,7 @@
       "loadCheck": "passed",
       "typecheck": "passed",
       "testFilesRun": 2,
-      "durationMs": 34024,
+      "durationMs": 29149,
       "killedIn": "listed-test-files"
     },
     {
@@ -3034,7 +3030,7 @@
       "loadCheck": "passed",
       "typecheck": "passed",
       "testFilesRun": 2,
-      "durationMs": 18693,
+      "durationMs": 16340,
       "killedIn": "listed-test-files"
     },
     {
@@ -3082,7 +3078,7 @@
       "loadCheck": "passed",
       "typecheck": "passed",
       "testFilesRun": 2,
-      "durationMs": 30546,
+      "durationMs": 27976,
       "killedIn": "listed-test-files"
     },
     {
@@ -3121,7 +3117,7 @@
       "loadCheck": "passed",
       "typecheck": "passed",
       "testFilesRun": 1,
-      "durationMs": 4629,
+      "durationMs": 3823,
       "killedIn": "listed-test-files"
     },
     {
@@ -3169,7 +3165,7 @@
       "loadCheck": "passed",
       "typecheck": "passed",
       "testFilesRun": 2,
-      "durationMs": 30795,
+      "durationMs": 28031,
       "killedIn": "listed-test-files"
     },
     {
@@ -3204,7 +3200,7 @@
       "loadCheck": "passed",
       "typecheck": "passed",
       "testFilesRun": 1,
-      "durationMs": 4896,
+      "durationMs": 3617,
       "killedIn": "listed-test-files"
     },
     {
@@ -3264,7 +3260,7 @@
       "loadCheck": "passed",
       "typecheck": "passed",
       "testFilesRun": 2,
-      "durationMs": 31240,
+      "durationMs": 27689,
       "killedIn": "listed-test-files"
     },
     {
@@ -3300,7 +3296,7 @@
       "loadCheck": "passed",
       "typecheck": "passed",
       "testFilesRun": 2,
-      "durationMs": 31204,
+      "durationMs": 27076,
       "killedIn": "listed-test-files"
     },
     {
@@ -3335,7 +3331,7 @@
       "loadCheck": "passed",
       "typecheck": "passed",
       "testFilesRun": 1,
-      "durationMs": 4619,
+      "durationMs": 3718,
       "killedIn": "listed-test-files"
     },
     {
@@ -3371,7 +3367,7 @@
       "loadCheck": "passed",
       "typecheck": "passed",
       "testFilesRun": 2,
-      "durationMs": 32529,
+      "durationMs": 28168,
       "killedIn": "listed-test-files"
     },
     {
@@ -3410,7 +3406,7 @@
       "loadCheck": "passed",
       "typecheck": "passed",
       "testFilesRun": 1,
-      "durationMs": 5735,
+      "durationMs": 3907,
       "killedIn": "listed-test-files"
     },
     {
@@ -3445,7 +3441,7 @@
       "loadCheck": "passed",
       "typecheck": "passed",
       "testFilesRun": 1,
-      "durationMs": 4492,
+      "durationMs": 3871,
       "killedIn": "listed-test-files"
     },
     {
@@ -3480,7 +3476,7 @@
       "loadCheck": "passed",
       "typecheck": "passed",
       "testFilesRun": 1,
-      "durationMs": 4657,
+      "durationMs": 3659,
       "killedIn": "listed-test-files"
     },
     {
@@ -3515,7 +3511,7 @@
       "loadCheck": "passed",
       "typecheck": "passed",
       "testFilesRun": 1,
-      "durationMs": 4338,
+      "durationMs": 4782,
       "killedIn": "listed-test-files"
     },
     {
@@ -3550,7 +3546,7 @@
       "loadCheck": "passed",
       "typecheck": "passed",
       "testFilesRun": 1,
-      "durationMs": 4547,
+      "durationMs": 5382,
       "killedIn": "listed-test-files"
     },
     {
@@ -3602,7 +3598,7 @@
       "loadCheck": "passed",
       "typecheck": "passed",
       "testFilesRun": 2,
-      "durationMs": 31266,
+      "durationMs": 29360,
       "killedIn": "listed-test-files"
     },
     {
@@ -3637,7 +3633,7 @@
       "loadCheck": "passed",
       "typecheck": "passed",
       "testFilesRun": 1,
-      "durationMs": 4654,
+      "durationMs": 4543,
       "killedIn": "listed-test-files"
     },
     {
@@ -3717,7 +3713,7 @@
       "loadCheck": "passed",
       "typecheck": "passed",
       "testFilesRun": 2,
-      "durationMs": 26308,
+      "durationMs": 24209,
       "killedIn": "listed-test-files"
     },
     {
@@ -3797,7 +3793,7 @@
       "loadCheck": "passed",
       "typecheck": "passed",
       "testFilesRun": 2,
-      "durationMs": 27132,
+      "durationMs": 24173,
       "killedIn": "listed-test-files"
     },
     {
@@ -3836,7 +3832,7 @@
       "loadCheck": "passed",
       "typecheck": "passed",
       "testFilesRun": 1,
-      "durationMs": 4801,
+      "durationMs": 4288,
       "killedIn": "listed-test-files"
     },
     {
@@ -3875,7 +3871,7 @@
       "loadCheck": "passed",
       "typecheck": "passed",
       "testFilesRun": 1,
-      "durationMs": 4717,
+      "durationMs": 3763,
       "killedIn": "listed-test-files"
     },
     {
@@ -3955,7 +3951,7 @@
       "loadCheck": "passed",
       "typecheck": "passed",
       "testFilesRun": 2,
-      "durationMs": 24283,
+      "durationMs": 21068,
       "killedIn": "listed-test-files"
     },
     {
@@ -4023,7 +4019,7 @@
       "loadCheck": "passed",
       "typecheck": "passed",
       "testFilesRun": 2,
-      "durationMs": 31692,
+      "durationMs": 27443,
       "requiredKillerFired": true,
       "killedIn": "listed-test-files"
     },
@@ -4092,7 +4088,7 @@
       "loadCheck": "passed",
       "typecheck": "passed",
       "testFilesRun": 2,
-      "durationMs": 31319,
+      "durationMs": 26743,
       "killedIn": "listed-test-files"
     },
     {
@@ -4143,7 +4139,7 @@
       "loadCheck": "passed",
       "typecheck": "passed",
       "testFilesRun": 1,
-      "durationMs": 4656,
+      "durationMs": 3754,
       "killedIn": "listed-test-files"
     },
     {
@@ -4178,7 +4174,7 @@
       "loadCheck": "passed",
       "typecheck": "passed",
       "testFilesRun": 1,
-      "durationMs": 4564,
+      "durationMs": 5431,
       "killedIn": "listed-test-files"
     },
     {
@@ -4213,7 +4209,7 @@
       "loadCheck": "passed",
       "typecheck": "passed",
       "testFilesRun": 1,
-      "durationMs": 4655,
+      "durationMs": 5457,
       "killedIn": "listed-test-files"
     },
     {
@@ -4260,7 +4256,7 @@
       "loadCheck": "passed",
       "typecheck": "passed",
       "testFilesRun": 1,
-      "durationMs": 5012,
+      "durationMs": 4861,
       "killedIn": "listed-test-files"
     },
     {
@@ -4295,7 +4291,7 @@
       "loadCheck": "passed",
       "typecheck": "passed",
       "testFilesRun": 1,
-      "durationMs": 5092,
+      "durationMs": 4498,
       "killedIn": "listed-test-files"
     },
     {
@@ -4338,7 +4334,7 @@
       "loadCheck": "passed",
       "typecheck": "passed",
       "testFilesRun": 1,
-      "durationMs": 4833,
+      "durationMs": 4472,
       "killedIn": "listed-test-files"
     },
     {
@@ -4381,7 +4377,7 @@
       "loadCheck": "passed",
       "typecheck": "passed",
       "testFilesRun": 1,
-      "durationMs": 4649,
+      "durationMs": 4494,
       "killedIn": "listed-test-files"
     },
     {
@@ -4420,7 +4416,7 @@
       "loadCheck": "passed",
       "typecheck": "passed",
       "testFilesRun": 1,
-      "durationMs": 5169,
+      "durationMs": 4983,
       "killedIn": "listed-test-files"
     },
     {
@@ -4464,7 +4460,7 @@
       "loadCheck": "passed",
       "typecheck": "passed",
       "testFilesRun": 2,
-      "durationMs": 31542,
+      "durationMs": 28509,
       "killedIn": "listed-test-files"
     },
     {
@@ -4504,7 +4500,7 @@
       "loadCheck": "passed",
       "typecheck": "passed",
       "testFilesRun": 2,
-      "durationMs": 30767,
+      "durationMs": 28016,
       "killedIn": "listed-test-files"
     },
     {
@@ -4544,7 +4540,7 @@
       "loadCheck": "passed",
       "typecheck": "passed",
       "testFilesRun": 2,
-      "durationMs": 31774,
+      "durationMs": 26973,
       "killedIn": "listed-test-files"
     },
     {
@@ -4588,7 +4584,7 @@
       "loadCheck": "passed",
       "typecheck": "passed",
       "testFilesRun": 2,
-      "durationMs": 31769,
+      "durationMs": 26921,
       "killedIn": "listed-test-files"
     },
     {
@@ -4623,7 +4619,7 @@
       "loadCheck": "passed",
       "typecheck": "passed",
       "testFilesRun": 1,
-      "durationMs": 4730,
+      "durationMs": 5032,
       "killedIn": "listed-test-files"
     },
     {
@@ -4667,7 +4663,7 @@
       "loadCheck": "passed",
       "typecheck": "passed",
       "testFilesRun": 2,
-      "durationMs": 32859,
+      "durationMs": 27981,
       "killedIn": "listed-test-files"
     },
     {
@@ -4716,7 +4712,7 @@
       "loadCheck": "passed",
       "typecheck": "passed",
       "testFilesRun": 1,
-      "durationMs": 5129,
+      "durationMs": 4530,
       "killedIn": "listed-test-files"
     },
     {
@@ -4756,7 +4752,7 @@
       "loadCheck": "passed",
       "typecheck": "passed",
       "testFilesRun": 1,
-      "durationMs": 4423,
+      "durationMs": 3590,
       "killedIn": "listed-test-files"
     },
     {
@@ -4791,7 +4787,7 @@
       "loadCheck": "passed",
       "typecheck": "passed",
       "testFilesRun": 1,
-      "durationMs": 4689,
+      "durationMs": 3651,
       "killedIn": "listed-test-files"
     },
     {
@@ -4842,7 +4838,7 @@
       "loadCheck": "passed",
       "typecheck": "passed",
       "testFilesRun": 1,
-      "durationMs": 4964,
+      "durationMs": 3630,
       "killedIn": "listed-test-files"
     },
     {
@@ -4901,7 +4897,7 @@
       "loadCheck": "passed",
       "typecheck": "passed",
       "testFilesRun": 1,
-      "durationMs": 4892,
+      "durationMs": 3377,
       "killedIn": "listed-test-files"
     },
     {
@@ -4956,7 +4952,7 @@
       "loadCheck": "passed",
       "typecheck": "passed",
       "testFilesRun": 1,
-      "durationMs": 4676,
+      "durationMs": 3571,
       "killedIn": "listed-test-files"
     },
     {
@@ -4991,7 +4987,7 @@
       "loadCheck": "passed",
       "typecheck": "passed",
       "testFilesRun": 1,
-      "durationMs": 4535,
+      "durationMs": 3892,
       "killedIn": "listed-test-files"
     },
     {
@@ -5026,7 +5022,7 @@
       "loadCheck": "passed",
       "typecheck": "passed",
       "testFilesRun": 1,
-      "durationMs": 5151,
+      "durationMs": 4186,
       "killedIn": "listed-test-files"
     },
     {
@@ -5061,7 +5057,7 @@
       "loadCheck": "passed",
       "typecheck": "passed",
       "testFilesRun": 1,
-      "durationMs": 5017,
+      "durationMs": 4192,
       "killedIn": "listed-test-files"
     },
     {
@@ -5104,7 +5100,7 @@
       "loadCheck": "passed",
       "typecheck": "passed",
       "testFilesRun": 1,
-      "durationMs": 4918,
+      "durationMs": 4542,
       "killedIn": "listed-test-files"
     },
     {
@@ -5147,7 +5143,7 @@
       "loadCheck": "passed",
       "typecheck": "passed",
       "testFilesRun": 1,
-      "durationMs": 5040,
+      "durationMs": 4517,
       "killedIn": "listed-test-files"
     },
     {
@@ -5182,7 +5178,7 @@
       "loadCheck": "passed",
       "typecheck": "passed",
       "testFilesRun": 1,
-      "durationMs": 5379,
+      "durationMs": 4380,
       "killedIn": "listed-test-files"
     },
     {
@@ -5217,7 +5213,7 @@
       "loadCheck": "passed",
       "typecheck": "passed",
       "testFilesRun": 1,
-      "durationMs": 5228,
+      "durationMs": 4270,
       "killedIn": "listed-test-files"
     },
     {
@@ -5260,7 +5256,7 @@
       "loadCheck": "passed",
       "typecheck": "passed",
       "testFilesRun": 1,
-      "durationMs": 5259,
+      "durationMs": 4293,
       "killedIn": "listed-test-files"
     },
     {
@@ -5295,7 +5291,7 @@
       "loadCheck": "passed",
       "typecheck": "passed",
       "testFilesRun": 1,
-      "durationMs": 5232,
+      "durationMs": 4403,
       "killedIn": "listed-test-files"
     },
     {
@@ -5330,7 +5326,7 @@
       "loadCheck": "passed",
       "typecheck": "passed",
       "testFilesRun": 1,
-      "durationMs": 5256,
+      "durationMs": 4758,
       "killedIn": "listed-test-files"
     },
     {
@@ -5365,7 +5361,7 @@
       "loadCheck": "passed",
       "typecheck": "passed",
       "testFilesRun": 1,
-      "durationMs": 5250,
+      "durationMs": 4613,
       "killedIn": "listed-test-files"
     },
     {
@@ -5400,7 +5396,7 @@
       "loadCheck": "passed",
       "typecheck": "passed",
       "testFilesRun": 1,
-      "durationMs": 5138,
+      "durationMs": 4540,
       "killedIn": "listed-test-files"
     },
     {
@@ -5435,7 +5431,7 @@
       "loadCheck": "passed",
       "typecheck": "passed",
       "testFilesRun": 1,
-      "durationMs": 5129,
+      "durationMs": 4567,
       "killedIn": "listed-test-files"
     },
     {
@@ -5470,7 +5466,7 @@
       "loadCheck": "passed",
       "typecheck": "passed",
       "testFilesRun": 1,
-      "durationMs": 4946,
+      "durationMs": 4702,
       "killedIn": "listed-test-files"
     },
     {
@@ -5513,7 +5509,7 @@
       "loadCheck": "passed",
       "typecheck": "passed",
       "testFilesRun": 1,
-      "durationMs": 4952,
+      "durationMs": 4550,
       "killedIn": "listed-test-files"
     },
     {
@@ -5556,7 +5552,7 @@
       "loadCheck": "passed",
       "typecheck": "passed",
       "testFilesRun": 1,
-      "durationMs": 5150,
+      "durationMs": 4894,
       "killedIn": "listed-test-files"
     },
     {
@@ -5603,7 +5599,7 @@
       "loadCheck": "passed",
       "typecheck": "passed",
       "testFilesRun": 1,
-      "durationMs": 5120,
+      "durationMs": 4703,
       "killedIn": "listed-test-files"
     },
     {
@@ -5642,7 +5638,7 @@
       "loadCheck": "passed",
       "typecheck": "passed",
       "testFilesRun": 1,
-      "durationMs": 5293,
+      "durationMs": 4497,
       "killedIn": "listed-test-files"
     },
     {
@@ -5690,7 +5686,7 @@
       "loadCheck": "passed",
       "typecheck": "passed",
       "testFilesRun": 2,
-      "durationMs": 5319,
+      "durationMs": 4723,
       "killedIn": "listed-test-files"
     },
     {
@@ -5730,7 +5726,7 @@
       "loadCheck": "passed",
       "typecheck": "passed",
       "testFilesRun": 2,
-      "durationMs": 33137,
+      "durationMs": 27616,
       "killedIn": "listed-test-files"
     },
     {
@@ -5765,7 +5761,7 @@
       "loadCheck": "passed",
       "typecheck": "passed",
       "testFilesRun": 1,
-      "durationMs": 5365,
+      "durationMs": 4612,
       "killedIn": "listed-test-files"
     },
     {
@@ -5824,7 +5820,7 @@
       "loadCheck": "passed",
       "typecheck": "passed",
       "testFilesRun": 1,
-      "durationMs": 4773,
+      "durationMs": 3743,
       "killedIn": "listed-test-files"
     },
     {
@@ -5859,7 +5855,7 @@
       "loadCheck": "passed",
       "typecheck": "passed",
       "testFilesRun": 1,
-      "durationMs": 5048,
+      "durationMs": 3863,
       "killedIn": "listed-test-files"
     },
     {
@@ -5898,7 +5894,7 @@
       "loadCheck": "passed",
       "typecheck": "passed",
       "testFilesRun": 1,
-      "durationMs": 4518,
+      "durationMs": 3354,
       "killedIn": "listed-test-files"
     },
     {
@@ -5933,7 +5929,7 @@
       "loadCheck": "passed",
       "typecheck": "passed",
       "testFilesRun": 1,
-      "durationMs": 4610,
+      "durationMs": 3812,
       "killedIn": "listed-test-files"
     },
     {
@@ -5973,7 +5969,7 @@
       "loadCheck": "passed",
       "typecheck": "passed",
       "testFilesRun": 2,
-      "durationMs": 4824,
+      "durationMs": 4133,
       "killedIn": "listed-test-files"
     },
     {
@@ -6008,7 +6004,7 @@
       "loadCheck": "passed",
       "typecheck": "passed",
       "testFilesRun": 1,
-      "durationMs": 5079,
+      "durationMs": 5500,
       "killedIn": "listed-test-files"
     },
     {
@@ -6043,7 +6039,7 @@
       "loadCheck": "passed",
       "typecheck": "passed",
       "testFilesRun": 1,
-      "durationMs": 5732,
+      "durationMs": 5422,
       "killedIn": "listed-test-files"
     },
     {
@@ -6078,7 +6074,7 @@
       "loadCheck": "passed",
       "typecheck": "passed",
       "testFilesRun": 1,
-      "durationMs": 5616,
+      "durationMs": 4787,
       "killedIn": "listed-test-files"
     },
     {
@@ -6117,7 +6113,7 @@
       "loadCheck": "passed",
       "typecheck": "passed",
       "testFilesRun": 1,
-      "durationMs": 5327,
+      "durationMs": 4524,
       "killedIn": "listed-test-files"
     },
     {
@@ -6152,7 +6148,7 @@
       "loadCheck": "passed",
       "typecheck": "passed",
       "testFilesRun": 1,
-      "durationMs": 4914,
+      "durationMs": 4278,
       "killedIn": "listed-test-files"
     },
     {
@@ -6187,7 +6183,7 @@
       "loadCheck": "passed",
       "typecheck": "passed",
       "testFilesRun": 1,
-      "durationMs": 4936,
+      "durationMs": 4072,
       "killedIn": "listed-test-files"
     },
     {
@@ -6222,7 +6218,7 @@
       "loadCheck": "passed",
       "typecheck": "passed",
       "testFilesRun": 1,
-      "durationMs": 5033,
+      "durationMs": 4541,
       "killedIn": "listed-test-files"
     },
     {
@@ -6261,7 +6257,7 @@
       "loadCheck": "passed",
       "typecheck": "passed",
       "testFilesRun": 1,
-      "durationMs": 5085,
+      "durationMs": 4532,
       "killedIn": "listed-test-files"
     },
     {
@@ -6296,20 +6292,111 @@
       "loadCheck": "passed",
       "typecheck": "passed",
       "testFilesRun": 1,
-      "durationMs": 4396,
+      "durationMs": 4441,
+      "killedIn": "listed-test-files"
+    },
+    {
+      "id": "F21-sticky-contest",
+      "family": "fail-closed",
+      "catalogue": "required",
+      "description": "A contest the session has already seen no longer withholds: the approach is judged on the instantaneous gap alone again.",
+      "protection": "Finding F21 (issue #61): once a waiting session has seen a follower inside the margin, a later wider gap does not make the leader selectable.",
+      "file": "services/api/src/matching.ts",
+      "edits": [
+        {
+          "file": "services/api/src/matching.ts",
+          "find": "    abstentions.add(\"approach_contested_during_session\");",
+          "replace": "    { /* Negative control F21: a remembered contest is ignored. */ }"
+        }
+      ],
+      "testFiles": [
+        "services/api/test/matching.test.ts"
+      ],
+      "missingTestFiles": [],
+      "outcome": "KILLED",
+      "reason": "3 test(s) newly fail in the listed test files",
+      "failingTestCount": 3,
+      "failingTestCountIncludingBaseline": 3,
+      "killedBy": [
+        {
+          "file": "services/api/test/matching.test.ts",
+          "test": "F21 regression: an approach once contested inside the margin must not become automatically selectable just because the gap later opens"
+        },
+        {
+          "file": "services/api/test/matching.test.ts",
+          "test": "F22 regression: a follower seen inside the margin while nothing was selectable yet still contests the approach"
+        },
+        {
+          "file": "services/api/test/matching.test.ts",
+          "test": "F22 regression: a pair inside the margin beyond the approach window contests the approach"
+        }
+      ],
+      "mustBeKilledBy": [
+        "F21 regression: an approach once contested inside the margin must not become automatically selectable just because the gap later opens"
+      ],
+      "baselineFailuresInListedFiles": [],
+      "loadCheck": "passed",
+      "typecheck": "passed",
+      "testFilesRun": 1,
+      "durationMs": 4713,
+      "requiredKillerFired": true,
+      "killedIn": "listed-test-files"
+    },
+    {
+      "id": "F22-contest-before-selectable",
+      "family": "fail-closed",
+      "catalogue": "required",
+      "description": "A pair seen inside the margin while nothing is selectable yet (cadence not fresh, or beyond the approach window) is no longer remembered as a contest.",
+      "protection": "Finding F22 (issue #61): the two vehicles nearest the stop seen inside the margin contest the approach whether or not a leader was selectable at that look.",
+      "file": "services/api/src/matching.ts",
+      "edits": [
+        {
+          "file": "services/api/src/matching.ts",
+          "find": "    passage.memory.contestedApproach = { at: request.now };\n  }",
+          "replace": "    { /* Negative control F22: a contest seen before any leader was selectable is forgotten. */ }\n  }"
+        }
+      ],
+      "testFiles": [
+        "services/api/test/matching.test.ts"
+      ],
+      "missingTestFiles": [],
+      "outcome": "KILLED",
+      "reason": "2 test(s) newly fail in the listed test files",
+      "failingTestCount": 2,
+      "failingTestCountIncludingBaseline": 2,
+      "killedBy": [
+        {
+          "file": "services/api/test/matching.test.ts",
+          "test": "F22 regression: a follower seen inside the margin while nothing was selectable yet still contests the approach"
+        },
+        {
+          "file": "services/api/test/matching.test.ts",
+          "test": "F22 regression: a pair inside the margin beyond the approach window contests the approach"
+        }
+      ],
+      "mustBeKilledBy": [
+        "F22 regression: a follower seen inside the margin while nothing was selectable yet still contests the approach",
+        "F22 regression: a pair inside the margin beyond the approach window contests the approach"
+      ],
+      "baselineFailuresInListedFiles": [],
+      "loadCheck": "passed",
+      "typecheck": "passed",
+      "testFilesRun": 1,
+      "durationMs": 4405,
+      "requiredKillerFired": true,
       "killedIn": "listed-test-files"
     }
   ],
   "summary": {
-    "total": 137,
-    "killed": 137,
+    "total": 139,
+    "killed": 139,
     "survived": 0,
     "stale": 0,
     "invalid": 0,
     "timeout": 0,
     "required": {
-      "total": 18,
-      "killed": 18
+      "total": 20,
+      "killed": 20
     },
     "extra": {
       "total": 119,
@@ -6323,7 +6410,7 @@
     "invalidIds": [],
     "timeoutIds": [],
     "exitCode": 0,
-    "durationMs": 1268423
+    "durationMs": 1062033
   },
   "notes": [
     "Every control ran against a temporary copy of services/api taken once at the start (the snapshot); the working tree was never edited.",

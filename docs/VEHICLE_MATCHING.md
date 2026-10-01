@@ -64,6 +64,16 @@ S + 1, and a bus reporting S may already have left. So:
   inside the four-stop window or behind it (finding F9: counted only inside the
   window, a bus one stop behind a leader four stops out did not count, and it
   could overtake). An on-board rider's bus must be the only one in its window.
+- **Contested approach** (findings F21, F22). Once two buses heading for the
+  stop have been less than three stops apart during a waiting session, the
+  approach stays contested for the rest of that session and nothing is
+  selected automatically, even if the gap later opens: the bus behind may
+  still arrive first. A look counts whether or not a leader was selectable
+  then (F22): a pair seen while the leader was stale, or while both were
+  beyond the four-stop window, contests the approach too. The nearest place
+  each bus could be, current or remembered, is what is compared, and one bus
+  reported at two places is not a pair. Round a loop the rule does not apply
+  (the loop rules above already withhold across the seam).
 - **Unknown position.** No stop sequence, or one the route does not have,
   blocks. Coordinates alone never select: they cannot say which side of the
   stop a bus is on.

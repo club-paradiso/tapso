@@ -1,6 +1,6 @@
 {
   "policyVersion": "matcher-passive-safety-v4",
-  "generatedAt": "2026-09-30T00:25:51.487Z",
+  "generatedAt": "2026-10-01T07:26:23.669Z",
   "awarded": "READY_FOR_SHADOW",
   "criteria": [
     {
@@ -36,8 +36,8 @@
       "title": "Every negative control (F1, F3 leak paths, F4, fail-closed rules) is killed",
       "status": "PASS",
       "evidenceClass": "VERIFIED_BY_TEST",
-      "observed": "137/137 killed, 0 survived, 0 stale, 0 invalid, 0 timed out; complete true, baseline green true, tree unchanged true; all 137 pinned controls killed",
-      "required": "a complete run on a green baseline and an unchanged tree: all killed, none survived, stale, invalid or timed out, and each of the 137 pinned controls among the killed"
+      "observed": "139/139 killed, 0 survived, 0 stale, 0 invalid, 0 timed out; complete true, baseline green true, tree unchanged true; all 139 pinned controls killed",
+      "required": "a complete run on a green baseline and an unchanged tree: all killed, none survived, stale, invalid or timed out, and each of the 139 pinned controls among the killed"
     },
     {
       "id": "SH-5",
