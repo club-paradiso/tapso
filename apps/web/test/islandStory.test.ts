@@ -60,8 +60,14 @@ test("the app starts the Live Activity only from the rider's confirmation (Swift
     const fn = [...before.matchAll(/func (\w+)\(/g)].pop()?.[1];
     if (fn) callers.add(fn);
   }
-  // A restored ride resumes the activity it already had; nothing else starts one.
-  assert.deepEqual([...callers].sort(), ["confirmVehicle", "resumeIfNeeded"]);
+  // The rider's tap on the sample ride or, on a live ride, the rider's tap
+  // once the server has accepted it; a restored ride resumes the activity it
+  // already had. Nothing else starts one.
+  assert.deepEqual([...callers].sort(), ["confirmLiveVehicle", "confirmVehicle", "resumeIfNeeded"]);
+  const live = model.slice(model.indexOf("func confirmLiveVehicle("));
+  const body = live.slice(0, live.indexOf("\n    }\n"));
+  assert.ok(body.indexOf("api.confirm(") >= 0 && body.indexOf("api.confirm(") < body.indexOf("await startLiveActivity()"),
+    "a live ride's activity starts only after the server accepted the rider's confirmation");
 });
 
 test("the app in front never shows its own activity in the island", () => {
