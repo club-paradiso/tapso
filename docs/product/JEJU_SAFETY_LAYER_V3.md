@@ -25,18 +25,13 @@ Times are minutes on one clock where the caller's "now" is 0. A range
 
 | Input | Where it comes from today | Label |
 |---|---|---|
-| Return departures (a full list) | **No verified source.** TAGO publishes no timetable in the services TAPSO uses (`DATA_VALIDATION.md`) | `MISSING` → evaluates to `unknown` |
-| Last departure of a route variant | TAGO `getRouteInfoIem` through `GET /v1/route-info`: first and last departure (`HHMM`) from the route's **starting stop**, and average headways (data.go.kr dataset 15098529) | `REPORTED-OFFICIAL`; live values `UNVERIFIED` until the post-deploy probe reads them. Used as one conservative departure (`LastBus`): a bus passes later stops after it leaves the starting stop |
+| Return departures, last practical departure | **No verified source.** TAGO's services in use publish vehicle positions and stop lists, not timetables (`DATA_VALIDATION.md`). An official Jeju timetable source must be verified before any `scheduled` list is fed in | `MISSING` → evaluates to `unknown` |
 | Feeder arrival range | Remaining stops on the live route × an assumed per-stop band, until an arrival-prediction source is verified | `ASSUMED` band, labelled as an estimate |
 | Connecting bus range | Same as above for a live connecting bus | `ASSUMED` band |
 | Walking metres | Haversine between surveyed stop coordinates (TAGO `gpslati`/`gpslong`) | `VERIFIED` coordinates, straight-line distance (a lower bound) |
 | Policy constants | Product choices | `ASSUMED` |
 
-So in live use today Safe Return honestly answers `unknown` for most places,
-with one exception since V2.4b: after a live ride the end screen shows each
-variant's last departure (`ReturnTripCard`), evaluated with `departures: [last]`,
-`arrival: 0`, `minimumStay: 0`, so the rider sees "be at the stop by" the last
-departure minus the 10-minute margin, never a time the bus passes their stop.
+So in live use today Safe Return honestly answers `unknown` for most places.
 That is the intended behaviour, not a gap to paper over: `unknown` is never
 shown as safe, and Discover never presents an `unknown` return as "다녀오기 좋아요".
 
