@@ -485,7 +485,7 @@ struct RideHeroCard: View {
 
 /// The Rescue plan's options in its order; the first is the suggestion when there is a
 /// choice. A walk shows its straight-line distance, never minutes: the real walk is longer.
-/// Figma: `04 iOS` › Product V3 › 30 Passed stop.
+/// Figma: `04 iOS` › Product V3 › `V3 / 26 Passed stop` (`195:3021`).
 struct RescueOptionList: View {
     let advice: PassedStopAdvice
 
