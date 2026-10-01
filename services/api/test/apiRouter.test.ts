@@ -988,3 +988,16 @@ test("route info: no published service day is NOT_FOUND, and provider failures k
   assert.equal((await get(flaky, `/v1/route-info?cityCode=${CITY}&routeId=${ROUTE}`)).status, 502);
   assert.equal((await get(flaky, `/v1/route-info?cityCode=${CITY}&routeId=${ROUTE}`)).status, 200, "a failure is never cached");
 });
+
+test("route info: values TAGO sent outside its documented shape are reported in meta, never in the item", async () => {
+  const handler = serviceHoursHandler(async (_cityCode, routeId) => ({ routeId, headwayMinutes: {}, undocumented: { endvehicletime: "223000" } }));
+  const response = await get(handler, `/v1/route-info?cityCode=${CITY}&routeId=${ROUTE}`);
+  assert.equal(response.status, 200);
+  const body = await response.json() as { item: Record<string, unknown>; meta: Record<string, unknown> };
+  assert.deepEqual(body.item, { routeId: ROUTE, headwayMinutes: {} });
+  assert.deepEqual(body.meta.undocumentedFields, { endvehicletime: "223000" });
+
+  const clean = serviceHoursHandler(async (_cityCode, routeId) => ({ routeId, headwayMinutes: {} }));
+  const plain = await (await get(clean, `/v1/route-info?cityCode=${CITY}&routeId=${ROUTE}`)).json() as { meta: Record<string, unknown> };
+  assert.equal("undocumentedFields" in plain.meta, false, "absent when TAGO sent nothing undocumented");
+});
