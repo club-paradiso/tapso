@@ -121,6 +121,13 @@ export const PauseIcon = (p: IconProps) => (
   </Svg>
 );
 
+export const TimerIcon = (p: IconProps) => (
+  <Svg {...p}>
+    <circle cx="12" cy="13.5" r="7" />
+    <path d="M12 13.5V9.5M10 3h4M18.5 7.5l1.5-1.5" />
+  </Svg>
+);
+
 export const LockIcon = (p: IconProps) => (
   <Svg {...p}>
     <rect x="5" y="10.5" width="14" height="10" rx="2.5" />
