@@ -59,6 +59,33 @@ public enum MapHandoff {
         }
     }
 
+    /// A walking hand-off to a place the rider shared (`SharedPlace`), or `nil`
+    /// when no honest one exists. Same documented URL shapes as a stop; the
+    /// place's coordinate came from the rider's own map app, so it is real.
+    /// A place outside Jeju, or one known only by a link, gets none.
+    public static func walkingRequest(to place: SharedPlace, in app: MapApp) -> MapHandoffRequest? {
+        guard place.isInJeju != false else { return nil }
+        let name = place.name ?? place.address
+        switch (app, place.coordinate) {
+        case let (.naverMap, coordinate?):
+            var items = [("dlat", format(coordinate.latitude)), ("dlng", format(coordinate.longitude))]
+            if let name { items.append(("dname", name)) }
+            items.append(("appname", appName))
+            return request(app, path: "route/walk", items)
+        case (.naverMap, nil):
+            guard let name else { return nil }
+            return request(app, path: "search", [("query", name), ("appname", appName)])
+        case let (.kakaoMap, coordinate?):
+            return request(app, path: "route", [
+                ("ep", "\(format(coordinate.latitude)),\(format(coordinate.longitude))"),
+                ("by", "FOOT")
+            ])
+        case (.kakaoMap, nil):
+            // KakaoMap's guide documents its keyword search only for the web, not the app scheme.
+            return nil
+        }
+    }
+
     private static func request(_ app: MapApp, path: String, _ items: [(String, String)]) -> MapHandoffRequest {
         var components = URLComponents()
         components.scheme = app.scheme
