@@ -54,20 +54,19 @@ test("no Live Activity exists before the rider confirms the bus", () => {
 
 test("the app starts the Live Activity only from the rider's confirmation (Swift)", () => {
   const model = readFileSync(repo("apps/ios/TapsoApp/TapsoAppModel.swift"), "utf8");
+  const enclosing = (index: number | undefined) => [...model.slice(0, index).matchAll(/func (\w+)\(/g)].pop()?.[1];
   const callers = new Set<string>();
   for (const call of model.matchAll(/await startLiveActivity\(\)/g)) {
-    const before = model.slice(0, call.index);
-    const fn = [...before.matchAll(/func (\w+)\(/g)].pop()?.[1];
+    const fn = enclosing(call.index);
     if (fn) callers.add(fn);
   }
-  // The rider's tap on the sample ride or, on a live ride, the rider's tap
-  // once the server has accepted it; a restored ride resumes the activity it
-  // already had. Nothing else starts one.
+  // A live ride is confirmed through the server (`confirmLiveVehicle`), which only the
+  // rider's tap reaches, through `confirmVehicle`. A restored ride resumes the activity
+  // it already had; nothing else starts one.
   assert.deepEqual([...callers].sort(), ["confirmLiveVehicle", "confirmVehicle", "resumeIfNeeded"]);
-  const live = model.slice(model.indexOf("func confirmLiveVehicle("));
-  const body = live.slice(0, live.indexOf("\n    }\n"));
-  assert.ok(body.indexOf("api.confirm(") >= 0 && body.indexOf("api.confirm(") < body.indexOf("await startLiveActivity()"),
-    "a live ride's activity starts only after the server accepted the rider's confirmation");
+  assert.match(model, /private func confirmLiveVehicle\(/, "the live confirmation is reachable only inside the model");
+  const liveCallers = [...model.matchAll(/await confirmLiveVehicle\(/g)].map((call) => enclosing(call.index));
+  assert.deepEqual(liveCallers, ["confirmVehicle"]);
 });
 
 test("the app in front never shows its own activity in the island", () => {
