@@ -2,7 +2,7 @@ import { useEffect, useId, useRef, useState } from "react";
 import {
   SUPPORT_CHANNELS,
   SUPPORT_CHANNEL_AVAILABILITY,
-} from "../content/site.ts";
+} from "../lib/supportChannels.ts";
 import {
   createSupportIntent,
   fetchSupportConfig,
