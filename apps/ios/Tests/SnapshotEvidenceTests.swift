@@ -69,6 +69,15 @@ final class SnapshotEvidenceTests: XCTestCase {
                 onMap: { _ in },
                 onDone: {},
                 appleMapsAvailable: true
+            ))),
+            ("29-end-return-trip", AnyView(RideEndContent(
+                outcome: RideOutcome(moment: .arrived, routeNumber: "202", destination: DemoCatalog.outbound.stops[8].stop),
+                naverAvailable: true,
+                kakaoAvailable: true,
+                handoffFailed: nil,
+                onMap: { _ in },
+                onDone: {},
+                returnService: .loaded(returnRows)
             )))
         ]
         for (name, view) in screens {
@@ -193,6 +202,27 @@ final class SnapshotEvidenceTests: XCTestCase {
             address: "제주특별자치도 제주시 한림읍 협재리 2497-1",
             coordinate: Coordinate(latitude: 33.3940, longitude: 126.2397)
         )
+    }
+
+    /// SYNTHETIC: two variants of a route number at 21:30 on a weekday in Jeju.
+    private var returnRows: [ReturnServiceRow] {
+        var calendar = Calendar(identifier: .gregorian)
+        calendar.timeZone = LastBus.timeZone
+        let evening = calendar.date(from: DateComponents(year: 2026, month: 10, day: 1, hour: 21, minute: 30))!
+        let way = TransitAPIRoute(routeId: "SYN-202-W", routeNumber: "202", startStopName: "제주버스터미널", endStopName: "협재")
+        let back = TransitAPIRoute(routeId: "SYN-202-E", routeNumber: "202", startStopName: "협재", endStopName: "제주버스터미널")
+        return [
+            ReturnServiceRow(
+                route: way,
+                advice: LastBus.advice(for: TransitAPIRouteServiceHours(routeId: way.routeId, firstDeparture: "06:00", lastDeparture: "22:30", headwayMinutes: .init(weekday: 30)), now: evening),
+                ridden: true
+            ),
+            ReturnServiceRow(
+                route: back,
+                advice: LastBus.advice(for: TransitAPIRouteServiceHours(routeId: back.routeId, firstDeparture: "06:10", lastDeparture: "21:50", headwayMinutes: .init(weekday: 30)), now: evening),
+                ridden: false
+            ),
+        ]
     }
 
     private func end(_ moment: RideMoment) -> AnyView {

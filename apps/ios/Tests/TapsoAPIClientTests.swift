@@ -212,6 +212,56 @@ final class TapsoAPIClientTests: XCTestCase {
         try await waitUntil { StubURLProtocol.recorded.contains { $0.httpMethod == "DELETE" } }
     }
 
+    func testRouteInfoReadsOneVariantsPublishedServiceDay() async throws {
+        StubURLProtocol.respond { _ in (200, Payload.routeInfo(routeID: "SYN-202-W", last: "22:30")) }
+        let hours = try await makeClient().routeInfo(routeID: "SYN-202-W")
+        XCTAssertEqual(hours.lastDeparture, "22:30")
+        XCTAssertEqual(hours.firstDeparture, "06:00")
+        XCTAssertEqual(hours.headwayMinutes.weekday, 30)
+        let request = try XCTUnwrap(StubURLProtocol.recorded.first)
+        XCTAssertEqual(request.url?.path, "/v1/route-info")
+        let query = URLComponents(url: try XCTUnwrap(request.url), resolvingAgainstBaseURL: false)?.queryItems ?? []
+        XCTAssertEqual(query.first { $0.name == "routeId" }?.value, "SYN-202-W")
+        XCTAssertEqual(query.first { $0.name == "cityCode" }?.value, "39")
+    }
+
+    func testAfterALiveRideTheWayBackShowsTodaysLastBusOfEachVariant() async throws {
+        StubURLProtocol.respond { request in
+            let routeID = URLComponents(url: request.url!, resolvingAgainstBaseURL: false)?.queryItems?.first { $0.name == "routeId" }?.value ?? ""
+            switch (request.url?.path ?? "", routeID) {
+            case ("/v1/routes", _): return (200, Payload.routes)
+            case ("/v1/route-info", "SYN-202-W"): return (200, Payload.routeInfo(routeID: "SYN-202-W", last: "22:30"))
+            default: return (404, Data(#"{"error":"NOT_FOUND","message":"the provider has no route with that routeId"}"#.utf8))
+            }
+        }
+        let model = makeModel()
+        let outcome = RideOutcome(
+            moment: .arrived,
+            routeNumber: "202",
+            destination: Stop(id: "SYN-STOP-10", name: "합성 정류장 10", coordinate: Coordinate(latitude: 33.47, longitude: 126.32)),
+            cityCode: "39",
+            routeID: "SYN-202-W"
+        )
+        var calendar = Calendar(identifier: .gregorian)
+        calendar.timeZone = LastBus.timeZone
+        let evening = calendar.date(from: DateComponents(year: 2026, month: 10, day: 1, hour: 21, minute: 30))!
+
+        await model.loadReturnService(for: outcome, now: evening)
+        guard case let .loaded(rows) = model.returnService else { return XCTFail("not loaded: \(model.returnService)") }
+        XCTAssertEqual(rows.map(\.route.routeId), ["SYN-202-W", "SYN-202-E"])
+        XCTAssertEqual(rows.map(\.ridden), [true, false])
+        XCTAssertEqual(rows[0].advice.level, .leaveBy)
+        XCTAssertEqual(rows[0].advice.beAtStopBy, "22:20")
+        XCTAssertEqual(rows[1].advice.level, .unknown, "no published service day is unknown, never safe")
+
+        let demo = RideOutcome(moment: .arrived, routeNumber: "365", destination: outcome.destination)
+        model.dismissOutcome()
+        StubURLProtocol.respond { _ in (500, Data()) }
+        await model.loadReturnService(for: demo)
+        XCTAssertEqual(model.returnService, .idle, "the synthetic demo has no way back to read")
+        XCTAssertTrue(StubURLProtocol.recorded.isEmpty)
+    }
+
     // MARK: Helpers
 
     private func makeClient() -> TapsoAPIClient {
@@ -252,6 +302,12 @@ private enum Payload {
         }
         return Data(#"{"items":[\#(items.joined(separator: ","))],"meta":{"topology":{"kind":"linear"}}}"#.utf8)
     }()
+
+    static func routeInfo(routeID: String, last: String) -> Data {
+        Data(#"""
+        {"item":{"routeId":"\#(routeID)","routeNumber":"202","startStopName":"합성 정류장 1","endStopName":"합성 정류장 12","firstDeparture":"06:00","lastDeparture":"\#(last)","headwayMinutes":{"weekday":30}},"meta":{"provider":"synthetic","timeReference":"starting_stop_departure"}}
+        """#.utf8)
+    }
 
     static func session(state: String, selected: Bool = false) -> Data {
         let stop = { (sequence: Int) in

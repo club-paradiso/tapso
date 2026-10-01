@@ -21,10 +21,13 @@ struct RideEndView: View {
                 onDone: { model.dismissOutcome() },
                 appleMapsAvailable: model.appleMapsTarget(for: outcome) != nil,
                 appleMapsFailed: model.appleMapsFailed,
-                onAppleMaps: { model.openAppleMaps(for: outcome) }
+                onAppleMaps: { model.openAppleMaps(for: outcome) },
+                returnService: model.returnService,
+                onRetryReturn: { Task { await model.loadReturnService(for: outcome) } }
             )
         }
         .background(TapsoColor.backgroundPrimary)
+        .task { await model.loadReturnService(for: outcome) }
     }
 }
 
@@ -38,6 +41,9 @@ struct RideEndContent: View {
     var appleMapsAvailable = false
     var appleMapsFailed = false
     var onAppleMaps: () -> Void = {}
+    /// Live rides: today's last buses for the way back.
+    var returnService: ReturnService = .idle
+    var onRetryReturn: () -> Void = {}
 
     private var passed: Bool { outcome.moment == .passedDestination }
     /// The shared place the walk goes to, when the ride started from one.
@@ -132,6 +138,8 @@ struct RideEndContent: View {
                 }
             }
 
+            ReturnTripCard(service: returnService, onRetry: onRetryReturn)
+
             Button("end.done", action: onDone)
                 .buttonStyle(PrimaryButtonStyle())
                 .accessibilityIdentifier("end-done")
@@ -139,5 +147,123 @@ struct RideEndContent: View {
         .padding(.horizontal, TapsoSpace.gutter)
         .padding(.vertical, TapsoSpace.xxl)
         .frame(maxWidth: .infinity, alignment: .leading)
+    }
+}
+
+/// Today's last buses of the route number, for the way back after a live ride.
+/// Figma: `ReturnTripCard / V3`. Times are departures from each variant's starting
+/// stop; the card says so, and never turns a published headway into a timetable.
+struct ReturnTripCard: View {
+    let service: ReturnService
+    var onRetry: () -> Void = {}
+
+    var body: some View {
+        switch service {
+        case .idle:
+            EmptyView()
+        case .loading:
+            TapsoCard {
+                HStack(spacing: TapsoSpace.sm) {
+                    ProgressView()
+                    Text("returnTrip.loading")
+                        .font(.subheadline)
+                        .foregroundStyle(TapsoColor.textSecondary)
+                }
+            }
+        case let .failed(failure):
+            LiveFailureNotice(failure: failure, retry: onRetry)
+        case let .loaded(rows):
+            TapsoCard {
+                VStack(alignment: .leading, spacing: TapsoSpace.sm) {
+                    Label("returnTrip.title", systemImage: "moon.stars")
+                        .font(.headline)
+                        .foregroundStyle(TapsoColor.textPrimary)
+                    ForEach(rows) { row in
+                        ReturnTripRow(row: row)
+                        if row.id != rows.last?.id {
+                            Divider().overlay(TapsoColor.separator)
+                        }
+                    }
+                    Text("returnTrip.note")
+                        .font(.footnote)
+                        .foregroundStyle(TapsoColor.textTertiary)
+                        .fixedSize(horizontal: false, vertical: true)
+                }
+            }
+        }
+    }
+}
+
+struct ReturnTripRow: View {
+    let row: ReturnServiceRow
+
+    var body: some View {
+        VStack(alignment: .leading, spacing: 4) {
+            HStack(spacing: TapsoSpace.xs) {
+                RouteBadge(number: row.route.routeNumber)
+                Text(String(format: RideText.string("returnTrip.direction"), row.route.startStopName ?? "—", row.route.endStopName ?? "—"))
+                    .font(.subheadline.weight(.semibold))
+                    .foregroundStyle(TapsoColor.textPrimary)
+                    .lineLimit(2)
+                if row.ridden {
+                    Text("returnTrip.ridden")
+                        .font(.caption2.weight(.bold))
+                        .foregroundStyle(TapsoColor.textSecondary)
+                        .padding(.horizontal, 6)
+                        .padding(.vertical, 2)
+                        .background(TapsoColor.backgroundElevated, in: Capsule())
+                }
+            }
+            Text(verbatim: levelText)
+                .font(.subheadline.weight(.bold))
+                .foregroundStyle(levelColor)
+            if let detail = detailText {
+                Text(verbatim: detail)
+                    .font(.footnote)
+                    .foregroundStyle(TapsoColor.textSecondary)
+            }
+        }
+        .padding(.vertical, TapsoSpace.xxs)
+        .frame(maxWidth: .infinity, alignment: .leading)
+        .accessibilityElement(children: .combine)
+    }
+
+    private var advice: LastBusAdvice { row.advice }
+
+    private var levelText: String {
+        let by = advice.beAtStopBy ?? ""
+        switch advice.level {
+        case .comfortable: return RideText.string("returnTrip.level.comfortable")
+        case .leaveBy: return String(format: RideText.string("returnTrip.level.leaveBy"), by)
+        case .tight: return String(format: RideText.string("returnTrip.level.tight"), by)
+        case .notRecommended:
+            return RideText.string(advice.isGone ? "returnTrip.level.gone" : "returnTrip.level.now")
+        case .unknown: return RideText.string("returnTrip.level.unknown")
+        }
+    }
+
+    private var levelColor: Color {
+        switch advice.level {
+        case .comfortable: TapsoColor.mintDeep
+        case .leaveBy: TapsoColor.journeyArrival
+        case .tight, .notRecommended: TapsoColor.journeyNext
+        case .unknown: TapsoColor.textSecondary
+        }
+    }
+
+    private var detailText: String? {
+        var parts: [String] = []
+        if let last = advice.lastDeparture {
+            parts.append(String(format: RideText.string("returnTrip.last"), last))
+        }
+        if let headway = advice.headwayMinutes {
+            let key = switch advice.day {
+            case .weekday: "returnTrip.headway.weekday"
+            case .saturday: "returnTrip.headway.saturday"
+            case .sunday: "returnTrip.headway.sunday"
+            }
+            parts.append(String(format: RideText.string(key), headway))
+        }
+        return parts.isEmpty ? nil : parts.joined(separator: " · ")
     }
 }

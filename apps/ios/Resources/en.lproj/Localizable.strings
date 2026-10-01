@@ -301,3 +301,20 @@
 "share.done" = "Done";
 "share.close" = "Close";
 "share.privacy" = "What you share is read on this device only. TAPSO doesn't open links and sends nothing anywhere.";
+
+/* The way back: today's last buses (route service hours). */
+"returnTrip.title" = "Last buses for the way back";
+"returnTrip.loading" = "Checking today's last buses";
+"returnTrip.direction" = "%@ → %@";
+"returnTrip.ridden" = "The way you came";
+"returnTrip.level.comfortable" = "Plenty of time before the last bus";
+"returnTrip.level.leaveBy" = "Be at the stop by %@";
+"returnTrip.level.tight" = "Hurry · be at the stop by %@";
+"returnTrip.level.now" = "Head to the stop now";
+"returnTrip.level.gone" = "Today's last bus has left";
+"returnTrip.level.unknown" = "Last bus time unknown";
+"returnTrip.last" = "Last bus %@ from its first stop";
+"returnTrip.headway.weekday" = "weekdays every %ld min on average";
+"returnTrip.headway.saturday" = "Saturdays every %ld min on average";
+"returnTrip.headway.sunday" = "Sundays every %ld min on average";
+"returnTrip.note" = "Last bus times are when it leaves the route's first stop. It passes other stops after that, so being at your stop by the time shown gets you there before it. Headways are averages, not a timetable.";

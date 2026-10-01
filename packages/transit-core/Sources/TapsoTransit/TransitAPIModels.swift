@@ -65,6 +65,54 @@ public struct TransitAPIStopList: Codable, Hashable, Sendable {
     }
 }
 
+/// `GET /v1/route-info`: a route's published service day (TAGO `getRouteInfoIem`).
+/// The times are departures from the route's starting stop (기점), never from any
+/// other stop; headways are published averages, never a timetable.
+public struct TransitAPIRouteServiceHours: Codable, Hashable, Sendable {
+    public struct Headways: Codable, Hashable, Sendable {
+        public let weekday: Int?
+        public let saturday: Int?
+        public let sunday: Int?
+
+        public init(weekday: Int? = nil, saturday: Int? = nil, sunday: Int? = nil) {
+            self.weekday = weekday
+            self.saturday = saturday
+            self.sunday = sunday
+        }
+    }
+
+    public let routeId: String
+    public let routeNumber: String?
+    public let startStopName: String?
+    public let endStopName: String?
+    /// `HH:MM`, Korean time.
+    public let firstDeparture: String?
+    public let lastDeparture: String?
+    public let headwayMinutes: Headways
+
+    public init(
+        routeId: String,
+        routeNumber: String? = nil,
+        startStopName: String? = nil,
+        endStopName: String? = nil,
+        firstDeparture: String? = nil,
+        lastDeparture: String? = nil,
+        headwayMinutes: Headways = Headways()
+    ) {
+        self.routeId = routeId
+        self.routeNumber = routeNumber
+        self.startStopName = startStopName
+        self.endStopName = endStopName
+        self.firstDeparture = firstDeparture
+        self.lastDeparture = lastDeparture
+        self.headwayMinutes = headwayMinutes
+    }
+}
+
+public struct TransitAPIRouteInfo: Codable, Hashable, Sendable {
+    public let item: TransitAPIRouteServiceHours
+}
+
 /// `{"error": "<CODE>", "message": "..."}`
 public struct TransitAPIErrorBody: Codable, Hashable, Sendable {
     public let error: String
