@@ -1,0 +1,45 @@
+name: Data source probe
+
+# Read-only evidence the agent environment cannot fetch itself: what
+# data.go.kr documents about the TAGO services, and the topology of named Jeju
+# routes from TAPSO's own production API. No secret, no write, no vehicle data.
+on:
+  workflow_dispatch:
+  push:
+    paths:
+      - .github/workflows/data-source-probe.yml
+      - scripts/data-sources/**
+
+permissions:
+  contents: read
+
+concurrency:
+  group: data-source-probe
+  cancel-in-progress: false
+
+jobs:
+  tago-docs:
+    runs-on: ubuntu-latest
+    timeout-minutes: 10
+    steps:
+      - uses: actions/checkout@v4
+        with:
+          persist-credentials: false
+      - uses: actions/setup-node@v4
+        with:
+          node-version: 22
+      - name: Official TAGO documentation on data.go.kr (public pages, no key)
+        run: node --experimental-strip-types scripts/data-sources/tago-docs.ts
+
+  jeju-routes:
+    runs-on: ubuntu-latest
+    timeout-minutes: 20
+    steps:
+      - uses: actions/checkout@v4
+        with:
+          persist-credentials: false
+      - uses: actions/setup-node@v4
+        with:
+          node-version: 22
+      - name: Jeju route topology from TAPSO's production API (stops only)
+        run: node --experimental-strip-types scripts/data-sources/jeju-routes.ts
