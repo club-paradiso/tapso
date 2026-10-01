@@ -82,7 +82,7 @@ Every movement shows a state change: the island's morph (420 ms, emphasis curve)
 
 ## Performance
 
-Local production build: JS 277 kB (86 kB gzip, V2 273 / 84), CSS 70 kB (14 kB gzip, V2 65 / 13), prerendered HTML 61 kB. No new dependency. Tracking reads eleven rectangles per animation frame only while scrolling.
+Production build (CI on `main@c73e247`): JS 279 kB (86 kB gzip; V2 273 / 84), CSS 70 kB (14 kB gzip; V2 65 / 13), prerendered HTML 62 kB. No new dependency. Tracking reads eleven rectangles per animation frame only while scrolling.
 
 ## Honesty
 
@@ -91,7 +91,7 @@ Unchanged rules (`forbiddenClaims.ts`, checked on sources and on the prerendered
 ## Verification
 
 ```bash
-npm --prefix apps/web test            # 125 tests, incl. islandStory, productParity, siteHonesty
+npm --prefix apps/web test            # 126 tests, incl. islandStory, productParity, siteHonesty
 npm --prefix apps/web run build       # typecheck, prerender, claim guard
 node apps/web/scripts/render-og.mjs   # after a build; needs Playwright and Pretendard
 ```
