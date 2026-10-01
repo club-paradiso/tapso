@@ -7,7 +7,13 @@ import { JourneySessionCoordinator } from "../src/journeySession.ts";
 import { MATCHER_POLICY_VERSION } from "../src/matching.ts";
 import type { ReadinessLevel } from "../src/matcherSafetyGate.ts";
 import { createBurstLimiter } from "../src/rateLimit.ts";
-import { ProviderConfigurationError, ProviderResponseError, type TransitProvider } from "../src/provider.ts";
+import {
+  ProviderConfigurationError,
+  ProviderResponseError,
+  ProviderTimeoutError,
+  ProviderUnavailableError,
+  type TransitProvider,
+} from "../src/provider.ts";
 import type { RouteRequest, StopOnRoute, VehicleObservation } from "../src/domain.ts";
 
 const CITY = "39";
@@ -298,6 +304,25 @@ test("provider failures map to safe statuses and are never cached as success", a
   const recovered = await get(handler, `/v1/vehicles?routeId=${ROUTE}&cityCode=${CITY}`);
   assert.equal(recovered.status, 200);
   assert.equal(upstream.vehicleCalls, 3, "failures were retried rather than served from cache");
+});
+
+test("an upstream timeout, an unreachable upstream and TAPSO's own failure are three distinct answers", async () => {
+  const { handler, upstream } = harness();
+  upstream.vehicleFailure = new ProviderTimeoutError("TAGO request timed out");
+  const timeout = await get(handler, `/v1/vehicles?routeId=${ROUTE}&cityCode=${CITY}`);
+  assert.equal(timeout.status, 504);
+  assert.deepEqual(await timeout.json(), { error: "PROVIDER_TIMEOUT", message: "TAGO request timed out" });
+  assert.equal(timeout.headers.get("cache-control"), "no-store");
+
+  upstream.vehicleFailure = new ProviderUnavailableError("TAGO provider returned HTTP 503");
+  const unavailable = await get(handler, `/v1/vehicles?routeId=${ROUTE}&cityCode=${CITY}`);
+  assert.equal(unavailable.status, 502);
+  assert.equal((await unavailable.json()).error, "PROVIDER_UNAVAILABLE");
+
+  upstream.vehicleFailure = new Error("TypeError: cannot read properties of undefined");
+  const internal = await get(handler, `/v1/vehicles?routeId=${ROUTE}&cityCode=${CITY}`);
+  assert.equal(internal.status, 500);
+  assert.deepEqual(await internal.json(), { error: "INTERNAL_ERROR", message: "internal error" });
 });
 
 test("an unexpected failure is answered generically", async () => {

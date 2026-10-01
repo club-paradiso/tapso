@@ -2,6 +2,8 @@ import type { RouteRequest, StopOnRoute, VehicleObservation } from "./domain.ts"
 import {
   ProviderConfigurationError,
   ProviderResponseError,
+  ProviderUnavailableError,
+  providerTransportError,
   type TransitProvider,
 } from "./provider.ts";
 import { CANONICAL_SERVICE_KEY_ENV, resolveTagoServiceKey } from "./serviceKey.ts";
@@ -208,8 +210,8 @@ export class TagoTransitProvider implements TransitProvider {
           signal: AbortSignal.timeout(8_000),
           redirect: "error",
         });
-      } catch {
-        lastError = new ProviderResponseError("TAGO request failed or timed out");
+      } catch (error) {
+        lastError = providerTransportError(error, "TAGO");
         if (attempt < TAGO_TRANSIENT_ATTEMPTS) {
           await delay(TAGO_RETRY_DELAY_MS);
           continue;
@@ -218,7 +220,7 @@ export class TagoTransitProvider implements TransitProvider {
       }
 
       if (!response.ok) {
-        lastError = new ProviderResponseError(`TAGO provider returned HTTP ${response.status}`);
+        lastError = new ProviderUnavailableError(`TAGO provider returned HTTP ${response.status}`);
         if (response.status >= 500 && attempt < TAGO_TRANSIENT_ATTEMPTS) {
           await delay(TAGO_RETRY_DELAY_MS);
           continue;
@@ -250,7 +252,7 @@ export class TagoTransitProvider implements TransitProvider {
         throw lastError;
       }
     }
-    throw lastError ?? new ProviderResponseError("TAGO request failed or timed out");
+    throw lastError ?? new ProviderUnavailableError("TAGO request failed");
   }
 }
 

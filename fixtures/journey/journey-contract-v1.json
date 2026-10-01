@@ -1,0 +1,133 @@
+{
+  "//": "SPECIFICATION, not data. The TAPSO Journey Contract v1: the one vocabulary the server (services/api/src/journeyContract.ts), the Swift core (packages/transit-core/Sources/TapsoTransit/JourneyContract.swift) and the marketing site use for a journey and for what every surface shows. Expectations are written by hand from docs/product/JOURNEY_CONTRACT_V3.md, not recorded from an implementation. Both implementations run every case below.",
+  "schemaVersion": "tapso-journey-contract-v1",
+  "vocabulary": {
+    "segmentKinds": ["walk", "ride", "transfer"],
+    "preRideStages": ["searching", "proposed", "similarBuses", "notFoundYet", "confirmed"],
+    "rideMoments": ["riding", "prepare", "nextStop", "arrived", "passedDestination", "delayed", "vehicleLost", "offline", "checking", "ended"],
+    "transferRisks": ["safe", "tight", "atRisk", "missed", "recovering", "unknown"],
+    "safeReturnLevels": ["comfortable", "leaveBy", "tight", "notRecommended", "unknown"],
+    "surfaceStates": ["waiting", "confirm", "riding", "prepare", "nextStop", "transfer", "transferRisk", "arrival", "delayed", "checking", "discovery", "recovery", "ended"],
+    "nextActions": [
+      "walkToStop",
+      "waitForBus",
+      "confirmBus",
+      "stayOnBus",
+      "prepareToExit",
+      "pressStopButton",
+      "exitHere",
+      "exitAndTransfer",
+      "boardNextBus",
+      "checkBusDisplay",
+      "keepWatching",
+      "checkAlternative",
+      "followRecovery",
+      "considerStop",
+      "finish"
+    ]
+  },
+  "contractCases": [
+    {
+      "id": "C1",
+      "why": "one ride with a walk at each end is a complete journey",
+      "segments": [
+        { "kind": "walk", "meters": 120 },
+        { "kind": "ride", "routeNumber": "202", "boardSequence": 1, "alightSequence": 30 },
+        { "kind": "walk", "meters": 430 }
+      ],
+      "expect": { "valid": true, "rideCount": 1, "transferCount": 0 }
+    },
+    {
+      "id": "C2",
+      "why": "two rides joined by a transfer",
+      "segments": [
+        { "kind": "ride", "routeNumber": "182", "boardSequence": 1, "alightSequence": 9 },
+        { "kind": "transfer", "meters": 0 },
+        { "kind": "ride", "routeNumber": "201", "boardSequence": 4, "alightSequence": 25 },
+        { "kind": "walk", "meters": 430 }
+      ],
+      "expect": { "valid": true, "rideCount": 2, "transferCount": 1 }
+    },
+    {
+      "id": "C3",
+      "why": "a journey with no ride is not a TAPSO journey",
+      "segments": [{ "kind": "walk", "meters": 800 }],
+      "expect": { "valid": false, "error": "noRide" }
+    },
+    {
+      "id": "C4",
+      "why": "two rides back to back hide a transfer the rider must make",
+      "segments": [
+        { "kind": "ride", "routeNumber": "182", "boardSequence": 1, "alightSequence": 9 },
+        { "kind": "ride", "routeNumber": "201", "boardSequence": 4, "alightSequence": 25 }
+      ],
+      "expect": { "valid": false, "error": "missingTransfer" }
+    },
+    {
+      "id": "C5",
+      "why": "a transfer must sit between two rides",
+      "segments": [
+        { "kind": "transfer", "meters": 50 },
+        { "kind": "ride", "routeNumber": "201", "boardSequence": 4, "alightSequence": 25 }
+      ],
+      "expect": { "valid": false, "error": "danglingTransfer" }
+    },
+    {
+      "id": "C6",
+      "why": "a ride must alight after it boards",
+      "segments": [{ "kind": "ride", "routeNumber": "365", "boardSequence": 12, "alightSequence": 12 }],
+      "expect": { "valid": false, "error": "invalidRideOrder" }
+    },
+    {
+      "id": "C7",
+      "why": "a walk between two rides is a transfer and must be written as one",
+      "segments": [
+        { "kind": "ride", "routeNumber": "182", "boardSequence": 1, "alightSequence": 9 },
+        { "kind": "walk", "meters": 200 },
+        { "kind": "ride", "routeNumber": "201", "boardSequence": 4, "alightSequence": 25 }
+      ],
+      "expect": { "valid": false, "error": "walkBetweenRides" }
+    },
+    {
+      "id": "C8",
+      "why": "a negative walking distance is not a measurement",
+      "segments": [
+        { "kind": "ride", "routeNumber": "365", "boardSequence": 1, "alightSequence": 5 },
+        { "kind": "walk", "meters": -1 }
+      ],
+      "expect": { "valid": false, "error": "invalidDistance" }
+    }
+  ],
+  "surfaceCases": [
+    { "id": "S1", "why": "a finished journey shows nothing else", "input": { "segment": "ride", "finalLeg": true, "rideMoment": "ended", "transferRisk": "atRisk", "recoveryActive": true }, "expect": { "state": "ended", "action": "finish" } },
+    { "id": "S2", "why": "an active recovery plan outranks every ride moment", "input": { "segment": "ride", "finalLeg": false, "rideMoment": "prepare", "recoveryActive": true }, "expect": { "state": "recovery", "action": "followRecovery" } },
+    { "id": "S3", "why": "before a bus is proposed the rider waits", "input": { "segment": "ride", "finalLeg": true, "preRide": "searching" }, "expect": { "state": "waiting", "action": "waitForBus" } },
+    { "id": "S4", "why": "no bus seen yet is still waiting, never an error", "input": { "segment": "ride", "finalLeg": true, "preRide": "notFoundYet" }, "expect": { "state": "waiting", "action": "waitForBus" } },
+    { "id": "S5", "why": "one proposed bus asks the rider to confirm", "input": { "segment": "ride", "finalLeg": true, "preRide": "proposed" }, "expect": { "state": "confirm", "action": "confirmBus" } },
+    { "id": "S6", "why": "similar buses are always a rider question", "input": { "segment": "ride", "finalLeg": true, "preRide": "similarBuses" }, "expect": { "state": "confirm", "action": "confirmBus" } },
+    { "id": "S7", "why": "the first walk leads to the stop", "input": { "segment": "walk", "finalLeg": false } , "expect": { "state": "waiting", "action": "walkToStop" } },
+    { "id": "S8", "why": "riding with three or more stops left", "input": { "segment": "ride", "finalLeg": true, "rideMoment": "riding" }, "expect": { "state": "riding", "action": "stayOnBus" } },
+    { "id": "S9", "why": "two stops left", "input": { "segment": "ride", "finalLeg": true, "rideMoment": "prepare" }, "expect": { "state": "prepare", "action": "prepareToExit" } },
+    { "id": "S10", "why": "next stop is the destination", "input": { "segment": "ride", "finalLeg": true, "rideMoment": "nextStop" }, "expect": { "state": "nextStop", "action": "pressStopButton" } },
+    { "id": "S11", "why": "arrived at the final stop", "input": { "segment": "ride", "finalLeg": true, "rideMoment": "arrived" }, "expect": { "state": "arrival", "action": "exitHere" } },
+    { "id": "S12", "why": "arrived at a transfer stop is a transfer, not the end", "input": { "segment": "ride", "finalLeg": false, "rideMoment": "arrived" }, "expect": { "state": "transfer", "action": "exitAndTransfer" } },
+    { "id": "S13", "why": "passing the destination is a recovery", "input": { "segment": "ride", "finalLeg": true, "rideMoment": "passedDestination" }, "expect": { "state": "recovery", "action": "followRecovery" } },
+    { "id": "S14", "why": "late data never alerts, whatever the transfer says", "input": { "segment": "ride", "finalLeg": false, "rideMoment": "delayed", "transferRisk": "atRisk" }, "expect": { "state": "delayed", "action": "checkBusDisplay" } },
+    { "id": "S15", "why": "offline is a delayed surface", "input": { "segment": "ride", "finalLeg": true, "rideMoment": "offline" }, "expect": { "state": "delayed", "action": "checkBusDisplay" } },
+    { "id": "S16", "why": "a missing bus keeps watching", "input": { "segment": "ride", "finalLeg": true, "rideMoment": "vehicleLost" }, "expect": { "state": "delayed", "action": "keepWatching" } },
+    { "id": "S17", "why": "disagreeing signals fail closed", "input": { "segment": "ride", "finalLeg": true, "rideMoment": "checking", "discoveryHint": true }, "expect": { "state": "checking", "action": "keepWatching" } },
+    { "id": "S18", "why": "a connection at risk shows while riding", "input": { "segment": "ride", "finalLeg": false, "rideMoment": "riding", "transferRisk": "atRisk", "discoveryHint": true }, "expect": { "state": "transferRisk", "action": "checkAlternative" } },
+    { "id": "S19", "why": "a missed connection without a plan still points to alternatives", "input": { "segment": "ride", "finalLeg": false, "rideMoment": "riding", "transferRisk": "missed" }, "expect": { "state": "transferRisk", "action": "checkAlternative" } },
+    { "id": "S20", "why": "getting off correctly outranks a risky connection", "input": { "segment": "ride", "finalLeg": false, "rideMoment": "prepare", "transferRisk": "atRisk" }, "expect": { "state": "prepare", "action": "prepareToExit" } },
+    { "id": "S21", "why": "the next stop before a transfer says to get off for the transfer", "input": { "segment": "ride", "finalLeg": false, "rideMoment": "nextStop", "transferRisk": "safe" }, "expect": { "state": "nextStop", "action": "pressStopButton" } },
+    { "id": "S22", "why": "a tight but makeable connection does not interrupt riding", "input": { "segment": "ride", "finalLeg": false, "rideMoment": "riding", "transferRisk": "tight" }, "expect": { "state": "riding", "action": "stayOnBus" } },
+    { "id": "S23", "why": "a discovery hint shows only while riding calmly", "input": { "segment": "ride", "finalLeg": true, "rideMoment": "riding", "discoveryHint": true }, "expect": { "state": "discovery", "action": "considerStop" } },
+    { "id": "S24", "why": "an unknown transfer risk never invents urgency", "input": { "segment": "ride", "finalLeg": false, "rideMoment": "riding", "transferRisk": "unknown", "discoveryHint": true }, "expect": { "state": "riding", "action": "stayOnBus" } },
+    { "id": "S25", "why": "walking between buses", "input": { "segment": "transfer", "finalLeg": false, "transferRisk": "safe" }, "expect": { "state": "transfer", "action": "boardNextBus" } },
+    { "id": "S26", "why": "a connection at risk during the transfer", "input": { "segment": "transfer", "finalLeg": false, "transferRisk": "atRisk" }, "expect": { "state": "transferRisk", "action": "checkAlternative" } },
+    { "id": "S27", "why": "a missed connection during the transfer", "input": { "segment": "transfer", "finalLeg": false, "transferRisk": "missed" }, "expect": { "state": "transferRisk", "action": "checkAlternative" } },
+    { "id": "S28", "why": "recovering from a missed connection is a recovery", "input": { "segment": "transfer", "finalLeg": false, "transferRisk": "recovering" }, "expect": { "state": "recovery", "action": "followRecovery" } },
+    { "id": "S29", "why": "the last walk after arrival ends at the place", "input": { "segment": "walk", "finalLeg": true }, "expect": { "state": "arrival", "action": "finish" } },
+    { "id": "S30", "why": "a confirmed bus with no ride moment yet fails closed", "input": { "segment": "ride", "finalLeg": true, "preRide": "confirmed" }, "expect": { "state": "checking", "action": "keepWatching" } }
+  ]
+}

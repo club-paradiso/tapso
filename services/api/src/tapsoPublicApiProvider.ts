@@ -15,7 +15,7 @@
  */
 
 import type { RouteRequest, StopOnRoute, VehicleObservation } from "./domain.ts";
-import { ProviderResponseError, type TransitProvider } from "./provider.ts";
+import { ProviderResponseError, ProviderUnavailableError, providerTransportError, type TransitProvider } from "./provider.ts";
 import type { RouteDiscovery } from "./passiveShadowCollector.ts";
 
 type FetchLike = typeof fetch;
@@ -97,10 +97,10 @@ export class TapsoPublicApiProvider implements TransitProvider, RouteDiscovery {
         signal: AbortSignal.timeout(10_000),
         redirect: "error",
       });
-    } catch {
-      throw new ProviderResponseError("TAPSO API request failed or timed out");
+    } catch (error) {
+      throw providerTransportError(error, "TAPSO API");
     }
-    if (!response.ok) throw new ProviderResponseError(`TAPSO API returned HTTP ${response.status}`);
+    if (!response.ok) throw new ProviderUnavailableError(`TAPSO API returned HTTP ${response.status}`);
     let payload: unknown;
     try {
       payload = await response.json();

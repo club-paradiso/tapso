@@ -29,7 +29,7 @@ public enum VehiclePlate {
 }
 
 /// Where the pre-ride vehicle check stands.
-public enum VehicleCheckStage: String, Codable, Hashable, Sendable {
+public enum VehicleCheckStage: String, Codable, Hashable, Sendable, CaseIterable {
     /// Watching buses on the way to the boarding stop.
     case searching
     /// One bus fits; the rider confirms it.
