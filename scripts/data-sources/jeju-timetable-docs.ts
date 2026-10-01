@@ -1,9 +1,10 @@
 /**
  * Prints what Jeju's official sources publish about bus timetables (first and
  * last departures) and on what terms, because TAGO's route info carries no
- * service day for Jeju (`VERIFIED` 2026-10-01, 50 variants of 102, 202, 282,
- * 365 and 800). Public pages only: no key, no API call, and no timetable file
- * is downloaded.
+ * service day for Jeju (`VERIFIED` 2026-10-01: all 58 variants of 102, 202,
+ * 282, 365 and 800 answer with no first or last departure and a weekday
+ * headway of "0"). Public pages only: no key, no API call, and no timetable
+ * file is downloaded.
  *
  *   node --experimental-strip-types scripts/data-sources/jeju-timetable-docs.ts
  *
@@ -24,8 +25,19 @@
 const pause = (ms: number) => new Promise((resolve) => setTimeout(resolve, ms));
 const unique = <T>(values: T[]) => [...new Set(values)];
 
-/** Decodes with the page's declared charset; Korean public sites still serve EUC-KR. */
+/** Up to three attempts: the portal sometimes drops a connection from the runner. */
 async function get(url: string): Promise<{ status: number; body: string }> {
+  let result = await getOnce(url);
+  for (const wait of [2_000, 4_000]) {
+    if (result.status !== 0 && result.status < 500) break;
+    await pause(wait);
+    result = await getOnce(url);
+  }
+  return result;
+}
+
+/** Decodes with the page's declared charset; Korean public sites still serve EUC-KR. */
+async function getOnce(url: string): Promise<{ status: number; body: string }> {
   await pause(1_000);
   try {
     const response = await fetch(url, {
@@ -145,7 +157,7 @@ const PORTAL = "https://www.data.go.kr";
 async function portalSearch(keyword: string, type: "API" | "FILE"): Promise<string[]> {
   const search = await get(`${PORTAL}/tcs/dss/selectDataSetList.do?dType=${type}&keyword=${encodeURIComponent(keyword)}`);
   const ids = unique([...search.body.matchAll(/\/data\/(\d{5,9})\/(?:openapi|fileData)\.do/g)].map((match) => match[1]!));
-  console.log(`\nDATASETS ${type} "${keyword}" (HTTP ${search.status}): ${ids.join(" ") || "(none found)"}`);
+  console.log(`\nDATASETS ${type} "${keyword}" (HTTP ${search.status}): ${ids.join(" ") || "(none found)"}${search.status === 0 ? ` ${search.body}` : ""}`);
   return ids;
 }
 
@@ -160,7 +172,7 @@ async function portalDataset(id: string): Promise<void> {
     console.log(`\n## data.go.kr ${id} (${kind}): HTTP ${page.status}; ${title(page.body)}`);
     printMeta(page.body);
     printLinks(page.body, PORTAL, /시간표|timetable|schedule|bus\.jeju|jejudatahub|download|다운로드/i);
-    printNear(text, ["시간표", "첫차", "막차", "출처"], 300);
+    printNear(text, ["시간표", "첫차", "막차", "출처", "바로가기", "다운로드"], 300);
     if (kind === "openapi") await printContract(id);
     return;
   }
