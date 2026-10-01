@@ -48,7 +48,7 @@ final class RideSetupTests: XCTestCase {
     // MARK: Destination-first catalogue
 
     func testSearchIgnoresSpacingAndMiddleDots() {
-        XCTAssertEqual(DemoCatalog.searchDestinations("출입국 외국인청"), ["제주시청(아라방면)"])
+        XCTAssertEqual(DemoCatalog.searchDestinations("시청 · 아라 방면"), ["제주시청(아라방면)"])
         XCTAssertEqual(DemoCatalog.searchDestinations("박물관"), ["국립제주박물관"])
         XCTAssertTrue(DemoCatalog.searchDestinations("   ").isEmpty)
     }
