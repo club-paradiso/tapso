@@ -8,8 +8,8 @@
       "matchingReadiness.test.ts"
     ],
     "exitCode": 0,
-    "tests": 689,
-    "pass": 689,
+    "tests": 690,
+    "pass": 690,
     "fail": 0,
     "skipped": 0,
     "todo": 0,
@@ -40,6 +40,7 @@
     "F22 keeps a session that never saw the two nearest buses inside the margin selectable",
     "F22 regression: a follower seen inside the margin while nothing was selectable yet still contests the approach",
     "F22 regression: a pair inside the margin beyond the approach window contests the approach",
+    "F24 regression: a contested approach stays contested for the rest of the session, not only at the next decision",
     "HTTP pilot uses TAGO and requires its official cityCode",
     "P10: the boarded vehicle's identity never changes a single replayed decision",
     "P11: unknown route progress fails closed",

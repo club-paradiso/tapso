@@ -11,15 +11,15 @@
   },
   "counts": {
     "sessions": 3000,
-    "automaticSelections": 1081,
-    "right": 911,
-    "wrongBoardedBusSeen": 12,
-    "wrongBoardedBusNeverSeen": 155,
+    "automaticSelections": 1011,
+    "right": 855,
+    "wrongBoardedBusSeen": 10,
+    "wrongBoardedBusNeverSeen": 143,
     "noArrival": 3,
-    "wrongWithdrawn": 75,
-    "wrongNotWithdrawn": 92,
-    "rightWithdrawn": 37,
-    "shownOvertaken": 65,
+    "wrongWithdrawn": 71,
+    "wrongNotWithdrawn": 82,
+    "rightWithdrawn": 34,
+    "shownOvertaken": 61,
     "shownOvertakenNotWithdrawn": 0
   }
 }
