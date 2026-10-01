@@ -72,7 +72,7 @@ type Harness = {
 
 function harness(
   env: ServerEnv = {},
-  overrides: { discoveryFailure?: Error; demonstratedReadiness?: ReadinessLevel } = {},
+  overrides: { discoveryFailure?: Error; demonstratedReadiness?: ReadinessLevel; liveActivityPush?: boolean } = {},
 ): Harness {
   const config = readTransitApiConfig(
     { TAGO_SERVICE_KEY: "synthetic-key", ...env },
@@ -111,6 +111,7 @@ function harness(
     limiter: config.rateLimit.enabled
       ? createBurstLimiter(config.rateLimit.limit, config.rateLimit.windowSeconds)
       : undefined,
+    ...(overrides.liveActivityPush ? { liveActivityPush: { enabled: true, environment: "development" } } : {}),
     log: () => {},
   });
   return { handler, upstream, discoveryCalls };
@@ -987,4 +988,85 @@ test("route info: no published service day is NOT_FOUND, and provider failures k
   });
   assert.equal((await get(flaky, `/v1/route-info?cityCode=${CITY}&routeId=${ROUTE}`)).status, 502);
   assert.equal((await get(flaky, `/v1/route-info?cityCode=${CITY}&routeId=${ROUTE}`)).status, 200, "a failure is never cached");
+});
+
+/* ------------------------------------------ Live Activity push token (milestone 2) */
+
+function putJson(handler: TransitApiHandler, path: string, body: unknown, headers: Record<string, string> = {}): Promise<Response> {
+  return handler(new Request(`http://api.test${path}`, {
+    method: "PUT",
+    headers: { "content-type": "application/json", ...headers },
+    body: JSON.stringify(body),
+  }));
+}
+
+// SYNTHETIC: an invented token; no device produced it.
+const PUSH_TOKEN = "0a1b".repeat(16);
+
+async function createSession(handler: TransitApiHandler): Promise<{ id: string }> {
+  return (await postJson(handler, "/v1/sessions", { routeId: ROUTE, cityCode: CITY, boardingStopSequence: 1, destinationStopSequence: 3 })).json();
+}
+
+test("a deployment without APNs refuses a push token instead of storing it, and health says push is off", async () => {
+  const { handler } = harness({ TRANSIT_SESSIONS_ENABLED: "true" });
+  assert.deepEqual((await (await get(handler, "/health")).json()).liveActivityPush, { enabled: false });
+  const session = await createSession(handler);
+  const refused = await putJson(handler, `/v1/sessions/${session.id}/live-activity`, { pushToken: PUSH_TOKEN });
+  assert.equal(refused.status, 503);
+  assert.equal((await refused.json()).error, "LIVE_ACTIVITY_PUSH_UNAVAILABLE");
+  // Clearing is always allowed: it can only remove a capability.
+  assert.equal((await del(handler, `/v1/sessions/${session.id}/live-activity`)).status, 204);
+
+  const disabled = harness({ TRANSIT_SESSIONS_ENABLED: "false" }, { liveActivityPush: true });
+  const closed = await putJson(disabled.handler, "/v1/sessions/abc/live-activity", { pushToken: PUSH_TOKEN });
+  assert.equal(closed.status, 503);
+  assert.equal((await closed.json()).error, "SESSIONS_UNAVAILABLE");
+});
+
+test("the app registers, rotates and clears its Live Activity push token; no answer or log line carries it", async () => {
+  const { handler } = harness({ TRANSIT_SESSIONS_ENABLED: "true" }, { liveActivityPush: true });
+  assert.deepEqual((await (await get(handler, "/health")).json()).liveActivityPush, { enabled: true, environment: "development" });
+  const lines: string[] = [];
+  const original = console.info;
+  console.info = (...args: unknown[]) => lines.push(args.map(String).join(" "));
+  try {
+    const session = await createSession(handler);
+    const registered = await putJson(handler, `/v1/sessions/${session.id}/live-activity`, { pushToken: PUSH_TOKEN });
+    assert.equal(registered.status, 200);
+    assert.equal(registered.headers.get("cache-control"), "no-store");
+    const body = await registered.json();
+    assert.equal(body.sessionId, session.id);
+    assert.match(body.liveActivityPush.fingerprint, /^[0-9a-f]{12}$/);
+    assert.ok(!JSON.stringify(body).includes(PUSH_TOKEN));
+
+    const viaRewrite = await putJson(handler, `/v1/session-live-activity?sessionId=${session.id}`, { pushToken: "ff".repeat(32) });
+    assert.equal(viaRewrite.status, 200, "the production rewrite target registers on the same session");
+    const read = await get(handler, `/v1/sessions/${session.id}`);
+    assert.ok(!(await read.text()).includes("ff".repeat(32)), "a session read never carries the token");
+
+    const bad = await putJson(handler, `/v1/sessions/${session.id}/live-activity`, { pushToken: "not-a-token" });
+    assert.equal(bad.status, 400);
+    assert.ok(!(await bad.text()).includes("not-a-token"));
+
+    assert.equal((await del(handler, `/v1/sessions/${session.id}/live-activity`)).status, 204);
+    assert.equal((await get(handler, `/v1/sessions/${session.id}/live-activity`)).status, 405);
+    assert.equal((await del(handler, `/v1/sessions/${session.id}`)).status, 204);
+    const gone = await putJson(handler, `/v1/sessions/${session.id}/live-activity`, { pushToken: PUSH_TOKEN });
+    assert.equal(gone.status, 404, "an ended ride takes no token");
+  } finally {
+    console.info = original;
+  }
+  assert.ok(lines.some((line) => line.includes("live_activity_token_registered")));
+  assert.ok(lines.every((line) => !line.includes(PUSH_TOKEN) && !line.includes("ff".repeat(32))), "a push token is never logged");
+});
+
+test("a browser origin an operator listed may register a token; the preflight names PUT", async () => {
+  const { handler } = harness({ TRANSIT_SESSIONS_ENABLED: "true", TRANSIT_ALLOWED_ORIGINS: "https://tapso-nu.vercel.app" }, { liveActivityPush: true });
+  const preflight = await handler(new Request("http://api.test/v1/sessions/abc/live-activity", {
+    method: "OPTIONS",
+    headers: { origin: "https://tapso-nu.vercel.app", "access-control-request-method": "PUT" },
+  }));
+  assert.equal(preflight.status, 204);
+  assert.match(preflight.headers.get("access-control-allow-methods") ?? "", /\bPUT\b/);
+  assert.equal(preflight.headers.get("allow"), "PUT, DELETE, OPTIONS");
 });
