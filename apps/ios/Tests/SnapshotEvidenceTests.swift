@@ -264,7 +264,8 @@ final class SnapshotEvidenceTests: XCTestCase {
         TapsoActivityAttributes.ContentState(
             phase: phase,
             currentStopName: "동문로터리",
-            nextStopName: "제주여자상업고등학교",
+            // Past the stop, the ride names where to get off (`PassedStopRescue`).
+            nextStopName: passed ? "국립제주박물관" : "제주여자상업고등학교",
             remainingStops: remaining,
             freshness: freshness,
             updatedAt: DemoFixtures.referenceDate,

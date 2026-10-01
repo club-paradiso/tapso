@@ -1180,7 +1180,7 @@ final class TapsoAppModel {
             if guidance.milestone == nil || newMilestone != nil {
                 RideFeedback.play(guidance.haptic)
             }
-            RideFeedback.announce(guidance)
+            RideFeedback.announce(guidance, exitStopName: passedStopAdvice?.exitStop?.stop.name)
         }
         if let state = contentState() {
             await liveActivity?.update(state: state, alerting: newMilestone)
@@ -1220,7 +1220,10 @@ final class TapsoAppModel {
     func contentState() -> TapsoActivityAttributes.ContentState? {
         guard let ride = activeRide else { return nil }
         let signal = ride.signal
-        let next = upcomingStopNames.first
+        // Past the stop, "next" is where to get off (`PassedStopRescue`), not a stop before the destination.
+        let next = ride.guidance.moment == .passedDestination
+            ? passedStopAdvice?.exitStop?.stop.name
+            : upcomingStopNames.first
         return TapsoActivityAttributes.ContentState(
             phase: signal.phase,
             currentStopName: currentStopName,

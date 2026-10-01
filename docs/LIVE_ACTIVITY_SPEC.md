@@ -18,6 +18,8 @@ The activity starts only after the rider confirms the bus; there is no Live Acti
 
 Counts are `live` for riding, prepare and next stop, `lastKnown` for delayed, lost and offline, and hidden for arrival, passed destination, checking and ended.
 
+Past the destination, `nextStopName` carries the stop to get off at (`PassedStopRescue`: the first stop after the bus's last reported position), not the next stop before the destination. The Lock Screen, the expanded island and VoiceOver then read "다음 정류장 {stop}에서 내리세요" through `RideText.detail`; with no known position, or once the data ages into delayed, they keep the moment's own detail line.
+
 ## Update policy
 
 - Relevance: riding 50; delayed, lost, offline, checking 75; prepare 85; next stop and passed destination 95; arrival 100.

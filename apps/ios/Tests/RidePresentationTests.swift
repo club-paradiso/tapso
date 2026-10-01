@@ -45,6 +45,24 @@ final class RidePresentationTests: XCTestCase {
         XCTAssertNil(TapsoLiveActivityPolicy.milestone(for: state), "passing the stop is not an arrival alert")
     }
 
+    func testPastTheStopEverySurfaceNamesTheExitWhenTheRideKnowsIt() {
+        let passed = makeState(.arrived, 0, passed: true, next: "국립제주박물관")
+        XCTAssertEqual(
+            RideText.detail(passed.guidance, exitStopName: passed.nextStopName),
+            String(format: RideText.string("rescue.exitAt"), "국립제주박물관")
+        )
+        let unknown = makeState(.arrived, 0, passed: true, next: nil)
+        XCTAssertEqual(RideText.detail(unknown.guidance, exitStopName: unknown.nextStopName), RideText.string("ride.passedDestination.detail"))
+        let riding = makeState(.active, 4)
+        XCTAssertEqual(
+            RideText.detail(riding.guidance, exitStopName: riding.nextStopName),
+            RideText.string(riding.guidance.copy.detail),
+            "before the stop, the next stop never replaces the moment's detail"
+        )
+        let stale = guidanceAccountingForStaleness(passed, isStale: true)
+        XCTAssertEqual(RideText.detail(stale, exitStopName: passed.nextStopName), RideText.string(stale.copy.detail), "aged data names no exit")
+    }
+
     func testOfflineAndLostAreDistinctQuietStatesOnTheIsland() {
         let offline = makeState(.active, 4, offline: true)
         let lost = makeState(.vehicleTemporarilyLost, 4)
@@ -235,12 +253,13 @@ final class RidePresentationTests: XCTestCase {
         _ phase: JourneyState,
         _ remaining: Int,
         passed: Bool = false,
-        offline: Bool = false
+        offline: Bool = false,
+        next: String? = "제주여자상업고등학교"
     ) -> TapsoActivityAttributes.ContentState {
         TapsoActivityAttributes.ContentState(
             phase: phase,
             currentStopName: "동문로터리",
-            nextStopName: "제주여자상업고등학교",
+            nextStopName: next,
             remainingStops: remaining,
             freshness: .fresh,
             updatedAt: Date(timeIntervalSince1970: 1_800_000_000),

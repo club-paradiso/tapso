@@ -441,16 +441,10 @@ struct RideHeroCard: View {
                 .font(.title2.weight(.heavy))
                 .foregroundStyle(TapsoColor.journeyNext)
                 .accessibilityAddTraits(.isHeader)
-            Group {
-                if let exit = snapshot.rescue?.exitStop {
-                    Text(String(format: RideText.string("rescue.exitAt"), exit.stop.name))
-                } else {
-                    Text(LocalizedStringKey(guidance.copy.detail))
-                }
-            }
-            .font(.headline)
-            .foregroundStyle(TapsoColor.textPrimary)
-            .fixedSize(horizontal: false, vertical: true)
+            Text(verbatim: RideText.detail(guidance, exitStopName: snapshot.rescue?.exitStop?.stop.name))
+                .font(.headline)
+                .foregroundStyle(TapsoColor.textPrimary)
+                .fixedSize(horizontal: false, vertical: true)
             Text(String(format: RideText.string("ride.passed.destination"), snapshot.destinationName))
                 .font(.subheadline)
                 .foregroundStyle(TapsoColor.textSecondary)

@@ -140,6 +140,7 @@ final class MapHandoffFlowTests: XCTestCase {
         let advice = try XCTUnwrap(model.passedStopAdvice)
         // The demo's bus is next seen at the end of the line, where everyone gets off.
         XCTAssertEqual(advice.exitStop?.stop.name, "국립제주박물관")
+        XCTAssertEqual(model.contentState()?.nextStopName, "국립제주박물관", "the Lock Screen names the exit, not a stop before the destination")
         XCTAssertNil(advice.straightLineMeters, "demo coordinates are synthetic: no walk is measured")
         XCTAssertEqual(advice.plan.options.map(\.action), [.openMapApp])
         XCTAssertNil(model.rescueMapRequest(for: .kakaoMap), "KakaoMap gets a real coordinate or nothing")

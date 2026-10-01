@@ -152,6 +152,9 @@ When the bus is placed beyond the rider's stop, the ride screen answers
 - **Map app:** always last. NAVER Map and, with a real coordinate, KakaoMap open
   a walking route to the shared place when the ride started from one, otherwise
   to the destination stop.
+- **Every surface says the same exit:** the Live Activity's `nextStopName`
+  carries it, and the Lock Screen, the expanded island and the VoiceOver
+  announcement read it through `RideText.detail` (`LIVE_ACTIVITY_SPEC.md`).
 
 Tests: `PassedStopRescueTests` (core), `MapHandoffFlowTests` (demo: next stop
 named, nothing measured; the way back to a shared place) and

@@ -241,6 +241,7 @@ final class TapsoAPIClientTests: XCTestCase {
         XCTAssertEqual(advice.straightLineMeters, 580, "surveyed stops 12 and 10, in a straight line")
         XCTAssertEqual(advice.plan.exitAt, "합성 정류장 12")
         XCTAssertEqual(advice.plan.options.map(\.action), [.walkBack, .openMapApp])
+        XCTAssertEqual(model.contentState()?.nextStopName, "합성 정류장 12", "the Lock Screen and island name the exit")
 
         let naver = try XCTUnwrap(URLComponents(string: try XCTUnwrap(model.rescueMapRequest(for: .naverMap)).urlString))
         XCTAssertEqual(naver.host, "route")
