@@ -57,14 +57,14 @@ return, transfer, rescue, handoff, discovery, eat, passport/share, mystery.
 | V2.1e | iOS real Journey Session integration | Live mode creates, refreshes, confirms and ends a session against the API; demo stays synthetic; guard test proves no real data reaches the Swift matcher | `IMPLEMENTED` (PR C), app side pending CI; production `BLOCKED_BY_CREDENTIALS` (V2.1d) |
 | V2.2 | Map Handoff | Share Extension accepts KakaoMap, NAVER Map, Apple Maps, URLs, coordinates, addresses and names; parser tests; Journey Contract created from a handoff | `IMPLEMENTED` (PR D, `MAP_HANDOFF_V3.md`); device run `UNVERIFIED` |
 | V2.3 | Core riding | Live Activity V3 states from `resolveSurface`; push-token registration endpoint; Transfer Guardian in the ride | `PENDING`; remote updates `BLOCKED_BY_PAID_MEMBERSHIP` (APNs); Transfer Guardian needs a planned transfer (no source) |
-| V2.4 | Jeju safety layer | Safe Return, Rescue engines with deterministic tests (no-return rejection, long headway, expired data) | `DONE` for the engines (#73 merged); last-bus data path and end-screen card `IMPLEMENTED` (PR E); Rescue for a passed destination `IMPLEMENTED` (#83, `PassedStopRescue`); the last-bus countdown on the Lock Screen `IMPLEMENTED` (PR G, `TapsoReturnAttributes`); missed-connection and wrong-direction rescue and Transfer Guardian wait on planned transfers (no route planner or transfer data) |
+| V2.4 | Jeju safety layer | Safe Return, Rescue engines with deterministic tests (no-return rejection, long headway, expired data) | `DONE` for the engines (#73 merged); last-bus data path and end-screen card `IMPLEMENTED` (PR E); Rescue for a passed destination `IMPLEMENTED` (#83, `PassedStopRescue`); the last-bus countdown on the Lock Screen `IMPLEMENTED` (PR G, `TapsoReturnAttributes`); Jeju last-bus data: TAGO has none (`VERIFIED`), the official timetable files are identified (data.go.kr 3043887, 제한 없음) and wait on a first file from a person; missed-connection and wrong-direction rescue and Transfer Guardian wait on planned transfers (no route planner or transfer data) |
 | V3.0 | Jeju discovery | 오늘 뭐하젠?, 그냥 탑서 (filtered before randomisation), route experiences grounded in live route data | `PENDING`: no verified place source yet |
 | V3.1 | Transit Fit | Semantic accessibility summary, no fake scores | `PENDING` |
 | V3.2 | Eat | Transit-aware food situations | `PENDING` |
 | V3.3 | Drop, Passport, Share | Editorial 1–3 picks; on-device passport; share card | `PENDING` |
 | V3.4 | Roulette / Mystery Ride | Experimental | `PENDING` |
-| WEB | Marketing site V3 | GO/RIDE/DISCOVER/RETURN story, semantic Dynamic Island engine, availability labels, reduced-motion static, 4-width visual QA | `PENDING` (PR G) |
-| FIGMA | Product V3 file | Pages 00–13, variables synced to code tokens, V3 components | `PENDING` |
+| WEB | Marketing site V3 | GO/RIDE/DISCOVER/RETURN story, semantic Dynamic Island engine, availability labels, reduced-motion static, 4-width visual QA | `IMPLEMENTED` (#75; status and map sections #86). Four-width QA done 2026-10-01 (see Progress) |
+| FIGMA | Product V3 file | Pages 00–13, variables synced to code tokens, V3 components | `IMPLEMENTED`: V3 pages, `02G` components, prototype flows; repository references #85. V3 web frames `BLOCKED` (uploads to figma.com are refused by this environment's egress proxy) |
 
 ## Decisions
 
@@ -143,9 +143,11 @@ swift test --package-path packages/transit-core   # macOS / CI
   in on the server, and the rows restored (`dc76346`, `2b33517`, `67a6955`); the
   resulting tree equals git's recursive merge.
 - 2026-10-01 18:24–18:26 UTC — the route-info probe against production:
-  production returned HTTP 200 with no first or last departure and no headway for all 50 variants of routes 102, 202, 282, 365 and 800. The way back reads `unknown` everywhere in Jeju until that
-  changes; this PR adds `meta.undocumentedFields` to tell "nothing" from
-  "another shape".
+  production returned HTTP 200 with no first or last departure and no headway
+  for every variant it answered: 52 of the 58 variants of routes 102, 202, 282,
+  365 and 800 (the first six requests reached production before the endpoint
+  was deployed; an earlier version of this entry said 50). #87 added
+  `meta.undocumentedFields` to tell "nothing" from "another shape".
 - The Figma file now follows the V3 page structure, with `02G iOS Product V3`
   components for the way back and rescue; repository references follow in #85.
   The site's status and map sections follow the app in #86.
@@ -154,6 +156,33 @@ swift test --package-path packages/transit-core   # macOS / CI
   `vehicletp` and `arrtime`, awaiting the owner's data.go.kr authorization) the
   connection window would come from an assumed per-stop band and mostly read
   `unknown`. Transit Fit's low-floor field lives in the same dataset.
+- 2026-10-01 19:04–19:05 UTC — #87 (`3d516cb`) and #85 (`3aea61a`) merged;
+  post-deploy verification green (run 36911628193).
+- After #87 deployed (probe runs 36911628211 and 36911886895), all 58 variants
+  answered HTTP 200 with no first or last departure and
+  `meta.undocumentedFields: {"intervaltime":"0"}`. TAGO has no Jeju service day
+  (`VERIFIED`).
+- Jeju timetable sources (#89, `scripts/data-sources/jeju-timetable-docs.ts`,
+  runs 36910287652 and 36913158370; `DATA_SOURCES.md`). The official timetable
+  is data.go.kr file dataset 3043887: per-route XLSX downloads from
+  `bus.jeju.go.kr`, licence 제한 없음, "수시 (1회성 데이터)". Neither it nor any
+  Jeju Open API on the portal is a timetable API. `bus.jeju.go.kr` omits its
+  intermediate certificate; the probe completes the chain only after verifying
+  it against the system roots.
+- Lock Screen contrast (#90, #91). The coral next-stop secondary line, open in
+  `KNOWN_ISSUES.md` since 2026-09-30, read 3.2:1. The same computation found
+  three more failures: 70 % ink on the dark coral (4.3:1); the count label at
+  80 % (3.7:1 on coral, 4.4:1 for light slate on basalt); and a last-known
+  numeral at 55 % (2.8:1). All now pass, with a test over every moment and
+  appearance.
+- Marketing site, four widths (390, 768, 1024, 1440). Local build of `main` plus
+  #86, Chromium, Pretendard served locally:
+  - no horizontal overflow at any scroll position;
+  - axe-core 4.10 WCAG 2.0/2.1 A+AA, 0 violations at 29–40 positions per width
+    under reduced motion. With motion on, contrast hits appear only in the
+    middle of cross-fades;
+  - reduced motion leaves the hero static, with no running animation;
+  - only inline sentence links are under 44 px.
 
 ## Risks and unexpected findings
 
@@ -161,19 +190,27 @@ swift test --package-path packages/transit-core   # macOS / CI
   `transit-core` check until the fix lands.
 - Production sessions cannot be enabled from this environment: the Upstash
   credentials are Sensitive values only the owner holds.
-- TAGO's `getRouteInfoIem` gives no service day for Jeju routes in production
-  (`VERIFIED` 2026-10-01, 50 variants). Unless TAGO sends it in another shape,
-  the last bus needs another official source (the Jeju bus information
-  system's timetables), whose terms must be checked before any use.
+- TAGO's `getRouteInfoIem` gives no service day for Jeju routes (`VERIFIED`
+  2026-10-01, all 58 variants; only `intervaltime` "0"). Jeju's official
+  timetables come as per-route files with no API. Importing them is a dated
+  dataset that can go stale when routes change ("수시" updates), so it needs a
+  staleness rule and a visible "as of" date.
 - GitHub merges criss-cross histories from one merge base; a branch that merges
   cleanly with local `git merge` can still conflict on the server. Check with
   `git merge-tree --merge-base=<GitHub's base>` before trusting a local merge.
 
 ## Exact next action
 
-Merge #85 (Figma references) and #86 (site) when green. Deploy this change and
-run the data-source probe: if `meta.undocumentedFields` shows another shape,
-parse that shape with a test built from the observed values; if TAGO sends
-nothing, look for an official Jeju timetable source and record its terms
-before using it. Then Live Activity V3 states from `resolveSurface` (recovery
-on the Lock Screen), then Discovery once a verified place source exists.
+Merge #86 (site), then #89 (this record), #90 (contrast) and #91. For the last
+bus:
+1. A person downloads one route's timetable XLSX from `bus.jeju.go.kr`, as
+   data.go.kr 3043887 instructs (365 first), and adds it under
+   `fixtures/jeju/timetables/` with its download date.
+2. Write the parser and a dated dataset behind `/v1/route-info`, with a staleness
+   rule.
+3. Label it `REPORTED-OFFICIAL` as of that date.
+
+Live Activity V3 states from `resolveSurface` add nothing over the V2 policy
+for a single-leg ride: recovery past the stop already names the exit (#83).
+They wait for planned transfers. Discovery waits for a verified place source
+and for production sessions (mission Section 18).
