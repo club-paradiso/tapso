@@ -87,7 +87,7 @@ The fixes after `367b74a` are verified by build, unit tests and the next CI rend
 
 1. First launch: Home with the question, search, map import, "처음이라면" sample card, privacy line; no permission prompt.
 2. 샘플 여정 체험하기 → bus check "이 버스로 보여요 ••xxxx" → 맞아요.
-3. Ride: "6 정거장 남았어요 · 제주출입국·외국인청까지 · 내릴 때 알려드릴게요"; Live Activity starts; "체험판은 앱을 켜 둔 동안 진행돼요".
+3. Ride: "6 정거장 남았어요 · 제주시청(아라방면)까지 · 내릴 때 알려드릴게요"; Live Activity starts; "체험판은 앱을 켜 둔 동안 진행돼요".
 4. Home button (the app stays running briefly; in this build it must be reopened to keep advancing): compact island "365 · 6 정거장". Lock: basalt Lock Screen.
 5. Two stops: amber hero, pill "준비 2", one alert "2정거장 남았어요", soft haptic.
 6. Next stop: coral hero with destination, coral Lock Screen, "다음 하차", one alert, strong haptic.
