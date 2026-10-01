@@ -93,8 +93,8 @@ test("vehicle identity and data freshness stay two independent signals", () => {
 
 test("the spoken summary follows the app's a11y.ride shapes", () => {
   assert.equal(
-    spokenSummary(presentMoment("riding"), "365", "제주출입국·외국인청", 6),
-    "365번, 제주출입국·외국인청까지 6정거장 남음. 내릴 때 알려드릴게요. 지금은 편하게 가셔도 돼요.",
+    spokenSummary(presentMoment("riding"), "365", "제주시청(아라방면)", 6),
+    "365번, 제주시청(아라방면)까지 6정거장 남음. 내릴 때 알려드릴게요. 지금은 편하게 가셔도 돼요.",
   );
   assert.match(spokenSummary(presentMoment("delayed"), "365", "X", 5), /마지막 확인 기준 5정거장 남음/);
   assert.doesNotMatch(spokenSummary(presentMoment("checking"), "365", "X", 5), /정거장 남음/);
