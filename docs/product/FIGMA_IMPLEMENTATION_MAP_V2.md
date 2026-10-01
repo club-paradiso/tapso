@@ -68,6 +68,22 @@ App-only pieces drawn inline in Figma screens: DemoDataChip (`DemoDataChip`, `de
 | (no frame) Live Activities off | `RideContent` notice | ACTIVE | `23-ride-live-activity-off` |
 | Live Activity & Dynamic Island board `160:1208` | `LiveActivitySurfaces.swift` | all ride moments | `la-lockscreen-*`, `di-compact-*`, `di-minimal-*`, `di-expanded-*` |
 
+## Product V3 board (2026-10-01)
+
+`04 iOS` › `iOS / Product V3 · Hand-off & Way back` (`193:2956`), built from the
+V2 components (`Icon / V2`, `Button / V2`, `RouteBadge / V2`, `StopRow / V2`,
+`돌이 / V2`) and bound to the `TAPSO V2 Semantic` variables. Sample data is
+synthetic and labelled so on the board.
+
+| Figma frame | SwiftUI | Snapshot |
+|---|---|---|
+| V3 / 20 Map import · place found (`193:2961`) | `MapImportContent` + `SharedPlaceCard` | `08-map-import-found` |
+| V3 / 21 Map import · outside Jeju (`193:2990`) | same | `26-map-import-outside-jeju` |
+| V3 / 22 Map import · link only (`193:3019`) | same | `27-map-import-link-only` |
+| V3 / 23 Live stops · near the shared place (`193:3049`) | `LiveStopPickerContent` › `suggestions(for:after:)` | (stateful; covered by `TapsoAPIClientTests`) |
+| V3 / 24 Share sheet · place found (`193:3098`) | `ShareExtension` › `ShareSheetView` | (extension; no snapshot target yet) |
+| V3 / 25 End · walk to the place, last buses (`193:3125`) | `RideEndContent` + `ReturnTripCard` | `28-end-walk-to-place`, `29-end-return-trip` |
+
 ## Known deltas between Figma and code
 
 | Delta | Why |
