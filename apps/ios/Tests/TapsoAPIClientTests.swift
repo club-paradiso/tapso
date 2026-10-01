@@ -148,6 +148,70 @@ final class TapsoAPIClientTests: XCTestCase {
         XCTAssertNil(model.activeRide)
     }
 
+    func testALiveRideFromASharedPlaceSuggestsItsNearestStopAndWalksThere() async throws {
+        StubURLProtocol.respond { request in
+            switch (request.httpMethod ?? "GET", request.url?.path ?? "") {
+            case ("GET", "/v1/routes"): (200, Payload.routes)
+            case ("GET", "/v1/stops"): (200, Payload.stops)
+            case ("POST", "/v1/sessions"): (201, Payload.session(state: "confirmation_required"))
+            case ("POST", "/v1/sessions/syn-session/confirm"): (200, Payload.session(state: "tracking", selected: true))
+            case ("GET", "/v1/sessions/syn-session"): (200, Payload.session(state: "tracking", selected: true))
+            case ("DELETE", "/v1/sessions/syn-session"): (204, Data())
+            default: (404, Data(#"{"error":"NOT_FOUND","message":"no such endpoint"}"#.utf8))
+            }
+        }
+        let model = makeModel()
+        model.openMapImport()
+        // Synthetic share text, a few metres from synthetic stop 10.
+        model.importSharedText("[네이버 지도] 합성 카페\n33.4701, 126.3201")
+        let place = try XCTUnwrap(model.sharedPlace)
+        model.continueWithLiveRoute()
+        XCTAssertEqual(model.path, [.mapImport, .liveRoutes])
+        XCTAssertEqual(model.handoffPlace, place)
+        XCTAssertEqual(StubURLProtocol.recorded.count, 0, "reading the shared place made no request")
+
+        await model.searchLiveRoutes(number: "202")
+        guard case let .results(_, routes) = model.liveRouteSearch, let route = routes.first else {
+            return XCTFail("no routes: \(model.liveRouteSearch)")
+        }
+        await model.chooseLiveRoute(route)
+        guard case let .loaded(stops) = model.liveStops else { return XCTFail("no stops: \(model.liveStops)") }
+        let boarding = try XCTUnwrap(stops.route.routeStop(sequence: 4))
+        // What the destination step shows: the stops after boarding nearest the place.
+        let match = HandoffStopSuggester.match(
+            for: place,
+            among: stops.route.stops.filter { $0.sequence > boarding.sequence },
+            coordinatesAreSurveyed: stops.coordinatesAreSurveyed
+        )
+        guard case let .nearby(suggestions) = match else { return XCTFail("expected nearby stops, got \(match)") }
+        XCTAssertEqual(suggestions.map(\.routeStop.sequence), [10, 11, 9])
+        XCTAssertEqual(suggestions.first?.straightLineMeters, 10)
+        XCTAssertFalse(
+            StubURLProtocol.recorded.contains { ($0.url?.absoluteString.removingPercentEncoding ?? "").contains("합성 카페") },
+            "the shared place never reaches the server"
+        )
+
+        let destination = try XCTUnwrap(suggestions.first?.routeStop)
+        model.chooseLiveStops(boarding: boarding, destination: destination, on: stops)
+        XCTAssertEqual(model.draft?.finalPlace, place)
+        try await waitUntil { model.vehicleCheck.stage == .proposed }
+        await model.confirmVehicle(try XCTUnwrap(model.vehicleCheck.proposals.first))
+        XCTAssertEqual(model.activeRide?.draft.finalPlace, place)
+
+        await model.finishRide()
+        let outcome = try XCTUnwrap(model.outcome)
+        let naver = try XCTUnwrap(URLComponents(string: try XCTUnwrap(model.mapRequest(for: .naverMap, outcome: outcome)).urlString))
+        XCTAssertEqual(naver.host, "route")
+        XCTAssertEqual(naver.path, "/walk")
+        XCTAssertEqual(naver.queryItems?.first { $0.name == "dname" }?.value, "합성 카페")
+        XCTAssertEqual(naver.queryItems?.first { $0.name == "dlat" }?.value, "33.470100")
+        XCTAssertEqual(model.appleMapsTarget(for: outcome)?.coordinate, place.coordinate)
+        for body in StubURLProtocol.bodies {
+            XCTAssertFalse(String(decoding: body, as: UTF8.self).contains("합성 카페"), "the shared place stays on the device")
+        }
+        try await waitUntil { StubURLProtocol.recorded.contains { $0.httpMethod == "DELETE" } }
+    }
+
     // MARK: Helpers
 
     private func makeClient() -> TapsoAPIClient {

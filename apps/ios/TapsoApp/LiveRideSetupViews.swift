@@ -93,6 +93,9 @@ struct LiveRouteSearchView: View {
     var body: some View {
         ScrollView {
             VStack(alignment: .leading, spacing: TapsoSpace.lg) {
+                if let place = model.handoffPlace {
+                    HandoffPlaceLine(place: place)
+                }
                 QuestionTitle("live.route.question")
                 HStack(spacing: TapsoSpace.sm) {
                     TextField("live.route.placeholder", text: $number)
@@ -245,9 +248,13 @@ struct LiveStopPickerView: View {
                 .padding(.horizontal, TapsoSpace.gutter)
                 .padding(.vertical, TapsoSpace.lg)
             case let .loaded(stops):
-                LiveStopPickerContent(stops: stops) { boarding, destination in
-                    model.chooseLiveStops(boarding: boarding, destination: destination, on: stops)
-                }
+                LiveStopPickerContent(
+                    stops: stops,
+                    onChoose: { boarding, destination in
+                        model.chooseLiveStops(boarding: boarding, destination: destination, on: stops)
+                    },
+                    place: model.handoffPlace
+                )
             }
         }
         .background(TapsoColor.backgroundPrimary)
@@ -259,6 +266,8 @@ struct LiveStopPickerView: View {
 struct LiveStopPickerContent: View {
     let stops: LiveRouteStops
     let onChoose: (RouteStop, RouteStop) -> Void
+    /// A place shared from a map app: the destination step suggests the stops near it.
+    var place: SharedPlace? = nil
 
     @State private var boarding: RouteStop?
     @State private var query = ""
@@ -304,7 +313,13 @@ struct LiveStopPickerContent: View {
                     .font(.subheadline.weight(.semibold))
                 }
                 QuestionTitle("live.stops.destination")
+                if let place {
+                    suggestions(for: place, after: boarding)
+                }
             } else {
+                if let place {
+                    HandoffPlaceLine(place: place)
+                }
                 QuestionTitle("live.stops.boarding")
             }
 
@@ -334,6 +349,51 @@ struct LiveStopPickerContent: View {
         .frame(maxWidth: .infinity, alignment: .leading)
     }
 
+    /// Stops after the boarding stop that fit the shared place (`HandoffStopSuggester`). The rider still chooses.
+    @ViewBuilder
+    private func suggestions(for place: SharedPlace, after boarding: RouteStop) -> some View {
+        let match = HandoffStopSuggester.match(
+            for: place,
+            among: stops.route.stops.filter { $0.sequence > boarding.sequence },
+            coordinatesAreSurveyed: stops.coordinatesAreSurveyed
+        )
+        let noneNearby = match == .nearby([])
+        if noneNearby || !match.suggestions.isEmpty {
+            VStack(alignment: .leading, spacing: 0) {
+                Text(String(format: RideText.string("live.stops.nearPlace"), place.name ?? place.address ?? ""))
+                    .font(.subheadline.weight(.semibold))
+                    .foregroundStyle(TapsoColor.textSecondary)
+                if noneNearby {
+                    Text(String(format: RideText.string("live.stops.nearPlace.none"), Int(HandoffStopSuggester.maxStraightLineMeters)))
+                        .font(.footnote)
+                        .foregroundStyle(TapsoColor.textSecondary)
+                        .fixedSize(horizontal: false, vertical: true)
+                        .padding(.top, TapsoSpace.xs)
+                }
+                ForEach(match.suggestions, id: \.routeStop.sequence) { suggestion in
+                    StopRow(
+                        name: suggestion.routeStop.stop.name,
+                        detail: suggestionDetail(suggestion),
+                        systemImage: "star.circle.fill",
+                        tint: TapsoColor.tangerine
+                    ) {
+                        choose(suggestion.routeStop)
+                    }
+                    Divider().overlay(TapsoColor.separator)
+                }
+            }
+            .padding(TapsoSpace.md)
+            .background(TapsoColor.tangerine.opacity(0.08), in: RoundedRectangle(cornerRadius: TapsoRadius.md, style: .continuous))
+            .accessibilityElement(children: .contain)
+        }
+    }
+
+    private func suggestionDetail(_ suggestion: HandoffStopSuggestion) -> String {
+        let order = detail(for: suggestion.routeStop)
+        guard let meters = suggestion.straightLineMeters else { return order }
+        return order + " · " + String(format: RideText.string("live.stops.straightLine"), meters)
+    }
+
     private func detail(for routeStop: RouteStop) -> String {
         guard let boarding else {
             return String(format: RideText.string("live.stops.order"), routeStop.sequence)
@@ -349,5 +409,26 @@ struct LiveStopPickerContent: View {
             boarding = routeStop
             query = ""
         }
+    }
+}
+
+/// The place the rider shared, kept in view while the ride is set up for it. Figma: `SharedPlaceCard / V3` (compact).
+struct HandoffPlaceLine: View {
+    let place: SharedPlace
+
+    var body: some View {
+        Label {
+            Text(String(format: RideText.string("live.handoff.place"), place.name ?? place.address ?? ""))
+                .font(.footnote.weight(.semibold))
+                .foregroundStyle(TapsoColor.textPrimary)
+                .fixedSize(horizontal: false, vertical: true)
+        } icon: {
+            Image(systemName: "mappin.and.ellipse")
+                .foregroundStyle(TapsoColor.tangerine)
+        }
+        .padding(.horizontal, TapsoSpace.sm)
+        .padding(.vertical, TapsoSpace.xs)
+        .background(TapsoColor.tangerine.opacity(0.12), in: Capsule())
+        .accessibilityElement(children: .combine)
     }
 }

@@ -202,3 +202,8 @@ Production and preview share one Upstash database (`exec-plans/DURABLE_JOURNEY_S
 ## Ending a ride deletes its session (2026-10-01)
 
 **Decision:** `DELETE /v1/sessions/:id` deletes the row. A finished ride stops costing provider reads (journey sessions read TAGO uncached), its stop history stops existing, and a post-deploy check can leave production as it found it. The session id stays the only credential, as for reading and confirming: a UUID that only the rider's device holds.
+
+## A shared place stays on the phone and only suggests where to get off (2026-10-01)
+
+**Decision:** map hand-off V3 (`product/MAP_HANDOFF_V3.md`) parses shared content in the Swift core with no network request, keeps one parsed place in the App Group `group.com.lucanomics.tapso` for at most 30 minutes, and lets it reach a ride only through a setup that started from the import screen. Stops near the place are suggestions computed from two real coordinates (TAGO's and the map app's), never from synthetic ones, and the rider still chooses both the stop and the bus. *Rejected:* resolving `kko.to` / `naver.me` links (a network fetch on the phone and undocumented scraping); sending the place to the server for a stop search (no documented, authorized endpoint yet, and the place is not needed there); opening the app from the share extension (iOS supports `NSExtensionContext.open` only for Today and iMessage extensions, `VERIFIED`).
+

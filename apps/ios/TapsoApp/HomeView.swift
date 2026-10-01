@@ -20,7 +20,8 @@ struct HomeView: View {
                 onMapImport: { model.openMapImport() },
                 onLive: { model.openLiveSearch() },
                 onSample: { model.startDemo() },
-                onDemoSettings: { model.isDemoPanelPresented = true }
+                onDemoSettings: { model.isDemoPanelPresented = true },
+                pendingPlaceName: model.sharedPlace.flatMap { $0.name ?? $0.address }
             )
         }
         .scrollBounceBehavior(.basedOnSize)
@@ -39,6 +40,8 @@ struct HomeContent: View {
     var onLive: () -> Void = {}
     let onSample: () -> Void
     var onDemoSettings: () -> Void = {}
+    /// A place shared from a map app that is waiting for a ride.
+    var pendingPlaceName: String? = nil
 
     var body: some View {
         VStack(alignment: .leading, spacing: TapsoSpace.xl) {
@@ -80,7 +83,7 @@ struct HomeContent: View {
                 }
             }
 
-            MapHandoffIntakeCard(action: onMapImport)
+            MapHandoffIntakeCard(pendingPlaceName: pendingPlaceName, action: onMapImport)
 
             LiveRideEntryCard(action: onLive)
 
@@ -213,6 +216,7 @@ struct SearchFieldButton: View {
 
 /// Entry to start from a place shared by KakaoMap or NAVER Map. Figma: `MapHandoffCard / V2`.
 struct MapHandoffIntakeCard: View {
+    var pendingPlaceName: String? = nil
     let action: () -> Void
 
     var body: some View {
@@ -227,9 +231,15 @@ struct MapHandoffIntakeCard: View {
                     Text("home.mapImport.title")
                         .font(.body.weight(.semibold))
                         .foregroundStyle(TapsoColor.textPrimary)
-                    Text("home.mapImport.body")
-                        .font(.footnote)
-                        .foregroundStyle(TapsoColor.textSecondary)
+                    if let pendingPlaceName {
+                        Text(String(format: RideText.string("home.mapImport.pending"), pendingPlaceName))
+                            .font(.footnote.weight(.semibold))
+                            .foregroundStyle(TapsoColor.mintDeep)
+                    } else {
+                        Text("home.mapImport.body")
+                            .font(.footnote)
+                            .foregroundStyle(TapsoColor.textSecondary)
+                    }
                 }
                 .multilineTextAlignment(.leading)
                 .fixedSize(horizontal: false, vertical: true)

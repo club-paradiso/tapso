@@ -243,8 +243,9 @@ struct DestinationRecap: View {
     }
 }
 
-/// Start from a place shared by a map app, without a network request or a paste prompt.
-/// Figma: `04 iOS` › Map-App Handoff Intake V2.
+/// Start from a place shared by a map app: pasted here, or sent from the share
+/// sheet by TAPSO's share extension. Read on the device; nothing is fetched or sent.
+/// Figma: `04 iOS` › Map-App Handoff Intake V3.
 struct MapImportView: View {
     @Bindable var model: TapsoAppModel
     @State private var pasted: String?
@@ -252,7 +253,9 @@ struct MapImportView: View {
     var body: some View {
         ScrollView {
             MapImportContent(
-                matches: pasted.map { model.stopNames(inSharedText: $0) },
+                place: model.sharedPlace,
+                unreadable: model.sharedPlaceUnreadable,
+                demoMatches: model.sharedPlace.map { model.stopNames(inSharedText: $0.searchText) } ?? [],
                 paste: AnyView(
                     PasteButton(payloadType: String.self) { strings in
                         pasted = strings.joined(separator: "\n")
@@ -261,34 +264,49 @@ struct MapImportView: View {
                     .controlSize(.large)
                     .tint(TapsoColor.journeyActive)
                 ),
-                onChoose: { model.chooseDestination(named: $0) },
-                onSearch: { model.path = [.search] }
+                onLive: { model.continueWithLiveRoute() },
+                onChooseDemo: { model.chooseDestination(named: $0) },
+                onSearch: { model.path = [.search] },
+                onClear: { model.dismissSharedPlace() }
             )
         }
         .background(TapsoColor.backgroundPrimary)
         .navigationTitle(Text("mapImport.title"))
         .navigationBarTitleDisplayMode(.inline)
+        .onChange(of: pasted) { _, text in
+            guard let text else { return }
+            model.importSharedText(text)
+            pasted = nil
+        }
     }
 }
 
 struct MapImportContent: View {
-    /// `nil` before anything is pasted.
-    let matches: [String]?
+    /// What was pasted or shared, read on the device. `nil` before anything arrives.
+    let place: SharedPlace?
+    var unreadable = false
+    /// Synthetic demo destinations named in the shared place, for the sample ride.
+    var demoMatches: [String] = []
     let paste: AnyView
-    let onChoose: (String) -> Void
+    var onLive: () -> Void = {}
+    let onChooseDemo: (String) -> Void
     let onSearch: () -> Void
+    var onClear: () -> Void = {}
 
     var body: some View {
         VStack(alignment: .leading, spacing: TapsoSpace.lg) {
             QuestionTitle("mapImport.question")
-            VStack(alignment: .leading, spacing: TapsoSpace.sm) {
-                step(1, "mapImport.step1")
-                step(2, "mapImport.step2")
-                step(3, "mapImport.step3")
-            }
-            paste
-            if let matches {
-                if matches.isEmpty {
+            if let place {
+                SharedPlaceCard(place: place, onClear: onClear)
+                actions(for: place)
+            } else {
+                VStack(alignment: .leading, spacing: TapsoSpace.sm) {
+                    step(1, "mapImport.step1")
+                    step(2, "mapImport.step2")
+                    step(3, "mapImport.step3")
+                }
+                paste
+                if unreadable {
                     NoticeCard(
                         systemImage: "link",
                         title: "mapImport.none.title",
@@ -297,14 +315,6 @@ struct MapImportContent: View {
                         actionTitle: "mapImport.none.action",
                         action: onSearch
                     )
-                } else {
-                    VStack(alignment: .leading, spacing: 0) {
-                        SectionTitle("mapImport.found")
-                        ForEach(matches, id: \.self) { name in
-                            StopRow(name: name, systemImage: "flag.fill", tint: TapsoColor.tangerine) { onChoose(name) }
-                            Divider().overlay(TapsoColor.separator)
-                        }
-                    }
                 }
             }
             Label("mapImport.privacy", systemImage: "hand.raised")
@@ -315,6 +325,56 @@ struct MapImportContent: View {
         .padding(.horizontal, TapsoSpace.gutter)
         .padding(.vertical, TapsoSpace.lg)
         .frame(maxWidth: .infinity, alignment: .leading)
+    }
+
+    @ViewBuilder
+    private func actions(for place: SharedPlace) -> some View {
+        if place.isInJeju == false {
+            NoticeCard(
+                systemImage: "mappin.slash",
+                title: "mapImport.outside.title",
+                message: "mapImport.outside.body",
+                tint: TapsoColor.journeyDegraded,
+                actionTitle: "mapImport.another",
+                action: onClear
+            )
+        } else if place.isLinkOnly {
+            NoticeCard(
+                systemImage: "link",
+                title: "mapImport.linkOnly.title",
+                message: "mapImport.linkOnly.body",
+                tint: TapsoColor.journeyChecking,
+                actionTitle: "mapImport.none.action",
+                action: onSearch
+            )
+        } else {
+            VStack(alignment: .leading, spacing: TapsoSpace.sm) {
+                Text("mapImport.live.title")
+                    .font(.headline)
+                    .foregroundStyle(TapsoColor.textPrimary)
+                Text("mapImport.live.body")
+                    .font(.subheadline)
+                    .foregroundStyle(TapsoColor.textSecondary)
+                    .fixedSize(horizontal: false, vertical: true)
+                Button(action: onLive) {
+                    Label("mapImport.live.action", systemImage: "bus.fill")
+                }
+                .buttonStyle(PrimaryButtonStyle())
+                .accessibilityIdentifier("map-import-live")
+            }
+            if !demoMatches.isEmpty {
+                VStack(alignment: .leading, spacing: 0) {
+                    HStack(spacing: TapsoSpace.xs) {
+                        SectionTitle("mapImport.found")
+                        DemoDataChip()
+                    }
+                    ForEach(demoMatches, id: \.self) { name in
+                        StopRow(name: name, systemImage: "flag.fill", tint: TapsoColor.tangerine) { onChooseDemo(name) }
+                        Divider().overlay(TapsoColor.separator)
+                    }
+                }
+            }
+        }
     }
 
     private func step(_ number: Int, _ key: LocalizedStringKey) -> some View {
@@ -330,5 +390,55 @@ struct MapImportContent: View {
                 .fixedSize(horizontal: false, vertical: true)
         }
         .accessibilityElement(children: .combine)
+    }
+}
+
+/// What TAPSO read from a shared place, and what it could not: a name, an
+/// address, whether the location is known and in Jeju. Figma: `SharedPlaceCard / V3`.
+struct SharedPlaceCard: View {
+    let place: SharedPlace
+    var onClear: (() -> Void)?
+
+    var body: some View {
+        TapsoCard {
+            VStack(alignment: .leading, spacing: TapsoSpace.xs) {
+                HStack(spacing: TapsoSpace.xs) {
+                    Label(LocalizedStringKey("mapImport.source." + place.source.rawValue), systemImage: "square.and.arrow.down")
+                        .font(.footnote.weight(.semibold))
+                        .foregroundStyle(TapsoColor.textSecondary)
+                    Spacer(minLength: 0)
+                    if let onClear {
+                        Button("mapImport.clear", action: onClear)
+                            .font(.footnote.weight(.semibold))
+                            .accessibilityIdentifier("map-import-clear")
+                    }
+                }
+                Text(verbatim: place.name ?? place.address ?? RideText.string("mapImport.unnamed"))
+                    .font(.title3.weight(.bold))
+                    .foregroundStyle(TapsoColor.textPrimary)
+                if place.name != nil, let address = place.address {
+                    Text(verbatim: address)
+                        .font(.subheadline)
+                        .foregroundStyle(TapsoColor.textSecondary)
+                }
+                Label(locationKey, systemImage: locationSymbol)
+                    .font(.footnote)
+                    .foregroundStyle(TapsoColor.textSecondary)
+            }
+            .fixedSize(horizontal: false, vertical: true)
+        }
+        .accessibilityElement(children: .contain)
+    }
+
+    private var locationKey: LocalizedStringKey {
+        if place.isInJeju == true { return "mapImport.location.jeju" }
+        if place.isInJeju == false { return "mapImport.location.outside" }
+        return place.isLinkOnly ? "mapImport.location.linkOnly" : "mapImport.location.nameOnly"
+    }
+
+    private var locationSymbol: String {
+        if place.isInJeju == true { return "mappin.and.ellipse" }
+        if place.isInJeju == false { return "mappin.slash" }
+        return place.isLinkOnly ? "link" : "text.magnifyingglass"
     }
 }

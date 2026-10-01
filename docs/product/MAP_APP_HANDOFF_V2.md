@@ -1,5 +1,7 @@
 # Map-app hand-off V2
 
+> **2026-10-01:** the inbound half is superseded by [`MAP_HANDOFF_V3.md`](MAP_HANDOFF_V3.md) (share extension, on-device place parsing, nearest-stop suggestions, the walk to the shared place). The evidence below still holds.
+
 How TAPSO works *with* KakaoMap and NAVER Map instead of replacing them. Researched 2026-09-30; labels as in `COMPETITIVE_POSITIONING_V2.md`. Only integrations with a documented basis are implemented, and the app still makes no network request (`services/api/test/crossLanguageAuthority.test.ts`).
 
 ## The flow
@@ -60,11 +62,11 @@ NAVER Map  "네이버 지도에서 목적지 찾기" (name search) for the walk
 
 | Idea | Reason |
 |---|---|
-| Share Extension target (TAPSO in the map app's share sheet) | Valid (VERIFIED) and the natural next step, but it adds a target, an App Group and signing capabilities that need the paid Apple team (`KNOWN_ISSUES.md` › `BLOCKED_BY_PAID_MEMBERSHIP`). Paste gives the same result with one extra tap today |
+| Share Extension target (TAPSO in the map app's share sheet) | Built in V3. The paid-team premise was wrong: App Groups are available to a free Personal Team (`VERIFIED`, Account Help › Supported capabilities (iOS), 2026-10-01) |
 | Resolving `kko.to` / `naver.me` links | Needs a network request (forbidden in the app) and undocumented scraping; must live on the server if ever built |
 | Reading the clipboard automatically | Would trigger the iOS paste prompt and read data the rider did not hand over |
 | Handing a bus route to a map app | No documented parameter exists in either app (NOT FOUND) |
-| Apple Maps hand-off | No transit in Korea (REPORTED); MapKit hand-off also needs coordinates, which are synthetic here |
+| Apple Maps hand-off | Built in V3 for real coordinates only: it shows the place and asks for no directions mode, because walking directions in Korea are `UNVERIFIED` |
 
 ## When real data arrives
 

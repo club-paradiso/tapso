@@ -7,6 +7,12 @@ TAPSO's default architecture tracks a public transit vehicle, not continuous pas
   (beta) talk only to TAPSO's own API: a route number, a route variant, two stop
   sequences and the bus the rider confirmed. No location, account or device
   identifier is sent, and the server deletes the session when the ride ends.
+- A place shared from a map app (share sheet or paste) is read on the phone and
+  never sent: TAPSO does not open shared links, keeps one parsed place (never the
+  raw text) in its App Group for at most 30 minutes, deletes it when read, and
+  keeps it afterwards only with the active ride on the device. The clipboard is
+  read only when the rider taps Paste, and written only when they tap Copy in
+  the share sheet (`product/MAP_HANDOFF_V3.md`).
 - The marketing site collects an email address, a coarse rider type, and a
   consent record, only after an explicit unchecked consent box is ticked. It
   stores no name, phone number, address, demographics, location, or IP address,
