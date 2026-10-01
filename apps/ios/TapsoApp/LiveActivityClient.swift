@@ -20,17 +20,40 @@ final class LiveActivityClient {
     var activityID: String? { activity?.id }
     var activitiesEnabled: Bool { ActivityAuthorizationInfo().areActivitiesEnabled }
 
+    /// Starts the ride's activity. With `push`, ActivityKit is asked for a push token so the server
+    /// can update the activity while the app is suspended. A build without the push entitlement
+    /// refuses that request; the activity then starts without push, as it always did.
     func start(
         attributes: TapsoActivityAttributes,
-        state: TapsoActivityAttributes.ContentState
+        state: TapsoActivityAttributes.ContentState,
+        push: Bool = false
     ) async throws {
         guard activitiesEnabled else { throw LiveActivityError.disabled }
         await endAll()
+        if push, let pushed = try? Activity.request(attributes: attributes, content: content(for: state), pushType: .token) {
+            activity = pushed
+            return
+        }
         activity = try Activity.request(
             attributes: attributes,
             content: content(for: state),
             pushType: nil
         )
+    }
+
+    /// Every push token the current activity is given, the first one and each rotation. An activity
+    /// started without push never yields one.
+    func pushTokens() -> AsyncStream<Data>? {
+        guard let activity else { return nil }
+        return AsyncStream { continuation in
+            let task = Task {
+                for await token in activity.pushTokenUpdates {
+                    continuation.yield(token)
+                }
+                continuation.finish()
+            }
+            continuation.onTermination = { _ in task.cancel() }
+        }
     }
 
     /// Updates the activity, alerting only for `milestone`. The app model decides

@@ -126,6 +126,12 @@ export interface TransitApiDependencies {
   limiter?: BurstLimiter;
   /** Separate budget so a ride never spends the public API's burst allowance. */
   operatorLimiter?: BurstLimiter;
+  /**
+   * Whether this deployment can push Live Activity updates: `describeApns`,
+   * names only. Absent reads as off, and a token is then refused rather than
+   * stored for pushes that will never come.
+   */
+  liveActivityPush?: { enabled: boolean; environment?: string; missing?: string[] };
   /** The shared operator secret. Deliberately not part of `config`, which `/health` echoes. */
   operatorToken?: string;
   now?: () => Date;
@@ -146,6 +152,7 @@ type Route =
   | "session_read"
   | "session_end"
   | "session_confirm"
+  | "session_live_activity"
   | "operator_snapshot"
   | "operator_analyze";
 
@@ -248,9 +255,13 @@ function resolvePath(path: string): Resolved | undefined {
   // Rewrite targets: the session identifier arrives as a query parameter.
   if (path === "/v1/session") return { route: "session_read", methods: ["GET", "DELETE"] };
   if (path === "/v1/session-confirm") return { route: "session_confirm", methods: ["POST"] };
+  if (path === "/v1/session-live-activity") return { route: "session_live_activity", methods: ["PUT", "DELETE"] };
 
   const confirm = /^\/v1\/sessions\/([^/]+)\/confirm$/.exec(path);
   if (confirm) return { route: "session_confirm", methods: ["POST"], sessionId: decodeSegment(confirm[1]) };
+
+  const liveActivity = /^\/v1\/sessions\/([^/]+)\/live-activity$/.exec(path);
+  if (liveActivity) return { route: "session_live_activity", methods: ["PUT", "DELETE"], sessionId: decodeSegment(liveActivity[1]) };
 
   const read = /^\/v1\/sessions\/([^/]+)$/.exec(path);
   if (read) return { route: "session_read", methods: ["GET", "DELETE"], sessionId: decodeSegment(read[1]) };
@@ -288,7 +299,7 @@ async function dispatch(
   const { config, provider, discovery } = dependencies;
 
   if (resolved.route === "health") {
-    return { response: json(healthPayload(config, support.now(), dependencies.sessions), 200, { "cache-control": "no-store" }) };
+    return { response: json(healthPayload(config, support.now(), dependencies.sessions, dependencies.liveActivityPush), 200, { "cache-control": "no-store" }) };
   }
 
   if (resolved.route === "cities") {
@@ -543,6 +554,22 @@ async function dispatch(
     return { response: new Response(null, { status: 204, headers: { ...baseHeaders(), "cache-control": "no-store" } }) };
   }
 
+  if (resolved.route === "session_live_activity") {
+    if (request.method === "DELETE") {
+      await sessions.clearLiveActivityToken(sessionId);
+      return { response: new Response(null, { status: 204, headers: { ...baseHeaders(), "cache-control": "no-store" } }) };
+    }
+    if (dependencies.liveActivityPush?.enabled !== true) {
+      throw apiError("LIVE_ACTIVITY_PUSH_UNAVAILABLE", "Live Activity updates by push are not enabled on this deployment");
+    }
+    const registration = await sessions.registerLiveActivityToken(sessionId, await readJsonBody(request));
+    logEvent("live_activity_token_registered", {
+      sessionId: registration.sessionId,
+      tokenFingerprint: registration.liveActivityPush.fingerprint,
+    });
+    return { response: json(registration, 200, { "cache-control": "no-store" }) };
+  }
+
   const session = await sessions.confirm(sessionId, await readJsonBody(request));
   logEvent("vehicle_match_confirmed", {
     sessionId: session.id,
@@ -554,7 +581,12 @@ async function dispatch(
 
 /* ------------------------------------------------------------------- health */
 
-function healthPayload(config: TransitApiConfig, now: Date, sessions: JourneySessionCoordinator | undefined): Record<string, unknown> {
+function healthPayload(
+  config: TransitApiConfig,
+  now: Date,
+  sessions: JourneySessionCoordinator | undefined,
+  liveActivityPush: TransitApiDependencies["liveActivityPush"],
+): Record<string, unknown> {
   return {
     ok: true,
     service: "tapso-transit-api",
@@ -589,6 +621,8 @@ function healthPayload(config: TransitApiConfig, now: Date, sessions: JourneySes
       sessionMatchingMode: sessions?.matchingMode ?? "none",
     },
     freshness: freshnessPosture(config),
+    // The app asks ActivityKit for a push token only when this says enabled.
+    liveActivityPush: liveActivityPush ?? { enabled: false },
   };
 }
 
@@ -803,7 +837,7 @@ function corsHeaders(config: TransitApiConfig, origin: string | null): Record<st
   return {
     vary: "Origin",
     "access-control-allow-origin": origin,
-    "access-control-allow-methods": "GET, POST, DELETE, OPTIONS",
+    "access-control-allow-methods": "GET, POST, PUT, DELETE, OPTIONS",
     "access-control-allow-headers": "content-type, authorization",
     "access-control-max-age": "600",
   };
@@ -904,6 +938,7 @@ const STATUS_BY_CODE: Record<string, number> = {
   SESSION_NOT_FOUND: 404,
   METHOD_NOT_ALLOWED: 405,
   SESSION_ID_COLLISION: 409,
+  SESSION_WRITE_CONFLICT: 409,
   SESSION_EXPIRED: 410,
   PAYLOAD_TOO_LARGE: 413,
   RATE_LIMITED: 429,
@@ -915,6 +950,7 @@ const STATUS_BY_CODE: Record<string, number> = {
   PROVIDER_TIMEOUT: 504,
   BLOCKED_BY_CREDENTIALS: 503,
   SESSIONS_UNAVAILABLE: 503,
+  LIVE_ACTIVITY_PUSH_UNAVAILABLE: 503,
   // The store is reachable or it is not. A session that cannot be read is
   // never reported as a session that does not exist.
   SESSION_STORE_UNAVAILABLE: 503,

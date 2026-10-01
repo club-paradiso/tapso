@@ -460,6 +460,76 @@ test("F21 regression: an approach once contested inside the margin must not beco
   assertWithheld(later, "approach_contested_during_session", "gap opened after a contested approach");
 });
 
+test("F24 regression: a contested approach stays contested for the rest of the session, not only at the next decision", () => {
+  // Issue #61, trace run 36833268557: each of the 43 follower_overtaking
+  // failures F22 left on the evidence of record had the contest in force at an
+  // earlier decision. The passage memory was rebuilt without it, so the
+  // decision after next no longer knew and committed to the leader.
+  const contested = matchVehicle(request([bus("leader", BOARDING - 4), bus("follower", BOARDING - 6)]));
+  assertWithheld(contested, "candidates_too_close", "initially contested");
+  const first = contested.passage?.contestedApproach;
+  assert.ok(first);
+
+  // The gap opens to the margin or more and stays open, so neither F21 nor
+  // F22 sees the contest again; the session must still remember it.
+  let passage = contested.passage;
+  const polls: Array<[number, number]> = [[BOARDING - 2, BOARDING - 5], [BOARDING - 1, BOARDING - 5], [BOARDING - 1, BOARDING - 4]];
+  for (const [index, [leader, follower]] of polls.entries()) {
+    const result = matchVehicle(request([bus("leader", leader), bus("follower", follower)], { passage }));
+    assertWithheld(result, "approach_contested_during_session", `poll ${index + 1} after the contest`);
+    assert.deepEqual(result.passage?.contestedApproach, first, "dated by the decision that first saw it");
+    passage = result.passage;
+  }
+});
+
+test("F22 regression: a follower seen inside the margin while nothing was selectable yet still contests the approach", () => {
+  // The first look: the leader's cadence is not fresh yet, as in a session's
+  // first polls, so there is no selectable leader and the F21 check never ran.
+  // The follower is two stops behind it.
+  const early = matchVehicle(request([
+    bus("leader", BOARDING - 4, { observedAt: secondsAgo(300) }),
+    bus("follower", BOARDING - 6),
+  ]));
+  assert.equal(early.status, "unavailable");
+  assert.ok(early.passage?.contestedApproach, "the contest is remembered although nothing was selectable");
+
+  // Fresh now, and three stops clear: exactly the decision the real-base
+  // follower_overtaking traces show committing before the follower overtook.
+  const later = matchVehicle(request([
+    bus("leader", BOARDING - 1),
+    bus("follower", BOARDING - 4),
+  ], { passage: early.passage }));
+  assertWithheld(later, "approach_contested_during_session", "gap opened after a contest seen before any leader was selectable");
+});
+
+test("F22 regression: a pair inside the margin beyond the approach window contests the approach", () => {
+  const far = matchVehicle(request([bus("leader", BOARDING - 6), bus("follower", BOARDING - 8)]));
+  assert.equal(far.status, "unavailable", "nothing is selectable beyond the window");
+  assert.ok(far.passage?.contestedApproach);
+  const near = matchVehicle(request([bus("leader", BOARDING - 3), bus("follower", BOARDING - 7)], { passage: far.passage }));
+  assertWithheld(near, "approach_contested_during_session");
+});
+
+test("F22 keeps a session that never saw the two nearest buses inside the margin selectable", () => {
+  const far = matchVehicle(request([bus("leader", BOARDING - 6), bus("follower", BOARDING - 9)]));
+  assert.equal(far.passage?.contestedApproach, undefined, "three stops apart is not a contest");
+  const near = matchVehicle(request([bus("leader", BOARDING - 2), bus("follower", BOARDING - 6)], { passage: far.passage }));
+  assertSelected(near, "leader");
+});
+
+test("F22 counts a vehicle once: one bus reported at two nearby places is not a pair", () => {
+  const twice = matchVehicle(request([bus("solo", BOARDING - 6), bus("solo", BOARDING - 7)]));
+  assert.equal(twice.passage?.contestedApproach, undefined);
+  const near = matchVehicle(request([bus("solo", BOARDING - 2)], { passage: twice.passage }));
+  assertSelected(near, "solo");
+});
+
+test("F22 does not apply round a loop, where F21's contest does not either", () => {
+  const loopStops: StopOnRoute[] = [...stops, { stopId: "SYN-1", name: "Synthetic 1", sequence: 21 }];
+  const result = matchVehicle(request([bus("leader", BOARDING - 6), bus("follower", BOARDING - 8)], { stops: loopStops }));
+  assert.equal(result.passage?.contestedApproach, undefined);
+});
+
 test("a follower counts against the margin whether stale or only remembered", () => {
   const stale = matchVehicle(request([
     bus("leader", BOARDING - 1),

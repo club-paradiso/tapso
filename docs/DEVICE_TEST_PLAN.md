@@ -15,8 +15,9 @@
 >
 > - Case 6: the app has no input injection path.
 > - Case 8, the pushes in case 9 and the APNs criterion: the Live Activity is
->   requested with `pushType: nil` (`apps/ios/TapsoApp/LiveActivityClient.swift`),
->   so there is no push token and no remote update.
+>   requested with a push token only when the server has APNs configured, which no deployment has
+>   yet; nothing pushes until the scheduler exists (`docs/exec-plans/LIVE_ACTIVITY_PUSH.md`), so
+>   there is no remote update.
 > - Network bytes in case 9: the demo makes no network request; a live ride
 >   reads one session every 15 s while the app runs.
 >

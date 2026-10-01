@@ -99,7 +99,7 @@ final class ShareModel {
     }
 }
 
-/// Figma: `07 iOS — Share` › Share sheet V3.
+/// Figma: `03 iOS — GO` › `V3 / 24 Share sheet · place found` (`193:3098`).
 struct ShareSheetView: View {
     let model: ShareModel
 

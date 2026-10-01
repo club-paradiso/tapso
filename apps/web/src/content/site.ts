@@ -12,11 +12,10 @@ export const LINKS = {
 } as const;
 
 export const NAV_ITEMS = [
-  { href: "#how", label: "작동 방식" },
-  { href: "#bus", label: "버스 확인" },
-  { href: "#live", label: "잠금 화면" },
+  { href: "#how", label: "타는 법" },
+  { href: "#trust", label: "흔들릴 때" },
   { href: "#status", label: "개발 현황" },
-  { href: "#faq", label: "자주 묻는 질문" },
+  { href: "#faq", label: "FAQ" },
 ] as const;
 
 export type StatusState = "done" | "active" | "next" | "later";
@@ -39,7 +38,22 @@ export const STATUS_ITEMS: readonly StatusItem[] = [
   {
     title: "제주 실시간 버스 데이터",
     state: "active",
-    body: "국토교통부 버스 공공데이터를 읽는 서버는 돌아가고 있어요. 이제 iPhone 앱과 연결하는 작업이 남았습니다.",
+    body: "국토교통부 버스 공공데이터를 읽는 서버와 iPhone 앱의 연결은 만들었어요. 운영 서버에서 여정 기능을 켜는 설정이 남았어요.",
+  },
+  {
+    title: "지도 앱에서 바로 출발",
+    state: "active",
+    body: "카카오맵·네이버 지도·Apple 지도에서 공유한 장소로 여정을 시작하고, 내린 뒤 걷는 길은 다시 지도 앱으로 넘겨요. 실제 iPhone 확인이 남았어요.",
+  },
+  {
+    title: "돌아갈 때 막차",
+    state: "active",
+    body: "노선의 막차(기점 출발) 시각이 공개돼 있으면 몇 시까지 정류장에 나가야 하는지 알려주고, 원하면 남은 시간을 잠금 화면에 띄워요. 다만 지금 받는 제주 노선 정보에는 막차 시각이 비어 있어서 \"알 수 없어요\"로 안내해요. iPhone 확인도 남았어요.",
+  },
+  {
+    title: "내릴 곳을 지났을 때",
+    state: "active",
+    body: "지나친 뒤 내릴 다음 정류장과 목적지까지의 직선거리를 알려주고, 다른 길은 지도 앱으로 이어줘요. 실제 iPhone 확인이 남았어요.",
   },
   {
     title: "버스 확인 안전성 검증",
@@ -68,6 +82,36 @@ export const STATUS_ITEMS: readonly StatusItem[] = [
   },
 ];
 
+export type MapLink = { state: string; tone: "done" | "none" | "planned"; title: string; body: string };
+
+/** What works with the map apps today, each item backed in `productParity.test.ts`. */
+export const MAP_LINKS: readonly MapLink[] = [
+  {
+    state: "체험판에 있어요",
+    tone: "done",
+    title: "지도 앱에서 공유한 장소로 시작",
+    body: "공유 메뉴에서 탑서를 고르거나 복사한 내용을 붙여넣으면, 장소를 휴대폰 안에서만 읽고 그곳으로 가는 탑승을 시작해요.",
+  },
+  {
+    state: "체험판에 있어요",
+    tone: "done",
+    title: "내린 뒤 지도 앱으로 넘기기",
+    body: "도착하면 네이버 지도와 카카오맵의 도보 길찾기로 이어가고, Apple 지도에서는 장소를 보여줘요. 카카오맵은 좌표를 아는 곳만 넘겨요.",
+  },
+  {
+    state: "아직 없어요",
+    tone: "none",
+    title: "카카오맵에서 이름으로 찾기",
+    body: "카카오맵 앱에서 장소 이름으로 검색하는 공식 링크를 찾지 못했어요. 그래서 좌표를 모르는 곳은 카카오맵으로 넘기지 않아요.",
+  },
+  {
+    state: "iPhone 확인 전",
+    tone: "planned",
+    title: "실제 iPhone에서 공유 메뉴 확인",
+    body: "공유 메뉴의 탑서는 만들었지만, 카카오맵과 네이버 지도의 공유가 실제 iPhone에서 그대로 들어오는지는 아직 확인하지 못했어요.",
+  },
+];
+
 export const PRIVACY_POINTS = [
   {
     title: "위치 권한을 묻지 않아요",
@@ -82,8 +126,8 @@ export const PRIVACY_POINTS = [
     body: "이름도 전화번호도 받지 않아요. 최근 여정과 즐겨찾기는 휴대폰 안에만 저장돼요.",
   },
   {
-    title: "붙여넣은 내용은 기기 안에서만",
-    body: "지도 앱에서 복사한 장소 이름은 휴대폰 안에서만 읽고 어디에도 보내지 않아요.",
+    title: "공유한 장소는 기기 안에서만",
+    body: "지도 앱에서 공유하거나 붙여넣은 장소는 휴대폰 안에서만 읽고 어디에도 보내지 않아요.",
   },
 ] as const;
 

@@ -1,6 +1,6 @@
 # UX audit before Product V2
 
-Audited on 2026-09-30 against `main` at `d94b5fd`: the SwiftUI app (`apps/ios/TapsoApp`), the Live Activity extension (`apps/ios/LiveActivity`), the shared policy (`apps/ios/Shared`), the Swift core (`packages/transit-core`) and the Figma file `kkx04GvqOzHje7Dw5ikO9X` (`04 iOS` workbench, node `11:2`). Every finding cites the code or node it comes from. The status column says what Product V2 did about it; `FIXED` means the fix is in this branch and covered by the named test or evidence.
+Audited on 2026-09-30 against `main` at `d94b5fd`: the SwiftUI app (`apps/ios/TapsoApp`), the Live Activity extension (`apps/ios/LiveActivity`), the shared policy (`apps/ios/Shared`), the Swift core (`packages/transit-core`) and the Figma file `kkx04GvqOzHje7Dw5ikO9X` (`04 iOS` workbench, node `11:2`; on `13 Archive` since 2026-10-01). Every finding cites the code or node it comes from. The status column says what Product V2 did about it; `FIXED` means the fix is in this branch and covered by the named test or evidence.
 
 Severity: **P0** misleads the rider about getting off, or contradicts the product's safety posture. **P1** breaks the core promise (configure once, trust, put the phone away) or blocks a main flow. **P2** polish, consistency, maintainability.
 

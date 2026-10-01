@@ -289,6 +289,8 @@ final class TapsoAppModel {
     @ObservationIgnored private let api: TapsoAPIClient
     @ObservationIgnored private var searchTask: Task<Void, Never>?
     @ObservationIgnored private var playbackTask: Task<Void, Never>?
+    /// Registers the live ride's Live Activity push tokens with the server.
+    @ObservationIgnored private var pushTokenTask: Task<Void, Never>?
     @ObservationIgnored private var rejectedVehicles: Set<VehicleIdentifier> = []
     @ObservationIgnored private var lastMoment: RideMoment?
     /// The live session being set up, before a bus is confirmed.
@@ -660,6 +662,7 @@ final class TapsoAppModel {
                 await startLiveActivity()
             } else {
                 await liveActivity?.update(state: state, alerting: nil)
+                registerPushTokens()
             }
         }
         if isLiveRide {
@@ -671,6 +674,7 @@ final class TapsoAppModel {
 
     func finishRide() async {
         playbackTask?.cancel()
+        pushTokenTask?.cancel()
         guard var ride = activeRide, let destination = ride.draft.destination else { return }
         endLiveRideSession(ride)
         let finalMoment = ride.guidance.moment
@@ -695,6 +699,7 @@ final class TapsoAppModel {
 
     func cancelRide() async {
         playbackTask?.cancel()
+        pushTokenTask?.cancel()
         guard var ride = activeRide else { return }
         endLiveRideSession(ride)
         ride.session.cancel()
@@ -1304,11 +1309,30 @@ final class TapsoAppModel {
             totalStops: ride.draft.totalStops,
             vehiclePlate: ride.plate
         )
+        // Only a live ride has a server session to push to; a demo ride never asks for a token.
+        let push = ride.live != nil ? await api.liveActivityPushEnabled() : false
         do {
-            try await liveActivity.start(attributes: attributes, state: state)
+            try await liveActivity.start(attributes: attributes, state: state, push: push)
             liveActivityUnavailable = false
         } catch {
             liveActivityUnavailable = true
+            return
+        }
+        registerPushTokens()
+    }
+
+    /// Sends each push token of the live ride's activity to the server, rotations included. The
+    /// server clears the token when the session ends; a failed registration leaves the activity
+    /// updating from the app, as it does without push.
+    private func registerPushTokens() {
+        pushTokenTask?.cancel()
+        guard let sessionID = activeRide?.live?.sessionID, let tokens = liveActivity?.pushTokens() else { return }
+        let api = self.api
+        pushTokenTask = Task {
+            for await token in tokens {
+                guard !Task.isCancelled else { return }
+                try? await api.registerLiveActivityToken(sessionID: sessionID, token: token)
+            }
         }
     }
 

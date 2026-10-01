@@ -47,10 +47,13 @@
 		16CBA37E2A09BAAB0168A223 /* LiveRideSetupViews.swift in Sources */ = {isa = PBXBuildFile; fileRef = 01DE7451FA463336C39A13CA /* LiveRideSetupViews.swift */; };
 		2664941987948A2833A62902 /* TapsoAPIClient.swift in Sources */ = {isa = PBXBuildFile; fileRef = DA0A54842582C43E01555CBD /* TapsoAPIClient.swift */; };
 		CC9DD2029F37F718EB7CEBA5 /* TapsoAPIClientTests.swift in Sources */ = {isa = PBXBuildFile; fileRef = 882BE9396F38A304F46668C5 /* TapsoAPIClientTests.swift */; };
+		901ED55A886FE33A92009E7E /* PrivacyInfo.xcprivacy in Resources */ = {isa = PBXBuildFile; fileRef = F1AB819C471FE37B33ADB3E4 /* PrivacyInfo.xcprivacy */; };
+		85AEE919B98FC2B4F142ADF3 /* PrivacyInfo.xcprivacy in Resources */ = {isa = PBXBuildFile; fileRef = F1AB819C471FE37B33ADB3E4 /* PrivacyInfo.xcprivacy */; };
 		9451EF849588FF0EADF755FC /* TapsoTransit in Frameworks */ = {isa = PBXBuildFile; productRef = F536A4E0A68B0B38648F8397 /* TapsoTransit */; };
 		475A092787C1701844B9FCB3 /* TapsoShare.appex in Embed Foundation Extensions */ = {isa = PBXBuildFile; fileRef = 4C57AFEC8C9C87857CBD0C09 /* TapsoShare.appex */; settings = {ATTRIBUTES = (RemoveHeadersOnCopy, ); }; };
 		E1D9CBB280C029E1C60C756D /* Assets.xcassets in Resources */ = {isa = PBXBuildFile; fileRef = 25F8D8F9725AF79DC9F83B2B /* Assets.xcassets */; };
 		B17CE88DC78FF832C6AEE2EE /* Localizable.strings in Resources */ = {isa = PBXBuildFile; fileRef = 2436CA0171BFA7890857165A /* Localizable.strings */; };
+		3E5A0C71D2B94F8A6C1E0B27 /* PrivacyInfo.xcprivacy in Resources */ = {isa = PBXBuildFile; fileRef = F1AB819C471FE37B33ADB3E4 /* PrivacyInfo.xcprivacy */; };
 		74BD126939816D3AFF1CC528 /* TapsoTokens.swift in Sources */ = {isa = PBXBuildFile; fileRef = 4D67654E6A9412B2253E65FB /* TapsoTokens.swift */; };
 		9B0B7C3D8D7B164B3D39EE9B /* ShareSheetView.swift in Sources */ = {isa = PBXBuildFile; fileRef = 342359D136468006D05DB4BA /* ShareSheetView.swift */; };
 		2D38E55EBC33EF8E1A5CD659 /* ShareViewController.swift in Sources */ = {isa = PBXBuildFile; fileRef = FAAB40DF9ECB2977B9B44C62 /* ShareViewController.swift */; };
@@ -138,6 +141,7 @@
 		01DE7451FA463336C39A13CA /* LiveRideSetupViews.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = LiveRideSetupViews.swift; sourceTree = "<group>"; };
 		DA0A54842582C43E01555CBD /* TapsoAPIClient.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = TapsoAPIClient.swift; sourceTree = "<group>"; };
 		882BE9396F38A304F46668C5 /* TapsoAPIClientTests.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = TapsoAPIClientTests.swift; sourceTree = "<group>"; };
+		F1AB819C471FE37B33ADB3E4 /* PrivacyInfo.xcprivacy */ = {isa = PBXFileReference; lastKnownFileType = text.xml; path = PrivacyInfo.xcprivacy; sourceTree = "<group>"; };
 		4C57AFEC8C9C87857CBD0C09 /* TapsoShare.appex */ = {isa = PBXFileReference; includeInIndex = 0; lastKnownFileType = "wrapper.app-extension"; path = TapsoShare.appex; sourceTree = BUILT_PRODUCTS_DIR; };
 		3850C076191C897830471588 /* Info.plist */ = {isa = PBXFileReference; lastKnownFileType = text.plist; path = Info.plist; sourceTree = "<group>"; };
 		286E73970E8E6D04090B1AFF /* TapsoShare.entitlements */ = {isa = PBXFileReference; lastKnownFileType = text.plist.entitlements; path = TapsoShare.entitlements; sourceTree = "<group>"; };
@@ -203,6 +207,7 @@
 			children = (
 				25F8D8F9725AF79DC9F83B2B /* Assets.xcassets */,
 				2436CA0171BFA7890857165A /* Localizable.strings */,
+				F1AB819C471FE37B33ADB3E4 /* PrivacyInfo.xcprivacy */,
 			);
 			path = Resources;
 			sourceTree = "<group>";
@@ -447,6 +452,7 @@
 			files = (
 				593B1456AA2D7A490909919B /* Assets.xcassets in Resources */,
 				C2176B27F64CF25CB4B735B1 /* Localizable.strings in Resources */,
+				901ED55A886FE33A92009E7E /* PrivacyInfo.xcprivacy in Resources */,
 			);
 			runOnlyForDeploymentPostprocessing = 0;
 		};
@@ -456,6 +462,7 @@
 			files = (
 				9DF797D657D259EB1CC12E82 /* Assets.xcassets in Resources */,
 				DD911FC6501FE330D9D8A2BF /* Localizable.strings in Resources */,
+				85AEE919B98FC2B4F142ADF3 /* PrivacyInfo.xcprivacy in Resources */,
 			);
 			runOnlyForDeploymentPostprocessing = 0;
 		};
@@ -465,6 +472,7 @@
 			files = (
 				E1D9CBB280C029E1C60C756D /* Assets.xcassets in Resources */,
 				B17CE88DC78FF832C6AEE2EE /* Localizable.strings in Resources */,
+				3E5A0C71D2B94F8A6C1E0B27 /* PrivacyInfo.xcprivacy in Resources */,
 			);
 			runOnlyForDeploymentPostprocessing = 0;
 		};

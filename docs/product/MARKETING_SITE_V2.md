@@ -1,5 +1,7 @@
 # Marketing site V2
 
+> 2026-10-01: the hero and sections 01–05 are superseded by Marketing Site V3 (`MARKETING_SITE_V3.md`): one ride told by a persistent Dynamic Island. Sections 06–11, the waitlist and support backends and the claim guard described here are unchanged.
+
 The public page at [tapso-nu.vercel.app](https://tapso-nu.vercel.app), built from `apps/web`. It presents TAPSO; it is not TAPSO. The native iOS app is the product. Every phone, Lock Screen and Dynamic Island on the page is a labelled re-drawing on synthetic data, and the page says so where each one appears.
 
 ## Purpose and audience
@@ -127,7 +129,7 @@ Korean title and description, canonical URL, Open Graph and Twitter card with a 
 
 ## Figma
 
-`03 Web` (`3:4`) now holds a section **Web / Marketing V2 · 2026-09-30** (`165:54`) with the information architecture and its code mapping; the V1 frames `9:2` and `10:20` are renamed as superseded. Visual captures of the built page could not be uploaded from the authoring environment (Figma's upload host was not reachable); place 1440 and 390 captures from the Vercel Preview in that section. Code Connect: `JourneyCard.figma.ts` and `DynamicIsland.figma.ts` were removed with the V1 markup they described; the form, button, result, dialog and banner templates remain valid.
+`03 Web` (`3:4`, renamed `11 Marketing Web` on 2026-10-01) holds a section **Web / Marketing V2 · 2026-09-30** (`165:54`) with the information architecture and its code mapping; the V1 frames `9:2` and `10:20` were renamed as superseded and, on 2026-10-01, moved to `13 Archive`. Visual captures of the built page could not be uploaded from the authoring environment (Figma's upload host was not reachable); place 1440 and 390 captures from the Vercel Preview in that section. Code Connect: `JourneyCard.figma.ts` and `DynamicIsland.figma.ts` were removed with the V1 markup they described; the form, button, result, dialog and banner templates remain valid.
 
 ## Known limitations
 

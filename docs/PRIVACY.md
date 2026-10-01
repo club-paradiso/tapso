@@ -3,6 +3,7 @@
 TAPSO's default architecture tracks a public transit vehicle, not continuous passenger location. A future one-shot boarding location may be optional and must work only with explicit permission; it is not required by the current core.
 
 - Government and APNs keys remain server-side and are excluded by `.gitignore`.
+- `apps/ios/Resources/PrivacyInfo.xcprivacy` (app, Live Activity extension and share extension): no tracking, no collected data types, and `UserDefaults` for the app's own state (reason `CA92.1`) and for the App Group hand-off inbox the share extension writes and the app reads (`HandoffInbox`, reason `1C8F.1`). Reason texts checked against Apple's `NSPrivacyAccessedAPITypeReasons` documentation on 2026-10-01. Whether live-ride session data counts as "collected" for App Store Connect's privacy label is the owner's call at submission; this repository's reading is that it serves only the ride in progress and is deleted at its end.
 - The iOS demo collects no user data and makes no network request. Live rides
   (beta) talk only to TAPSO's own API: a route number, a route variant, two stop
   sequences and the bus the rider confirmed. No location, account or device

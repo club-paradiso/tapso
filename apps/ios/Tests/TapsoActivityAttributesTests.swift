@@ -18,6 +18,27 @@ final class TapsoActivityAttributesTests: XCTestCase {
         XCTAssertLessThan(data.count, 4_096)
     }
 
+    /// The server's APNs payload (`services/api/src/apns.ts`, committed as the
+    /// SYNTHETIC fixture `fixtures/transit/live-activity-push.json`) decodes as
+    /// this app's content state the way ActivityKit decodes `content-state`:
+    /// `JSONDecoder` defaults, so a date is seconds since 2001-01-01.
+    func testServerPushContentStateDecodesAsTheAppsContentState() throws {
+        let url = URL(fileURLWithPath: #filePath)
+            .deletingLastPathComponent().deletingLastPathComponent()
+            .deletingLastPathComponent().deletingLastPathComponent()
+            .appendingPathComponent("fixtures/transit/live-activity-push.json")
+        let fixture = try XCTUnwrap(try JSONSerialization.jsonObject(with: Data(contentsOf: url)) as? [String: Any])
+        XCTAssertEqual(fixture["synthetic"] as? Bool, true)
+        let aps = try XCTUnwrap((fixture["body"] as? [String: Any])?["aps"] as? [String: Any])
+        let contentState = try JSONSerialization.data(withJSONObject: try XCTUnwrap(aps["content-state"]))
+        let state = try JSONDecoder().decode(TapsoActivityAttributes.ContentState.self, from: contentState)
+        XCTAssertEqual(state.phase, .approachingDestination)
+        XCTAssertEqual(state.remainingStops, 2)
+        XCTAssertEqual(state.freshness, .fresh)
+        XCTAssertEqual(state.updatedAt, Date(timeIntervalSince1970: TimeInterval(try XCTUnwrap(aps["timestamp"] as? Int))))
+        XCTAssertEqual(state.guidance.milestone, .prepare)
+    }
+
     func testDemoTimelineEndsAtDestination() {
         XCTAssertEqual(DemoFixtures.demoTimeline().count, 9)
         XCTAssertEqual(DemoFixtures.demoTimeline().last?.confirmedStopID, DemoFixtures.plan.destinationStopID)

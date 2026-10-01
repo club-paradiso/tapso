@@ -1,6 +1,6 @@
 # Information architecture V2
 
-Implemented in `apps/ios/TapsoApp`. Figma: `04 iOS` › `iOS / Product V2` (node `157:10`).
+Implemented in `apps/ios/TapsoApp`. Figma: `03 iOS — GO` (node `205:3310`) and `04 iOS — RIDE` (node `157:10`).
 
 ## Principle
 
