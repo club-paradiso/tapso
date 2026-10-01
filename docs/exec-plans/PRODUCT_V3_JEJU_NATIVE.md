@@ -173,8 +173,8 @@ swift test --package-path packages/transit-core   # macOS / CI
   `KNOWN_ISSUES.md` since 2026-09-30, read 3.2:1. The same computation found
   three more failures: 70 % ink on the dark coral (4.3:1); the count label at
   80 % (3.7:1 on coral, 4.4:1 for light slate on basalt); and a last-known
-  numeral at 55 % (2.8:1). All now pass, with a test over every moment and
-  appearance.
+  numeral at 55 % (2.8:1). #90 makes all four pass and adds a test over every
+  moment in light and dark; #91 marks the `KNOWN_ISSUES.md` item fixed.
 - Marketing site, four widths (390, 768, 1024, 1440). Local build of `main` plus
   #86, Chromium, Pretendard served locally:
   - no horizontal overflow at any scroll position;
@@ -183,6 +183,8 @@ swift test --package-path packages/transit-core   # macOS / CI
     middle of cross-fades;
   - reduced motion leaves the hero static, with no running animation;
   - only inline sentence links are under 44 px.
+- 2026-10-01 19:30 UTC — #86 (`55c648e`) merged, CI green on its head in both
+  runs; #85 and #87, merged after that run, do not touch `apps/web`.
 
 ## Risks and unexpected findings
 
@@ -201,8 +203,7 @@ swift test --package-path packages/transit-core   # macOS / CI
 
 ## Exact next action
 
-Merge #86 (site), then #89 (this record), #90 (contrast) and #91. For the last
-bus:
+For the last bus:
 1. A person downloads one route's timetable XLSX from `bus.jeju.go.kr`, as
    data.go.kr 3043887 instructs (365 first), and adds it under
    `fixtures/jeju/timetables/` with its download date.
