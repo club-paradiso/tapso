@@ -25,8 +25,23 @@ enum RideSurfacePalette {
     }
 
     static func secondaryText(for moment: RideMoment) -> Color {
-        primaryText(for: moment).opacity(moment == .arrived ? 0.72 : 0.7)
+        primaryText(for: moment).opacity(secondaryOpacity(for: moment))
     }
+
+    /// Dimmed only where the dimmed text still reads at 4.5:1 or more (basalt 9.3:1, tangerine 4.8:1).
+    /// On coral, 70 % white reads 3.2:1 on the light coral and 70 % ink 4.3:1 on the dark one, so the
+    /// secondary line is drawn at full strength there (5.0:1 and 7.0:1, `DESIGN_SYSTEM_V2.md`).
+    static func secondaryOpacity(for moment: RideMoment) -> Double {
+        switch moment {
+        case .nextStop, .passedDestination: 1
+        case .arrived: 0.72
+        default: 0.7
+        }
+    }
+
+    /// The unit label under the Lock Screen's count. At 80 % it reads under 4.5:1 on coral (white, 3.7:1)
+    /// and, in light appearance, on basalt (slate, 4.4:1), so it is drawn at full strength.
+    static let countLabelOpacity: Double = 1
 
     /// The accent on a basalt surface; on an escalated surface the text colour takes over.
     static func accent(for moment: RideMoment) -> Color {
@@ -80,7 +95,13 @@ struct LockScreenRideView: View {
                         .lineLimit(2)
                 }
                 Spacer(minLength: 4)
-                RemainingOrSymbol(guidance: guidance, remaining: state.remainingStops, color: accent, large: true)
+                RemainingOrSymbol(
+                    guidance: guidance,
+                    remaining: state.remainingStops,
+                    color: accent,
+                    large: true,
+                    labelOpacity: RideSurfacePalette.countLabelOpacity
+                )
             }
 
             if showsRail {
@@ -127,6 +148,12 @@ struct RemainingOrSymbol: View {
     let remaining: Int
     let color: Color
     var large = false
+    /// The unit label under the numeral: dimmed on the black island, full strength on the Lock Screen
+    /// (`RideSurfacePalette.countLabelOpacity`).
+    var labelOpacity: Double = 0.8
+
+    /// Dimmed, still at least 3:1 for a numeral this large on every surface (slate on basalt 3.7:1).
+    static let lastKnownOpacity: Double = 0.7
 
     var body: some View {
         switch guidance.count {
@@ -136,11 +163,11 @@ struct RemainingOrSymbol: View {
                     .font(TapsoType.numeral(large ? 40 : 24))
                     .monospacedDigit()
                     .foregroundStyle(color)
-                    .opacity(guidance.count == .lastKnown ? 0.55 : 1)
+                    .opacity(guidance.count == .lastKnown ? Self.lastKnownOpacity : 1)
                     .contentTransition(.numericText())
                 Text(guidance.count == .lastKnown ? LocalizedStringKey("count.lastKnown") : LocalizedStringKey(RideText.countKey("count.unit", remaining)))
                     .font(.caption2.weight(.bold))
-                    .foregroundStyle(color.opacity(0.8))
+                    .foregroundStyle(color.opacity(labelOpacity))
             }
         case .hidden:
             Image(systemName: guidance.symbolName)
