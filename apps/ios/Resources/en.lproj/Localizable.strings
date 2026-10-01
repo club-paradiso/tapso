@@ -118,6 +118,13 @@
 "ride.gotOff" = "I'm off";
 "ride.passed.destination" = "Your stop: %@";
 "ride.passed.end" = "End ride";
+"rescue.exitAt" = "Get off at the next stop, %@";
+"rescue.suggested" = "Suggested";
+"rescue.walkBack.title" = "Walk back";
+"rescue.walkBack.detail" = "%ld m to your stop in a straight line; the walk itself is longer";
+"rescue.walk.tooFar" = "Even in a straight line your stop is %ld m away, too far to walk.";
+"rescue.mapApp.title" = "Find the way in a map app";
+"rescue.mapApp.detail" = "A map app knows the buses back and the walk better than TAPSO";
 "ride.closeApp" = "The preview plays while TAPSO is open. The Lock Screen and Dynamic Island show the same guidance.";
 "ride.liveActivityOff.title" = "Lock Screen updates are off";
 "ride.liveActivityOff.body" = "Turn on Live Activities in Settings › TAPSO to follow along on the Lock Screen and Dynamic Island. The app keeps guiding you.";
@@ -151,6 +158,7 @@
 "handoff.title" = "Now on foot";
 "handoff.body" = "TAPSO covers the bus. For the walk, use a map app.";
 "handoff.naver.findDestination" = "Find it in NAVER Map";
+"handoff.kakao.findDestination" = "Find it in KakaoMap";
 "handoff.kakao.unavailable" = "Preview stop coordinates are synthetic, so KakaoMap directions aren't offered.";
 "handoff.failed.title" = "Couldn't open the map app";
 "handoff.failed.naverMap" = "Couldn't open NAVER Map. Check that it's installed.";

@@ -70,7 +70,7 @@ App-only pieces drawn inline in Figma screens: DemoDataChip (`DemoDataChip`, `de
 
 ## Product V3 board (2026-10-01)
 
-`04 iOS` › `iOS / Product V3 · Hand-off & Way back` (`193:2956`), built from the
+`04 iOS` › `iOS / Product V3 · Hand-off, Way back & Rescue` (`193:2956`), built from the
 V2 components (`Icon / V2`, `Button / V2`, `RouteBadge / V2`, `StopRow / V2`,
 `돌이 / V2`) and bound to the `TAPSO V2 Semantic` variables. Sample data is
 synthetic and labelled so on the board.
@@ -83,6 +83,11 @@ synthetic and labelled so on the board.
 | V3 / 23 Live stops · near the shared place (`193:3049`) | `LiveStopPickerContent` › `suggestions(for:after:)` | (stateful; covered by `TapsoAPIClientTests`) |
 | V3 / 24 Share sheet · place found (`193:3098`) | `ShareExtension` › `ShareSheetView` | (extension; no snapshot target yet) |
 | V3 / 25 End · walk to the place, last buses (`193:3125`) | `RideEndContent` + `ReturnTripCard` | `28-end-walk-to-place`, `29-end-return-trip` |
+| V3 / 26 Passed stop · next stop, walk back (`195:3021`) | `RideHeroCard` › `passed` + `RescueOptionList` | `17-ride-passed` (demo: no distance), `30-ride-passed-walk-back` |
+
+The `RideHero / V2` › `moment=passed` variant (`155:230`) now matches the code:
+`color/journey/next` at 8 % behind a 2 pt `color/journey/next` stroke. It was a
+solid fill, which hid the coral headline on `V2 / 18 Missed stop recovery`.
 
 ## Known deltas between Figma and code
 

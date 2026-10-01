@@ -56,10 +56,10 @@ return, transfer, rescue, handoff, discovery, eat, passport/share, mystery.
 | V2.1d | Production durable sessions | `/health` reports `sessions.store=redis`, namespace `production`; post-deploy session smoke passes | `BLOCKED_BY_CREDENTIALS`: four Production variables on `tapso-api` (runbook in `PRODUCTION_TRANSIT_API.md`) |
 | V2.1e | iOS real Journey Session integration | Live mode creates, refreshes, confirms and ends a session against the API; demo stays synthetic; guard test proves no real data reaches the Swift matcher | `IMPLEMENTED` (PR C), app side pending CI; production `BLOCKED_BY_CREDENTIALS` (V2.1d) |
 | V2.2 | Map Handoff | Share Extension accepts KakaoMap, NAVER Map, Apple Maps, URLs, coordinates, addresses and names; parser tests; Journey Contract created from a handoff | `IMPLEMENTED` (PR D, `MAP_HANDOFF_V3.md`); device run `UNVERIFIED` |
-| V2.3 | Core riding | Live Activity V3 states from `resolveSurface`; push-token registration endpoint; Transfer Guardian in the ride | `PENDING` (PR E) |
-| V2.4 | Jeju safety layer | Safe Return, Rescue engines with deterministic tests (no-return rejection, long headway, expired data) | `DONE` for the engines (#73 merged); last-bus data path and end-screen card `IMPLEMENTED` (PR E); Rescue and Transfer wiring pending |
-| V3.0 | Jeju discovery | 오늘 뭐하젠?, 그냥 탑서 (filtered before randomisation), route experiences grounded in live route data | `PENDING` (PR F) |
-| V3.1 | Transit Fit | Semantic accessibility summary, no fake scores | `PENDING` (PR F) |
+| V2.3 | Core riding | Live Activity V3 states from `resolveSurface`; push-token registration endpoint; Transfer Guardian in the ride | `PENDING`; remote updates `BLOCKED_BY_PAID_MEMBERSHIP` (APNs); Transfer Guardian needs a planned transfer (no source) |
+| V2.4 | Jeju safety layer | Safe Return, Rescue engines with deterministic tests (no-return rejection, long headway, expired data) | `DONE` for the engines (#73 merged); last-bus data path and end-screen card `IMPLEMENTED` (PR E); Rescue for a passed destination `IMPLEMENTED` (PR F, `PassedStopRescue`); missed-connection and wrong-direction rescue and Transfer Guardian wait on planned transfers (no route planner or transfer data) |
+| V3.0 | Jeju discovery | 오늘 뭐하젠?, 그냥 탑서 (filtered before randomisation), route experiences grounded in live route data | `PENDING`: no verified place source yet |
+| V3.1 | Transit Fit | Semantic accessibility summary, no fake scores | `PENDING` |
 | V3.2 | Eat | Transit-aware food situations | `PENDING` |
 | V3.3 | Drop, Passport, Share | Editorial 1–3 picks; on-device passport; share card | `PENDING` |
 | V3.4 | Roulette / Mystery Ride | Experimental | `PENDING` |
@@ -124,6 +124,13 @@ swift test --package-path packages/transit-core   # macOS / CI
   `a811855`); the islandStory blob matched `main`. #75 and #76 together turned
   `main`'s `web` job red; #79 fixes the test.
 
+- 2026-10-01 17:04 UTC — #79 merged (`c5dc149`); #78 updated from `main` on
+  the server (`update_pull_request_branch`, no local fetch).
+- PR F (`claude/v24-rescue-passed-stop`, on PR E): `PassedStopRescue` reads the
+  Rescue engine for the passed destination — the next stop after the bus's last
+  position, straight-line metres only between surveyed stops, map app last, no
+  ride back without a verified opposite direction — and the ride screen shows it.
+
 ## Risks and unexpected findings
 
 - `main` had been red since `cd806f6`; any PR based on it inherits the red
@@ -133,5 +140,7 @@ swift test --package-path packages/transit-core   # macOS / CI
 
 ## Exact next action
 
-Merge PR C once its `ios` job is green, retarget PR D to `main`, get PR D
-green, then PR E (Live Activity V3 states from `resolveSurface`).
+Merge #78 (PR D) once CI is green on its `main` merge; retarget #82 (PR E) to
+`main`, update it from `main`, merge; then PR F (Rescue) the same way. After
+that: Live Activity V3 states from `resolveSurface` (recovery on the Lock
+Screen), then Discovery once a verified place source exists.

@@ -212,6 +212,46 @@ final class TapsoAPIClientTests: XCTestCase {
         try await waitUntil { StubURLProtocol.recorded.contains { $0.httpMethod == "DELETE" } }
     }
 
+    func testPastTheStopALiveRideNamesTheNextStopAndMeasuresTheWalkBack() async throws {
+        StubURLProtocol.respond { request in
+            switch (request.httpMethod ?? "GET", request.url?.path ?? "") {
+            case ("GET", "/v1/stops"): (200, Payload.stops)
+            case ("POST", "/v1/sessions"): (201, Payload.session(state: "confirmation_required"))
+            case ("POST", "/v1/sessions/syn-session/confirm"), ("GET", "/v1/sessions/syn-session"):
+                (200, Payload.session(state: "passed_destination", selected: true, at: 11, phase: "passed_destination"))
+            case ("DELETE", "/v1/sessions/syn-session"): (204, Data())
+            default: (404, Data(#"{"error":"NOT_FOUND","message":"no such endpoint"}"#.utf8))
+            }
+        }
+        let model = makeModel()
+        let api = TransitAPIRoute(routeId: "SYN-202-W", routeNumber: "202", startStopName: "합성 정류장 1", endStopName: "합성 정류장 12")
+        await model.chooseLiveRoute(api)
+        guard case let .loaded(stops) = model.liveStops else { return XCTFail("no stops: \(model.liveStops)") }
+        model.chooseLiveStops(
+            boarding: try XCTUnwrap(stops.route.routeStop(sequence: 4)),
+            destination: try XCTUnwrap(stops.route.routeStop(sequence: 10)),
+            on: stops
+        )
+        try await waitUntil { model.vehicleCheck.stage == .proposed }
+        await model.confirmVehicle(try XCTUnwrap(model.vehicleCheck.proposals.first))
+        XCTAssertEqual(model.guidance?.moment, .passedDestination)
+
+        let advice = try XCTUnwrap(model.passedStopAdvice)
+        XCTAssertEqual(advice.exitStop?.sequence, 12, "the server placed the bus at 11; the next stop is 12")
+        XCTAssertEqual(advice.straightLineMeters, 580, "surveyed stops 12 and 10, in a straight line")
+        XCTAssertEqual(advice.plan.exitAt, "합성 정류장 12")
+        XCTAssertEqual(advice.plan.options.map(\.action), [.walkBack, .openMapApp])
+
+        let naver = try XCTUnwrap(URLComponents(string: try XCTUnwrap(model.rescueMapRequest(for: .naverMap)).urlString))
+        XCTAssertEqual(naver.host, "route")
+        XCTAssertEqual(naver.path, "/walk")
+        XCTAssertEqual(naver.queryItems?.first { $0.name == "dname" }?.value, "합성 정류장 10")
+        XCTAssertNotNil(model.rescueMapRequest(for: .kakaoMap), "surveyed coordinates reach KakaoMap")
+
+        await model.cancelRide()
+        try await waitUntil { StubURLProtocol.recorded.contains { $0.httpMethod == "DELETE" } }
+    }
+
     func testRouteInfoReadsOneVariantsPublishedServiceDay() async throws {
         StubURLProtocol.respond { _ in (200, Payload.routeInfo(routeID: "SYN-202-W", last: "22:30")) }
         let hours = try await makeClient().routeInfo(routeID: "SYN-202-W")
@@ -309,14 +349,14 @@ private enum Payload {
         """#.utf8)
     }
 
-    static func session(state: String, selected: Bool = false) -> Data {
+    static func session(state: String, selected: Bool = false, at sequence: Int = 5, phase: String = "active") -> Data {
         let stop = { (sequence: Int) in
             #"{"stopId":"SYN-STOP-\#(sequence)","name":"합성 정류장 \#(sequence)","sequence":\#(sequence)}"#
         }
         let candidates = selected ? "" : #","candidates":[{"vehicleId":"SYN70가0412","score":0,"evidence":[],"rejectedReasons":[],"stopOffset":-2,"zone":"approaching"}]"#
         let selection = selected ? #","selectedVehicleId":"SYN70가0412","selectionMode":"explicit""# : ""
         let progress = selected
-            ? #","progress":{"currentStopSequence":5,"currentStopId":"SYN-STOP-5","remainingStops":5,"phase":"active","source":"provider_stop_sequence","observedAt":"1970-01-01T00:00:00.000Z"}"#
+            ? #","progress":{"currentStopSequence":\#(sequence),"currentStopId":"SYN-STOP-\#(sequence)","remainingStops":\#(max(0, 10 - sequence)),"phase":"\#(phase)","source":"provider_stop_sequence","observedAt":"1970-01-01T00:00:00.000Z"}"#
             : ""
         return Data(#"""
         {"id":"syn-session","routeId":"SYN-202-W","cityCode":"39","boardingStop":\#(stop(4)),"destinationStop":\#(stop(10)),"riderState":"waiting_at_stop","matchConfidence":"unknown","state":"\#(state)","explanation":"synthetic","matchingMode":"shadow"\#(selection)\#(progress)\#(candidates),"createdAt":"2026-10-01T06:00:00.000Z","updatedAt":"2026-10-01T06:00:10.000Z","expiresAt":"2026-10-01T10:00:00.000Z"}
