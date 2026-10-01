@@ -36,10 +36,11 @@ because it looks scalable.
 | Production `tapso-api` has only `TAGO_SERVICE_KEY` and `RIDE_CAPTURE_OPERATOR_TOKEN` for Production; Upstash and session variables exist only for one Preview branch | `VERIFIED` | Vercel project `prj_XTimnEWdrhaDMSJfgELHzQAo3Nn2` environment listing (names only, values never read) |
 | Production journey sessions therefore answer `503 SESSIONS_UNAVAILABLE` | `VERIFIED_FROM_DOC` | `KNOWN_ISSUES.md` (`BLOCKED_BY_ACCESS`, production smoke run `36804898273`) |
 | Production deployment of `tapso-api` is `main@71c99b1` | `VERIFIED` | deployment `dpl_BnV2Z4nyH7eEkpnk6p5351A42uzE`, target production, READY |
-| This agent environment cannot reach `tapso-api.vercel.app`, `tapso-nu.vercel.app`, `apis.data.go.kr`, `www.data.go.kr`, `download.swift.org`, or the Actions artifact blob store; it can reach `developer.apple.com` and GitHub | `VERIFIED` | proxy `connect_rejected` for each; GitHub-hosted runners reach production and are used for anything that needs it |
+| This agent environment cannot reach `tapso-api.vercel.app`, `tapso-nu.vercel.app`, `apis.data.go.kr`, `www.data.go.kr`, `download.swift.org`, or the Actions artifact blob store; it can reach `developer.apple.com` and GitHub | `VERIFIED` | proxy `connect_rejected` for each (also `www.apple.com`, `apis.map.kakao.com`, `map.kakao.com`, `map.naver.com`, `guide.ncloud-docs.com`); GitHub-hosted runners reach production and are used for anything that needs it |
 | No Swift toolchain locally | `VERIFIED` | Swift and iOS changes are verified by CI (`transit-core`, `ios` jobs on `macos-15`) |
 | Matcher readiness is `READY_FOR_SHADOW`; issue #61 (F21) is being worked in PR #71 by another session (F22, F24) | `VERIFIED` | PR #71 head `e96f0da`, CI green, real-base gate evidence run `36871560482` in progress at 14:50 UTC |
-| Paid Apple Developer Program membership is absent (Personal Team `89CGFQ24U5`) | `VERIFIED_FROM_DOC` | `KNOWN_ISSUES.md` › `BLOCKED_BY_PAID_MEMBERSHIP`; TestFlight, APNs, App Groups on device and physical Dynamic Island checks wait on it |
+| Paid Apple Developer Program membership is absent (Personal Team `89CGFQ24U5`) | `VERIFIED_FROM_DOC` | `KNOWN_ISSUES.md` › `BLOCKED_BY_PAID_MEMBERSHIP`; TestFlight, APNs and physical Dynamic Island checks wait on it |
+| App Groups work on a free Personal Team; push notifications do not | `VERIFIED` | developer.apple.com › Account Help › Supported capabilities (iOS), read 2026-10-01 (App groups: ADP, ADEP and Apple Developer columns all checked) |
 | TAGO publishes no observation timestamp and no timetable in the services TAPSO uses | `VERIFIED_FROM_DOC` | `DATA_VALIDATION.md`, `validation/TAGO_2026-09-11.md`; Safe Return and Transfer Guardian treat headway and last departures as inputs that may be `unknown` |
 
 ## Milestones
@@ -49,14 +50,14 @@ return, transfer, rescue, handoff, discovery, eat, passport/share, mystery.
 
 | # | Milestone | Observable completion | Status |
 |---|---|---|---|
-| V2.1a | CI green on `main` | `transit-core` job green on the PR | `IN_PROGRESS` (PR A) |
+| V2.1a | CI green on `main` | `transit-core` job green on the PR | `DONE` (#72 merged) |
 | V2.1b | Reliability taxonomy | `PROVIDER_TIMEOUT` 504, `PROVIDER_UNAVAILABLE` 502, `PROVIDER_RESPONSE_INVALID` 502, `INTERNAL_ERROR` 500 and an empty list are distinct; tests in `tagoProvider.test.ts`, `apiRouter.test.ts` | `DONE` in PR A |
 | V2.1c | Journey Contract v1 | Same specification passes in Node and Swift (`JOURNEY_CONTRACT_V3.md`) | `DONE` in PR A (Swift pending CI) |
 | V2.1d | Production durable sessions | `/health` reports `sessions.store=redis`, namespace `production`; post-deploy session smoke passes | `BLOCKED_BY_CREDENTIALS`: four Production variables on `tapso-api` (runbook in `PRODUCTION_TRANSIT_API.md`) |
 | V2.1e | iOS real Journey Session integration | Live mode creates, refreshes, confirms and ends a session against the API; demo stays synthetic; guard test proves no real data reaches the Swift matcher | `IMPLEMENTED` (PR C), app side pending CI; production `BLOCKED_BY_CREDENTIALS` (V2.1d) |
-| V2.2 | Map Handoff | Share Extension accepts KakaoMap, NAVER Map, Apple Maps, URLs, coordinates, addresses and names; parser tests; Journey Contract created from a handoff | `PENDING` (PR D) |
+| V2.2 | Map Handoff | Share Extension accepts KakaoMap, NAVER Map, Apple Maps, URLs, coordinates, addresses and names; parser tests; Journey Contract created from a handoff | `IMPLEMENTED` (PR D, `MAP_HANDOFF_V3.md`); device run `UNVERIFIED` |
 | V2.3 | Core riding | Live Activity V3 states from `resolveSurface`; push-token registration endpoint; Transfer Guardian in the ride | `PENDING` (PR E) |
-| V2.4 | Jeju safety layer | Safe Return, Rescue engines with deterministic tests (no-return rejection, long headway, expired data) | `IMPLEMENTED` (PR B #73): engines in both languages; wiring into surfaces pending |
+| V2.4 | Jeju safety layer | Safe Return, Rescue engines with deterministic tests (no-return rejection, long headway, expired data) | `DONE` for the engines (#73 merged); wiring into surfaces pending |
 | V3.0 | Jeju discovery | 오늘 뭐하젠?, 그냥 탑서 (filtered before randomisation), route experiences grounded in live route data | `PENDING` (PR F) |
 | V3.1 | Transit Fit | Semantic accessibility summary, no fake scores | `PENDING` (PR F) |
 | V3.2 | Eat | Transit-aware food situations | `PENDING` |
@@ -104,6 +105,16 @@ swift test --package-path packages/transit-core   # macOS / CI
   violation (a network API added to `HomeView.swift`, the client's host
   changed: both turned the suite red, then reverted).
 
+- 2026-10-01 15:55 UTC — #73 merged after re-verifying the combined state
+  (`main@665a431` + PR B: services/api 782/782, typecheck clean, no Swift
+  type collisions).
+- PR D (`claude/v22-map-handoff`, on PR C): `SharedPlaceParser`, `HandoffInbox`,
+  `HandoffStopSuggester`, `HandoffJourney` in the core; the `TapsoShare`
+  extension with the App Group; paste and share-sheet intake, nearest-stop
+  suggestions in live setup, the walk to the shared place through NAVER Map,
+  KakaoMap and Apple Maps. Found on the way: the V2 end screen never showed its
+  KakaoMap button even when coordinates were real (fixed).
+
 ## Risks and unexpected findings
 
 - `main` had been red since `cd806f6`; any PR based on it inherits the red
@@ -113,5 +124,5 @@ swift test --package-path packages/transit-core   # macOS / CI
 
 ## Exact next action
 
-Get PR C through the `ios` CI job (no local Swift toolchain), then the map
-hand-off (PR D).
+Merge PR C once its `ios` job is green, retarget PR D to `main`, get PR D
+green, then PR E (Live Activity V3 states from `resolveSurface`).
