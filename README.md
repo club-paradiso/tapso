@@ -13,6 +13,7 @@ Public product site: [tapso-nu.vercel.app](https://tapso-nu.vercel.app)
 | Swift transit core | `VERIFIED` | Swift tests (CI job `transit-core`) cover progress, freshness, journey transitions, debug evidence, and the demo-only `VehicleMatchingEngine` |
 | Native iOS app | `VERIFIED` | CI job `ios` builds the committed project (app + WidgetKit extension) and runs its tests on an iPhone simulator on every push |
 | Product V2 ride-companion UX | `IMPLEMENTED` on synthetic data | Destination-first setup, one-tap repeat rides, rider-confirmed vehicle check, distinct riding / two-stop / next-stop / arrival / passed layouts, calm delayed / lost / offline / checking states, relaunch recovery, paste intake from map apps, NAVER Map hand-off. One `RideGuidancePolicy` in the Swift core drives the app, Lock Screen and Dynamic Island. Simulator snapshot evidence in Korean and English from CI. See [docs/product](docs/product/) |
+| Live rides (beta) | `IMPLEMENTED`, `BLOCKED_BY_CREDENTIALS` in production | Route number → official variant → real stop list → server journey session → rider-confirmed bus → server progress, through one client (`TapsoAPIClient.swift`) to TAPSO's own API only; the server ranks in shadow mode and the rider selects. Tested against server-generated payloads and a stubbed transport. Production sessions answer `503 SESSIONS_UNAVAILABLE` until enabled, and the app says so. See [LIVE_JOURNEY_V3.md](docs/product/LIVE_JOURNEY_V3.md) |
 | Local demo scenarios | `IMPLEMENTED` | Synthetic scripts (smooth, similar buses, no bus yet, delayed data, bus lost, offline, passed destination) at 1×, 5× or manual steps, applied through `RideSession` |
 | Lock Screen / Dynamic Island | `VERIFIED` (simulator) | V2 surfaces rendered for every ride moment by `SnapshotEvidenceTests` in CI (island regions inside a drawn outline); the V1 surfaces were checked on an iOS 26.3 iPhone 17 Pro Simulator on the build host. Physical device `UNVERIFIED` |
 | TypeScript API scaffold | `VERIFIED` | Native Node tests cover matching and official-schema normalization |
@@ -47,7 +48,7 @@ xcodebuild -project apps/ios/Tapso.xcodeproj -scheme Tapso \
   -destination 'platform=iOS Simulator,name=iPhone 17' build
 ```
 
-Open `apps/ios/Tapso.xcodeproj` and run the `Tapso` scheme. Search for where you get off (or tap **샘플 여정 체험하기**), confirm the proposed bus, then press Home to watch the Dynamic Island and lock the phone for the Lock Screen. The **체험 설정** sheet picks a synthetic scenario and playback speed. Everything the app shows is synthetic: it makes no network request.
+Open `apps/ios/Tapso.xcodeproj` and run the `Tapso` scheme. Search for where you get off (or tap **샘플 여정 체험하기**), confirm the proposed bus, then press Home to watch the Dynamic Island and lock the phone for the Lock Screen. The **체험 설정** sheet picks a synthetic scenario and playback speed. Everything the demo shows is synthetic and it makes no network request. **버스 번호로 타기** (실시간 · 베타) uses TAPSO's production API instead; until production journey sessions are enabled it stops at the vehicle check and says so.
 
 After adding or removing a Swift file under `apps/ios`, run `python3 scripts/ios/sync_xcodeproj.py` (or regenerate with XcodeGen) and `python3 scripts/ios/check_localization.py`.
 

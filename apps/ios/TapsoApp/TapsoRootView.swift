@@ -20,6 +20,9 @@ struct TapsoRootView: View {
                             destination(for: step)
                         }
                 }
+                .onChange(of: model.path) { _, newPath in
+                    model.pathDidChange(newPath)
+                }
                 .sheet(isPresented: $model.isDemoPanelPresented) {
                     DemoControlsView(model: model)
                         .presentationDetents([.medium])
@@ -44,6 +47,10 @@ struct TapsoRootView: View {
             MapImportView(model: model)
         case .vehicleCheck:
             VehicleCheckView(model: model)
+        case .liveRoutes:
+            LiveRouteSearchView(model: model)
+        case let .liveStops(routeID):
+            LiveStopPickerView(model: model, routeID: routeID)
         }
     }
 }

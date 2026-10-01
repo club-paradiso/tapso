@@ -51,7 +51,7 @@ TAPSO는 제주 버스 탑승 중 남은 정거장과 하차 타이밍을 Dynami
 ### Beta review notes
 
 - No account or test credentials are required.
-- The app makes no network request and collects no user data in this demo build.
+- The demo makes no network request and collects no user data. Live rides (beta) talk only to TAPSO's API and send no location or identity; they need production journey sessions enabled.
 - Route, stop, and vehicle observations are synthetic and labeled as demo behavior.
 - Live Activity updates are local in this build. Automatic background progression and real Jeju data are not claimed.
 - A Dynamic Island-capable iPhone provides the intended experience; other supported iPhones show the Lock Screen Live Activity.

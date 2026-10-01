@@ -26,27 +26,71 @@ enum SetupStep: Hashable {
     case boarding(routeID: RouteID, destinationStopID: StopID)
     case mapImport
     case vehicleCheck
+    /// Live: the route number, then its official variants.
+    case liveRoutes
+    /// Live: boarding and destination on one variant's real stop list.
+    case liveStops(routeID: String)
 }
 
 /// The ride being set up: where to get off, which bus, where to board.
+///
+/// A demo draft looks its route up in the synthetic `DemoCatalog`. A live draft
+/// carries the route as TAPSO's API returned it, its TAGO city code, and the
+/// provider sequences of both stops (stop ids repeat round a loop; sequences do not).
 struct RideDraft: Codable, Hashable {
     let routeID: RouteID
     let boardingStopID: StopID
     let destinationStopID: StopID
+    let liveRoute: TransitRoute?
+    let cityCode: String?
+    let boardingSequence: Int?
+    let destinationSequence: Int?
+    /// Whether stop coordinates are real (TAGO) rather than synthetic.
+    let coordinatesAreSurveyed: Bool?
 
     init(routeID: RouteID, boardingStopID: StopID, destinationStopID: StopID) {
         self.routeID = routeID
         self.boardingStopID = boardingStopID
         self.destinationStopID = destinationStopID
+        liveRoute = nil
+        cityCode = nil
+        boardingSequence = nil
+        destinationSequence = nil
+        coordinatesAreSurveyed = false
     }
 
     init(_ journey: SavedJourney) {
         self.init(routeID: journey.routeID, boardingStopID: journey.boardingStopID, destinationStopID: journey.destinationStopID)
     }
 
-    var route: TransitRoute? { DemoCatalog.route(id: routeID) }
-    var boarding: Stop? { route?.routeStop(id: boardingStopID)?.stop }
-    var destination: Stop? { route?.routeStop(id: destinationStopID)?.stop }
+    init(live route: TransitRoute, cityCode: String, boarding: RouteStop, destination: RouteStop, coordinatesAreSurveyed: Bool) {
+        routeID = route.id
+        boardingStopID = boarding.stop.id
+        destinationStopID = destination.stop.id
+        liveRoute = route
+        self.cityCode = cityCode
+        boardingSequence = boarding.sequence
+        destinationSequence = destination.sequence
+        self.coordinatesAreSurveyed = coordinatesAreSurveyed
+    }
+
+    /// Live data from TAPSO's API, as opposed to the synthetic demo.
+    var isLive: Bool { cityCode != nil }
+
+    var route: TransitRoute? { liveRoute ?? DemoCatalog.route(id: routeID) }
+
+    var boardingRouteStop: RouteStop? {
+        if let boardingSequence, let stop = route?.routeStop(sequence: boardingSequence) { return stop }
+        return route?.routeStop(id: boardingStopID)
+    }
+
+    var destinationRouteStop: RouteStop? {
+        if let destinationSequence, let stop = route?.routeStop(sequence: destinationSequence) { return stop }
+        return route?.routeStop(id: destinationStopID)
+    }
+
+    var boarding: Stop? { boardingRouteStop?.stop }
+    var destination: Stop? { destinationRouteStop?.stop }
 
     var plan: RidePlan {
         RidePlan(
@@ -60,12 +104,22 @@ struct RideDraft: Codable, Hashable {
     /// Stops from boarding to destination.
     var totalStops: Int {
         guard
-            let route,
-            let from = route.routeStop(id: boardingStopID)?.sequence,
-            let to = route.routeStop(id: destinationStopID)?.sequence
+            let from = boardingRouteStop?.sequence,
+            let to = destinationRouteStop?.sequence
         else { return 1 }
         return max(1, to - from)
     }
+}
+
+/// What the server last said about a live ride.
+struct LiveRideState: Codable, Hashable {
+    let sessionID: String
+    let vehicleID: String
+    /// The server's reading, translated by `LiveSessionInterpreter`.
+    var signal: RideSignal
+    var currentStopSequence: Int?
+    /// Set when the server ended or lost the session; the ride stops polling.
+    var endedByServer: Bool
 }
 
 /// A ride in progress. Persisted so a relaunch resumes it instead of losing it.
@@ -86,12 +140,16 @@ struct ActiveRide: Codable, Hashable {
     /// Milestones already signalled this ride, so each alerts and buzzes at most once,
     /// across relaunches and through delayed/lost/offline interruptions.
     var alertedMilestones: Set<RideMilestone>?
+    /// Present for a live ride; `nil` for the demo.
+    var live: LiveRideState?
+
+    var isLive: Bool { live != nil }
 
     /// When the ride's data last reached the app, in real time.
     var lastUpdateAt: Date { lastObservedAt ?? session.startedAt }
 
     var beats: [DemoRideBeat] {
-        guard let route = draft.route else { return [] }
+        guard live == nil, let route = draft.route else { return [] }
         return DemoRideScript.beats(
             route: route,
             boarding: draft.boardingStopID,
@@ -103,7 +161,35 @@ struct ActiveRide: Codable, Hashable {
     var hasMoreBeats: Bool { beatIndex + 1 < beats.count }
 
     var signal: RideSignal {
-        RideSignal(session: session, freshness: freshnessOverride, isOffline: isOffline)
+        guard let live else {
+            return RideSignal(session: session, freshness: freshnessOverride, isOffline: isOffline)
+        }
+        // A finished or cancelled ride reads as ended on every surface, whatever the server said last.
+        if session.state == .completed || session.state == .cancelled {
+            return RideSignal(phase: session.state, remainingStops: 0, freshness: .fresh)
+        }
+        // Silence since the server last answered can only make the data older, never fresher.
+        let server = live.signal
+        return RideSignal(
+            phase: live.endedByServer ? .vehicleRecovery : server.phase,
+            remainingStops: live.endedByServer ? -1 : server.remainingStops,
+            freshness: Self.older(server.freshness, freshnessOverride),
+            destinationPassed: server.destinationPassed,
+            isOffline: isOffline || server.isOffline
+        )
+    }
+
+    private static func older(_ server: DataFreshness, _ local: DataFreshness?) -> DataFreshness {
+        func rank(_ value: DataFreshness) -> Int {
+            switch value {
+            case .fresh: 0
+            case .aging: 1
+            case .stale: 2
+            case .unknown: 3
+            }
+        }
+        guard let local else { return server }
+        return rank(local) > rank(server) ? local : server
     }
 
     var guidance: RideGuidance { RideGuidancePolicy.guidance(for: signal) }
@@ -132,17 +218,38 @@ final class TapsoAppModel {
     private(set) var resumedAfterRelaunch = false
     private(set) var liveActivityUnavailable = false
     private(set) var mapHandoffFailed: MapApp?
+    /// Live setup: the route number search.
+    private(set) var liveRouteSearch: LiveRouteSearch = .idle
+    /// Live setup: one variant's real stop list.
+    private(set) var liveStops: LiveStops = .idle
+    /// The last live request that did not answer, shown as a calm notice. `nil` once one succeeds.
+    private(set) var liveFailure: TransitAPIFailure?
+    /// A saved live journey no longer matched the route's current stop list.
+    private(set) var liveSavedJourneyChanged = false
 
     @ObservationIgnored private let store: JourneyStore
     @ObservationIgnored private let liveActivity: LiveActivityClient?
+    @ObservationIgnored private let api: TapsoAPIClient
     @ObservationIgnored private var searchTask: Task<Void, Never>?
     @ObservationIgnored private var playbackTask: Task<Void, Never>?
     @ObservationIgnored private var rejectedVehicles: Set<VehicleIdentifier> = []
     @ObservationIgnored private var lastMoment: RideMoment?
+    /// The live session being set up, before a bus is confirmed.
+    @ObservationIgnored private var liveSetupSession: JourneySessionSnapshot?
 
-    init(store: JourneyStore = JourneyStore(), liveActivity: LiveActivityClient? = LiveActivityClient()) {
+    /// Seconds between session reads while the rider waits at the stop and while riding.
+    /// Each read costs one bus-feed request on the server.
+    static let liveCheckInterval: Duration = .seconds(10)
+    static let liveRideInterval: Duration = .seconds(15)
+
+    init(
+        store: JourneyStore = JourneyStore(),
+        liveActivity: LiveActivityClient? = LiveActivityClient(),
+        api: TapsoAPIClient = TapsoAPIClient()
+    ) {
         self.store = store
         self.liveActivity = liveActivity
+        self.api = api
         library = store.loadLibrary()
         if var saved = store.loadActiveRide(), Date().timeIntervalSince(saved.lastUpdateAt) < 8 * 3_600 {
             // Re-age restored data against the wall clock: a ride saved at the next stop and
@@ -171,18 +278,27 @@ final class TapsoAppModel {
     var canAdvanceDemo: Bool { activeRide?.hasMoreBeats ?? false }
 
     var currentStopName: String {
-        activeRide?.session.latestProgress?.currentStop.stop.name ?? activeRide?.draft.boarding?.name ?? ""
+        if let ride = activeRide, ride.isLive {
+            let sequence = ride.live?.currentStopSequence
+            return sequence.flatMap { ride.draft.route?.routeStop(sequence: $0)?.stop.name } ?? ride.draft.boarding?.name ?? ""
+        }
+        return activeRide?.session.latestProgress?.currentStop.stop.name ?? activeRide?.draft.boarding?.name ?? ""
     }
+
+    var isLiveRide: Bool { activeRide?.isLive ?? false }
+    /// The server ended or lost the live session; the rider can only finish the ride.
+    var liveRideEndedByServer: Bool { activeRide?.live?.endedByServer ?? false }
 
     /// Stops still ahead, next first, ending at the destination.
     var upcomingStopNames: [String] {
         guard
             let ride = activeRide,
             let route = ride.draft.route,
-            let destination = route.routeStop(id: ride.draft.destinationStopID)?.sequence
+            let destination = ride.draft.destinationRouteStop?.sequence
         else { return [] }
-        let current = ride.session.latestProgress?.currentStop.sequence
-            ?? route.routeStop(id: ride.draft.boardingStopID)?.sequence
+        let current = ride.live?.currentStopSequence
+            ?? ride.session.latestProgress?.currentStop.sequence
+            ?? ride.draft.boardingRouteStop?.sequence
             ?? destination
         return route.stops
             .filter { $0.sequence > current && $0.sequence <= destination }
@@ -220,6 +336,10 @@ final class TapsoAppModel {
 
     /// Repeat rider: one tap from Home to the vehicle check.
     func rideAgain(_ journey: SavedJourney) {
+        if journey.isLive {
+            Task { await self.rideAgainLive(journey) }
+            return
+        }
         guard RideDraft(journey).route != nil else { return }
         draft = RideDraft(journey)
         path = [.vehicleCheck]
@@ -298,6 +418,13 @@ final class TapsoAppModel {
     /// "다른 버스예요": drop the proposal and keep watching. Never switches silently.
     func rejectProposal(_ proposal: VehicleProposal) {
         rejectedVehicles.insert(proposal.vehicleID)
+        if draft?.isLive == true {
+            // The server keeps reporting every bus; the next read shows the next one.
+            if let snapshot = liveSetupSession {
+                vehicleCheck = LiveSessionInterpreter.vehicleCheck(for: snapshot, excluding: rejectedVehicles)
+            }
+            return
+        }
         let remaining = vehicleCheck.proposals.filter { !rejectedVehicles.contains($0.vehicleID) }
         vehicleCheck = VehicleCheck.evaluate(proposals: remaining, hasSearched: true)
         guard remaining.isEmpty, let route = draft?.route else { return }
@@ -316,12 +443,18 @@ final class TapsoAppModel {
 
     func cancelSetup() {
         searchTask?.cancel()
+        endLiveSetupSession()
         path = []
         draft = nil
+        liveFailure = nil
     }
 
     /// The rider's tap is what selects a bus; nothing is selected without it.
     func confirmVehicle(_ proposal: VehicleProposal) async {
+        if draft?.isLive == true {
+            await confirmLiveVehicle(proposal)
+            return
+        }
         guard
             activeRide == nil,
             let draft,
@@ -383,6 +516,7 @@ final class TapsoAppModel {
     }
 
     func speedChanged() {
+        guard !isLiveRide else { return }
         playbackTask?.cancel()
         beginPlayback()
     }
@@ -400,12 +534,17 @@ final class TapsoAppModel {
                 await liveActivity?.update(state: state, alerting: nil)
             }
         }
-        beginPlayback()
+        if isLiveRide {
+            beginLivePolling()
+        } else {
+            beginPlayback()
+        }
     }
 
     func finishRide() async {
         playbackTask?.cancel()
         guard var ride = activeRide, let destination = ride.draft.destination else { return }
+        endLiveRideSession(ride)
         let finalMoment = ride.guidance.moment
         // The activity's last minute on screen reads "ride ended", not the last milestone.
         ride.session.complete()
@@ -425,6 +564,7 @@ final class TapsoAppModel {
     func cancelRide() async {
         playbackTask?.cancel()
         guard var ride = activeRide else { return }
+        endLiveRideSession(ride)
         ride.session.cancel()
         activeRide = ride
         if let state = contentState() {
@@ -447,8 +587,10 @@ final class TapsoAppModel {
     // MARK: Map hand-off
 
     func mapRequest(for app: MapApp, to stop: Stop) -> MapHandoffRequest? {
-        // Demo stop coordinates are synthetic: only a name search is honest.
-        MapHandoff.walkingRequest(to: stop, in: app, coordinatesAreSurveyed: false)
+        // Demo stop coordinates are synthetic: only a name search is honest there.
+        // Live stops carry TAGO's surveyed coordinates when every stop had them.
+        let surveyed = (activeRide?.draft ?? draft)?.coordinatesAreSurveyed ?? false
+        return MapHandoff.walkingRequest(to: stop, in: app, coordinatesAreSurveyed: surveyed)
     }
 
     func openMapApp(_ request: MapHandoffRequest) async {
@@ -456,6 +598,339 @@ final class TapsoAppModel {
         guard let url = URL(string: request.urlString) else { return }
         let opened = await UIApplication.shared.open(url)
         if !opened { mapHandoffFailed = request.app }
+    }
+
+    // MARK: Live rides (TAPSO API)
+
+    /// Live setup starts from the route number: TAPSO's API has no stop search yet,
+    /// and inventing one from a stale list would send riders to the wrong stop.
+    func openLiveSearch() {
+        searchTask?.cancel()
+        liveRouteSearch = .idle
+        liveFailure = nil
+        liveSavedJourneyChanged = false
+        path = [.liveRoutes]
+    }
+
+    /// Every official variant of a route number.
+    func searchLiveRoutes(number raw: String) async {
+        let number = raw.trimmingCharacters(in: .whitespacesAndNewlines)
+        guard !number.isEmpty, number.count <= 16 else {
+            liveRouteSearch = .idle
+            return
+        }
+        liveRouteSearch = .loading(number)
+        do {
+            let routes = try await api.routes(number: number)
+            guard case let .loading(current) = liveRouteSearch, current == number else { return }
+            liveRouteSearch = .results(number, routes)
+        } catch {
+            guard case let .loading(current) = liveRouteSearch, current == number else { return }
+            liveRouteSearch = .failed(number, Self.failure(error))
+        }
+    }
+
+    /// Opens one variant's real stop list.
+    func chooseLiveRoute(_ route: TransitAPIRoute) async {
+        liveStops = .loading(route)
+        path.append(.liveStops(routeID: route.routeId))
+        await loadLiveStops(route)
+    }
+
+    func loadLiveStops(_ route: TransitAPIRoute) async {
+        liveStops = .loading(route)
+        do {
+            let list = try await api.stops(routeID: route.routeId)
+            guard case let .loading(current) = liveStops, current.routeId == route.routeId else { return }
+            let built = TransitRoute.live(route, stops: list.items)
+            liveStops = .loaded(LiveRouteStops(
+                apiRoute: route,
+                route: built.route,
+                coordinatesAreSurveyed: built.coordinatesAreSurveyed,
+                topology: list.meta?.topology?.kind ?? "linear"
+            ))
+        } catch {
+            guard case let .loading(current) = liveStops, current.routeId == route.routeId else { return }
+            liveStops = .failed(route, Self.failure(error))
+        }
+    }
+
+    /// Boarding and destination chosen on a real stop list: the server session starts here.
+    func chooseLiveStops(boarding: RouteStop, destination: RouteStop, on stops: LiveRouteStops) {
+        guard boarding.sequence < destination.sequence else { return }
+        draft = RideDraft(
+            live: stops.route,
+            cityCode: TapsoAPIClient.jejuCityCode,
+            boarding: boarding,
+            destination: destination,
+            coordinatesAreSurveyed: stops.coordinatesAreSurveyed
+        )
+        path.append(.vehicleCheck)
+        beginLiveVehicleCheck()
+    }
+
+    /// Leaving the vehicle check by any route (back, cancel, a new search) stops its polling.
+    func pathDidChange(_ newPath: [SetupStep]) {
+        guard !newPath.contains(.vehicleCheck), activeRide == nil else { return }
+        searchTask?.cancel()
+        endLiveSetupSession()
+    }
+
+    /// A saved live journey starts from the server's current stop list, never a stored one.
+    private func rideAgainLive(_ journey: SavedJourney) async {
+        guard
+            let cityCode = journey.cityCode,
+            let boardingSequence = journey.boardingSequence,
+            let destinationSequence = journey.destinationSequence
+        else { return }
+        let apiRoute = TransitAPIRoute(
+            routeId: journey.routeID.rawValue,
+            routeNumber: journey.routeNumber,
+            startStopName: nil,
+            endStopName: journey.headsign
+        )
+        liveFailure = nil
+        do {
+            let list = try await api.stops(routeID: apiRoute.routeId, cityCode: cityCode)
+            let built = TransitRoute.live(apiRoute, stops: list.items)
+            guard
+                let boarding = built.route.routeStop(sequence: boardingSequence),
+                let destination = built.route.routeStop(sequence: destinationSequence),
+                boarding.stop.id == journey.boardingStopID,
+                destination.stop.id == journey.destinationStopID
+            else {
+                // The route changed since this journey was saved: choose again.
+                openLiveSearch()
+                liveSavedJourneyChanged = true
+                await searchLiveRoutes(number: journey.routeNumber)
+                return
+            }
+            draft = RideDraft(
+                live: built.route,
+                cityCode: cityCode,
+                boarding: boarding,
+                destination: destination,
+                coordinatesAreSurveyed: built.coordinatesAreSurveyed
+            )
+            path = [.vehicleCheck]
+            beginLiveVehicleCheck()
+        } catch {
+            openLiveSearch()
+            liveFailure = Self.failure(error)
+        }
+    }
+
+    private func beginLiveVehicleCheck() {
+        searchTask?.cancel()
+        endLiveSetupSession()
+        rejectedVehicles = []
+        liveFailure = nil
+        vehicleCheck = VehicleCheck.evaluate(proposals: [], hasSearched: false)
+        resumeLiveVehicleCheck()
+    }
+
+    /// Polls the setup session, creating it first if needed. The server ranks the
+    /// buses; the rider confirms one. Nothing is selected here.
+    private func resumeLiveVehicleCheck() {
+        searchTask?.cancel()
+        guard let draft, draft.isLive else { return }
+        searchTask = Task { [weak self] in
+            await self?.runLiveVehicleCheck(draft)
+        }
+    }
+
+    private func runLiveVehicleCheck(_ draft: RideDraft) async {
+        guard
+            let cityCode = draft.cityCode,
+            let boarding = draft.boardingSequence,
+            let destination = draft.destinationSequence
+        else { return }
+        while !Task.isCancelled {
+            do {
+                let snapshot: JourneySessionSnapshot
+                if let existing = liveSetupSession {
+                    snapshot = try await api.session(id: existing.id)
+                } else {
+                    snapshot = try await api.createSession(
+                        routeID: draft.routeID.rawValue,
+                        cityCode: cityCode,
+                        boardingSequence: boarding,
+                        destinationSequence: destination
+                    )
+                }
+                if Task.isCancelled {
+                    // The rider left while this was in flight; a session nobody reads must not linger.
+                    if liveSetupSession?.id != snapshot.id { endSessionInBackground(snapshot.id) }
+                    return
+                }
+                liveSetupSession = snapshot
+                liveFailure = nil
+                vehicleCheck = LiveSessionInterpreter.vehicleCheck(for: snapshot, excluding: rejectedVehicles)
+            } catch is CancellationError {
+                return
+            } catch {
+                let failure = Self.failure(error)
+                liveFailure = failure
+                switch failure {
+                case .sessionExpired, .sessionNotFound:
+                    liveSetupSession = nil
+                default:
+                    if !failure.isTransient { return }
+                }
+            }
+            try? await Task.sleep(for: Self.liveCheckInterval)
+        }
+    }
+
+    private func confirmLiveVehicle(_ proposal: VehicleProposal) async {
+        guard
+            activeRide == nil,
+            let draft,
+            let route = draft.route,
+            let boarding = draft.boardingRouteStop,
+            let destination = draft.destinationRouteStop,
+            let cityCode = draft.cityCode,
+            let setup = liveSetupSession
+        else { return }
+        searchTask?.cancel()
+        liveFailure = nil
+        let snapshot: JourneySessionSnapshot
+        do {
+            snapshot = try await api.confirm(sessionID: setup.id, vehicleID: proposal.vehicleID.rawValue)
+        } catch {
+            // The bus may have left the feed, or the network dropped: say so and keep checking.
+            liveFailure = Self.failure(error)
+            resumeLiveVehicleCheck()
+            return
+        }
+        // The setup session is now the ride's session; it must not be ended as setup.
+        liveSetupSession = nil
+        vehicleCheck = VehicleCheck.evaluate(proposals: vehicleCheck.proposals, hasSearched: true, confirmed: proposal.vehicleID)
+
+        let now = Date()
+        var session = RideSession(plan: draft.plan, startedAt: now, state: .vehicleConfirmationRequired)
+        session.confirm(vehicleID: proposal.vehicleID)
+        activeRide = ActiveRide(
+            session: session,
+            draft: draft,
+            plate: proposal.maskedPlate,
+            scenario: .smooth,
+            beatIndex: -1,
+            clock: now,
+            isOffline: false,
+            freshnessOverride: nil,
+            lastObservedAt: now,
+            alertedMilestones: [],
+            live: LiveRideState(
+                sessionID: snapshot.id,
+                vehicleID: proposal.vehicleID.rawValue,
+                signal: LiveSessionInterpreter.rideSignal(for: snapshot),
+                currentStopSequence: LiveSessionInterpreter.currentStopSequence(for: snapshot),
+                endedByServer: false
+            )
+        )
+        outcome = nil
+        resumedAfterRelaunch = false
+        lastMoment = activeRide?.guidance.moment
+        // A short ride can open at a milestone; the rider is looking at it, so it counts as signalled.
+        if let milestone = activeRide?.guidance.milestone {
+            activeRide?.alertedMilestones = [milestone]
+        }
+        store.saveActiveRide(activeRide)
+
+        library.recordRide(
+            SavedJourney(liveRoute: route, cityCode: cityCode, boarding: boarding, destination: destination, at: now),
+            at: now
+        )
+        store.saveLibrary(library)
+        path = []
+
+        await startLiveActivity()
+        guard activeRide != nil else {
+            await liveActivity?.endAll()
+            return
+        }
+        beginLivePolling()
+    }
+
+    private func beginLivePolling() {
+        playbackTask?.cancel()
+        guard let live = activeRide?.live, !live.endedByServer else { return }
+        let sessionID = live.sessionID
+        playbackTask = Task { [weak self] in
+            while !Task.isCancelled {
+                try? await Task.sleep(for: Self.liveRideInterval)
+                guard !Task.isCancelled, let self else { return }
+                guard await self.refreshLiveRide(sessionID: sessionID) else { return }
+            }
+        }
+    }
+
+    /// One session read during the ride. False when polling should stop.
+    private func refreshLiveRide(sessionID: String) async -> Bool {
+        do {
+            let snapshot = try await api.session(id: sessionID)
+            guard var ride = activeRide, ride.live?.sessionID == sessionID else { return false }
+            ride.live?.signal = LiveSessionInterpreter.rideSignal(for: snapshot)
+            if let sequence = LiveSessionInterpreter.currentStopSequence(for: snapshot) {
+                ride.live?.currentStopSequence = sequence
+            }
+            ride.isOffline = false
+            ride.freshnessOverride = nil
+            ride.lastObservedAt = Date()
+            activeRide = ride
+            liveFailure = nil
+        } catch is CancellationError {
+            return false
+        } catch {
+            guard var ride = activeRide, ride.live?.sessionID == sessionID else { return false }
+            let failure = Self.failure(error)
+            liveFailure = failure
+            switch failure {
+            case .sessionExpired, .sessionNotFound, .sessionsUnavailable, .serviceUnavailable, .rejected:
+                ride.live?.endedByServer = true
+            case .offline:
+                ride.isOffline = true
+            default:
+                // Silence ages the data; it never makes it fresher.
+                ride.freshnessOverride = FreshnessPolicy.conservativeDefault.classify(
+                    observedAt: ride.lastObservedAt,
+                    relativeTo: Date()
+                )
+            }
+            activeRide = ride
+        }
+        store.saveActiveRide(activeRide)
+        await rideDidChange()
+        return !(activeRide?.live?.endedByServer ?? true)
+    }
+
+    private func endLiveSetupSession() {
+        if let id = liveSetupSession?.id { endSessionInBackground(id) }
+        liveSetupSession = nil
+    }
+
+    private func endLiveRideSession(_ ride: ActiveRide) {
+        guard let live = ride.live, !live.endedByServer else { return }
+        let api = self.api
+        let id = live.sessionID
+        Task.detached {
+            try? await api.endSession(id: id)
+        }
+    }
+
+    /// Best effort: a session nobody ends expires on the server after four hours without polling.
+    /// A setup session that became the ride's session is never ended from setup.
+    private func endSessionInBackground(_ id: String) {
+        guard activeRide?.live?.sessionID != id else { return }
+        let api = self.api
+        Task.detached {
+            try? await api.endSession(id: id)
+        }
+    }
+
+    private static func failure(_ error: Error) -> TransitAPIFailure {
+        (error as? TransitAPIFailure) ?? .server
     }
 
     // MARK: Private
@@ -545,11 +1020,10 @@ final class TapsoAppModel {
     func contentState() -> TapsoActivityAttributes.ContentState? {
         guard let ride = activeRide else { return nil }
         let signal = ride.signal
-        let progress = ride.session.latestProgress
         let next = upcomingStopNames.first
         return TapsoActivityAttributes.ContentState(
             phase: signal.phase,
-            currentStopName: progress?.currentStop.stop.name ?? ride.draft.boarding?.name ?? "",
+            currentStopName: currentStopName,
             nextStopName: next,
             remainingStops: signal.remainingStops,
             freshness: signal.freshness,
@@ -558,4 +1032,28 @@ final class TapsoAppModel {
             isOffline: signal.isOffline
         )
     }
+}
+
+/// Live setup: the route number search.
+enum LiveRouteSearch: Equatable {
+    case idle
+    case loading(String)
+    case results(String, [TransitAPIRoute])
+    case failed(String, TransitAPIFailure)
+}
+
+/// Live setup: one variant's stop list, as the API returned it.
+enum LiveStops: Equatable {
+    case idle
+    case loading(TransitAPIRoute)
+    case loaded(LiveRouteStops)
+    case failed(TransitAPIRoute, TransitAPIFailure)
+}
+
+struct LiveRouteStops: Equatable {
+    let apiRoute: TransitAPIRoute
+    let route: TransitRoute
+    let coordinatesAreSurveyed: Bool
+    /// `linear`, `loop` or `repeating` (`classifyTopology` on the server).
+    let topology: String
 }
