@@ -141,9 +141,11 @@ P13-memory-order 10000 (R20); P12-returned 10011 (R23); P3-lap 10001 (R24).
 
 `VERIFIED_BY_TEST`. `scripts/negative-controls/run.ts --typecheck`
 (`artifacts/matcher-directed-v1/negative-controls.json`, generated on commit
-`b46c8c4`): **137 of 137 controls killed** (18 required,
+`a6032c3`): **140 of 140 controls killed** (21 required,
 119 extra), 0 survived, 0 stale, 0 invalid, 0 timed out, each by tests in
-its own listed files. The baseline was green (675 / 675, no type error),
+its own listed files. The three added on 2026-10-01 put back the F21, F22
+and F24 gaps (`F21-sticky-contest`, `F22-contest-before-selectable`,
+`F24-contest-kept-for-session`). The baseline was green (690 / 690, no type error),
 every kill was re-confirmed on the unmutated snapshot, and the working tree
 did not change during the run. Each
 control puts back one answer leak (F3, F6, F14), removes one fail-closed rule
@@ -224,19 +226,22 @@ allows.
 
 | Outcome | Sessions |
 |---|---:|
-| Automatic selections | 1 089 of 3 000 |
-| Right: the bus the rider boards | 917 |
-| Wrong: the boarded bus had not been in the feed before the selection | 157 |
-| Wrong: the boarded bus had been in the feed | 12 |
+| Automatic selections | 1 011 of 3 000 |
+| Right: the bus the rider boards | 855 |
+| Wrong: the boarded bus had not been in the feed before the selection | 143 |
+| Wrong: the boarded bus had been in the feed | 10 |
 | No bus reaches the stop within the session | 3 |
-| Wrong selections withdrawn / kept | 77 / 92 |
-| Right selections withdrawn (what the watch costs, on these feeds) | 38 |
-| Wrong selections where the feed showed the boarded bus reaching the stop no later than the selected one | 67 |
+| Wrong selections withdrawn / kept | 71 / 82 |
+| Right selections withdrawn (what the watch costs, on these feeds) | 34 |
+| Wrong selections where the feed showed the boarded bus reaching the stop no later than the selected one | 61 |
 | … of those not withdrawn by the poll that showed it (P16) | **0** |
 
-Read as a model, not a rate: in this model 169 of 1 089 automatic selections
-pick the wrong bus, 157 of them because the rider's bus had not appeared in
-the feed yet. No matcher can pick a bus the feed does not show, which is why
+Read as a model, not a rate: in this model 153 of 1 011 automatic selections
+pick the wrong bus, 143 of them because the rider's bus had not appeared in
+the feed yet (the F23 shape: no rule that reads the feed can see such a bus).
+F21, F22 and F24 cost these sessions 78 automatic selections against the
+table of 2026-09-29 (1 089), 62 of them right ones: a contest, once seen, now
+withholds for the rest of the session. No matcher can pick a bus the feed does not show, which is why
 automatic matching stays off and the rider confirms. What the feed does show,
 the boarding watch acts on: every overtaking it showed was withdrawn by the
 poll that showed it. The kit's feeds are monotone and list each bus once; the

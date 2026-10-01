@@ -2018,6 +2018,56 @@ export const NEGATIVE_CONTROLS: readonly NegativeControl[] = [
     }],
     testFiles: [T.session],
   },
+  /* --------------------------------------------------- F21, F22 (issue #61) */
+  {
+    id: "F21-sticky-contest",
+    family: "fail-closed",
+    catalogue: "required",
+    description: "A contest the session has already seen no longer withholds: the approach is judged on the instantaneous gap alone again.",
+    protection: "Finding F21 (issue #61): once a waiting session has seen a follower inside the margin, a later wider gap does not make the leader selectable.",
+    edits: [{
+      file: MATCHING,
+      find: '    abstentions.add("approach_contested_during_session");',
+      replace: "    { /* Negative control F21: a remembered contest is ignored. */ }",
+    }],
+    testFiles: [T.matching],
+    mustBeKilledBy: [
+      "F21 regression: an approach once contested inside the margin must not become automatically selectable just because the gap later opens",
+    ],
+  },
+  {
+    id: "F22-contest-before-selectable",
+    family: "fail-closed",
+    catalogue: "required",
+    description: "A pair seen inside the margin while nothing is selectable yet (cadence not fresh, or beyond the approach window) is no longer remembered as a contest.",
+    protection: "Finding F22 (issue #61): the two vehicles nearest the stop seen inside the margin contest the approach whether or not a leader was selectable at that look.",
+    edits: [{
+      file: MATCHING,
+      find: "    passage.memory.contestedApproach = { at: request.now };\n  }",
+      replace: "    { /* Negative control F22: a contest seen before any leader was selectable is forgotten. */ }\n  }",
+    }],
+    testFiles: [T.matching],
+    mustBeKilledBy: [
+      "F22 regression: a follower seen inside the margin while nothing was selectable yet still contests the approach",
+      "F22 regression: a pair inside the margin beyond the approach window contests the approach",
+    ],
+  },
+  {
+    id: "F24-contest-kept-for-session",
+    family: "fail-closed",
+    catalogue: "required",
+    description: "The passage memory is rebuilt without the contest it carried: a contest withholds at the next decision only, and the decision after it may commit.",
+    protection: "Finding F24 (issue #61): a contested approach, once seen by a waiting session, stays in its memory for the rest of the session.",
+    edits: [{
+      file: MATCHING,
+      find: "    ...(prior?.contestedApproach ? { contestedApproach: prior.contestedApproach } : {}),",
+      replace: "    /* Negative control F24: the contest is not carried to the next decision. */",
+    }],
+    testFiles: [T.matching],
+    mustBeKilledBy: [
+      "F24 regression: a contested approach stays contested for the rest of the session, not only at the next decision",
+    ],
+  },
 ];
 
 /**
