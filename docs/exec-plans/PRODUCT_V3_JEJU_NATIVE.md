@@ -169,12 +169,12 @@ swift test --package-path packages/transit-core   # macOS / CI
   Jeju Open API on the portal is a timetable API. `bus.jeju.go.kr` omits its
   intermediate certificate; the probe completes the chain only after verifying
   it against the system roots.
-- Lock Screen contrast (#90, #91). The coral next-stop secondary line, open in
+- Lock Screen contrast (#90, #92). The coral next-stop secondary line, open in
   `KNOWN_ISSUES.md` since 2026-09-30, read 3.2:1. The same computation found
   three more failures: 70 % ink on the dark coral (4.3:1); the count label at
   80 % (3.7:1 on coral, 4.4:1 for light slate on basalt); and a last-known
   numeral at 55 % (2.8:1). #90 makes all four pass and adds a test over every
-  moment in light and dark; #91 marks the `KNOWN_ISSUES.md` item fixed.
+  moment in light and dark; #92 marks the `KNOWN_ISSUES.md` item fixed.
 - Marketing site, four widths (390, 768, 1024, 1440). Local build of `main` plus
   #86, Chromium, Pretendard served locally:
   - no horizontal overflow at any scroll position;
@@ -185,6 +185,9 @@ swift test --package-path packages/transit-core   # macOS / CI
   - only inline sentence links are under 44 px.
 - 2026-10-01 19:30 UTC — #86 (`55c648e`) merged, CI green on its head in both
   runs; #85 and #87, merged after that run, do not touch `apps/web`.
+- 2026-10-01 19:58 and 20:02 UTC — #90 (`d7c6ecd`) and #88 (`98c5013`) merged.
+  #88 edited the `KNOWN_ISSUES.md` item next to the way-back one, so `main` was
+  merged into #89 (`423f9f0`).
 
 ## Risks and unexpected findings
 
@@ -200,6 +203,10 @@ swift test --package-path packages/transit-core   # macOS / CI
 - GitHub merges criss-cross histories from one merge base; a branch that merges
   cleanly with local `git merge` can still conflict on the server. Check with
   `git merge-tree --merge-base=<GitHub's base>` before trusting a local merge.
+- A squash-merged pull request's own commits are not in `main`'s history (#75
+  landed as `47112f5`). #91 was based on one of them, so #92 replaced it, built
+  on `main` itself. Edits to adjacent lines conflict in git's merge (#88 and #89
+  in `KNOWN_ISSUES.md`): hold one side at the base, merge, then re-apply it.
 
 ## Exact next action
 
