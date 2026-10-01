@@ -43,9 +43,9 @@ test("step navigation clamps at both ends", () => {
 
 test("the synthetic trip uses the app's demo route", () => {
   assert.equal(DEMO_ROUTE.stops[DEMO_TRIP.boardingIndex], "제주버스터미널");
-  assert.equal(DEMO_ROUTE.stops[DEMO_TRIP.destinationIndex], "제주출입국·외국인청");
+  assert.equal(DEMO_ROUTE.stops[DEMO_TRIP.destinationIndex], "제주시청(아라방면)");
   assert.equal(TRIP_TOTAL_STOPS, 8);
-  assert.equal(positionFor(1).next, "제주출입국·외국인청");
+  assert.equal(positionFor(1).next, "제주시청(아라방면)");
   assert.equal(positionFor(0).next, undefined);
   assert.equal(railProgress(TRIP_TOTAL_STOPS), 0);
   assert.equal(railProgress(0), 1);
