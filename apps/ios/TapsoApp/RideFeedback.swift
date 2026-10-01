@@ -26,9 +26,9 @@ enum RideFeedback {
         }
     }
 
-    static func announce(_ guidance: RideGuidance) {
+    static func announce(_ guidance: RideGuidance, exitStopName: String? = nil) {
         guard UIAccessibility.isVoiceOverRunning else { return }
-        let text = RideText.string(guidance.copy.headline) + ". " + RideText.string(guidance.copy.detail)
+        let text = RideText.string(guidance.copy.headline) + ". " + RideText.detail(guidance, exitStopName: exitStopName)
         AccessibilityNotification.Announcement(text).post()
     }
 }

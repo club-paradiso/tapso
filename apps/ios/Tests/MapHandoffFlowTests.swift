@@ -128,6 +128,47 @@ final class MapHandoffFlowTests: XCTestCase {
         XCTAssertNil(model.sharedPlace)
     }
 
+    func testPastTheStopTheDemoNamesTheNextStopAndMeasuresNothingSynthetic() async throws {
+        let model = makeModel()
+        model.scenario = .passedDestination
+        model.startDemo()
+        await model.confirmVehicle(try XCTUnwrap(model.vehicleCheck.proposals.first))
+        XCTAssertNil(model.passedStopAdvice, "no rescue while the ride is on course")
+        await advanceUntilPassed(model)
+        XCTAssertEqual(model.guidance?.moment, .passedDestination)
+
+        let advice = try XCTUnwrap(model.passedStopAdvice)
+        // The demo's bus is next seen at the end of the line, where everyone gets off.
+        XCTAssertEqual(advice.exitStop?.stop.name, "국립제주박물관")
+        XCTAssertEqual(model.contentState()?.nextStopName, "국립제주박물관", "the Lock Screen names the exit, not a stop before the destination")
+        XCTAssertNil(advice.straightLineMeters, "demo coordinates are synthetic: no walk is measured")
+        XCTAssertEqual(advice.plan.options.map(\.action), [.openMapApp])
+        XCTAssertNil(model.rescueMapRequest(for: .kakaoMap), "KakaoMap gets a real coordinate or nothing")
+        XCTAssertNotNil(model.rescueMapRequest(for: .naverMap), "NAVER Map can still search the stop by name")
+        await model.cancelRide()
+    }
+
+    func testPastTheStopTheWayBackGoesTowardTheSharedPlace() async throws {
+        let model = makeModel()
+        model.openMapImport()
+        model.importSharedText("[카카오맵] 제주시청(아라방면) 앞 합성 서점\n33.4996, 126.5312")
+        let place = try XCTUnwrap(model.sharedPlace)
+        let option = try XCTUnwrap(DemoCatalog.routeOptions(toDestinationNamed: "제주시청(아라방면)").first)
+        model.scenario = .passedDestination
+        model.chooseBoarding(try XCTUnwrap(option.boardingStops.first), routeID: option.route.id, destinationStopID: option.destination.id)
+        try await waitUntil { model.vehicleCheck.stage == .proposed }
+        await model.confirmVehicle(try XCTUnwrap(model.vehicleCheck.proposals.first))
+        XCTAssertEqual(model.activeRide?.draft.finalPlace, place)
+        await advanceUntilPassed(model)
+        XCTAssertEqual(model.guidance?.moment, .passedDestination)
+
+        // The place's coordinate came from the rider's map app; the stops' are synthetic.
+        let kakao = try XCTUnwrap(model.rescueMapRequest(for: .kakaoMap))
+        XCTAssertEqual(kakao.urlString, "kakaomap://route?ep=33.499600,126.531200&by=FOOT")
+        XCTAssertNil(model.passedStopAdvice?.straightLineMeters, "the walk back to the stop is still unmeasured")
+        await model.cancelRide()
+    }
+
     // MARK: Helpers
 
     private func makeModel() -> TapsoAppModel {
@@ -137,6 +178,12 @@ final class MapHandoffFlowTests: XCTestCase {
         )
         model.speed = .manual
         return model
+    }
+
+    private func advanceUntilPassed(_ model: TapsoAppModel) async {
+        while model.guidance?.moment != .passedDestination, model.canAdvanceDemo {
+            await model.advanceDemo()
+        }
     }
 
     private func makeInbox() throws -> HandoffInbox {

@@ -52,6 +52,10 @@
 13. On a build without the App Group provisioned, the extension offers "복사하기"; pasting in TAPSO gives the same place.
 14. Live: after naming the bus, the stops nearest the place are suggested after boarding; the end screen opens NAVER Map and KakaoMap walking routes to the place and shows it in Apple Maps.
 
+## Rescue cases (`product/JEJU_SAFETY_LAYER_V3.md`)
+
+15. Live: stay on past the destination. When TAPSO says "목적지를 지났어요", note the stop it names and where the bus actually stops next; compare the straight-line metres with the walk NAVER Map gives; check that no ride back is offered and the map buttons open a walking route to the stop (or the shared place).
+
 ## Pass criteria
 
 - No false confident arrival or silent vehicle switch.

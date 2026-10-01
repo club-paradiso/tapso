@@ -30,6 +30,8 @@ Times are minutes on one clock where the caller's "now" is 0. A range
 | Feeder arrival range | Remaining stops on the live route × an assumed per-stop band, until an arrival-prediction source is verified | `ASSUMED` band, labelled as an estimate |
 | Connecting bus range | Same as above for a live connecting bus | `ASSUMED` band |
 | Walking metres | Haversine between surveyed stop coordinates (TAGO `gpslati`/`gpslong`) | `VERIFIED` coordinates, straight-line distance (a lower bound) |
+| Where the bus is after the destination | The journey session's `progress.currentStopSequence`: TAGO's stop sequence, or the near-stop estimate (`progress.source`) | As the session labels it. Rescue's exit is the stop *after* it, because TAGO says where the bus is, not whether its doors are open |
+| A bus back the other way through both stops | **No verified source.** Route variants are separate TAGO routes and TAPSO does not yet pair their stops | `MISSING` → Rescue never offers a ride back; the map app does that search |
 | Policy constants | Product choices | `ASSUMED` |
 
 So in live use today Safe Return honestly answers `unknown` for most places,
@@ -39,6 +41,10 @@ variant's last departure (`ReturnTripCard`), evaluated with `departures: [last]`
 departure minus the 10-minute margin, never a time the bus passes their stop.
 That is the intended behaviour, not a gap to paper over: `unknown` is never
 shown as safe, and Discover never presents an `unknown` return as "다녀오기 좋아요".
+
+Rescue is in the ride since V2.4c for one situation, the passed destination
+(`PassedStopRescue`, below). Missed connections and wrong direction wait for a
+ride with a planned transfer and for a verified opposite-direction pairing.
 
 ## Safe Return
 
@@ -126,6 +132,35 @@ more is marked long.
 
 Every option says what it knows: a walk in whole minutes rounded up, a wait in
 minutes or nothing when unknown.
+
+### In the ride: the passed destination (V2.4c)
+
+When the bus is placed beyond the rider's stop, the ride screen answers
+"목적지를 지났어요" with `PassedStopRescue.advice` (Swift core):
+
+- **Exit:** the first stop after both the destination and the stop the session
+  last placed the bus at, by provider sequence (stop ids repeat round a loop).
+  At the end of the line it is the bus's own stop. Unknown position → no stop is
+  named and the generic "다음 정류장에서 내려 돌아가세요" stays.
+- **Walk back:** straight-line metres from the exit to the destination stop,
+  rounded to 10 m, only when every stop's coordinates are surveyed (never the
+  demo's synthetic ones). The engine offers it up to 1 200 m; the screen shows
+  the distance and says the real walk is longer, never minutes. A measured walk
+  beyond the limit is said once ("직선으로도 … m라 걸어가기엔 멀어요").
+- **Ride back:** never offered (`oppositeDirection` stays unknown, see the
+  labels above).
+- **Map app:** always last. NAVER Map and, with a real coordinate, KakaoMap open
+  a walking route to the shared place when the ride started from one, otherwise
+  to the destination stop.
+- **Every surface says the same exit:** the Live Activity's `nextStopName`
+  carries it, and the Lock Screen, the expanded island and the VoiceOver
+  announcement read it through `RideText.detail` (`LIVE_ACTIVITY_SPEC.md`).
+
+Tests: `PassedStopRescueTests` (core), `MapHandoffFlowTests` (demo: next stop
+named, nothing measured; the way back to a shared place) and
+`TapsoAPIClientTests` (a live session reporting `passed_destination` at stop 11
+of 12: exit 12, 580 m, walk then map app). Snapshots `17-ride-passed` and
+`30-ride-passed-walk-back`.
 
 ## What this does not do
 

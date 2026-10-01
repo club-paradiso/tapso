@@ -44,7 +44,9 @@ final class SnapshotEvidenceTests: XCTestCase {
             ("14-ride-prepare", ride(.approachingDestination, 2)),
             ("15-ride-next-stop", ride(.nextStopIsDestination, 1)),
             ("16-ride-arrived", ride(.arrived, 0)),
-            ("17-ride-passed", ride(.arrived, 0, passed: true)),
+            ("17-ride-passed", ride(.arrived, 0, passed: true, rescue: PassedStopRescue.advice(
+                route: DemoCatalog.outbound, destinationSequence: 8, busSequence: 9, coordinatesAreSurveyed: false
+            ))),
             ("18-ride-delayed", ride(.active, 4, freshness: .stale)),
             ("19-ride-vehicle-lost", ride(.vehicleTemporarilyLost, 4)),
             ("20-ride-offline", ride(.active, 4, offline: true)),
@@ -78,7 +80,8 @@ final class SnapshotEvidenceTests: XCTestCase {
                 onMap: { _ in },
                 onDone: {},
                 returnService: .loaded(returnRows)
-            )))
+            ))),
+            ("30-ride-passed-walk-back", ride(.arrived, 0, passed: true, rescue: walkBackAdvice, kakaoAvailable: true))
         ]
         for (name, view) in screens {
             for scheme in [ColorScheme.light, .dark] {
@@ -168,7 +171,9 @@ final class SnapshotEvidenceTests: XCTestCase {
         passed: Bool = false,
         offline: Bool = false,
         resumed: Bool = false,
-        liveActivityOff: Bool = false
+        liveActivityOff: Bool = false,
+        rescue: PassedStopAdvice? = nil,
+        kakaoAvailable: Bool = false
     ) -> AnyView {
         let guidance = RideGuidancePolicy.guidance(for: RideSignal(
             phase: phase, remainingStops: remaining, freshness: freshness, destinationPassed: passed, isOffline: offline
@@ -186,7 +191,9 @@ final class SnapshotEvidenceTests: XCTestCase {
                 upcomingStops: current < 8 ? Array(names[(current + 1)...8]) : [],
                 plate: attributes.vehiclePlate,
                 liveActivityUnavailable: liveActivityOff,
-                resumed: resumed
+                resumed: resumed,
+                rescue: rescue,
+                kakaoAvailable: kakaoAvailable
             ),
             onFinish: {},
             onMapSearch: { _ in },
@@ -201,6 +208,17 @@ final class SnapshotEvidenceTests: XCTestCase {
             name: "협재해수욕장",
             address: "제주특별자치도 제주시 한림읍 협재리 2497-1",
             coordinate: Coordinate(latitude: 33.3940, longitude: 126.2397)
+        )
+    }
+
+    /// SYNTHETIC: a passed stop whose next stop is 440 m from the destination in a straight
+    /// line, as surveyed coordinates would measure it. The demo's own coordinates are never measured.
+    private var walkBackAdvice: PassedStopAdvice {
+        let exit = DemoCatalog.outbound.stops[9]
+        return PassedStopAdvice(
+            exitStop: exit,
+            straightLineMeters: 440,
+            plan: Rescue.plan(RescueInput(kind: .passedDestination, nextStopName: exit.stop.name, walkBackMeters: 440))
         )
     }
 
@@ -246,7 +264,8 @@ final class SnapshotEvidenceTests: XCTestCase {
         TapsoActivityAttributes.ContentState(
             phase: phase,
             currentStopName: "동문로터리",
-            nextStopName: "제주여자상업고등학교",
+            // Past the stop, the ride names where to get off (`PassedStopRescue`).
+            nextStopName: passed ? "국립제주박물관" : "제주여자상업고등학교",
             remainingStops: remaining,
             freshness: freshness,
             updatedAt: DemoFixtures.referenceDate,

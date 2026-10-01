@@ -74,7 +74,7 @@ struct LockScreenRideView: View {
                         .foregroundStyle(primary)
                         .lineLimit(2)
                         .minimumScaleFactor(0.85)
-                    Text(LocalizedStringKey(guidance.copy.detail))
+                    Text(verbatim: RideText.detail(guidance, exitStopName: state.nextStopName))
                         .font(.footnote.weight(.medium))
                         .foregroundStyle(secondary)
                         .lineLimit(2)
@@ -103,7 +103,8 @@ struct LockScreenRideView: View {
             guidance: guidance,
             routeNumber: attributes.routeNumber,
             destination: attributes.destinationName,
-            remainingStops: state.remainingStops
+            remainingStops: state.remainingStops,
+            exitStopName: state.nextStopName
         )))
     }
 
@@ -323,7 +324,7 @@ struct IslandExpandedBottom: View {
                     height: 8
                 )
             } else {
-                Text(LocalizedStringKey(guidance.copy.detail))
+                Text(verbatim: RideText.detail(guidance, exitStopName: state.nextStopName))
                     .font(.caption)
                     .foregroundStyle(TapsoColor.textOnDarkSurface.opacity(0.75))
                     .lineLimit(2)
@@ -339,7 +340,8 @@ struct IslandExpandedBottom: View {
             guidance: guidance,
             routeNumber: attributes.routeNumber,
             destination: attributes.destinationName,
-            remainingStops: state.remainingStops
+            remainingStops: state.remainingStops,
+            exitStopName: state.nextStopName
         )))
     }
 }

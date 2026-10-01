@@ -116,8 +116,15 @@
 "ride.moreStops" = "%ld곳 더";
 "ride.stopsAhead" = "남은 정류장";
 "ride.gotOff" = "내렸어요";
-"ride.passed.destination" = "내릴 곳: %@";
+"ride.passed.destination" = "목적지: %@";
 "ride.passed.end" = "여정 끝내기";
+"rescue.exitAt" = "다음 정류장 %@에서 내리세요";
+"rescue.suggested" = "추천";
+"rescue.walkBack.title" = "걸어서 돌아가기";
+"rescue.walkBack.detail" = "목적지 정류장까지 직선 %ld m · 실제로 걷는 길은 더 길어요";
+"rescue.walk.tooFar" = "목적지 정류장까지 직선으로도 %ld m라 걸어가기엔 멀어요.";
+"rescue.mapApp.title" = "지도 앱에서 길 찾기";
+"rescue.mapApp.detail" = "돌아가는 버스와 걷는 길은 지도 앱이 더 잘 알려줘요";
 "ride.closeApp" = "체험판은 앱을 켜 둔 동안 진행돼요. 잠금 화면과 다이나믹 아일랜드에도 같은 안내가 보여요.";
 "ride.liveActivityOff.title" = "잠금 화면 안내가 꺼져 있어요";
 "ride.liveActivityOff.body" = "설정 › 탑서에서 실시간 현황을 켜면 잠금 화면과 다이나믹 아일랜드에서도 볼 수 있어요. 앱 안에서는 계속 안내해요.";
@@ -151,6 +158,7 @@
 "handoff.title" = "이제 걸어서";
 "handoff.body" = "탑서는 버스까지만 함께해요. 걸어가는 길은 지도 앱에서 확인하세요.";
 "handoff.naver.findDestination" = "네이버 지도에서 목적지 찾기";
+"handoff.kakao.findDestination" = "카카오맵에서 목적지 찾기";
 "handoff.kakao.unavailable" = "체험판 정류장 좌표는 합성 데이터라 카카오맵 길찾기는 연결하지 않아요.";
 "handoff.failed.title" = "지도 앱을 열지 못했어요";
 "handoff.failed.naverMap" = "네이버 지도를 열 수 없어요. 앱이 설치되어 있는지 확인해주세요.";

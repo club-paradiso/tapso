@@ -252,15 +252,25 @@ enum RideText {
         count == 1 ? key + ".one" : key
     }
 
+    /// The moment's detail line. Past the stop it names the stop to get off at when the
+    /// ride knows it (`PassedStopRescue`), so the app, Lock Screen and island say the same.
+    static func detail(_ guidance: RideGuidance, exitStopName: String? = nil) -> String {
+        if guidance.moment == .passedDestination, let exitStopName, !exitStopName.isEmpty {
+            return String(format: string("rescue.exitAt"), exitStopName)
+        }
+        return string(guidance.copy.detail)
+    }
+
     /// VoiceOver sentence for a ride: the count only when it is safe to act on.
     static func accessibilitySummary(
         guidance: RideGuidance,
         routeNumber: String,
         destination: String,
-        remainingStops: Int
+        remainingStops: Int,
+        exitStopName: String? = nil
     ) -> String {
         let headline = string(guidance.copy.headline)
-        let detail = string(guidance.copy.detail)
+        let detail = Self.detail(guidance, exitStopName: exitStopName)
         switch guidance.count {
         case .live:
             return String(format: string(countKey("a11y.ride.live", remainingStops)), routeNumber, destination, remainingStops, headline, detail)
