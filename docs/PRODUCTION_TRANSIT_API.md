@@ -125,6 +125,8 @@ accepts both so local and production paths are identical.
 | GET | `/v1/sessions/:id` | Refresh a ride session |
 | DELETE | `/v1/sessions/:id` | End a ride session: the row is deleted, `204`; an unknown or already ended id is `404` |
 | POST | `/v1/sessions/:id/confirm` | Confirm a vehicle explicitly |
+| PUT | `/v1/sessions/:id/live-activity` | Store the ride's Live Activity push token, `{ "pushToken": "<hex>" }`; answers its fingerprint, never the token. `503 LIVE_ACTIVITY_PUSH_UNAVAILABLE` unless APNs is configured (`/health` → `liveActivityPush.enabled`) |
+| DELETE | `/v1/sessions/:id/live-activity` | Clear the push token, `204`; ending the session clears it too |
 
 Two further paths exist for controlled ride evidence only, a legacy flow that
 no release gate has required since 2026-09-29. They require

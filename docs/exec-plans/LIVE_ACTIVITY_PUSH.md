@@ -29,23 +29,26 @@ Started 2026-10-01. Living document; update it as milestones land.
    - Response classification (token rejected → drop it; our credential; throttled; unavailable or network).
    - Token fingerprints in logs, never tokens.
    - Tests: `services/api/test/apns.test.ts`, which verifies the JWT signature, the payload shape, the classification, the refresh rules, and that no token reaches a log line.
-2. **Token registration** — `NEXT`.
-   - `PUT /v1/sessions/:id/live-activity` with `{ "pushToken": "<hex>" }` stores the token, its fingerprint and when it arrived in the session record. `DELETE` clears it. Ending the session clears it too.
-   - Add the Vercel rewrite next to the existing session rewrites.
+2. **Token registration** — `DONE`.
+   - `PUT /v1/sessions/:id/live-activity` with `{ "pushToken": "<hex>" }` stores the token (normalised to lower case), its fingerprint and when it arrived in the session row (`liveActivityPush`, optional, no schema bump). The answer carries the fingerprint, never the token. `DELETE` clears it. Ending the session deletes the row and the token with it.
+   - `503 LIVE_ACTIVITY_PUSH_UNAVAILABLE` while APNs is not configured, so no token is stored for pushes that cannot come. `/health` reports `liveActivityPush` by `describeApns` (enabled, environment, or the missing setting names).
+   - Vercel rewrite `/v1/sessions/:id/live-activity` → `/api/v1/session-live-activity`. CORS allows `PUT`.
+   - The write retries a lost compare-and-set up to three times (it derives nothing from a provider read), then answers `409 SESSION_WRITE_CONFLICT`. A refresh that raced it loses its own compare-and-set and keeps the token.
    - The session's TTL (4 h) bounds the token's life.
-   - Index of sessions that have a token: a set under the deployment's own session namespace (`TRANSIT_SESSION_KEY_PREFIX` + `push-index`), so nothing outside that namespace is read or written.
-   - Tests: input validation (hex, length), storage round trip, deletion on end, the namespace guard.
-3. **App side** — `NEXT`, after 2. In the live ride of club-paradiso/tapso#76 (`TapsoAppModel`, `LiveActivityClient`):
-   - Ask for `pushType: .token` only when the server reports push enabled (`/health` → `liveActivityPush.enabled`); otherwise keep `pushType: nil`, as today.
-   - Observe `pushTokenUpdates` and register every new token: rotation is a re-registration.
-   - On the end of the ride, the server clears the token.
-   - Tests use a recording transport, as in `TapsoAPIClientTests`, and the session fixture `fixtures/journey/session-views-v1.json`.
+   - Tests: `journeySession.test.ts` (round trip, rotation, clear, end, refusal without echo, both race orders, bounded retry) and `apiRouter.test.ts` (push off, sessions off, rewrite, no token in any answer or log line, preflight). Two mutations (dropping the field on read, no retry) each fail a test.
+   - Moved to milestone 5: the index of sessions with a token. Only the scheduler reads it, so it is built with the scheduler, inside the session namespace.
+3. **App side** — `DONE` in code; on a device `UNVERIFIED` (milestone 6). In the live ride (`TapsoAppModel`, `LiveActivityClient`, `TapsoAPIClient`):
+   - A live ride asks for `pushType: .token` only when the server reports push enabled (`/health` → `liveActivityPush.enabled`; any failure reads as off). A demo ride never asks.
+   - If ActivityKit refuses the push request (a build without the push entitlement, which a Personal Team cannot have), the activity starts with `pushType: nil`, as before.
+   - Every token from `pushTokenUpdates` is registered with `PUT /v1/sessions/:id/live-activity`: rotation is a re-registration. A relaunch with the activity still running observes it again. Finishing or cancelling the ride stops the observation; ending the session on the server deletes the token.
+   - Tests: `TapsoAPIClientTests` (`/health` read as on, off, absent, failed, offline; the PUT and its hex body; a refused registration). The API client also typechecks under Swift 6 on Linux against transit-core. The `ActivityKit` calls compile only in the iOS job.
+   - The app target has no `aps-environment` entitlement yet: adding it needs the paid team (`BLOCKED_BY_APPLE_ACCOUNT`).
 4. **Push on change** — `NEXT`, after 2.
    - When a session refresh changes the content state, push it (priority 5).
    - When a milestone is first reached, push it with its alert (priority 10).
    - Push `event: end` with a dismissal date when the ride ends.
    - Idempotency: record the last pushed `timestamp` and content per session, never push older content, and drop the token on `token_rejected`.
-5. **Scheduler** — `BLOCKED_BY_INFRASTRUCTURE`. Something must refresh sessions that have a token while the app is suspended: an operator-authenticated `POST /operator/live-activity/tick` that refreshes due sessions from the index, called every 15–30 s by an external scheduler. The scheduler is not chosen: Vercel Cron's minimum interval is a minute, GitHub Actions schedules are not reliable at minutes, and a small always-on worker is a new piece of infrastructure the owner must approve.
+5. **Scheduler** — `BLOCKED_BY_INFRASTRUCTURE`. With it, an index of sessions that have a token: a set under the deployment's own session namespace (`TRANSIT_SESSION_KEY_PREFIX` + `push-index`), so nothing outside that namespace is read or written. Something must refresh sessions that have a token while the app is suspended: an operator-authenticated `POST /operator/live-activity/tick` that refreshes due sessions from the index, called every 15–30 s by an external scheduler. The scheduler is not chosen: Vercel Cron's minimum interval is a minute, GitHub Actions schedules are not reliable at minutes, and a small always-on worker is a new piece of infrastructure the owner must approve.
 6. **Device evidence** — `BLOCKED_BY_PHYSICAL_DEVICE`.
    - A TestFlight build on an iPhone with Dynamic Island.
    - Record:
@@ -73,4 +76,6 @@ xcodebuild ... test   # TapsoActivityAttributesTests.testServerPushContentStateD
 ## 6. Progress and next action
 
 - 2026-10-01: milestone 1 done. Milestones 2–4 need no Apple account and come next. Milestones 5 and 6 are blocked as labelled.
-- Exact next action: milestone 2. Add the token route and rewrite, store the token in `StoredJourneySession` (optional field, no schema bump), add the `push-index` set inside the session namespace, and write the tests listed above.
+- 2026-10-01: milestone 2 done (token route, storage, rewrite, health). The push index moved to milestone 5.
+- 2026-10-01: milestone 3 done in code (device `UNVERIFIED`). The marketing page's "only with the app open" claim is now pinned to milestone 6, not to `pushType: nil`.
+- Exact next action: milestone 4. Compute the content state on the server from the session (a port of `RideGuidancePolicy` checked against the Swift one through a shared fixture), push on change, and record what was last pushed.

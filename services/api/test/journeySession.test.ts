@@ -1,6 +1,13 @@
 import test from "node:test";
 import assert from "node:assert/strict";
-import { confirmationCandidates, JourneySessionCoordinator, SessionExpiredError, SessionInputError } from "../src/journeySession.ts";
+import {
+  confirmationCandidates,
+  JourneySessionCoordinator,
+  SessionExpiredError,
+  SessionInputError,
+  SessionNotFoundError,
+  SessionWriteConflictError,
+} from "../src/journeySession.ts";
 import type { RouteRequest, StopOnRoute, VehicleObservation } from "../src/domain.ts";
 import type { TransitProvider } from "../src/provider.ts";
 import {
@@ -2047,4 +2054,116 @@ test("a stored automatic selection written before the watch existed starts one f
     .refresh("pre-watch");
   assert.equal(view.selectedVehicleId, undefined);
   assert.equal(view.state, "confirmation_required");
+});
+
+/* ------------------------------------------ Live Activity push token (milestone 2) */
+
+// SYNTHETIC: an invented token; no device produced it.
+const PUSH_TOKEN = "0a1b".repeat(16);
+
+test("a Live Activity push token is stored on the session, survives a refresh, and goes with the ride", async () => {
+  const store = new MemoryJourneySessionStore();
+  const provider = new MutableProvider();
+  const now = new Date("2026-10-01T09:00:00Z");
+  provider.vehiclesValue = [
+    { vehicleId: "BUS-A", routeId, observedAt: now.toISOString(), directionCode: "1", stopSequence: 2 },
+  ];
+  const coordinator = new JourneySessionCoordinator(provider, { now: () => now, store, idFactory: () => "push-1" });
+  await coordinator.create(onBoardInput());
+
+  const registered = await coordinator.registerLiveActivityToken("push-1", { pushToken: PUSH_TOKEN.toUpperCase() });
+  assert.equal(registered.sessionId, "push-1");
+  assert.equal(registered.liveActivityPush.registered, true);
+  assert.match(registered.liveActivityPush.fingerprint, /^[0-9a-f]{12}$/);
+  assert.equal(registered.liveActivityPush.registeredAt, now.toISOString());
+  assert.ok(!JSON.stringify(registered).includes(PUSH_TOKEN), "the answer carries the fingerprint, never the token");
+  assert.equal((await store.load("push-1"))?.session.liveActivityPush?.token, PUSH_TOKEN, "stored normalised to lower case");
+
+  const view = await coordinator.refresh("push-1");
+  assert.ok(!JSON.stringify(view).includes(PUSH_TOKEN), "a session view never carries the token");
+  assert.equal((await store.load("push-1"))?.session.liveActivityPush?.token, PUSH_TOKEN, "a refresh keeps it");
+
+  // Rotation is a re-registration: the new token replaces the old one.
+  const rotated = "ff".repeat(32);
+  await coordinator.registerLiveActivityToken("push-1", { pushToken: rotated });
+  assert.equal((await store.load("push-1"))?.session.liveActivityPush?.token, rotated);
+
+  await coordinator.clearLiveActivityToken("push-1");
+  assert.equal((await store.load("push-1"))?.session.liveActivityPush, undefined);
+  await coordinator.clearLiveActivityToken("push-1"); // clearing nothing is not an error
+
+  await coordinator.registerLiveActivityToken("push-1", { pushToken: PUSH_TOKEN });
+  await coordinator.end("push-1");
+  assert.equal(await store.load("push-1"), undefined, "ending the ride removes the row and the token in it");
+  await assert.rejects(coordinator.registerLiveActivityToken("push-1", { pushToken: PUSH_TOKEN }), SessionNotFoundError);
+});
+
+test("a push token that is not a hexadecimal token is refused without echoing it", async () => {
+  const provider = new MutableProvider();
+  const coordinator = new JourneySessionCoordinator(provider, { idFactory: () => "push-2" });
+  await coordinator.create(onBoardInput());
+  for (const body of [undefined, [], {}, { pushToken: 42 }, { pushToken: "abc" }, { pushToken: "zz".repeat(32) }, { pushToken: "a".repeat(513) }]) {
+    await assert.rejects(coordinator.registerLiveActivityToken("push-2", body), (error: unknown) => {
+      assert.ok(error instanceof SessionInputError);
+      assert.ok(!error.message.includes("zz".repeat(32)));
+      return true;
+    });
+  }
+});
+
+test("a token registration and a refresh racing for one session both land", async () => {
+  const store = new MemoryJourneySessionStore();
+  const provider = new BarrierProvider();
+  const now = new Date("2026-10-01T09:10:00Z");
+  const bus = (stopSequence: number): VehicleObservation => ({
+    vehicleId: "BUS-A",
+    routeId,
+    observedAt: now.toISOString(),
+    directionCode: "1",
+    stopSequence,
+  });
+  const options = { now: () => now, store, automaticMatchingEnabled: true };
+  provider.snapshots = [[bus(2)]];
+  await new JourneySessionCoordinator(provider, { ...options, idFactory: () => "push-race" }).create(onBoardInput());
+
+  // A refresh reads the row, then waits on the provider while the app
+  // registers its token on another instance.
+  provider.gated = true;
+  provider.snapshots = [[bus(3)]];
+  const refreshing = new JourneySessionCoordinator(provider, options).refresh("push-race");
+  await tick();
+  await new JourneySessionCoordinator(provider, options).registerLiveActivityToken("push-race", { pushToken: PUSH_TOKEN });
+  provider.releaseNext();
+  await refreshing;
+  // The refresh lost its compare-and-set and wrote nothing over the token.
+  assert.equal((await store.load("push-race"))?.session.liveActivityPush?.token, PUSH_TOKEN);
+
+  // The other order: a write lands between the registration's read and its
+  // save. The registration re-reads and applies itself to the newer row.
+  let interleave = true;
+  const racing: JourneySessionStore = {
+    load: (id) => store.load(id),
+    create: (session) => store.create(session),
+    delete: (id) => store.delete(id),
+    async save(session, expectedVersion) {
+      if (interleave) {
+        interleave = false;
+        const current = (await store.load(session.id))!;
+        await store.save({ ...current.session, riderState: "on_board", matchConfidence: "low" }, current.version);
+      }
+      return store.save(session, expectedVersion);
+    },
+  };
+  const rotated = "ff".repeat(32);
+  await new JourneySessionCoordinator(provider, { ...options, store: racing }).registerLiveActivityToken("push-race", { pushToken: rotated });
+  const after = (await store.load("push-race"))!.session;
+  assert.equal(after.liveActivityPush?.token, rotated);
+  assert.equal(after.matchConfidence, "low", "the write that won first is kept");
+
+  // A session other requests keep winning is answered as busy, after a bounded number of tries.
+  const alwaysLosing: JourneySessionStore = { ...racing, save: async () => ({ outcome: "conflict", stored: await store.load("push-race") }) };
+  await assert.rejects(
+    new JourneySessionCoordinator(provider, { ...options, store: alwaysLosing }).registerLiveActivityToken("push-race", { pushToken: PUSH_TOKEN }),
+    SessionWriteConflictError,
+  );
 });

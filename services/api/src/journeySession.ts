@@ -15,11 +15,13 @@ import {
   recentlySeenVehicles,
   type SourceFreshnessEvidence,
 } from "./sourceFreshness.ts";
+import { tokenFingerprint } from "./apns.ts";
 import type { TransitProvider } from "./provider.ts";
 import {
   JOURNEY_SESSION_SCHEMA_VERSION,
   MemoryJourneySessionStore,
   type JourneySessionStore,
+  type LiveActivityPushToken,
   type StoredJourneySession,
   type VersionedJourneySession,
 } from "./sessionStore.ts";
@@ -257,6 +259,7 @@ type SessionRecord = SessionInput & {
   passage?: PassageMemory;
   /** Present from an automatic selection for a waiting rider on. */
   boardingWatch?: BoardingWatch;
+  liveActivityPush?: LiveActivityPushToken;
 };
 
 export class JourneySessionCoordinator {
@@ -416,6 +419,46 @@ export class JourneySessionCoordinator {
       expired: session.expiresAtMs <= this.now().getTime(),
       ...(session.selectionMode === undefined ? {} : { selectionMode: session.selectionMode }),
     };
+  }
+
+  /**
+   * Store the push token of the ride's Live Activity. A rotated token
+   * (`Activity.pushTokenUpdates`) is registered the same way and replaces the
+   * old one.
+   */
+  async registerLiveActivityToken(id: string, value: unknown): Promise<LiveActivityRegistration> {
+    const token = parsePushToken(value);
+    const registeredAtMs = this.now().getTime();
+    const record = await this.writePushToken(id, (row) => {
+      row.liveActivityPush = { token, fingerprint: tokenFingerprint(token), registeredAtMs };
+    });
+    return registrationView(record);
+  }
+
+  /** The activity ended or the rider turned updates off. Clearing an absent token is not an error. */
+  async clearLiveActivityToken(id: string): Promise<void> {
+    await this.writePushToken(id, (row) => {
+      delete row.liveActivityPush;
+    });
+  }
+
+  /**
+   * Unlike `commit`, a lost compare-and-set is retried here. The write derives
+   * nothing from a provider read: it sets one field on the row it just read,
+   * so re-reading and re-applying it cannot move progress backward, and a
+   * concurrent refresh keeps everything it wrote. A refresh that read before
+   * this write loses its own compare-and-set and answers from this row, which
+   * carries the token.
+   */
+  private async writePushToken(id: string, apply: (record: SessionRecord) => void): Promise<SessionRecord> {
+    for (let attempt = 0; attempt < PUSH_TOKEN_WRITE_ATTEMPTS; attempt += 1) {
+      const { record, version } = await this.requireSession(id);
+      apply(record);
+      const outcome = await this.store.save(toStored(record), version);
+      if (outcome.outcome === "saved") return record;
+      if (!outcome.stored) throw new SessionExpiredError();
+    }
+    throw new SessionWriteConflictError();
   }
 
   /**
@@ -978,6 +1021,7 @@ function toStored(record: SessionRecord): StoredJourneySession {
     consecutiveProviderFailures: record.consecutiveProviderFailures,
     ...(record.passage === undefined ? {} : { passage: record.passage }),
     ...(record.boardingWatch === undefined ? {} : { boardingWatch: record.boardingWatch }),
+    ...(record.liveActivityPush === undefined ? {} : { liveActivityPush: record.liveActivityPush }),
   };
 }
 
@@ -1014,7 +1058,37 @@ function toRecord(session: StoredJourneySession): SessionRecord {
         ? { passage: { offsets: {}, withheld: { reason: "passage_memory_unavailable", at: new Date(session.updatedAtMs).toISOString() } } }
         : {}),
     ...(session.boardingWatch === undefined ? {} : { boardingWatch: session.boardingWatch }),
+    ...(session.liveActivityPush === undefined ? {} : { liveActivityPush: session.liveActivityPush }),
   };
+}
+
+/** Bounded: a session written this often by others is answered as busy, not retried forever. */
+const PUSH_TOKEN_WRITE_ATTEMPTS = 3;
+
+/** APNs device tokens are hexadecimal; the bounds are those `liveActivityRequest` enforces. */
+const PUSH_TOKEN_PATTERN = /^[0-9a-f]{16,512}$/;
+
+export interface LiveActivityRegistration {
+  sessionId: string;
+  liveActivityPush: { registered: true; fingerprint: string; registeredAt: string };
+}
+
+function registrationView(record: SessionRecord): LiveActivityRegistration {
+  const push = record.liveActivityPush!;
+  return {
+    sessionId: record.id,
+    liveActivityPush: { registered: true, fingerprint: push.fingerprint, registeredAt: new Date(push.registeredAtMs).toISOString() },
+  };
+}
+
+function parsePushToken(value: unknown): string {
+  if (!value || typeof value !== "object" || Array.isArray(value)) throw new SessionInputError("JSON object required");
+  const token = (value as Record<string, unknown>).pushToken;
+  if (typeof token !== "string") throw new SessionInputError("pushToken is required");
+  const normalized = token.trim().toLowerCase();
+  // The message never echoes the value: a near-miss token is still a token.
+  if (!PUSH_TOKEN_PATTERN.test(normalized)) throw new SessionInputError("pushToken must be 16 to 512 hexadecimal characters");
+  return normalized;
 }
 
 export class SessionInputError extends Error {
@@ -1034,6 +1108,15 @@ export class SessionExpiredError extends Error {
 
   constructor() {
     super("journey session expired");
+  }
+}
+
+/** Other requests kept winning the session's compare-and-set. The caller may retry. */
+export class SessionWriteConflictError extends Error {
+  readonly code = "SESSION_WRITE_CONFLICT";
+
+  constructor() {
+    super("journey session is being updated by other requests; retry");
   }
 }
 
