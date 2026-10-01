@@ -6,7 +6,9 @@
  *   node --experimental-strip-types scripts/data-sources/route-info.ts [routeNo ...]
  *
  * Output lines:
- *   HOURS <routeNo> <routeId> first <HH:MM|-> last <HH:MM|-> headway <wd>/<sat>/<sun> HTTP <status> <start> → <end>
+ *   HOURS <routeNo> <routeId> first <HH:MM|-> last <HH:MM|-> headway <wd>/<sat>/<sun> HTTP <status> <start> → <end> [undocumented {…}]
+ * `undocumented` is `meta.undocumentedFields`: service-day fields TAGO sent in a
+ * shape its documentation does not give, verbatim. Absent when there are none.
  * A 404 before the endpoint is deployed, or for a route TAGO publishes no
  * service day for, is printed as such and is not an error.
  */
@@ -42,7 +44,8 @@ for (const number of numbers) {
       `HOURS ${number} ${variant.routeId} first ${item.firstDeparture ?? "-"} last ${item.lastDeparture ?? "-"} `
       + `headway ${headway.weekday ?? "-"}/${headway.saturday ?? "-"}/${headway.sunday ?? "-"} HTTP ${info.status} `
       + `${variant.startStopName ?? "?"} → ${variant.endStopName ?? "?"}`
-      + (info.status === 200 ? "" : ` ${info.body?.error ?? ""}`),
+      + (info.status === 200 ? "" : ` ${info.body?.error ?? ""}`)
+      + (info.body?.meta?.undocumentedFields ? ` undocumented ${JSON.stringify(info.body.meta.undocumentedFields)}` : ""),
     );
   }
 }

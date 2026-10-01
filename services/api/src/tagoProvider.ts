@@ -47,6 +47,8 @@ export interface TagoRoute {
  * every later stop after that, so "be at your stop by the last departure" is a
  * conservative rule, never a promise about when the bus passes it.
  */
+export type ServiceDayField = "startvehicletime" | "endvehicletime" | "intervaltime" | "intervalsattime" | "intervalsuntime";
+
 export interface TagoRouteServiceHours {
   routeId: string;
   routeNumber?: string;
@@ -58,6 +60,13 @@ export interface TagoRouteServiceHours {
   lastDeparture?: string;
   /** Average minutes between buses, as published; never a timetable. */
   headwayMinutes: { weekday?: number; saturday?: number; sunday?: number };
+  /**
+   * Service-day fields TAGO sent in a shape its documentation does not give
+   * (`HHMM`, whole minutes): the field name and the raw text, trimmed and cut to
+   * 16 characters. Never parsed: it only lets a probe tell "TAGO publishes
+   * nothing" from "TAGO publishes something else". Public schedule data.
+   */
+  undocumented?: Partial<Record<ServiceDayField, string>>;
 }
 
 /** Official Ministry of Land, Infrastructure and Transport TAGO adapter. */
@@ -133,16 +142,24 @@ export class TagoTransitProvider implements TransitProvider {
     if (startStopName !== undefined) hours.startStopName = startStopName;
     const endStopName = stringField(item, "endnodenm", "endNodeNm");
     if (endStopName !== undefined) hours.endStopName = endStopName;
-    const firstDeparture = serviceTime(stringField(item, "startvehicletime", "startVehicleTime"));
+    const undocumented: Partial<Record<ServiceDayField, string>> = {};
+    const read = <T>(field: ServiceDayField, camel: string, parse: (raw: string | undefined) => T | undefined): T | undefined => {
+      const raw = stringField(item, field, camel);
+      const value = parse(raw);
+      if (raw !== undefined && value === undefined) undocumented[field] = raw.slice(0, 16);
+      return value;
+    };
+    const firstDeparture = read("startvehicletime", "startVehicleTime", serviceTime);
     if (firstDeparture !== undefined) hours.firstDeparture = firstDeparture;
-    const lastDeparture = serviceTime(stringField(item, "endvehicletime", "endVehicleTime"));
+    const lastDeparture = read("endvehicletime", "endVehicleTime", serviceTime);
     if (lastDeparture !== undefined) hours.lastDeparture = lastDeparture;
-    const weekday = headway(stringField(item, "intervaltime", "intervalTime"));
+    const weekday = read("intervaltime", "intervalTime", headway);
     if (weekday !== undefined) hours.headwayMinutes.weekday = weekday;
-    const saturday = headway(stringField(item, "intervalsattime", "intervalSatTime"));
+    const saturday = read("intervalsattime", "intervalSatTime", headway);
     if (saturday !== undefined) hours.headwayMinutes.saturday = saturday;
-    const sunday = headway(stringField(item, "intervalsuntime", "intervalSunTime"));
+    const sunday = read("intervalsuntime", "intervalSunTime", headway);
     if (sunday !== undefined) hours.headwayMinutes.sunday = sunday;
+    if (Object.keys(undocumented).length > 0) hours.undocumented = undocumented;
     return hours;
   }
 
