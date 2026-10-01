@@ -48,7 +48,7 @@ final class RideSetupTests: XCTestCase {
     // MARK: Destination-first catalogue
 
     func testSearchIgnoresSpacingAndMiddleDots() {
-        XCTAssertEqual(DemoCatalog.searchDestinations("출입국 외국인청"), ["제주출입국·외국인청"])
+        XCTAssertEqual(DemoCatalog.searchDestinations("출입국 외국인청"), ["제주시청(아라방면)"])
         XCTAssertEqual(DemoCatalog.searchDestinations("박물관"), ["국립제주박물관"])
         XCTAssertTrue(DemoCatalog.searchDestinations("   ").isEmpty)
     }
@@ -201,8 +201,8 @@ final class RideSetupTests: XCTestCase {
     // MARK: Map hand-off
 
     func testSharedTextFindsTheMostSpecificStopName() {
-        let shared = "[카카오맵] 제주출입국·외국인청\n제주특별자치도 제주시 ...\nkko.to/abc"
-        XCTAssertEqual(StopNameMatcher.matches(in: shared, among: DemoCatalog.destinationNames).first, "제주출입국·외국인청")
+        let shared = "[카카오맵] 제주시청(아라방면)\n제주특별자치도 제주시 ...\nkko.to/abc"
+        XCTAssertEqual(StopNameMatcher.matches(in: shared, among: DemoCatalog.destinationNames).first, "제주시청(아라방면)")
     }
 
     func testALinkAloneFindsNothing() {
