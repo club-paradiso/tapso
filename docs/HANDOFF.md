@@ -6,6 +6,16 @@
 
 For the release-focused Claude Desktop/Claude Code continuation, use `docs/CLAUDE_DESKTOP_HANDOFF.md`. The Apple team identity is now resolved: the only team available to the build host is a free Personal Team, so TestFlight distribution is gated on obtaining a paid Apple Developer Program membership. See `KNOWN_ISSUES.md` and the Team prerequisite in `TESTFLIGHT.md`.
 
+## State on 2026-10-02 (production ride vertical slice, PR #94)
+
+- **Production sessions: still off.** Production answers `503 SESSIONS_UNAVAILABLE` (post-deploy run `36976781695`). The only missing piece is four environment variables on the `tapso-api` Vercel project (`PRODUCTION_TRANSIT_API.md` → *Enabling durable sessions in production*). An agent cannot set them: its Vercel connection does not include that project, and its sandbox cannot reach `tapso-api.vercel.app`.
+- **Issue #80: fixed in code.** At `READY_FOR_SHADOW` the rider picks a bus from raw positions (`vehicleChoice`, `choose`). Only `READY_FOR_CONFIRMATION_ASSISTED` lets the matcher's list be a suggestion.
+- **TAGO failures are bounded.** One 9 s deadline per logical request, with telemetry per request in `/health` → `providerHealth`. A failed stop-list refresh is served stale; a failed vehicle read fails closed.
+- **Issue #74: measured and not fixed, by decision** (`validation/ISSUE_74_LATE_APPEARANCE_2026-10-02.md`). Readiness stays `READY_FOR_SHADOW`.
+- **Live Activity push, milestone 4: done in code.** It pushes on change, alerts each milestone once, and ends the activity with the ride. It needs APNs credentials (paid Apple team) and a scheduler (milestone 5) before anything is pushed.
+- **Route 365 timetable.** The dataset schema, validator and staleness rule exist. The parser waits for the owner to download the XLSX into `fixtures/jeju/timetables/raw/365.xlsx`.
+- **Exact next action:** the owner sets the four session variables on `tapso-api` and redeploys. The post-deploy workflow then proves the session lifecycle in production.
+
 ## What works
 
 - `packages/transit-core`: deterministic Swift route progress, freshness, journey state, demo fixtures, and a demo-only matcher (`VehicleMatchingEngine`, not authoritative for real riders; see `VEHICLE_MATCHING.md`).
