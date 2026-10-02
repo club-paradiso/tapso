@@ -12,6 +12,7 @@ import { describeApns, readApnsConfig } from "./apns.ts";
 import { CachedTransitProvider } from "./cachedTransitProvider.ts";
 import { JourneySessionCoordinator } from "./journeySession.ts";
 import { resolveOperatorToken } from "./operatorAuth.ts";
+import { logProviderRequest, ProviderHealth } from "./providerHealth.ts";
 import { createBurstLimiter } from "./rateLimit.ts";
 import { resolveTagoServiceKey, serviceKeyWarning } from "./serviceKey.ts";
 import { readSessionKeyPrefix } from "./sessionKeyPrefix.ts";
@@ -59,7 +60,16 @@ export function createTransitApi(env: ServerEnv = process.env as ServerEnv): Tra
 
   // Passed explicitly so this function honours the `env` it was given rather
   // than reaching back into `process.env` through the provider's own default.
-  const upstream = new TagoTransitProvider({ serviceKey: credential.key });
+  // One record per logical TAGO request: a structured log line, and this
+  // instance's rolling summary in `/health` (`providerHealth.ts`).
+  const providerHealth = new ProviderHealth();
+  const upstream = new TagoTransitProvider({
+    serviceKey: credential.key,
+    onRequest: (record) => {
+      providerHealth.record(record);
+      logProviderRequest(record);
+    },
+  });
   const provider = new CachedTransitProvider(upstream, {
     stopTtlMs: config.cachePolicy.stopTtlMs,
     vehicleTtlMs: config.cachePolicy.vehicleTtlMs,
@@ -110,6 +120,7 @@ export function createTransitApi(env: ServerEnv = process.env as ServerEnv): Tra
       directProvider: upstream,
       sessions,
       liveActivityPush: describeApns(readApnsConfig(env)),
+      providerHealth,
       ...(limiter ? { limiter } : {}),
       ...(operatorLimiter ? { operatorLimiter } : {}),
       ...(operator.configured ? { operatorToken: operator.token } : {}),

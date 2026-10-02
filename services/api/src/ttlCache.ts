@@ -6,7 +6,12 @@
  * provider outage can never be replayed as a success.
  */
 
-export type CacheOutcome = "hit" | "miss" | "coalesced";
+/**
+ * `stale`: the upstream call failed and an expired value no older than the
+ * cache's `staleIfErrorMs` was served instead. Only caches of slow-changing
+ * reference data (route topology) may enable it; live positions never do.
+ */
+export type CacheOutcome = "hit" | "miss" | "coalesced" | "stale";
 
 export interface CachedResult<T> {
   value: T;
@@ -18,6 +23,11 @@ export interface TtlCacheOptions {
   now?: () => number;
   /** Opportunistic prune threshold; entries are bounded, never unbounded. */
   maxEntries?: number;
+  /**
+   * How long past its expiry a value may still answer for a failed upstream
+   * call. Defaults to 0: a failure is a failure. Never for live data.
+   */
+  staleIfErrorMs?: number;
 }
 
 type CacheEntry<T> = {
@@ -30,6 +40,7 @@ export class TtlCache<T> {
 
   private readonly now: () => number;
   private readonly maxEntries: number;
+  readonly staleIfErrorMs: number;
   private readonly entries = new Map<string, CacheEntry<T>>();
   private readonly inflight = new Map<string, Promise<T>>();
 
@@ -37,6 +48,7 @@ export class TtlCache<T> {
     this.ttlMs = normalizeTtl(options.ttlMs);
     this.now = options.now ?? Date.now;
     this.maxEntries = options.maxEntries ?? 256;
+    this.staleIfErrorMs = Math.max(0, options.staleIfErrorMs ?? 0);
   }
 
   async readThrough(key: string, load: () => Promise<T>): Promise<CachedResult<T>> {
@@ -58,7 +70,15 @@ export class TtlCache<T> {
         this.inflight.delete(key);
       });
     this.inflight.set(key, promise);
-    return { value: await promise, cache: "miss" };
+    try {
+      return { value: await promise, cache: "miss" };
+    } catch (error) {
+      // The value that failed to refresh, if it is recent enough to stand in.
+      if (cached && this.staleIfErrorMs > 0 && cached.expiresAt + this.staleIfErrorMs > this.now()) {
+        return { value: cached.value, cache: "stale" };
+      }
+      throw error;
+    }
   }
 
   delete(key: string): void {
@@ -73,7 +93,7 @@ export class TtlCache<T> {
     if (this.entries.size <= this.maxEntries) return;
     const now = this.now();
     for (const [key, entry] of this.entries) {
-      if (entry.expiresAt <= now) this.entries.delete(key);
+      if (entry.expiresAt + this.staleIfErrorMs <= now) this.entries.delete(key);
     }
   }
 }

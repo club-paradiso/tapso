@@ -66,7 +66,7 @@ Each failure keeps its meaning from server to screen (`TransitAPIFailure`,
 | No connection | URLError | 인터넷 연결이 끊겼어요 | continues |
 | Bus feed slow | `PROVIDER_TIMEOUT` (504) | 버스 정보가 늦게 와요 | continues |
 | Bus feed unreachable | `PROVIDER_UNAVAILABLE` (502) | 버스 정보를 못 받았어요 | continues |
-| Bus feed malformed | `PROVIDER_RESPONSE_INVALID` (502) | 버스 정보가 이상해요 | continues |
+| Bus feed malformed | `PROVIDER_RESPONSE_INVALID` (502) | 버스 위치를 잠시 확인할 수 없어요 | continues |
 | Live rides off on the server | `SESSIONS_UNAVAILABLE` (503) | 실시간 승차는 준비 중이에요 | stops |
 | Session expired / unknown | 410 / 404 | 여정 시간이 지났어요 / 여정을 찾을 수 없어요 | stops; setup starts a new session |
 | TAPSO failed | `INTERNAL_ERROR` (500) | 탑서 서버에 문제가 생겼어요 | continues |

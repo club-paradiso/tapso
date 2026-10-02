@@ -2,10 +2,12 @@ import type { RouteRequest, StopOnRoute, VehicleObservation } from "./domain.ts"
 import {
   ProviderConfigurationError,
   ProviderResponseError,
+  ProviderTimeoutError,
   ProviderUnavailableError,
   providerTransportError,
   type TransitProvider,
 } from "./provider.ts";
+import { logProviderRequest, type ProviderOutcome, type ProviderRequestRecord } from "./providerHealth.ts";
 import { CANONICAL_SERVICE_KEY_ENV, resolveTagoServiceKey } from "./serviceKey.ts";
 
 type FetchLike = typeof fetch;
@@ -13,6 +15,18 @@ type UnknownRecord = Record<string, unknown>;
 
 const TAGO_TRANSIENT_ATTEMPTS = 2;
 const TAGO_RETRY_DELAY_MS = 250;
+/**
+ * The whole of one logical request (every page and retry) gets this long.
+ * Production saw 12–14 s answers when each of two attempts had 8 s of its own
+ * and nothing bounded their sum; the app gives up on a request at 20 s and a
+ * rider at a stop much sooner. A slow feed now answers `PROVIDER_TIMEOUT`
+ * within this budget instead of a late success or a later 502.
+ */
+export const TAGO_REQUEST_DEADLINE_MS = 9_000;
+/** One attempt never takes longer than this, nor longer than what is left of the deadline. */
+export const TAGO_ATTEMPT_TIMEOUT_MS = 6_000;
+/** A retry is only worth starting with at least this much of the deadline left. */
+export const TAGO_MINIMUM_RETRY_BUDGET_MS = 2_000;
 
 export interface TagoTransitProviderOptions {
   serviceKey?: string;
@@ -20,6 +34,17 @@ export interface TagoTransitProviderOptions {
   locationBaseURL?: string;
   fetchImplementation?: FetchLike;
   now?: () => Date;
+  /** Overrides for tests; production uses the constants above. */
+  deadlineMs?: number;
+  attemptTimeoutMs?: number;
+  minimumRetryBudgetMs?: number;
+  /** Monotonic milliseconds for the deadline. Defaults to `performance.now`. */
+  clock?: () => number;
+  sleep?: (milliseconds: number) => Promise<void>;
+  /** 0 ≤ value < 1; spreads concurrent retries. Defaults to `Math.random`. */
+  random?: () => number;
+  /** Receives one record per logical request. Defaults to a structured log line. */
+  onRequest?: (record: ProviderRequestRecord) => void;
 }
 
 export interface TagoCity {
@@ -76,6 +101,13 @@ export class TagoTransitProvider implements TransitProvider {
   private readonly locationBaseURL: string;
   private readonly fetchImplementation: FetchLike;
   private readonly now: () => Date;
+  private readonly deadlineMs: number;
+  private readonly attemptTimeoutMs: number;
+  private readonly minimumRetryBudgetMs: number;
+  private readonly clock: () => number;
+  private readonly sleep: (milliseconds: number) => Promise<void>;
+  private readonly random: () => number;
+  private readonly onRequest: (record: ProviderRequestRecord) => void;
 
   constructor(options: TagoTransitProviderOptions = {}) {
     // Resolved through the shared helper so the provider and the health payload
@@ -87,6 +119,13 @@ export class TagoTransitProvider implements TransitProvider {
       ?? "https://apis.data.go.kr/1613000/BusLcInfoInqireService";
     this.fetchImplementation = options.fetchImplementation ?? fetch;
     this.now = options.now ?? (() => new Date());
+    this.deadlineMs = options.deadlineMs ?? TAGO_REQUEST_DEADLINE_MS;
+    this.attemptTimeoutMs = options.attemptTimeoutMs ?? TAGO_ATTEMPT_TIMEOUT_MS;
+    this.minimumRetryBudgetMs = options.minimumRetryBudgetMs ?? TAGO_MINIMUM_RETRY_BUDGET_MS;
+    this.clock = options.clock ?? (() => performance.now());
+    this.sleep = options.sleep ?? delay;
+    this.random = options.random ?? Math.random;
+    this.onRequest = options.onRequest ?? logProviderRequest;
   }
 
   async cities(): Promise<TagoCity[]> {
@@ -208,11 +247,49 @@ export class TagoTransitProvider implements TransitProvider {
     }));
   }
 
+  /**
+   * One logical request: every page and retry inside one deadline, recorded
+   * once (`providerHealth.ts`) whatever the outcome. The record names the
+   * operation and the outcome class, never the URL (it carries the key).
+   */
   private async request(
     baseURL: string,
     path: string,
     params: Record<string, string>,
     paged = true,
+  ): Promise<UnknownRecord[]> {
+    const started = this.clock();
+    const trace: RequestTrace = { attempts: 0, deadlineAt: started + this.deadlineMs };
+    let outcome: ProviderOutcome = "ok";
+    let detail: string | undefined;
+    try {
+      return await this.requestPages(baseURL, path, params, paged, trace);
+    } catch (error) {
+      outcome = failureOutcome(error);
+      // A configuration message names the credential variable, which `/health`
+      // must never carry; the outcome class says enough.
+      detail = outcome !== "BLOCKED_BY_CREDENTIALS" && error instanceof Error ? error.message : undefined;
+      throw error;
+    } finally {
+      this.onRequest({
+        provider: "tago",
+        operation: path.replace(/^\//, ""),
+        outcome,
+        latencyMs: Math.max(0, Math.round(this.clock() - started)),
+        attempts: trace.attempts,
+        ...(detail === undefined ? {} : { detail }),
+        ...(trace.httpStatus === undefined ? {} : { httpStatus: trace.httpStatus }),
+        at: this.now().toISOString(),
+      });
+    }
+  }
+
+  private async requestPages(
+    baseURL: string,
+    path: string,
+    params: Record<string, string>,
+    paged: boolean,
+    trace: RequestTrace,
   ): Promise<UnknownRecord[]> {
     if (!this.serviceKey) {
       throw new ProviderConfigurationError(`${CANONICAL_SERVICE_KEY_ENV} is required for TAGO live transit calls`);
@@ -235,7 +312,7 @@ export class TagoTransitProvider implements TransitProvider {
         url.searchParams.set("numOfRows", "100");
       }
 
-      const envelope = await this.fetchEnvelopeWithTransientRetry(url);
+      const envelope = await this.fetchEnvelopeWithTransientRetry(url, trace);
       const resultCode = stringField(envelope.header, "resultCode");
       if (!resultCode) throw new ProviderResponseError("TAGO resultCode is missing");
       if (resultCode && resultCode !== "00" && resultCode !== "0") {
@@ -261,13 +338,28 @@ export class TagoTransitProvider implements TransitProvider {
 
   /**
    * data.go.kr occasionally returns a syntactically valid but incomplete TAGO
-   * envelope for a single request. Treat transport failures, HTTP 5xx, non-JSON
-   * bodies, and malformed envelopes as transient once, then fail closed. Logical
-   * TAGO result codes are handled by the caller and are never retried here.
+   * envelope for a single request. Transport failures, timeouts, HTTP 5xx,
+   * non-JSON bodies and malformed envelopes are retried once (a GET changes
+   * nothing upstream), after a short jittered pause, and only while enough of
+   * the request's deadline is left for the retry to be worth it; then the
+   * request fails closed. Logical TAGO result codes and HTTP 4xx are answers,
+   * handled by the caller and never retried here.
    */
-  private async fetchEnvelopeWithTransientRetry(url: URL): Promise<{ header: UnknownRecord; body: UnknownRecord }> {
+  private async fetchEnvelopeWithTransientRetry(url: URL, trace: RequestTrace): Promise<{ header: UnknownRecord; body: UnknownRecord }> {
     let lastError: ProviderResponseError | undefined;
     for (let attempt = 1; attempt <= TAGO_TRANSIENT_ATTEMPTS; attempt += 1) {
+      const remaining = trace.deadlineAt - this.clock();
+      if (remaining <= 0) throw lastError ?? new ProviderTimeoutError("TAGO request deadline exceeded");
+      trace.attempts += 1;
+      const retry = async (error: ProviderResponseError): Promise<boolean> => {
+        lastError = error;
+        if (attempt >= TAGO_TRANSIENT_ATTEMPTS) return false;
+        const pause = TAGO_RETRY_DELAY_MS * (1 + this.random());
+        if (trace.deadlineAt - this.clock() - pause < this.minimumRetryBudgetMs) return false;
+        await this.sleep(pause);
+        return true;
+      };
+
       let response: Response;
       try {
         response = await this.fetchImplementation(url, {
@@ -276,52 +368,62 @@ export class TagoTransitProvider implements TransitProvider {
             "user-agent": "TAPSO-live-transit/1.0",
             connection: "close",
           },
-          signal: AbortSignal.timeout(8_000),
+          signal: AbortSignal.timeout(Math.max(1, Math.min(this.attemptTimeoutMs, Math.floor(remaining)))),
           redirect: "error",
         });
       } catch (error) {
-        lastError = providerTransportError(error, "TAGO");
-        if (attempt < TAGO_TRANSIENT_ATTEMPTS) {
-          await delay(TAGO_RETRY_DELAY_MS);
-          continue;
-        }
-        throw lastError;
+        if (await retry(providerTransportError(error, "TAGO"))) continue;
+        throw lastError!;
       }
 
+      trace.httpStatus = response.status;
       if (!response.ok) {
-        lastError = new ProviderUnavailableError(`TAGO provider returned HTTP ${response.status}`);
-        if (response.status >= 500 && attempt < TAGO_TRANSIENT_ATTEMPTS) {
-          await delay(TAGO_RETRY_DELAY_MS);
-          continue;
-        }
-        throw lastError;
+        const error = new ProviderUnavailableError(`TAGO provider returned HTTP ${response.status}`);
+        if (response.status >= 500 && await retry(error)) continue;
+        throw error;
       }
 
       let payload: unknown;
       try {
         payload = await response.json();
-      } catch {
-        lastError = new ProviderResponseError("TAGO returned a non-JSON response");
-        if (attempt < TAGO_TRANSIENT_ATTEMPTS) {
-          await delay(TAGO_RETRY_DELAY_MS);
-          continue;
-        }
-        throw lastError;
+      } catch (error) {
+        // A body cut off by the attempt's timeout is a timeout, not nonsense.
+        const failure = isTimeout(error) ? providerTransportError(error, "TAGO") : new ProviderResponseError("TAGO returned a non-JSON response");
+        if (await retry(failure)) continue;
+        throw lastError!;
       }
 
       try {
         return extractEnvelope(payload);
       } catch (error) {
         if (!(error instanceof ProviderResponseError)) throw error;
-        lastError = error;
-        if (attempt < TAGO_TRANSIENT_ATTEMPTS) {
-          await delay(TAGO_RETRY_DELAY_MS);
-          continue;
-        }
-        throw lastError;
+        if (await retry(error)) continue;
+        throw lastError!;
       }
     }
     throw lastError ?? new ProviderUnavailableError("TAGO request failed");
+  }
+}
+
+interface RequestTrace {
+  attempts: number;
+  deadlineAt: number;
+  httpStatus?: number;
+}
+
+function isTimeout(error: unknown): boolean {
+  return Boolean(error && typeof error === "object" && "name" in error && String((error as { name: unknown }).name) === "TimeoutError");
+}
+
+function failureOutcome(error: unknown): ProviderOutcome {
+  const code = error && typeof error === "object" && "code" in error ? String((error as { code: unknown }).code) : "";
+  switch (code) {
+    case "PROVIDER_TIMEOUT":
+    case "PROVIDER_UNAVAILABLE":
+    case "BLOCKED_BY_CREDENTIALS":
+      return code;
+    default:
+      return "PROVIDER_RESPONSE_INVALID";
   }
 }
 

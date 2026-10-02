@@ -246,8 +246,8 @@
 "live.error.providerTimeout.body" = "The bus information system is slow to answer. Checking again shortly.";
 "live.error.providerUnavailable.title" = "No bus data right now";
 "live.error.providerUnavailable.body" = "The bus information system can't be reached. Checking again shortly.";
-"live.error.providerInvalid.title" = "Bus data looks wrong";
-"live.error.providerInvalid.body" = "The bus data could not be read. Checking again shortly.";
+"live.error.providerInvalid.title" = "Can't place the bus right now";
+"live.error.providerInvalid.body" = "The data we got was incomplete, so we didn't use it. Checking again.";
 "live.error.sessionsUnavailable.title" = "Live rides are coming soon";
 "live.error.sessionsUnavailable.body" = "Live journeys are not switched on on the server yet. You can try the flow in the demo.";
 "live.error.serviceUnavailable.title" = "Bus data is unavailable";
