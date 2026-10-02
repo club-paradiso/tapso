@@ -56,7 +56,18 @@ export class TtlCache<T> {
     if (cached && cached.expiresAt > this.now()) return { value: cached.value, cache: "hit" };
 
     const pending = this.inflight.get(key);
-    if (pending) return { value: await pending, cache: "coalesced" };
+    if (pending) {
+      try {
+        return { value: await pending, cache: "coalesced" };
+      } catch (error) {
+        // The same fallback the request that started the load gets: one
+        // outage must not answer some callers stale and others with the error.
+        if (cached && this.staleIfErrorMs > 0 && cached.expiresAt + this.staleIfErrorMs > this.now()) {
+          return { value: cached.value, cache: "stale" };
+        }
+        throw error;
+      }
+    }
 
     const promise = load()
       .then((value) => {

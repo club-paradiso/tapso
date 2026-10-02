@@ -109,3 +109,28 @@ test("vehicle positions are never served stale: a failure is a failure", async (
   now = 1_500;
   await assert.rejects(cached.vehiclesResult(request), /no body object/);
 });
+
+test("callers that joined a failing refresh get the same stale stop list as the one that started it", async () => {
+  let now = 0;
+  let release: (() => void) | undefined;
+  class Slow implements TransitProvider {
+    fail = false;
+    async stops(): Promise<StopOnRoute[]> {
+      if (!this.fail) return [{ stopId: "A", name: "A", sequence: 1 }];
+      await new Promise<void>((resolve) => { release = resolve; });
+      throw new Error("TAGO payload has no body object");
+    }
+    async vehicles(): Promise<VehicleObservation[]> { return []; }
+  }
+  const upstream = new Slow();
+  const cached = new CachedTransitProvider(upstream, { stopTtlMs: 1_000, now: () => now });
+  await cached.stopsResult(request);
+  upstream.fail = true;
+  now = 2_000;
+  const first = cached.stopsResult(request);
+  const second = cached.stopsResult(request);
+  await new Promise((resolve) => setImmediate(resolve));
+  release!();
+  const results = await Promise.all([first, second]);
+  assert.deepEqual(results.map((result) => result.cache), ["stale", "stale"]);
+});

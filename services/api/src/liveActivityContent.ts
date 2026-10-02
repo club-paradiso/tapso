@@ -222,7 +222,11 @@ export function planLiveActivityPush(
   delivery: LiveActivityDelivery | undefined,
 ): LiveActivityPlan {
   if (view.selectedVehicleId === undefined) return { send: false, reason: "no_confirmed_bus" };
-  const timestampMs = Date.parse(view.progress?.evidenceAt ?? view.updatedAt);
+  // Fresh progress was true when its evidence arrived. Any other state (a
+  // degraded, lost or checking session keeps the old progress with its old
+  // evidence time) became true when the session moved into it.
+  const fresh = view.state === "tracking" || view.state === "arrived" || view.state === "passed_destination";
+  const timestampMs = Date.parse((fresh ? view.progress?.evidenceAt : undefined) ?? view.updatedAt);
   if (!Number.isFinite(timestampMs) || (delivery && timestampMs <= delivery.lastTimestampMs)) return { send: false, reason: "not_newer" };
   const contentState = liveActivityContentState(view, stops, timestampMs);
   const { updatedAt: _updatedAt, ...comparable } = contentState;

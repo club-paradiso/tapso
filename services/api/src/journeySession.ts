@@ -509,7 +509,12 @@ export class JourneySessionCoordinator {
    * token is registered. Reads the row only; never the provider.
    */
   async liveActivityTarget(id: string): Promise<LiveActivityTarget | undefined> {
-    const { record } = await this.requireSession(id);
+    // Deliberately not `requireSession`: that deletes an expired row, and
+    // `beforeEnd` runs ahead of `end`, which must still be able to end an
+    // expired session. A read only; expiry stays the caller's business.
+    const stored = await this.store.load(id);
+    if (!stored) return undefined;
+    const record = toRecord(stored.session);
     const push = record.liveActivityPush;
     if (!push) return undefined;
     const progressStop = record.lastProgress

@@ -134,3 +134,20 @@ test("ending the ride ends the activity, then the row and its token are gone", a
   await pusher.beforeEnd("syn-la");
   assert.equal(sender.sent.at(-1), end, "an ended session has no token to push to");
 });
+
+test("an expired session can still be ended after the end push looks it up", async () => {
+  const provider = new Provider();
+  let now = new Date("2026-10-02T06:00:00.000Z");
+  provider.at = now;
+  const sessions = new JourneySessionCoordinator(provider, { now: () => now, idFactory: () => "syn-la-expired", sessionTtlMs: 60_000 });
+  const sender = new Sender();
+  const pusher = new LiveActivityPusher(sender, sessions, { now: () => now.getTime(), log: () => {}, budgetMs: 50 });
+  await sessions.create({ routeId, cityCode: "999", boardingStopSequence: 3, destinationStopSequence: 9 });
+  await sessions.registerLiveActivityToken("syn-la-expired", { pushToken: TOKEN });
+  now = new Date(now.getTime() + 120_000);
+  await pusher.beforeEnd("syn-la-expired");
+  const ended = await sessions.end("syn-la-expired");
+  assert.equal(ended.expired, true);
+  assert.equal(sender.sent.at(-1)?.event, "end");
+});
+

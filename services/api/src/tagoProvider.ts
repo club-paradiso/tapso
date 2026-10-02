@@ -353,9 +353,11 @@ export class TagoTransitProvider implements TransitProvider {
       trace.attempts += 1;
       const retry = async (error: ProviderResponseError): Promise<boolean> => {
         lastError = error;
-        if (attempt >= TAGO_TRANSIENT_ATTEMPTS) return false;
+        // One retry per logical request, not per page.
+        if (attempt >= TAGO_TRANSIENT_ATTEMPTS || trace.retried) return false;
         const pause = TAGO_RETRY_DELAY_MS * (1 + this.random());
         if (trace.deadlineAt - this.clock() - pause < this.minimumRetryBudgetMs) return false;
+        trace.retried = true;
         await this.sleep(pause);
         return true;
       };
@@ -407,6 +409,8 @@ export class TagoTransitProvider implements TransitProvider {
 
 interface RequestTrace {
   attempts: number;
+  /** A retry was spent; a later page gets none. */
+  retried?: boolean;
   deadlineAt: number;
   httpStatus?: number;
 }

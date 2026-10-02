@@ -119,3 +119,18 @@ test("the end push reads as ended, comes after anything pushed, and leaves withi
   assert.ok(end.timestampMs > first.next.lastTimestampMs);
   assert.equal(end.dismissalDateMs! - end.timestampMs, 60_000);
 });
+
+test("a ride that turns degraded or lost is pushed at the transition, not at its old evidence time", () => {
+  const tracked = planLiveActivityPush(view("tracking-riding"), stops, undefined);
+  assert.ok(tracked.send);
+  for (const id of ["degraded-missing", "lost"]) {
+    const failed = view(id);
+    // Same retained progress, same old evidence time as the last push.
+    failed.progress = { ...failed.progress!, evidenceAt: new Date(tracked.next.lastTimestampMs).toISOString() };
+    failed.updatedAt = new Date(tracked.next.lastTimestampMs + 20_000).toISOString();
+    const plan = planLiveActivityPush(failed, stops, tracked.next);
+    assert.ok(plan.send, id);
+    assert.equal(plan.push.timestampMs, tracked.next.lastTimestampMs + 20_000, id);
+  }
+});
+

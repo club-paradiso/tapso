@@ -147,3 +147,27 @@ test("a missing credential is recorded by class only: the record never names the
   assert.equal(records[0]!.detail, undefined);
   assert.equal(records[0]!.attempts, 0);
 });
+
+test("one logical request retries once in total, not once per page", async () => {
+  let call = 0;
+  let clock = 0;
+  const page = (no: number) => new Response(JSON.stringify({ response: {
+    header: { resultCode: "00" },
+    body: { totalCount: 200, pageNo: no, items: { item: Array.from({ length: 100 }, (_, index) => ({ vehicleno: `SYN${no}-${index}`, nodeord: 1 })) } },
+  } }));
+  const broken = () => new Response(JSON.stringify({ response: { header: { resultCode: "00" } } }));
+  // Page 1 fails once, then answers; page 2 fails once: a second retry would rescue it.
+  const script = [broken, () => page(1), broken, () => page(2)];
+  const records: ProviderRequestRecord[] = [];
+  const provider = new TagoTransitProvider({
+    serviceKey: SECRET,
+    fetchImplementation: async () => { const answer = script[call++]!; clock += 100; return answer(); },
+    clock: () => clock,
+    sleep: async (milliseconds) => { clock += milliseconds; },
+    random: () => 0,
+    onRequest: (record) => records.push(record),
+  });
+  await assert.rejects(provider.stops(route), ProviderResponseError);
+  assert.equal(call, 3, "page 2 got no retry of its own");
+  assert.equal(records[0]!.attempts, 3);
+});
