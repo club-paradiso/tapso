@@ -398,6 +398,16 @@ production → Redeploy). Nothing else is manual:
    API itself: sessions stay off and `/health` says why. Correct the variable
    and redeploy.
 
+Incident 2026-10-02 23:25 UTC: the first attempt set `TRANSIT_SESSION_STORE=redis`
+while the Upstash credentials did not reach the Production deployment (the
+preview's pair was branch-scoped and could not be extended to Production). The
+configuration then threw at boot and every route, not only sessions, answered
+`500` (post-deploy run `37077467037`: 16 of 17 checks failed). Recovery was the
+rollback below. Since PR #94 an unusable store setting no longer throws: sessions
+stay off, `/health` → `sessions.problem` names the category (no URL, token or
+value), and the read endpoints keep serving. Add the Upstash pair as new
+Production-only variables; a branch-scoped preview variable cannot be widened.
+
 Rollback: delete `TRANSIT_SESSION_STORE` (or set it to `memory`) and redeploy;
 sessions return to `503`, and rows already written expire on their own TTL.
 

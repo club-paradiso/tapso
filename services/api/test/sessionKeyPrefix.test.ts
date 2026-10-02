@@ -171,21 +171,21 @@ test("one namespace can never be nested inside another", () => {
 
 /* --------------------------------------------------------- boot-time failure */
 
-test("an invalid explicit namespace fails at boot instead of falling back", () => {
+test("an invalid explicit namespace turns sessions off at boot instead of falling back, and never the deployment", () => {
   for (const bad of ["", " ", "tapso:*", "tapso:", "tapso:preview:journey-session: "]) {
     const env = { TRANSIT_SESSION_KEY_PREFIX: bad };
     assert.throws(() => readSessionKeyPrefix(env), /TRANSIT_SESSION_KEY_PREFIX/, JSON.stringify(bad));
     // Config is read on every store, so a dormant typo on a memory deployment
     // does not wait for the day someone switches to redis.
-    assert.throws(() => readTransitApiConfig(env, NODE), /TRANSIT_SESSION_KEY_PREFIX/);
-    assert.throws(
-      () => readTransitApiConfig({ ...env, TRANSIT_SESSION_STORE: "redis", ...UPSTASH }, NODE),
-      /TRANSIT_SESSION_KEY_PREFIX/,
-    );
-    assert.throws(
-      () => createTransitApi({ ...env, TRANSIT_SESSION_STORE: "redis", ...UPSTASH }),
-      /TRANSIT_SESSION_KEY_PREFIX/,
-    );
+    for (const config of [
+      readTransitApiConfig(env, NODE),
+      readTransitApiConfig({ ...env, TRANSIT_SESSION_STORE: "redis", ...UPSTASH }, NODE),
+    ]) {
+      assert.equal(config.sessions.enabled, false, JSON.stringify(bad));
+      assert.equal(config.sessions.store, "memory", "a namespace that cannot be used is never written to");
+      assert.match(config.sessions.problem ?? "", /namespace setting is invalid/);
+    }
+    assert.doesNotThrow(() => createTransitApi({ ...env, TRANSIT_SESSION_STORE: "redis", ...UPSTASH }));
   }
 });
 

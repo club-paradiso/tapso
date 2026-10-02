@@ -223,15 +223,28 @@ export function readTransitApiConfig(
   const demonstratedReadiness = options.demonstratedReadiness ?? DEMONSTRATED_MATCHING_READINESS;
   const readinessPermitsAutomatic = automaticMatchingPermitted(demonstratedReadiness);
   const automaticMatchingEnabled = automaticMatchingRequested && readinessPermitsAutomatic;
-  // Reading this validates it: asking for `redis` without usable credentials
-  // throws here rather than booting a deployment that answers every session
-  // request with a store error.
-  const sessionStore = readSessionStoreKind(env);
-  // Validated at boot on every store, not only `redis`: a malformed namespace
-  // left dormant on a memory deployment would otherwise surface on the day the
-  // store is switched. The value stays out of `TransitApiConfig`, which
-  // `/health` serializes; the key layout is nobody's business but the wiring's.
-  const sessionKeyPrefix = readSessionKeyPrefix(env);
+  // A session store that is asked for but cannot be used disables sessions,
+  // never the deployment. It used to throw here, and on 2026-10-02 a
+  // production deployment whose Upstash credentials did not reach it answered
+  // every route with 500: the read endpoints have nothing to do with sessions.
+  // The store falls back to `memory`, sessions stay off (the memory store
+  // never serves them on serverless), and `/health` says why in categories,
+  // never values or variable contents.
+  let sessionStore: SessionStoreKind;
+  let sessionKeyPrefix: string;
+  let storeProblem: string | undefined;
+  try {
+    sessionStore = readSessionStoreKind(env);
+    // Validated at boot on every store, not only `redis`: a malformed
+    // namespace left dormant on a memory deployment would otherwise surface on
+    // the day the store is switched. The value stays out of `TransitApiConfig`,
+    // which `/health` serializes.
+    sessionKeyPrefix = readSessionKeyPrefix(env);
+  } catch (error) {
+    sessionStore = "memory";
+    sessionKeyPrefix = readSessionKeyPrefix({});
+    storeProblem = sessionStoreProblem(error);
+  }
   // Only a durable store writes keys, so only then does the namespace have to
   // belong to this deployment. A namespace that does not disables sessions
   // rather than the deployment.
@@ -242,7 +255,8 @@ export function readTransitApiConfig(
   // A durable store removes the reason serverless defaults to off. The
   // operator still has to say yes; what changes is that saying yes is no
   // longer a decision to lose rides on scale-out.
-  const sessionsRequested = boolean(env, "TRANSIT_SESSIONS_ENABLED", platform === "node" || sessionStore === "redis");
+  const sessionsRequested = storeProblem === undefined
+    && boolean(env, "TRANSIT_SESSIONS_ENABLED", platform === "node" || sessionStore === "redis");
 
   return {
     transitProvider: "tago",
@@ -261,7 +275,9 @@ export function readTransitApiConfig(
       enabled: sessionsRequested && namespaceProblem === undefined,
       durableStoreConfigured: sessionStore === "redis",
       ...(namespace === undefined ? {} : { namespace }),
-      ...(sessionsRequested && namespaceProblem !== undefined ? { problem: namespaceProblem } : {}),
+      ...(storeProblem !== undefined
+        ? { problem: storeProblem }
+        : sessionsRequested && namespaceProblem !== undefined ? { problem: namespaceProblem } : {}),
     },
     matching: {
       matcherPolicy: MATCHER_POLICY_VERSION,
@@ -319,6 +335,15 @@ export function readTransitApiConfig(
  * put a deployment that believed it had durable sessions back on the exact
  * failure mode it was trying to leave.
  */
+/** What `/health` says about a store that could not be configured. Categories only. */
+function sessionStoreProblem(error: unknown): string {
+  const message = error instanceof Error ? error.message : "";
+  if (/must be memory or redis/.test(message)) return "session store setting is neither memory nor redis; sessions are off";
+  if (/requires/.test(message)) return "durable session store requested without its URL and token on this deployment; sessions are off";
+  if (/https origin/.test(message)) return "durable session store URL is not an absolute https origin; sessions are off";
+  return "session namespace setting is invalid; sessions are off";
+}
+
 function readSessionStoreKind(env: ServerEnv): SessionStoreKind {
   const raw = trimmed(env, "TRANSIT_SESSION_STORE")?.toLowerCase();
   if (raw === undefined || raw === "memory") return "memory";
