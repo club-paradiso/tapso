@@ -55,7 +55,8 @@ Decision:
 - No undocumented Jeju BIS endpoint becomes a TAPSO product API (unchanged).
 - The timetable files may be used under their 제한 없음 terms only as a **dated, imported dataset**, labelled with the download date and never presented as live.
 - The static page holds no per-route file link: the links appear once a route is chosen. Reproducing the page's own requests to fetch them would mean using an undocumented endpoint.
-- So the first file comes from a person following the dataset's instructions. The parser and the staleness rule are written against that real file.
+- So the first file comes from a person following the dataset's instructions. The parser is written against that real file.
+- 2026-10-02: the format-independent half exists (`services/api/src/officialTimetable.ts`): the normalized dataset `tapso-jeju-timetable-v1` (label `OFFICIAL_DATED`, source page and file name, SHA-256 of the file, download date, optional effective date, parser name and version, departures per starting stop and day type), its validator, and the staleness rule (`fresh` ≤ 30 days after download, `aging` ≤ 90, then `stale`; a future download or effective date is `unknown`; only `fresh` and `aging` give a last bus, always with its as-of date; the bounds are `ASSUMED`). The agent environment cannot reach `bus.jeju.go.kr` or `data.go.kr` (egress denied), so the Route 365 file must still come from the owner: put it at `fixtures/jeju/timetables/raw/365.xlsx` exactly as downloaded, with the download date in the commit message.
 
 ## Runtime provider
 

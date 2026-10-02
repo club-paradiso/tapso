@@ -102,7 +102,7 @@ export function validateTimetableDataset(value: unknown): OfficialTimetableDatas
     const times = entry.departures as unknown[];
     times.forEach((time, position) => {
       if (typeof time !== "string" || !TIME.test(time)) fail(`services[${index}].departures[${position}] must be HH:MM`);
-      if (position > 0 && String(times[position - 1]) >= time) fail(`services[${index}].departures must be strictly ascending`);
+      if (position > 0 && String(times[position - 1]) >= String(time)) fail(`services[${index}].departures must be strictly ascending`);
     });
   });
   return value as OfficialTimetableDataset;
