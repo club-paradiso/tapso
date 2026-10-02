@@ -24,7 +24,7 @@ Severity as in V2: **P0** misrepresents the product; **P1** blocks understanding
 
 > 버스를 확인한 순간부터, 아일랜드가 탑니다.
 
-The page is one synthetic ride on 365 from 제주버스터미널 to 제주시청(아라방면). The island is its narrator: empty while the rider plans and confirms, alive from the confirmation, counting down, honest when the data is shaky, escalating at two stops, the next stop and arrival, and gone when the ride ends.
+The page tells one Route 365 ride from 제주국제공항3(용담,시청)[북] to 제주시청(아라방면), using the verified `JEB405136522` provider stop topology. Vehicle identity, plate and playback timing remain synthetic. The island is its narrator: empty while the rider plans and confirms, alive from the confirmation, counting down, honest when the data is shaky, escalating at two stops, the next stop and arrival, and gone when the ride ends.
 
 ## Island Story Engine
 
