@@ -148,6 +148,33 @@ final class LiveSessionInterpreterTests: XCTestCase {
         XCTAssertEqual(LiveSessionInterpreter.currentStopSequence(for: riding), 5)
     }
 
+    /// The server's Live Activity push port (`liveActivityContent.ts`) computed these from the
+    /// same payloads; a push must say exactly what the app would show.
+    func testServerPushSignalsAgreeWithTheApp() throws {
+        struct Entry: Decodable {
+            let id: String
+            let signal: RideSignal
+            let moment: RideMoment
+            let milestone: RideMilestone?
+        }
+        struct File: Decodable { let signals: [Entry] }
+        let repository = URL(fileURLWithPath: #filePath)
+            .deletingLastPathComponent().deletingLastPathComponent().deletingLastPathComponent()
+            .deletingLastPathComponent().deletingLastPathComponent()
+        let url = repository.appendingPathComponent("fixtures/journey/live-activity-signals-v1.json")
+        let entries = try JSONDecoder().decode(File.self, from: Data(contentsOf: url)).signals
+        let views = try scenarios()
+        XCTAssertEqual(Set(entries.map(\.id)), Set(views.keys))
+        for entry in entries {
+            let view = try XCTUnwrap(views[entry.id])
+            let signal = LiveSessionInterpreter.rideSignal(for: view)
+            XCTAssertEqual(signal, entry.signal, entry.id)
+            let guidance = RideGuidancePolicy.guidance(for: signal)
+            XCTAssertEqual(guidance.moment, entry.moment, entry.id)
+            XCTAssertEqual(guidance.milestone, entry.milestone, entry.id)
+        }
+    }
+
     /// Late, missing or unconfirmed data never produces a get-off alert.
     func testNoMilestoneWithoutFreshServerProgress() throws {
         for (id, view) in try scenarios() {

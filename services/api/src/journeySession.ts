@@ -16,6 +16,7 @@ import {
   type SourceFreshnessEvidence,
 } from "./sourceFreshness.ts";
 import { tokenFingerprint } from "./apns.ts";
+import type { LiveActivityDelivery } from "./liveActivityContent.ts";
 import { readinessRank, type ReadinessLevel } from "./matcherSafetyGate.ts";
 import { DEMONSTRATED_MATCHING_READINESS } from "./matchingReadiness.ts";
 import type { TransitProvider } from "./provider.ts";
@@ -205,6 +206,16 @@ export interface JourneySessionView {
   createdAt: string;
   updatedAt: string;
   expiresAt: string;
+}
+
+/** What `liveActivityTarget` returns. The token is a capability: never log it, never return it. */
+export interface LiveActivityTarget {
+  token: string;
+  fingerprint: string;
+  delivery?: LiveActivityDelivery;
+  stops: StopOnRoute[];
+  boardingStop: StopOnRoute;
+  lastProgressStopName?: string;
 }
 
 export interface JourneySessionCoordinatorOptions {
@@ -486,9 +497,52 @@ export class JourneySessionCoordinator {
     const token = parsePushToken(value);
     const registeredAtMs = this.now().getTime();
     const record = await this.writePushToken(id, (row) => {
-      row.liveActivityPush = { token, fingerprint: tokenFingerprint(token), registeredAtMs };
+      const delivery = row.liveActivityPush?.delivery;
+      row.liveActivityPush = { token, fingerprint: tokenFingerprint(token), registeredAtMs, ...(delivery ? { delivery } : {}) };
     });
     return registrationView(record);
+  }
+
+  /**
+   * Where a push for this session would go: the registered token, what was
+   * last pushed, and the route's stops for the content. `undefined` when no
+   * token is registered. Reads the row only; never the provider.
+   */
+  async liveActivityTarget(id: string): Promise<LiveActivityTarget | undefined> {
+    const { record } = await this.requireSession(id);
+    const push = record.liveActivityPush;
+    if (!push) return undefined;
+    const progressStop = record.lastProgress
+      ? record.stops.find((stop) => stop.sequence === record.lastProgress!.currentStopSequence)?.name
+      : undefined;
+    return {
+      token: push.token,
+      fingerprint: push.fingerprint,
+      ...(push.delivery ? { delivery: push.delivery } : {}),
+      stops: record.stops,
+      boardingStop: record.boardingStop,
+      ...(progressStop ? { lastProgressStopName: progressStop } : {}),
+    };
+  }
+
+  /**
+   * Record an accepted push. Only onto the token it was sent to: a token that
+   * rotated meanwhile keeps its own record. Never moves the record backward.
+   */
+  async recordLiveActivityDelivery(id: string, fingerprint: string, delivery: LiveActivityDelivery): Promise<void> {
+    await this.writePushToken(id, (row) => {
+      const push = row.liveActivityPush;
+      if (!push || push.fingerprint !== fingerprint) return;
+      if (push.delivery && push.delivery.lastTimestampMs >= delivery.lastTimestampMs) return;
+      push.delivery = delivery;
+    });
+  }
+
+  /** APNs rejected this token: forget it, unless it has already been replaced. */
+  async dropLiveActivityToken(id: string, fingerprint: string): Promise<void> {
+    await this.writePushToken(id, (row) => {
+      if (row.liveActivityPush?.fingerprint === fingerprint) delete row.liveActivityPush;
+    });
   }
 
   /** The activity ended or the rider turned updates off. Clearing an absent token is not an error. */

@@ -25,6 +25,7 @@ import type { BurstLimiter } from "./rateLimit.ts";
 import { maskClientAddress } from "./rateLimit.ts";
 import { TtlCache } from "./ttlCache.ts";
 import { logEvent } from "./observability.ts";
+import type { LiveActivityPusher } from "./liveActivityPusher.ts";
 import type { ProviderHealth } from "./providerHealth.ts";
 import { TAGO_CADENCE_POLICY_V1 } from "./sourceFreshness.ts";
 
@@ -133,6 +134,11 @@ export interface TransitApiDependencies {
    * stored for pushes that will never come.
    */
   liveActivityPush?: { enabled: boolean; environment?: string; missing?: string[] };
+  /**
+   * Present only where APNs is configured: pushes a ride's Live Activity after
+   * its session is read or confirmed, and ends it when the session ends.
+   */
+  liveActivityPusher?: Pick<LiveActivityPusher, "afterRead" | "beforeEnd">;
   /** This instance's recent upstream outcomes and latency, shown in `/health`. */
   providerHealth?: Pick<ProviderHealth, "snapshot">;
   /** The shared operator secret. Deliberately not part of `config`, which `/health` echoes. */
@@ -546,10 +552,13 @@ async function dispatch(
   const sessionId = sessionIdentifier(resolved, url);
 
   if (resolved.route === "session_read") {
-    return { response: json(await sessions.refresh(sessionId), 200, { "cache-control": "no-store" }) };
+    const session = await sessions.refresh(sessionId);
+    await dependencies.liveActivityPusher?.afterRead(session);
+    return { response: json(session, 200, { "cache-control": "no-store" }) };
   }
 
   if (resolved.route === "session_end") {
+    await dependencies.liveActivityPusher?.beforeEnd(sessionId);
     const ended = await sessions.end(sessionId);
     logEvent("journey_session_ended", {
       sessionId: ended.id,
@@ -577,6 +586,7 @@ async function dispatch(
   }
 
   const session = await sessions.confirm(sessionId, await readJsonBody(request));
+  await dependencies.liveActivityPusher?.afterRead(session);
   logEvent("vehicle_match_confirmed", {
     sessionId: session.id,
     routeId: session.routeId,

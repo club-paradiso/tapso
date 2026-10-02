@@ -43,11 +43,12 @@ Started 2026-10-01. Living document; update it as milestones land.
    - Every token from `pushTokenUpdates` is registered with `PUT /v1/sessions/:id/live-activity`: rotation is a re-registration. A relaunch with the activity still running observes it again. Finishing or cancelling the ride stops the observation; ending the session on the server deletes the token.
    - Tests: `TapsoAPIClientTests` (`/health` read as on, off, absent, failed, offline; the PUT and its hex body; a refused registration). The API client also typechecks under Swift 6 on Linux against transit-core. The `ActivityKit` calls compile only in the iOS job.
    - The app target has no `aps-environment` entitlement yet: adding it needs the paid team (`BLOCKED_BY_APPLE_ACCOUNT`).
-4. **Push on change** — `NEXT`, after 2.
-   - When a session refresh changes the content state, push it (priority 5).
-   - When a milestone is first reached, push it with its alert (priority 10).
-   - Push `event: end` with a dismissal date when the ride ends.
-   - Idempotency: record the last pushed `timestamp` and content per session, never push older content, and drop the token on `token_rejected`.
+4. **Push on change** — `DONE` in code (2026-10-02); nothing is pushed in production until APNs is configured (`BLOCKED_BY_APPLE_ACCOUNT`), and on a device `UNVERIFIED`.
+   - `services/api/src/liveActivityContent.ts` ports `LiveSessionInterpreter.rideSignal`, `RideGuidancePolicy.moment`/`milestone`, the app's content-state builder and `PassedStopRescue.exitStop`. `fixtures/journey/live-activity-signals-v1.json` is generated from it over the server's own session payloads (`scripts/journey/live-activity-signals.ts`, checked in CI); `LiveSessionInterpreterTests.testServerPushSignalsAgreeWithTheApp` recomputes each entry in Swift.
+   - `planLiveActivityPush`: only a rider-confirmed bus; the push's timestamp is when its content was true (`progress.evidenceAt`); never one no newer than the last accepted; changed content at priority 5; unchanged content again after 60 s, to move its 120 s stale date; a milestone reached for the first time carries its alert (the app's own `ride.<milestone>` words, checked against `Localizable.strings`), once per ride. `planLiveActivityEnd`: `completed` content, dismissed after 60 s.
+   - `LiveActivityPusher` runs after `GET /v1/sessions/:id` and after a confirmation, and before `DELETE`. It records what Apple accepted in the session row (`liveActivityPush.delivery`, kept across a token rotation), forgets a token Apple rejects, and never fails the rider's request: a 3 s budget, every failure logged by kind with the token's fingerprint only.
+   - Wired in `apiRuntime.ts` only when `readApnsConfig` is enabled.
+   - Tests: `liveActivityContent.test.ts`, `liveActivityPusher.test.ts`.
 5. **Scheduler** — `BLOCKED_BY_INFRASTRUCTURE`. With it, an index of sessions that have a token: a set under the deployment's own session namespace (`TRANSIT_SESSION_KEY_PREFIX` + `push-index`), so nothing outside that namespace is read or written. Something must refresh sessions that have a token while the app is suspended: an operator-authenticated `POST /operator/live-activity/tick` that refreshes due sessions from the index, called every 15–30 s by an external scheduler. The scheduler is not chosen: Vercel Cron's minimum interval is a minute, GitHub Actions schedules are not reliable at minutes, and a small always-on worker is a new piece of infrastructure the owner must approve.
 6. **Device evidence** — `BLOCKED_BY_PHYSICAL_DEVICE`.
    - A TestFlight build on an iPhone with Dynamic Island.
@@ -78,4 +79,5 @@ xcodebuild ... test   # TapsoActivityAttributesTests.testServerPushContentStateD
 - 2026-10-01: milestone 1 done. Milestones 2–4 need no Apple account and come next. Milestones 5 and 6 are blocked as labelled.
 - 2026-10-01: milestone 2 done (token route, storage, rewrite, health). The push index moved to milestone 5.
 - 2026-10-01: milestone 3 done in code (device `UNVERIFIED`). The marketing page's "only with the app open" claim is now pinned to milestone 6, not to `pushType: nil`.
-- Exact next action: milestone 4. Compute the content state on the server from the session (a port of `RideGuidancePolicy` checked against the Swift one through a shared fixture), push on change, and record what was last pushed.
+- 2026-10-02: milestone 4 done in code. Pushes follow the session's reads; while the app is suspended nothing reads it.
+- Exact next action: milestone 5, which needs an owner decision on where the scheduler runs. The Railway collector (`services/api/src/backgroundServer.ts`, `Dockerfile.collector`) already runs always-on beside the API and could call an operator-authenticated tick every 15–30 s; that is the recommendation, since it adds no platform. It is only useful once APNs is configured.
