@@ -82,7 +82,7 @@ Every movement shows a state change: the island's morph (420 ms, emphasis curve)
 
 ## Performance
 
-Local production build: JS 277 kB (86 kB gzip, V2 273 / 84), CSS 70 kB (14 kB gzip, V2 65 / 13), prerendered HTML 61 kB. No new dependency. Tracking reads eleven rectangles per animation frame only while scrolling.
+Production build (CI on `main@c73e247`): JS 279 kB (86 kB gzip; V2 273 / 84), CSS 70 kB (14 kB gzip; V2 65 / 13), prerendered HTML 62 kB. No new dependency. Tracking reads eleven rectangles per animation frame only while scrolling.
 
 ## Honesty
 
@@ -91,7 +91,7 @@ Unchanged rules (`forbiddenClaims.ts`, checked on sources and on the prerendered
 ## Verification
 
 ```bash
-npm --prefix apps/web test            # 125 tests, incl. islandStory, productParity, siteHonesty
+npm --prefix apps/web test            # 126 tests, incl. islandStory, productParity, siteHonesty
 npm --prefix apps/web run build       # typecheck, prerender, claim guard
 node apps/web/scripts/render-og.mjs   # after a build; needs Playwright and Pretendard
 ```
@@ -100,7 +100,7 @@ Captures (local build, Chromium, Pretendard installed locally): `docs/design/mar
 
 ## Known limitations
 
-- Figma has no V3 frames yet; the V2 marketing frames are superseded (`FIGMA_IMPLEMENTATION_MAP_V2.md`).
+- Figma's V3 frames (`11 Marketing Web` › `218:2`, four widths) are rebuilt from the code at `main@55c648e` and set Noto Sans KR instead of Pretendard (`FIGMA_IMPLEMENTATION_MAP_V2.md`); they go stale when the page changes.
 - The device pictures are drawings: real island size, truncation and alert presentation need hardware.
 - Light theme only; Pretendard still loads from jsDelivr.
 - The Vercel preview was not opened from the authoring environment.

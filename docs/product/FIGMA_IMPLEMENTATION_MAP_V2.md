@@ -12,7 +12,7 @@ File: `TAPSO — Product / Marketing Design System`, key `kkx04GvqOzHje7Dw5ikO9X
 | 05 Live Activity · Dynamic Island | `160:1208` | One row per ride moment: compact, minimal, expanded, Lock Screen |
 | 07 Discover, 08 Eat, 10 Passport / Share | `205:4`, `205:5`, `205:7` | Status cards only: not designed, and why |
 | 09 Return / Rescue › Return / Rescue · Product V3 | `193:2956` | V3 25–27: the way back, rescue past your stop, the countdown |
-| 11 Marketing Web | `3:4` | Marketing V2 board (`165:54`) |
+| 11 Marketing Web | `3:4` | The marketing site V3 as built, four widths (`218:2`, below); the V2 board `165:54` is on `13 Archive` |
 | 12 Prototype | `205:8` | Clickable flows A (map hand-off → ride), B (confirmation → island → arrival), D (passed stop → rescue), built from labelled copies |
 | 13 Archive | `102:2` | Superseded boards in dated sections, nothing deleted: Web legacy and V1, iOS V1 workbench and the live-ride trial, Android workbench, Playground and the Product V2 explorations |
 | Variables › TAPSO V2 Semantic | `VariableCollectionId:151:14` | Semantic tokens, Light/Dark |
@@ -100,6 +100,27 @@ The `RideHero / V2` › `moment=passed` variant (`155:230`) now matches the code
 `color/journey/next` at 8 % behind a 2 pt `color/journey/next` stroke. It was a
 solid fill, which hid the coral headline on `V2 / 18 Missed stop recovery`.
 
+## Marketing site V3 (2026-10-01)
+
+`11 Marketing Web` › `Web / Marketing V3 · 2026-10-01 · code main@55c648e` (`218:2`)
+rebuilds the page as built (`MARKETING_SITE_V3.md`): `apps/web` at `main@55c648e`,
+rendered with reduced motion and written back as editable layers. The code is the
+source of truth; regenerate the frames when `apps/web` changes.
+
+| Width | Frame |
+|---|---|
+| 1440 · large desktop | `219:2` |
+| 1280 · laptop | `231:2` |
+| 390 · mobile | `241:2` |
+| 360 · compact mobile | `258:2` |
+
+Layer names carry the element and its classes (`section#confirm.chapter…`), so a
+layer leads to its component in `apps/web/src`. Solid colours are bound to
+`TAPSO V2 Semantic` (text, backgrounds, separator, identity colours) or, for brand,
+state and translucent colours, to `TAPSO Primitives`; `jeju/sand` and
+`jeju/sand-deep` mirror `--sand` and `--sand-deep` in `tokens.css`. Auto layout is
+applied where the page's spacing is regular.
+
 ## Known deltas between Figma and code
 
 | Delta | Why |
@@ -109,3 +130,5 @@ solid fill, which hid the coral headline on `V2 / 18 Missed stop recovery`.
 | Figma frames are 402 × 874 only | Device widths 375 and 440 and AX3 text are covered by snapshot evidence, not frames |
 | Search frame shows a typed query without the keyboard | Keyboard is system UI |
 | Figma shows `••0001` / `••0002`; code masks synthetic plates from `DemoCatalog.plate(for:)` | Both are synthetic |
+| Web frames set Noto Sans KR, and wrapped Korean breaks only between words, with hard line breaks | Pretendard is not available to Figma here and Figma has no `word-break: keep-all`; Noto Sans KR runs wider, so a few paragraphs take one more line |
+| Web chapter backgrounds are `band ·` rectangles; the bus scene's road and the privacy lines are dashed strokes | The site paints them with a box-shadow and repeating gradients |
