@@ -89,7 +89,10 @@ struct VehicleCheckContent: View {
                         }
                     }
                 }
-            case .similarBuses:
+            case .similarBuses, .choose:
+                // `choose`: no suggestion is allowed (issue #80). Every bus is a
+                // card the rider taps after reading its plate; none is first by
+                // anything but where it is.
                 VStack(spacing: TapsoSpace.sm) {
                     ForEach(check.proposals) { proposal in
                         Button { onConfirm(proposal) } label: {
@@ -99,7 +102,7 @@ struct VehicleCheckContent: View {
                         .accessibilityHint(Text("check.pick.hint"))
                     }
                     Button { check.proposals.forEach(onReject) } label: {
-                        Text("check.noneOfThese")
+                        Text(LocalizedStringKey(check.stage == .choose ? "check.choose.none" : "check.noneOfThese"))
                     }
                     .buttonStyle(SecondaryButtonStyle())
                 }

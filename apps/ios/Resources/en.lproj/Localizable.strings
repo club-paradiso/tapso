@@ -56,6 +56,8 @@
 "check.proposed.detail" = "Check the plate as you board";
 "check.similarBuses.headline" = "Similar buses nearby";
 "check.similarBuses.detail" = "Pick the bus you boarded";
+"check.choose.headline" = "Pick the bus you're boarding";
+"check.choose.detail" = "Tap the one whose plate matches";
 "check.notFoundYet.headline" = "No bus in sight yet";
 "check.notFoundYet.detail" = "We'll show route %@ as soon as one appears";
 "check.confirmed.headline" = "Bus confirmed";
@@ -63,6 +65,7 @@
 "check.confirm" = "Yes, I'm on this bus";
 "check.reject" = "It's a different bus";
 "check.noneOfThese" = "Neither of these";
+"check.choose.none" = "Not in this list";
 "check.pick.hint" = "Double-tap if this is your bus";
 "check.plateHint" = "Last digits of the bus's plate";
 "check.position.atStop" = "At your stop";

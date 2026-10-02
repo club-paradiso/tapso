@@ -14,7 +14,7 @@
  * | Level | What the product may do |
  * |---|---|
  * | `NOT_READY` | Nothing matcher-driven reaches a rider. |
- * | `READY_FOR_SHADOW` | The matcher runs and its ranking is recorded; riders see nothing from it; only an explicit rider confirmation selects a bus. |
+ * | `READY_FOR_SHADOW` | The matcher runs and its ranking is recorded; riders see nothing from it (enforced by `vehicleChoicePresentation` in `journeySession.ts`: riders are shown raw positions); only an explicit rider confirmation selects a bus. |
  * | `READY_FOR_CONFIRMATION_ASSISTED` | The matcher's pick may be shown to the rider as a suggestion; only the rider's tap commits it. |
  * | `READY_FOR_BOUNDED_AUTOMATION` | Automatic commitment for a waiting rider inside the evidenced envelope, with a rider-visible way to undo it. |
  * | `READY_FOR_AUTOMATIC_MATCHING` | Automatic commitment in every supported rider state. |

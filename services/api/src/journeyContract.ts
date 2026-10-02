@@ -16,7 +16,7 @@
 export const JOURNEY_CONTRACT_VERSION = "tapso-journey-contract-v1";
 
 export const SEGMENT_KINDS = ["walk", "ride", "transfer"] as const;
-export const PRE_RIDE_STAGES = ["searching", "proposed", "similarBuses", "notFoundYet", "confirmed"] as const;
+export const PRE_RIDE_STAGES = ["searching", "proposed", "similarBuses", "choose", "notFoundYet", "confirmed"] as const;
 export const RIDE_MOMENTS = [
   "riding",
   "prepare",
@@ -193,6 +193,7 @@ function resolveRide(input: SurfaceInput): ResolvedSurface {
         return { state: "waiting", action: "waitForBus" };
       case "proposed":
       case "similarBuses":
+      case "choose":
         return { state: "confirm", action: "confirmBus" };
       default:
         return { state: "checking", action: "keepWatching" };

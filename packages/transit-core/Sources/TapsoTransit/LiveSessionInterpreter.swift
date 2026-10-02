@@ -8,16 +8,40 @@ import Foundation
 /// on that poll), never from a timestamp re-read on the phone: TAGO publishes
 /// no observation time, and `evidenceAt` is TAPSO's receipt time.
 public enum LiveSessionInterpreter {
+    /// Whether the server lets the matcher's list be presented as a suggestion.
+    ///
+    /// Only at `READY_FOR_CONFIRMATION_ASSISTED` or above (issue #80). A server
+    /// that does not say, or says something unknown, gets the rider-identifies
+    /// presentation: the safe reading of silence.
+    public static func allowsMatcherSuggestion(_ snapshot: JourneySessionSnapshot) -> Bool {
+        snapshot.vehicleChoice?.allowsMatcherSuggestion == true
+    }
+
     /// Buses the rider can confirm, nearest the stop first, minus any they said were not theirs.
     ///
-    /// Only `confirmation_required` lists are proposals. An `awaiting_match`
-    /// session publishes the matcher's full ranking, which includes buses that
-    /// have already left the stop; offering one of those to a waiting rider is
-    /// the exact mistake the directed matcher exists to prevent.
+    /// Below confirmation-assisted readiness these are the server's raw
+    /// positions (`vehicleChoice.vehicles`): nothing the matcher ranked or
+    /// filtered. At that readiness they are the matcher's confirmation list,
+    /// and only `confirmation_required` lists are proposals: an
+    /// `awaiting_match` session publishes the matcher's full ranking, which
+    /// includes buses that have already left the stop.
     public static func proposals(
         from snapshot: JourneySessionSnapshot,
         excluding rejected: Set<VehicleIdentifier> = []
     ) -> [VehicleProposal] {
+        guard snapshot.selectedVehicleId == nil else { return [] }
+        if !allowsMatcherSuggestion(snapshot) {
+            guard snapshot.sessionState == .confirmationRequired || snapshot.sessionState == .awaitingMatch else { return [] }
+            if let choice = snapshot.vehicleChoice {
+                return choice.vehicles.compactMap { vehicle in
+                    let vehicleID = VehicleIdentifier(rawValue: vehicle.vehicleId)
+                    guard !rejected.contains(vehicleID) else { return nil }
+                    return VehicleProposal(vehicleID: vehicleID, plate: vehicle.vehicleId, stopsAway: vehicle.stopsAway)
+                }
+            }
+            // A server from before `vehicleChoice`: its confirmation list, shown
+            // without any suggestion (`vehicleCheck` asks the rider to pick).
+        }
         guard snapshot.sessionState == .confirmationRequired else { return [] }
         return (snapshot.candidates ?? []).compactMap { candidate in
             let vehicleID = VehicleIdentifier(rawValue: candidate.vehicleId)
@@ -28,6 +52,8 @@ public enum LiveSessionInterpreter {
     }
 
     /// The pre-ride check for a session that has been read at least once.
+    /// Below confirmation-assisted readiness even a single bus is a question
+    /// (`choose`), never "this looks like your bus".
     public static func vehicleCheck(
         for snapshot: JourneySessionSnapshot,
         excluding rejected: Set<VehicleIdentifier> = []
@@ -37,7 +63,11 @@ public enum LiveSessionInterpreter {
             let proposal = VehicleProposal(vehicleID: vehicleID, plate: selected, stopsAway: nil)
             return VehicleCheck.evaluate(proposals: [proposal], hasSearched: true, confirmed: vehicleID)
         }
-        return VehicleCheck.evaluate(proposals: proposals(from: snapshot, excluding: rejected), hasSearched: true)
+        return VehicleCheck.evaluate(
+            proposals: proposals(from: snapshot, excluding: rejected),
+            hasSearched: true,
+            suggestionsAllowed: allowsMatcherSuggestion(snapshot)
+        )
     }
 
     /// The ride's facts for `RideGuidancePolicy`. Anything the server did not

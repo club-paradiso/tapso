@@ -42,6 +42,11 @@
             "zone": "departed"
           }
         ],
+        "vehicleChoice": {
+          "presentation": "rider_identifies",
+          "readiness": "READY_FOR_SHADOW",
+          "vehicles": []
+        },
         "explanation": "No fresh vehicle of this route is approaching the boarding stop.",
         "matchingMode": "shadow",
         "shadowSelection": {
@@ -105,6 +110,16 @@
             "zone": "approaching"
           }
         ],
+        "vehicleChoice": {
+          "presentation": "rider_identifies",
+          "readiness": "READY_FOR_SHADOW",
+          "vehicles": [
+            {
+              "vehicleId": "SYN70가0412",
+              "stopsAway": 2
+            }
+          ]
+        },
         "explanation": "Automatic selection is withheld until the matcher's demonstrated readiness permits it. Ranked candidates and server-observed cadence evidence are published for explicit confirmation only.",
         "matchingMode": "shadow",
         "shadowSelection": {
@@ -192,6 +207,20 @@
             "zone": "approaching"
           }
         ],
+        "vehicleChoice": {
+          "presentation": "rider_identifies",
+          "readiness": "READY_FOR_SHADOW",
+          "vehicles": [
+            {
+              "vehicleId": "SYN70가0412",
+              "stopsAway": 1
+            },
+            {
+              "vehicleId": "SYN70가0388",
+              "stopsAway": 2
+            }
+          ]
+        },
         "explanation": "Automatic selection is withheld until the matcher's demonstrated readiness permits it. Ranked candidates and server-observed cadence evidence are published for explicit confirmation only.",
         "matchingMode": "shadow",
         "shadowSelection": {
@@ -805,6 +834,252 @@
         "createdAt": "2026-10-01T08:00:00.000Z",
         "updatedAt": "2026-10-01T08:02:50.000Z",
         "expiresAt": "2026-10-01T12:00:00.000Z"
+      }
+    },
+    {
+      "id": "rider-identifies-at-shadow",
+      "why": "READY_FOR_SHADOW: raw positions nearest first, the bus at the stop and one beyond the matcher's window included, the departed one left out",
+      "view": {
+        "id": "syn-session-identify",
+        "routeId": "SYN-ROUTE-202",
+        "cityCode": "999",
+        "boardingStop": {
+          "stopId": "SYN-STOP-10",
+          "name": "합성 정류장 10",
+          "sequence": 10,
+          "latitude": 33.468,
+          "longitude": 126.318
+        },
+        "destinationStop": {
+          "stopId": "SYN-STOP-12",
+          "name": "합성 정류장 12",
+          "sequence": 12,
+          "latitude": 33.472,
+          "longitude": 126.322
+        },
+        "riderState": "waiting_at_stop",
+        "matchConfidence": "unknown",
+        "state": "confirmation_required",
+        "candidates": [
+          {
+            "vehicleId": "SYN70가0456",
+            "score": 50,
+            "evidence": [
+              "route_id",
+              "boarding_stop_offset_0",
+              "zone_boarding_stop_unresolved"
+            ],
+            "rejectedReasons": [
+              "source_cadence_not_fresh",
+              "boarding_stop_position_unresolved"
+            ],
+            "stopOffset": 0,
+            "zone": "boarding_stop_unresolved"
+          },
+          {
+            "vehicleId": "SYN70가0789",
+            "score": 45,
+            "evidence": [
+              "route_id",
+              "boarding_stop_offset_-1",
+              "zone_approaching"
+            ],
+            "rejectedReasons": [
+              "source_cadence_not_fresh"
+            ],
+            "stopOffset": -1,
+            "zone": "approaching"
+          }
+        ],
+        "vehicleChoice": {
+          "presentation": "rider_identifies",
+          "readiness": "READY_FOR_SHADOW",
+          "vehicles": [
+            {
+              "vehicleId": "SYN70가0456",
+              "stopsAway": 0
+            },
+            {
+              "vehicleId": "SYN70가0789",
+              "stopsAway": 1
+            },
+            {
+              "vehicleId": "SYN70가0123",
+              "stopsAway": 7
+            }
+          ]
+        },
+        "explanation": "Automatic selection is withheld until the matcher's demonstrated readiness permits it. Ranked candidates and server-observed cadence evidence are published for explicit confirmation only.",
+        "matchingMode": "shadow",
+        "shadowSelection": {
+          "status": "unavailable",
+          "confidence": "unknown",
+          "explanation": "No fresh vehicle of this route is approaching the boarding stop."
+        },
+        "sourceFreshness": {
+          "SYN70가0123": {
+            "state": "unknown",
+            "sampleCount": 1,
+            "spanSeconds": 0,
+            "latestReceiptAgeSeconds": 0,
+            "contentChangeCount": 0,
+            "sequenceDecreaseCount": 0,
+            "reason": "More server-observed TAGO samples are required before freshness can be inferred."
+          },
+          "SYN70가0456": {
+            "state": "unknown",
+            "sampleCount": 1,
+            "spanSeconds": 0,
+            "latestReceiptAgeSeconds": 0,
+            "contentChangeCount": 0,
+            "sequenceDecreaseCount": 0,
+            "reason": "More server-observed TAGO samples are required before freshness can be inferred."
+          },
+          "SYN70가0789": {
+            "state": "unknown",
+            "sampleCount": 1,
+            "spanSeconds": 0,
+            "latestReceiptAgeSeconds": 0,
+            "contentChangeCount": 0,
+            "sequenceDecreaseCount": 0,
+            "reason": "More server-observed TAGO samples are required before freshness can be inferred."
+          },
+          "SYN70가0999": {
+            "state": "unknown",
+            "sampleCount": 1,
+            "spanSeconds": 0,
+            "latestReceiptAgeSeconds": 0,
+            "contentChangeCount": 0,
+            "sequenceDecreaseCount": 0,
+            "reason": "More server-observed TAGO samples are required before freshness can be inferred."
+          }
+        },
+        "createdAt": "2026-10-01T09:00:00.000Z",
+        "updatedAt": "2026-10-01T09:00:00.000Z",
+        "expiresAt": "2026-10-01T13:00:00.000Z"
+      }
+    },
+    {
+      "id": "matcher-suggestion-at-confirmation-assisted",
+      "why": "READY_FOR_CONFIRMATION_ASSISTED (not demonstrated; generated to pin the switch): the matcher's confirmation list may be suggested",
+      "view": {
+        "id": "syn-session-suggest",
+        "routeId": "SYN-ROUTE-202",
+        "cityCode": "999",
+        "boardingStop": {
+          "stopId": "SYN-STOP-10",
+          "name": "합성 정류장 10",
+          "sequence": 10,
+          "latitude": 33.468,
+          "longitude": 126.318
+        },
+        "destinationStop": {
+          "stopId": "SYN-STOP-12",
+          "name": "합성 정류장 12",
+          "sequence": 12,
+          "latitude": 33.472,
+          "longitude": 126.322
+        },
+        "riderState": "waiting_at_stop",
+        "matchConfidence": "unknown",
+        "state": "confirmation_required",
+        "candidates": [
+          {
+            "vehicleId": "SYN70가0456",
+            "score": 50,
+            "evidence": [
+              "route_id",
+              "boarding_stop_offset_0",
+              "zone_boarding_stop_unresolved"
+            ],
+            "rejectedReasons": [
+              "source_cadence_not_fresh",
+              "boarding_stop_position_unresolved"
+            ],
+            "stopOffset": 0,
+            "zone": "boarding_stop_unresolved"
+          },
+          {
+            "vehicleId": "SYN70가0789",
+            "score": 45,
+            "evidence": [
+              "route_id",
+              "boarding_stop_offset_-1",
+              "zone_approaching"
+            ],
+            "rejectedReasons": [
+              "source_cadence_not_fresh"
+            ],
+            "stopOffset": -1,
+            "zone": "approaching"
+          }
+        ],
+        "vehicleChoice": {
+          "presentation": "matcher_suggestion",
+          "readiness": "READY_FOR_CONFIRMATION_ASSISTED",
+          "vehicles": [
+            {
+              "vehicleId": "SYN70가0456",
+              "stopsAway": 0
+            },
+            {
+              "vehicleId": "SYN70가0789",
+              "stopsAway": 1
+            },
+            {
+              "vehicleId": "SYN70가0123",
+              "stopsAway": 7
+            }
+          ]
+        },
+        "explanation": "Automatic selection is withheld until the matcher's demonstrated readiness permits it. Ranked candidates and server-observed cadence evidence are published for explicit confirmation only.",
+        "matchingMode": "shadow",
+        "shadowSelection": {
+          "status": "unavailable",
+          "confidence": "unknown",
+          "explanation": "No fresh vehicle of this route is approaching the boarding stop."
+        },
+        "sourceFreshness": {
+          "SYN70가0123": {
+            "state": "unknown",
+            "sampleCount": 1,
+            "spanSeconds": 0,
+            "latestReceiptAgeSeconds": 0,
+            "contentChangeCount": 0,
+            "sequenceDecreaseCount": 0,
+            "reason": "More server-observed TAGO samples are required before freshness can be inferred."
+          },
+          "SYN70가0456": {
+            "state": "unknown",
+            "sampleCount": 1,
+            "spanSeconds": 0,
+            "latestReceiptAgeSeconds": 0,
+            "contentChangeCount": 0,
+            "sequenceDecreaseCount": 0,
+            "reason": "More server-observed TAGO samples are required before freshness can be inferred."
+          },
+          "SYN70가0789": {
+            "state": "unknown",
+            "sampleCount": 1,
+            "spanSeconds": 0,
+            "latestReceiptAgeSeconds": 0,
+            "contentChangeCount": 0,
+            "sequenceDecreaseCount": 0,
+            "reason": "More server-observed TAGO samples are required before freshness can be inferred."
+          },
+          "SYN70가0999": {
+            "state": "unknown",
+            "sampleCount": 1,
+            "spanSeconds": 0,
+            "latestReceiptAgeSeconds": 0,
+            "contentChangeCount": 0,
+            "sequenceDecreaseCount": 0,
+            "reason": "More server-observed TAGO samples are required before freshness can be inferred."
+          }
+        },
+        "createdAt": "2026-10-01T09:00:00.000Z",
+        "updatedAt": "2026-10-01T09:00:00.000Z",
+        "expiresAt": "2026-10-01T13:00:00.000Z"
       }
     }
   ]

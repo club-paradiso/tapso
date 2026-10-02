@@ -245,7 +245,7 @@ public enum JourneySurfacePolicy {
             switch input.preRide {
             case .searching, .notFoundYet:
                 return JourneySurface(.waiting, .waitForBus)
-            case .proposed, .similarBuses:
+            case .proposed, .similarBuses, .choose:
                 return JourneySurface(.confirm, .confirmBus)
             case .confirmed, nil:
                 return JourneySurface(.checking, .keepWatching)

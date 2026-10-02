@@ -16,6 +16,8 @@ import {
   type SourceFreshnessEvidence,
 } from "./sourceFreshness.ts";
 import { tokenFingerprint } from "./apns.ts";
+import { readinessRank, type ReadinessLevel } from "./matcherSafetyGate.ts";
+import { DEMONSTRATED_MATCHING_READINESS } from "./matchingReadiness.ts";
 import type { TransitProvider } from "./provider.ts";
 import {
   JOURNEY_SESSION_SCHEMA_VERSION,
@@ -117,6 +119,47 @@ export interface ShadowSelectionView {
   explanation: string;
 }
 
+/**
+ * How the rider is asked which bus is theirs, decided by the readiness the
+ * release gate has demonstrated and by nothing else (issue #80).
+ *
+ * `rider_identifies` (below `READY_FOR_CONFIRMATION_ASSISTED`): the rider is
+ * shown the buses of this route variant the latest provider read placed where
+ * they could still be boarded, nearest the stop first by stop count, and picks
+ * the one whose plate they see. Nothing the matcher concluded reaches the list:
+ * not its ranking, score, cadence verdict, passage memory or approach window.
+ * The app never preselects or labels one of them as the likely bus.
+ *
+ * `matcher_suggestion` (`READY_FOR_CONFIRMATION_ASSISTED` and above): the
+ * matcher's confirmation candidates (`candidates`) may be presented as a
+ * suggestion. Only the rider's tap commits it.
+ */
+export type VehicleChoicePresentation = "rider_identifies" | "matcher_suggestion";
+
+export interface RiderVisibleVehicle {
+  vehicleId: string;
+  /** Stops still to travel to the boarding stop by the provider's stop sequence; `0` is at the stop. Absent when unknown. */
+  stopsAway?: number;
+  /** Stops past the boarding stop, for a bus the rider may already be on. */
+  stopsPast?: number;
+}
+
+export interface VehicleChoiceView {
+  presentation: VehicleChoicePresentation;
+  /** The demonstrated readiness the presentation was derived from. */
+  readiness: ReadinessLevel;
+  /** Raw positions from the latest provider read; see `riderVisibleVehicles`. */
+  vehicles: RiderVisibleVehicle[];
+}
+
+/** The one rule the app and the server share: a suggestion needs confirmation-assisted readiness. */
+export function vehicleChoicePresentation(level: ReadinessLevel): VehicleChoicePresentation {
+  return readinessRank(level) >= readinessRank("READY_FOR_CONFIRMATION_ASSISTED") ? "matcher_suggestion" : "rider_identifies";
+}
+
+/** Enough for a busy variant; a longer list is a list nobody reads at a bus stop. */
+export const RIDER_VISIBLE_VEHICLE_LIMIT = 8;
+
 export interface JourneySessionView {
   id: string;
   routeId: string;
@@ -132,6 +175,12 @@ export interface JourneySessionView {
   state: JourneySessionState;
   progress?: JourneyProgressView;
   candidates?: RankedCandidate[];
+  /**
+   * Present before a bus is selected, whenever a provider read arrived: what
+   * the rider may be shown, and how (`VehicleChoicePresentation`). Clients
+   * build the vehicle step from this, never from `candidates` directly.
+   */
+  vehicleChoice?: VehicleChoiceView;
   explanation: string;
   /**
    * `shadow` until release gate `matcher-passive-safety-v4` demonstrates
@@ -174,6 +223,11 @@ export interface JourneySessionCoordinatorOptions {
   maxConsecutiveProviderFailures?: number;
   /** Defaults to an in-process store. See `sessionStore.ts`. */
   store?: JourneySessionStore;
+  /**
+   * Defaults to `DEMONSTRATED_MATCHING_READINESS`. Only tests pass another
+   * level: in a deployment the readiness is the committed gate result.
+   */
+  matchingReadiness?: ReadinessLevel;
 }
 
 type SessionInput = {
@@ -273,6 +327,7 @@ export class JourneySessionCoordinator {
   private readonly automaticMatchingEnabled: boolean;
   private readonly maxConsecutiveProviderFailures: number;
   private readonly store: JourneySessionStore;
+  private readonly matchingReadiness: ReadinessLevel;
 
   constructor(provider: TransitProvider, options: JourneySessionCoordinatorOptions = {}) {
     this.provider = provider;
@@ -297,6 +352,7 @@ export class JourneySessionCoordinator {
     );
     // Fail closed: only an explicit `true` turns automatic selection on.
     this.automaticMatchingEnabled = options.automaticMatchingEnabled === true;
+    this.matchingReadiness = options.matchingReadiness ?? DEMONSTRATED_MATCHING_READINESS;
     this.maxConsecutiveProviderFailures = positiveDuration(
       options.maxConsecutiveProviderFailures,
       DEFAULT_MAX_CONSECUTIVE_PROVIDER_FAILURES,
@@ -641,13 +697,20 @@ export class JourneySessionCoordinator {
       // bus at the stop, which the matcher never selects on its own but which
       // is exactly the one a rider at the stop is most likely stepping onto.
       const plausible = confirmationCandidates(result.ranked, record.riderState ?? "waiting_at_stop");
+      const withdrawn = record.passage?.withheld?.reason === SELECTION_WITHDRAWN;
+      const vehicleChoice: VehicleChoiceView = {
+        presentation: vehicleChoicePresentation(this.matchingReadiness),
+        readiness: this.matchingReadiness,
+        vehicles: riderVisibleVehicles(vehicles, record, { includeJustDeparted: withdrawn }),
+      };
 
       // Withdrawn now or earlier: until the rider says which bus they are on,
       // that is the question, whatever else the snapshot shows.
-      if (record.passage?.withheld?.reason === SELECTION_WITHDRAWN) {
+      if (withdrawn) {
         return this.view(record, {
           state: "confirmation_required",
           candidates: withdrawalCandidates(result.ranked, record),
+          vehicleChoice,
           explanation: "Another bus of this route was seen reaching the boarding stop before the automatically "
             + "selected one, so the rider may be aboard it. The selection is withdrawn and no bus will be selected "
             + "automatically again in this session; confirm the bus you are on.",
@@ -663,6 +726,7 @@ export class JourneySessionCoordinator {
         return this.view(record, {
           state: plausible.length > 0 ? "confirmation_required" : "awaiting_match",
           candidates: plausible.length > 0 ? plausible : result.ranked,
+          vehicleChoice,
           explanation: plausible.length > 0
             ? "Automatic selection is withheld until the matcher's demonstrated readiness permits it. "
               + "Ranked candidates and server-observed cadence evidence are published for explicit confirmation only."
@@ -681,6 +745,7 @@ export class JourneySessionCoordinator {
         return this.view(record, {
           state: "confirmation_required",
           candidates: plausible.length > 0 ? plausible : result.ranked,
+          vehicleChoice,
           explanation: result.explanation,
           sourceFreshness,
         });
@@ -689,6 +754,7 @@ export class JourneySessionCoordinator {
         return this.view(record, {
           state: plausible.length > 0 ? "confirmation_required" : "awaiting_match",
           candidates: plausible.length > 0 ? plausible : result.ranked,
+          vehicleChoice,
           explanation: result.explanation,
           sourceFreshness,
         });
@@ -956,6 +1022,7 @@ export class JourneySessionCoordinator {
       explanation: string;
       progress?: JourneyProgressView;
       candidates?: RankedCandidate[];
+      vehicleChoice?: VehicleChoiceView;
       shadowSelection?: ShadowSelectionView;
       sourceFreshness?: ReadonlyMap<string, SourceFreshnessEvidence>;
       providerRead?: { state: "failed"; consecutiveFailures: number };
@@ -975,6 +1042,7 @@ export class JourneySessionCoordinator {
       state: state.state,
       progress: state.progress,
       candidates: state.candidates,
+      ...(state.vehicleChoice ? { vehicleChoice: state.vehicleChoice } : {}),
       explanation: state.explanation,
       matchingMode: this.matchingMode,
       ...(state.shadowSelection ? { shadowSelection: state.shadowSelection } : {}),
@@ -1214,6 +1282,66 @@ export function confirmationCandidates(ranked: RankedCandidate[], riderState: Ri
   return ranked
     .filter((candidate) => !candidate.rejectedReasons.includes("wrong_route") && candidate.zone !== undefined && zones.has(candidate.zone))
     .sort(nearestTheStopFirst);
+}
+
+/**
+ * The buses a rider at `rider_identifies` readiness is shown: every bus of this
+ * route variant in the latest provider read, minus those its stop sequence
+ * places where the rider can no longer be boarding (two or more stops past the
+ * stop for a waiting rider, two or more before it for one on board). Ordered
+ * by stop count to the boarding stop, then vehicle id; a bus with no usable
+ * stop, or listed twice, goes last with no count.
+ *
+ * Pure position from the provider's own stop sequence (`classifyRouteProgress`
+ * on this snapshot alone). Deliberately not the matcher's output: no score, no
+ * cadence verdict, no passage memory, no remembered positions and no approach
+ * window, so the order cannot carry the matcher's hidden pick (issue #80).
+ * After a withdrawal the rider may be on the bus that reached the stop first,
+ * so a waiting rider is also shown buses just past it, within the on-board window.
+ */
+export function riderVisibleVehicles(
+  vehicles: readonly VehicleObservation[],
+  session: { routeId: string; stops: StopOnRoute[]; boardingStop: StopOnRoute; riderState?: RiderState },
+  options: { includeJustDeparted?: boolean } = {},
+): RiderVisibleVehicle[] {
+  const riderState = session.riderState ?? "waiting_at_stop";
+  const boarding = session.boardingStop.sequence;
+  const topology = routeTopologyFacts(session.stops, boarding);
+  const shape = { loop: topology.loop, cycleLength: topology.cycleLength, sequences: topology.sequences };
+  const rows = vehicles.filter((vehicle) => vehicle.routeId === session.routeId);
+  const listed = new Map<string, number>();
+  for (const row of rows) listed.set(row.vehicleId, (listed.get(row.vehicleId) ?? 0) + 1);
+  const visible = new Map<string, RiderVisibleVehicle>();
+  for (const row of rows) {
+    if (visible.has(row.vehicleId)) continue;
+    if ((listed.get(row.vehicleId) ?? 0) > 1) {
+      visible.set(row.vehicleId, { vehicleId: row.vehicleId });
+      continue;
+    }
+    const facts = classifyRouteProgress(row.stopSequence, boarding, riderState, shape);
+    if (riderState === "on_board") {
+      if (facts.zone === "not_yet_at_boarding_stop") continue;
+      visible.set(row.vehicleId, {
+        vehicleId: row.vehicleId,
+        ...(facts.backward === undefined ? {} : { stopsPast: facts.backward }),
+      });
+      continue;
+    }
+    if (facts.zone === "departed") {
+      const past = facts.backward;
+      if (!options.includeJustDeparted || past === undefined || past > DIRECTED_MATCHER_POLICY_V1.onBoardWindowStops) continue;
+      visible.set(row.vehicleId, { vehicleId: row.vehicleId, stopsPast: past });
+      continue;
+    }
+    visible.set(row.vehicleId, {
+      vehicleId: row.vehicleId,
+      ...(facts.forward === undefined ? {} : { stopsAway: facts.forward }),
+    });
+  }
+  const distance = (vehicle: RiderVisibleVehicle) => vehicle.stopsAway ?? vehicle.stopsPast ?? Number.POSITIVE_INFINITY;
+  return [...visible.values()]
+    .sort((left, right) => distance(left) - distance(right) || left.vehicleId.localeCompare(right.vehicleId))
+    .slice(0, RIDER_VISIBLE_VEHICLE_LIMIT);
 }
 
 /** A bus whose stop is unknown goes last; ties go to the vehicle id. */

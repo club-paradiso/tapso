@@ -36,6 +36,10 @@ public enum VehicleCheckStage: String, Codable, Hashable, Sendable, CaseIterable
     case proposed
     /// More than one bus fits; the rider picks the one they boarded.
     case similarBuses
+    /// No suggestion is allowed (matcher readiness below confirmation-assisted,
+    /// issue #80): the rider picks their bus from where the buses are, however
+    /// many there are. Nothing is presented as the likely one.
+    case choose
     /// No bus fits yet. Still watching.
     case notFoundYet
     /// The rider confirmed a bus. The ride can start.
@@ -49,14 +53,19 @@ public struct VehicleCheck: Hashable, Sendable {
     /// Decides the stage from what the rider could board.
     ///
     /// Two or more proposals are always a question for the rider, never a pick,
-    /// however they are ordered.
+    /// however they are ordered. Without `suggestionsAllowed` one proposal is a
+    /// question too (`choose`), and the order is the given one.
     public static func evaluate(
         proposals: [VehicleProposal],
         hasSearched: Bool,
-        confirmed: VehicleIdentifier? = nil
+        confirmed: VehicleIdentifier? = nil,
+        suggestionsAllowed: Bool = true
     ) -> VehicleCheck {
         if let confirmed, proposals.contains(where: { $0.vehicleID == confirmed }) {
             return VehicleCheck(stage: .confirmed, proposals: proposals.filter { $0.vehicleID == confirmed })
+        }
+        if !suggestionsAllowed, !proposals.isEmpty {
+            return VehicleCheck(stage: .choose, proposals: proposals)
         }
         switch proposals.count {
         case 0:
@@ -73,7 +82,7 @@ public struct VehicleCheck: Hashable, Sendable {
     public var detailKey: String { "check.\(stage.rawValue).detail" }
 
     public static var allCopyKeys: [String] {
-        [VehicleCheckStage.searching, .proposed, .similarBuses, .notFoundYet, .confirmed].flatMap {
+        [VehicleCheckStage.searching, .proposed, .similarBuses, .choose, .notFoundYet, .confirmed].flatMap {
             ["check.\($0.rawValue).headline", "check.\($0.rawValue).detail"]
         }
     }

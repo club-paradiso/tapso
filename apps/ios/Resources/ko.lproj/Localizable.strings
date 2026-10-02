@@ -56,6 +56,8 @@
 "check.proposed.detail" = "탈 때 번호판 끝자리를 확인해주세요";
 "check.similarBuses.headline" = "비슷한 버스가 있어요";
 "check.similarBuses.detail" = "탑승한 버스를 골라주세요";
+"check.choose.headline" = "타는 버스를 골라주세요";
+"check.choose.detail" = "번호판 끝자리가 같은 버스를 눌러주세요";
 "check.notFoundYet.headline" = "아직 오는 버스가 안 보여요";
 "check.notFoundYet.detail" = "%@번 버스가 보이면 바로 알려드릴게요";
 "check.confirmed.headline" = "버스를 확인했어요";
@@ -63,6 +65,7 @@
 "check.confirm" = "맞아요, 이 버스를 탔어요";
 "check.reject" = "다른 버스예요";
 "check.noneOfThese" = "둘 다 아니에요";
+"check.choose.none" = "이 중엔 없어요";
 "check.pick.hint" = "이 버스를 탔다면 두 번 탭하세요";
 "check.plateHint" = "버스 번호판 끝자리";
 "check.position.atStop" = "정류장에 도착";
