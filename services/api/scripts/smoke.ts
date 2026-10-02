@@ -243,6 +243,10 @@ function describeSessionOutcome(result: Awaited<ReturnType<typeof get>>): Omit<C
  */
 function describeSessionStore(sessions: Record<string, unknown> | undefined, environment: string | undefined): Omit<Check, "name"> {
   if (!sessions) return fail("health has no sessions block");
+  // A store setting that could not be used falls back to memory with sessions
+  // off and says why (2026-10-02 incident). That is a misconfiguration to fix,
+  // whatever store is reported.
+  if (typeof sessions.problem === "string") return fail(`sessions refused: ${sessions.problem}`);
   const store = String(sessions.store);
   if (store === "memory") {
     return sessions.enabled === true
@@ -251,7 +255,6 @@ function describeSessionStore(sessions: Record<string, unknown> | undefined, env
   }
   if (store !== "redis") return fail(`unknown session store ${store}`);
   if (sessions.namespace === undefined) return { outcome: "WARN", detail: "durable store; deployment predates the namespace guard" };
-  if (typeof sessions.problem === "string") return fail(`durable store, sessions refused: ${sessions.problem}`);
   if (sessions.enabled !== true) return pass(`durable store (namespace ${String(sessions.namespace)}); sessions switched off by configuration`);
   if (environment === "production" && sessions.namespace !== "production") {
     return fail(`production serves sessions from the ${String(sessions.namespace)} namespace`);
