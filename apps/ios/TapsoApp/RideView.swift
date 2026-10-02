@@ -3,7 +3,7 @@ import TapsoTransit
 
 /// The ride. Remaining stops first, then the destination, then what to do.
 /// Riding, two stops, next stop and arrival are four different layouts, not
-/// one counter. Figma: `04 iOS` › Active Ride V2 and its state frames.
+/// one counter. Figma: `04 iOS — RIDE` › `iOS — RIDE · Product V2` (`157:10`).
 struct RideView: View {
     @Bindable var model: TapsoAppModel
     @State private var confirmingEnd = false
@@ -12,13 +12,29 @@ struct RideView: View {
     var body: some View {
         NavigationStack {
             ScrollView {
+                if model.isLiveRide, let failure = model.liveFailure {
+                    LiveFailureNotice(failure: failure)
+                        .padding(.horizontal, TapsoSpace.gutter)
+                        .padding(.top, TapsoSpace.md)
+                }
+                if model.liveRideEndedByServer {
+                    NoticeCard(
+                        systemImage: "stop.circle",
+                        title: "live.ride.ended.title",
+                        message: "live.ride.ended.body",
+                        tint: TapsoColor.journeyDegraded,
+                        actionTitle: "ride.end.action",
+                        action: { Task { await model.cancelRide() } }
+                    )
+                    .padding(.horizontal, TapsoSpace.gutter)
+                    .padding(.top, TapsoSpace.md)
+                }
                 if let guidance = model.guidance {
                     RideContent(
                         snapshot: RideSnapshot(model: model, guidance: guidance),
                         onFinish: { Task { await model.finishRide() } },
                         onMapSearch: { app in
-                            guard let destination = model.activeRide?.draft.destination,
-                                  let request = model.mapRequest(for: app, to: destination) else { return }
+                            guard let request = model.rescueMapRequest(for: app) else { return }
                             Task { await model.openMapApp(request) }
                         },
                         onDismissResume: { model.dismissResumeNotice() }
@@ -40,7 +56,9 @@ struct RideView: View {
                 }
                 ToolbarItem(placement: .topBarTrailing) {
                     Menu {
-                        Button("ride.menu.demo", systemImage: "testtube.2") { model.isDemoPanelPresented = true }
+                        if !model.isLiveRide {
+                            Button("ride.menu.demo", systemImage: "testtube.2") { model.isDemoPanelPresented = true }
+                        }
                         Button("ride.menu.end", systemImage: "xmark.circle", role: .destructive) { confirmingEnd = true }
                     } label: {
                         Image(systemName: "ellipsis.circle")
@@ -84,6 +102,9 @@ struct RideSnapshot {
     let liveActivityUnavailable: Bool
     let resumed: Bool
     let mapHandoffFailed: MapApp?
+    /// Past the stop: the Rescue plan for the way back.
+    let rescue: PassedStopAdvice?
+    let kakaoAvailable: Bool
 
     @MainActor
     init(model: TapsoAppModel, guidance: RideGuidance) {
@@ -98,7 +119,9 @@ struct RideSnapshot {
             plate: model.vehiclePlate,
             liveActivityUnavailable: model.liveActivityUnavailable,
             resumed: model.resumedAfterRelaunch,
-            mapHandoffFailed: model.mapHandoffFailed
+            mapHandoffFailed: model.mapHandoffFailed,
+            rescue: model.passedStopAdvice,
+            kakaoAvailable: model.rescueMapRequest(for: .kakaoMap) != nil
         )
     }
 
@@ -113,7 +136,9 @@ struct RideSnapshot {
         plate: String?,
         liveActivityUnavailable: Bool = false,
         resumed: Bool = false,
-        mapHandoffFailed: MapApp? = nil
+        mapHandoffFailed: MapApp? = nil,
+        rescue: PassedStopAdvice? = nil,
+        kakaoAvailable: Bool = false
     ) {
         self.guidance = guidance
         self.routeNumber = routeNumber
@@ -126,6 +151,8 @@ struct RideSnapshot {
         self.liveActivityUnavailable = liveActivityUnavailable
         self.resumed = resumed
         self.mapHandoffFailed = mapHandoffFailed
+        self.rescue = rescue
+        self.kakaoAvailable = kakaoAvailable
     }
 }
 
@@ -205,7 +232,7 @@ struct RideContent: View {
     }
 }
 
-/// The moment-specific hero. Figma: `JourneyActionCard / V2` variants.
+/// The moment-specific hero. Figma: `RideHero / V2` variants.
 struct RideHeroCard: View {
     let snapshot: RideSnapshot
     let onFinish: () -> Void
@@ -406,14 +433,15 @@ struct RideHeroCard: View {
         .background(fill, in: RoundedRectangle(cornerRadius: TapsoRadius.hero, style: .continuous))
     }
 
-    /// The destination went by. What happened, and the way back.
+    /// The destination went by. Where to get off, then the way back in the Rescue
+    /// plan's order (`PassedStopRescue`): a measured short walk first, the map app last.
     private var passed: some View {
         VStack(alignment: .leading, spacing: TapsoSpace.md) {
             Label(LocalizedStringKey(guidance.copy.headline), systemImage: guidance.symbolName)
                 .font(.title2.weight(.heavy))
                 .foregroundStyle(TapsoColor.journeyNext)
                 .accessibilityAddTraits(.isHeader)
-            Text(LocalizedStringKey(guidance.copy.detail))
+            Text(verbatim: RideText.detail(guidance, exitStopName: snapshot.rescue?.exitStop?.stop.name))
                 .font(.headline)
                 .foregroundStyle(TapsoColor.textPrimary)
                 .fixedSize(horizontal: false, vertical: true)
@@ -421,10 +449,19 @@ struct RideHeroCard: View {
                 .font(.subheadline)
                 .foregroundStyle(TapsoColor.textSecondary)
                 .fixedSize(horizontal: false, vertical: true)
+            if let rescue = snapshot.rescue {
+                RescueOptionList(advice: rescue)
+            }
             Button { onMapSearch(.naverMap) } label: {
                 Label("handoff.naver.findDestination", systemImage: "map")
             }
             .buttonStyle(PrimaryButtonStyle())
+            if snapshot.kakaoAvailable {
+                Button { onMapSearch(.kakaoMap) } label: {
+                    Label("handoff.kakao.findDestination", systemImage: "map")
+                }
+                .buttonStyle(SecondaryButtonStyle())
+            }
             Button(action: onFinish) {
                 Text("ride.passed.end")
             }
@@ -440,7 +477,75 @@ struct RideHeroCard: View {
     }
 }
 
-/// The stops ahead, nearest first, ending at the destination. Figma: `StopRail / V2`.
+/// The Rescue plan's options in its order; the first is the suggestion when there is a
+/// choice. A walk shows its straight-line distance, never minutes: the real walk is longer.
+/// Figma: `09 Return / Rescue` › `V3 / 26 Passed stop` (`195:3021`); component
+/// `RescueOption / V3` on `02G iOS Product V3`.
+struct RescueOptionList: View {
+    let advice: PassedStopAdvice
+
+    var body: some View {
+        VStack(alignment: .leading, spacing: TapsoSpace.sm) {
+            ForEach(Array(rows.enumerated()), id: \.offset) { index, row in
+                HStack(alignment: .firstTextBaseline, spacing: TapsoSpace.sm) {
+                    Image(systemName: row.symbol)
+                        .foregroundStyle(TapsoColor.journeyNext)
+                        .accessibilityHidden(true)
+                    VStack(alignment: .leading, spacing: 2) {
+                        HStack(spacing: TapsoSpace.xs) {
+                            Text(verbatim: row.title)
+                                .font(.subheadline.weight(.semibold))
+                                .foregroundStyle(TapsoColor.textPrimary)
+                            if index == 0 && rows.count > 1 {
+                                Text("rescue.suggested")
+                                    .font(.caption.weight(.bold))
+                                    .foregroundStyle(TapsoColor.journeyNext)
+                            }
+                        }
+                        Text(verbatim: row.detail)
+                            .font(.footnote)
+                            .foregroundStyle(TapsoColor.textSecondary)
+                            .fixedSize(horizontal: false, vertical: true)
+                    }
+                }
+                .accessibilityElement(children: .combine)
+            }
+            if advice.walkTooFar, let meters = advice.straightLineMeters {
+                Text(String(format: RideText.string("rescue.walk.tooFar"), meters))
+                    .font(.footnote)
+                    .foregroundStyle(TapsoColor.textSecondary)
+                    .fixedSize(horizontal: false, vertical: true)
+            }
+        }
+    }
+
+    private struct Row {
+        let symbol: String
+        let title: String
+        let detail: String
+    }
+
+    /// A passed-stop plan holds a walk back and the map app; `PassedStopRescue` never offers a ride back.
+    private var rows: [Row] {
+        advice.plan.options.compactMap { option -> Row? in
+            switch option.action {
+            case .walkBack:
+                guard let meters = advice.straightLineMeters else { return nil }
+                return Row(
+                    symbol: "figure.walk",
+                    title: RideText.string("rescue.walkBack.title"),
+                    detail: String(format: RideText.string("rescue.walkBack.detail"), meters)
+                )
+            case .openMapApp:
+                return Row(symbol: "map", title: RideText.string("rescue.mapApp.title"), detail: RideText.string("rescue.mapApp.detail"))
+            case .rideBack, .waitForNextConnection, .takeAlternativeRoute:
+                return nil
+            }
+        }
+    }
+}
+
+/// The stops ahead, nearest first, ending at the destination. Figma: `StopLadder / V2`.
 struct StopLadder: View {
     let current: String
     let upcoming: [String]

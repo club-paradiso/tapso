@@ -7,7 +7,13 @@ import { JourneySessionCoordinator } from "../src/journeySession.ts";
 import { MATCHER_POLICY_VERSION } from "../src/matching.ts";
 import type { ReadinessLevel } from "../src/matcherSafetyGate.ts";
 import { createBurstLimiter } from "../src/rateLimit.ts";
-import { ProviderConfigurationError, ProviderResponseError, type TransitProvider } from "../src/provider.ts";
+import {
+  ProviderConfigurationError,
+  ProviderResponseError,
+  ProviderTimeoutError,
+  ProviderUnavailableError,
+  type TransitProvider,
+} from "../src/provider.ts";
 import type { RouteRequest, StopOnRoute, VehicleObservation } from "../src/domain.ts";
 
 const CITY = "39";
@@ -66,7 +72,7 @@ type Harness = {
 
 function harness(
   env: ServerEnv = {},
-  overrides: { discoveryFailure?: Error; demonstratedReadiness?: ReadinessLevel } = {},
+  overrides: { discoveryFailure?: Error; demonstratedReadiness?: ReadinessLevel; liveActivityPush?: boolean } = {},
 ): Harness {
   const config = readTransitApiConfig(
     { TAGO_SERVICE_KEY: "synthetic-key", ...env },
@@ -105,6 +111,7 @@ function harness(
     limiter: config.rateLimit.enabled
       ? createBurstLimiter(config.rateLimit.limit, config.rateLimit.windowSeconds)
       : undefined,
+    ...(overrides.liveActivityPush ? { liveActivityPush: { enabled: true, environment: "development" } } : {}),
     log: () => {},
   });
   return { handler, upstream, discoveryCalls };
@@ -298,6 +305,25 @@ test("provider failures map to safe statuses and are never cached as success", a
   const recovered = await get(handler, `/v1/vehicles?routeId=${ROUTE}&cityCode=${CITY}`);
   assert.equal(recovered.status, 200);
   assert.equal(upstream.vehicleCalls, 3, "failures were retried rather than served from cache");
+});
+
+test("an upstream timeout, an unreachable upstream and TAPSO's own failure are three distinct answers", async () => {
+  const { handler, upstream } = harness();
+  upstream.vehicleFailure = new ProviderTimeoutError("TAGO request timed out");
+  const timeout = await get(handler, `/v1/vehicles?routeId=${ROUTE}&cityCode=${CITY}`);
+  assert.equal(timeout.status, 504);
+  assert.deepEqual(await timeout.json(), { error: "PROVIDER_TIMEOUT", message: "TAGO request timed out" });
+  assert.equal(timeout.headers.get("cache-control"), "no-store");
+
+  upstream.vehicleFailure = new ProviderUnavailableError("TAGO provider returned HTTP 503");
+  const unavailable = await get(handler, `/v1/vehicles?routeId=${ROUTE}&cityCode=${CITY}`);
+  assert.equal(unavailable.status, 502);
+  assert.equal((await unavailable.json()).error, "PROVIDER_UNAVAILABLE");
+
+  upstream.vehicleFailure = new Error("TypeError: cannot read properties of undefined");
+  const internal = await get(handler, `/v1/vehicles?routeId=${ROUTE}&cityCode=${CITY}`);
+  assert.equal(internal.status, 500);
+  assert.deepEqual(await internal.json(), { error: "INTERNAL_ERROR", message: "internal error" });
 });
 
 test("an unexpected failure is answered generically", async () => {
@@ -798,4 +824,262 @@ test("health reports the session store by category and never its credentials", a
   // allowed to pick a rider's bus.
   assert.equal(body.freshness.automaticMatching, "shadow_only_pending_matching_readiness");
   assert.equal(body.matching.automaticMatchingEnabled, false);
+});
+
+function del(handler: TransitApiHandler, path: string): Promise<Response> {
+  return handler(new Request(`http://api.test${path}`, { method: "DELETE" }));
+}
+
+test("a rider ends a session: the row is gone, a second end is 404, and the rewrite target ends it too", async () => {
+  const { handler } = harness({ TRANSIT_SESSIONS_ENABLED: "true" });
+  const create = () => postJson(handler, "/v1/sessions", {
+    routeId: ROUTE,
+    cityCode: CITY,
+    boardingStopSequence: 2,
+    destinationStopSequence: 3,
+  });
+
+  const session = await (await create()).json();
+  const ended = await del(handler, `/v1/sessions/${session.id}`);
+  assert.equal(ended.status, 204);
+  assert.equal(ended.headers.get("cache-control"), "no-store");
+  assert.equal(await ended.text(), "");
+
+  const afterwards = await get(handler, `/v1/sessions/${session.id}`);
+  assert.equal(afterwards.status, 404, "an ended session is gone, not expired");
+  assert.equal((await afterwards.json()).error, "SESSION_NOT_FOUND");
+
+  const again = await del(handler, `/v1/sessions/${session.id}`);
+  assert.equal(again.status, 404);
+  assert.equal((await again.json()).error, "SESSION_NOT_FOUND");
+
+  const rewritten = await (await create()).json();
+  const viaRewrite = await del(handler, `/v1/session?sessionId=${rewritten.id}`);
+  assert.equal(viaRewrite.status, 204, "the production rewrite target ends the same session");
+  assert.equal((await get(handler, `/v1/sessions/${rewritten.id}`)).status, 404);
+
+  assert.equal((await del(handler, "/v1/sessions/not%2Fa%2Fvalid%20id")).status, 400);
+  assert.equal((await del(handler, "/v1/sessions")).status, 405, "the collection itself cannot be deleted");
+  const confirm = await handler(new Request(`http://api.test/v1/sessions/${rewritten.id}/confirm`, { method: "DELETE" }));
+  assert.equal(confirm.status, 405);
+});
+
+test("ending a session fails closed like every session route when sessions are disabled", async () => {
+  const { handler } = harness({ TRANSIT_SESSIONS_ENABLED: "false" });
+  const response = await del(handler, "/v1/sessions/abc");
+  assert.equal(response.status, 503);
+  assert.equal((await response.json()).error, "SESSIONS_UNAVAILABLE");
+});
+
+test("a browser origin an operator listed may end a session; the preflight names DELETE", async () => {
+  const { handler } = harness({ TRANSIT_SESSIONS_ENABLED: "true", TRANSIT_ALLOWED_ORIGINS: "https://tapso-nu.vercel.app" });
+  const preflight = await handler(new Request("http://api.test/v1/sessions/abc", {
+    method: "OPTIONS",
+    headers: { origin: "https://tapso-nu.vercel.app", "access-control-request-method": "DELETE" },
+  }));
+  assert.equal(preflight.status, 204);
+  assert.match(preflight.headers.get("access-control-allow-methods") ?? "", /\bDELETE\b/);
+  assert.match(preflight.headers.get("allow") ?? "", /\bDELETE\b/);
+});
+
+test("a production deployment serves sessions only from the production namespace, and says why when it cannot", async () => {
+  const durable = {
+    VERCEL: "1",
+    TRANSIT_SESSION_STORE: "redis",
+    UPSTASH_REDIS_REST_URL: "https://synthetic.upstash.io",
+    UPSTASH_REDIS_REST_TOKEN: "synthetic-upstash-token",
+  };
+  const cases: Array<{ env: ServerEnv; enabled: boolean; namespace: string }> = [
+    { env: { ...durable, VERCEL_ENV: "production", TRANSIT_SESSION_KEY_PREFIX: "tapso:prod:journey-session:" }, enabled: true, namespace: "production" },
+    { env: { ...durable, VERCEL_ENV: "production" }, enabled: false, namespace: "default" },
+    { env: { ...durable, VERCEL_ENV: "production", TRANSIT_SESSION_KEY_PREFIX: "tapso:preview:journey-session:" }, enabled: false, namespace: "preview" },
+    { env: { ...durable, VERCEL_ENV: "preview", TRANSIT_SESSION_KEY_PREFIX: "tapso:prod:journey-session:" }, enabled: false, namespace: "production" },
+    { env: { ...durable, VERCEL_ENV: "preview", TRANSIT_SESSION_KEY_PREFIX: "tapso:preview:journey-session:" }, enabled: true, namespace: "preview" },
+    { env: { ...durable, VERCEL_ENV: "preview", TRANSIT_SESSION_KEY_PREFIX: "tapso:verify:journey-session:" }, enabled: false, namespace: "verification" },
+  ];
+  for (const { env, enabled, namespace } of cases) {
+    const label = `${env.VERCEL_ENV} ${env.TRANSIT_SESSION_KEY_PREFIX ?? "(default)"}`;
+    const { handler } = harness(env);
+    const health = await (await get(handler, "/health")).json();
+    assert.equal(health.sessions.enabled, enabled, label);
+    assert.equal(health.sessions.namespace, namespace, label);
+    assert.equal(health.sessions.problem === undefined, enabled, label);
+    assert.ok(!JSON.stringify(health).includes("journey-session:"), `${label}: the prefix itself never reaches /health`);
+    const response = await postJson(handler, "/v1/sessions", { routeId: ROUTE, cityCode: CITY, boardingStopSequence: 2, destinationStopSequence: 3 });
+    if (enabled) {
+      assert.notEqual(response.status, 503, label);
+    } else {
+      assert.equal(response.status, 503, label);
+      const body = await response.json();
+      assert.equal(body.error, "SESSIONS_UNAVAILABLE", label);
+      assert.match(body.message, /namespace/, label);
+    }
+  }
+});
+
+/** A discovery stub that publishes a service day for `ROUTE` only. SYNTHETIC values. */
+function serviceHoursHandler(read: (cityCode: string, routeId: string) => Promise<unknown>): TransitApiHandler {
+  const config = readTransitApiConfig({ TAGO_SERVICE_KEY: "synthetic-key" }, { nodeVersion: "v22.0.0" });
+  const provider = new CachedTransitProvider(new StubProvider(), {
+    stopTtlMs: config.cachePolicy.stopTtlMs,
+    vehicleTtlMs: config.cachePolicy.vehicleTtlMs,
+  });
+  return createTransitApiHandler({
+    config,
+    provider,
+    log: () => {},
+    discovery: {
+      async cities() { return []; },
+      async routes() { return []; },
+      routeServiceHours: read as never,
+    },
+  });
+}
+
+test("route info: a route's published service day, read once per discovery window, with its reference stated", async () => {
+  let calls = 0;
+  const handler = serviceHoursHandler(async (_cityCode, routeId) => {
+    calls += 1;
+    return routeId === ROUTE
+      ? { routeId, routeNumber: "365", firstDeparture: "06:00", lastDeparture: "22:30", headwayMinutes: { weekday: 29 } }
+      : undefined;
+  });
+  const response = await get(handler, `/v1/route-info?cityCode=${CITY}&routeId=${ROUTE}`);
+  assert.equal(response.status, 200);
+  const body = await response.json() as { item: unknown; meta: Record<string, unknown> };
+  assert.deepEqual(body.item, {
+    routeId: ROUTE,
+    routeNumber: "365",
+    firstDeparture: "06:00",
+    lastDeparture: "22:30",
+    headwayMinutes: { weekday: 29 },
+  });
+  assert.equal(body.meta.timeReference, "starting_stop_departure", "the times are departures from the starting stop");
+  assert.equal(body.meta.headway, "published_average_minutes");
+  assert.match(response.headers.get("cache-control") ?? "", /max-age=/);
+
+  await get(handler, `/v1/route-info?cityCode=${CITY}&routeId=${ROUTE}`);
+  assert.equal(calls, 1, "one provider read per route per discovery window");
+
+  const unknown = await get(handler, `/v1/route-info?cityCode=${CITY}&routeId=JEB000000000`);
+  assert.equal(unknown.status, 404);
+  assert.equal((await unknown.json() as { error: string }).error, "NOT_FOUND");
+
+  for (const path of [`/v1/route-info?cityCode=${CITY}`, `/v1/route-info?routeId=${ROUTE}`, `/v1/route-info?cityCode=${CITY}&routeId=../x`]) {
+    assert.equal((await get(handler, path)).status, 400, path);
+  }
+  assert.equal((await get(handler, `/v1/route-info?cityCode=${CITY}&routeId=${ROUTE}`, { method: "POST" })).status, 405);
+});
+
+test("route info: no published service day is NOT_FOUND, and provider failures keep their meaning", async () => {
+  const { handler } = harness();
+  assert.equal((await get(handler, `/v1/route-info?cityCode=${CITY}&routeId=${ROUTE}`)).status, 404, "a provider without the operation invents nothing");
+
+  const timeout = serviceHoursHandler(async () => { throw new ProviderTimeoutError("TAGO request timed out"); });
+  const slow = await get(timeout, `/v1/route-info?cityCode=${CITY}&routeId=${ROUTE}`);
+  assert.equal(slow.status, 504);
+  assert.equal((await slow.json() as { error: string }).error, "PROVIDER_TIMEOUT");
+
+  let failures = 0;
+  const flaky = serviceHoursHandler(async (_cityCode, routeId) => {
+    failures += 1;
+    if (failures === 1) throw new ProviderUnavailableError("TAGO provider returned HTTP 503");
+    return { routeId, headwayMinutes: {} };
+  });
+  assert.equal((await get(flaky, `/v1/route-info?cityCode=${CITY}&routeId=${ROUTE}`)).status, 502);
+  assert.equal((await get(flaky, `/v1/route-info?cityCode=${CITY}&routeId=${ROUTE}`)).status, 200, "a failure is never cached");
+});
+
+/* ------------------------------------------ Live Activity push token (milestone 2) */
+
+function putJson(handler: TransitApiHandler, path: string, body: unknown, headers: Record<string, string> = {}): Promise<Response> {
+  return handler(new Request(`http://api.test${path}`, {
+    method: "PUT",
+    headers: { "content-type": "application/json", ...headers },
+    body: JSON.stringify(body),
+  }));
+}
+
+// SYNTHETIC: an invented token; no device produced it.
+const PUSH_TOKEN = "0a1b".repeat(16);
+
+async function createSession(handler: TransitApiHandler): Promise<{ id: string }> {
+  return (await postJson(handler, "/v1/sessions", { routeId: ROUTE, cityCode: CITY, boardingStopSequence: 1, destinationStopSequence: 3 })).json();
+}
+
+test("a deployment without APNs refuses a push token instead of storing it, and health says push is off", async () => {
+  const { handler } = harness({ TRANSIT_SESSIONS_ENABLED: "true" });
+  assert.deepEqual((await (await get(handler, "/health")).json()).liveActivityPush, { enabled: false });
+  const session = await createSession(handler);
+  const refused = await putJson(handler, `/v1/sessions/${session.id}/live-activity`, { pushToken: PUSH_TOKEN });
+  assert.equal(refused.status, 503);
+  assert.equal((await refused.json()).error, "LIVE_ACTIVITY_PUSH_UNAVAILABLE");
+  // Clearing is always allowed: it can only remove a capability.
+  assert.equal((await del(handler, `/v1/sessions/${session.id}/live-activity`)).status, 204);
+
+  const disabled = harness({ TRANSIT_SESSIONS_ENABLED: "false" }, { liveActivityPush: true });
+  const closed = await putJson(disabled.handler, "/v1/sessions/abc/live-activity", { pushToken: PUSH_TOKEN });
+  assert.equal(closed.status, 503);
+  assert.equal((await closed.json()).error, "SESSIONS_UNAVAILABLE");
+});
+
+test("the app registers, rotates and clears its Live Activity push token; no answer or log line carries it", async () => {
+  const { handler } = harness({ TRANSIT_SESSIONS_ENABLED: "true" }, { liveActivityPush: true });
+  assert.deepEqual((await (await get(handler, "/health")).json()).liveActivityPush, { enabled: true, environment: "development" });
+  const lines: string[] = [];
+  const original = console.info;
+  console.info = (...args: unknown[]) => lines.push(args.map(String).join(" "));
+  try {
+    const session = await createSession(handler);
+    const registered = await putJson(handler, `/v1/sessions/${session.id}/live-activity`, { pushToken: PUSH_TOKEN });
+    assert.equal(registered.status, 200);
+    assert.equal(registered.headers.get("cache-control"), "no-store");
+    const body = await registered.json();
+    assert.equal(body.sessionId, session.id);
+    assert.match(body.liveActivityPush.fingerprint, /^[0-9a-f]{12}$/);
+    assert.ok(!JSON.stringify(body).includes(PUSH_TOKEN));
+
+    const viaRewrite = await putJson(handler, `/v1/session-live-activity?sessionId=${session.id}`, { pushToken: "ff".repeat(32) });
+    assert.equal(viaRewrite.status, 200, "the production rewrite target registers on the same session");
+    const read = await get(handler, `/v1/sessions/${session.id}`);
+    assert.ok(!(await read.text()).includes("ff".repeat(32)), "a session read never carries the token");
+
+    const bad = await putJson(handler, `/v1/sessions/${session.id}/live-activity`, { pushToken: "not-a-token" });
+    assert.equal(bad.status, 400);
+    assert.ok(!(await bad.text()).includes("not-a-token"));
+
+    assert.equal((await del(handler, `/v1/sessions/${session.id}/live-activity`)).status, 204);
+    assert.equal((await get(handler, `/v1/sessions/${session.id}/live-activity`)).status, 405);
+    assert.equal((await del(handler, `/v1/sessions/${session.id}`)).status, 204);
+    const gone = await putJson(handler, `/v1/sessions/${session.id}/live-activity`, { pushToken: PUSH_TOKEN });
+    assert.equal(gone.status, 404, "an ended ride takes no token");
+  } finally {
+    console.info = original;
+  }
+  assert.ok(lines.some((line) => line.includes("live_activity_token_registered")));
+  assert.ok(lines.every((line) => !line.includes(PUSH_TOKEN) && !line.includes("ff".repeat(32))), "a push token is never logged");
+});
+
+test("a browser origin an operator listed may register a token; the preflight names PUT", async () => {
+  const { handler } = harness({ TRANSIT_SESSIONS_ENABLED: "true", TRANSIT_ALLOWED_ORIGINS: "https://tapso-nu.vercel.app" }, { liveActivityPush: true });
+  const preflight = await handler(new Request("http://api.test/v1/sessions/abc/live-activity", {
+    method: "OPTIONS",
+    headers: { origin: "https://tapso-nu.vercel.app", "access-control-request-method": "PUT" },
+  }));
+  assert.equal(preflight.status, 204);
+  assert.match(preflight.headers.get("access-control-allow-methods") ?? "", /\bPUT\b/);
+  assert.equal(preflight.headers.get("allow"), "PUT, DELETE, OPTIONS");
+});
+
+test("route info: values TAGO sent outside its documented shape are reported in meta, never in the item", async () => {
+  const handler = serviceHoursHandler(async (_cityCode, routeId) => ({ routeId, headwayMinutes: {}, undocumented: { endvehicletime: "223000" } }));
+  const response = await get(handler, `/v1/route-info?cityCode=${CITY}&routeId=${ROUTE}`);
+  assert.equal(response.status, 200);
+  const body = await response.json() as { item: Record<string, unknown>; meta: Record<string, unknown> };
+  assert.deepEqual(body.item, { routeId: ROUTE, headwayMinutes: {} });
+  assert.deepEqual(body.meta.undocumentedFields, { endvehicletime: "223000" });
+
+  const clean = serviceHoursHandler(async (_cityCode, routeId) => ({ routeId, headwayMinutes: {} }));
+  const plain = await (await get(clean, `/v1/route-info?cityCode=${CITY}&routeId=${ROUTE}`)).json() as { meta: Record<string, unknown> };
+  assert.equal("undocumentedFields" in plain.meta, false, "absent when TAGO sent nothing undocumented");
 });

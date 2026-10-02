@@ -38,6 +38,25 @@ Requests use `serviceKey`, `_type=json`, and where applicable `cityCode`, `route
 
 [Jeju Bus Information System](https://bus.jeju.go.kr/) remains the official passenger-facing corroboration source for route existence, schedule, endpoint, and local classification. No undocumented Jeju BIS endpoint is treated as a supported TAPSO product API.
 
+## Jeju timetables: the last bus
+
+TAGO's `getRouteInfoIem` carries no service day for Jeju. For all 58 variants of routes 102, 202, 282, 365 and 800 it sends no first or last departure, and a weekday headway `intervaltime` of `"0"` (`VERIFIED` 2026-10-01: `scripts/data-sources/route-info.ts`, data-source probe run 36911886895). Jeju's last buses therefore need Jeju's own timetables.
+
+`scripts/data-sources/jeju-timetable-docs.ts` read what the official sources publish (data-source probe run 36913158370, 2026-10-01). The table below is `REPORTED-OFFICIAL`, quoted from the pages.
+
+| Source | What it is | Terms | Fit |
+|---|---|---|---|
+| data.go.kr `3043887`, "제주특별자치도_제주버스시간표정보_20200918" | File dataset: "제주특별자치도 내 모든 운행 버스의 시간표 정보를 제공합니다", every bus type. "버스 타입을 선택한 후 노선을 클릭하면 시간표정보를 엑셀파일로 다운로드 할 수 있음". XLSX, provided as a download on the agency's own site (`bus.jeju.go.kr/publicTrafficInformation/generalBusSchedule?viewtype=2`). Registered 2020-09-18, modified 2025-07-30, update cycle "수시 (1회성 데이터)" | 이용허락범위 **제한 없음**, free | The official timetable: one file per route, downloaded from the page; not an API |
+| `bus.jeju.go.kr` timetable page | "Please select a bus type and select a route": a route's times appear only after it is chosen. The page also links fee tables and the route booklet "버스노선 책자 (2026년 1월 1일 기준)". It shows no copyright or terms notice | Those of the data.go.kr entry above | Where the files come from. The site sends its certificate without the Sectigo intermediate (`Sectigo Public Server Authentication CA DV R36`), so a client that does not fetch intermediates fails; the probe fetches it and verifies it against the system roots |
+| data.go.kr `15058442`, "제주특별자치도_버스정보시스템" | Open API (type LINK, XML): facility data (CCTV, VMS, AVI, VDS) and node-link traffic information. Registered 2016-05-17 | 제한 없음 | No timetable |
+| data.go.kr `15074254`, `15074255`, `15074257`–`15074262` | Open APIs (type LINK, JSON; operation approval by review): route basics ("노선번호, 버스번호, 시작정류소, 종점정류소, 노선명"), stop basics and ridership statistics | 제한 없음 | No timetable field in any description. The portal publishes no machine-readable contract for them |
+
+Decision:
+- No undocumented Jeju BIS endpoint becomes a TAPSO product API (unchanged).
+- The timetable files may be used under their 제한 없음 terms only as a **dated, imported dataset**, labelled with the download date and never presented as live.
+- The static page holds no per-route file link: the links appear once a route is chosen. Reproducing the page's own requests to fetch them would mean using an undocumented endpoint.
+- So the first file comes from a person following the dataset's instructions. The parser and the staleness rule are written against that real file.
+
 ## Runtime provider
 
 Government-specific DTOs stop inside the TAGO provider adapter:

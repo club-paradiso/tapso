@@ -1,10 +1,11 @@
 import { ArrowIcon, BusIcon, MapIcon, WalkIcon } from "../components/Icons";
 import { SectionHead } from "../components/SectionHead";
+import { MAP_LINKS } from "../content/site";
 
 /**
- * TAPSO next to the map apps, never against them. The "지금 되는 연결" list
- * states only what `docs/product/MAP_APP_HANDOFF_V2.md` records as built, and
- * labels the rest.
+ * TAPSO next to the map apps, never against them. The "지금 되는 것과 아직 안
+ * 되는 것" list is `MAP_LINKS`; `test/productParity.test.ts` ties each item to
+ * the code (or the open device check) that backs it.
  */
 
 const FLOW = [
@@ -30,34 +31,6 @@ const FLOW = [
     tone: "map",
   },
 ] as const;
-
-const LINKS = [
-  {
-    state: "체험판에 있어요",
-    tone: "done",
-    title: "지도 앱에서 공유한 장소로 시작",
-    body: "공유 → 복사한 내용을 붙여넣으면 정류장 이름을 찾아요. 휴대폰 안에서만 읽어요.",
-  },
-  {
-    state: "체험판에 있어요",
-    tone: "done",
-    title: "내린 뒤 네이버 지도로 넘기기",
-    body: "도착하면 네이버 지도에서 목적지 이름을 검색해 걷는 길을 이어가요.",
-  },
-  {
-    state: "아직 없어요",
-    tone: "none",
-    title: "카카오맵으로 넘기기",
-    body: "카카오맵은 앱에서 장소 이름으로 검색하는 공식 방법을 찾지 못해 연결하지 않았어요.",
-  },
-  {
-    state: "계획",
-    tone: "planned",
-    title: "지도 앱 공유 메뉴에 탑서 추가",
-    body: "Apple 개발자 계정이 준비되면 붙일 수 있어요. 지금은 붙여넣기로 같은 일을 해요.",
-  },
-] as const;
-
 export function MapCompanion() {
   return (
     <section className="section maps" id="maps" aria-labelledby="maps-title">
@@ -100,7 +73,7 @@ export function MapCompanion() {
         <div className="links-block">
           <h3>지금 되는 것과 아직 안 되는 것</h3>
           <ul className="links-list">
-            {LINKS.map((l) => (
+            {MAP_LINKS.map((l) => (
               <li key={l.title}>
                 <span className={`state-pill tone-${l.tone}`}>{l.state}</span>
                 <b>{l.title}</b>
@@ -109,7 +82,7 @@ export function MapCompanion() {
             ))}
           </ul>
           <p className="fineprint">
-            카카오맵과 네이버 지도는 각 회사의 서비스이며, 탑서와 제휴 관계가 없어요. ‘체험판’은
+            카카오맵, 네이버 지도, Apple 지도는 각 회사의 서비스이며, 탑서와 제휴 관계가 없어요. ‘체험판’은
             합성 데이터로 움직이는 개발 중인 iOS 앱을 말해요.
           </p>
         </div>

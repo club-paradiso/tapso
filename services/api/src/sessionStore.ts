@@ -61,6 +61,23 @@ export interface StoredJourneySession {
   passage?: PassageMemory;
   /** After an automatic selection for a waiting rider (finding F20). See `BoardingWatch`. */
   boardingWatch?: BoardingWatch;
+  /** Absent until the app registers its Live Activity's push token. See `LiveActivityPushToken`. */
+  liveActivityPush?: LiveActivityPushToken;
+}
+
+/**
+ * The ActivityKit push token of the Live Activity that follows this ride
+ * (`docs/exec-plans/LIVE_ACTIVITY_PUSH.md`, milestone 2).
+ *
+ * The token is a capability: whoever holds it can update the rider's Lock
+ * Screen. It is never logged and never returned; logs and answers carry the
+ * fingerprint. It lives in the session row and nowhere else, so ending the
+ * ride or the row's TTL removes it.
+ */
+export interface LiveActivityPushToken {
+  token: string;
+  fingerprint: string;
+  registeredAtMs: number;
 }
 
 /**

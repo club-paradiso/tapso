@@ -2,18 +2,25 @@ import SwiftUI
 import TapsoTransit
 
 /// Finds the physical bus and asks the rider to confirm it. Nothing is
-/// selected without the rider's tap. Figma: `04 iOS` › Matching / Vehicle Confirmation V2.
+/// selected without the rider's tap. Figma: `03 iOS — GO` › `V2 / 07 Matching (searching)`
+/// (`158:214`), `V2 / 08 Vehicle confirmation` (`158:277`), `V2 / 09 Multiple candidates` (`158:353`).
 struct VehicleCheckView: View {
     @Bindable var model: TapsoAppModel
 
     var body: some View {
         ScrollView {
             if let draft = model.draft, let route = draft.route {
+                if draft.isLive, let failure = model.liveFailure {
+                    LiveFailureNotice(failure: failure)
+                        .padding(.horizontal, TapsoSpace.gutter)
+                        .padding(.top, TapsoSpace.lg)
+                }
                 VehicleCheckContent(
                     check: model.vehicleCheck,
                     routeNumber: route.number,
                     boardingName: draft.boarding?.name ?? "",
                     destinationName: draft.destination?.name ?? "",
+                    isLive: draft.isLive,
                     onConfirm: { proposal in Task { await model.confirmVehicle(proposal) } },
                     onReject: { model.rejectProposal($0) }
                 )
@@ -35,6 +42,8 @@ struct VehicleCheckContent: View {
     let routeNumber: String
     let boardingName: String
     let destinationName: String
+    /// Live: the buses come from TAPSO's server. Demo: synthetic.
+    var isLive = false
     let onConfirm: (VehicleProposal) -> Void
     let onReject: (VehicleProposal) -> Void
 
@@ -96,7 +105,7 @@ struct VehicleCheckContent: View {
                 }
             }
 
-            Label("check.why", systemImage: "info.circle")
+            Label(LocalizedStringKey(isLive ? "check.why.live" : "check.why"), systemImage: "info.circle")
                 .font(.footnote)
                 .foregroundStyle(TapsoColor.textSecondary)
                 .fixedSize(horizontal: false, vertical: true)

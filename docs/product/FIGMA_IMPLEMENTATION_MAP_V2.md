@@ -4,12 +4,20 @@ File: `TAPSO — Product / Marketing Design System`, key `kkx04GvqOzHje7Dw5ikO9X
 
 | Figma page | Node | Contents |
 |---|---|---|
+| 00 Cover / Index | `46:2` | Page map and editing rules; the Handoff boards (`13:2` reality labels and rules, `162:2` this table, condensed) |
 | 02F iOS Ride V2 | `152:2` | V2 components (below) |
-| 04 iOS › iOS / Product V2 | `157:10` | 23 finished screen designs (19 light, 4 dark through the V2 Dark mode) and a header |
-| 04 iOS › Live Activity & Dynamic Island | `160:1208` | One row per ride moment: compact, minimal, expanded, Lock Screen |
-| 06 Handoff › Product V2 mapping | see page | This table, condensed |
-| 07 Playground › Product V2 explorations | see page | Alternatives considered |
+| 02G iOS Product V3 | `212:2` | V3 components: `ReturnTripRow / V3` (`212:123`), `RescueOption / V3` (`212:139`), `ReturnCountdown / Lock Screen V3` (`212:162`), `ReturnCountdown / Island V3` (`212:193`) |
+| 03 iOS — GO › iOS — GO · Product V2 + V3 | `205:3310` | Home to the rider's confirmation: V2 01–09 with Dark · 02, Dark · 08 and EN · 02, and the map hand-off V3 20–24 |
+| 04 iOS — RIDE › iOS — RIDE · Product V2 | `157:10` | The ride: V2 10–19 with their dark, EN and SE 375 variants |
+| 05 Live Activity · Dynamic Island | `160:1208` | One row per ride moment: compact, minimal, expanded, Lock Screen |
+| 07 Discover, 08 Eat, 10 Passport / Share | `205:4`, `205:5`, `205:7` | Status cards only: not designed, and why |
+| 09 Return / Rescue › Return / Rescue · Product V3 | `193:2956` | V3 25–27: the way back, rescue past your stop, the countdown |
+| 11 Marketing Web | `3:4` | The marketing site V3 as built, four widths (`218:2`, below); the V2 board `165:54` is on `13 Archive` |
+| 12 Prototype | `205:8` | Clickable flows A (map hand-off → ride), B (confirmation → island → arrival), D (passed stop → rescue), built from labelled copies |
+| 13 Archive | `102:2` | Superseded boards in dated sections, nothing deleted: Web legacy and V1, iOS V1 workbench and the live-ride trial, Android workbench, Playground and the Product V2 explorations |
 | Variables › TAPSO V2 Semantic | `VariableCollectionId:151:14` | Semantic tokens, Light/Dark |
+
+Pages follow the Product V3 structure since 2026-10-01. There is no separate `06 Dynamic Island` page: one `ContentState` draws the Lock Screen and every island region, so `05` keeps them on one row per moment, where a mismatch shows. Node IDs did not change when boards moved between pages.
 
 Keep this file current when either side changes. Code Connect for Swift is not set up: publishing needs an Organization/Enterprise Figma plan (`docs/FIGMA_CODE_CONNECT.md`), so node IDs here are the mapping.
 
@@ -68,6 +76,51 @@ App-only pieces drawn inline in Figma screens: DemoDataChip (`DemoDataChip`, `de
 | (no frame) Live Activities off | `RideContent` notice | ACTIVE | `23-ride-live-activity-off` |
 | Live Activity & Dynamic Island board `160:1208` | `LiveActivitySurfaces.swift` | all ride moments | `la-lockscreen-*`, `di-compact-*`, `di-minimal-*`, `di-expanded-*` |
 
+## Product V3 board (2026-10-01)
+
+The hand-off frames V3 20–24 are on `03 iOS — GO` (`205:3310`); V3 25–27 on
+`09 Return / Rescue` › `Return / Rescue · Product V3` (`193:2956`). All are built from the
+V2 components (`Icon / V2`, `Button / V2`, `RouteBadge / V2`, `StopRow / V2`,
+`돌이 / V2`) and bound to the `TAPSO V2 Semantic` variables; in 25–27 the last-bus rows,
+the rescue options and the countdown surfaces are instances of the `02G iOS Product V3`
+components. Sample data is synthetic and labelled so on the boards.
+
+| Figma frame | SwiftUI | Snapshot |
+|---|---|---|
+| V3 / 20 Map import · place found (`193:2961`) | `MapImportContent` + `SharedPlaceCard` | `08-map-import-found` |
+| V3 / 21 Map import · outside Jeju (`193:2990`) | same | `26-map-import-outside-jeju` |
+| V3 / 22 Map import · link only (`193:3019`) | same | `27-map-import-link-only` |
+| V3 / 23 Live stops · near the shared place (`193:3049`) | `LiveStopPickerContent` › `suggestions(for:after:)` | (stateful; covered by `TapsoAPIClientTests`) |
+| V3 / 24 Share sheet · place found (`193:3098`) | `ShareExtension` › `ShareSheetView` | (extension; no snapshot target yet) |
+| V3 / 25 End · walk to the place, last buses (`193:3125`) | `RideEndContent` + `ReturnTripCard` | `28-end-walk-to-place`, `29-end-return-trip` |
+| V3 / 26 Passed stop · next stop, walk back (`195:3021`) | `RideHeroCard` › `passed` + `RescueOptionList` | `17-ride-passed` (demo: no distance), `30-ride-passed-walk-back` |
+| V3 / 27 Return countdown · Lock Screen, island, end card (`199:3046`) | `ReturnLockScreenView`, `ReturnIsland*`, `ReturnTripRow` › `pinControl` | `la-lockscreen-return-countdown`, `la-lockscreen-return-late`, `di-*-return-*`, `31-end-return-countdown` |
+
+The `RideHero / V2` › `moment=passed` variant (`155:230`) now matches the code:
+`color/journey/next` at 8 % behind a 2 pt `color/journey/next` stroke. It was a
+solid fill, which hid the coral headline on `V2 / 18 Missed stop recovery`.
+
+## Marketing site V3 (2026-10-01)
+
+`11 Marketing Web` › `Web / Marketing V3 · 2026-10-01 · code main@55c648e` (`218:2`)
+rebuilds the page as built (`MARKETING_SITE_V3.md`): `apps/web` at `main@55c648e`,
+rendered with reduced motion and written back as editable layers. The code is the
+source of truth; regenerate the frames when `apps/web` changes.
+
+| Width | Frame |
+|---|---|
+| 1440 · large desktop | `219:2` |
+| 1280 · laptop | `231:2` |
+| 390 · mobile | `241:2` |
+| 360 · compact mobile | `258:2` |
+
+Layer names carry the element and its classes (`section#confirm.chapter…`), so a
+layer leads to its component in `apps/web/src`. Solid colours are bound to
+`TAPSO V2 Semantic` (text, backgrounds, separator, identity colours) or, for brand,
+state and translucent colours, to `TAPSO Primitives`; `jeju/sand` and
+`jeju/sand-deep` mirror `--sand` and `--sand-deep` in `tokens.css`. Auto layout is
+applied where the page's spacing is regular.
+
 ## Known deltas between Figma and code
 
 | Delta | Why |
@@ -77,3 +130,5 @@ App-only pieces drawn inline in Figma screens: DemoDataChip (`DemoDataChip`, `de
 | Figma frames are 402 × 874 only | Device widths 375 and 440 and AX3 text are covered by snapshot evidence, not frames |
 | Search frame shows a typed query without the keyboard | Keyboard is system UI |
 | Figma shows `••0001` / `••0002`; code masks synthetic plates from `DemoCatalog.plate(for:)` | Both are synthetic |
+| Web frames set Noto Sans KR, and wrapped Korean breaks only between words, with hard line breaks | Pretendard is not available to Figma here and Figma has no `word-break: keep-all`; Noto Sans KR runs wider, so a few paragraphs take one more line |
+| Web chapter backgrounds are `band ·` rectangles; the bus scene's road and the privacy lines are dashed strokes | The site paints them with a box-shadow and repeating gradients |

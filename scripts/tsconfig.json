@@ -5,5 +5,5 @@
     "module": "ESNext",
     "moduleResolution": "Bundler"
   },
-  "include": ["matcher-evidence/*.ts", "passive-shadow/*.ts", "negative-controls/*.ts"]
+  "include": ["matcher-evidence/*.ts", "passive-shadow/*.ts", "negative-controls/*.ts", "journey/*.ts", "data-sources/*.ts"]
 }

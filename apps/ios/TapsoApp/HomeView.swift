@@ -2,7 +2,8 @@ import SwiftUI
 import TapsoTransit
 
 /// Home answers one question — where are you getting off? — and makes a
-/// repeat ride one tap. No map, no feed, no dashboard. Figma: `04 iOS` › Home V2.
+/// repeat ride one tap. No map, no feed, no dashboard. Figma: `03 iOS — GO` › `V2 / 01 Home · first ride`
+/// (`157:15`) and `V2 / 02 Home · recent & favourites` (`157:73`).
 struct HomeView: View {
     @Bindable var model: TapsoAppModel
 
@@ -18,8 +19,10 @@ struct HomeView: View {
                 onRideAgain: { model.rideAgain($0) },
                 onToggleFavorite: { model.toggleFavorite($0) },
                 onMapImport: { model.openMapImport() },
+                onLive: { model.openLiveSearch() },
                 onSample: { model.startDemo() },
-                onDemoSettings: { model.isDemoPanelPresented = true }
+                onDemoSettings: { model.isDemoPanelPresented = true },
+                pendingPlaceName: model.sharedPlace.flatMap { $0.name ?? $0.address }
             )
         }
         .scrollBounceBehavior(.basedOnSize)
@@ -35,8 +38,11 @@ struct HomeContent: View {
     let onRideAgain: (SavedJourney) -> Void
     let onToggleFavorite: (SavedJourney) -> Void
     let onMapImport: () -> Void
+    var onLive: () -> Void = {}
     let onSample: () -> Void
     var onDemoSettings: () -> Void = {}
+    /// A place shared from a map app that is waiting for a ride.
+    var pendingPlaceName: String? = nil
 
     var body: some View {
         VStack(alignment: .leading, spacing: TapsoSpace.xl) {
@@ -78,7 +84,9 @@ struct HomeContent: View {
                 }
             }
 
-            MapHandoffIntakeCard(action: onMapImport)
+            MapHandoffIntakeCard(pendingPlaceName: pendingPlaceName, action: onMapImport)
+
+            LiveRideEntryCard(action: onLive)
 
             if library.recents.isEmpty {
                 firstRideCard
@@ -176,7 +184,7 @@ struct HomeContent: View {
     }
 }
 
-/// Looks like a field and opens search; typing happens on the next screen. Figma: `DestinationSearchField / V2`.
+/// Looks like a field and opens search; typing happens on the next screen. Figma: `SearchField / V2`.
 struct SearchFieldButton: View {
     let action: () -> Void
 
@@ -207,8 +215,9 @@ struct SearchFieldButton: View {
     }
 }
 
-/// Entry to start from a place shared by KakaoMap or NAVER Map. Figma: `MapHandoffCard / V2`.
+/// Entry to start from a place shared by KakaoMap or NAVER Map. Figma: no Figma component yet; drawn inside the screens.
 struct MapHandoffIntakeCard: View {
+    var pendingPlaceName: String? = nil
     let action: () -> Void
 
     var body: some View {
@@ -223,9 +232,15 @@ struct MapHandoffIntakeCard: View {
                     Text("home.mapImport.title")
                         .font(.body.weight(.semibold))
                         .foregroundStyle(TapsoColor.textPrimary)
-                    Text("home.mapImport.body")
-                        .font(.footnote)
-                        .foregroundStyle(TapsoColor.textSecondary)
+                    if let pendingPlaceName {
+                        Text(String(format: RideText.string("home.mapImport.pending"), pendingPlaceName))
+                            .font(.footnote.weight(.semibold))
+                            .foregroundStyle(TapsoColor.mintDeep)
+                    } else {
+                        Text("home.mapImport.body")
+                            .font(.footnote)
+                            .foregroundStyle(TapsoColor.textSecondary)
+                    }
                 }
                 .multilineTextAlignment(.leading)
                 .fixedSize(horizontal: false, vertical: true)

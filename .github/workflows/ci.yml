@@ -74,7 +74,12 @@ jobs:
             -derivedDataPath work/DerivedData \
             CODE_SIGNING_ALLOWED=NO \
             build test 2>&1 | tee work-xcodebuild.log | grep -E "error:|warning: .*(Tapso|Shared|LiveActivity)|Test Case .*(passed|failed)|\*\* (BUILD|TEST)" || true
-          grep -q "\*\* TEST SUCCEEDED \*\*" work-xcodebuild.log
+          if ! grep -q "\*\* TEST SUCCEEDED \*\*" work-xcodebuild.log; then
+            # The filter above hides a crashed test (it never prints "passed" or "failed");
+            # show the lines that explain the failure in the job log itself.
+            grep -nE "Restarting after|[Cc]rash|[Ff]atal error|Incorrect actor|Failing tests:|Tests\.test|Test Suite .* failed|failed \(" work-xcodebuild.log | tail -n 80 || true
+            exit 1
+          fi
       - name: Render snapshot evidence in Korean and English
         env:
           TEST_RUNNER_TAPSO_SNAPSHOT_DIR: ${{ github.workspace }}/work/snapshots

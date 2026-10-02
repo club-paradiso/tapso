@@ -1,0 +1,27 @@
+{
+  "synthetic": true,
+  "request": "POST /3/device/0000000000000000000000000000000000000000000000000000000000000000 (APNs)",
+  "headers": {
+    "apns-push-type": "liveactivity",
+    "apns-topic": "com.lucanomics.tapso.push-type.liveactivity",
+    "apns-priority": "5",
+    "content-type": "application/json"
+  },
+  "body": {
+    "aps": {
+      "timestamp": 1790841660,
+      "event": "update",
+      "content-state": {
+        "phase": "approachingDestination",
+        "currentStopName": "동문로터리",
+        "nextStopName": "제주여자상업고등학교",
+        "remainingStops": 2,
+        "freshness": "fresh",
+        "updatedAt": 812534460,
+        "destinationPassed": false,
+        "isOffline": false
+      },
+      "stale-date": 1790841780
+    }
+  }
+}

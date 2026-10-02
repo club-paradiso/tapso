@@ -1,7 +1,12 @@
 import test from "node:test";
 import assert from "node:assert/strict";
 import { TagoTransitProvider } from "../src/tagoProvider.ts";
-import { ProviderConfigurationError } from "../src/provider.ts";
+import {
+  ProviderConfigurationError,
+  ProviderResponseError,
+  ProviderTimeoutError,
+  ProviderUnavailableError,
+} from "../src/provider.ts";
 
 /**
  * Synthetic test fixtures, not observations: every provider response below is
@@ -232,4 +237,152 @@ test("rejects a TAGO response without a result code", async () => {
     provider.vehicles({ routeId: "JEB405136521", cityCode: "39" }),
     /TAGO resultCode is missing/,
   );
+});
+
+/*
+ * Reliability taxonomy (Product V3, section 37): a timeout, an unreachable or
+ * erroring provider and a malformed answer are three different situations for
+ * a rider, and none of them is "no bus". Each stays a ProviderResponseError so
+ * every existing failure path (session degradation, collectors) still catches
+ * it.
+ */
+
+test("a TAGO request that times out twice is PROVIDER_TIMEOUT, never 'no bus'", async () => {
+  let calls = 0;
+  const fakeFetch: typeof fetch = async () => {
+    calls += 1;
+    throw new DOMException("The operation was aborted due to timeout", "TimeoutError");
+  };
+  const provider = new TagoTransitProvider({ serviceKey: "test-key", fetchImplementation: fakeFetch });
+  await assert.rejects(
+    provider.vehicles({ routeId: "JEB405136521", cityCode: "39" }),
+    (error: Error) => {
+      assert.ok(error instanceof ProviderTimeoutError);
+      assert.ok(error instanceof ProviderResponseError, "existing catch paths still see a provider failure");
+      assert.equal((error as ProviderTimeoutError).code, "PROVIDER_TIMEOUT");
+      assert.match(error.message, /^TAGO request timed out$/);
+      return true;
+    },
+  );
+  assert.equal(calls, 2, "a timeout is transient and retried once");
+});
+
+test("a TAGO transport failure is PROVIDER_UNAVAILABLE", async () => {
+  const fakeFetch: typeof fetch = async () => {
+    throw new TypeError("fetch failed");
+  };
+  const provider = new TagoTransitProvider({ serviceKey: "test-key", fetchImplementation: fakeFetch });
+  await assert.rejects(
+    provider.stops({ routeId: "JEB405136521", cityCode: "39" }),
+    (error: Error) => {
+      assert.ok(error instanceof ProviderUnavailableError);
+      assert.equal((error as ProviderUnavailableError).code, "PROVIDER_UNAVAILABLE");
+      return true;
+    },
+  );
+});
+
+test("a TAGO HTTP error that persists is PROVIDER_UNAVAILABLE, a malformed body is PROVIDER_RESPONSE_INVALID", async () => {
+  const httpError: typeof fetch = async () => new Response("down", { status: 503 });
+  const unavailable = new TagoTransitProvider({ serviceKey: "test-key", fetchImplementation: httpError });
+  await assert.rejects(
+    unavailable.vehicles({ routeId: "JEB405136521", cityCode: "39" }),
+    (error: Error) => (error as ProviderUnavailableError).code === "PROVIDER_UNAVAILABLE",
+  );
+
+  const malformed: typeof fetch = async () => new Response(JSON.stringify({ response: { header: { resultCode: "00" } } }));
+  const invalid = new TagoTransitProvider({ serviceKey: "test-key", fetchImplementation: malformed });
+  await assert.rejects(
+    invalid.vehicles({ routeId: "JEB405136521", cityCode: "39" }),
+    (error: Error) => {
+      assert.equal(error.constructor, ProviderResponseError);
+      assert.equal((error as ProviderResponseError).code, "PROVIDER_RESPONSE_INVALID");
+      return true;
+    },
+  );
+});
+
+/**
+ * `getRouteInfoIem` in the shape data.go.kr documents for dataset 15098529
+ * (REPORTED-OFFICIAL). SYNTHETIC values; route ids reuse the earlier fixtures.
+ */
+function routeInfoFetch(item: Record<string, unknown> | undefined, seen: URL[] = []): typeof fetch {
+  return async (input) => {
+    const url = new URL(String(input));
+    seen.push(url);
+    return new Response(JSON.stringify({ response: {
+      header: { resultCode: "00", resultMsg: "OK" },
+      body: { items: item === undefined ? "" : { item } },
+    } }));
+  };
+}
+
+test("reads a route's published service day: first and last departure from the starting stop, and headways", async () => {
+  const seen: URL[] = [];
+  const provider = new TagoTransitProvider({
+    serviceKey: "test-key",
+    fetchImplementation: routeInfoFetch({
+      routeid: "JEB405136521", routeno: 365, routetp: "간선버스",
+      startnodenm: "제주대학교", endnodenm: "제주한라대학교(종점)",
+      startvehicletime: "0600", endvehicletime: "2230",
+      intervaltime: 29, intervalsattime: "23", intervalsuntime: 29,
+    }, seen),
+  });
+  assert.deepEqual(await provider.routeServiceHours("39", "JEB405136521"), {
+    routeId: "JEB405136521",
+    routeNumber: "365",
+    routeType: "간선버스",
+    startStopName: "제주대학교",
+    endStopName: "제주한라대학교(종점)",
+    firstDeparture: "06:00",
+    lastDeparture: "22:30",
+    headwayMinutes: { weekday: 29, saturday: 23, sunday: 29 },
+  });
+  const url = seen[0]!;
+  assert.ok(url.pathname.endsWith("/BusRouteInfoInqireService/getRouteInfoIem"));
+  assert.equal(url.searchParams.get("cityCode"), "39");
+  assert.equal(url.searchParams.get("routeId"), "JEB405136521");
+  assert.equal(url.searchParams.get("pageNo"), null, "the operation is not paged");
+});
+
+test("service hours stay absent when TAGO leaves them out or sends what it does not document", async () => {
+  const read = (item: Record<string, unknown>) =>
+    new TagoTransitProvider({ serviceKey: "test-key", fetchImplementation: routeInfoFetch({ routeid: "R1", ...item }) })
+      .routeServiceHours("39", "R1");
+
+  assert.deepEqual(await read({}), { routeId: "R1", headwayMinutes: {} }, "every field is optional");
+  // A number loses its leading zero in JSON; it is still HHMM.
+  assert.equal((await read({ startvehicletime: 600, endvehicletime: 30 }))?.firstDeparture, "06:00");
+  assert.equal((await read({ endvehicletime: 30 }))?.lastDeparture, "00:30");
+  for (const time of ["2510", "2460", "1260", "6:00", "06:00", "", "abc", 12345]) {
+    assert.equal((await read({ endvehicletime: time }))?.lastDeparture, undefined, `${time} is not a documented HHMM`);
+  }
+  for (const interval of [0, -5, "0", "x", 1441, 12.5]) {
+    assert.deepEqual((await read({ intervaltime: interval }))?.headwayMinutes, {}, `${interval} is not a headway`);
+  }
+});
+
+test("a service-day value TAGO sends outside its documented shape is kept verbatim for diagnosis, never used", async () => {
+  const read = (item: Record<string, unknown>) =>
+    new TagoTransitProvider({ serviceKey: "test-key", fetchImplementation: routeInfoFetch({ routeid: "R1", ...item }) })
+      .routeServiceHours("39", "R1");
+
+  const hours = await read({ startvehicletime: "05:30", endvehicletime: "223000", intervaltime: "15~20", intervalsattime: 20, intervalsuntime: "" });
+  assert.equal(hours?.firstDeparture, undefined);
+  assert.equal(hours?.lastDeparture, undefined);
+  assert.deepEqual(hours?.headwayMinutes, { saturday: 20 });
+  assert.deepEqual(
+    hours?.undocumented,
+    { startvehicletime: "05:30", endvehicletime: "223000", intervaltime: "15~20" },
+    "an empty value is absent, not undocumented",
+  );
+  assert.equal((await read({ endvehicletime: "x".repeat(40) }))?.undocumented?.endvehicletime, "x".repeat(16), "cut to 16 characters");
+  assert.equal((await read({ startvehicletime: "0600", intervaltime: 29 }))?.undocumented, undefined, "documented values are not reported");
+});
+
+test("a route TAGO does not know has no service day", async () => {
+  const empty = new TagoTransitProvider({ serviceKey: "test-key", fetchImplementation: routeInfoFetch(undefined) });
+  assert.equal(await empty.routeServiceHours("39", "R1"), undefined);
+  const other = new TagoTransitProvider({ serviceKey: "test-key", fetchImplementation: routeInfoFetch({ routeid: "R2", endvehicletime: "2200" }) });
+  assert.equal(await other.routeServiceHours("39", "R1"), undefined, "another route's hours are never borrowed");
 });

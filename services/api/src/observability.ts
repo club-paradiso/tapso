@@ -7,6 +7,8 @@ export type TapsoEvent =
   | "vehicle_match_confirmation_required"
   | "vehicle_match_confirmed"
   | "journey_session_created"
+  | "journey_session_ended"
+  | "live_activity_token_registered"
   | "vehicle_lost"
   | "transit_data_stale"
   | "destination_approaching"

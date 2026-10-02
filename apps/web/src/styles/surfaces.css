@@ -320,17 +320,6 @@
   opacity: 0.9;
 }
 
-.phone-island {
-  position: absolute;
-  top: 0.68em;
-  left: 50%;
-  z-index: 4;
-  width: 7.7em;
-  height: 2.3em;
-  border-radius: var(--radius-pill);
-  background: var(--island-black);
-  transform: translateX(-50%);
-}
 
 /* App screens ------------------------------------------------------------- */
 
@@ -1030,15 +1019,6 @@
   line-height: 1.2;
 }
 
-.island-compact {
-  align-items: center;
-  justify-content: space-between;
-  gap: 0.5em;
-  width: 15.5em;
-  height: 2.3em;
-  padding: 0 0.55em 0 0.45em;
-  border-radius: var(--radius-pill);
-}
 
 .island-leading {
   display: flex;
@@ -1103,29 +1083,8 @@
   font-weight: 900;
 }
 
-.island-minimal {
-  display: grid;
-  place-items: center;
-  width: 2.3em;
-  height: 2.3em;
-  border-radius: 50%;
-  color: var(--role);
-  font-weight: 900;
-}
 
-.island-minimal svg {
-  width: 1.1em;
-  height: 1.1em;
-}
 
-.island-expanded {
-  flex-direction: column;
-  gap: 0.7em;
-  width: 23em;
-  max-width: 100%;
-  padding: 0.95em 1.05em 1.05em;
-  border-radius: 2.6em;
-}
 
 .island-x-top {
   display: flex;

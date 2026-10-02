@@ -7,6 +7,8 @@
 - Primary language: Korean
 - Bundle ID: `com.lucanomics.tapso`
 - Live Activity extension: `com.lucanomics.tapso.LiveActivity`
+- Share extension: `com.lucanomics.tapso.Share`
+- App Group (app and share extension): `group.com.lucanomics.tapso` — available to a free Personal Team as well (`VERIFIED`, Account Help › Supported capabilities (iOS)), so device builds keep working without the paid team
 - SKU: `tapso-ios-demo-2026`
 - Version: `0.1.0`
 - Build: increment `CURRENT_PROJECT_VERSION` for every upload
@@ -51,7 +53,7 @@ TAPSO는 제주 버스 탑승 중 남은 정거장과 하차 타이밍을 Dynami
 ### Beta review notes
 
 - No account or test credentials are required.
-- The app makes no network request and collects no user data in this demo build.
+- The demo makes no network request and collects no user data. Live rides (beta) talk only to TAPSO's API and send no location or identity; they need production journey sessions enabled.
 - Route, stop, and vehicle observations are synthetic and labeled as demo behavior.
 - Live Activity updates are local in this build. Automatic background progression and real Jeju data are not claimed.
 - A Dynamic Island-capable iPhone provides the intended experience; other supported iPhones show the Lock Screen Live Activity.
@@ -64,7 +66,7 @@ Set this to an address monitored by the release owner in App Store Connect. Do n
 
 1. Satisfy the **Team prerequisite** above and confirm the latest Apple Developer agreements are accepted for that exact team.
 2. Confirm the signing account can reach Certificates, Identifiers & Profiles for that team, and update `DEVELOPMENT_TEAM` in `apps/ios/project.yml` if the verified paid Team ID differs from the value currently checked in.
-3. Register the app and extension bundle identifiers, then select that paid team in Xcode.
+3. Register the app and both extension bundle identifiers and the App Group, then select that paid team in Xcode.
 4. Create the App Store Connect record using the values above.
 5. Archive with `Release`, validate, and upload through Xcode Organizer.
 6. Confirm build processing and export-compliance status. The app declares `ITSAppUsesNonExemptEncryption = NO` because this demo contains no encryption implementation.

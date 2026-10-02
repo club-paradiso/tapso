@@ -1,6 +1,8 @@
 # Marketing site V2
 
-The public page at [tapso-nu.vercel.app](https://tapso-nu.vercel.app), built from `apps/web`. It presents TAPSO; it is not TAPSO. The native iOS app is the product. Every phone, Lock Screen and Dynamic Island on the page is a labelled re-drawing. The Route 365 stop topology is the verified provider topology; vehicle identity, plate, timing and playback state are synthetic, and the page labels the preview accordingly.
+> 2026-10-01: the hero and sections 01–05 are superseded by Marketing Site V3 (`MARKETING_SITE_V3.md`): one ride told by a persistent Dynamic Island. Sections 06–11, the waitlist and support backends and the claim guard described here are unchanged.
+
+The public page at [tapso-nu.vercel.app](https://tapso-nu.vercel.app), built from `apps/web`. It presents TAPSO; it is not TAPSO. The native iOS app is the product. Every phone, Lock Screen and Dynamic Island on the page is a labelled re-drawing. The Route 365 stop topology is verified provider topology; vehicle identity, plate, timing and playback state are synthetic, and the page labels the preview accordingly.
 
 ## Purpose and audience
 
@@ -127,7 +129,7 @@ Korean title and description, canonical URL, Open Graph and Twitter card with a 
 
 ## Figma
 
-`03 Web` (`3:4`) now holds a section **Web / Marketing V2 · 2026-09-30** (`165:54`) with the information architecture and its code mapping; the V1 frames `9:2` and `10:20` are renamed as superseded. Visual captures of the built page could not be uploaded from the authoring environment (Figma's upload host was not reachable); place 1440 and 390 captures from the Vercel Preview in that section. Code Connect: `JourneyCard.figma.ts` and `DynamicIsland.figma.ts` were removed with the V1 markup they described; the form, button, result, dialog and banner templates remain valid.
+`03 Web` (`3:4`, renamed `11 Marketing Web` on 2026-10-01) held a section **Web / Marketing V2 · 2026-09-30** (`165:54`) with the information architecture and its code mapping; the V1 frames `9:2` and `10:20` were renamed as superseded and, on 2026-10-01, moved to `13 Archive`. V3 replaced this page; on 2026-10-01 the V2 section moved to `13 Archive` as well, and `11 Marketing Web` now holds the V3 page as built at four widths (`MARKETING_SITE_V3.md`), so no V2 captures will be placed. Code Connect: `JourneyCard.figma.ts` and `DynamicIsland.figma.ts` were removed with the V1 markup they described; the form, button, result, dialog and banner templates remain valid.
 
 ## Known limitations
 
@@ -136,4 +138,4 @@ Korean title and description, canonical URL, Open Graph and Twitter card with a 
 - Pretendard comes from jsDelivr. Self-hosting would remove the third-party request but means committing the subset font files or adding the `pretendard` package (98 MB unpacked, per `npm view`) to every install; not done.
 - Light theme only. The page declares `color-scheme: light`.
 - Vercel Preview could not be reached from the authoring environment; preview verification is listed in the pull request.
-- The iOS Lock Screen draws its secondary text on coral at 70 % white (`RideSurfacePalette.secondaryText`), which computes to about 3.2:1 from the token values (the web's 72 % measured 3.28:1 in axe); the web draws it opaque. Recorded in `KNOWN_ISSUES.md` for the app, not changed here.
+- The iOS Lock Screen drew its secondary text on coral at 70 % white (`RideSurfacePalette.secondaryText`), about 3.2:1 from the token values (the web's 72 % measured 3.28:1 in axe), while the web draws it opaque. Fixed in the app by #90 (2026-10-01): full strength on coral, 5.0:1 light and 7.0:1 dark; `KNOWN_ISSUES.md` marks it fixed (#92).

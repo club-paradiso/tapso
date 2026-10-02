@@ -66,17 +66,22 @@ function correctRide(routeId: string): RideSnapshot[] {
 }
 
 /**
- * The rider waits at stop 6 and lets the first bus go: `wrong`. The decoy
- * approaches, one stop nearer each poll, and ends one stop short of the stop.
- * The bus the rider actually boards is held at stop 2, three stops behind the
- * decoy: far enough back that the decoy's lead is clear. The directed matcher
- * cannot know the rider will skip the leading bus, and it commits to it — a
- * bus still approaching the stop, never one that has already left it.
+ * The rider waits at stop 6 and lets the first bus go: `wrong`. The decoy is
+ * two stops short of the stop, then one, moving all the while. The bus the
+ * rider actually boards is held at stop 1, three stops behind the decoy at the
+ * first look and four after: a lead clear by the margin at every decision. The
+ * directed matcher cannot know the rider will skip the leading bus, and it
+ * commits to it — a bus still approaching the stop, never one that has already
+ * left it. (A decoy that began inside the margin of the boarded bus would
+ * contest the approach for the session and never be selected: finding F22.)
  */
 function wrongRide(routeId: string): RideSnapshot[] {
   return [0, 5, 10].map((seconds, index) => ({
     capturedAt: at(seconds),
-    vehicles: [tago(OTHER, seconds, 3 + index, routeId), tago(BOARDED, seconds, 2, routeId)],
+    vehicles: [
+      { ...tago(OTHER, seconds, [4, 5, 5][index]!, routeId), latitude: 33.53 + index * 0.0005 },
+      tago(BOARDED, seconds, 1, routeId),
+    ],
   }));
 }
 

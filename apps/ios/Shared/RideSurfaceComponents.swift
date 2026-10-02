@@ -2,7 +2,7 @@ import SwiftUI
 import TapsoTransit
 
 // Components shared by the app, the Lock Screen and the Dynamic Island, so the
-// three surfaces draw one product. Figma: `02D Journey` V2 components.
+// three surfaces draw one product. Figma: `02F iOS Ride V2`.
 
 /// Route number in a rounded capsule. Figma: `RouteBadge / V2`.
 struct RouteBadge: View {
@@ -135,7 +135,7 @@ private struct SmileShape: Shape {
 }
 
 /// Progress from boarding to destination: a moving bus that ends at the
-/// tangerine destination. Figma: `JourneyProgressRail / V2`.
+/// tangerine destination. Figma: `JourneyRail / V2`.
 struct JourneyRail: View {
     /// 0 at boarding, 1 at the destination.
     let progress: Double
@@ -178,7 +178,7 @@ struct JourneyRail: View {
 }
 
 /// Vehicle identity and data freshness, side by side and never merged.
-/// Figma: `VehicleConfidenceStatus / V2` and `DataFreshnessStatus / V2`.
+/// Figma: `TrustBadge / V2` (`signal=vehicle-*` and `signal=data-*`).
 struct TrustBadge: View {
     enum Kind { case vehicle(VehicleIdentityStatus, plate: String?), data(DataLinkStatus) }
 
@@ -252,15 +252,25 @@ enum RideText {
         count == 1 ? key + ".one" : key
     }
 
+    /// The moment's detail line. Past the stop it names the stop to get off at when the
+    /// ride knows it (`PassedStopRescue`), so the app, Lock Screen and island say the same.
+    static func detail(_ guidance: RideGuidance, exitStopName: String? = nil) -> String {
+        if guidance.moment == .passedDestination, let exitStopName, !exitStopName.isEmpty {
+            return String(format: string("rescue.exitAt"), exitStopName)
+        }
+        return string(guidance.copy.detail)
+    }
+
     /// VoiceOver sentence for a ride: the count only when it is safe to act on.
     static func accessibilitySummary(
         guidance: RideGuidance,
         routeNumber: String,
         destination: String,
-        remainingStops: Int
+        remainingStops: Int,
+        exitStopName: String? = nil
     ) -> String {
         let headline = string(guidance.copy.headline)
-        let detail = string(guidance.copy.detail)
+        let detail = Self.detail(guidance, exitStopName: exitStopName)
         switch guidance.count {
         case .live:
             return String(format: string(countKey("a11y.ride.live", remainingStops)), routeNumber, destination, remainingStops, headline, detail)

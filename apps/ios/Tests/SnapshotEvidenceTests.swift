@@ -34,8 +34,8 @@ final class SnapshotEvidenceTests: XCTestCase {
             ("04-destination-results", AnyView(DestinationSearchContent(query: "제주", recentNames: [], onChoose: { _ in }))),
             ("05-route-select", AnyView(RouteSelectContent(destinationName: "관덕정", options: DemoCatalog.routeOptions(toDestinationNamed: "관덕정"), onChoose: { _ in }))),
             ("06-boarding-stop", AnyView(BoardingStopContent(route: DemoCatalog.outbound, destination: DemoCatalog.outbound.stops[8], onChoose: { _ in }))),
-            ("07-map-import", AnyView(MapImportContent(matches: nil, paste: AnyView(pastePlaceholder), onChoose: { _ in }, onSearch: {}))),
-            ("08-map-import-found", AnyView(MapImportContent(matches: ["제주시청(아라방면)"], paste: AnyView(pastePlaceholder), onChoose: { _ in }, onSearch: {}))),
+            ("07-map-import", AnyView(MapImportContent(place: nil, paste: AnyView(pastePlaceholder), onChooseDemo: { _ in }, onSearch: {}))),
+            ("08-map-import-found", AnyView(MapImportContent(place: sharedPlace, demoMatches: ["제주시청(아라방면)"], paste: AnyView(pastePlaceholder), onChooseDemo: { _ in }, onSearch: {}))),
             ("09-check-searching", check(.evaluate(proposals: [], hasSearched: false))),
             ("10-check-proposed", check(.evaluate(proposals: DemoCatalog.proposals(for: .smooth, route: DemoCatalog.outbound), hasSearched: true))),
             ("11-check-similar-buses", check(.evaluate(proposals: DemoCatalog.proposals(for: .similarBuses, route: DemoCatalog.outbound), hasSearched: true))),
@@ -44,7 +44,9 @@ final class SnapshotEvidenceTests: XCTestCase {
             ("14-ride-prepare", ride(.approachingDestination, 2)),
             ("15-ride-next-stop", ride(.nextStopIsDestination, 1)),
             ("16-ride-arrived", ride(.arrived, 0)),
-            ("17-ride-passed", ride(.arrived, 0, passed: true)),
+            ("17-ride-passed", ride(.arrived, 0, passed: true, rescue: PassedStopRescue.advice(
+                route: DemoCatalog.outbound, destinationSequence: 8, busSequence: 9, coordinatesAreSurveyed: false
+            ))),
             ("18-ride-delayed", ride(.active, 4, freshness: .stale)),
             ("19-ride-vehicle-lost", ride(.vehicleTemporarilyLost, 4)),
             ("20-ride-offline", ride(.active, 4, offline: true)),
@@ -52,7 +54,44 @@ final class SnapshotEvidenceTests: XCTestCase {
             ("22-ride-resumed", ride(.active, 5, resumed: true)),
             ("23-ride-live-activity-off", ride(.active, 6, liveActivityOff: true)),
             ("24-end-arrived", end(.arrived)),
-            ("25-end-passed", end(.passedDestination))
+            ("25-end-passed", end(.passedDestination)),
+            ("26-map-import-outside-jeju", AnyView(MapImportContent(
+                place: SharedPlace(source: .appleMaps, name: "합성 장소", coordinate: Coordinate(latitude: 37.5665, longitude: 126.9780)),
+                paste: AnyView(pastePlaceholder), onChooseDemo: { _ in }, onSearch: {}
+            ))),
+            ("27-map-import-link-only", AnyView(MapImportContent(
+                place: SharedPlace(source: .kakaoMap, unresolvedLink: "kakaomap://place?id=SynThetic"),
+                paste: AnyView(pastePlaceholder), onChooseDemo: { _ in }, onSearch: {}
+            ))),
+            ("28-end-walk-to-place", AnyView(RideEndContent(
+                outcome: RideOutcome(moment: .arrived, routeNumber: "202", destination: DemoCatalog.outbound.stops[8].stop, place: sharedPlace),
+                naverAvailable: true,
+                kakaoAvailable: true,
+                handoffFailed: nil,
+                onMap: { _ in },
+                onDone: {},
+                appleMapsAvailable: true
+            ))),
+            ("29-end-return-trip", AnyView(RideEndContent(
+                outcome: RideOutcome(moment: .arrived, routeNumber: "202", destination: DemoCatalog.outbound.stops[8].stop),
+                naverAvailable: true,
+                kakaoAvailable: true,
+                handoffFailed: nil,
+                onMap: { _ in },
+                onDone: {},
+                returnService: .loaded(returnRows)
+            ))),
+            ("30-ride-passed-walk-back", ride(.arrived, 0, passed: true, rescue: walkBackAdvice, kakaoAvailable: true)),
+            ("31-end-return-countdown", AnyView(RideEndContent(
+                outcome: RideOutcome(moment: .arrived, routeNumber: "202", destination: DemoCatalog.outbound.stops[8].stop),
+                naverAvailable: true,
+                kakaoAvailable: true,
+                handoffFailed: nil,
+                onMap: { _ in },
+                onDone: {},
+                returnService: .loaded(returnRows),
+                returnPin: { $0.route.routeId == "SYN-202-W" ? .pinned : .available }
+            )))
         ]
         for (name, view) in screens {
             for scheme in [ColorScheme.light, .dark] {
@@ -94,7 +133,29 @@ final class SnapshotEvidenceTests: XCTestCase {
             try render(in: directory, AnyView(IslandMinimalMock(state: state, isStale: isStale)), name: "di-minimal-\(name)", width: 60, scheme: .dark, background: .white)
             try render(in: directory, AnyView(IslandExpandedMock(attributes: attributes, state: state, isStale: isStale)), name: "di-expanded-\(name)", width: 380, scheme: .dark, background: .white)
         }
+        // "돌아갈 시간": counting down, then past the time to be at the stop. The timer runs from now.
+        let countdown = TapsoReturnAttributes.ContentState(startedAt: Date(), beAtStopBy: Date().addingTimeInterval(83 * 60))
+        for (name, isStale) in [("return-countdown", false), ("return-late", true)] {
+            try render(in: directory,
+                AnyView(ReturnLockScreenView(attributes: returnAttributes, state: countdown, isStale: isStale, drawsBackground: true)
+                    .clipShape(RoundedRectangle(cornerRadius: 22, style: .continuous))),
+                name: "la-lockscreen-\(name)", width: 370, scheme: .dark, background: .black
+            )
+            try render(in: directory, AnyView(ReturnIslandCompactMock(attributes: returnAttributes, state: countdown, isStale: isStale)), name: "di-compact-\(name)", width: 300, scheme: .dark, background: .white)
+            try render(in: directory, AnyView(ReturnIslandMinimal(isStale: isStale).frame(width: 37, height: 37).background(Color.black, in: Circle()).padding(10)), name: "di-minimal-\(name)", width: 60, scheme: .dark, background: .white)
+            try render(in: directory, AnyView(ReturnIslandExpandedMock(attributes: returnAttributes, state: countdown, isStale: isStale)), name: "di-expanded-\(name)", width: 380, scheme: .dark, background: .white)
+        }
     }
+
+    /// SYNTHETIC: the way back as the end screen would pin it.
+    private let returnAttributes = TapsoReturnAttributes(
+        routeID: "SYN-202-E",
+        routeNumber: "202",
+        startStopName: "협재",
+        endStopName: "제주버스터미널",
+        beAtStopByText: "21:40",
+        lastDeparture: "21:50"
+    )
 
     // MARK: Builders
 
@@ -142,7 +203,9 @@ final class SnapshotEvidenceTests: XCTestCase {
         passed: Bool = false,
         offline: Bool = false,
         resumed: Bool = false,
-        liveActivityOff: Bool = false
+        liveActivityOff: Bool = false,
+        rescue: PassedStopAdvice? = nil,
+        kakaoAvailable: Bool = false
     ) -> AnyView {
         let guidance = RideGuidancePolicy.guidance(for: RideSignal(
             phase: phase, remainingStops: remaining, freshness: freshness, destinationPassed: passed, isOffline: offline
@@ -160,12 +223,56 @@ final class SnapshotEvidenceTests: XCTestCase {
                 upcomingStops: current < 8 ? Array(names[(current + 1)...8]) : [],
                 plate: attributes.vehiclePlate,
                 liveActivityUnavailable: liveActivityOff,
-                resumed: resumed
+                resumed: resumed,
+                rescue: rescue,
+                kakaoAvailable: kakaoAvailable
             ),
             onFinish: {},
             onMapSearch: { _ in },
             onDismissResume: {}
         ))
+    }
+
+    /// SYNTHETIC: a place as KakaoMap's share text would describe it (`MAP_HANDOFF_V3.md`).
+    private var sharedPlace: SharedPlace {
+        SharedPlace(
+            source: .kakaoMap,
+            name: "협재해수욕장",
+            address: "제주특별자치도 제주시 한림읍 협재리 2497-1",
+            coordinate: Coordinate(latitude: 33.3940, longitude: 126.2397)
+        )
+    }
+
+    /// SYNTHETIC: a passed stop whose next stop is 440 m from the destination in a straight
+    /// line, as surveyed coordinates would measure it. The demo's own coordinates are never measured.
+    private var walkBackAdvice: PassedStopAdvice {
+        let exit = DemoCatalog.outbound.stops[9]
+        return PassedStopAdvice(
+            exitStop: exit,
+            straightLineMeters: 440,
+            plan: Rescue.plan(RescueInput(kind: .passedDestination, nextStopName: exit.stop.name, walkBackMeters: 440))
+        )
+    }
+
+    /// SYNTHETIC: two variants of a route number at 21:30 on a weekday in Jeju.
+    private var returnRows: [ReturnServiceRow] {
+        var calendar = Calendar(identifier: .gregorian)
+        calendar.timeZone = LastBus.timeZone
+        let evening = calendar.date(from: DateComponents(year: 2026, month: 10, day: 1, hour: 21, minute: 30))!
+        let way = TransitAPIRoute(routeId: "SYN-202-W", routeNumber: "202", startStopName: "제주버스터미널", endStopName: "협재")
+        let back = TransitAPIRoute(routeId: "SYN-202-E", routeNumber: "202", startStopName: "협재", endStopName: "제주버스터미널")
+        return [
+            ReturnServiceRow(
+                route: way,
+                advice: LastBus.advice(for: TransitAPIRouteServiceHours(routeId: way.routeId, firstDeparture: "06:00", lastDeparture: "22:30", headwayMinutes: .init(weekday: 30)), now: evening),
+                ridden: true
+            ),
+            ReturnServiceRow(
+                route: back,
+                advice: LastBus.advice(for: TransitAPIRouteServiceHours(routeId: back.routeId, firstDeparture: "06:10", lastDeparture: "21:50", headwayMinutes: .init(weekday: 30)), now: evening),
+                ridden: false
+            ),
+        ]
     }
 
     private func end(_ moment: RideMoment) -> AnyView {
@@ -189,7 +296,8 @@ final class SnapshotEvidenceTests: XCTestCase {
         TapsoActivityAttributes.ContentState(
             phase: phase,
             currentStopName: "동문로터리",
-            nextStopName: "제주여자상업고등학교",
+            // Past the stop, the ride names where to get off (`PassedStopRescue`).
+            nextStopName: passed ? "국립제주박물관" : "제주여자상업고등학교",
             remainingStops: remaining,
             freshness: freshness,
             updatedAt: DemoFixtures.referenceDate,
@@ -230,6 +338,45 @@ private extension View {
 }
 
 /// The compact island: leading and trailing either side of the camera cut-out.
+private struct ReturnIslandCompactMock: View {
+    let attributes: TapsoReturnAttributes
+    let state: TapsoReturnAttributes.ContentState
+    let isStale: Bool
+
+    var body: some View {
+        HStack(spacing: 0) {
+            ReturnIslandCompactLeading(attributes: attributes, isStale: isStale)
+                .padding(.leading, 10)
+            Spacer(minLength: 126)
+            ReturnIslandCompactTrailing(state: state, isStale: isStale)
+                .padding(.trailing, 10)
+        }
+        .frame(height: 37)
+        .background(Color.black, in: Capsule())
+        .padding(12)
+    }
+}
+
+private struct ReturnIslandExpandedMock: View {
+    let attributes: TapsoReturnAttributes
+    let state: TapsoReturnAttributes.ContentState
+    let isStale: Bool
+
+    var body: some View {
+        VStack(spacing: 8) {
+            HStack(alignment: .top) {
+                ReturnIslandExpandedLeading(attributes: attributes, isStale: isStale)
+                Spacer()
+                ReturnIslandExpandedTrailing(state: state, isStale: isStale)
+            }
+            ReturnIslandExpandedBottom(attributes: attributes, isStale: isStale)
+        }
+        .padding(16)
+        .background(Color.black, in: RoundedRectangle(cornerRadius: 44, style: .continuous))
+        .padding(12)
+    }
+}
+
 private struct IslandCompactMock: View {
     let attributes: TapsoActivityAttributes
     let state: TapsoActivityAttributes.ContentState

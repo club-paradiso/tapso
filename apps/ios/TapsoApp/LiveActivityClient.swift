@@ -20,17 +20,40 @@ final class LiveActivityClient {
     var activityID: String? { activity?.id }
     var activitiesEnabled: Bool { ActivityAuthorizationInfo().areActivitiesEnabled }
 
+    /// Starts the ride's activity. With `push`, ActivityKit is asked for a push token so the server
+    /// can update the activity while the app is suspended. A build without the push entitlement
+    /// refuses that request; the activity then starts without push, as it always did.
     func start(
         attributes: TapsoActivityAttributes,
-        state: TapsoActivityAttributes.ContentState
+        state: TapsoActivityAttributes.ContentState,
+        push: Bool = false
     ) async throws {
         guard activitiesEnabled else { throw LiveActivityError.disabled }
         await endAll()
+        if push, let pushed = try? Activity.request(attributes: attributes, content: content(for: state), pushType: .token) {
+            activity = pushed
+            return
+        }
         activity = try Activity.request(
             attributes: attributes,
             content: content(for: state),
             pushType: nil
         )
+    }
+
+    /// Every push token the current activity is given, the first one and each rotation. An activity
+    /// started without push never yields one.
+    func pushTokens() -> AsyncStream<Data>? {
+        guard let activity else { return nil }
+        return AsyncStream { continuation in
+            let task = Task {
+                for await token in activity.pushTokenUpdates {
+                    continuation.yield(token)
+                }
+                continuation.finish()
+            }
+            continuation.onTermination = { _ in task.cancel() }
+        }
     }
 
     /// Updates the activity, alerting only for `milestone`. The app model decides
@@ -89,6 +112,53 @@ final class LiveActivityClient {
             sound: .default
         )
     }
+}
+
+/// The "돌아갈 시간" countdown (`TapsoReturnAttributes`): at most one, started and ended by the
+/// rider. Its content never changes after it starts, so it needs no update and no push.
+@MainActor
+final class ReturnReminderClient {
+    private var activity: Activity<TapsoReturnAttributes>?
+
+    init() {
+        activity = Activity<TapsoReturnAttributes>.activities.first {
+            switch $0.activityState {
+            case .active, .stale:
+                true
+            default:
+                false
+            }
+        }
+    }
+
+    var activitiesEnabled: Bool { ActivityAuthorizationInfo().areActivitiesEnabled }
+
+    /// The pinned variant and its countdown, while one is on screen.
+    var current: (attributes: TapsoReturnAttributes, state: TapsoReturnAttributes.ContentState)? {
+        guard let activity else { return nil }
+        return (activity.attributes, activity.content.state)
+    }
+
+    func start(attributes: TapsoReturnAttributes, state: TapsoReturnAttributes.ContentState) async throws {
+        guard activitiesEnabled else { throw LiveActivityError.disabled }
+        await end()
+        // Stale from the moment to be at the stop: the surfaces then say so instead of counting.
+        activity = try Activity.request(
+            attributes: attributes,
+            content: ActivityContent(state: state, staleDate: state.beAtStopBy, relevanceScore: Self.relevance),
+            pushType: nil
+        )
+    }
+
+    func end() async {
+        for existing in Activity<TapsoReturnAttributes>.activities {
+            await existing.end(nil, dismissalPolicy: .immediate)
+        }
+        activity = nil
+    }
+
+    /// Below every ride moment (`TapsoLiveActivityPolicy`), so a ride under way keeps the Dynamic Island.
+    static let relevance: Double = 10
 }
 
 enum LiveActivityError: LocalizedError {

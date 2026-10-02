@@ -9,10 +9,14 @@
  * boarding stop as plausible, and has no rider state. It is not equivalent and
  * does not pretend to be: it only drives the deterministic demo.
  *
- * These tests keep it that way. If the iOS app ever gains a network path, or
- * calls the Swift engine with anything but demo fixtures, they fail — at which
- * point the Swift engine has to pass `fixtures/transit/directed-matcher-invariants.json`
- * (below, run against the backend today) before it decides anything.
+ * These tests keep it that way. The app has exactly one network path,
+ * `apps/ios/TapsoApp/TapsoAPIClient.swift`, which talks only to TAPSO's own API
+ * (where the directed matcher and the rider's confirmation decide) and never
+ * touches a Swift matcher type. If any other Swift file gains a network path,
+ * if the client reaches any other host, or if the Swift engine is called with
+ * anything but demo fixtures, they fail — at which point the Swift engine has
+ * to pass `fixtures/transit/directed-matcher-invariants.json` (below, run
+ * against the backend today) before it decides anything.
  */
 
 import test from "node:test";
@@ -39,14 +43,49 @@ function swiftFiles(directory: string): string[] {
 
 const appSources = [...swiftFiles(join(repo, "apps/ios")), ...swiftFiles(join(repo, "packages/transit-core/Sources"))];
 
-test("the iOS app and the Swift core make no network request, so no real vehicle can reach the Swift matcher", () => {
+/** The app's one network client, and the test that stubs it. Nothing else may reach the network. */
+const NETWORK_CLIENT = "apps/ios/TapsoApp/TapsoAPIClient.swift";
+const NETWORK_CLIENT_TESTS = "apps/ios/Tests/TapsoAPIClientTests.swift";
+const TAPSO_API = "https://tapso-api.vercel.app";
+
+test("the Swift core makes no network request, and the app reaches the network only through TapsoAPIClient", () => {
   assert.ok(appSources.length > 0, "Swift sources were found");
+  assert.ok(appSources.some((file) => relative(repo, file) === NETWORK_CLIENT), "the network client exists");
   for (const file of appSources) {
+    const path = relative(repo, file);
     const source = readFileSync(file, "utf8");
-    for (const pattern of [/URLSession/, /URLRequest/, /NWConnection/, /https?:\/\//]) {
-      assert.doesNotMatch(source, pattern, `${relative(repo, file)} contains ${pattern}; a network path would let real data reach a non-authoritative matcher`);
+    const networkAllowed = path === NETWORK_CLIENT || path === NETWORK_CLIENT_TESTS;
+    for (const pattern of [/URLSession/, /URLRequest/, /https?:\/\//]) {
+      if (networkAllowed) continue;
+      assert.doesNotMatch(source, pattern, `${path} contains ${pattern}; a network path outside TapsoAPIClient could let real data reach a non-authoritative matcher`);
     }
+    assert.doesNotMatch(source, /NWConnection|URLSessionWebSocketTask|CFStream/, `${path} opens a raw connection`);
+    // The government feed's credential stays on the server; no Swift file may address it.
+    assert.doesNotMatch(source, /data\.go\.kr/, `${path} addresses the government feed directly`);
   }
+});
+
+test("the network client talks only to TAPSO's own API, through documented endpoints, and carries no Swift matcher type", () => {
+  const client = readFileSync(join(repo, NETWORK_CLIENT), "utf8");
+  assert.deepEqual([...new Set(client.match(/https?:\/\/[^"\s)`]+/g) ?? [])], [TAPSO_API]);
+  // Code only: the client's documentation may name the matcher it must never feed.
+  const code = client.replace(/\/\*[\s\S]*?\*\//g, "").replace(/\/\/.*$/gm, "");
+  for (const forbidden of [/VehicleMatchingEngine/, /VehicleMatchingInput/, /VehicleCandidate\b/, /VehicleObservation\b/, /BoardingContext/]) {
+    assert.doesNotMatch(code, forbidden, `the network path must never feed the demo-only Swift matcher (${forbidden})`);
+  }
+  const paths = [...client.matchAll(/path: "([^"]+)"/g)].map((match) => match[1]!.replace(/\\\([^)]*\)\)?/g, ":id"));
+  assert.ok(paths.length > 0);
+  const documented = new Set([
+    "/health",
+    "/v1/routes",
+    "/v1/stops",
+    "/v1/route-info",
+    "/v1/sessions",
+    "/v1/sessions/:id",
+    "/v1/sessions/:id/confirm",
+    "/v1/sessions/:id/live-activity",
+  ]);
+  for (const path of paths) assert.ok(documented.has(path), `${path} is not a documented TAPSO endpoint`);
 });
 
 test("the Swift VehicleMatchingEngine is called only by the demo, with demo fixtures", () => {

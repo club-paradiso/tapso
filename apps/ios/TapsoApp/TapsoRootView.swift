@@ -6,6 +6,7 @@ import TapsoTransit
 struct TapsoRootView: View {
     @Bindable var model: TapsoAppModel
     @Environment(\.accessibilityReduceMotion) private var reduceMotion
+    @Environment(\.scenePhase) private var scenePhase
 
     var body: some View {
         Group {
@@ -20,6 +21,9 @@ struct TapsoRootView: View {
                             destination(for: step)
                         }
                 }
+                .onChange(of: model.path) { _, newPath in
+                    model.pathDidChange(newPath)
+                }
                 .sheet(isPresented: $model.isDemoPanelPresented) {
                     DemoControlsView(model: model)
                         .presentationDetents([.medium])
@@ -29,6 +33,13 @@ struct TapsoRootView: View {
         .tint(TapsoColor.mintDeep)
         .animation(TapsoMotion.animation(TapsoMotion.standard, reduceMotion: reduceMotion), value: model.hasActiveRide)
         .task { await model.resumeIfNeeded() }
+        .onChange(of: scenePhase, initial: true) { _, phase in
+            guard phase == .active else { return }
+            // A place left by the share extension is picked up when TAPSO comes forward,
+            // and a last-bus countdown long past its time is cleared.
+            model.collectHandoff()
+            Task { await model.refreshReturnReminder() }
+        }
     }
 
     @ViewBuilder
@@ -44,6 +55,10 @@ struct TapsoRootView: View {
             MapImportView(model: model)
         case .vehicleCheck:
             VehicleCheckView(model: model)
+        case .liveRoutes:
+            LiveRouteSearchView(model: model)
+        case let .liveStops(routeID):
+            LiveStopPickerView(model: model, routeID: routeID)
         }
     }
 }

@@ -8,6 +8,7 @@
 
 import { readTransitApiConfig, readUpstashCredentials, type ServerEnv, type TransitApiConfig } from "./apiConfig.ts";
 import { createTransitApiHandler, type TransitApiHandler } from "./apiRouter.ts";
+import { describeApns, readApnsConfig } from "./apns.ts";
 import { CachedTransitProvider } from "./cachedTransitProvider.ts";
 import { JourneySessionCoordinator } from "./journeySession.ts";
 import { resolveOperatorToken } from "./operatorAuth.ts";
@@ -108,6 +109,7 @@ export function createTransitApi(env: ServerEnv = process.env as ServerEnv): Tra
       // session coordinator above, which must see consecutive, uncached reads.
       directProvider: upstream,
       sessions,
+      liveActivityPush: describeApns(readApnsConfig(env)),
       ...(limiter ? { limiter } : {}),
       ...(operatorLimiter ? { operatorLimiter } : {}),
       ...(operator.configured ? { operatorToken: operator.token } : {}),

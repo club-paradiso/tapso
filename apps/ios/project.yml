@@ -41,6 +41,12 @@ targets:
         UILaunchScreen: {}
         UISupportedInterfaceOrientations:
           - UIInterfaceOrientationPortrait
+    entitlements:
+      path: TapsoApp/Tapso.entitlements
+      properties:
+        # Shared with TapsoShare: the share extension leaves a parsed place here (`HandoffInbox`).
+        com.apple.security.application-groups:
+          - group.com.lucanomics.tapso
     settings:
       base:
         PRODUCT_BUNDLE_IDENTIFIER: com.lucanomics.tapso
@@ -50,6 +56,8 @@ targets:
     dependencies:
       - package: TapsoTransit
       - target: TapsoLiveActivity
+        embed: true
+      - target: TapsoShare
         embed: true
     scheme:
       testTargets:
@@ -75,6 +83,41 @@ targets:
       base:
         PRODUCT_BUNDLE_IDENTIFIER: com.lucanomics.tapso.LiveActivity
         PRODUCT_NAME: TapsoLiveActivity
+        APPLICATION_EXTENSION_API_ONLY: YES
+        SKIP_INSTALL: YES
+        TARGETED_DEVICE_FAMILY: "1"
+    dependencies:
+      - package: TapsoTransit
+  TapsoShare:
+    type: app-extension
+    platform: iOS
+    sources:
+      - path: ShareExtension
+      - path: Shared/TapsoTokens.swift
+      - path: Resources
+        buildPhase: resources
+    info:
+      path: ShareExtension/Info.plist
+      properties:
+        CFBundleDisplayName: TAPSO
+        CFBundleShortVersionString: $(MARKETING_VERSION)
+        CFBundleVersion: $(CURRENT_PROJECT_VERSION)
+        NSExtension:
+          NSExtensionAttributes:
+            NSExtensionActivationRule:
+              NSExtensionActivationSupportsText: true
+              NSExtensionActivationSupportsWebURLWithMaxCount: 1
+          NSExtensionPointIdentifier: com.apple.share-services
+          NSExtensionPrincipalClass: $(PRODUCT_MODULE_NAME).ShareViewController
+    entitlements:
+      path: ShareExtension/TapsoShare.entitlements
+      properties:
+        com.apple.security.application-groups:
+          - group.com.lucanomics.tapso
+    settings:
+      base:
+        PRODUCT_BUNDLE_IDENTIFIER: com.lucanomics.tapso.Share
+        PRODUCT_NAME: TapsoShare
         APPLICATION_EXTENSION_API_ONLY: YES
         SKIP_INSTALL: YES
         TARGETED_DEVICE_FAMILY: "1"

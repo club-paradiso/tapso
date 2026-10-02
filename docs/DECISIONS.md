@@ -185,6 +185,25 @@ The V1 app and Live Activity each had their own switch over the phase, and they 
 
 **Decision:** the app keeps making no network request. Search, proposals and rides come from `DemoCatalog` and `DemoRideScript`, labelled synthetic in code and on Home. `services/api/test/crossLanguageAuthority.test.ts` stays as it is; the Swift `VehicleMatchingEngine` still ranks only the sample ride's demo fixture.
 
+## The app reaches TAPSO's API through one client, and the server still decides (2026-10-01)
+
+**Decision:** Product V3 connects the app to journey sessions (`docs/product/LIVE_JOURNEY_V3.md`). It supersedes the entry above for live rides only; the demo keeps its synthetic catalogue and scripts. Every network API lives in `apps/ios/TapsoApp/TapsoAPIClient.swift`, which addresses only `https://tapso-api.vercel.app` through documented endpoints and never names a Swift matcher type. The server's `directed-route-progress-v1` ranks in shadow mode and the rider's tap selects; the app translates the server's session into the surfaces it already has (`LiveSessionInterpreter`), and never re-derives freshness from a timestamp, because TAGO publishes none. `services/api/test/crossLanguageAuthority.test.ts` now enforces those rules instead of "no network": a network API in any other Swift file, another host, an undocumented path, or a matcher type in the client fails CI, and the Swift `VehicleMatchingEngine` is still called only by `startDemo` with demo fixtures. *Rejected:* calling TAGO from the phone (the credential must stay server-side) and porting the matcher to Swift (it would have to pass `fixtures/transit/directed-matcher-invariants.json` first, for no product gain).
+
 ## CI builds the iOS app and publishes snapshot evidence (2026-09-30)
 
 **Decision:** a macOS `ios` job builds the committed project, runs the app and Live Activity tests, renders every Product V2 screen and ride surface in Korean and English, and checks XcodeGen membership parity. The committed `.xcodeproj` is kept in step by `scripts/ios/sync_xcodeproj.py` so it can be updated without a Mac. The job runs with `contents: read` and no persisted credentials; its only output is the artifact `ios-snapshot-evidence`. A branch-publishing job (`ci-evidence/<branch>`) was tried during Product V2 review and removed: it held a write token while installing an unpinned package from the network, and the artifact is the canonical evidence.
+
+## The production session namespace belongs to production alone (2026-10-01)
+
+**Decision:** the API decides at boot whether a deployment may serve journey sessions from its Redis namespace. A deployment with `VERCEL_ENV=production` serves them only from `tapso:prod:journey-session:`; no other deployment or process may use that namespace; the `verify` namespace is never served. A violation disables sessions with the reason in `/health` and in the `503`, rather than failing the boot, because the read endpoints have nothing to do with it.
+
+Production and preview share one Upstash database (`exec-plans/DURABLE_JOURNEY_SESSIONS.md`), so a namespace typo is the one mistake that would mix test rides into real ones or the reverse. `/health` now reports the namespace's category (`sessions.namespace`), never the prefix, so the rule can be checked from outside: the scheduled and post-deploy smokes fail a production deployment that reports any other category.
+
+## Ending a ride deletes its session (2026-10-01)
+
+**Decision:** `DELETE /v1/sessions/:id` deletes the row. A finished ride stops costing provider reads (journey sessions read TAGO uncached), its stop history stops existing, and a post-deploy check can leave production as it found it. The session id stays the only credential, as for reading and confirming: a UUID that only the rider's device holds.
+
+## A shared place stays on the phone and only suggests where to get off (2026-10-01)
+
+**Decision:** map hand-off V3 (`product/MAP_HANDOFF_V3.md`) parses shared content in the Swift core with no network request, keeps one parsed place in the App Group `group.com.lucanomics.tapso` for at most 30 minutes, and lets it reach a ride only through a setup that started from the import screen. Stops near the place are suggestions computed from two real coordinates (TAGO's and the map app's), never from synthetic ones, and the rider still chooses both the stop and the bus. *Rejected:* resolving `kko.to` / `naver.me` links (a network fetch on the phone and undocumented scraping); sending the place to the server for a stop search (no documented, authorized endpoint yet, and the place is not needed there); opening the app from the share extension (iOS supports `NSExtensionContext.open` only for Today and iMessage extensions, `VERIFIED`).
+

@@ -17,7 +17,12 @@ import {
   READINESS_GATE,
 } from "./matchingReadiness.ts";
 import { resolveOperatorToken } from "./operatorAuth.ts";
-import { readSessionKeyPrefix } from "./sessionKeyPrefix.ts";
+import {
+  classifySessionKeyPrefix,
+  readSessionKeyPrefix,
+  sessionNamespaceProblem,
+  type SessionNamespaceClass,
+} from "./sessionKeyPrefix.ts";
 import { resolveTagoServiceKey, type ServiceKeySource } from "./serviceKey.ts";
 
 export type ServerEnv = Record<string, string | undefined>;
@@ -95,6 +100,17 @@ export interface TransitApiConfig {
     enabled: boolean;
     /** True when `redis` has a usable URL and token. Never the values. */
     durableStoreConfigured: boolean;
+    /**
+     * The category of the Redis key namespace, with `redis` only. Never the
+     * prefix itself. Production and preview share one database, so this is
+     * how an operator confirms which one a deployment writes to.
+     */
+    namespace?: SessionNamespaceClass;
+    /**
+     * Why sessions are disabled although asked for: the namespace does not
+     * belong to this deployment (`sessionNamespaceProblem`). Absent otherwise.
+     */
+    problem?: string;
   };
   /**
    * Automatic vehicle selection is a separate rollout axis from sessions.
@@ -215,7 +231,18 @@ export function readTransitApiConfig(
   // left dormant on a memory deployment would otherwise surface on the day the
   // store is switched. The value stays out of `TransitApiConfig`, which
   // `/health` serializes; the key layout is nobody's business but the wiring's.
-  readSessionKeyPrefix(env);
+  const sessionKeyPrefix = readSessionKeyPrefix(env);
+  // Only a durable store writes keys, so only then does the namespace have to
+  // belong to this deployment. A namespace that does not disables sessions
+  // rather than the deployment.
+  const namespace = sessionStore === "redis" ? classifySessionKeyPrefix(sessionKeyPrefix) : undefined;
+  const namespaceProblem = namespace === undefined
+    ? undefined
+    : sessionNamespaceProblem(trimmed(env, "VERCEL_ENV"), namespace);
+  // A durable store removes the reason serverless defaults to off. The
+  // operator still has to say yes; what changes is that saying yes is no
+  // longer a decision to lose rides on scale-out.
+  const sessionsRequested = boolean(env, "TRANSIT_SESSIONS_ENABLED", platform === "node" || sessionStore === "redis");
 
   return {
     transitProvider: "tago",
@@ -231,11 +258,10 @@ export function readTransitApiConfig(
     },
     sessions: {
       store: sessionStore,
-      // A durable store removes the reason serverless defaults to off. The
-      // operator still has to say yes; what changes is that saying yes is no
-      // longer a decision to lose rides on scale-out.
-      enabled: boolean(env, "TRANSIT_SESSIONS_ENABLED", platform === "node" || sessionStore === "redis"),
+      enabled: sessionsRequested && namespaceProblem === undefined,
       durableStoreConfigured: sessionStore === "redis",
+      ...(namespace === undefined ? {} : { namespace }),
+      ...(sessionsRequested && namespaceProblem !== undefined ? { problem: namespaceProblem } : {}),
     },
     matching: {
       matcherPolicy: MATCHER_POLICY_VERSION,

@@ -29,6 +29,10 @@
       "destination": "/api/v1/stops"
     },
     {
+      "source": "/v1/route-info",
+      "destination": "/api/v1/route-info"
+    },
+    {
       "source": "/v1/vehicles",
       "destination": "/api/v1/vehicles"
     },
@@ -43,6 +47,10 @@
     {
       "source": "/v1/sessions/:id/confirm",
       "destination": "/api/v1/session-confirm?sessionId=:id"
+    },
+    {
+      "source": "/v1/sessions/:id/live-activity",
+      "destination": "/api/v1/session-live-activity?sessionId=:id"
     },
     {
       "source": "/v1/sessions/:id",

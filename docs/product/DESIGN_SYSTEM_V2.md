@@ -59,6 +59,11 @@ The existing `TAPSO Color`, `TAPSO Dimensions` and web components are unchanged;
 | journey.checking (dark) on basalt | 6.5:1 |
 | journey.degraded (dark) on basalt | 8.1:1 |
 
+The Lock Screen follows the system appearance even on basalt, so its text is checked with both token variants, for every moment (`RidePresentationTests.testLockScreenTextReadsOnEverySurface`). Text is dimmed only where it stays at 4.5:1 or more: the secondary line at 70 % on basalt (9.2:1) and 72 % on tangerine (4.8:1).
+- **Coral:** the secondary line is full strength. Dimmed to 70 % it read 3.2:1 on the light coral and 4.3:1 on the dark one.
+- **Count unit label:** full strength on every surface. At 80 % it read 3.7:1 on the light coral and 4.4:1 for light slate on basalt.
+- **Last-known count numeral:** 70 %. Slate on basalt then reads 3.7:1 in light appearance and 4.6:1 in dark, above the 3:1 that large text needs; at the previous 55 % it read 2.8:1.
+
 The V1 values these replace failed: white on `#D64545` 4.4:1, white on `#F2685C` 3.0:1, `#7A8C95` on white 3.5:1, ink on the slate route badge 3.1:1 (`UX_AUDIT_V2.md` P2-2).
 
 ## Space, size, radius

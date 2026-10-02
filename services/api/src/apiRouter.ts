@@ -18,7 +18,7 @@ import { analyzeRideCapture, classifyTopology, RideCaptureInputError, type RideC
 import { operatorTokenMatches, readBearerToken } from "./operatorAuth.ts";
 import type { CachedTransitProvider } from "./cachedTransitProvider.ts";
 import type { TransitProvider } from "./provider.ts";
-import type { TagoCity, TagoRoute, TagoTransitProvider } from "./tagoProvider.ts";
+import type { TagoCity, TagoRoute, TagoRouteServiceHours, TagoTransitProvider } from "./tagoProvider.ts";
 import type { JourneySessionCoordinator } from "./journeySession.ts";
 import type { TransitApiConfig } from "./apiConfig.ts";
 import type { BurstLimiter } from "./rateLimit.ts";
@@ -110,8 +110,11 @@ export interface TransitApiDependencies {
    * Discovery calls (`cities`, `routes`) are not part of `TransitProvider`.
    * `allRoutes` is optional because whether the provider will list a whole city
    * is the provider's answer to give, not this module's to assume.
+   * `routeServiceHours` is optional for the same reason: a provider without a
+   * published service day answers `NOT_FOUND`, never an invented one.
    */
-  discovery: Pick<TagoTransitProvider, "cities" | "routes"> & Partial<Pick<TagoTransitProvider, "allRoutes">>;
+  discovery: Pick<TagoTransitProvider, "cities" | "routes">
+    & Partial<Pick<TagoTransitProvider, "allRoutes" | "routeServiceHours">>;
   provider: CachedTransitProvider;
   /**
    * The uncached upstream, used only by the operator ride-capture path. Task B
@@ -123,6 +126,12 @@ export interface TransitApiDependencies {
   limiter?: BurstLimiter;
   /** Separate budget so a ride never spends the public API's burst allowance. */
   operatorLimiter?: BurstLimiter;
+  /**
+   * Whether this deployment can push Live Activity updates: `describeApns`,
+   * names only. Absent reads as off, and a token is then refused rather than
+   * stored for pushes that will never come.
+   */
+  liveActivityPush?: { enabled: boolean; environment?: string; missing?: string[] };
   /** The shared operator secret. Deliberately not part of `config`, which `/health` echoes. */
   operatorToken?: string;
   now?: () => Date;
@@ -135,12 +144,15 @@ type Route =
   | "health"
   | "cities"
   | "routes"
+  | "route_info"
   | "stops"
   | "vehicles"
   | "matches"
   | "session_create"
   | "session_read"
+  | "session_end"
   | "session_confirm"
+  | "session_live_activity"
   | "operator_snapshot"
   | "operator_analyze";
 
@@ -152,6 +164,8 @@ export function createTransitApiHandler(dependencies: TransitApiDependencies): T
   const log = dependencies.log ?? defaultLog;
   const cityCache = new TtlCache<TagoCity[]>({ ttlMs: config.cachePolicy.discoveryTtlMs });
   const routeCache = new TtlCache<TagoRoute[]>({ ttlMs: config.cachePolicy.discoveryTtlMs });
+  // A route's published service day changes rarely; one read per route per discovery window.
+  const routeInfoCache = new TtlCache<TagoRouteServiceHours | null>({ ttlMs: config.cachePolicy.discoveryTtlMs });
 
   return async function handle(request: Request, context: RequestContext = {}): Promise<Response> {
     const startedAt = Date.now();
@@ -159,7 +173,7 @@ export function createTransitApiHandler(dependencies: TransitApiDependencies): T
     const path = url ? normalizePath(url.pathname) : "/";
     const origin = request.headers.get("origin");
     const cors = corsHeaders(config, origin);
-    const resolved = url ? resolve(path) : undefined;
+    const resolved = url ? resolve(path, request.method) : undefined;
 
     if (request.method === "OPTIONS") {
       return preflight(config, resolved, cors);
@@ -177,7 +191,7 @@ export function createTransitApiHandler(dependencies: TransitApiDependencies): T
       enforceRateLimit(dependencies, clientAddress(request, context), resolved.route);
       if (isOperatorRoute(resolved.route)) requireOperator(dependencies, request);
 
-      const result = await dispatch(dependencies, { cityCache, routeCache, now }, resolved, request, url);
+      const result = await dispatch(dependencies, { cityCache, routeCache, routeInfoCache, now }, resolved, request, url);
       cache = result.cache ?? "none";
       response = withHeaders(result.response, cors);
     } catch (error) {
@@ -215,10 +229,19 @@ export function normalizePath(pathname: string): string {
   return path === "" ? "/" : path;
 }
 
-function resolve(path: string): Resolved | undefined {
+function resolve(path: string, method: string): Resolved | undefined {
+  const resolved = resolvePath(path);
+  // One path, two routes: reading a session and ending it share an address,
+  // and are logged, limited and dispatched as what they are.
+  if (resolved?.route === "session_read" && method === "DELETE") return { ...resolved, route: "session_end" };
+  return resolved;
+}
+
+function resolvePath(path: string): Resolved | undefined {
   if (path === "/health") return { route: "health", methods: ["GET"] };
   if (path === "/v1/cities") return { route: "cities", methods: ["GET"] };
   if (path === "/v1/routes") return { route: "routes", methods: ["GET"] };
+  if (path === "/v1/route-info") return { route: "route_info", methods: ["GET"] };
   if (path === "/v1/stops") return { route: "stops", methods: ["GET"] };
   if (path === "/v1/vehicles") return { route: "vehicles", methods: ["GET"] };
   if (path === "/v1/matches") return { route: "matches", methods: ["POST"] };
@@ -230,14 +253,18 @@ function resolve(path: string): Resolved | undefined {
   if (path === "/operator/analyze") return { route: "operator_analyze", methods: ["POST"] };
 
   // Rewrite targets: the session identifier arrives as a query parameter.
-  if (path === "/v1/session") return { route: "session_read", methods: ["GET"] };
+  if (path === "/v1/session") return { route: "session_read", methods: ["GET", "DELETE"] };
   if (path === "/v1/session-confirm") return { route: "session_confirm", methods: ["POST"] };
+  if (path === "/v1/session-live-activity") return { route: "session_live_activity", methods: ["PUT", "DELETE"] };
 
   const confirm = /^\/v1\/sessions\/([^/]+)\/confirm$/.exec(path);
   if (confirm) return { route: "session_confirm", methods: ["POST"], sessionId: decodeSegment(confirm[1]) };
 
+  const liveActivity = /^\/v1\/sessions\/([^/]+)\/live-activity$/.exec(path);
+  if (liveActivity) return { route: "session_live_activity", methods: ["PUT", "DELETE"], sessionId: decodeSegment(liveActivity[1]) };
+
   const read = /^\/v1\/sessions\/([^/]+)$/.exec(path);
-  if (read) return { route: "session_read", methods: ["GET"], sessionId: decodeSegment(read[1]) };
+  if (read) return { route: "session_read", methods: ["GET", "DELETE"], sessionId: decodeSegment(read[1]) };
 
   return undefined;
 }
@@ -256,6 +283,7 @@ function decodeSegment(value: string | undefined): string | undefined {
 type Support = {
   cityCache: TtlCache<TagoCity[]>;
   routeCache: TtlCache<TagoRoute[]>;
+  routeInfoCache: TtlCache<TagoRouteServiceHours | null>;
   now: () => Date;
 };
 
@@ -271,7 +299,7 @@ async function dispatch(
   const { config, provider, discovery } = dependencies;
 
   if (resolved.route === "health") {
-    return { response: json(healthPayload(config, support.now(), dependencies.sessions), 200, { "cache-control": "no-store" }) };
+    return { response: json(healthPayload(config, support.now(), dependencies.sessions, dependencies.liveActivityPush), 200, { "cache-control": "no-store" }) };
   }
 
   if (resolved.route === "cities") {
@@ -312,6 +340,39 @@ async function dispatch(
             // One route number is several official routes. Collapsing them
             // would destroy direction and endpoint identity.
             variantsPreserved: true,
+          },
+        },
+        200,
+        sharedCacheControl(config.cachePolicy.discoveryTtlMs),
+      ),
+    };
+  }
+
+  if (resolved.route === "route_info") {
+    const route = routeRequestFrom(url);
+    const read = discovery.routeServiceHours;
+    if (!read) throw apiError("NOT_FOUND", "this provider publishes no service hours");
+    const result = await support.routeInfoCache.readThrough(
+      `${route.cityCode}:${route.routeId}`,
+      async () => (await read.call(discovery, route.cityCode, route.routeId)) ?? null,
+    );
+    if (!result.value) throw apiError("NOT_FOUND", "the provider has no route with that routeId");
+    const { undocumented, ...item } = result.value;
+    return {
+      cache: result.cache,
+      response: json(
+        {
+          item,
+          meta: {
+            provider: config.transitProvider,
+            cityCode: route.cityCode,
+            routeId: route.routeId,
+            // `firstDeparture` / `lastDeparture` leave the route's starting stop; every
+            // later stop is passed after that. Headways are the published averages.
+            timeReference: "starting_stop_departure",
+            headway: "published_average_minutes",
+            // What TAGO sent outside its documented shape, verbatim; the item never uses it.
+            ...(undocumented ? { undocumentedFields: undocumented } : {}),
           },
         },
         200,
@@ -482,6 +543,33 @@ async function dispatch(
     return { response: json(await sessions.refresh(sessionId), 200, { "cache-control": "no-store" }) };
   }
 
+  if (resolved.route === "session_end") {
+    const ended = await sessions.end(sessionId);
+    logEvent("journey_session_ended", {
+      sessionId: ended.id,
+      routeId: ended.routeId,
+      expired: ended.expired,
+      selectionMode: ended.selectionMode,
+    });
+    return { response: new Response(null, { status: 204, headers: { ...baseHeaders(), "cache-control": "no-store" } }) };
+  }
+
+  if (resolved.route === "session_live_activity") {
+    if (request.method === "DELETE") {
+      await sessions.clearLiveActivityToken(sessionId);
+      return { response: new Response(null, { status: 204, headers: { ...baseHeaders(), "cache-control": "no-store" } }) };
+    }
+    if (dependencies.liveActivityPush?.enabled !== true) {
+      throw apiError("LIVE_ACTIVITY_PUSH_UNAVAILABLE", "Live Activity updates by push are not enabled on this deployment");
+    }
+    const registration = await sessions.registerLiveActivityToken(sessionId, await readJsonBody(request));
+    logEvent("live_activity_token_registered", {
+      sessionId: registration.sessionId,
+      tokenFingerprint: registration.liveActivityPush.fingerprint,
+    });
+    return { response: json(registration, 200, { "cache-control": "no-store" }) };
+  }
+
   const session = await sessions.confirm(sessionId, await readJsonBody(request));
   logEvent("vehicle_match_confirmed", {
     sessionId: session.id,
@@ -493,7 +581,12 @@ async function dispatch(
 
 /* ------------------------------------------------------------------- health */
 
-function healthPayload(config: TransitApiConfig, now: Date, sessions: JourneySessionCoordinator | undefined): Record<string, unknown> {
+function healthPayload(
+  config: TransitApiConfig,
+  now: Date,
+  sessions: JourneySessionCoordinator | undefined,
+  liveActivityPush: TransitApiDependencies["liveActivityPush"],
+): Record<string, unknown> {
   return {
     ok: true,
     service: "tapso-transit-api",
@@ -528,6 +621,8 @@ function healthPayload(config: TransitApiConfig, now: Date, sessions: JourneySes
       sessionMatchingMode: sessions?.matchingMode ?? "none",
     },
     freshness: freshnessPosture(config),
+    // The app asks ActivityKit for a push token only when this says enabled.
+    liveActivityPush: liveActivityPush ?? { enabled: false },
   };
 }
 
@@ -709,9 +804,15 @@ function requireOperator(dependencies: TransitApiDependencies, request: Request)
 function requireSessions(dependencies: TransitApiDependencies): JourneySessionCoordinator {
   const { sessions, config } = dependencies;
   if (sessions && config.sessions.enabled) return sessions;
+  // The reason, as the configuration knows it: a client and an operator act
+  // differently on "not durable here", "wrong namespace" and "switched off".
   throw apiError(
     "SESSIONS_UNAVAILABLE",
-    "ride sessions are held in one process's memory and are disabled on this deployment",
+    config.sessions.problem
+      ? `ride sessions are disabled on this deployment: ${config.sessions.problem}`
+      : config.sessions.store === "memory"
+        ? "ride sessions are held in one process's memory and are disabled on this deployment"
+        : "ride sessions are disabled on this deployment by configuration",
   );
 }
 
@@ -736,7 +837,7 @@ function corsHeaders(config: TransitApiConfig, origin: string | null): Record<st
   return {
     vary: "Origin",
     "access-control-allow-origin": origin,
-    "access-control-allow-methods": "GET, POST, OPTIONS",
+    "access-control-allow-methods": "GET, POST, PUT, DELETE, OPTIONS",
     "access-control-allow-headers": "content-type, authorization",
     "access-control-max-age": "600",
   };
@@ -837,12 +938,19 @@ const STATUS_BY_CODE: Record<string, number> = {
   SESSION_NOT_FOUND: 404,
   METHOD_NOT_ALLOWED: 405,
   SESSION_ID_COLLISION: 409,
+  SESSION_WRITE_CONFLICT: 409,
   SESSION_EXPIRED: 410,
   PAYLOAD_TOO_LARGE: 413,
   RATE_LIMITED: 429,
   PROVIDER_RESPONSE_INVALID: 502,
+  // The upstream feed could not be reached or answered with an HTTP error.
+  PROVIDER_UNAVAILABLE: 502,
+  // The upstream feed did not answer within TAPSO's deadline. Distinct from
+  // INTERNAL_ERROR (TAPSO broke) and from an empty vehicle list (no bus).
+  PROVIDER_TIMEOUT: 504,
   BLOCKED_BY_CREDENTIALS: 503,
   SESSIONS_UNAVAILABLE: 503,
+  LIVE_ACTIVITY_PUSH_UNAVAILABLE: 503,
   // The store is reachable or it is not. A session that cannot be read is
   // never reported as a session that does not exist.
   SESSION_STORE_UNAVAILABLE: 503,
