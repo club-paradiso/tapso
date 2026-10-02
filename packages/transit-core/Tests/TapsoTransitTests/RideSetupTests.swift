@@ -22,6 +22,25 @@ final class RideSetupTests: XCTestCase {
         XCTAssertEqual(check.headlineKey, "check.proposed.headline")
     }
 
+    /// Issue #80: without a suggestion allowed, one bus or many is the rider's pick, in the given order.
+    func testWithoutSuggestionsEveryListIsTheRidersPick() {
+        let one = DemoCatalog.proposals(for: .smooth, route: DemoCatalog.outbound)
+        let single = VehicleCheck.evaluate(proposals: one, hasSearched: true, suggestionsAllowed: false)
+        XCTAssertEqual(single.stage, .choose)
+        XCTAssertEqual(single.headlineKey, "check.choose.headline")
+
+        let two = DemoCatalog.proposals(for: .similarBuses, route: DemoCatalog.outbound)
+        let many = VehicleCheck.evaluate(proposals: two.reversed(), hasSearched: true, suggestionsAllowed: false)
+        XCTAssertEqual(many.stage, .choose)
+        XCTAssertEqual(many.proposals, two.reversed(), "the server's order, not a re-ranking")
+
+        XCTAssertEqual(VehicleCheck.evaluate(proposals: [], hasSearched: true, suggestionsAllowed: false).stage, .notFoundYet)
+        XCTAssertEqual(
+            VehicleCheck.evaluate(proposals: one, hasSearched: true, confirmed: one[0].vehicleID, suggestionsAllowed: false).stage,
+            .confirmed
+        )
+    }
+
     func testNoBusIsSearchingThenNotFoundYet() {
         XCTAssertEqual(VehicleCheck.evaluate(proposals: [], hasSearched: false).stage, .searching)
         XCTAssertEqual(VehicleCheck.evaluate(proposals: [], hasSearched: true).stage, .notFoundYet)

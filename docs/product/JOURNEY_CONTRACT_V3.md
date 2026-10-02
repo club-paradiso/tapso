@@ -11,7 +11,7 @@ them invents its own journey semantics.
 | Swift core | `packages/transit-core/Sources/TapsoTransit/JourneyContract.swift` | `packages/transit-core/Tests/TapsoTransitTests/JourneyContractTests.swift` |
 
 Both test files check the vocabulary lists in order, every contract case, every
-surface case, and an exhaustive sweep of every input combination (11 088) for
+surface case, and an exhaustive sweep of every input combination (12 936) for
 two safety properties: late or uncertain data never produces a get-off
 milestone, and a discovery hint never shows while a connection is planned.
 
@@ -49,7 +49,7 @@ An unmeasured distance stays absent; it is never filled with a guess.
 | List | Values |
 |---|---|
 | Segment kinds | `walk`, `ride`, `transfer` |
-| Pre-ride stages | `searching`, `proposed`, `similarBuses`, `notFoundYet`, `confirmed` (Swift `VehicleCheckStage`) |
+| Pre-ride stages | `searching`, `proposed`, `similarBuses`, `choose` (below confirmation-assisted matcher readiness the rider picks the bus, even one; issue #80), `notFoundYet`, `confirmed` (Swift `VehicleCheckStage`) |
 | Ride moments | `riding`, `prepare`, `nextStop`, `arrived`, `passedDestination`, `delayed`, `vehicleLost`, `offline`, `checking`, `ended` (Swift `RideMoment`, from `RideGuidancePolicy`) |
 | Transfer risks | `safe`, `tight`, `atRisk`, `missed`, `recovering`, `unknown` |
 | Safe Return levels | `comfortable`, `leaveBy`, `tight`, `notRecommended`, `unknown` |
@@ -70,7 +70,7 @@ state and one action. Precedence, highest first:
 3. The current segment:
    - **walk**: before the first ride `waiting` / `walkToStop`; after the last ride `arrival` / `finish`.
    - **transfer**: `recovering` → `recovery`; `atRisk` or `missed` → `transferRisk` / `checkAlternative`; otherwise `transfer` / `boardNextBus`.
-   - **ride, before a ride moment**: `searching`/`notFoundYet` → `waiting` / `waitForBus`; `proposed`/`similarBuses` → `confirm` / `confirmBus`; anything else → `checking` / `keepWatching` (fail closed).
+   - **ride, before a ride moment**: `searching`/`notFoundYet` → `waiting` / `waitForBus`; `proposed`/`similarBuses`/`choose` → `confirm` / `confirmBus`; anything else → `checking` / `keepWatching` (fail closed).
    - **ride, with a moment**:
 
 | Ride moment | Final ride | Ride before a transfer |

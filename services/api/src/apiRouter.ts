@@ -25,6 +25,8 @@ import type { BurstLimiter } from "./rateLimit.ts";
 import { maskClientAddress } from "./rateLimit.ts";
 import { TtlCache } from "./ttlCache.ts";
 import { logEvent } from "./observability.ts";
+import type { LiveActivityPusher } from "./liveActivityPusher.ts";
+import type { ProviderHealth } from "./providerHealth.ts";
 import { TAGO_CADENCE_POLICY_V1 } from "./sourceFreshness.ts";
 
 /**
@@ -132,6 +134,13 @@ export interface TransitApiDependencies {
    * stored for pushes that will never come.
    */
   liveActivityPush?: { enabled: boolean; environment?: string; missing?: string[] };
+  /**
+   * Present only where APNs is configured: pushes a ride's Live Activity after
+   * its session is read or confirmed, and ends it when the session ends.
+   */
+  liveActivityPusher?: Pick<LiveActivityPusher, "afterRead" | "beforeEnd">;
+  /** This instance's recent upstream outcomes and latency, shown in `/health`. */
+  providerHealth?: Pick<ProviderHealth, "snapshot">;
   /** The shared operator secret. Deliberately not part of `config`, which `/health` echoes. */
   operatorToken?: string;
   now?: () => Date;
@@ -299,7 +308,7 @@ async function dispatch(
   const { config, provider, discovery } = dependencies;
 
   if (resolved.route === "health") {
-    return { response: json(healthPayload(config, support.now(), dependencies.sessions, dependencies.liveActivityPush), 200, { "cache-control": "no-store" }) };
+    return { response: json(healthPayload(config, support.now(), dependencies.sessions, dependencies.liveActivityPush, dependencies.providerHealth), 200, { "cache-control": "no-store" }) };
   }
 
   if (resolved.route === "cities") {
@@ -403,10 +412,13 @@ async function dispatch(
              * must assume `linear`, which is the choice that refuses wrap-around.
              */
             topology: classifyTopology(result.value),
+            // The provider failed to refresh this route's stops; this is the
+            // last list it gave, at most a day old. Never cached downstream.
+            ...(result.cache === "stale" ? { servedStale: { reason: "provider_error" } } : {}),
           },
         },
         200,
-        sharedCacheControl(config.cachePolicy.stopTtlMs),
+        result.cache === "stale" ? { "cache-control": "no-store" } : sharedCacheControl(config.cachePolicy.stopTtlMs),
       ),
     };
   }
@@ -540,10 +552,13 @@ async function dispatch(
   const sessionId = sessionIdentifier(resolved, url);
 
   if (resolved.route === "session_read") {
-    return { response: json(await sessions.refresh(sessionId), 200, { "cache-control": "no-store" }) };
+    const session = await sessions.refresh(sessionId);
+    await dependencies.liveActivityPusher?.afterRead(session);
+    return { response: json(session, 200, { "cache-control": "no-store" }) };
   }
 
   if (resolved.route === "session_end") {
+    await dependencies.liveActivityPusher?.beforeEnd(sessionId);
     const ended = await sessions.end(sessionId);
     logEvent("journey_session_ended", {
       sessionId: ended.id,
@@ -571,6 +586,7 @@ async function dispatch(
   }
 
   const session = await sessions.confirm(sessionId, await readJsonBody(request));
+  await dependencies.liveActivityPusher?.afterRead(session);
   logEvent("vehicle_match_confirmed", {
     sessionId: session.id,
     routeId: session.routeId,
@@ -586,6 +602,7 @@ function healthPayload(
   now: Date,
   sessions: JourneySessionCoordinator | undefined,
   liveActivityPush: TransitApiDependencies["liveActivityPush"],
+  providerHealth: TransitApiDependencies["providerHealth"],
 ): Record<string, unknown> {
   return {
     ok: true,
@@ -623,6 +640,8 @@ function healthPayload(
     freshness: freshnessPosture(config),
     // The app asks ActivityKit for a push token only when this says enabled.
     liveActivityPush: liveActivityPush ?? { enabled: false },
+    // Per warm instance, never global, and never an input to a rider decision.
+    ...(providerHealth ? { providerHealth: providerHealth.snapshot() } : {}),
   };
 }
 

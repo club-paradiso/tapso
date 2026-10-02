@@ -96,5 +96,5 @@ test("resolution is total and fails closed: no input combination escapes the voc
       }
     }
   }
-  assert.equal(combinations, 3 * 2 * 6 * 11 * 7 * 2 * 2);
+  assert.equal(combinations, 3 * 2 * 7 * 11 * 7 * 2 * 2);
 });

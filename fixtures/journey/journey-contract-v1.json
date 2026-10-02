@@ -3,7 +3,7 @@
   "schemaVersion": "tapso-journey-contract-v1",
   "vocabulary": {
     "segmentKinds": ["walk", "ride", "transfer"],
-    "preRideStages": ["searching", "proposed", "similarBuses", "notFoundYet", "confirmed"],
+    "preRideStages": ["searching", "proposed", "similarBuses", "choose", "notFoundYet", "confirmed"],
     "rideMoments": ["riding", "prepare", "nextStop", "arrived", "passedDestination", "delayed", "vehicleLost", "offline", "checking", "ended"],
     "transferRisks": ["safe", "tight", "atRisk", "missed", "recovering", "unknown"],
     "safeReturnLevels": ["comfortable", "leaveBy", "tight", "notRecommended", "unknown"],
@@ -105,6 +105,7 @@
     { "id": "S4", "why": "no bus seen yet is still waiting, never an error", "input": { "segment": "ride", "finalLeg": true, "preRide": "notFoundYet" }, "expect": { "state": "waiting", "action": "waitForBus" } },
     { "id": "S5", "why": "one proposed bus asks the rider to confirm", "input": { "segment": "ride", "finalLeg": true, "preRide": "proposed" }, "expect": { "state": "confirm", "action": "confirmBus" } },
     { "id": "S6", "why": "similar buses are always a rider question", "input": { "segment": "ride", "finalLeg": true, "preRide": "similarBuses" }, "expect": { "state": "confirm", "action": "confirmBus" } },
+    { "id": "S6b", "why": "below confirmation-assisted readiness the rider picks the bus, even one (issue #80)", "input": { "segment": "ride", "finalLeg": true, "preRide": "choose" }, "expect": { "state": "confirm", "action": "confirmBus" } },
     { "id": "S7", "why": "the first walk leads to the stop", "input": { "segment": "walk", "finalLeg": false } , "expect": { "state": "waiting", "action": "walkToStop" } },
     { "id": "S8", "why": "riding with three or more stops left", "input": { "segment": "ride", "finalLeg": true, "rideMoment": "riding" }, "expect": { "state": "riding", "action": "stayOnBus" } },
     { "id": "S9", "why": "two stops left", "input": { "segment": "ride", "finalLeg": true, "rideMoment": "prepare" }, "expect": { "state": "prepare", "action": "prepareToExit" } },

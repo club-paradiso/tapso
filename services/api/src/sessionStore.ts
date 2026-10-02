@@ -20,6 +20,7 @@
 
 import type { PassageMemory, StopOnRoute, VehicleObservation } from "./domain.ts";
 import type { BoardingWatch, JourneyProgressView } from "./journeySession.ts";
+import type { LiveActivityDelivery } from "./liveActivityContent.ts";
 
 /** Bumped when the persisted shape changes in a way an old row cannot satisfy. */
 export const JOURNEY_SESSION_SCHEMA_VERSION = 1;
@@ -78,6 +79,12 @@ export interface LiveActivityPushToken {
   token: string;
   fingerprint: string;
   registeredAtMs: number;
+  /**
+   * What was last pushed to this ride's activity (`liveActivityContent.ts`).
+   * Absent until the first accepted push; kept across a token rotation, since
+   * a rotated token belongs to the same activity.
+   */
+  delivery?: LiveActivityDelivery;
 }
 
 /**

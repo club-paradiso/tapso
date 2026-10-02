@@ -4,6 +4,14 @@ import { TtlCache, type CachedResult } from "./ttlCache.ts";
 
 export const DEFAULT_STOP_CACHE_TTL_MS = 6 * 60 * 60 * 1_000;
 export const DEFAULT_VEHICLE_CACHE_TTL_MS = 20_000;
+/**
+ * How long a route's stop list may still answer when TAGO fails to refresh it.
+ * Topology changes on the order of timetable revisions, not minutes, and a
+ * failed read of it (`/v1/stops` 502 in production) otherwise blocks a rider
+ * from even choosing a stop. Vehicles have no such allowance: an old position
+ * served as current would be a fake success.
+ */
+export const STOP_STALE_IF_ERROR_MS = 24 * 60 * 60 * 1_000;
 
 export interface CachedTransitProviderOptions {
   stopTtlMs?: number;
@@ -13,7 +21,9 @@ export interface CachedTransitProviderOptions {
 
 /**
  * Shares one successful upstream result per route for a short window and
- * coalesces concurrent misses. Failed upstream calls are never cached.
+ * coalesces concurrent misses. Failed upstream calls are never cached. A stop
+ * list that fails to refresh may be answered from its last success for up to
+ * a day (`stale`); vehicle positions never are.
  *
  * In a serverless deployment this cache is per warm instance, so the shared
  * layer that actually bounds upstream fan-out is the CDN `s-maxage` the API
@@ -30,7 +40,7 @@ export class CachedTransitProvider implements TransitProvider {
     this.upstream = upstream;
     const stopTtlMs = options.stopTtlMs ?? DEFAULT_STOP_CACHE_TTL_MS;
     const vehicleTtlMs = options.vehicleTtlMs ?? DEFAULT_VEHICLE_CACHE_TTL_MS;
-    this.stopCache = new TtlCache<StopOnRoute[]>({ ttlMs: stopTtlMs, now: options.now });
+    this.stopCache = new TtlCache<StopOnRoute[]>({ ttlMs: stopTtlMs, now: options.now, staleIfErrorMs: STOP_STALE_IF_ERROR_MS });
     this.vehicleCache = new TtlCache<VehicleObservation[]>({ ttlMs: vehicleTtlMs, now: options.now });
     this.policy = { stopTtlMs: this.stopCache.ttlMs, vehicleTtlMs: this.vehicleCache.ttlMs };
   }

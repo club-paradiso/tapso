@@ -156,6 +156,6 @@ final class JourneyContractTests: XCTestCase {
                 }
             }
         }
-        XCTAssertEqual(combinations, 3 * 2 * 6 * 11 * 7 * 2 * 2)
+        XCTAssertEqual(combinations, 3 * 2 * 7 * 11 * 7 * 2 * 2)
     }
 }

@@ -1,6 +1,7 @@
 import test from "node:test";
 import assert from "node:assert/strict";
 import { readTransitApiConfig } from "../src/apiConfig.ts";
+import { createTransitApi } from "../src/apiRuntime.ts";
 import { createBurstLimiter, maskClientAddress } from "../src/rateLimit.ts";
 
 const NODE = { nodeVersion: "v22.18.0" };
@@ -225,35 +226,47 @@ test("an operator can still keep sessions off with a durable store configured", 
   assert.equal(config.sessions.enabled, false);
 });
 
-test("asking for redis without credentials fails loudly instead of falling back to memory", () => {
-  // A silent fallback would leave a deployment that believes it has durable
-  // sessions running on the exact failure mode it was trying to leave.
-  assert.throws(
-    () => readTransitApiConfig({ TRANSIT_SESSION_STORE: "redis" }, NODE),
-    /requires UPSTASH_REDIS_REST_URL and UPSTASH_REDIS_REST_TOKEN/,
-  );
-  assert.throws(
-    () => readTransitApiConfig({ TRANSIT_SESSION_STORE: "redis", UPSTASH_REDIS_REST_URL: UPSTASH.UPSTASH_REDIS_REST_URL }, NODE),
-    /requires UPSTASH_REDIS_REST_URL and UPSTASH_REDIS_REST_TOKEN/,
-  );
+/**
+ * A store that is asked for but unusable turns sessions off and says why; it
+ * never takes the deployment down (production answered every route with 500
+ * on 2026-10-02 when it did) and never pretends to be durable.
+ */
+function assertSessionsRefused(env: Record<string, string>, problem: RegExp): void {
+  const config = readTransitApiConfig(env, NODE);
+  assert.equal(config.sessions.enabled, false, "sessions are off, even where memory sessions would be on");
+  assert.equal(config.sessions.store, "memory");
+  assert.equal(config.sessions.durableStoreConfigured, false, "never reported as durable");
+  assert.match(config.sessions.problem ?? "", problem);
+  assert.ok(!JSON.stringify(config).includes("synthetic-upstash-token"));
+  assert.ok(!JSON.stringify(config).includes("synthetic.upstash.io"));
+}
+
+test("asking for redis without credentials turns sessions off and says so, never a silent memory fallback", () => {
+  assertSessionsRefused({ TRANSIT_SESSION_STORE: "redis" }, /without its URL and token/);
+  assertSessionsRefused({ TRANSIT_SESSION_STORE: "redis", UPSTASH_REDIS_REST_URL: UPSTASH.UPSTASH_REDIS_REST_URL }, /without its URL and token/);
 });
 
 test("an unknown store name is a misconfiguration, not a default", () => {
-  assert.throws(
-    () => readTransitApiConfig({ TRANSIT_SESSION_STORE: "postgres" }, NODE),
-    /TRANSIT_SESSION_STORE must be memory or redis/,
-  );
+  assertSessionsRefused({ TRANSIT_SESSION_STORE: "postgres" }, /neither memory nor redis/);
 });
 
 test("a plaintext store URL is refused so a bearer token never crosses http", () => {
-  assert.throws(
-    () => readTransitApiConfig({
-      TRANSIT_SESSION_STORE: "redis",
-      UPSTASH_REDIS_REST_URL: "http://synthetic.upstash.io",
-      UPSTASH_REDIS_REST_TOKEN: "synthetic-upstash-token",
-    }, NODE),
-    /must be an absolute https origin/,
-  );
+  assertSessionsRefused({
+    TRANSIT_SESSION_STORE: "redis",
+    UPSTASH_REDIS_REST_URL: "http://synthetic.upstash.io",
+    UPSTASH_REDIS_REST_TOKEN: "synthetic-upstash-token",
+  }, /not an absolute https origin/);
+});
+
+test("a misconfigured store leaves the read endpoints serving", async () => {
+  const api = createTransitApi({ VERCEL: "1", VERCEL_ENV: "production", TAGO_SERVICE_KEY: "synthetic-key", TRANSIT_SESSION_STORE: "redis" });
+  const health = await api.handler(new Request("http://api.test/health"));
+  assert.equal(health.status, 200);
+  const body = await health.json() as { sessions: { enabled: boolean; problem?: string } };
+  assert.equal(body.sessions.enabled, false);
+  assert.match(body.sessions.problem ?? "", /sessions are off/);
+  const session = await api.handler(new Request("http://api.test/v1/sessions", { method: "POST", body: "{}" }));
+  assert.equal(session.status, 503);
 });
 
 test("store credentials never reach the config object", () => {

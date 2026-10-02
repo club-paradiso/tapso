@@ -35,7 +35,7 @@ final class LiveSessionInterpreterTests: XCTestCase {
 
     func testEveryGeneratedPayloadDecodes() throws {
         let views = try scenarios()
-        XCTAssertGreaterThanOrEqual(views.count, 14)
+        XCTAssertGreaterThanOrEqual(views.count, 16)
         for (id, view) in views {
             XCTAssertNotEqual(view.sessionState, .unrecognized, id)
         }
@@ -50,9 +50,12 @@ final class LiveSessionInterpreterTests: XCTestCase {
         XCTAssertEqual(LiveSessionInterpreter.vehicleCheck(for: awaiting).stage, .notFoundYet)
     }
 
-    func testOneApproachingBusIsProposedWithItsMaskedPlate() throws {
-        let check = LiveSessionInterpreter.vehicleCheck(for: try XCTUnwrap(scenarios()["confirmation-one"]))
-        XCTAssertEqual(check.stage, .proposed)
+    /// Issue #80: at `READY_FOR_SHADOW` one bus is a question, never "this looks like your bus".
+    func testOneApproachingBusIsAQuestionNotASuggestion() throws {
+        let snapshot = try XCTUnwrap(scenarios()["confirmation-one"])
+        XCTAssertEqual(snapshot.vehicleChoice?.presentation, "rider_identifies")
+        let check = LiveSessionInterpreter.vehicleCheck(for: snapshot)
+        XCTAssertEqual(check.stage, .choose)
         XCTAssertEqual(check.proposals.map(\.maskedPlate), ["••0412"])
         XCTAssertEqual(check.proposals.first?.stopsAway, 2)
     }
@@ -60,7 +63,7 @@ final class LiveSessionInterpreterTests: XCTestCase {
     func testTwoApproachingBusesAreARiderQuestionNearestFirst() throws {
         let snapshot = try XCTUnwrap(scenarios()["confirmation-two"])
         let check = LiveSessionInterpreter.vehicleCheck(for: snapshot)
-        XCTAssertEqual(check.stage, .similarBuses)
+        XCTAssertEqual(check.stage, .choose)
         XCTAssertEqual(check.proposals.map(\.maskedPlate), ["••0412", "••0388"])
         XCTAssertEqual(check.proposals.map(\.stopsAway), [1, 2])
 
@@ -68,8 +71,50 @@ final class LiveSessionInterpreterTests: XCTestCase {
             for: snapshot,
             excluding: [VehicleIdentifier(rawValue: "SYN70가0412")]
         )
-        XCTAssertEqual(afterRejecting.stage, .proposed)
+        XCTAssertEqual(afterRejecting.stage, .choose)
         XCTAssertEqual(afterRejecting.proposals.map(\.maskedPlate), ["••0388"])
+    }
+
+    /// Issue #80: the rider's list is the server's raw positions, not the matcher's
+    /// confirmation list. The bus at the stop and one beyond the matcher's window are
+    /// both there, nearest first; nothing is suggested.
+    func testAtShadowTheRiderSeesRawPositionsAndNoSuggestion() throws {
+        let snapshot = try XCTUnwrap(scenarios()["rider-identifies-at-shadow"])
+        XCTAssertFalse(LiveSessionInterpreter.allowsMatcherSuggestion(snapshot))
+        XCTAssertEqual(snapshot.candidates?.count, 2, "the matcher's list is narrower and stays unread")
+        let check = LiveSessionInterpreter.vehicleCheck(for: snapshot)
+        XCTAssertEqual(check.stage, .choose)
+        XCTAssertEqual(check.proposals.map(\.maskedPlate), ["••0456", "••0789", "••0123"])
+        XCTAssertEqual(check.proposals.map(\.stopsAway), [0, 1, 7])
+    }
+
+    /// The switch the gate would have to award first: only confirmation-assisted
+    /// readiness lets the matcher's list be presented, and a tap still commits.
+    func testConfirmationAssistedReadinessMaySuggestTheMatchersList() throws {
+        let snapshot = try XCTUnwrap(scenarios()["matcher-suggestion-at-confirmation-assisted"])
+        XCTAssertTrue(LiveSessionInterpreter.allowsMatcherSuggestion(snapshot))
+        let check = LiveSessionInterpreter.vehicleCheck(for: snapshot)
+        XCTAssertEqual(check.stage, .similarBuses)
+        XCTAssertEqual(check.proposals.map(\.maskedPlate), ["••0456", "••0789"])
+        XCTAssertNil(snapshot.selectedVehicleId)
+
+        let one = LiveSessionInterpreter.vehicleCheck(for: snapshot, excluding: [VehicleIdentifier(rawValue: "SYN70가0456")])
+        XCTAssertEqual(one.stage, .proposed)
+    }
+
+    /// A server that does not say how to present the buses gets no suggestion.
+    func testASilentServerGetsNoSuggestion() throws {
+        let json = #"""
+        {"id":"syn","routeId":"SYN","cityCode":"39","boardingStop":{"stopId":"S4","name":"넷","sequence":4},"destinationStop":{"stopId":"S9","name":"아홉","sequence":9},"state":"confirmation_required","candidates":[{"vehicleId":"SYN70가0412","stopOffset":-2,"zone":"approaching","rejectedReasons":[]}]}
+        """#
+        let silent = try JSONDecoder().decode(JourneySessionSnapshot.self, from: Data(json.utf8))
+        XCTAssertFalse(LiveSessionInterpreter.allowsMatcherSuggestion(silent))
+        XCTAssertEqual(LiveSessionInterpreter.vehicleCheck(for: silent).stage, .choose)
+
+        let unknown = json.replacingOccurrences(of: #""state""#, with: #""vehicleChoice":{"presentation":"something_new","vehicles":[]},"state""#)
+        let future = try JSONDecoder().decode(JourneySessionSnapshot.self, from: Data(unknown.utf8))
+        XCTAssertFalse(LiveSessionInterpreter.allowsMatcherSuggestion(future))
+        XCTAssertEqual(LiveSessionInterpreter.vehicleCheck(for: future).stage, .notFoundYet)
     }
 
     func testAConfirmedSessionIsConfirmed() throws {
@@ -101,6 +146,33 @@ final class LiveSessionInterpreterTests: XCTestCase {
         let riding = try XCTUnwrap(views["tracking-riding"])
         XCTAssertEqual(LiveSessionInterpreter.rideSignal(for: riding).remainingStops, 5)
         XCTAssertEqual(LiveSessionInterpreter.currentStopSequence(for: riding), 5)
+    }
+
+    /// The server's Live Activity push port (`liveActivityContent.ts`) computed these from the
+    /// same payloads; a push must say exactly what the app would show.
+    func testServerPushSignalsAgreeWithTheApp() throws {
+        struct Entry: Decodable {
+            let id: String
+            let signal: RideSignal
+            let moment: RideMoment
+            let milestone: RideMilestone?
+        }
+        struct File: Decodable { let signals: [Entry] }
+        let repository = URL(fileURLWithPath: #filePath)
+            .deletingLastPathComponent().deletingLastPathComponent().deletingLastPathComponent()
+            .deletingLastPathComponent().deletingLastPathComponent()
+        let url = repository.appendingPathComponent("fixtures/journey/live-activity-signals-v1.json")
+        let entries = try JSONDecoder().decode(File.self, from: Data(contentsOf: url)).signals
+        let views = try scenarios()
+        XCTAssertEqual(Set(entries.map(\.id)), Set(views.keys))
+        for entry in entries {
+            let view = try XCTUnwrap(views[entry.id])
+            let signal = LiveSessionInterpreter.rideSignal(for: view)
+            XCTAssertEqual(signal, entry.signal, entry.id)
+            let guidance = RideGuidancePolicy.guidance(for: signal)
+            XCTAssertEqual(guidance.moment, entry.moment, entry.id)
+            XCTAssertEqual(guidance.milestone, entry.milestone, entry.id)
+        }
     }
 
     /// Late, missing or unconfirmed data never produces a get-off alert.

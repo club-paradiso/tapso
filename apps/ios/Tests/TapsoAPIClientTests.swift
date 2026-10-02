@@ -152,7 +152,7 @@ final class TapsoAPIClientTests: XCTestCase {
         XCTAssertEqual(model.path.last, .vehicleCheck)
         XCTAssertTrue(model.draft?.isLive ?? false)
 
-        try await waitUntil { model.vehicleCheck.stage == .proposed }
+        try await waitUntil { model.vehicleCheck.stage == .choose }
         XCTAssertEqual(model.vehicleCheck.proposals.map(\.maskedPlate), ["••0412"])
         XCTAssertNil(model.activeRide, "nothing is selected before the rider taps")
 
@@ -238,7 +238,7 @@ final class TapsoAPIClientTests: XCTestCase {
         let destination = try XCTUnwrap(suggestions.first?.routeStop)
         model.chooseLiveStops(boarding: boarding, destination: destination, on: stops)
         XCTAssertEqual(model.draft?.finalPlace, place)
-        try await waitUntil { model.vehicleCheck.stage == .proposed }
+        try await waitUntil { model.vehicleCheck.stage == .choose }
         await model.confirmVehicle(try XCTUnwrap(model.vehicleCheck.proposals.first))
         XCTAssertEqual(model.activeRide?.draft.finalPlace, place)
 
@@ -276,7 +276,7 @@ final class TapsoAPIClientTests: XCTestCase {
             destination: try XCTUnwrap(stops.route.routeStop(sequence: 10)),
             on: stops
         )
-        try await waitUntil { model.vehicleCheck.stage == .proposed }
+        try await waitUntil { model.vehicleCheck.stage == .choose }
         await model.confirmVehicle(try XCTUnwrap(model.vehicleCheck.proposals.first))
         XCTAssertEqual(model.guidance?.moment, .passedDestination)
 
@@ -414,7 +414,7 @@ private enum Payload {
         let stop = { (sequence: Int) in
             #"{"stopId":"SYN-STOP-\#(sequence)","name":"합성 정류장 \#(sequence)","sequence":\#(sequence)}"#
         }
-        let candidates = selected ? "" : #","candidates":[{"vehicleId":"SYN70가0412","score":0,"evidence":[],"rejectedReasons":[],"stopOffset":-2,"zone":"approaching"}]"#
+        let candidates = selected ? "" : #","candidates":[{"vehicleId":"SYN70가0412","score":0,"evidence":[],"rejectedReasons":[],"stopOffset":-2,"zone":"approaching"}],"vehicleChoice":{"presentation":"rider_identifies","readiness":"READY_FOR_SHADOW","vehicles":[{"vehicleId":"SYN70가0412","stopsAway":2}]}"#
         let selection = selected ? #","selectedVehicleId":"SYN70가0412","selectionMode":"explicit""# : ""
         let progress = selected
             ? #","progress":{"currentStopSequence":\#(sequence),"currentStopId":"SYN-STOP-\#(sequence)","remainingStops":\#(max(0, 10 - sequence)),"phase":"\#(phase)","source":"provider_stop_sequence","observedAt":"1970-01-01T00:00:00.000Z"}"#

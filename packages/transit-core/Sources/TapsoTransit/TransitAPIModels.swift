@@ -133,6 +133,10 @@ public struct JourneySessionSnapshot: Codable, Hashable, Sendable {
     public let state: String
     public let progress: Progress?
     public let candidates: [Candidate]?
+    /// How the rider may be asked which bus is theirs (issue #80). The server
+    /// derives it from the demonstrated matcher readiness; absent means a
+    /// server from before it existed, read as `riderIdentifies`.
+    public let vehicleChoice: VehicleChoice?
     public let explanation: String?
     public let matchingMode: String?
     public let providerRead: ProviderRead?
@@ -155,6 +159,25 @@ public struct JourneySessionSnapshot: Codable, Hashable, Sendable {
         public let stopOffset: Int?
         public let zone: String?
         public let rejectedReasons: [String]?
+    }
+
+    public struct VehicleChoice: Codable, Hashable, Sendable {
+        /// `rider_identifies` or `matcher_suggestion`. Anything else fails closed to `rider_identifies`.
+        public let presentation: String
+        public let readiness: String?
+        /// Raw positions from the latest provider read, nearest the stop first.
+        public let vehicles: [Vehicle]
+
+        public struct Vehicle: Codable, Hashable, Sendable {
+            public let vehicleId: String
+            /// Stops still to travel to the boarding stop; `0` is at the stop.
+            public let stopsAway: Int?
+            /// Stops past the boarding stop, for a bus the rider may already be on.
+            public let stopsPast: Int?
+        }
+
+        /// Only an explicit `matcher_suggestion` lets the matcher's list read as a suggestion.
+        public var allowsMatcherSuggestion: Bool { presentation == "matcher_suggestion" }
     }
 
     public struct ProviderRead: Codable, Hashable, Sendable {

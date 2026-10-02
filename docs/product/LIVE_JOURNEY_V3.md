@@ -29,12 +29,22 @@ Home › 버스 번호로 타기 (실시간 · 베타)
 
 ## Who decides
 
-- **The server ranks, the rider selects.** Matching runs in shadow mode on the
-  server (`directed-route-progress-v1`, readiness `READY_FOR_SHADOW`). The app
-  shows only a `confirmation_required` session's candidates as proposals. An
-  `awaiting_match` session publishes the full ranking, which includes buses that
-  have already left the stop; the app never offers those
-  (`LiveSessionInterpreterTests.testADepartedBusIsNeverProposed`).
+- **The server ranks in shadow, the rider identifies.** Matching runs in shadow
+  mode on the server (`directed-route-progress-v1`, readiness
+  `READY_FOR_SHADOW`). At that readiness riders see nothing from the matcher
+  (issue #80): every pre-selection session carries `vehicleChoice`
+  (`presentation: "rider_identifies"`), the buses of the route variant that the
+  latest provider read places where they can still be boarded, nearest the stop
+  by stop count. No score, cadence verdict, passage memory or approach window
+  shapes it, and a bus seven stops out is listed as plainly as one at the stop.
+  The app shows them as `choose` ("타는 버스를 골라주세요"), even when there is
+  one: never "이 버스로 보여요", never preselected. A bus two or more stops past
+  the stop is never shown to a waiting rider
+  (`LiveSessionInterpreterTests.testADepartedBusIsNeverProposed`). Only
+  `presentation: "matcher_suggestion"`, which the server sends from
+  `READY_FOR_CONFIRMATION_ASSISTED` up, lets the app present the matcher's
+  `confirmation_required` candidates as a suggestion; a tap still commits. A
+  server that does not say gets the rider-identifies reading.
 - **Freshness comes from the server's state.** `tracking` means the selected bus
   had fresh server-observed cadence on that poll; `degraded` shows the last known
   count, dimmed, with no alert; `lost` shows the bus as missing. The app never
@@ -56,7 +66,7 @@ Each failure keeps its meaning from server to screen (`TransitAPIFailure`,
 | No connection | URLError | 인터넷 연결이 끊겼어요 | continues |
 | Bus feed slow | `PROVIDER_TIMEOUT` (504) | 버스 정보가 늦게 와요 | continues |
 | Bus feed unreachable | `PROVIDER_UNAVAILABLE` (502) | 버스 정보를 못 받았어요 | continues |
-| Bus feed malformed | `PROVIDER_RESPONSE_INVALID` (502) | 버스 정보가 이상해요 | continues |
+| Bus feed malformed | `PROVIDER_RESPONSE_INVALID` (502) | 버스 위치를 잠시 확인할 수 없어요 | continues |
 | Live rides off on the server | `SESSIONS_UNAVAILABLE` (503) | 실시간 승차는 준비 중이에요 | stops |
 | Session expired / unknown | 410 / 404 | 여정 시간이 지났어요 / 여정을 찾을 수 없어요 | stops; setup starts a new session |
 | TAPSO failed | `INTERNAL_ERROR` (500) | 탑서 서버에 문제가 생겼어요 | continues |

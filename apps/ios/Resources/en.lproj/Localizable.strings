@@ -56,6 +56,8 @@
 "check.proposed.detail" = "Check the plate as you board";
 "check.similarBuses.headline" = "Similar buses nearby";
 "check.similarBuses.detail" = "Pick the bus you boarded";
+"check.choose.headline" = "Pick the bus you're boarding";
+"check.choose.detail" = "Tap the one whose plate matches";
 "check.notFoundYet.headline" = "No bus in sight yet";
 "check.notFoundYet.detail" = "We'll show route %@ as soon as one appears";
 "check.confirmed.headline" = "Bus confirmed";
@@ -63,6 +65,7 @@
 "check.confirm" = "Yes, I'm on this bus";
 "check.reject" = "It's a different bus";
 "check.noneOfThese" = "Neither of these";
+"check.choose.none" = "Not in this list";
 "check.pick.hint" = "Double-tap if this is your bus";
 "check.plateHint" = "Last digits of the bus's plate";
 "check.position.atStop" = "At your stop";
@@ -243,8 +246,8 @@
 "live.error.providerTimeout.body" = "The bus information system is slow to answer. Checking again shortly.";
 "live.error.providerUnavailable.title" = "No bus data right now";
 "live.error.providerUnavailable.body" = "The bus information system can't be reached. Checking again shortly.";
-"live.error.providerInvalid.title" = "Bus data looks wrong";
-"live.error.providerInvalid.body" = "The bus data could not be read. Checking again shortly.";
+"live.error.providerInvalid.title" = "Can't place the bus right now";
+"live.error.providerInvalid.body" = "The data we got was incomplete, so we didn't use it. Checking again.";
 "live.error.sessionsUnavailable.title" = "Live rides are coming soon";
 "live.error.sessionsUnavailable.body" = "Live journeys are not switched on on the server yet. You can try the flow in the demo.";
 "live.error.serviceUnavailable.title" = "Bus data is unavailable";

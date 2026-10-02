@@ -8,10 +8,12 @@
 
 import { readTransitApiConfig, readUpstashCredentials, type ServerEnv, type TransitApiConfig } from "./apiConfig.ts";
 import { createTransitApiHandler, type TransitApiHandler } from "./apiRouter.ts";
-import { describeApns, readApnsConfig } from "./apns.ts";
+import { ApnsLiveActivitySender, describeApns, Http2ApnsTransport, readApnsConfig } from "./apns.ts";
 import { CachedTransitProvider } from "./cachedTransitProvider.ts";
 import { JourneySessionCoordinator } from "./journeySession.ts";
+import { LiveActivityPusher } from "./liveActivityPusher.ts";
 import { resolveOperatorToken } from "./operatorAuth.ts";
+import { logProviderRequest, ProviderHealth } from "./providerHealth.ts";
 import { createBurstLimiter } from "./rateLimit.ts";
 import { resolveTagoServiceKey, serviceKeyWarning } from "./serviceKey.ts";
 import { readSessionKeyPrefix } from "./sessionKeyPrefix.ts";
@@ -59,7 +61,16 @@ export function createTransitApi(env: ServerEnv = process.env as ServerEnv): Tra
 
   // Passed explicitly so this function honours the `env` it was given rather
   // than reaching back into `process.env` through the provider's own default.
-  const upstream = new TagoTransitProvider({ serviceKey: credential.key });
+  // One record per logical TAGO request: a structured log line, and this
+  // instance's rolling summary in `/health` (`providerHealth.ts`).
+  const providerHealth = new ProviderHealth();
+  const upstream = new TagoTransitProvider({
+    serviceKey: credential.key,
+    onRequest: (record) => {
+      providerHealth.record(record);
+      logProviderRequest(record);
+    },
+  });
   const provider = new CachedTransitProvider(upstream, {
     stopTtlMs: config.cachePolicy.stopTtlMs,
     vehicleTtlMs: config.cachePolicy.vehicleTtlMs,
@@ -77,6 +88,9 @@ export function createTransitApi(env: ServerEnv = process.env as ServerEnv): Tra
     automaticMatchingEnabled: config.matching.automaticMatchingEnabled,
     store: sessionStore,
   });
+  // Push needs the APNs key, team and bundle id (`apns.ts`); without all of
+  // them nothing is pushed and `/health` names what is missing.
+  const apns = readApnsConfig(env);
   const limiter = config.rateLimit.enabled
     ? createBurstLimiter(config.rateLimit.limit, config.rateLimit.windowSeconds)
     : undefined;
@@ -109,7 +123,11 @@ export function createTransitApi(env: ServerEnv = process.env as ServerEnv): Tra
       // session coordinator above, which must see consecutive, uncached reads.
       directProvider: upstream,
       sessions,
-      liveActivityPush: describeApns(readApnsConfig(env)),
+      liveActivityPush: describeApns(apns),
+      ...(apns.enabled
+        ? { liveActivityPusher: new LiveActivityPusher(new ApnsLiveActivitySender(apns, new Http2ApnsTransport()), sessions) }
+        : {}),
+      providerHealth,
       ...(limiter ? { limiter } : {}),
       ...(operatorLimiter ? { operatorLimiter } : {}),
       ...(operator.configured ? { operatorToken: operator.token } : {}),

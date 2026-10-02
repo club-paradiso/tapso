@@ -150,10 +150,43 @@ async function lostRide(): Promise<void> {
   record("lost", "the bus has been missing beyond the grace window", await sessions.refresh("syn-session-lost"));
 }
 
+/**
+ * Issue #80: at `READY_FOR_SHADOW` the rider is shown raw positions, not the
+ * matcher's confirmation list. The bus at the stop and the one seven stops out
+ * (beyond the matcher's approach window) are both listed, nearest first; the
+ * same snapshot under a confirmation-assisted readiness is the matcher's list.
+ */
+async function riderIdentifies(): Promise<void> {
+  const now = new Date("2026-10-01T09:00:00.000Z");
+  const rows = () => [row("SYN70가0123", now, 3), row("SYN70가0456", now, 10), row("SYN70가0789", now, 9), row("SYN70가0999", now, 12)];
+  const input = { routeId, cityCode, boardingStopSequence: 10, destinationStopSequence: 12 };
+  const shadow = new ScriptedProvider();
+  shadow.rows = rows();
+  const atShadow = new JourneySessionCoordinator(shadow, { now: () => now, idFactory: () => "syn-session-identify" });
+  record(
+    "rider-identifies-at-shadow",
+    "READY_FOR_SHADOW: raw positions nearest first, the bus at the stop and one beyond the matcher's window included, the departed one left out",
+    await atShadow.create(input),
+  );
+  const assisted = new ScriptedProvider();
+  assisted.rows = rows();
+  const atAssisted = new JourneySessionCoordinator(assisted, {
+    now: () => now,
+    idFactory: () => "syn-session-suggest",
+    matchingReadiness: "READY_FOR_CONFIRMATION_ASSISTED",
+  });
+  record(
+    "matcher-suggestion-at-confirmation-assisted",
+    "READY_FOR_CONFIRMATION_ASSISTED (not demonstrated; generated to pin the switch): the matcher's confirmation list may be suggested",
+    await atAssisted.create(input),
+  );
+}
+
 await waitingRide();
 await earlyConfirmation();
 await passedRide();
 await lostRide();
+await riderIdentifies();
 
 const out = path.resolve("fixtures/journey/session-views-v1.json");
 const text = `${JSON.stringify({
