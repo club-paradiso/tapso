@@ -32,7 +32,7 @@ deployment is `VERIFIED_LIVE_INFRASTRUCTURE`, `IMPLEMENTED` is
         │                      │    │   + CDN s-maxage with the same numbers
         │                      ▼    │
         │    TagoTransitProvider    │   fixed official hosts, no redirects,
-        └──────────────────────┼────┘   8 s timeout, bounded pagination
+        └──────────────────────┼────┘   9 s per request (6 s per attempt), bounded pagination
                                ▼
              https://apis.data.go.kr/1613000/BusRouteInfoInqireService
              https://apis.data.go.kr/1613000/BusLcInfoInqireService
@@ -288,10 +288,24 @@ than a convention someone has to remember.
 ## Security posture
 
 - **Upstream.** `TagoTransitProvider` targets two fixed official HTTPS hosts
-  that cannot be overridden by environment variables, refuses redirects, times
-  out at 8 s, bounds pagination, validates `resultCode`, and normalizes provider
-  errors to a numeric code. There is no caller-controlled URL anywhere in the
-  path, so no SSRF surface is introduced.
+  that cannot be overridden by environment variables, refuses redirects, gives
+  one logical request (every page and retry) 9 s and an attempt at most 6 s,
+  retries a transport failure, timeout, HTTP 5xx or malformed envelope once
+  after a jittered 250–500 ms pause and only with 2 s of the budget left, bounds
+  pagination, validates `resultCode`, and normalizes provider errors to a
+  numeric code. There is no caller-controlled URL anywhere in the path, so no
+  SSRF surface is introduced.
+- **Provider telemetry.** Each logical TAGO request writes one
+  `provider_request` log line (operation, outcome class, latency, attempts,
+  last HTTP status, TAPSO's own failure message) and feeds `/health` →
+  `providerHealth`, a rolling summary of the last 100 requests of *this warm
+  instance* (outcomes, retried count, p50/p95/max latency, last failure). It
+  never carries the request URL, the service key or a vehicle number, and no
+  rider-facing decision reads it.
+- **Stale stops, never stale vehicles.** When TAGO fails to refresh a route's
+  stop list, `/v1/stops` answers the last list this instance read, up to a day
+  old, with `meta.servedStale` and `cache-control: no-store`. Vehicle positions
+  are never served from an old read: the failure is the answer.
 - **CORS.** No browser origin is allowed unless an operator lists it in
   `TRANSIT_ALLOWED_ORIGINS`. A native iOS client is not a CORS client and is
   unaffected. `Access-Control-Allow-Origin: *` is never emitted, and `*` is not
@@ -350,10 +364,15 @@ or scheduled worker for APNs (`ARCHITECTURE.md`).
 
 ### Enabling durable sessions in production
 
-Status 2026-10-01: production answers `503 SESSIONS_UNAVAILABLE` from the memory
-store (scheduled smoke, run `36804898273`). The code is ready; what is missing
-is four environment variables on the `tapso-api` Vercel project, which only an
-account with access to that project can set. In the Vercel dashboard →
+Status 2026-10-02: production still answers `503 SESSIONS_UNAVAILABLE` from the
+memory store (post-deploy verification run `36976781695`, 07:05 UTC, build
+`98c50135f63d`: "sessions policy 503 SESSIONS_UNAVAILABLE"; the lifecycle smoke
+skipped). The code is ready; what is missing is four environment variables on
+the `tapso-api` Vercel project, which only an account with access to that
+project can set. The agent's Vercel connection reaches only team
+`club-paradiso` with one project, `visable`; `tapso` and `tapso-api` are not in
+it, and reading `tapso-api.vercel.app` through it is refused (403), so an agent
+can neither read their settings nor set these. In the Vercel dashboard →
 `tapso-api` → Settings → Environment Variables, add for **Production** only:
 
 | Name | Value | Sensitive |
