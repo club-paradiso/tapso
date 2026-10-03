@@ -78,6 +78,9 @@ jobs:
             # The filter above hides a crashed test (it never prints "passed" or "failed");
             # show the lines that explain the failure in the job log itself.
             grep -nE "Restarting after|[Cc]rash|[Ff]atal error|Incorrect actor|Failing tests:|Tests\.test|Test Suite .* failed|failed \(" work-xcodebuild.log | tail -n 80 || true
+            # A compiler crash prints "Please submit a bug report" and a stack dump: show which file and
+            # which pass crashed, which the filters above drop.
+            grep -nE -B3 -A18 "Stack dump:|While (evaluating|type-checking|emitting|silgen|verifying)" work-xcodebuild.log | head -n 120 || true
             exit 1
           fi
       - name: Render snapshot evidence in Korean and English
