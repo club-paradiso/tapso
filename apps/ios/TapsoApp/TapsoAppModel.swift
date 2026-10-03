@@ -1229,6 +1229,7 @@ final class TapsoAppModel {
         retainedDeviceSample = nil
         hybridDiagnosticLines = []
         hybridPermissionRequested = false
+        lastManualRefresh = nil
     }
 
     private func reconcileRidePosition(manual: Bool) async {
@@ -1269,7 +1270,7 @@ final class TapsoAppModel {
                 && $0.cityCode == current.draft.cityCode
         } ?? true
         let result = hybridEngine?.evaluate(official: usableOfficial, sequence: snapshot?.progress?.currentStopSequence,
-            evidenceAt: evidenceAt, selectedVehicleID: !snapshotMatchesRide || snapshot?.trackingIntegrity != nil ? nil : (snapshot == nil ? live.vehicleID : snapshot?.selectedVehicleId),
+            evidenceAt: evidenceAt, selectedVehicleID: !snapshotMatchesRide || (snapshot != nil && snapshot?.progress == nil) || snapshot?.trackingIntegrity != nil ? nil : (snapshot == nil ? live.vehicleID : snapshot?.selectedVehicleId),
             device: retainedDeviceSample, now: Date())
         current.hybridPosition = result
         current.isOffline = false // Connectivity alone is not passenger reliability.
@@ -1282,7 +1283,7 @@ final class TapsoAppModel {
             let deviceAge = retainedDeviceSample.map { Int(Date().timeIntervalSince($0.timestamp) / 5) * 5 } ?? -1
             let accuracy = retainedDeviceSample.map { Int($0.accuracy / 10) * 10 } ?? -1
             let officialAge = evidenceAt.map { Int(Date().timeIntervalSince($0) / 5) * 5 } ?? -1
-            let line = "\(Int(result.evaluatedAt.timeIntervalSince1970)) state=\(result.state.rawValue) confidence=\(Int(result.confidence * 100)) reason=\(result.reason) route100m=\(result.routeDistanceBucket ?? -1) stop=\(result.currentStopSequence ?? -1) remaining=\(result.remainingStops) officialAge5s=\(officialAge) gpsAge5s=\(deviceAge) accuracy10m=\(accuracy) legacy=\(current.live?.signal.freshness.rawValue ?? "unknown")"
+            let line = "\(Int(result.evaluatedAt.timeIntervalSince1970)) state=\(result.state.rawValue) source=\(result.source) category=\(result.confidenceCategory) confidence=\(Int(result.confidence * 100)) reason=\(result.reason) route100m=\(result.routeDistanceBucket ?? -1) stop=\(result.currentStopSequence ?? -1) remaining=\(result.remainingStops) officialAge5s=\(officialAge) gpsAge5s=\(deviceAge) accuracy10m=\(accuracy) legacy=\(current.live?.signal.freshness.rawValue ?? "unknown")"
             hybridDiagnosticLines.append(line)
             if hybridDiagnosticLines.count > 200 { hybridDiagnosticLines.removeFirst(hybridDiagnosticLines.count - 200) }
         }
@@ -1293,6 +1294,9 @@ final class TapsoAppModel {
 
     /// One session read during the ride. False when polling should stop.
     private func refreshLiveRide(sessionID: String) async -> Bool {
+        guard !readInFlight else { return true }
+        readInFlight = true
+        defer { readInFlight = false }
         do {
             let snapshot = try await api.session(id: sessionID)
             guard var ride = activeRide, ride.live?.sessionID == sessionID else { return false }

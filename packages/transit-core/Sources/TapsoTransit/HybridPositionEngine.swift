@@ -86,6 +86,19 @@ public struct HybridRidePosition: Codable, Hashable, Sendable {
     public let reason: String
     public let routeDistanceBucket: Int?
 
+    public var source: String {
+        switch state {
+        case .live: "official"
+        case .fused: "verified_route_device"
+        case .predicted: "device_stop_estimate"
+        case .lost: "unavailable"
+        }
+    }
+
+    public var confidenceCategory: String {
+        confidence >= 0.75 ? "high" : (confidence >= 0.4 ? "estimated" : "low")
+    }
+
     public func signal(at now: Date) -> RideSignal {
         guard now <= validUntil, state != .lost, remainingStops >= 0 else {
             return RideSignal(phase: .vehicleRecovery, remainingStops: -1, freshness: .unknown)
@@ -274,7 +287,7 @@ public struct HybridPositionEngine: Sendable {
 }
 
 /// Extension point for aggregated route/variant/direction/time bucket timings.
-/// No precise rider samples are stored, and predictions never commit passage.
+/// No precise rider samples are stored, and timing alone never commits passage.
 public struct SegmentTimingEstimate: Sendable {
     public let sampleCount: Int
     public let medianSeconds: Double?

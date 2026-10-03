@@ -222,7 +222,7 @@ struct RideContent: View {
                     .foregroundStyle(TapsoColor.textSecondary)
             }
 
-            if ![.arrived, .passedDestination, .ended].contains(guidance.moment) {
+            if ![.arrived, .passedDestination, .ended].contains(guidance.moment), guidance.count != .hidden {
                 StopLadder(
                     current: snapshot.currentStopName,
                     upcoming: snapshot.upcomingStops,
@@ -315,11 +315,13 @@ struct RideHeroCard: View {
                     }
                 }
             }
-            JourneyRail(
-                progress: JourneyRail.progress(remaining: snapshot.remainingStops, total: snapshot.totalStops),
-                role: guidance.colorRole
-            )
-            .padding(.top, TapsoSpace.xs)
+            if guidance.count != .hidden {
+                JourneyRail(
+                    progress: JourneyRail.progress(remaining: snapshot.remainingStops, total: snapshot.totalStops),
+                    role: guidance.colorRole
+                )
+                .padding(.top, TapsoSpace.xs)
+            }
         }
         .padding(TapsoSpace.lg)
         .frame(maxWidth: .infinity, alignment: .leading)
