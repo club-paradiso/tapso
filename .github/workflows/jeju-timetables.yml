@@ -1,0 +1,53 @@
+name: Jeju timetable import
+
+# Downloads every route timetable file bus.jeju.go.kr offers and parses each
+# (scripts/timetables/fetch_jeju_bis.py), because the agent environment cannot
+# reach the site. The result is committed to the branch that ran it, never to
+# main: it lands on main only through a reviewed pull request. No secret.
+# Run by hand (Actions → Jeju timetable import → Run workflow, on a topic
+# branch). A parser change does not need a new download:
+# `fetch_jeju_bis.py fixtures/jeju/timetables/bis --reparse`.
+on:
+  workflow_dispatch:
+
+permissions:
+  contents: write
+
+concurrency:
+  group: jeju-timetables
+  cancel-in-progress: false
+
+jobs:
+  import:
+    if: github.ref != 'refs/heads/main'
+    runs-on: ubuntu-latest
+    timeout-minutes: 45
+    steps:
+      - uses: actions/checkout@v4
+      # Same check as data-source-probe.yml: bus.jeju.go.kr omits its intermediate certificate.
+      # Fetch it from the certificate's own CA Issuers URL and use it only if it and the site's
+      # certificate verify against the runner's system roots.
+      - name: Complete bus.jeju.go.kr's certificate chain (verified against the system roots)
+        run: |
+          set -euo pipefail
+          openssl s_client -connect bus.jeju.go.kr:443 -servername bus.jeju.go.kr -showcerts </dev/null 2>/dev/null > chain.txt || true
+          openssl x509 -in chain.txt -out leaf.pem
+          uri=$(openssl x509 -in leaf.pem -noout -ext authorityInfoAccess | sed -n 's/.*CA Issuers - URI:\(.*\)/\1/p' | head -1)
+          curl -fsS --max-time 20 "$uri" -o issuer.raw
+          openssl x509 -inform DER -in issuer.raw -out issuer.pem 2>/dev/null || openssl x509 -in issuer.raw -out issuer.pem
+          openssl verify -CAfile /etc/ssl/certs/ca-certificates.crt issuer.pem
+          openssl verify -CAfile /etc/ssl/certs/ca-certificates.crt -untrusted issuer.pem leaf.pem
+          cp issuer.pem "$RUNNER_TEMP/bis-intermediate.pem"
+          rm -f chain.txt leaf.pem issuer.raw issuer.pem
+      - name: Download and parse every timetable (one request per second)
+        run: python3 scripts/timetables/fetch_jeju_bis.py fixtures/jeju/timetables/bis --intermediate "$RUNNER_TEMP/bis-intermediate.pem"
+      - name: Commit the import to this branch
+        run: |
+          set -euo pipefail
+          git config user.name "github-actions[bot]"
+          git config user.email "41898282+github-actions[bot]@users.noreply.github.com"
+          git add fixtures/jeju/timetables/bis
+          if git diff --cached --quiet; then echo "nothing changed"; exit 0; fi
+          counts=$(python3 -c 'import json;print(json.load(open("fixtures/jeju/timetables/bis/manifest.json"))["counts"])')
+          git commit -m "timetable: import every bus.jeju.go.kr timetable ($(TZ=Asia/Seoul date +%F)) $counts" -m "Workflow run ${GITHUB_RUN_ID}."
+          git push origin "HEAD:${GITHUB_REF_NAME}"

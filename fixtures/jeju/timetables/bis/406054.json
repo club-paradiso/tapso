@@ -1,0 +1,66 @@
+{
+  "schemaVersion": "tapso-jeju-timetable-v2",
+  "label": "OFFICIAL_DATED",
+  "source": {
+    "publisher": "제주특별자치도 (bus.jeju.go.kr)",
+    "dataset": "data.go.kr 3043887",
+    "page": "https://bus.jeju.go.kr/publicTrafficInformation/generalBusSchedule",
+    "file": "406054.xlsx",
+    "sha256": "583c421b6ba5df6d39b982bdd2a80571515bce6065b452d1c866eaf3a4ed59be"
+  },
+  "retrievedOn": "2026-10-03",
+  "parser": {
+    "name": "jeju-bis-xlsx",
+    "version": "2"
+  },
+  "routeNumber": "692",
+  "services": [
+    {
+      "sheet": "692 천지연-서귀여고-신시가지-서귀여고-천지연",
+      "dayType": "unstated",
+      "direction": "천지연→ 천지연(순환)",
+      "effectiveFrom": "2025-05-28",
+      "summary": "서귀포공영버스(064-760-3111~3)",
+      "timepoints": [
+        "천지연",
+        "서귀포YWCA",
+        "동문로터리 (농협앞)",
+        "제주은행",
+        "중앙로터리 (서)",
+        "남성마을",
+        "서귀포여고",
+        "혁신도시LH아파트",
+        "국세공무원교육원",
+        "중앙도서관",
+        "서호북문",
+        "서홍새마을금고",
+        "중앙로터리 (서쪽)",
+        "남군농협",
+        "송산동주민센터",
+        "천지연"
+      ],
+      "trips": [
+        {
+          "times": [
+            "06:50",
+            "06:53",
+            "06:55",
+            "06:57",
+            "07:00",
+            "07:04",
+            "07:10",
+            "07:14",
+            "07:16",
+            "07:24",
+            "07:31",
+            "07:40",
+            "07:48",
+            "07:52",
+            "07:55",
+            "08:00"
+          ]
+        }
+      ]
+    }
+  ]
+}

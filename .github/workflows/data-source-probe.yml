@@ -66,6 +66,8 @@ jobs:
           echo "NODE_EXTRA_CA_CERTS=$RUNNER_TEMP/bis-intermediate.pem" >> "$GITHUB_ENV"
       - name: Jeju's official bus timetable sources and their terms (public pages, no key, no download)
         run: node --experimental-strip-types scripts/data-sources/jeju-timetable-docs.ts
+      - name: How the timetable page lists routes and serves each file (page and scripts only, no download)
+        run: node --experimental-strip-types scripts/data-sources/jeju-timetable-endpoints.ts
 
   jeju-routes:
     runs-on: ubuntu-latest
