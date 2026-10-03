@@ -181,6 +181,8 @@
 "demo.scenario.offline" = "Offline";
 "demo.scenario.passedDestination" = "Passed destination";
 "demo.playback" = "Playback";
+"demo.build" = "This build";
+"demo.build.footer" = "Proves which commit this test phone is running.";
 "demo.speed" = "Speed";
 "demo.chip.hint" = "Opens preview settings";
 "demo.speed.manual" = "Step";

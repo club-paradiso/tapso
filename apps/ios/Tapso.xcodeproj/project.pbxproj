@@ -74,6 +74,9 @@
 		307BDD2BAD0F9151AD868D47 /* TapsoBuild.swift in Sources */ = {isa = PBXBuildFile; fileRef = 398037FB6C2D02FF122CE04E /* TapsoBuild.swift */; };
 		57E75BA032FC3B671EFFDEE4 /* TimetableViews.swift in Sources */ = {isa = PBXBuildFile; fileRef = D27A317F31F3A1D14EC71AF3 /* TimetableViews.swift */; };
 		D04437A49F0C74EA59D9B1FD /* TransitCatalogFile.swift in Sources */ = {isa = PBXBuildFile; fileRef = DBBD6FB3D631DB88237726EF /* TransitCatalogFile.swift */; };
+		27D3B0A355DC8BCC07907E1D /* BrandWordmark.swift in Sources */ = {isa = PBXBuildFile; fileRef = C61FF6E913F7DCDE87D983B5 /* BrandWordmark.swift */; };
+		11F216705CBD35830606908D /* BrandWordmark.swift in Sources */ = {isa = PBXBuildFile; fileRef = C61FF6E913F7DCDE87D983B5 /* BrandWordmark.swift */; };
+		4DA1D1D973E57698519C31FC /* BrandTests.swift in Sources */ = {isa = PBXBuildFile; fileRef = 5E327558E2B513FF963AD97E /* BrandTests.swift */; };
 /* End PBXBuildFile section */
 
 /* Begin PBXContainerItemProxy section */
@@ -173,6 +176,8 @@
 		398037FB6C2D02FF122CE04E /* TapsoBuild.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = TapsoBuild.swift; sourceTree = "<group>"; };
 		D27A317F31F3A1D14EC71AF3 /* TimetableViews.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = TimetableViews.swift; sourceTree = "<group>"; };
 		DBBD6FB3D631DB88237726EF /* TransitCatalogFile.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = TransitCatalogFile.swift; sourceTree = "<group>"; };
+		C61FF6E913F7DCDE87D983B5 /* BrandWordmark.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = BrandWordmark.swift; sourceTree = "<group>"; };
+		5E327558E2B513FF963AD97E /* BrandTests.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = BrandTests.swift; sourceTree = "<group>"; };
 /* End PBXFileReference section */
 
 /* Begin PBXFrameworksBuildPhase section */
@@ -214,6 +219,7 @@
 		062A2546A85E60F33E64530A /* Tests */ = {
 			isa = PBXGroup;
 			children = (
+				5E327558E2B513FF963AD97E /* BrandTests.swift */,
 				0254DEF030E85E3CF7322DF3 /* MapHandoffFlowTests.swift */,
 				4F3242CAC95098615B71E4AF /* RidePresentationTests.swift */,
 				6DB796C0ED563974A2B95EA4 /* ScreenshotImportFlowTests.swift */,
@@ -237,6 +243,7 @@
 		2DD9A96AC488A534FCCDC0DD /* Shared */ = {
 			isa = PBXGroup;
 			children = (
+				C61FF6E913F7DCDE87D983B5 /* BrandWordmark.swift */,
 				3A6FA6A0937D209C796FC84C /* LiveActivitySurfaces.swift */,
 				D102FEDCF3DA956AE2EC37A9 /* ReturnActivitySurfaces.swift */,
 				DE291882CA4321AAC786EA59 /* RideSurfaceComponents.swift */,
@@ -388,6 +395,7 @@
 				A08AA033D74EF844CB743564 /* Resources */,
 				8F19FCBB96FFD46FCBCFC0A1 /* Frameworks */,
 				EBEFDCB00880183E80759205 /* Embed Foundation Extensions */,
+				7B1D1D0B5E0F4C6B9A3E2F10 /* Write Git commit into Info.plist */,
 			);
 			buildRules = (
 			);
@@ -509,12 +517,31 @@
 		};
 /* End PBXResourcesBuildPhase section */
 
+/* Begin PBXShellScriptBuildPhase section */
+		7B1D1D0B5E0F4C6B9A3E2F10 /* Write Git commit into Info.plist */ = {
+			isa = PBXShellScriptBuildPhase;
+			alwaysOutOfDate = 1;
+			buildActionMask = 2147483647;
+			files = (
+			);
+			inputPaths = (
+			);
+			name = "Write Git commit into Info.plist";
+			outputPaths = (
+			);
+			runOnlyForDeploymentPostprocessing = 0;
+			shellPath = /bin/sh;
+			shellScript = "PLIST=\"${TARGET_BUILD_DIR}/${INFOPLIST_PATH}\"\n[ -f \"$PLIST\" ] || exit 0\nSHA=$(cd \"${SRCROOT}\" && /usr/bin/git rev-parse --short=7 HEAD 2>/dev/null || echo unknown)\nif [ \"$SHA\" != \"unknown\" ] && ! (cd \"${SRCROOT}\" && /usr/bin/git diff --quiet 2>/dev/null); then SHA=\"${SHA}-dirty\"; fi\n/usr/libexec/PlistBuddy -c \"Delete :TapsoGitCommit\" \"$PLIST\" >/dev/null 2>&1 || true\n/usr/libexec/PlistBuddy -c \"Add :TapsoGitCommit string ${SHA}\" \"$PLIST\"\n";
+		};
+/* End PBXShellScriptBuildPhase section */
+
 /* Begin PBXSourcesBuildPhase section */
 		779B7B7365A3FD895ED6DC44 /* Sources */ = {
 			isa = PBXSourcesBuildPhase;
 			buildActionMask = 2147483647;
 			files = (
 				8F65C63671DC8F13C4B219C8 /* AppComponents.swift in Sources */,
+				27D3B0A355DC8BCC07907E1D /* BrandWordmark.swift in Sources */,
 				21314EBAC48BF9850B409EF3 /* CatalogSearchViews.swift in Sources */,
 				3CC3ABC68AFD26260A4BD353 /* DemoControlsView.swift in Sources */,
 				C5476D706116582E39974F11 /* HomeView.swift in Sources */,
@@ -553,6 +580,7 @@
 			isa = PBXSourcesBuildPhase;
 			buildActionMask = 2147483647;
 			files = (
+				11F216705CBD35830606908D /* BrandWordmark.swift in Sources */,
 				E7D6FCED61BA991CB675260B /* LiveActivitySurfaces.swift in Sources */,
 				780FE7AA8EE44BC0BAAB03E2 /* ReturnActivitySurfaces.swift in Sources */,
 				E87AC521F6825585467E54DD /* RideSurfaceComponents.swift in Sources */,
@@ -570,6 +598,7 @@
 			isa = PBXSourcesBuildPhase;
 			buildActionMask = 2147483647;
 			files = (
+				4DA1D1D973E57698519C31FC /* BrandTests.swift in Sources */,
 				6C7EC458E60617F296856254 /* MapHandoffFlowTests.swift in Sources */,
 				F0FCB5D5AF2DDFA92C6AD18C /* RidePresentationTests.swift in Sources */,
 				22E0764272F0461035C8207B /* ScreenshotImportFlowTests.swift in Sources */,

@@ -48,6 +48,17 @@ struct DemoControlsView: View {
                 } header: {
                     Text("demo.playback")
                 }
+
+                Section {
+                    Text(verbatim: TapsoBuild.identity().line)
+                        .font(.footnote.monospacedDigit())
+                        .textSelection(.enabled)
+                        .accessibilityIdentifier("build-identity")
+                } header: {
+                    Text("demo.build")
+                } footer: {
+                    Text("demo.build.footer")
+                }
             }
             .navigationTitle(Text("demo.title"))
             .navigationBarTitleDisplayMode(.inline)
