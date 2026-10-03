@@ -33,15 +33,12 @@ Extension image support; analytics (none exists); changing the matcher or live-r
 
 ## Evidence
 
-Environment of the authoring session: Linux, no Swift toolchain, no Xcode, no network route to `download.swift.org`. **Swift code was written and syntax-checked (tree-sitter) but not compiled or run in this session.** The checks that did run:
+The code was written in a Linux session with no Swift toolchain, then verified by CI on PR #102 (head `7efccdd`, 2026-10-03): `transit-core` (`swift test`), `ios` (`xcodebuild` build and test, including `ScreenshotImportFlowTests`), `api`, `web` and `matcher-evidence` all succeeded, and the PR merged as `d7d89e5`.
 
-- `python3 scripts/ios/check_localization.py`: ok.
-- `python3 scripts/ios/sync_xcodeproj.py --check`: ok.
-- Syntax parse of every new Swift file: no errors.
-- Expected values in the tests were derived by tracing the algorithm by hand against the fixtures.
+Also run before merge: `check_localization.py`, `sync_xcodeproj.py --check`, web tests, typecheck and build.
 
-Not run here (CI and the owner's Mac must): `swift test --package-path packages/transit-core`, the `xcodebuild … build test` command in `AGENTS.md`.
+Not verified: the Vision test is skipped where the runtime lacks `ko-KR` (CI's log says whether it ran); no real KakaoMap, NAVER Map or Apple Maps screenshot; nothing on a device.
 
 ## Next action
 
-Run the verification commands in `AGENTS.md` on a Mac, fix whatever the compiler and tests report, then run `DEVICE_TEST_PLAN.md` cases 17–20 with real screenshots from the three map apps. Then: Share Extension images (store a `ScreenshotReading` in the App Group inbox), real-screenshot fixtures sanitised by the owner, and an alias table if a source for stop aliases is found.
+Check whether the Vision test ran or skipped in the `ios` CI log, then run `DEVICE_TEST_PLAN.md` cases 17–20 with real screenshots from the three map apps. Then: Share Extension images (store a `ScreenshotReading` in the App Group inbox), real-screenshot fixtures sanitised by the owner, and an alias table if a source for stop aliases is found.

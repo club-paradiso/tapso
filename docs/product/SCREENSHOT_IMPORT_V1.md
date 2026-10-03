@@ -121,8 +121,8 @@ limit, and a UI that cannot be exercised without Xcode and a device. It is the n
 
 | Check | Result |
 |---|---|
-| `swift test --package-path packages/transit-core` (`ScreenshotImportTests`, `RouteImportResolverTests`) | see `exec-plans/SCREENSHOT_ROUTE_IMPORT.md` → Evidence |
-| `ScreenshotImportFlowTests` (app model with a stubbed transit API; Vision on rendered light and dark screens) | see the ExecPlan |
+| `swift test --package-path packages/transit-core` (`ScreenshotImportTests`, `RouteImportResolverTests`) | passed in CI, PR #102 |
+| `ScreenshotImportFlowTests` (app model with a stubbed transit API; Vision on rendered light and dark screens) | passed in CI, PR #102 (the Vision test skips without `ko-KR`) |
 | Real KakaoMap / NAVER Map / Apple Maps screenshots | `UNVERIFIED`: none committed or run. Fixtures are SYNTHETIC OCR transcripts shaped like each app's route view |
 | iPhone | `UNVERIFIED`: `DEVICE_TEST_PLAN.md` cases 17–20 |
 
