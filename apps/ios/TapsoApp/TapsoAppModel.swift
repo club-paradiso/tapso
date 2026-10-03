@@ -1288,7 +1288,7 @@ final class TapsoAppModel {
             let deviceAge = retainedDeviceSample.map { Int(Date().timeIntervalSince($0.timestamp) / 5) * 5 } ?? -1
             let accuracy = retainedDeviceSample.map { Int($0.accuracy / 10) * 10 } ?? -1
             let officialAge = evidenceAt.map { Int(Date().timeIntervalSince($0) / 5) * 5 } ?? -1
-            let line = "\(Int(result.evaluatedAt.timeIntervalSince1970)) state=\(result.state.rawValue) source=\(result.source) category=\(result.confidenceCategory) confidence=\(Int(result.confidence * 100)) reason=\(result.reason) route100m=\(result.routeDistanceBucket ?? -1) stop=\(result.currentStopSequence ?? -1) remaining=\(result.remainingStops) officialAge5s=\(officialAge) gpsAge5s=\(deviceAge) accuracy10m=\(accuracy) legacy=\(current.live?.signal.freshness.rawValue ?? "unknown")"
+            let line = "\(Int(result.evaluatedAt.timeIntervalSince1970)) route=\(route.number) variant=\(route.id.rawValue) direction=\(route.direction.rawValue) vehicle=\(current.plate) state=\(result.state.rawValue) source=\(result.source) category=\(result.confidenceCategory) confidence=\(Int(result.confidence * 100)) reason=\(result.reason) route100m=\(result.routeDistanceBucket ?? -1) stop=\(result.currentStopSequence ?? -1) remaining=\(result.remainingStops) officialAge5s=\(officialAge) gpsAge5s=\(deviceAge) accuracy10m=\(accuracy) legacy=\(current.live?.signal.freshness.rawValue ?? "unknown") legacyRemaining=\(current.live?.signal.remainingStops ?? -1) officialSequence=\(snapshot?.progress?.currentStopSequence ?? -1)"
             hybridDiagnosticLines.append(line)
             if hybridDiagnosticLines.count > 200 { hybridDiagnosticLines.removeFirst(hybridDiagnosticLines.count - 200) }
         }
