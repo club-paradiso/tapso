@@ -63,6 +63,10 @@
 		A4BC18B0C6700F5DEE8A832F /* TapsoReturnAttributes.swift in Sources */ = {isa = PBXBuildFile; fileRef = DB410939543F5C21ABBF6A70 /* TapsoReturnAttributes.swift */; };
 		650AC169EC77845B280C25D9 /* TapsoReturnAttributes.swift in Sources */ = {isa = PBXBuildFile; fileRef = DB410939543F5C21ABBF6A70 /* TapsoReturnAttributes.swift */; };
 		5839FD3A610C398D8FFF2F14 /* TapsoReturnActivityWidget.swift in Sources */ = {isa = PBXBuildFile; fileRef = 2B52DB562472A43D4D48F471 /* TapsoReturnActivityWidget.swift */; };
+		15C8BE959913FD7DC74C90BC /* LiveRouteImportCatalog.swift in Sources */ = {isa = PBXBuildFile; fileRef = 8B023AAD9EC6D00AFF13C829 /* LiveRouteImportCatalog.swift */; };
+		DBA3F1C6B60D01B4A4505125 /* ScreenshotImportViews.swift in Sources */ = {isa = PBXBuildFile; fileRef = B44662751CB9EDA0A65897FC /* ScreenshotImportViews.swift */; };
+		9D5E3B6CEF9138AE20C99988 /* VisionScreenshotTextRecognizer.swift in Sources */ = {isa = PBXBuildFile; fileRef = C91A93C001D9AF658DA966C6 /* VisionScreenshotTextRecognizer.swift */; };
+		22E0764272F0461035C8207B /* ScreenshotImportFlowTests.swift in Sources */ = {isa = PBXBuildFile; fileRef = 6DB796C0ED563974A2B95EA4 /* ScreenshotImportFlowTests.swift */; };
 		C698235F4923522CB7ED7EFA /* RideLocationSampler.swift in Sources */ = {isa = PBXBuildFile; fileRef = 813AFBE6918965418D110364 /* RideLocationSampler.swift */; };
 /* End PBXBuildFile section */
 
@@ -153,6 +157,10 @@
 		D102FEDCF3DA956AE2EC37A9 /* ReturnActivitySurfaces.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = ReturnActivitySurfaces.swift; sourceTree = "<group>"; };
 		DB410939543F5C21ABBF6A70 /* TapsoReturnAttributes.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = TapsoReturnAttributes.swift; sourceTree = "<group>"; };
 		2B52DB562472A43D4D48F471 /* TapsoReturnActivityWidget.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = TapsoReturnActivityWidget.swift; sourceTree = "<group>"; };
+		8B023AAD9EC6D00AFF13C829 /* LiveRouteImportCatalog.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = LiveRouteImportCatalog.swift; sourceTree = "<group>"; };
+		B44662751CB9EDA0A65897FC /* ScreenshotImportViews.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = ScreenshotImportViews.swift; sourceTree = "<group>"; };
+		C91A93C001D9AF658DA966C6 /* VisionScreenshotTextRecognizer.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = VisionScreenshotTextRecognizer.swift; sourceTree = "<group>"; };
+		6DB796C0ED563974A2B95EA4 /* ScreenshotImportFlowTests.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = ScreenshotImportFlowTests.swift; sourceTree = "<group>"; };
 		813AFBE6918965418D110364 /* RideLocationSampler.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = RideLocationSampler.swift; sourceTree = "<group>"; };
 /* End PBXFileReference section */
 

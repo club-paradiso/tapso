@@ -1613,6 +1613,18 @@ struct LiveRouteStops: Equatable {
     let topology: String
 }
 
+/// Screenshot import: what the screen shows. A result is never a started ride.
+enum ScreenshotImportState: Equatable {
+    case idle
+    /// Reading the picture and looking up the routes of the bus numbers in it.
+    case reading
+    /// One route and direction strongly supported: the rider confirms.
+    case confirm(RouteImportProposal)
+    /// Several candidates, or one that is not certain enough to confirm outright.
+    case choose([RouteImportProposal])
+    case failed(RouteImportFailure)
+}
+
 private extension ISO8601DateFormatter {
     static var tapsoEvidence: ISO8601DateFormatter {
         let formatter = ISO8601DateFormatter()
