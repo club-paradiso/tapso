@@ -354,9 +354,10 @@ struct IslandExpandedBottom: View {
                     .foregroundStyle(TapsoColor.textOnDarkSurface.opacity(0.75))
                     .lineLimit(2)
             }
-            HStack(spacing: 12) {
-                TrustBadge(kind: .vehicle(guidance.vehicle, plate: attributes.vehiclePlate), onDark: true)
-                TrustBadge(kind: .data(guidance.data), onDark: true)
+            if let plate = attributes.vehiclePlate {
+                Text(verbatim: plate)
+                    .font(.caption)
+                    .foregroundStyle(TapsoColor.textOnDarkSurface.opacity(0.7))
             }
         }
         .padding(.horizontal, 6)

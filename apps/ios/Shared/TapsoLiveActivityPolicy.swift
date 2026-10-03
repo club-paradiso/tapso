@@ -33,7 +33,7 @@ enum TapsoLiveActivityPolicy {
         for state: TapsoActivityAttributes.ContentState
     ) -> Date? {
         if let expiry = state.trackingValidUntil { return expiry }
-        switch displayPhase(for: state) {
+        return switch displayPhase(for: state) {
         case .arrived, .ended:
             nil
         default:

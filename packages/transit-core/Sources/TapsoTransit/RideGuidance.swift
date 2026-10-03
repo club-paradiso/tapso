@@ -112,7 +112,23 @@ public struct RideSignal: Codable, Hashable, Sendable {
         self.freshness = freshness
         self.destinationPassed = destinationPassed
         self.isOffline = isOffline
-        self.isEstimated = isEstimated
+        self.isEstimated = isEstimated ? true : nil
+    }
+
+    private enum CodingKeys: String, CodingKey {
+        case phase, remainingStops, freshness, destinationPassed, isOffline, isEstimated
+    }
+
+    public init(from decoder: any Decoder) throws {
+        let values = try decoder.container(keyedBy: CodingKeys.self)
+        self.init(
+            phase: try values.decode(JourneyState.self, forKey: .phase),
+            remainingStops: try values.decode(Int.self, forKey: .remainingStops),
+            freshness: try values.decode(DataFreshness.self, forKey: .freshness),
+            destinationPassed: try values.decodeIfPresent(Bool.self, forKey: .destinationPassed) ?? false,
+            isOffline: try values.decodeIfPresent(Bool.self, forKey: .isOffline) ?? false,
+            isEstimated: try values.decodeIfPresent(Bool.self, forKey: .isEstimated) ?? false
+        )
     }
 }
 

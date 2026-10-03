@@ -218,6 +218,32 @@ final class HybridPositionEngineTests: XCTestCase {
         }
     }
 
+    func testSurveyedStopPassageCanAdvanceOnlyAnApproximateCount() {
+        var value = engine()
+        seed(&value, gps: sample(0))
+        XCTAssertEqual(delayed(&value, at: 15, gps: sample(15, latitude: 33.001)).currentStopSequence, 1)
+        let result = delayed(&value, at: 25, gps: sample(25, latitude: 33.0015))
+        XCTAssertEqual(result.currentStopSequence, 2)
+        XCTAssertEqual(result.remainingStops, 6)
+        XCTAssertEqual(result.state, .predicted)
+        XCTAssertNil(RideGuidancePolicy.guidance(for: result.signal(at: start.addingTimeInterval(25))).milestone)
+    }
+
+    func testRepeatedReadDoesNotExtendOfficialFreshness() {
+        var value = engine()
+        let result = value.evaluate(official: RideSignal(phase: .active, remainingStops: 7, freshness: .fresh), sequence: 1,
+                                    evidenceAt: start, selectedVehicleID: "bus", device: nil, now: start.addingTimeInterval(20))
+        XCTAssertEqual(result.validUntil, start.addingTimeInterval(30))
+        XCTAssertEqual(result.signal(at: start.addingTimeInterval(31)).freshness, .unknown)
+    }
+
+    func testLegacyAndExplicitFalseEstimatedSignalsDecodeEqually() throws {
+        let legacy = #"{"phase":"active","remainingStops":7,"freshness":"fresh","destinationPassed":false,"isOffline":false}"#
+        let explicit = #"{"phase":"active","remainingStops":7,"freshness":"fresh","destinationPassed":false,"isOffline":false,"isEstimated":false}"#
+        XCTAssertEqual(try JSONDecoder().decode(RideSignal.self, from: Data(legacy.utf8)),
+                       try JSONDecoder().decode(RideSignal.self, from: Data(explicit.utf8)))
+    }
+
     func testSegmentMedianNeedsEnoughCleanSamples() {
         XCTAssertNil(SegmentTimingEstimate(samples: [30, 40, 50, 60]).medianSeconds)
         XCTAssertEqual(SegmentTimingEstimate(samples: [30, 35, 40, 50, 900, .nan, -1]).medianSeconds, 40)

@@ -1263,8 +1263,13 @@ final class TapsoAppModel {
         }
         let evidenceAt = snapshot?.progress?.evidenceAt.flatMap { ISO8601DateFormatter.tapsoEvidence.date(from: $0) }
         let usableOfficial = snapshot?.progress?.source != "retained_last_known" ? snapshot.map { LiveSessionInterpreter.rideSignal(for: $0) } : nil
+        let snapshotMatchesRide = snapshot.map {
+            $0.id == sessionID && $0.routeId == current.draft.routeID.rawValue
+                && $0.destinationStop.sequence == destination
+                && $0.cityCode == current.draft.cityCode
+        } ?? true
         let result = hybridEngine?.evaluate(official: usableOfficial, sequence: snapshot?.progress?.currentStopSequence,
-            evidenceAt: evidenceAt, selectedVehicleID: snapshot?.trackingIntegrity != nil ? nil : (snapshot == nil ? live.vehicleID : snapshot?.selectedVehicleId),
+            evidenceAt: evidenceAt, selectedVehicleID: !snapshotMatchesRide || snapshot?.trackingIntegrity != nil ? nil : (snapshot == nil ? live.vehicleID : snapshot?.selectedVehicleId),
             device: retainedDeviceSample, now: Date())
         current.hybridPosition = result
         current.isOffline = false // Connectivity alone is not passenger reliability.

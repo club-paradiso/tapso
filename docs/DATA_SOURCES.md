@@ -56,6 +56,14 @@ Decision:
 - The timetable files may be used under their 제한 없음 terms only as a **dated, imported dataset**, labelled with the download date and never presented as live.
 - The static page holds no per-route file link: the links appear once a route is chosen. Reproducing the page's own requests to fetch them would mean using an undocumented endpoint.
 - So the first file comes from a person following the dataset's instructions. The parser is written against that real file.
+- 2026-10-03, **decision changed by the owner**: every route's file may be downloaded by automation, as the page's own download, for the same dated offline import. The owner asked for all routes instead of downloading each file by hand.
+  - The requests are read from the page by `scripts/data-sources/jeju-timetable-endpoints.ts` (data-source probe run 37086675116), never guessed:
+    - `POST /publicTrafficInformation/getBusRouteNum` with `GROUTE_TYPE` lists a route group's timetables (`GSCHEDULE_ID`, `GSCHEDULE_NM`). The groups come from the page's own `showRouteNum('<type>')` buttons.
+    - `POST /data/schedule/getGroupScheduleInfo` with `gscheduleId` comes back empty when a route has no timetable.
+    - `GET /data/schedule/downScheduleExcel?gscheduleId=` returns the XLSX.
+  - `scripts/timetables/fetch_jeju_bis.py` makes those requests at one per second, from `.github/workflows/jeju-timetables.yml`. The workflow commits to its topic branch, never to `main`.
+  - The output is `fixtures/jeju/timetables/bis/`: each raw file, the parse of each file the parser accepts, and a `manifest.json` with each file's checksum and outcome. A file the parser refuses stays raw, with its reason.
+  - None of these endpoints becomes a runtime dependency: the first bullet above still holds.
 - 2026-10-02: the format-independent half exists (`services/api/src/officialTimetable.ts`): the normalized dataset `tapso-jeju-timetable-v1` (since replaced by v2, below) (label `OFFICIAL_DATED`, source page and file name, SHA-256 of the file, download date, optional effective date, parser name and version, departures per starting stop and day type), its validator, and the staleness rule (`fresh` ≤ 30 days after download, `aging` ≤ 90, then `stale`; a future download or effective date is `unknown`; only `fresh` and `aging` give a last bus, always with its as-of date; the bounds are `ASSUMED`). The agent environment cannot reach `bus.jeju.go.kr` or `data.go.kr` (egress denied), so the Route 365 file must still come from the owner: put it at `fixtures/jeju/timetables/raw/365.xlsx` exactly as downloaded, with the download date in the commit message.
 - 2026-10-03: **Route 365 is imported** (`VERIFIED` from the file; `OFFICIAL_DATED`).
   - The owner downloaded it from the timetable page on 2026-10-03 at 10:26 KST. The workbook was written by the server (Apache POI) at that minute and is committed unchanged at `fixtures/jeju/timetables/raw/365.xlsx` (SHA-256 `8eafd16b…6d07a4`).

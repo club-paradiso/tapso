@@ -1,0 +1,41 @@
+{
+  "schemaVersion": "tapso-jeju-timetable-v2",
+  "label": "OFFICIAL_DATED",
+  "source": {
+    "publisher": "제주특별자치도 (bus.jeju.go.kr)",
+    "dataset": "data.go.kr 3043887",
+    "page": "https://bus.jeju.go.kr/publicTrafficInformation/generalBusSchedule",
+    "file": "406052.xlsx",
+    "sha256": "bf76892cc7d9f8f06ebed655532b4da082064e133e5fa298fccb93a60ddc8447"
+  },
+  "retrievedOn": "2026-10-03",
+  "parser": {
+    "name": "jeju-bis-xlsx",
+    "version": "2"
+  },
+  "routeNumber": "5006",
+  "services": [
+    {
+      "sheet": "5006 (남주고-터미널-중문-조각공원)심야",
+      "dayType": "unstated",
+      "direction": "남주고-조각공원 (심야)",
+      "summary": "첫차/막차 23:00, 배차간격 1일 1회, 동서교통(064-732-4934)",
+      "timepoints": [
+        "남주고",
+        "버스터미널",
+        "중문우체국",
+        "조각공원"
+      ],
+      "trips": [
+        {
+          "times": [
+            "23:00",
+            "23:23",
+            "23:35",
+            "23:55"
+          ]
+        }
+      ]
+    }
+  ]
+}

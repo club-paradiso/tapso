@@ -1,0 +1,45 @@
+{
+  "schemaVersion": "tapso-jeju-timetable-v2",
+  "label": "OFFICIAL_DATED",
+  "source": {
+    "publisher": "제주특별자치도 (bus.jeju.go.kr)",
+    "dataset": "data.go.kr 3043887",
+    "page": "https://bus.jeju.go.kr/publicTrafficInformation/generalBusSchedule",
+    "file": "406050.xlsx",
+    "sha256": "d2aebf0645ceee8d8457bf33828d335653015312382d7ebe678bbdc6c5d95014"
+  },
+  "retrievedOn": "2026-10-03",
+  "parser": {
+    "name": "jeju-bis-xlsx",
+    "version": "2"
+  },
+  "routeNumber": "5004",
+  "services": [
+    {
+      "sheet": "5004 (남주고-중앙R-터미널-서진A-강정-주거물)심야",
+      "dayType": "unstated",
+      "direction": "남주고-주거물 (심야)",
+      "summary": "첫차/막차 23:00, 배차간격 1일 1회, 동서교통(064-732-4934)",
+      "timepoints": [
+        "남주고",
+        "중앙로터리",
+        "버스터미널",
+        "서진아파트",
+        "강정초등학교",
+        "주거물"
+      ],
+      "trips": [
+        {
+          "times": [
+            "23:00",
+            "23:10",
+            "23:23",
+            "23:35",
+            "23:45",
+            "23:55"
+          ]
+        }
+      ]
+    }
+  ]
+}

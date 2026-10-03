@@ -211,28 +211,29 @@ public struct HybridPositionEngine: Sendable {
                 lastDeviceAt = device.timestamp
             }
         }
-        if officialStrong { return result(.live, 0.95, "consistent_official", 30) }
+        if officialStrong { return result(.live, 0.95, "consistent_official", max(0, 30 - (officialAge ?? 30))) }
         guard let strongAt, now.timeIntervalSince(strongAt) >= 0, now.timeIntervalSince(strongAt) <= 180,
               let committed else { return result(.lost, 0.1, "association_expired") }
         guard recentDevice, let device, let projection else {
             clearDeviceContinuity()
             return result(.lost, 0.15, "no_usable_device_geometry")
         }
-        // Only a surveyed road shape can commit stop passage. Chords remain a visual estimate.
+        // Surveyed stop proximity followed by forward departure can advance an approximate
+        // count. A chord alone or elapsed time can never do so; approximate results cannot alert.
+        advanceConfirmedPassage(device: device, projection: projection, now: now)
         if geometry.verifiedRoadShape {
-            advanceConfirmedPassage(device: device, projection: projection, now: now)
             let ageFactor = max(0, 1 - now.timeIntervalSince(strongAt) / 240)
             let accuracyFactor = max(0, 1 - device.accuracy / 100)
             let routeFactor = max(0, 1 - projection.distanceFromRoute / 160)
             let confidence = 0.4 * ageFactor + 0.3 * accuracyFactor + 0.3 * routeFactor
             // Multiple distinct samples and moving course are required for fusion.
             if confidence >= 0.75, consistentSamples >= 2, (device.speed ?? 0) >= 2, device.course != nil {
-                return result(.fused, confidence, "verified_route_device_fusion")
+                return result(.fused, confidence, "verified_route_device_fusion", min(20, 180 - now.timeIntervalSince(strongAt)))
             }
         }
         // A prediction never causes an actionable 2/1/0-stop milestone.
-        guard destination - committed > 2 else { return result(.lost, 0.3, "destination_needs_confirmation") }
-        return result(.predicted, geometry.verifiedRoadShape ? 0.6 : 0.45, "bounded_device_estimate")
+        guard destination - (self.committed ?? committed) > 2 else { return result(.lost, 0.3, "destination_needs_confirmation") }
+        return result(.predicted, geometry.verifiedRoadShape ? 0.6 : 0.45, "bounded_device_estimate", min(20, 180 - now.timeIntervalSince(strongAt)))
     }
 
     private mutating func clearDeviceContinuity() {
