@@ -25,8 +25,8 @@
     "16"
   ],
   "counts": {
-    "parsed": 69,
-    "parse_refused": 165,
+    "parsed": 67,
+    "parse_refused": 167,
     "no_timetable": 1
   },
   "timetables": [
@@ -114,7 +114,7 @@
       "bytes": 7449,
       "sha256": "4685f8ed7f383d9664d2179c36bd33f5f6ea1092756df141ff076ca6bef2d1a0",
       "outcome": "parse_refused",
-      "reason": "sheet '181 공항-516도로-서귀포-평화로-공항-제주터미널' cell J27: unreadable value '21:57\\n(종료)'"
+      "reason": "sheet '181 공항-516도로-서귀포-평화로-공항-제주터미널' cell K9: a value right of the table's last column (J)"
     },
     {
       "id": "405008",
@@ -126,7 +126,7 @@
       "bytes": 7173,
       "sha256": "0a4f3ab042bca57cbde772bd6b8deb88564e81233f4ac8a8d1f25b9100f3daba",
       "outcome": "parse_refused",
-      "reason": "sheet '182 제주터미널-공항-평화로-서귀포-516로-공항' cell I8: unreadable value '6:05(출발)'"
+      "reason": "sheet '182 제주터미널-공항-평화로-서귀포-516로-공항' cell J10: a value right of the table's last column (I)"
     },
     {
       "id": "405009",
@@ -138,7 +138,7 @@
       "bytes": 18060,
       "sha256": "7373a4f415f15678bf14a172d9b1c91d10c66e7d27fd994b3557b7d598161348",
       "outcome": "parse_refused",
-      "reason": "sheet '201 서귀포터미널-남원-성산-세화-조천-제주터미널' row 8: trip 1 has no time"
+      "reason": "sheet '201 서귀포터미널-남원-성산-세화-조천-제주터미널' cell J14: a value right of the table's last column (I)"
     },
     {
       "id": "405010",
@@ -150,7 +150,7 @@
       "bytes": 17964,
       "sha256": "2f7bffe777814408ea8b283d9ce37b563f10331884805ac10795eefc5b982e3d",
       "outcome": "parse_refused",
-      "reason": "sheet '202 제주터미널-애월-한림-대정-중문-서귀터미널' cell J8: unreadable value '5:50(출발)'"
+      "reason": "sheet '202 제주터미널-애월-한림-대정-중문-서귀터미널' cell K12: a value right of the table's last column (J)"
     },
     {
       "id": "405011",
@@ -562,9 +562,8 @@
       "file": "raw/405044.xlsx",
       "bytes": 5789,
       "sha256": "cffe8ae6636a34ec267b9a6dcda87c357cf0ce6c6653ae328461f35b46b9fd72",
-      "outcome": "parsed",
-      "routeNumber": "462",
-      "services": 1
+      "outcome": "parse_refused",
+      "reason": "sheet '462 순환(버스터미널-사대부고-해안마을-버스터미널)' cell I10: a value right of the table's last column (H)"
     },
     {
       "id": "405045",
@@ -1203,7 +1202,7 @@
       "bytes": 6751,
       "sha256": "5a417553915c80658d16bd2868078b0ae26512c9c1bfbe3618ac614ae45a88c5",
       "outcome": "parse_refused",
-      "reason": "sheet '795 (순환)하귀-애월-금성리-애월-하귀' row 8: trip 1 has no time"
+      "reason": "sheet '795 (순환)하귀-애월-금성리-애월-하귀' cell J8: a value right of the table's last column (I)"
     },
     {
       "id": "405097",
@@ -1507,7 +1506,7 @@
       "bytes": 5896,
       "sha256": "ae794a09bf825e61dc55e7e33d3fe865cc35014d1db58b3ced453f8f91ea4068",
       "outcome": "parse_refused",
-      "reason": "sheet '461 순환(버스터미널-탑동-해안마을-버스터미널)' cell C22: unreadable value '22:05 터미널(제주은행)'"
+      "reason": "sheet '461 순환(버스터미널-탑동-해안마을-버스터미널)' cell I10: a value right of the table's last column (H)"
     },
     {
       "id": "405123",
@@ -2633,9 +2632,8 @@
       "file": "raw/406038.xlsx",
       "bytes": 5940,
       "sha256": "5a55bfedcb7a629ba4623105ac06466de269057fcb96f39ed8794cb42d91b70a",
-      "outcome": "parsed",
-      "routeNumber": "744",
-      "services": 1
+      "outcome": "parse_refused",
+      "reason": "sheet '744 (신흥2리-의귀초-신례리-토평사거리-오일시장)' cell J8: a value right of the table's last column (I)"
     },
     {
       "id": "406039",
