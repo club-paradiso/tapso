@@ -54,7 +54,7 @@ Status vocabulary: `DONE`, `ACTIVE`, `BLOCKED`, `NOT_YET_VERIFIED`, `FAILED`.
 | F. Route geometry / map-matching audit | DONE (classified) | Stop coordinates surveyed for every stop in the catalog; no road polyline: geometry class `APPROXIMATE` (stop chords) for every variant, `AUTHORITATIVE` for none | Keep prediction capped as the engine already does; no v1 feature depends on road geometry | — | Geometry: NOT_REQUIRED_FOR_V1 (§69) |
 | G. Dynamic Island Coexistence V3 | ACTIVE | Figma V1 page built this session (see §5); SwiftUI not started | Human Review Gate A | User review | Dynamic Island (§67) |
 | H. Lock Screen / ride-screen UX cleanup | ACTIVE | One trust word per moment (`RideTrust`); ride screen shows one notice per root condition | Apply the same to Lock Screen and island after Gate B | Gate B | Lock Screen (§83) |
-| I. Background / APNs production completion | BLOCKED | Token route, store, index, scheduler and pusher exist in code; ticker live on Railway and answering 503 every 5 min; APNs variables absent | Owner: paid Apple team, then the five `APNS_*` variables on `tapso-api`; make the ticker skip while `/health.liveActivityPush.enabled` is false (design below) | Apple team / APNs key | Background/APNs (§68) |
+| I. Background / APNs production completion | BLOCKED | Token route, store, index, scheduler and pusher exist in code; ticker on Railway now gated on `/health` (PR #112, tested); APNs variables absent | Owner: paid Apple team, then the five `APNS_*` variables on `tapso-api` (`LIVE_ACTIVITY_PUSH.md` §3b); then the device protocol | Apple team / APNs key | Background/APNs (§68) |
 | J. Screenshot / map-import regression | NOT_YET_VERIFIED | CI evidence from #102–#105, #109 on simulator; share extension `UNVERIFIED` on device | Re-run `ScreenshotImportFlowTests`, `MapHandoffFlowTests` on the device build | Physical device | Screenshot/map import (§83) |
 | K. Offline / cache / recovery validation | NOT_YET_VERIFIED | Catalog ETag cache, schedule provenance, restored-ride path exist and are unit-tested; vehicle cache never serves stale rows (`cachedTransitProvider.ts`) | Device check: airplane mode mid-ride, reconnect | Physical device | Offline/recovery (§70) |
 | L. Observability / field diagnostics | NOT_YET_VERIFIED | Structured `transit_api_request` logs with `durationMs`, `cache`, route; `reliability` now on every selected-vehicle view; Debug hybrid diagnostic lines exist only behind the flag | Debug ride trace (build SHA, route, variant, masked vehicle, provider sequence, state, reliability, hybrid, lifecycle, milestone, LA event) in PR C | — | — |
@@ -138,11 +138,11 @@ diagnostics must show the commit under test.
 
 | PR | Branch | Contents | Status |
 |---|---|---|---|
-| A | `fix/live-ride-reliability-v3` | confirmed-ride policy, reliability view, trust word, dedupe, timeout copy, forensic doc, this plan, tests, fixtures | in progress |
-| E | `fix/brand-integrity-gate` | `BrandWordmark`, build identity, brand guard, snapshots | in progress |
+| A | `fix/live-ride-reliability-v3` | confirmed-ride policy, reliability view, trust word, dedupe, timeout copy, forensic doc, this plan, tests, fixtures | [PR #110](https://github.com/club-paradiso/tapso/pull/110) |
+| E | `fix/brand-integrity-gate` | `BrandWordmark`, build identity, brand guard, snapshots | [PR #111](https://github.com/club-paradiso/tapso/pull/111) |
 | B | `feat/dynamic-island-coexistence-v3` | after Gate B | not started |
 | C | `feat/hybrid-production-readiness-v1` | rollout flag, diagnostics trace, device evidence | not started |
-| D | `feat/live-activity-background-production-v1` | ticker skip-while-disabled, APNs config, authority handoff | not started |
+| D | `feat/live-activity-background-production-v1` | ticker gated on `/health`, authority by app state, owner APNs steps | [PR #112](https://github.com/club-paradiso/tapso/pull/112); APNs itself still blocked |
 
 ## 9. Reproduction
 
@@ -162,3 +162,4 @@ xcodebuild -project apps/ios/Tapso.xcodeproj -scheme Tapso -destination 'platfor
   collector test as the only other failure, Swift core 235/235); plan created;
   Figma V1 page built; Gate A reached. Exact next action: user review of the
   Figma frames listed in the Gate A report; meanwhile PR A and PR E through CI.
+- 2026-10-04 (continued): PR #110, #111 and #112 open; Figma page re-read, no user edits yet (Gate A still open). Next: CI on the three PRs; then the Debug ride trace (workstream L) on `feat/hybrid-production-readiness-v1`.
