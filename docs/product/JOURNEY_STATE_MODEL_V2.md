@@ -88,7 +88,7 @@ Colour roles map to `TapsoColor.journey(_:)`; Figma `color/journey/*`. Copy keys
 
 ### delayed — DEGRADED_DATA
 - **Question:** Is something wrong?
-- **Primary:** banner "실시간 정보가 잠시 늦고 있어요". **Secondary:** "추적은 계속하고 있어요. 차내 안내도 함께 확인해주세요"; last-known count dimmed, labelled "마지막 확인".
+- **Primary:** "현재 위치를 정확히 확인하기 어려워요" (eyebrow "위치 확인 필요", compact "위치 확인"). **Secondary:** "차내 안내방송과 정류장 표시를 함께 확인해주세요."; last-known count dimmed, labelled "마지막 확인". (Copy keys `ride.delayed.*`, replaced the earlier "실시간 정보가 잠시 늦고 있어요" wording; see `HYBRID_POSITION.md` for the opt-in hybrid engine, which withholds the count when unreliable.)
 - **Colour:** `journeyDegraded` slate; data badge "업데이트 지연" amber. **Symbol:** `clock.arrow.circlepath`. **Haptic/alert:** none. Relevance 75. **Recovery:** check the bus's own stop display; resumes on the next fresh observation.
 
 ### vehicleLost — VEHICLE_TEMPORARILY_LOST
