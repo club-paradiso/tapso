@@ -6,6 +6,7 @@
  *
  *   node --experimental-strip-types scripts/catalog/build-jeju-catalog.ts \
  *     [--base https://tapso-api.vercel.app] [--live] [--pace-ms 700]
+ *   … --probe-only [--first-type 순환버스]   probe the committed catalog without rebuilding it
  *
  * Writes:
  *   services/api/data/jeju-transit-catalog.json     the catalog (served by GET /v1/catalog)
@@ -46,6 +47,9 @@ const LIVE = args.includes("--live");
 // Probe the catalog already written, without rebuilding it (the workflow commits
 // the catalog first, so a slow probe can never cost the catalog).
 const PROBE_ONLY = args.includes("--probe-only");
+// Probe variants of this provider route type first, e.g. 순환버스 (Jeju's late-night school routes,
+// 22:00-23:40 KST): a full probe takes about 40 minutes, longer than their service window.
+const FIRST_TYPE = option("--first-type");
 const ROOT = path.resolve(import.meta.dirname, "..", "..");
 
 const pause = (ms: number) => new Promise((resolve) => setTimeout(resolve, ms));
@@ -177,7 +181,11 @@ console.log(`CALLS ${calls}`);
 
 async function probe(catalog: TransitCatalog): Promise<void> {
   const probes: Record<string, { status: number; vehicles: number; withStopSequence: number; sequenceInRange: number }> = {};
-  for (const route of catalog.routes) {
+  const ordered = FIRST_TYPE
+    ? [...catalog.routes.filter((route) => route.routeType === FIRST_TYPE), ...catalog.routes.filter((route) => route.routeType !== FIRST_TYPE)]
+    : catalog.routes;
+  const startedAt = new Date().toISOString();
+  for (const route of ordered) {
     const { status, body } = await getJson(`/v1/vehicles?routeId=${encodeURIComponent(route.routeId)}&cityCode=${CITY}`);
     const items: { stopSequence?: unknown }[] = status === 200 && Array.isArray(body?.items) ? body.items : [];
     const maxSequence = route.sequences?.at(-1) ?? route.stops.length;
@@ -187,7 +195,7 @@ async function probe(catalog: TransitCatalog): Promise<void> {
   }
   await writeFile(
     path.join(ROOT, "artifacts/route-coverage/jeju-live-probe.json"),
-    `${JSON.stringify({ probedAt: new Date().toISOString(), base: BASE, catalogVersion: catalog.catalogVersion, note: "Vehicle counts only; no vehicle number is recorded. A count of zero means no bus reported at that moment, not that the route is unsupported.", probes }, null, 2)}\n`,
+    `${JSON.stringify({ probedAt: new Date().toISOString(), startedAt, ...(FIRST_TYPE ? { firstType: FIRST_TYPE } : {}), base: BASE, catalogVersion: catalog.catalogVersion, note: "Vehicle counts only; no vehicle number is recorded. A count of zero means no bus reported at that moment, not that the route is unsupported.", probes }, null, 2)}\n`,
   );
   console.log(`LIVE_PROBE ${Object.keys(probes).length} variants`);
 }

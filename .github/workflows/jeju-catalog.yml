@@ -6,7 +6,9 @@ name: Jeju transit catalog
 # environment cannot reach the API, so this runs on GitHub. No secret is needed.
 #
 # - On a topic branch, a change to ops/jeju-catalog/request.json runs it once and
-#   commits the result to that branch.
+#   commits the result to that branch. With "probeOnly": true it skips the build and
+#   probes the committed catalog; "firstType" probes that provider route type first
+#   (순환버스 are late-night routes, 22:00-23:40 KST, shorter than a full probe).
 # - Weekly on main, it refreshes onto the branch data/jeju-catalog-refresh and
 #   opens a pull request when the catalog changed. It never commits to main.
 on:
@@ -43,9 +45,22 @@ jobs:
           else
             echo "branch=${GITHUB_REF_NAME}" >> "$GITHUB_OUTPUT"
           fi
+      - name: Read the request
+        id: request
+        run: |
+          node -e '
+            const r = JSON.parse(require("fs").readFileSync("ops/jeju-catalog/request.json", "utf8"));
+            const out = require("fs").createWriteStream(process.env.GITHUB_OUTPUT, { flags: "a" });
+            // A scheduled or manual run on main always rebuilds; probeOnly applies to a request on a topic branch.
+            const probeOnly = process.env.GITHUB_EVENT_NAME === "push" && r.probeOnly === true;
+            const firstType = typeof r.firstType === "string" && /^[가-힣A-Za-z]{1,10}$/.test(r.firstType) ? r.firstType : "";
+            out.write(`probe_only=${probeOnly}\nlive=${probeOnly || r.live === true}\nfirst_type=${firstType}\n`);
+          '
       - name: Build the catalog (paced, read-only)
+        if: steps.request.outputs.probe_only != 'true'
         run: node --experimental-strip-types scripts/catalog/build-jeju-catalog.ts
       - name: Commit the catalog before the slower probe
+        if: steps.request.outputs.probe_only != 'true'
         env:
           GH_TOKEN: ${{ github.token }}
           TARGET: ${{ steps.target.outputs.branch }}
@@ -64,8 +79,13 @@ jobs:
             done
           fi
       - name: Probe every variant's live endpoint (counts only, no vehicle number)
+        if: steps.request.outputs.live == 'true'
+        env:
+          FIRST_TYPE: ${{ steps.request.outputs.first_type }}
         run: |
-          if node -e 'process.exit(JSON.parse(require("fs").readFileSync("ops/jeju-catalog/request.json","utf8")).live ? 0 : 1)'; then
+          if [ -n "${FIRST_TYPE}" ]; then
+            node --experimental-strip-types scripts/catalog/build-jeju-catalog.ts --probe-only --first-type "${FIRST_TYPE}"
+          else
             node --experimental-strip-types scripts/catalog/build-jeju-catalog.ts --probe-only
           fi
       - name: Production-readiness audit (offline, from the files just written)
