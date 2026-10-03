@@ -44,8 +44,8 @@ export function Support({ onOpen }: { onOpen: () => void }) {
       <div className="container">
         <SectionHead
           index="10"
-          eyebrow="응원하기"
-          title="탑서에 힘을 보태고 싶다면"
+          eyebrow="개발 후원"
+          title="탑서 개발을 후원하고 싶다면"
           titleId="support-title"
         >
           <p>
@@ -70,7 +70,7 @@ export function Support({ onOpen }: { onOpen: () => void }) {
             </ul>
             <p className="support-detail">{detail}</p>
             <button type="button" className="btn btn-outline" onClick={onOpen}>
-              {supportOpen ? "후원 방법 보기" : "후원 안내 보기"}
+              {supportOpen ? "후원하기" : "후원 준비 상태 보기"}
             </button>
             <p className="fineprint">
               탑서는 비영리 단체가 아니며 기부금 영수증이나 세액공제는 제공하지
