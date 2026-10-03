@@ -99,4 +99,13 @@ xcodebuild ... test   # TapsoActivityAttributesTests.testServerPushContentStateD
 - 2026-10-01: milestone 2 done (token route, storage, rewrite, health). The push index moved to milestone 5.
 - 2026-10-01: milestone 3 done in code (device `UNVERIFIED`). The marketing page's "only with the app open" claim is now pinned to milestone 6, not to `pushType: nil`.
 - 2026-10-02: milestone 4 done in code. Pushes follow the session's reads; while the app is suspended nothing reads it.
-- 2026-10-03: milestone 5 done in code, on the Railway collector (owner's decision). Exact next action: the paid Apple team, then APNs configuration on the API; the scheduler then needs only `LIVE_ACTIVITY_TICK_URL` and `LIVE_ACTIVITY_TICK_TOKEN` on the collector.
+- 2026-10-03: milestone 5 done in code, on the Railway collector (owner's decision). Exact next action: the paid Apple team, then APNs configuration on the API; the scheduler needs nothing more.
+- 2026-10-03: the ticker is live on the Railway collector (`tapso-ride-collector` / `collector`, deployment `bbe39acb`).
+  - `LIVE_ACTIVITY_TICK_URL=https://tapso-api.vercel.app/operator/live-activity/tick`.
+  - `LIVE_ACTIVITY_TICK_TOKEN=${{RIDE_CAPTURE_OPERATOR_TOKEN}}`, a Railway reference to the collector's own operator token, so no secret was copied.
+  - Its first tick (03:07:17 UTC) logged `outcome: push_unavailable`. The API answered 503 because APNs is not configured, as expected. The ticker now asks every 5 minutes.
+  - `VERIFIED`: the collector reaches the tick route, and its token is accepted.
+    - Post-deploy run 37091931321 shows the API's operator route enabled ("operator path is closed: 401 without a token"). A disabled route would answer `503 OPERATOR_DISABLED`.
+    - On an enabled route the token is checked before anything else, so a wrong token would have read `unauthorized`.
+    - The 503 the ticker got is therefore `LIVE_ACTIVITY_PUSH_UNAVAILABLE`: the request passed the operator check and the sessions check, and stopped at the missing APNs configuration.
+  - Rollback: delete the two variables.
