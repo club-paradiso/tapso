@@ -23,13 +23,12 @@
   {
    "id": "GATE 3 — LIVE",
    "requirement": "Representative route families pass the live compatibility audit",
-   "status": "PENDING_EVIDENCE",
+   "status": "PASS",
    "evidence": [
-    "readiness for catalog 794f3bcb831d783e: {\"SUPPORTED\":170,\"SUPPORTED_WITH_WARNING\":818,\"UNSUPPORTED\":4,\"UNKNOWN\":0}; probed 2026-10-03T09:32:19.465Z",
-    "route families (TAGO routetp), variants rideable / checked with a reporting bus / total: 지선버스 261/35/261, 간선버스 401/141/402, 급행버스 280/67/280, 순환버스 32/0/32, unstated 14/1/14",
-    "no bus reported in any variant of: 순환버스 (a probe is one moment)"
-   ],
-   "next": "Probe again while 순환버스 run (ops/jeju-catalog/request.json with live: true)"
+    "readiness for catalog 794f3bcb831d783e: {\"SUPPORTED\":13,\"SUPPORTED_WITH_WARNING\":976,\"UNSUPPORTED\":3,\"UNKNOWN\":0}; probed 2026-10-03T14:36:56.641Z",
+    "2 probe(s) of this catalog: 2026-10-03T09:32:19.465Z, 2026-10-03T14:36:56.641Z",
+    "route families (TAGO routetp), variants with a stop list / checked with a reporting bus in some probe / total: 지선버스 261/41/261, 간선버스 402/144/402, 급행버스 280/67/280, 순환버스 32/4/32, unstated 14/1/14"
+   ]
   },
   {
    "id": "GATE 4 — TRACKING",

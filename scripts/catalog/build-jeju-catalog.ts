@@ -193,9 +193,12 @@ async function probe(catalog: TransitCatalog): Promise<void> {
     const sequenceInRange = items.filter((item) => typeof item.stopSequence === "number" && item.stopSequence >= 1 && item.stopSequence <= maxSequence).length;
     probes[route.routeId] = { status, vehicles: items.length, withStopSequence, sequenceInRange };
   }
-  await writeFile(
-    path.join(ROOT, "artifacts/route-coverage/jeju-live-probe.json"),
-    `${JSON.stringify({ probedAt: new Date().toISOString(), startedAt, ...(FIRST_TYPE ? { firstType: FIRST_TYPE } : {}), base: BASE, catalogVersion: catalog.catalogVersion, note: "Vehicle counts only; no vehicle number is recorded. A count of zero means no bus reported at that moment, not that the route is unsupported.", probes }, null, 2)}\n`,
-  );
+  const probedAt = new Date().toISOString();
+  const record = `${JSON.stringify({ probedAt, startedAt, ...(FIRST_TYPE ? { firstType: FIRST_TYPE } : {}), base: BASE, catalogVersion: catalog.catalogVersion, note: "Vehicle counts only; no vehicle number is recorded. A count of zero means no bus reported at that moment, not that the route is unsupported.", probes }, null, 2)}\n`;
+  // The latest probe feeds the readiness report; every probe is kept, because a probe is one
+  // moment and release gate 3 counts what any probe of this catalog version observed.
+  await writeFile(path.join(ROOT, "artifacts/route-coverage/jeju-live-probe.json"), record);
+  await mkdir(path.join(ROOT, "artifacts/route-coverage/probe-history"), { recursive: true });
+  await writeFile(path.join(ROOT, `artifacts/route-coverage/probe-history/${probedAt.slice(0, 19).replaceAll(":", "-")}Z.json`), record);
   console.log(`LIVE_PROBE ${Object.keys(probes).length} variants`);
 }

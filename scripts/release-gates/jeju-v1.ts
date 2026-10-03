@@ -18,7 +18,7 @@ import { existsSync, mkdirSync, readFileSync, readdirSync, writeFileSync } from 
 import path from "node:path";
 
 import { validateTimetableBundle } from "../../services/api/src/officialTimetable.ts";
-import type { ReadinessReport } from "../../services/api/src/routeReadiness.ts";
+import type { LiveProbe, ReadinessReport } from "../../services/api/src/routeReadiness.ts";
 import { validateCatalog, type TransitCatalog } from "../../services/api/src/transitCatalog.ts";
 
 type Status = "PASS" | "FAIL" | "PENDING_EVIDENCE" | "BLOCKED";
@@ -119,26 +119,40 @@ const gates: Gate[] = [];
       // Representative families: TAGO's own route type for each variant. A family passes only on
       // evidence: some variant whose reporting buses all carried an in-route stop sequence. A variant
       // with no bus at probe time is rideable but unchecked, and never stands in for evidence.
+      // A probe is one moment, so every committed probe of this catalog version counts
+      // (artifacts/route-coverage/probe-history); a variant that failed in any of them is failed.
+      const historyDir = "artifacts/route-coverage/probe-history";
+      const history = (existsSync(file(historyDir)) ? readdirSync(file(historyDir)).filter((name) => name.endsWith(".json")).sort() : [])
+        .map((name) => json(`${historyDir}/${name}`) as { probedAt: string; catalogVersion: string; probes: Record<string, LiveProbe> })
+        .filter((probe) => probe.catalogVersion === catalog.catalogVersion);
+      evidence.push(`${history.length} probe(s) of this catalog: ${history.map((probe) => probe.probedAt).join(", ") || "none"}`);
+      const checked = new Map<string, "ok" | "failed">();
+      for (const probe of history) {
+        for (const [routeId, result] of Object.entries(probe.probes)) {
+          const failed = result.status !== 200 || (result.vehicles > 0 && (result.withStopSequence !== result.vehicles || result.sequenceInRange !== result.vehicles));
+          if (failed) checked.set(routeId, "failed");
+          else if (result.vehicles > 0 && checked.get(routeId) !== "failed") checked.set(routeId, "ok");
+        }
+      }
       const families = new Map<string, { rideable: number; evidenced: number; failed: number; total: number }>();
       for (const route of catalog.routes) {
         const variant = report.variants.find((entry) => entry.routeId === route.routeId);
         const family = route.routeType ?? "unstated";
         const entry = families.get(family) ?? { rideable: 0, evidenced: 0, failed: 0, total: 0 };
         entry.total += 1;
-        if (variant && (variant.tracking === "SUPPORTED" || variant.tracking === "SUPPORTED_WITH_WARNING")) {
-          entry.rideable += 1;
-          if (variant.live === "answered_with_buses") entry.evidenced += 1;
-        }
-        if (variant?.live === "answered_with_buses" && variant.tracking === "UNSUPPORTED") entry.failed += 1;
+        const rideable = variant !== undefined && variant.live !== "no_stop_list";
+        if (rideable) entry.rideable += 1;
+        if (rideable && checked.get(route.routeId) === "ok") entry.evidenced += 1;
+        if (checked.get(route.routeId) === "failed") entry.failed += 1;
         families.set(family, entry);
       }
-      evidence.push(`route families (TAGO routetp), variants rideable / checked with a reporting bus / total: ${[...families].map(([family, entry]) => `${family} ${entry.rideable}/${entry.evidenced}/${entry.total}`).join(", ")}`);
+      evidence.push(`route families (TAGO routetp), variants with a stop list / checked with a reporting bus in some probe / total: ${[...families].map(([family, entry]) => `${family} ${entry.rideable}/${entry.evidenced}/${entry.total}`).join(", ")}`);
       const failing = [...families].filter(([, entry]) => entry.evidenced === 0 && entry.failed > 0).map(([family]) => family);
       const unchecked = [...families].filter(([, entry]) => entry.evidenced === 0 && entry.failed === 0).map(([family]) => family);
       status = failing.length > 0 ? "FAIL" : unchecked.length > 0 ? "PENDING_EVIDENCE" : "PASS";
       if (failing.length > 0) evidence.push(`every reporting bus failed the stop-sequence check in: ${failing.join(", ")}`);
       if (unchecked.length > 0) {
-        evidence.push(`no bus reported in any variant of: ${unchecked.join(", ")} (a probe is one moment)`);
+        evidence.push(`no bus reported in any variant of: ${unchecked.join(", ")}, in any probe`);
         next = `Probe again while ${unchecked.join(", ")} run (ops/jeju-catalog/request.json with live: true)`;
       }
     }
