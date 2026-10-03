@@ -14,7 +14,7 @@ export function Header() {
         <a className="brand" href="#top" aria-label="TAPSO 탑서, 맨 위로">
           <BrandMark />
           <span className="brand-word" aria-hidden="true">
-            TAPSO <span>탑서</span>
+            TAPSŌ <span>탑서</span>
           </span>
         </a>
         <nav className="site-nav" aria-label="페이지 안내">
