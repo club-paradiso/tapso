@@ -75,10 +75,11 @@ No failure produces a proposal or a get-off alert.
 
 ## Production state
 
-Production journey sessions answer `503 SESSIONS_UNAVAILABLE` until the four
-variables in `PRODUCTION_TRANSIT_API.md` (*Enabling durable sessions in
-production*) are set on the `tapso-api` project. Until then a live ride ends at
-the vehicle check with the "준비 중" notice; route and stop reads work.
+Production serves journey sessions from the durable store since 2026-10-03
+(post-deploy run `37081618489`, lifecycle 8/8), so a live ride can be set up,
+confirmed and ended against production. On a device the live flow is
+`UNVERIFIED`. Before that date production answered `503 SESSIONS_UNAVAILABLE`
+and a live ride ended at the vehicle check with the "준비 중" notice.
 
 ## Limitations
 

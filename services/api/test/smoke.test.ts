@@ -100,6 +100,16 @@ test("the production smoke test passes end to end against the current API contra
   assert.match(output, /PASS +vehicles .*matching shadow_only_pending_matching_readiness/);
 });
 
+test("the production smoke test fails a deployment whose session store setting could not be used", async () => {
+  // The 2026-10-02 incident's setting: a durable store asked for without its
+  // credentials. Since the fail-soft fix the API keeps serving, so only this
+  // check says sessions are off for a reason that needs fixing.
+  const { code, output } = await smoke({ TRANSIT_SESSION_STORE: "redis" });
+  assert.equal(code, 1, output);
+  assert.match(output, /FAIL +session store +sessions refused: durable session store requested without its URL and token/);
+  assert.match(output, /PASS +health /, "the read endpoints still answer");
+});
+
 test("the production smoke test warns when an operator's automatic-matching opt-in is refused", async () => {
   const { code, output } = await smoke({ TRANSIT_AUTOMATIC_MATCHING_ENABLED: "true" });
   assert.equal(code, 0, output);

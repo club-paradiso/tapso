@@ -364,6 +364,8 @@ or scheduled worker for APNs (`ARCHITECTURE.md`).
 
 ### Enabling durable sessions in production
 
+**Done 2026-10-03.** Production serves sessions from Upstash, namespace `production` (post-deploy run `37081618489` (2026-10-03 00:21 UTC, build `bfd8c7e`); smoke 17/17, lifecycle 8/8). The Upstash pair was added as new Production-only variables. The status below is the history.
+
 Status 2026-10-02: production still answers `503 SESSIONS_UNAVAILABLE` from the
 memory store (post-deploy verification run `36976781695`, 07:05 UTC, build
 `98c50135f63d`: "sessions policy 503 SESSIONS_UNAVAILABLE"; the lifecycle smoke

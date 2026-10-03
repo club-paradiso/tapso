@@ -8,13 +8,13 @@ For the release-focused Claude Desktop/Claude Code continuation, use `docs/CLAUD
 
 ## State on 2026-10-02 (production ride vertical slice, PR #94)
 
-- **Production sessions: still off.** Production answers `503 SESSIONS_UNAVAILABLE` (post-deploy run `36976781695`). The only missing piece is four environment variables on the `tapso-api` Vercel project (`PRODUCTION_TRANSIT_API.md` → *Enabling durable sessions in production*). An agent cannot set them: its Vercel connection does not include that project, and its sandbox cannot reach `tapso-api.vercel.app`.
+- **Production sessions: on since 2026-10-03.** Post-deploy run `37081618489` (00:21 UTC, build `bfd8c7e`): smoke 17/17, lifecycle 8/8. The Production variables are set; do not change or redeploy them to "enable" sessions. Rollback is in `PRODUCTION_TRANSIT_API.md`. History: until then production answered `503 SESSIONS_UNAVAILABLE`, and the first attempt on 2026-10-02 took the API down for about 30 minutes (`KNOWN_ISSUES.md`, `INCIDENT`).
 - **Issue #80: fixed in code.** At `READY_FOR_SHADOW` the rider picks a bus from raw positions (`vehicleChoice`, `choose`). Only `READY_FOR_CONFIRMATION_ASSISTED` lets the matcher's list be a suggestion.
 - **TAGO failures are bounded.** One 9 s deadline per logical request, with telemetry per request in `/health` → `providerHealth`. A failed stop-list refresh is served stale; a failed vehicle read fails closed.
 - **Issue #74: measured and not fixed, by decision** (`validation/ISSUE_74_LATE_APPEARANCE_2026-10-02.md`). Readiness stays `READY_FOR_SHADOW`.
 - **Live Activity push, milestone 4: done in code.** It pushes on change, alerts each milestone once, and ends the activity with the ride. It needs APNs credentials (paid Apple team) and a scheduler (milestone 5) before anything is pushed.
 - **Route 365 timetable.** The dataset schema, validator and staleness rule exist. The parser waits for the owner to download the XLSX into `fixtures/jeju/timetables/raw/365.xlsx`.
-- **Exact next action:** the owner sets the four session variables on `tapso-api` and redeploys. The post-deploy workflow then proves the session lifecycle in production.
+- **Exact next action:** unchanged for matcher evidence. It is the rider-free path below; no readiness level needs a ride. Product, separately and optionally: an owner check of the live flow on their own iPhone, installed with the free Personal Team (no TestFlight, a 7-day install, no APNs). It is a product check, not matcher evidence. The paid Apple team remains the blocker for APNs and TestFlight.
 
 ## What works
 
