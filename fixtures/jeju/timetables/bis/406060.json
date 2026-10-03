@@ -1,22 +1,32 @@
 {
-  "schemaVersion": "tapso-jeju-timetable-v2",
+  "schemaVersion": "tapso-jeju-timetable-v3",
   "label": "OFFICIAL_DATED",
   "source": {
     "publisher": "제주특별자치도 (bus.jeju.go.kr)",
     "dataset": "data.go.kr 3043887",
     "page": "https://bus.jeju.go.kr/publicTrafficInformation/generalBusSchedule",
     "file": "406060.xlsx",
-    "sha256": "61319296358ee73bb4b198a2b86efe492b06b306ea326611f1379b8a2a04e883"
+    "sha256": "61319296358ee73bb4b198a2b86efe492b06b306ea326611f1379b8a2a04e883",
+    "scheduleId": "406060",
+    "listedName": "753"
   },
   "retrievedOn": "2026-10-03",
   "parser": {
     "name": "jeju-bis-xlsx",
-    "version": "2"
+    "version": "3"
   },
-  "routeNumber": "753",
+  "routeNumbers": [
+    "753"
+  ],
+  "status": "parsed",
   "services": [
     {
-      "sheet": "753 대평리-컨벤션센터",
+      "sheets": [
+        "753 대평리-컨벤션센터"
+      ],
+      "routeNumbers": [
+        "753"
+      ],
       "dayType": "unstated",
       "direction": "대평리↔ 컨벤션센터 (순환)",
       "effectiveFrom": "2025-03-10",
@@ -36,6 +46,7 @@
       ],
       "trips": [
         {
+          "routeNumber": "753",
           "times": [
             "06:30",
             "06:40",
@@ -48,9 +59,11 @@
             "07:21",
             "07:30",
             "07:38"
-          ]
+          ],
+          "firstTime": "06:30"
         },
         {
+          "routeNumber": "753",
           "times": [
             "08:00",
             "08:10",
@@ -63,9 +76,11 @@
             "08:51",
             "09:00",
             "09:08"
-          ]
+          ],
+          "firstTime": "08:00"
         },
         {
+          "routeNumber": "753",
           "times": [
             "09:20",
             "09:30",
@@ -78,9 +93,11 @@
             "10:11",
             "10:20",
             "10:28"
-          ]
+          ],
+          "firstTime": "09:20"
         },
         {
+          "routeNumber": "753",
           "times": [
             "11:10",
             "11:20",
@@ -93,9 +110,11 @@
             "12:01",
             "12:10",
             "12:18"
-          ]
+          ],
+          "firstTime": "11:10"
         },
         {
+          "routeNumber": "753",
           "times": [
             "14:30",
             "14:40",
@@ -108,9 +127,11 @@
             "15:21",
             "15:30",
             "15:38"
-          ]
+          ],
+          "firstTime": "14:30"
         },
         {
+          "routeNumber": "753",
           "times": [
             "16:00",
             "16:10",
@@ -123,9 +144,11 @@
             "16:51",
             "17:00",
             "17:08"
-          ]
+          ],
+          "firstTime": "16:00"
         },
         {
+          "routeNumber": "753",
           "times": [
             "17:40",
             "17:50",
@@ -138,9 +161,11 @@
             "18:31",
             "18:40",
             "18:48"
-          ]
+          ],
+          "firstTime": "17:40"
         },
         {
+          "routeNumber": "753",
           "times": [
             "19:45",
             "19:55",
@@ -153,9 +178,11 @@
             "20:36",
             "20:45",
             "20:53"
-          ]
+          ],
+          "firstTime": "19:45"
         }
-      ]
+      ],
+      "status": "ok"
     }
   ]
 }

@@ -1,22 +1,32 @@
 {
-  "schemaVersion": "tapso-jeju-timetable-v2",
+  "schemaVersion": "tapso-jeju-timetable-v3",
   "label": "OFFICIAL_DATED",
   "source": {
     "publisher": "제주특별자치도 (bus.jeju.go.kr)",
     "dataset": "data.go.kr 3043887",
     "page": "https://bus.jeju.go.kr/publicTrafficInformation/generalBusSchedule",
     "file": "405119.xlsx",
-    "sha256": "7ad567c25106a67c62cd15117c2f79f157a1db393139aa8a4779e7fad8284b8c"
+    "sha256": "7ad567c25106a67c62cd15117c2f79f157a1db393139aa8a4779e7fad8284b8c",
+    "scheduleId": "405119",
+    "listedName": "437"
   },
   "retrievedOn": "2026-10-03",
   "parser": {
     "name": "jeju-bis-xlsx",
-    "version": "2"
+    "version": "3"
   },
-  "routeNumber": "437",
+  "routeNumbers": [
+    "437"
+  ],
+  "status": "parsed",
   "services": [
     {
-      "sheet": "437 순환(한라도서관-정실-연동-연미-오라-한라도서관)",
+      "sheets": [
+        "437 순환(한라도서관-정실-연동-연미-오라-한라도서관)"
+      ],
+      "routeNumbers": [
+        "437"
+      ],
       "dayType": "unstated",
       "direction": "한라도서관→한라초→연미마을→한라도서관(순환)",
       "effectiveFrom": "2025-05-09",
@@ -38,6 +48,7 @@
       ],
       "trips": [
         {
+          "routeNumber": "437",
           "times": [
             "06:20",
             "06:24",
@@ -52,9 +63,11 @@
             "07:23",
             "07:27",
             "07:34"
-          ]
+          ],
+          "firstTime": "06:20"
         },
         {
+          "routeNumber": "437",
           "times": [
             "07:35",
             "07:39",
@@ -69,9 +82,11 @@
             "08:43",
             "08:47",
             "08:54"
-          ]
+          ],
+          "firstTime": "07:35"
         },
         {
+          "routeNumber": "437",
           "times": [
             "09:10",
             "09:14",
@@ -86,9 +101,11 @@
             "10:13",
             "10:17",
             "10:24"
-          ]
+          ],
+          "firstTime": "09:10"
         },
         {
+          "routeNumber": "437",
           "times": [
             "10:40",
             "10:44",
@@ -103,9 +120,11 @@
             "11:43",
             "11:47",
             "11:54"
-          ]
+          ],
+          "firstTime": "10:40"
         },
         {
+          "routeNumber": "437",
           "times": [
             "12:00",
             "12:04",
@@ -120,9 +139,11 @@
             "13:03",
             "13:07",
             "13:14"
-          ]
+          ],
+          "firstTime": "12:00"
         },
         {
+          "routeNumber": "437",
           "times": [
             "13:40",
             "13:44",
@@ -137,9 +158,11 @@
             "14:43",
             "14:47",
             "14:54"
-          ]
+          ],
+          "firstTime": "13:40"
         },
         {
+          "routeNumber": "437",
           "times": [
             "15:10",
             "15:14",
@@ -154,9 +177,11 @@
             "16:13",
             "16:17",
             "16:24"
-          ]
+          ],
+          "firstTime": "15:10"
         },
         {
+          "routeNumber": "437",
           "times": [
             "16:50",
             "16:54",
@@ -171,9 +196,11 @@
             "17:58",
             "18:02",
             "18:09"
-          ]
+          ],
+          "firstTime": "16:50"
         },
         {
+          "routeNumber": "437",
           "times": [
             "18:10",
             "18:14",
@@ -188,9 +215,11 @@
             "19:18",
             "19:22",
             "19:29"
-          ]
+          ],
+          "firstTime": "18:10"
         },
         {
+          "routeNumber": "437",
           "times": [
             "19:30",
             "19:34",
@@ -205,9 +234,11 @@
             "20:33",
             "20:37",
             "20:44"
-          ]
+          ],
+          "firstTime": "19:30"
         },
         {
+          "routeNumber": "437",
           "times": [
             "20:30",
             "20:34",
@@ -222,9 +253,11 @@
             "21:33",
             "21:37",
             "21:44"
-          ]
+          ],
+          "firstTime": "20:30"
         },
         {
+          "routeNumber": "437",
           "times": [
             "21:45",
             "21:49",
@@ -239,9 +272,11 @@
             "22:48",
             "22:52",
             "22:59"
-          ]
+          ],
+          "firstTime": "21:45"
         }
-      ]
+      ],
+      "status": "ok"
     }
   ]
 }

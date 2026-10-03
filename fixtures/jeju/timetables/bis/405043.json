@@ -1,0 +1,69 @@
+{
+  "schemaVersion": "tapso-jeju-timetable-v3",
+  "label": "OFFICIAL_DATED",
+  "source": {
+    "publisher": "제주특별자치도 (bus.jeju.go.kr)",
+    "dataset": "data.go.kr 3043887",
+    "page": "https://bus.jeju.go.kr/publicTrafficInformation/generalBusSchedule",
+    "file": "405043.xlsx",
+    "sha256": "02c0829352fb436eef502b34ec146a96f3c53a075dfdc35e1e08678e28a003cf",
+    "scheduleId": "405043",
+    "listedName": "356-1"
+  },
+  "retrievedOn": "2026-10-03",
+  "parser": {
+    "name": "jeju-bis-xlsx",
+    "version": "3"
+  },
+  "routeNumbers": [
+    "356-1"
+  ],
+  "serviceLabels": [
+    "임시"
+  ],
+  "status": "parsed",
+  "services": [
+    {
+      "sheets": [
+        "356-1 (임시운행)하귀-신제주R-중앙여고-제주대"
+      ],
+      "routeNumbers": [
+        "356-1"
+      ],
+      "dayType": "unstated",
+      "serviceLabels": [
+        "임시"
+      ],
+      "direction": "하귀→신제주로터리→중앙여고→제주대",
+      "effectiveFrom": "2023-08-10",
+      "summary": "관광지순환버스㈜ 064-746-7310",
+      "timepoints": [
+        "하귀하나로마트",
+        "외도부영아파트",
+        "한라병원",
+        "신제주로터리(제주도청)",
+        "보건소",
+        "이도초등학교",
+        "제주중앙여고",
+        "제주대학교"
+      ],
+      "trips": [
+        {
+          "routeNumber": "356-1",
+          "times": [
+            "07:08",
+            "07:16",
+            "07:39",
+            "07:45",
+            "07:51",
+            "07:54",
+            "07:57",
+            "08:10"
+          ],
+          "firstTime": "07:08"
+        }
+      ],
+      "status": "ok"
+    }
+  ]
+}

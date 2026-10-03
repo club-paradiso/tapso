@@ -1,22 +1,32 @@
 {
-  "schemaVersion": "tapso-jeju-timetable-v2",
+  "schemaVersion": "tapso-jeju-timetable-v3",
   "label": "OFFICIAL_DATED",
   "source": {
     "publisher": "제주특별자치도 (bus.jeju.go.kr)",
     "dataset": "data.go.kr 3043887",
     "page": "https://bus.jeju.go.kr/publicTrafficInformation/generalBusSchedule",
     "file": "405148.xlsx",
-    "sha256": "2e36635675f8bc306182a058e5b9106b245a31f0d6a1218a37afb533497e86de"
+    "sha256": "2e36635675f8bc306182a058e5b9106b245a31f0d6a1218a37afb533497e86de",
+    "scheduleId": "405148",
+    "listedName": "441"
   },
   "retrievedOn": "2026-10-03",
   "parser": {
     "name": "jeju-bis-xlsx",
-    "version": "2"
+    "version": "3"
   },
-  "routeNumber": "441",
+  "routeNumbers": [
+    "441"
+  ],
+  "status": "parsed",
   "services": [
     {
-      "sheet": "441 순환(별빛누리-시청-용담-연북로-별빛누리)",
+      "sheets": [
+        "441 순환(별빛누리-시청-용담-연북로-별빛누리)"
+      ],
+      "routeNumbers": [
+        "441"
+      ],
       "dayType": "unstated",
       "direction": "제주대(별빛누리공원)→사대부고→제주대(별빛누리공원)(순환)",
       "effectiveFrom": "2024-04-25",
@@ -36,6 +46,7 @@
       ],
       "trips": [
         {
+          "routeNumber": "441",
           "times": [
             null,
             null,
@@ -48,9 +59,11 @@
             "06:34",
             "06:46",
             null
-          ]
+          ],
+          "firstTime": "05:45"
         },
         {
+          "routeNumber": "441",
           "times": [
             null,
             "06:25",
@@ -63,9 +76,11 @@
             "07:31",
             "07:43",
             null
-          ]
+          ],
+          "firstTime": "06:25"
         },
         {
+          "routeNumber": "441",
           "times": [
             null,
             "07:05",
@@ -78,9 +93,11 @@
             "08:20",
             "08:35",
             null
-          ]
+          ],
+          "firstTime": "07:05"
         },
         {
+          "routeNumber": "441",
           "times": [
             null,
             "08:05",
@@ -93,9 +110,11 @@
             "09:20",
             "09:35",
             null
-          ]
+          ],
+          "firstTime": "08:05"
         },
         {
+          "routeNumber": "441",
           "times": [
             null,
             "09:30",
@@ -108,9 +127,11 @@
             "10:45",
             "11:00",
             "11:05"
-          ]
+          ],
+          "firstTime": "09:30"
         },
         {
+          "routeNumber": "441",
           "times": [
             null,
             "10:50",
@@ -123,9 +144,11 @@
             "12:05",
             "12:20",
             "12:25"
-          ]
+          ],
+          "firstTime": "10:50"
         },
         {
+          "routeNumber": "441",
           "times": [
             "12:45",
             "12:50",
@@ -138,9 +161,11 @@
             "14:05",
             "14:20",
             "14:25"
-          ]
+          ],
+          "firstTime": "12:45"
         },
         {
+          "routeNumber": "441",
           "times": [
             "14:45",
             "14:50",
@@ -153,9 +178,11 @@
             "16:05",
             "16:20",
             "16:25"
-          ]
+          ],
+          "firstTime": "14:45"
         },
         {
+          "routeNumber": "441",
           "times": [
             "15:55",
             "16:00",
@@ -168,9 +195,11 @@
             "17:15",
             "17:30",
             "17:35"
-          ]
+          ],
+          "firstTime": "15:55"
         },
         {
+          "routeNumber": "441",
           "times": [
             "17:05",
             "17:10",
@@ -183,9 +212,11 @@
             "18:25",
             "18:40",
             null
-          ]
+          ],
+          "firstTime": "17:05"
         },
         {
+          "routeNumber": "441",
           "times": [
             "18:05",
             "18:10",
@@ -198,9 +229,11 @@
             "19:25",
             "19:40",
             null
-          ]
+          ],
+          "firstTime": "18:05"
         },
         {
+          "routeNumber": "441",
           "times": [
             null,
             "19:30",
@@ -213,9 +246,11 @@
             "20:38",
             "20:53",
             null
-          ]
+          ],
+          "firstTime": "19:30"
         },
         {
+          "routeNumber": "441",
           "times": [
             null,
             "20:40",
@@ -228,9 +263,11 @@
             "21:48",
             "22:03",
             null
-          ]
+          ],
+          "firstTime": "20:40"
         },
         {
+          "routeNumber": "441",
           "times": [
             null,
             "22:10",
@@ -243,9 +280,11 @@
             null,
             null,
             null
-          ]
+          ],
+          "firstTime": "22:10"
         }
-      ]
+      ],
+      "status": "ok"
     }
   ]
 }

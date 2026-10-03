@@ -131,6 +131,8 @@ jobs:
       - run: for f in beta.js beta-client-core.js beta-admin.js beta-admin-core.js background.js; do node --check services/api/public/ride-capture/$f || exit 1; done
       - run: python3 -m unittest discover -s scripts/tago -p 'test_*.py'
       - run: python3 -m unittest discover -s scripts/timetables -p 'test_*.py'
+      - name: Release gates the repository decides (docs/exec-plans/JEJU_PRODUCTION_V1.md)
+        run: node --experimental-strip-types scripts/release-gates/jeju-v1.ts --check
 
   matcher-evidence:
     # The offline half of release gate matcher-passive-safety-v4: every check

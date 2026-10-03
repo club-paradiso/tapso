@@ -1,24 +1,35 @@
 {
-  "schemaVersion": "tapso-jeju-timetable-v2",
+  "schemaVersion": "tapso-jeju-timetable-v3",
   "label": "OFFICIAL_DATED",
   "source": {
     "publisher": "제주특별자치도 (bus.jeju.go.kr)",
     "dataset": "data.go.kr 3043887",
     "page": "https://bus.jeju.go.kr/publicTrafficInformation/generalBusSchedule",
     "file": "406051.xlsx",
-    "sha256": "4a9dd972664309aa1c817a83a94ce051b2e2f455fdeb7b250d9f607cce164135"
+    "sha256": "4a9dd972664309aa1c817a83a94ce051b2e2f455fdeb7b250d9f607cce164135",
+    "scheduleId": "406051",
+    "listedName": "5005"
   },
   "retrievedOn": "2026-10-03",
   "parser": {
     "name": "jeju-bis-xlsx",
-    "version": "2"
+    "version": "3"
   },
-  "routeNumber": "5005",
+  "routeNumbers": [
+    "5005"
+  ],
+  "status": "parsed",
   "services": [
     {
-      "sheet": "5005 (삼성여고-중앙R-터미널-중문-조각공원)심야",
+      "sheets": [
+        "5005 (삼성여고-중앙R-터미널-중문-조각공원)심야"
+      ],
+      "routeNumbers": [
+        "5005"
+      ],
       "dayType": "unstated",
       "direction": "삼성여고-조각공원 (심야)",
+      "effectiveNote": "미입력",
       "summary": "첫차/막차 23:00, 배차간격 1일 1회, 동서교통(064-732-4934)",
       "timepoints": [
         "삼성여고",
@@ -29,15 +40,18 @@
       ],
       "trips": [
         {
+          "routeNumber": "5005",
           "times": [
             "23:00",
             "23:07",
             "23:19",
             "23:32",
             "23:52"
-          ]
+          ],
+          "firstTime": "23:00"
         }
-      ]
+      ],
+      "status": "ok"
     }
   ]
 }

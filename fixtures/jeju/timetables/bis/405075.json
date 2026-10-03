@@ -1,0 +1,152 @@
+{
+  "schemaVersion": "tapso-jeju-timetable-v3",
+  "label": "OFFICIAL_DATED",
+  "source": {
+    "publisher": "제주특별자치도 (bus.jeju.go.kr)",
+    "dataset": "data.go.kr 3043887",
+    "page": "https://bus.jeju.go.kr/publicTrafficInformation/generalBusSchedule",
+    "file": "405075.xlsx",
+    "sha256": "5214f0fcc1ac11ccfbfaa2a6089b53a7088e09971a13552d3ecc0052e041c6e6",
+    "scheduleId": "405075",
+    "listedName": "704-1, 704-3"
+  },
+  "retrievedOn": "2026-10-03",
+  "parser": {
+    "name": "jeju-bis-xlsx",
+    "version": "3"
+  },
+  "routeNumbers": [
+    "704-1",
+    "704-3"
+  ],
+  "serviceLabels": [
+    "옵서버스"
+  ],
+  "status": "parsed",
+  "services": [
+    {
+      "sheets": [
+        "704-1 조천-선흘-선인동(거문오름)-와산-조천",
+        "704-3 조천-선흘-선인동(거문오름)-와산-조천"
+      ],
+      "routeNumbers": [
+        "704-1",
+        "704-3"
+      ],
+      "dayType": "unstated",
+      "serviceLabels": [
+        "옵서버스"
+      ],
+      "direction": "조천체육관 → 조천체육관 (순환)",
+      "effectiveFrom": "2025-05-28",
+      "summary": "제주시공영버스(064-728-3211)",
+      "timepoints": [
+        "조천체육관",
+        "함덕",
+        "선흘",
+        "목선동",
+        "선인동",
+        "거문오름 입구(양잠단지)",
+        "선인동",
+        "와산",
+        "멍중내",
+        "대흘2리",
+        "함덕",
+        "조천체육관"
+      ],
+      "trips": [
+        {
+          "routeNumber": "704-1",
+          "times": [
+            null,
+            null,
+            null,
+            null,
+            null,
+            "06:50",
+            "06:57",
+            "07:02",
+            null,
+            "07:06",
+            "07:14",
+            "07:21"
+          ],
+          "firstTime": "06:50"
+        },
+        {
+          "routeNumber": "704-3",
+          "times": [
+            "07:40",
+            "07:45",
+            "07:55",
+            "07:59",
+            "08:03",
+            null,
+            "08:03",
+            "08:08",
+            null,
+            "08:12",
+            "08:20",
+            "08:27"
+          ],
+          "firstTime": "07:40"
+        },
+        {
+          "routeNumber": "704-1",
+          "times": [
+            "08:52",
+            "08:57",
+            "09:07",
+            "09:11",
+            "09:15",
+            "09:24",
+            "09:31",
+            "09:36",
+            null,
+            "09:40",
+            "09:48",
+            "09:55"
+          ],
+          "firstTime": "08:52"
+        },
+        {
+          "routeNumber": "704-1",
+          "times": [
+            "10:55",
+            "11:00",
+            "11:10",
+            "11:14",
+            "11:18",
+            "11:27",
+            "11:34",
+            "11:39",
+            null,
+            "11:43",
+            "11:51",
+            "11:58"
+          ],
+          "firstTime": "10:55"
+        },
+        {
+          "routeNumber": "704-1",
+          "times": [
+            "12:25",
+            "12:30",
+            "12:40",
+            "12:44",
+            "12:48",
+            "12:57",
+            "13:04",
+            "13:09",
+            null,
+            "13:13",
+            "13:21",
+            "13:28"
+          ],
+          "firstTime": "12:25"
+        }
+      ],
+      "status": "ok"
+    }
+  ]
+}

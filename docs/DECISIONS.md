@@ -1,5 +1,13 @@
 # Architecture decisions
 
+## Destination search runs on a reviewed catalog file, on the phone (2026-10-03)
+
+**Decision:** every Jeju route variant and its ordered stops are built by a pipeline (`scripts/catalog/build-jeju-catalog.ts`, GitHub Actions, reviewed data PR) into one versioned file the API serves as-is (`GET /v1/catalog`, ETag = content version); the app caches it and searches locally. Identity stays the provider's: one variant per route ID, one stop per stop ID; only a compass marker is dropped to group two poles of one place. A destination chosen in the catalog is re-checked against the server's current stop list before boarding is offered. *Rejected:* a stop-search endpoint per keystroke (latency, quota, fails with TAGO); collapsing "202" and "202-1" or a route's directions into one choice. See `exec-plans/JEJU_PRODUCTION_V1.md`.
+
+## Official timetables are served only where the file agrees with itself (2026-10-03)
+
+**Decision:** parser v3 reads the BIS workbooks by format family and fails closed; a service whose summary disagrees with its trips, whose times run backwards, or whose sheets differ is `source_conflict` and never served. "Today" is claimed only where the table's own day label covers the date under the Korean holiday calendar; "휴일" never decides an ordinary Saturday; tables with no day type are shown as such. *Rejected:* correcting typos, interpolating between timepoints, treating holidays as Sundays without a label saying so.
+
 ## Native SwiftUI client
 
 **Decision:** SwiftUI + ActivityKit + WidgetKit. Dynamic Island is central and a wrapper framework adds no value.
@@ -213,3 +221,7 @@ Production and preview share one Upstash database (`exec-plans/DURABLE_JOURNEY_S
 **Decision:** the readiness boundary is enforced in code. `vehicleChoicePresentation` (`services/api/src/journeySession.ts`) derives each session's `vehicleChoice.presentation` from `DEMONSTRATED_MATCHING_READINESS`: `rider_identifies` below `READY_FOR_CONFIRMATION_ASSISTED`, `matcher_suggestion` from it up. At `rider_identifies` the list is `riderVisibleVehicles`: the latest provider read's buses of the exact route variant, minus any two or more stops past the stop (waiting rider), ordered by stop count to the stop, then vehicle id, at most eight. It reads no matcher score, cadence verdict, passage memory, remembered position or approach window; a test gives the same final snapshot to a fresh session and to one with matcher history and requires the same list. The app (`LiveSessionInterpreter`) builds the vehicle step from `vehicleChoice` and shows `choose` for any count, never `proposed`; a missing or unknown presentation reads as `rider_identifies`. `candidates` and `shadowSelection` stay in the payload for evaluation and tooling. Confirmation is unchanged: any bus in the current snapshot, by the rider's tap.
 
 This is option 2 of issue #80 (the approach of the closed #77), applied on the server so it costs no extra provider read and both languages read one field. *Rejected:* ruling that the confirmation list is not matcher output (option 1). It is filtered by the matcher's approach window, and the single-bus copy "이 버스로 보여요" read as the matcher's pick, which `READY_FOR_SHADOW` forbids. Ordering by position is allowed: it is what a rider at the stop sees, and it leaves the bus at the stop, which the matcher never selects, first.
+
+## Variants that share one stop list under two route IDs stay separate (2026-10-03)
+
+**Decision:** the first catalog build (`794f3bcb831d783e`) lists 32 stop lists twice under one number with two provider route IDs (e.g. 202 `JEB405320213` and `JEB405320237`). Live positions are read per route ID, so the two are kept as separate variants: `DestinationSearchIndex.routeOptions(to:)` numbers same-ended variants no stop tells apart (`DestinationRouteOption.twin`, in route ID order), the route choice screen labels them "같은 정류장을 도는 별도 운행 n/m" and tells the rider to come back and choose the other if their bus does not appear, and the readiness audit warns on both. *Rejected:* merging them (the session would read one route ID and miss the other's buses); hiding one (no source says which runs); reading both IDs in one session (doubles provider reads and changes the server's matching input, which this slice does not touch).

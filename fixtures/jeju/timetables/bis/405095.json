@@ -1,22 +1,32 @@
 {
-  "schemaVersion": "tapso-jeju-timetable-v2",
+  "schemaVersion": "tapso-jeju-timetable-v3",
   "label": "OFFICIAL_DATED",
   "source": {
     "publisher": "제주특별자치도 (bus.jeju.go.kr)",
     "dataset": "data.go.kr 3043887",
     "page": "https://bus.jeju.go.kr/publicTrafficInformation/generalBusSchedule",
     "file": "405095.xlsx",
-    "sha256": "7484ead7abbc4590151a18bb4a7ff35c6de430662ea56b81bb57ba536f990c55"
+    "sha256": "7484ead7abbc4590151a18bb4a7ff35c6de430662ea56b81bb57ba536f990c55",
+    "scheduleId": "405095",
+    "listedName": "794-2"
   },
   "retrievedOn": "2026-10-03",
   "parser": {
     "name": "jeju-bis-xlsx",
-    "version": "2"
+    "version": "3"
   },
-  "routeNumber": "794-2",
+  "routeNumbers": [
+    "794-2"
+  ],
+  "status": "parsed",
   "services": [
     {
-      "sheet": "794-2 애월-납읍-어음리-납읍-애월",
+      "sheets": [
+        "794-2 애월-납읍-어음리-납읍-애월"
+      ],
+      "routeNumbers": [
+        "794-2"
+      ],
       "dayType": "unstated",
       "direction": "애월→납읍→어음리→납읍→애월(순환)",
       "effectiveFrom": "2025-04-01",
@@ -37,6 +47,7 @@
       ],
       "trips": [
         {
+          "routeNumber": "794-2",
           "times": [
             "06:24",
             "06:27",
@@ -50,9 +61,11 @@
             "07:09",
             "07:12",
             "07:15"
-          ]
+          ],
+          "firstTime": "06:24"
         },
         {
+          "routeNumber": "794-2",
           "times": [
             "07:25",
             "07:28",
@@ -66,9 +79,11 @@
             "08:10",
             "08:13",
             "08:16"
-          ]
+          ],
+          "firstTime": "07:25"
         },
         {
+          "routeNumber": "794-2",
           "times": [
             "09:25",
             "09:28",
@@ -82,9 +97,11 @@
             "10:10",
             "10:13",
             "10:16"
-          ]
+          ],
+          "firstTime": "09:25"
         },
         {
+          "routeNumber": "794-2",
           "times": [
             "10:35",
             "10:38",
@@ -98,9 +115,11 @@
             "11:20",
             "11:23",
             "11:26"
-          ]
+          ],
+          "firstTime": "10:35"
         },
         {
+          "routeNumber": "794-2",
           "times": [
             "12:05",
             "12:08",
@@ -114,9 +133,11 @@
             "12:50",
             "12:53",
             "12:56"
-          ]
+          ],
+          "firstTime": "12:05"
         },
         {
+          "routeNumber": "794-2",
           "times": [
             "14:10",
             "14:13",
@@ -130,9 +151,11 @@
             "14:55",
             "14:58",
             "15:01"
-          ]
+          ],
+          "firstTime": "14:10"
         },
         {
+          "routeNumber": "794-2",
           "times": [
             "15:41",
             "15:44",
@@ -146,9 +169,11 @@
             "16:26",
             "16:29",
             "16:32"
-          ]
+          ],
+          "firstTime": "15:41"
         },
         {
+          "routeNumber": "794-2",
           "times": [
             "16:57",
             "17:00",
@@ -162,9 +187,11 @@
             "17:42",
             "17:45",
             "17:48"
-          ]
+          ],
+          "firstTime": "16:57"
         },
         {
+          "routeNumber": "794-2",
           "times": [
             "18:48",
             "18:51",
@@ -178,9 +205,11 @@
             "19:33",
             "19:36",
             "19:39"
-          ]
+          ],
+          "firstTime": "18:48"
         },
         {
+          "routeNumber": "794-2",
           "times": [
             "20:14",
             "20:17",
@@ -194,9 +223,11 @@
             null,
             null,
             null
-          ]
+          ],
+          "firstTime": "20:14"
         }
-      ]
+      ],
+      "status": "ok"
     }
   ]
 }

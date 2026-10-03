@@ -1,0 +1,165 @@
+{
+  "schemaVersion": "tapso-jeju-timetable-v3",
+  "label": "OFFICIAL_DATED",
+  "source": {
+    "publisher": "제주특별자치도 (bus.jeju.go.kr)",
+    "dataset": "data.go.kr 3043887",
+    "page": "https://bus.jeju.go.kr/publicTrafficInformation/generalBusSchedule",
+    "file": "405157.xlsx",
+    "sha256": "7d39a24ff3d64f2415e1cc6788dc54037b4297ba7504d5e6e9fde4fd0aebeade",
+    "scheduleId": "405157",
+    "listedName": "202-4"
+  },
+  "retrievedOn": "2026-10-03",
+  "parser": {
+    "name": "jeju-bis-xlsx",
+    "version": "3"
+  },
+  "routeNumbers": [
+    "202-4"
+  ],
+  "serviceLabels": [
+    "수요맞춤형"
+  ],
+  "status": "parsed",
+  "services": [
+    {
+      "sheets": [
+        "202-4 한담동(애월)-하귀-제주버스터미널"
+      ],
+      "routeNumbers": [
+        "202-4"
+      ],
+      "dayType": "unstated",
+      "serviceLabels": [
+        "수요맞춤형"
+      ],
+      "direction": "한담동(애월)→하귀→제주버스터미널",
+      "effectiveFrom": "2025-09-05",
+      "summary": "한담동 출발 15:45, 막차 19:10,  제주여객(064-753-2056)",
+      "timepoints": [
+        "한담동",
+        "애월",
+        "하귀",
+        "오일시장",
+        "제주버스 터미널"
+      ],
+      "trips": [
+        {
+          "routeNumber": "202-4",
+          "times": [
+            "15:45",
+            "15:47",
+            "16:05",
+            "16:23",
+            "16:50"
+          ],
+          "firstTime": "15:45"
+        },
+        {
+          "routeNumber": "202-4",
+          "times": [
+            "16:15",
+            "16:17",
+            "16:35",
+            "16:53",
+            "17:20"
+          ],
+          "firstTime": "16:15"
+        },
+        {
+          "routeNumber": "202-4",
+          "times": [
+            "18:50",
+            "18:52",
+            "19:10",
+            "19:30",
+            "19:55"
+          ],
+          "firstTime": "18:50"
+        },
+        {
+          "routeNumber": "202-4",
+          "times": [
+            "19:10",
+            "19:12",
+            "19:30",
+            "19:48",
+            "20:15"
+          ],
+          "firstTime": "19:10"
+        }
+      ],
+      "status": "ok"
+    },
+    {
+      "sheets": [
+        "202-4 제주버스터미널-하귀-한담동(애월)"
+      ],
+      "routeNumbers": [
+        "202-4"
+      ],
+      "dayType": "unstated",
+      "serviceLabels": [
+        "수요맞춤형"
+      ],
+      "direction": "제주버스터미널→하귀→한담동(애월)",
+      "effectiveFrom": "2025-09-05",
+      "summary": "제주버스터미널 출발 14:35, 막차 18:00,  제주여객(064-753-2056)",
+      "timepoints": [
+        "제주버스 터미널",
+        "오일시장",
+        "하귀",
+        "애월",
+        "한담동"
+      ],
+      "trips": [
+        {
+          "routeNumber": "202-4",
+          "times": [
+            "14:35",
+            "14:48",
+            "15:08",
+            "15:25",
+            "15:27"
+          ],
+          "firstTime": "14:35"
+        },
+        {
+          "routeNumber": "202-4",
+          "times": [
+            "15:15",
+            "15:28",
+            "15:48",
+            "16:05",
+            "16:07"
+          ],
+          "firstTime": "15:15"
+        },
+        {
+          "routeNumber": "202-4",
+          "times": [
+            "17:35",
+            "17:48",
+            "18:08",
+            "18:25",
+            "18:27"
+          ],
+          "firstTime": "17:35"
+        },
+        {
+          "routeNumber": "202-4",
+          "times": [
+            "18:00",
+            "18:13",
+            "18:33",
+            "18:50",
+            "18:52"
+          ],
+          "firstTime": "18:00"
+        }
+      ],
+      "status": "ok"
+    }
+  ]
+}

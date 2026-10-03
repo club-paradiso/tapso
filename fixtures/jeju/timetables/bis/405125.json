@@ -1,22 +1,32 @@
 {
-  "schemaVersion": "tapso-jeju-timetable-v2",
+  "schemaVersion": "tapso-jeju-timetable-v3",
   "label": "OFFICIAL_DATED",
   "source": {
     "publisher": "제주특별자치도 (bus.jeju.go.kr)",
     "dataset": "data.go.kr 3043887",
     "page": "https://bus.jeju.go.kr/publicTrafficInformation/generalBusSchedule",
     "file": "405125.xlsx",
-    "sha256": "b65534ca796890e6f9b4d0f8f848705bc7e97c38e8b34854aa178eff8d2ba2a2"
+    "sha256": "b65534ca796890e6f9b4d0f8f848705bc7e97c38e8b34854aa178eff8d2ba2a2",
+    "scheduleId": "405125",
+    "listedName": "782-2"
   },
   "retrievedOn": "2026-10-03",
   "parser": {
     "name": "jeju-bis-xlsx",
-    "version": "2"
+    "version": "3"
   },
-  "routeNumber": "782-2",
+  "routeNumbers": [
+    "782-2"
+  ],
+  "status": "parsed",
   "services": [
     {
-      "sheet": "782-2 한림2리-귀덕초-봉성-대림-한림2리",
+      "sheets": [
+        "782-2 한림2리-귀덕초-봉성-대림-한림2리"
+      ],
+      "routeNumbers": [
+        "782-2"
+      ],
       "dayType": "unstated",
       "direction": "한림2리 → 한림2리 (순환)",
       "effectiveFrom": "2024-02-01",
@@ -35,6 +45,7 @@
       ],
       "trips": [
         {
+          "routeNumber": "782-2",
           "times": [
             "07:05",
             "07:10",
@@ -46,9 +57,11 @@
             "07:41",
             "07:50",
             "07:55"
-          ]
+          ],
+          "firstTime": "07:05"
         },
         {
+          "routeNumber": "782-2",
           "times": [
             "08:15",
             "08:20",
@@ -60,9 +73,11 @@
             "08:51",
             "09:00",
             "09:05"
-          ]
+          ],
+          "firstTime": "08:15"
         },
         {
+          "routeNumber": "782-2",
           "times": [
             "09:30",
             "09:35",
@@ -74,9 +89,11 @@
             "10:06",
             "10:15",
             "10:20"
-          ]
+          ],
+          "firstTime": "09:30"
         },
         {
+          "routeNumber": "782-2",
           "times": [
             "10:45",
             "10:50",
@@ -88,9 +105,11 @@
             "11:21",
             "11:30",
             "11:35"
-          ]
+          ],
+          "firstTime": "10:45"
         },
         {
+          "routeNumber": "782-2",
           "times": [
             "12:55",
             "13:00",
@@ -102,9 +121,11 @@
             "13:31",
             "13:40",
             "13:45"
-          ]
+          ],
+          "firstTime": "12:55"
         },
         {
+          "routeNumber": "782-2",
           "times": [
             "14:10",
             "14:15",
@@ -116,9 +137,11 @@
             "14:46",
             "14:55",
             "15:00"
-          ]
+          ],
+          "firstTime": "14:10"
         },
         {
+          "routeNumber": "782-2",
           "times": [
             "15:25",
             "15:30",
@@ -130,9 +153,11 @@
             "16:01",
             "16:10",
             "16:15"
-          ]
+          ],
+          "firstTime": "15:25"
         },
         {
+          "routeNumber": "782-2",
           "times": [
             "16:45",
             "16:50",
@@ -144,9 +169,11 @@
             "17:21",
             "17:30",
             "17:35"
-          ]
+          ],
+          "firstTime": "16:45"
         },
         {
+          "routeNumber": "782-2",
           "times": [
             "18:35",
             "18:40",
@@ -158,9 +185,11 @@
             "19:11",
             "19:20",
             "19:25"
-          ]
+          ],
+          "firstTime": "18:35"
         },
         {
+          "routeNumber": "782-2",
           "times": [
             "19:45",
             "19:50",
@@ -172,9 +201,11 @@
             "20:21",
             "20:30",
             "20:35"
-          ]
+          ],
+          "firstTime": "19:45"
         }
-      ]
+      ],
+      "status": "ok"
     }
   ]
 }

@@ -1,22 +1,32 @@
 {
-  "schemaVersion": "tapso-jeju-timetable-v2",
+  "schemaVersion": "tapso-jeju-timetable-v3",
   "label": "OFFICIAL_DATED",
   "source": {
     "publisher": "제주특별자치도 (bus.jeju.go.kr)",
     "dataset": "data.go.kr 3043887",
     "page": "https://bus.jeju.go.kr/publicTrafficInformation/generalBusSchedule",
     "file": "405057.xlsx",
-    "sha256": "17929edd049e46cf249d4c8c00d26d255c98bd7c67ebbfb644c8dfe4a0fe4fd1"
+    "sha256": "17929edd049e46cf249d4c8c00d26d255c98bd7c67ebbfb644c8dfe4a0fe4fd1",
+    "scheduleId": "405057",
+    "listedName": "454"
   },
   "retrievedOn": "2026-10-03",
   "parser": {
     "name": "jeju-bis-xlsx",
-    "version": "2"
+    "version": "3"
   },
-  "routeNumber": "454",
+  "routeNumbers": [
+    "454"
+  ],
+  "status": "parsed",
   "services": [
     {
-      "sheet": "454 순환(도두동-용담-공항-신제주R-오일장-도두동)",
+      "sheets": [
+        "454 순환(도두동-용담-공항-신제주R-오일장-도두동)"
+      ],
+      "routeNumbers": [
+        "454"
+      ],
       "dayType": "unstated",
       "direction": "도두→공항→도두 (순환)",
       "effectiveFrom": "2024-12-31",
@@ -34,6 +44,7 @@
       ],
       "trips": [
         {
+          "routeNumber": "454",
           "times": [
             "06:05",
             "06:11",
@@ -44,9 +55,11 @@
             "06:45",
             "06:48",
             "06:54"
-          ]
+          ],
+          "firstTime": "06:05"
         },
         {
+          "routeNumber": "454",
           "times": [
             "07:25",
             "07:31",
@@ -57,9 +70,11 @@
             "08:05",
             "08:08",
             "08:14"
-          ]
+          ],
+          "firstTime": "07:25"
         },
         {
+          "routeNumber": "454",
           "times": [
             "08:55",
             "09:01",
@@ -70,9 +85,11 @@
             "09:35",
             "09:38",
             "09:44"
-          ]
+          ],
+          "firstTime": "08:55"
         },
         {
+          "routeNumber": "454",
           "times": [
             "10:25",
             "10:31",
@@ -83,9 +100,11 @@
             "11:05",
             "11:08",
             "11:14"
-          ]
+          ],
+          "firstTime": "10:25"
         },
         {
+          "routeNumber": "454",
           "times": [
             "12:45",
             "12:51",
@@ -96,9 +115,11 @@
             "13:25",
             "13:28",
             "13:34"
-          ]
+          ],
+          "firstTime": "12:45"
         },
         {
+          "routeNumber": "454",
           "times": [
             "14:50",
             "14:56",
@@ -109,9 +130,11 @@
             "15:30",
             "15:33",
             "15:39"
-          ]
+          ],
+          "firstTime": "14:50"
         },
         {
+          "routeNumber": "454",
           "times": [
             "16:25",
             "16:31",
@@ -122,9 +145,11 @@
             "17:05",
             "17:08",
             "17:14"
-          ]
+          ],
+          "firstTime": "16:25"
         },
         {
+          "routeNumber": "454",
           "times": [
             "18:00",
             "18:06",
@@ -135,9 +160,11 @@
             "18:40",
             "18:43",
             "18:49"
-          ]
+          ],
+          "firstTime": "18:00"
         },
         {
+          "routeNumber": "454",
           "times": [
             "19:15",
             "19:21",
@@ -148,9 +175,11 @@
             "19:55",
             "19:58",
             "20:04"
-          ]
+          ],
+          "firstTime": "19:15"
         },
         {
+          "routeNumber": "454",
           "times": [
             "20:30",
             "20:36",
@@ -161,9 +190,11 @@
             "21:10",
             "21:13",
             "21:19"
-          ]
+          ],
+          "firstTime": "20:30"
         },
         {
+          "routeNumber": "454",
           "times": [
             "21:35",
             "21:40",
@@ -174,9 +205,11 @@
             null,
             null,
             null
-          ]
+          ],
+          "firstTime": "21:35"
         }
-      ]
+      ],
+      "status": "ok"
     }
   ]
 }

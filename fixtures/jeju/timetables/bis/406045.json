@@ -1,22 +1,32 @@
 {
-  "schemaVersion": "tapso-jeju-timetable-v2",
+  "schemaVersion": "tapso-jeju-timetable-v3",
   "label": "OFFICIAL_DATED",
   "source": {
     "publisher": "제주특별자치도 (bus.jeju.go.kr)",
     "dataset": "data.go.kr 3043887",
     "page": "https://bus.jeju.go.kr/publicTrafficInformation/generalBusSchedule",
     "file": "406045.xlsx",
-    "sha256": "2c493f32c35183b27650430cfb1dae3a96be379792afb778635eeda449e60ff9"
+    "sha256": "2c493f32c35183b27650430cfb1dae3a96be379792afb778635eeda449e60ff9",
+    "scheduleId": "406045",
+    "listedName": "761-3"
   },
   "retrievedOn": "2026-10-03",
   "parser": {
     "name": "jeju-bis-xlsx",
-    "version": "2"
+    "version": "3"
   },
-  "routeNumber": "761-3",
+  "routeNumbers": [
+    "761-3"
+  ],
+  "status": "parsed",
   "services": [
     {
-      "sheet": "761-3 현대미술관-대정(운진항)",
+      "sheets": [
+        "761-3 현대미술관-대정(운진항)"
+      ],
+      "routeNumbers": [
+        "761-3"
+      ],
       "dayType": "unstated",
       "direction": "현대미술관 → 대정(운진항)",
       "effectiveFrom": "2019-01-01",
@@ -31,6 +41,7 @@
       ],
       "trips": [
         {
+          "routeNumber": "761-3",
           "times": [
             "07:20",
             "07:34",
@@ -38,9 +49,11 @@
             "07:46",
             "07:52",
             "08:03"
-          ]
+          ],
+          "firstTime": "07:20"
         },
         {
+          "routeNumber": "761-3",
           "times": [
             "09:23",
             "09:37",
@@ -48,9 +61,11 @@
             "09:49",
             "09:55",
             "10:06"
-          ]
+          ],
+          "firstTime": "09:23"
         },
         {
+          "routeNumber": "761-3",
           "times": [
             "11:33",
             "11:47",
@@ -58,9 +73,11 @@
             "11:59",
             "12:05",
             "12:16"
-          ]
+          ],
+          "firstTime": "11:33"
         },
         {
+          "routeNumber": "761-3",
           "times": [
             "15:06",
             "15:20",
@@ -68,9 +85,11 @@
             "15:32",
             "15:38",
             "15:49"
-          ]
+          ],
+          "firstTime": "15:06"
         },
         {
+          "routeNumber": "761-3",
           "times": [
             "17:36",
             "17:50",
@@ -78,12 +97,19 @@
             "18:02",
             "18:08",
             "18:19"
-          ]
+          ],
+          "firstTime": "17:36"
         }
-      ]
+      ],
+      "status": "ok"
     },
     {
-      "sheet": "761-3 대정(운진항)-현대미술관",
+      "sheets": [
+        "761-3 대정(운진항)-현대미술관"
+      ],
+      "routeNumbers": [
+        "761-3"
+      ],
       "dayType": "unstated",
       "direction": "대정(운진항) → 현대미술관",
       "effectiveFrom": "2019-01-01",
@@ -98,6 +124,7 @@
       ],
       "trips": [
         {
+          "routeNumber": "761-3",
           "times": [
             "08:20",
             "08:31",
@@ -105,9 +132,11 @@
             "08:45",
             "08:49",
             "09:03"
-          ]
+          ],
+          "firstTime": "08:20"
         },
         {
+          "routeNumber": "761-3",
           "times": [
             "10:40",
             "10:51",
@@ -115,9 +144,11 @@
             "11:05",
             "11:09",
             "11:23"
-          ]
+          ],
+          "firstTime": "10:40"
         },
         {
+          "routeNumber": "761-3",
           "times": [
             "14:10",
             "14:21",
@@ -125,9 +156,11 @@
             "14:35",
             "14:39",
             "14:53"
-          ]
+          ],
+          "firstTime": "14:10"
         },
         {
+          "routeNumber": "761-3",
           "times": [
             "16:40",
             "16:51",
@@ -135,9 +168,11 @@
             "17:05",
             "17:09",
             "17:23"
-          ]
+          ],
+          "firstTime": "16:40"
         },
         {
+          "routeNumber": "761-3",
           "times": [
             "19:50",
             "20:01",
@@ -145,9 +180,11 @@
             "20:15",
             "20:19",
             "20:33"
-          ]
+          ],
+          "firstTime": "19:50"
         }
-      ]
+      ],
+      "status": "ok"
     }
   ]
 }

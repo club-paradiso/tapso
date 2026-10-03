@@ -1,0 +1,191 @@
+{
+  "schemaVersion": "tapso-jeju-timetable-v3",
+  "label": "OFFICIAL_DATED",
+  "source": {
+    "publisher": "제주특별자치도 (bus.jeju.go.kr)",
+    "dataset": "data.go.kr 3043887",
+    "page": "https://bus.jeju.go.kr/publicTrafficInformation/generalBusSchedule",
+    "file": "406025.xlsx",
+    "sha256": "a68dfb46de0e297cc6f8b5f759bee3c99ec0a48fe8dca18537ec29e9bf39526f",
+    "scheduleId": "406025",
+    "listedName": "721-3"
+  },
+  "retrievedOn": "2026-10-03",
+  "parser": {
+    "name": "jeju-bis-xlsx",
+    "version": "3"
+  },
+  "routeNumbers": [
+    "721-3"
+  ],
+  "serviceLabels": [
+    "옵서버스"
+  ],
+  "status": "parsed",
+  "services": [
+    {
+      "sheets": [
+        "721-3 성읍-수산초-성산읍-섭지코지-고성리"
+      ],
+      "routeNumbers": [
+        "721-3"
+      ],
+      "dayType": "unstated",
+      "serviceLabels": [
+        "옵서버스"
+      ],
+      "direction": "성읍문화마을 → 성산고 → 고성리",
+      "effectiveFrom": "2024-07-15",
+      "summary": "서귀포공영버스(064-760-3111~3)",
+      "timepoints": [
+        "성읍문화마을",
+        "모구리야영장",
+        "수산2리퐁낭거리",
+        "수산초등학교",
+        "성산읍사무소",
+        "섭지코지",
+        "광치기해변",
+        "성산고등학교",
+        "고성환승정류장"
+      ],
+      "trips": [
+        {
+          "routeNumber": "721-3",
+          "times": [
+            "07:00",
+            "07:05",
+            "07:17",
+            "07:26",
+            "07:38",
+            "07:43",
+            "07:51",
+            "07:59",
+            "08:09"
+          ],
+          "firstTime": "07:00"
+        },
+        {
+          "routeNumber": "721-3",
+          "times": [
+            "09:10",
+            "09:15",
+            "09:27",
+            "09:36",
+            "09:48",
+            "09:53",
+            "10:01",
+            "10:09",
+            "10:19"
+          ],
+          "firstTime": "09:10"
+        },
+        {
+          "routeNumber": "721-3",
+          "times": [
+            "11:40",
+            "11:45",
+            "11:57",
+            "12:06",
+            "12:18",
+            "12:23",
+            "12:31",
+            "12:39",
+            "12:49"
+          ],
+          "firstTime": "11:40"
+        },
+        {
+          "routeNumber": "721-3",
+          "times": [
+            null,
+            null,
+            null,
+            null,
+            null,
+            null,
+            null,
+            null,
+            null
+          ],
+          "window": {
+            "from": "14:00",
+            "to": "20:30",
+            "label": "실시간 호출형"
+          },
+          "firstTime": null,
+          "conditions": [
+            "demand_responsive"
+          ]
+        }
+      ],
+      "status": "ok"
+    },
+    {
+      "sheets": [
+        "721-3 고성리-수산초-모구리-성읍"
+      ],
+      "routeNumbers": [
+        "721-3"
+      ],
+      "dayType": "unstated",
+      "serviceLabels": [
+        "옵서버스"
+      ],
+      "direction": "고성리 → 수산초 →성읍문화마을",
+      "effectiveFrom": "2024-07-15",
+      "summary": "서귀포공영버스(064-760-3111~3)",
+      "timepoints": [
+        "고성환승정류장",
+        "수산초등학교",
+        "수산2리퐁낭거리",
+        "모구리야영장",
+        "성읍문화마을"
+      ],
+      "trips": [
+        {
+          "routeNumber": "721-3",
+          "times": [
+            "08:12",
+            "08:20",
+            "08:29",
+            "08:41",
+            "08:46"
+          ],
+          "firstTime": "08:12"
+        },
+        {
+          "routeNumber": "721-3",
+          "times": [
+            "10:22",
+            "10:30",
+            "10:39",
+            "10:51",
+            "10:56"
+          ],
+          "firstTime": "10:22"
+        },
+        {
+          "routeNumber": "721-3",
+          "times": [
+            null,
+            null,
+            null,
+            null,
+            null
+          ],
+          "window": {
+            "from": "14:00",
+            "to": "20:30",
+            "label": "실시간 호출형"
+          },
+          "note": "호",
+          "firstTime": null,
+          "conditions": [
+            "demand_responsive"
+          ]
+        }
+      ],
+      "status": "ok"
+    }
+  ]
+}

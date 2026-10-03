@@ -33,7 +33,7 @@ export const IOS_COPY = {
   "check.similarBuses.headline": "비슷한 버스가 있어요",
   "check.similarBuses.detail": "탑승한 버스를 골라주세요",
   "check.confirmed.headline": "버스를 확인했어요",
-  "check.confirmed.detail": "체험판은 앱을 켜 두면 끝까지 진행돼요",
+  "check.confirmed.detail": "이 버스로 따라갈게요",
   "check.confirm": "맞아요, 이 버스를 탔어요",
   "check.reject": "다른 버스예요",
   "check.noneOfThese": "둘 다 아니에요",

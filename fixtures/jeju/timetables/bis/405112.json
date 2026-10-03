@@ -1,0 +1,84 @@
+{
+  "schemaVersion": "tapso-jeju-timetable-v3",
+  "label": "OFFICIAL_DATED",
+  "source": {
+    "publisher": "제주특별자치도 (bus.jeju.go.kr)",
+    "dataset": "data.go.kr 3043887",
+    "page": "https://bus.jeju.go.kr/publicTrafficInformation/generalBusSchedule",
+    "file": "405112.xlsx",
+    "sha256": "fed28a3e59739ea11d313b529d7f53335f5114ffc7264c138e4d92fbf7f868e7",
+    "scheduleId": "405112",
+    "listedName": "3007"
+  },
+  "retrievedOn": "2026-10-03",
+  "parser": {
+    "name": "jeju-bis-xlsx",
+    "version": "3"
+  },
+  "routeNumbers": [
+    "3007"
+  ],
+  "status": "parsed",
+  "services": [
+    {
+      "sheets": [
+        "3007 (우당-여상-중앙여중-수선화A-화북-우당)심야"
+      ],
+      "routeNumbers": [
+        "3007"
+      ],
+      "dayType": "unstated",
+      "direction": "우당도서관-우당도서관 (심야)",
+      "effectiveNote": "미입력",
+      "summary": "첫차 22:30, 막차 23:30, 배차간격 1일 2회, 관광지순환버스(064-746-7310)",
+      "timepoints": [
+        "우당도서관",
+        "여상",
+        "동문R",
+        "중앙여중",
+        "대한생명",
+        "인제",
+        "수선화아파트",
+        "삼양",
+        "화북주공",
+        "우당도서관"
+      ],
+      "trips": [
+        {
+          "routeNumber": "3007",
+          "times": [
+            "22:30",
+            "22:34",
+            "22:38",
+            "22:44",
+            "22:50",
+            "22:55",
+            "23:00",
+            "23:09",
+            "23:12",
+            "23:18"
+          ],
+          "firstTime": "22:30"
+        },
+        {
+          "routeNumber": "3007",
+          "times": [
+            "23:30",
+            "23:32",
+            "23:35",
+            "23:41",
+            "23:47",
+            "23:51",
+            "23:56",
+            "24:04",
+            "24:06",
+            "24:11"
+          ],
+          "firstTime": "23:30"
+        }
+      ],
+      "crossesMidnight": true,
+      "status": "ok"
+    }
+  ]
+}

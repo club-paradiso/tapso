@@ -1,0 +1,187 @@
+{
+  "schemaVersion": "tapso-jeju-timetable-v3",
+  "label": "OFFICIAL_DATED",
+  "source": {
+    "publisher": "제주특별자치도 (bus.jeju.go.kr)",
+    "dataset": "data.go.kr 3043887",
+    "page": "https://bus.jeju.go.kr/publicTrafficInformation/generalBusSchedule",
+    "file": "405145.xlsx",
+    "sha256": "f844f7fbdc19c68122d49b2862d3b54a9b00d5ff7b1cfacf5884ae72e8440b2b",
+    "scheduleId": "405145",
+    "listedName": "357-1, 358-1(수요맞춤형)"
+  },
+  "retrievedOn": "2026-10-03",
+  "parser": {
+    "name": "jeju-bis-xlsx",
+    "version": "3"
+  },
+  "routeNumbers": [
+    "357-1",
+    "358-1"
+  ],
+  "serviceLabels": [
+    "수요맞춤형"
+  ],
+  "status": "parsed",
+  "services": [
+    {
+      "sheets": [
+        "357-1 월평-시청-터미널-신제주R-한라병원-수산",
+        "358-1 월평-시청-터미널-신제주R-한라병원-수산"
+      ],
+      "routeNumbers": [
+        "357-1",
+        "358-1"
+      ],
+      "dayType": "unstated",
+      "serviceLabels": [
+        "수요맞춤형"
+      ],
+      "direction": "월평→제주도청→수산(하귀)",
+      "effectiveFrom": "2024-08-01",
+      "summary": "관광지순환버스(064-746-7310)",
+      "timepoints": [
+        "월평",
+        "법원",
+        "이도초등학교",
+        "보건소",
+        "터미널",
+        "제주도청(신제주로타리)",
+        "한라병원",
+        "외도부영",
+        "하귀휴먼시아",
+        "수산(하귀)"
+      ],
+      "trips": [
+        {
+          "routeNumber": "357-1",
+          "times": [
+            "16:08",
+            null,
+            "16:30",
+            "16:41",
+            null,
+            "16:51",
+            "16:57",
+            "17:21",
+            "17:31",
+            "17:42"
+          ],
+          "firstTime": "16:08"
+        },
+        {
+          "routeNumber": "358-1",
+          "times": [
+            "16:30",
+            "16:51",
+            null,
+            null,
+            "17:03",
+            "17:13",
+            "17:19",
+            "17:43",
+            "17:53",
+            "18:04"
+          ],
+          "firstTime": "16:30"
+        },
+        {
+          "routeNumber": "357-1",
+          "times": [
+            "17:28",
+            null,
+            "17:50",
+            "18:01",
+            null,
+            "18:11",
+            "18:17",
+            "18:41",
+            "18:51",
+            "19:02"
+          ],
+          "firstTime": "17:28"
+        },
+        {
+          "routeNumber": "358-1",
+          "times": [
+            "17:50",
+            "18:11",
+            null,
+            null,
+            "18:23",
+            "18:33",
+            "18:39",
+            "19:03",
+            "19:13",
+            "19:24"
+          ],
+          "firstTime": "17:50"
+        }
+      ],
+      "note": "토,공휴일방학기간운행 안함",
+      "status": "ok"
+    },
+    {
+      "sheets": [
+        "357-1 하귀-한라병원-신제주R-터미널-시청-월평",
+        "358-1 하귀-한라병원-신제주R-터미널-시청-월평"
+      ],
+      "routeNumbers": [
+        "357-1",
+        "358-1"
+      ],
+      "dayType": "unstated",
+      "serviceLabels": [
+        "수요맞춤형"
+      ],
+      "direction": "수산(하귀)→제주도청→월평",
+      "effectiveFrom": "2024-08-01",
+      "summary": "삼영교통(064-713-7000)",
+      "timepoints": [
+        "수산(하귀)",
+        "하귀휴먼시아",
+        "외도부영",
+        "한라병원",
+        "제주도청(신제주로타리)",
+        "터미널",
+        "보건소",
+        "법원",
+        "월평"
+      ],
+      "trips": [
+        {
+          "routeNumber": "357-1",
+          "times": [
+            "06:45",
+            "06:56",
+            "07:06",
+            "07:30",
+            "07:36",
+            null,
+            "07:45",
+            "07:50",
+            "08:11"
+          ],
+          "firstTime": "06:45"
+        },
+        {
+          "routeNumber": "358-1",
+          "times": [
+            "06:55",
+            "07:06",
+            "07:16",
+            "07:40",
+            "07:46",
+            "07:55",
+            null,
+            "08:03",
+            "08:24"
+          ],
+          "firstTime": "06:55"
+        }
+      ],
+      "note": "토,공휴일방학기간운행 안함",
+      "status": "ok"
+    }
+  ]
+}

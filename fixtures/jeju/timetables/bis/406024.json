@@ -1,0 +1,176 @@
+{
+  "schemaVersion": "tapso-jeju-timetable-v3",
+  "label": "OFFICIAL_DATED",
+  "source": {
+    "publisher": "제주특별자치도 (bus.jeju.go.kr)",
+    "dataset": "data.go.kr 3043887",
+    "page": "https://bus.jeju.go.kr/publicTrafficInformation/generalBusSchedule",
+    "file": "406024.xlsx",
+    "sha256": "dc3c55dcd888470f08a25f7b82c6efe2405645310910cbe0aaa9b5514b5b3286",
+    "scheduleId": "406024",
+    "listedName": "721-2"
+  },
+  "retrievedOn": "2026-10-03",
+  "parser": {
+    "name": "jeju-bis-xlsx",
+    "version": "3"
+  },
+  "routeNumbers": [
+    "721-2"
+  ],
+  "serviceLabels": [
+    "옵서버스"
+  ],
+  "status": "parsed",
+  "services": [
+    {
+      "sheets": [
+        "721-2 대천동-수산초-성산읍-고성리"
+      ],
+      "routeNumbers": [
+        "721-2"
+      ],
+      "dayType": "unstated",
+      "serviceLabels": [
+        "옵서버스"
+      ],
+      "direction": "대천동 → 성산고 → 고성리",
+      "effectiveFrom": "2024-07-15",
+      "summary": "서귀포공영버스(064-760-3111~3)",
+      "timepoints": [
+        "대천동",
+        "수산2리퐁낭거리",
+        "수산초등학교",
+        "광치기해변",
+        "성산고등학교",
+        "시흥리 하동",
+        "고성오일시장",
+        "성산읍사무소",
+        "섭지코지",
+        "고성환승정류장"
+      ],
+      "trips": [
+        {
+          "routeNumber": "721-2",
+          "times": [
+            "07:20",
+            "07:42",
+            "07:51",
+            "08:04",
+            "08:13",
+            "08:17",
+            "08:24",
+            "08:30",
+            "08:35",
+            "08:40"
+          ],
+          "firstTime": "07:20"
+        },
+        {
+          "routeNumber": "721-2",
+          "times": [
+            "10:30",
+            "10:52",
+            "11:01",
+            "11:14",
+            "11:23",
+            "11:27",
+            "11:34",
+            "11:40",
+            "11:45",
+            "11:50"
+          ],
+          "firstTime": "10:30"
+        },
+        {
+          "routeNumber": "721-2",
+          "times": [
+            null,
+            null,
+            null,
+            null,
+            null,
+            null,
+            null,
+            null,
+            null,
+            null
+          ],
+          "window": {
+            "from": "14:00",
+            "to": "20:30",
+            "label": "실시간 호출형"
+          },
+          "firstTime": null,
+          "conditions": [
+            "demand_responsive"
+          ]
+        }
+      ],
+      "status": "ok"
+    },
+    {
+      "sheets": [
+        "721-2 고성리-수산초-대천동"
+      ],
+      "routeNumbers": [
+        "721-2"
+      ],
+      "dayType": "unstated",
+      "serviceLabels": [
+        "옵서버스"
+      ],
+      "direction": "고성리 → 수산초 → 대천동",
+      "effectiveFrom": "2024-07-15",
+      "summary": "서귀포공영버스(064-760-3111~3)",
+      "timepoints": [
+        "고성환승정류장",
+        "수산초등학교",
+        "수산2리퐁낭거리",
+        "대천동"
+      ],
+      "trips": [
+        {
+          "routeNumber": "721-2",
+          "times": [
+            "08:43",
+            "08:51",
+            "09:00",
+            "09:22"
+          ],
+          "firstTime": "08:43"
+        },
+        {
+          "routeNumber": "721-2",
+          "times": [
+            "11:53",
+            "12:01",
+            "12:10",
+            "12:32"
+          ],
+          "firstTime": "11:53"
+        },
+        {
+          "routeNumber": "721-2",
+          "times": [
+            null,
+            null,
+            null,
+            null
+          ],
+          "window": {
+            "from": "14:00",
+            "to": "20:30",
+            "label": "실시간 호출형"
+          },
+          "note": "답",
+          "firstTime": null,
+          "conditions": [
+            "demand_responsive"
+          ]
+        }
+      ],
+      "status": "ok"
+    }
+  ]
+}

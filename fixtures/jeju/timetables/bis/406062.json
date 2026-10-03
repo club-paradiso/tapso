@@ -1,0 +1,232 @@
+{
+  "schemaVersion": "tapso-jeju-timetable-v3",
+  "label": "OFFICIAL_DATED",
+  "source": {
+    "publisher": "제주특별자치도 (bus.jeju.go.kr)",
+    "dataset": "data.go.kr 3043887",
+    "page": "https://bus.jeju.go.kr/publicTrafficInformation/generalBusSchedule",
+    "file": "406062.xlsx",
+    "sha256": "b420fbfe9c1264e3aa22ebd3ee06eff6adaa4b4032d9f72c1b49b2571eefb626",
+    "scheduleId": "406062",
+    "listedName": "680"
+  },
+  "retrievedOn": "2026-10-03",
+  "parser": {
+    "name": "jeju-bis-xlsx",
+    "version": "3"
+  },
+  "routeNumbers": [
+    "680"
+  ],
+  "serviceLabels": [
+    "순환"
+  ],
+  "status": "parsed",
+  "services": [
+    {
+      "sheets": [
+        "680 강정항↔강정항(순환)"
+      ],
+      "routeNumbers": [
+        "680"
+      ],
+      "dayType": "unstated",
+      "serviceLabels": [
+        "순환"
+      ],
+      "direction": "강정항↔강정항",
+      "effectiveFrom": "2026-06-10",
+      "summary": "서귀포시 공영버스(064-760-3111~3114)",
+      "timepoints": [
+        "강정항",
+        "법환우체국",
+        "중앙공영주차빌딩",
+        "중앙로터리(서쪽)",
+        "솔동산입구",
+        "법환우제국",
+        "월평마을",
+        "강정항"
+      ],
+      "trips": [
+        {
+          "routeNumber": "680",
+          "times": [
+            null,
+            null,
+            null,
+            null,
+            null,
+            "07:50",
+            null,
+            "08:02"
+          ],
+          "offTable": [
+            {
+              "place": "보목포구",
+              "time": "07:25",
+              "role": "at",
+              "column": "중앙공영주차빌딩"
+            },
+            {
+              "place": "송산동주민센터",
+              "time": "07:35",
+              "role": "at",
+              "column": "중앙로터리(서쪽)"
+            },
+            {
+              "place": "서귀여고",
+              "time": "07:45",
+              "role": "at",
+              "column": "솔동산입구"
+            }
+          ],
+          "note": "서귀포여고 연장운행",
+          "firstTime": "07:25"
+        },
+        {
+          "routeNumber": "680",
+          "times": [
+            "08:10",
+            "08:22",
+            "08:33",
+            "08:36",
+            "08:41",
+            "08:52",
+            null,
+            "09:04"
+          ],
+          "firstTime": "08:10"
+        },
+        {
+          "routeNumber": "680",
+          "times": [
+            "09:35",
+            "09:47",
+            "09:58",
+            "10:01",
+            "10:06",
+            "10:17",
+            null,
+            "10:29"
+          ],
+          "firstTime": "09:35"
+        },
+        {
+          "routeNumber": "680",
+          "times": [
+            "10:45",
+            "10:57",
+            "11:08",
+            "11:11",
+            "11:16",
+            "11:27",
+            "11:39",
+            "11:47"
+          ],
+          "firstTime": "10:45"
+        },
+        {
+          "routeNumber": "680",
+          "times": [
+            "11:55",
+            "12:07",
+            "12:18",
+            null,
+            null,
+            null,
+            null,
+            null
+          ],
+          "offTable": [
+            {
+              "place": "중앙로터리 (동쪽)",
+              "time": "12:21",
+              "role": "end",
+              "column": "중앙로터리(서쪽)"
+            }
+          ],
+          "firstTime": "11:55"
+        },
+        {
+          "routeNumber": "680",
+          "times": [
+            null,
+            null,
+            "14:00",
+            "14:03",
+            "14:08",
+            "14:19",
+            null,
+            "14:31"
+          ],
+          "firstTime": "14:00"
+        },
+        {
+          "routeNumber": "680",
+          "times": [
+            "14:40",
+            "14:52",
+            "15:03",
+            "15:06",
+            "15:11",
+            "15:22",
+            "15:34",
+            "15:42"
+          ],
+          "firstTime": "14:40"
+        },
+        {
+          "routeNumber": "680",
+          "times": [
+            "16:10",
+            "16:22",
+            "16:33",
+            "16:36",
+            "16:41",
+            "16:52",
+            "17:04",
+            "17:12"
+          ],
+          "firstTime": "16:10"
+        },
+        {
+          "routeNumber": "680",
+          "times": [
+            "17:35",
+            "17:47",
+            "17:58",
+            "18:01",
+            "18:06",
+            "18:17",
+            null,
+            "18:29"
+          ],
+          "firstTime": "17:35"
+        },
+        {
+          "routeNumber": "680",
+          "times": [
+            "18:40",
+            "18:52",
+            "19:03",
+            null,
+            null,
+            null,
+            null,
+            null
+          ],
+          "offTable": [
+            {
+              "place": "중앙로터리 (동쪽)",
+              "time": "19:06",
+              "role": "end",
+              "column": "중앙로터리(서쪽)"
+            }
+          ],
+          "firstTime": "18:40"
+        }
+      ],
+      "status": "ok"
+    }
+  ]
+}

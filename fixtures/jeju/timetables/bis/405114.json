@@ -1,0 +1,148 @@
+{
+  "schemaVersion": "tapso-jeju-timetable-v3",
+  "label": "OFFICIAL_DATED",
+  "source": {
+    "publisher": "제주특별자치도 (bus.jeju.go.kr)",
+    "dataset": "data.go.kr 3043887",
+    "page": "https://bus.jeju.go.kr/publicTrafficInformation/generalBusSchedule",
+    "file": "405114.xlsx",
+    "sha256": "d8f158b3c00b6fdc0fdd47cf6f1ecf87e951cc468598eca025f9f46c60070b7c",
+    "scheduleId": "405114",
+    "listedName": "202-1"
+  },
+  "retrievedOn": "2026-10-03",
+  "parser": {
+    "name": "jeju-bis-xlsx",
+    "version": "3"
+  },
+  "routeNumbers": [
+    "202-1"
+  ],
+  "serviceLabels": [
+    "임시"
+  ],
+  "status": "parsed",
+  "services": [
+    {
+      "sheets": [
+        "202-1 (임시운행)신제주R-애월-한림고"
+      ],
+      "routeNumbers": [
+        "202-1"
+      ],
+      "dayType": "unstated",
+      "serviceLabels": [
+        "임시"
+      ],
+      "direction": "신제주로터리→애월→한림고",
+      "effectiveFrom": "2024-05-30",
+      "summary": "관광지순환버스㈜ 064-746-7310",
+      "timepoints": [
+        "신제주로터리(제주도청)",
+        "오일시장",
+        "외도초교",
+        "하귀환승정류장",
+        "애월고",
+        "애월환승정류장",
+        "동명리 (한림체육관 입구)",
+        "한림고"
+      ],
+      "trips": [
+        {
+          "routeNumber": "202-1",
+          "times": [
+            "06:57",
+            "07:03",
+            "07:12",
+            "07:17",
+            "07:32",
+            "07:35",
+            "07:56",
+            "08:02"
+          ],
+          "firstTime": "06:57"
+        },
+        {
+          "routeNumber": "202-1",
+          "times": [
+            "07:10",
+            "07:16",
+            "07:25",
+            "07:30",
+            "07:45",
+            "07:48",
+            "08:09",
+            "08:15"
+          ],
+          "firstTime": "07:10"
+        }
+      ],
+      "note": "토.공휴일방학기간 운행 안함",
+      "status": "ok"
+    },
+    {
+      "sheets": [
+        "202-1 (임시운행)한림고-애월-신제주로터리"
+      ],
+      "routeNumbers": [
+        "202-1"
+      ],
+      "dayType": "unstated",
+      "serviceLabels": [
+        "임시"
+      ],
+      "direction": "한림고→애월→신제주로터리",
+      "effectiveFrom": "2021-07-01",
+      "summary": "관광지순환버스㈜ 064-746-7310",
+      "timepoints": [
+        "한림고",
+        "동명리 (한림체육관 입구)",
+        "애월환승정류장",
+        "애월고",
+        "하귀환승정류장",
+        "외도초교",
+        "오일시장",
+        "신제주로터리(제주도청)"
+      ],
+      "trips": [
+        {
+          "routeNumber": "202-1",
+          "times": [
+            "16:45",
+            "16:54",
+            "17:14",
+            "17:18",
+            "17:34",
+            "17:39",
+            "17:49",
+            "17:55"
+          ],
+          "note": "토.공휴일 운행 안함",
+          "firstTime": "16:45",
+          "conditions": [
+            "토.공휴일 운행 안함"
+          ]
+        },
+        {
+          "routeNumber": "202-1",
+          "times": [
+            "20:00",
+            "20:09",
+            "20:29",
+            "20:33",
+            "20:49",
+            "20:54",
+            "21:04",
+            "21:10"
+          ],
+          "note": "토.공휴일 방학기간 운행 안함",
+          "firstTime": "20:00",
+          "conditions": [
+            "토.공휴일 방학기간 운행 안함"
+          ]
+        }
+      ],
+      "status": "ok"
+    }
+  ]
+}

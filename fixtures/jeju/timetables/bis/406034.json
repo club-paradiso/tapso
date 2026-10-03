@@ -1,0 +1,525 @@
+{
+  "schemaVersion": "tapso-jeju-timetable-v3",
+  "label": "OFFICIAL_DATED",
+  "source": {
+    "publisher": "제주특별자치도 (bus.jeju.go.kr)",
+    "dataset": "data.go.kr 3043887",
+    "page": "https://bus.jeju.go.kr/publicTrafficInformation/generalBusSchedule",
+    "file": "406034.xlsx",
+    "sha256": "a49078411b287a2e88d9741cadb833ad590bfc2536b2ba2b62f87d10d28c314d",
+    "scheduleId": "406034",
+    "listedName": "741-2"
+  },
+  "retrievedOn": "2026-10-03",
+  "parser": {
+    "name": "jeju-bis-xlsx",
+    "version": "3"
+  },
+  "routeNumbers": [
+    "741-2"
+  ],
+  "serviceLabels": [
+    "옵서버스"
+  ],
+  "status": "source_conflict",
+  "services": [
+    {
+      "sheets": [
+        "741-2 (평일)남원읍-고수동"
+      ],
+      "routeNumbers": [
+        "741-2"
+      ],
+      "dayType": "weekday",
+      "dayLabel": "평일",
+      "serviceLabels": [
+        "옵서버스"
+      ],
+      "direction": "금호리조트→신흥1리→ 토산초→금호리조트(순환)",
+      "effectiveFrom": "2024-09-23",
+      "summary": "서귀포공영버스(064-760-3111~3)",
+      "timepoints": [
+        "금호리조트",
+        "남원읍사무소",
+        "서소동",
+        "태흥3리사무소",
+        "신흥1리사무소",
+        "신흥교",
+        "온천동",
+        "고수동입구",
+        "고수동종점",
+        "토산초등학교",
+        "송천교",
+        "태흥3리사무소",
+        "서소동",
+        "남원읍사무소",
+        "금호리조트"
+      ],
+      "trips": [
+        {
+          "routeNumber": "741-2",
+          "times": [
+            null,
+            null,
+            null,
+            null,
+            null,
+            null,
+            null,
+            null,
+            "06:50",
+            "06:58",
+            "07:01",
+            "07:03",
+            "07:06",
+            "07:10",
+            "07:16"
+          ],
+          "firstTime": "06:50"
+        },
+        {
+          "routeNumber": "741-2",
+          "times": [
+            "07:30",
+            "07:36",
+            "07:39",
+            "07:44",
+            "07:47",
+            "07:55",
+            "07:57",
+            "07:59",
+            "08:02",
+            "08:10",
+            "08:13",
+            "08:15",
+            "08:18",
+            "08:22",
+            "08:28"
+          ],
+          "note": "신흥1리 마을안길 경유",
+          "firstTime": "07:30"
+        },
+        {
+          "routeNumber": "741-2",
+          "times": [
+            "09:00",
+            "09:06",
+            "09:09",
+            "09:14",
+            "09:17",
+            "09:25",
+            "09:27",
+            "09:29",
+            "09:32",
+            "09:40",
+            "09:43",
+            "09:45",
+            "09:48",
+            "09:52",
+            "09:58"
+          ],
+          "note": "신흥1리 마을안길 경유",
+          "firstTime": "09:00"
+        },
+        {
+          "routeNumber": "741-2",
+          "times": [
+            "10:50",
+            "10:56",
+            "10:59",
+            "11:04",
+            "11:07",
+            "11:15",
+            "11:17",
+            "11:19",
+            "11:22",
+            "11:30",
+            "11:33",
+            "11:35",
+            "11:38",
+            "11:42",
+            "11:48"
+          ],
+          "note": "신흥1리 마을안길 경유",
+          "firstTime": "10:50"
+        },
+        {
+          "routeNumber": "741-2",
+          "times": [
+            "12:20",
+            "12:26",
+            "12:29",
+            "12:34",
+            "12:37",
+            "12:45",
+            "12:47",
+            "12:49",
+            "12:52",
+            null,
+            null,
+            null,
+            null,
+            null,
+            null
+          ],
+          "note": "신흥1리 마을안길 경유",
+          "firstTime": "12:20"
+        },
+        {
+          "routeNumber": "741-2",
+          "times": [
+            "14:30",
+            "14:36",
+            "14:39",
+            "14:44",
+            "14:47",
+            "14:55",
+            "14:57",
+            "14:59",
+            "15:02",
+            "15:10",
+            "15:13",
+            "11:15",
+            "15:18",
+            "15:22",
+            "15:28"
+          ],
+          "note": "신흥1리 마을안길 경유",
+          "firstTime": "14:30"
+        },
+        {
+          "routeNumber": "741-2",
+          "times": [
+            null,
+            null,
+            null,
+            null,
+            null,
+            null,
+            null,
+            null,
+            null,
+            null,
+            null,
+            null,
+            null,
+            null,
+            null
+          ],
+          "window": {
+            "from": "14:30",
+            "to": "21:00",
+            "label": "실시간 호출형"
+          },
+          "firstTime": null,
+          "conditions": [
+            "demand_responsive"
+          ]
+        }
+      ],
+      "status": "source_conflict",
+      "conflicts": [
+        "trip 6: times run backwards (15:13 then 11:15)"
+      ],
+      "warnings": [
+        "rows are not in time order at '태흥3리사무소'"
+      ]
+    },
+    {
+      "sheets": [
+        "741-2 (토요일)남원읍-고수동"
+      ],
+      "routeNumbers": [
+        "741-2"
+      ],
+      "dayType": "saturday",
+      "dayLabel": "토요일",
+      "serviceLabels": [
+        "옵서버스"
+      ],
+      "direction": "금호리조트→신흥1리→ 토산초→금호리조트(순환)",
+      "effectiveFrom": "2024-09-23",
+      "summary": "서귀포공영버스(064-760-3111~3)",
+      "timepoints": [
+        "금호리조트",
+        "남원읍사무소",
+        "서소동",
+        "태흥3리사무소",
+        "신흥1리사무소",
+        "신흥교",
+        "온천동",
+        "고수동입구",
+        "고수동종점",
+        "토산초등학교",
+        "송천교",
+        "태흥3리사무소",
+        "서소동",
+        "남원읍사무소",
+        "금호리조트"
+      ],
+      "trips": [
+        {
+          "routeNumber": "741-2",
+          "times": [
+            null,
+            null,
+            null,
+            null,
+            null,
+            null,
+            null,
+            null,
+            "06:50",
+            "06:58",
+            "07:01",
+            "07:03",
+            "07:06",
+            "07:10",
+            "07:16"
+          ],
+          "firstTime": "06:50"
+        },
+        {
+          "routeNumber": "741-2",
+          "times": [
+            "07:30",
+            "07:36",
+            "07:39",
+            "07:44",
+            "07:47",
+            "07:55",
+            "07:57",
+            "07:59",
+            "08:02",
+            "08:10",
+            "08:13",
+            "08:15",
+            "08:18",
+            "08:22",
+            "08:28"
+          ],
+          "note": "신흥1리 마을안길 경유",
+          "firstTime": "07:30"
+        },
+        {
+          "routeNumber": "741-2",
+          "times": [
+            "09:00",
+            "09:06",
+            "09:09",
+            "09:14",
+            "09:17",
+            "09:25",
+            "09:27",
+            "09:29",
+            "09:32",
+            "09:40",
+            "09:43",
+            "09:45",
+            "09:48",
+            "09:52",
+            "09:58"
+          ],
+          "note": "신흥1리 마을안길 경유",
+          "firstTime": "09:00"
+        },
+        {
+          "routeNumber": "741-2",
+          "times": [
+            "10:50",
+            "10:56",
+            "10:59",
+            "11:04",
+            "11:07",
+            "11:15",
+            "11:17",
+            "11:19",
+            "11:22",
+            "11:30",
+            "11:33",
+            "11:35",
+            "11:38",
+            "11:42",
+            "11:48"
+          ],
+          "note": "신흥1리 마을안길 경유",
+          "firstTime": "10:50"
+        },
+        {
+          "routeNumber": "741-2",
+          "times": [
+            "12:20",
+            "12:26",
+            "12:29",
+            "12:34",
+            "12:37",
+            "12:45",
+            "12:47",
+            "12:49",
+            "12:52",
+            null,
+            null,
+            null,
+            null,
+            null,
+            null
+          ],
+          "note": "신흥1리 마을안길 경유",
+          "firstTime": "12:20"
+        },
+        {
+          "routeNumber": "741-2",
+          "times": [
+            "14:30",
+            "14:36",
+            "14:39",
+            "14:44",
+            "14:47",
+            "14:55",
+            "14:57",
+            "14:59",
+            "15:02",
+            "15:10",
+            "15:13",
+            "11:15",
+            "15:18",
+            "15:22",
+            "15:28"
+          ],
+          "note": "신흥1리 마을안길 경유",
+          "firstTime": "14:30"
+        },
+        {
+          "routeNumber": "741-2",
+          "times": [
+            null,
+            null,
+            null,
+            null,
+            null,
+            null,
+            null,
+            null,
+            null,
+            null,
+            null,
+            null,
+            null,
+            null,
+            null
+          ],
+          "window": {
+            "from": "15:10",
+            "to": "21:00",
+            "label": "실시간 호출형"
+          },
+          "firstTime": null,
+          "conditions": [
+            "demand_responsive"
+          ]
+        }
+      ],
+      "status": "source_conflict",
+      "conflicts": [
+        "trip 6: times run backwards (15:13 then 11:15)"
+      ],
+      "warnings": [
+        "rows are not in time order at '태흥3리사무소'"
+      ]
+    },
+    {
+      "sheets": [
+        "741-2 (휴일)남원읍-고수동"
+      ],
+      "routeNumbers": [
+        "741-2"
+      ],
+      "dayType": "sunday_holiday",
+      "dayLabel": "일,공휴일",
+      "serviceLabels": [
+        "옵서버스"
+      ],
+      "direction": "금호리조트→신흥1리→ 토산초→금호리조트(순환)",
+      "effectiveFrom": "2024-09-23",
+      "summary": "서귀포공영버스(064-760-3111~3)",
+      "timepoints": [
+        "금호리조트",
+        "남원읍사무소",
+        "서소동",
+        "태흥3리사무소",
+        "신흥1리사무소",
+        "신흥교",
+        "온천동",
+        "고수동입구",
+        "고수동종점",
+        "토산초등학교",
+        "송천교",
+        "태흥3리사무소",
+        "서소동",
+        "남원읍사무소",
+        "금호리조트"
+      ],
+      "trips": [
+        {
+          "routeNumber": "741-2",
+          "times": [
+            null,
+            null,
+            null,
+            null,
+            null,
+            null,
+            null,
+            null,
+            null,
+            null,
+            null,
+            null,
+            null,
+            null,
+            null
+          ],
+          "window": {
+            "from": "06:50",
+            "to": "12:30",
+            "label": "오전 실시간 호출형"
+          },
+          "firstTime": null,
+          "conditions": [
+            "demand_responsive"
+          ]
+        },
+        {
+          "routeNumber": "741-2",
+          "times": [
+            null,
+            null,
+            null,
+            null,
+            null,
+            null,
+            null,
+            null,
+            null,
+            null,
+            null,
+            null,
+            null,
+            null,
+            null
+          ],
+          "window": {
+            "from": "14:00",
+            "to": "21:00",
+            "label": "오후 실시간 호출형"
+          },
+          "firstTime": null,
+          "conditions": [
+            "demand_responsive"
+          ]
+        }
+      ],
+      "status": "ok"
+    }
+  ]
+}

@@ -163,6 +163,28 @@ async function run(): Promise<void> {
   record("operator path is closed", operator.status === 401 || operator.status === 503
     ? pass(`${operator.status} without a token`)
     : fail(`status ${operator.status} without a token — the ride-capture path must never answer unauthenticated`));
+
+  // Reviewed data files (docs/exec-plans/JEJU_PRODUCTION_V1.md). A deployment that
+  // predates them answers 404 and is a warning, not a failure; one that has the
+  // endpoint but no valid file says so with 503 and is a warning too.
+  const timetables = await get(`/v1/timetables?routeNo=${encodeURIComponent(routeNumber)}`);
+  const item = timetables.body?.item as Record<string, unknown> | undefined;
+  record("official timetables", timetables.status === 200
+    ? item?.label === "OFFICIAL_DATED" && typeof item?.asOf === "string" && ["available", "source_conflict", "no_timetable", "not_published"].includes(String(item?.status))
+      ? pass(`route ${routeNumber}: ${String(item?.status)}, as of ${String(item?.asOf)}, ${asArray(item?.today).length} direction(s) for today`)
+      : fail(`200 without an OFFICIAL_DATED view: ${preview(timetables.text)}`)
+    : timetables.status === 404 || timetables.status === 503
+      ? { outcome: "WARN", detail: `${timetables.status}: ${timetables.status === 404 ? "deployment predates the timetable endpoint" : String(timetables.body?.message ?? "no timetable bundle")}` }
+      : fail(`status ${timetables.status}`));
+
+  const catalog = await get("/v1/catalog");
+  record("transit catalog", catalog.status === 200
+    ? catalog.body?.schemaVersion === "tapso-jeju-catalog-v1" && asArray(catalog.body?.routes).length > 0
+      ? pass(`catalog ${String(catalog.body?.catalogVersion)}: ${asArray(catalog.body?.routes).length} variants, ${asArray(catalog.body?.stops).length} stops`)
+      : fail(`200 without a catalog: ${preview(catalog.text)}`)
+    : catalog.status === 404 || catalog.status === 503
+      ? { outcome: "WARN", detail: `${catalog.status}: ${catalog.status === 404 ? "deployment predates the catalog endpoint" : String(catalog.body?.message ?? "no catalog deployed")}` }
+      : fail(`status ${catalog.status}`));
 }
 
 /**

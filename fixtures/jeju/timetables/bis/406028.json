@@ -1,0 +1,217 @@
+{
+  "schemaVersion": "tapso-jeju-timetable-v3",
+  "label": "OFFICIAL_DATED",
+  "source": {
+    "publisher": "제주특별자치도 (bus.jeju.go.kr)",
+    "dataset": "data.go.kr 3043887",
+    "page": "https://bus.jeju.go.kr/publicTrafficInformation/generalBusSchedule",
+    "file": "406028.xlsx",
+    "sha256": "7c19ed984eb57b1232befa38590a1138d167959d7bb4da4624be1db3a73e846d",
+    "scheduleId": "406028",
+    "listedName": "731-1"
+  },
+  "retrievedOn": "2026-10-03",
+  "parser": {
+    "name": "jeju-bis-xlsx",
+    "version": "3"
+  },
+  "routeNumbers": [
+    "731-1"
+  ],
+  "serviceLabels": [
+    "옵서버스"
+  ],
+  "status": "parsed",
+  "services": [
+    {
+      "sheets": [
+        "731-1 성읍문화마을-삼달1리-신풍리-표선고-제주민속촌"
+      ],
+      "routeNumbers": [
+        "731-1"
+      ],
+      "dayType": "unstated",
+      "serviceLabels": [
+        "옵서버스"
+      ],
+      "direction": "성읍문화마을 → 표선(제주민속촌)",
+      "effectiveFrom": "2025-06-20",
+      "summary": "서귀포공영버스(064-760-3111~3)",
+      "timepoints": [
+        "성읍문화마을",
+        "삼달1리삼거리",
+        "신풍리사무소",
+        "하천하동",
+        "표선고등학교",
+        "표선(제주민속촌)"
+      ],
+      "trips": [
+        {
+          "routeNumber": "731-1",
+          "times": [
+            "07:30",
+            "07:38",
+            "07:42",
+            "07:51",
+            "07:55",
+            "08:01"
+          ],
+          "firstTime": "07:30"
+        },
+        {
+          "routeNumber": "731-1",
+          "times": [
+            "08:39",
+            "08:47",
+            "08:51",
+            "09:00",
+            "09:04",
+            "09:10"
+          ],
+          "firstTime": "08:39"
+        },
+        {
+          "routeNumber": "731-1",
+          "times": [
+            "10:24",
+            "10:32",
+            "10:36",
+            "10:45",
+            "10:49",
+            "10:55"
+          ],
+          "firstTime": "10:24"
+        },
+        {
+          "routeNumber": "731-1",
+          "times": [
+            "11:59",
+            "12:07",
+            "12:11",
+            "12:20",
+            "12:24",
+            "12:30"
+          ],
+          "firstTime": "11:59"
+        },
+        {
+          "routeNumber": "731-1",
+          "times": [
+            null,
+            null,
+            null,
+            null,
+            null,
+            null
+          ],
+          "window": {
+            "from": "14:00",
+            "to": "21:30",
+            "label": "실시간 호출형"
+          },
+          "note": "출",
+          "firstTime": null,
+          "conditions": [
+            "demand_responsive"
+          ]
+        }
+      ],
+      "status": "ok"
+    },
+    {
+      "sheets": [
+        "731-1 제주민속촌-표선고-신풍리-삼달1리-성읍문화마을"
+      ],
+      "routeNumbers": [
+        "731-1"
+      ],
+      "dayType": "unstated",
+      "serviceLabels": [
+        "옵서버스"
+      ],
+      "direction": "표선(제주민속촌) → 성읍문화마을",
+      "effectiveFrom": "2025-06-20",
+      "summary": "서귀포공영버스(064-760-3111~3)",
+      "timepoints": [
+        "표선(제주민속촌)",
+        "표선고등학교",
+        "하천하동",
+        "신풍리사무소",
+        "삼달1리삼거리",
+        "성읍문화마을"
+      ],
+      "trips": [
+        {
+          "routeNumber": "731-1",
+          "times": [
+            "08:05",
+            "08:11",
+            "08:15",
+            "08:24",
+            "08:29",
+            "08:39"
+          ],
+          "firstTime": "08:05"
+        },
+        {
+          "routeNumber": "731-1",
+          "times": [
+            "09:50",
+            "09:56",
+            "10:00",
+            "10:09",
+            "10:14",
+            "10:24"
+          ],
+          "firstTime": "09:50"
+        },
+        {
+          "routeNumber": "731-1",
+          "times": [
+            "11:25",
+            "11:31",
+            "11:35",
+            "11:44",
+            "11:49",
+            "11:59"
+          ],
+          "firstTime": "11:25"
+        },
+        {
+          "routeNumber": "731-1",
+          "times": [
+            "12:55",
+            "13:01",
+            "13:05",
+            "13:14",
+            "13:19",
+            "13:29"
+          ],
+          "firstTime": "12:55"
+        },
+        {
+          "routeNumber": "731-1",
+          "times": [
+            null,
+            null,
+            null,
+            null,
+            null,
+            null
+          ],
+          "window": {
+            "from": "14:00",
+            "to": "21:30",
+            "label": "실시간 호출형"
+          },
+          "note": "출",
+          "firstTime": null,
+          "conditions": [
+            "demand_responsive"
+          ]
+        }
+      ],
+      "status": "ok"
+    }
+  ]
+}

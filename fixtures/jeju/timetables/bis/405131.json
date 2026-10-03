@@ -1,0 +1,132 @@
+{
+  "schemaVersion": "tapso-jeju-timetable-v3",
+  "label": "OFFICIAL_DATED",
+  "source": {
+    "publisher": "제주특별자치도 (bus.jeju.go.kr)",
+    "dataset": "data.go.kr 3043887",
+    "page": "https://bus.jeju.go.kr/publicTrafficInformation/generalBusSchedule",
+    "file": "405131.xlsx",
+    "sha256": "a15b1cd260f90f7c42a26d9aa0017832c1a8da6d2dd8ee4ff4a32e5867fa9f0d",
+    "scheduleId": "405131",
+    "listedName": "800-1(새벽심야)"
+  },
+  "retrievedOn": "2026-10-03",
+  "parser": {
+    "name": "jeju-bis-xlsx",
+    "version": "3"
+  },
+  "routeNumbers": [
+    "800-1"
+  ],
+  "serviceLabels": [
+    "심야"
+  ],
+  "status": "parsed",
+  "services": [
+    {
+      "sheets": [
+        "800-1 공항-평화로-서귀포혁신도시(서귀포등기소"
+      ],
+      "routeNumbers": [
+        "800-1"
+      ],
+      "dayType": "unstated",
+      "serviceLabels": [
+        "심야"
+      ],
+      "direction": "제주국제공항→서귀포등기소",
+      "effectiveFrom": "2026-03-03",
+      "summary": "(관광지순환버스 064-746-7310)",
+      "timepoints": [
+        "국제공항",
+        "도청(신제주R)",
+        "회수사거리",
+        "서귀포시청 2청사 (서귀포우체국)",
+        "공무원연금공단",
+        "서귀포등기소"
+      ],
+      "trips": [
+        {
+          "routeNumber": "800-1",
+          "times": [
+            "22:30",
+            "22:34",
+            "23:09",
+            "23:18",
+            "23:20",
+            "23:30"
+          ],
+          "firstTime": "22:30"
+        },
+        {
+          "routeNumber": "800-1",
+          "times": [
+            "23:00",
+            "23:04",
+            "23:39",
+            "23:48",
+            "23:50",
+            "24:00"
+          ],
+          "firstTime": "23:00"
+        }
+      ],
+      "crossesMidnight": true,
+      "status": "ok"
+    },
+    {
+      "sheets": [
+        "800-1 서귀포혁신도시(서귀포등기소-평화로-공항"
+      ],
+      "routeNumbers": [
+        "800-1"
+      ],
+      "dayType": "unstated",
+      "serviceLabels": [
+        "심야"
+      ],
+      "direction": "서귀포등기소→제주국제공항",
+      "effectiveFrom": "2024-05-30",
+      "summary": "(관광지순환버스 064-746-7310)",
+      "timepoints": [
+        "서귀포등기소",
+        "공무원연금공단",
+        "서귀포시청 2청사 (서귀포우체국)",
+        "회수사거리",
+        "도청(신제주R)",
+        "국제공항"
+      ],
+      "trips": [
+        {
+          "routeNumber": "800-1",
+          "times": [
+            "05:30",
+            "05:40",
+            "05:42",
+            "05:51",
+            "06:31",
+            "06:36"
+          ],
+          "firstTime": "05:30"
+        },
+        {
+          "routeNumber": "800-1",
+          "times": [
+            "06:40",
+            "06:50",
+            "06:52",
+            "07:01",
+            "07:46",
+            "07:51"
+          ],
+          "note": "토,공휴일 운행 안함",
+          "firstTime": "06:40",
+          "conditions": [
+            "토,공휴일 운행 안함"
+          ]
+        }
+      ],
+      "status": "ok"
+    }
+  ]
+}

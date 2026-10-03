@@ -12,12 +12,32 @@ struct DestinationSearchView: View {
 
     var body: some View {
         ScrollView {
-            DestinationSearchContent(
-                query: query,
-                recentNames: model.library.recentDestinationNames,
-                onChoose: { model.chooseDestination(named: $0) }
-            )
+            if let index = model.catalogIndex {
+                CatalogDestinationSearchContent(
+                    query: query,
+                    index: index,
+                    recentNames: model.library.recentDestinationNames,
+                    generatedAt: index.catalog.generatedAt,
+                    refreshFailed: model.catalogUpdateFailed,
+                    onChoose: { model.chooseCatalogPlace($0) }
+                )
+            } else {
+                CatalogPendingContent(
+                    status: model.catalogStatus,
+                    onRetry: { Task { await model.refreshCatalog() } },
+                    onLive: { model.openLiveSearch() }
+                )
+                if TapsoBuild.showsDemo {
+                    // Development only: the synthetic demo while no catalog is on the phone.
+                    DestinationSearchContent(
+                        query: query,
+                        recentNames: model.library.recentDestinationNames,
+                        onChoose: { model.chooseDestination(named: $0) }
+                    )
+                }
+            }
         }
+        .task { if model.catalogIndex == nil { await model.refreshCatalog() } }
         .scrollDismissesKeyboard(.interactively)
         .background(TapsoColor.backgroundPrimary)
         .safeAreaInset(edge: .top) {
@@ -258,6 +278,7 @@ struct MapImportView: View {
                 place: model.sharedPlace,
                 unreadable: model.sharedPlaceUnreadable,
                 demoMatches: model.sharedPlace.map { model.stopNames(inSharedText: $0.searchText) } ?? [],
+                matchesAreSynthetic: model.sharedTextMatchesAreSynthetic,
                 screenshot: AnyView(ScreenshotImportSection(model: model)),
                 paste: AnyView(
                     PasteButton(payloadType: String.self) { strings in
@@ -268,7 +289,7 @@ struct MapImportView: View {
                     .tint(TapsoColor.journeyActive)
                 ),
                 onLive: { model.continueWithLiveRoute() },
-                onChooseDemo: { model.chooseDestination(named: $0) },
+                onChooseDemo: { model.chooseRecentDestination(named: $0) },
                 onSearch: { model.path = [.search] },
                 onClear: { model.dismissSharedPlace() }
             )
@@ -288,8 +309,10 @@ struct MapImportContent: View {
     /// What was pasted or shared, read on the device. `nil` before anything arrives.
     let place: SharedPlace?
     var unreadable = false
-    /// Synthetic demo destinations named in the shared place, for the sample ride.
+    /// Stop names found in the shared place: catalog places, or the demo's in a demo build.
     var demoMatches: [String] = []
+    /// Whether those names came from the synthetic demo, and are labelled so.
+    var matchesAreSynthetic = true
     /// The screenshot entry (`ScreenshotImportSection`): the primary way in.
     var screenshot: AnyView = AnyView(EmptyView())
     let paste: AnyView
@@ -377,7 +400,9 @@ struct MapImportContent: View {
                 VStack(alignment: .leading, spacing: 0) {
                     HStack(spacing: TapsoSpace.xs) {
                         SectionTitle("mapImport.found")
-                        DemoDataChip()
+                        if matchesAreSynthetic {
+                            DemoDataChip()
+                        }
                     }
                     ForEach(demoMatches, id: \.self) { name in
                         StopRow(name: name, systemImage: "flag.fill", tint: TapsoColor.tangerine) { onChooseDemo(name) }

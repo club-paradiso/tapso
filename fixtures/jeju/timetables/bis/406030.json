@@ -1,0 +1,191 @@
+{
+  "schemaVersion": "tapso-jeju-timetable-v3",
+  "label": "OFFICIAL_DATED",
+  "source": {
+    "publisher": "제주특별자치도 (bus.jeju.go.kr)",
+    "dataset": "data.go.kr 3043887",
+    "page": "https://bus.jeju.go.kr/publicTrafficInformation/generalBusSchedule",
+    "file": "406030.xlsx",
+    "sha256": "1a258be4dca6d51f4df3f196c60eb7791d035d87210bb30ef72afad94d5c4138",
+    "scheduleId": "406030",
+    "listedName": "732-1"
+  },
+  "retrievedOn": "2026-10-03",
+  "parser": {
+    "name": "jeju-bis-xlsx",
+    "version": "3"
+  },
+  "routeNumbers": [
+    "732-1"
+  ],
+  "serviceLabels": [
+    "옵서버스"
+  ],
+  "status": "parsed",
+  "services": [
+    {
+      "sheets": [
+        "732-1 표선읍-성읍"
+      ],
+      "routeNumbers": [
+        "732-1"
+      ],
+      "dayType": "unstated",
+      "serviceLabels": [
+        "옵서버스"
+      ],
+      "direction": "표선(제주민속촌) → 성읍문화마을",
+      "effectiveFrom": "2025-06-20",
+      "summary": "서귀포공영버스(064-760-3111~3)",
+      "timepoints": [
+        "표선제주민속촌",
+        "농기구수리센터",
+        "세화3리입구",
+        "토산1리",
+        "가시리도린동산",
+        "성읍문화마을"
+      ],
+      "trips": [
+        {
+          "routeNumber": "732-1",
+          "times": [
+            "07:58",
+            "08:05",
+            "08:12",
+            "08:17",
+            "08:22",
+            "08:33"
+          ],
+          "firstTime": "07:58"
+        },
+        {
+          "routeNumber": "732-1",
+          "times": [
+            "09:43",
+            "09:50",
+            "09:57",
+            "10:02",
+            "10:07",
+            "10:18"
+          ],
+          "firstTime": "09:43"
+        },
+        {
+          "routeNumber": "732-1",
+          "times": [
+            "12:03",
+            "12:10",
+            "12:17",
+            "12:22",
+            "12:27",
+            "12:38"
+          ],
+          "firstTime": "12:03"
+        },
+        {
+          "routeNumber": "732-1",
+          "times": [
+            null,
+            null,
+            null,
+            null,
+            null,
+            null
+          ],
+          "window": {
+            "from": "14:00",
+            "to": "21:30",
+            "label": "실시간 호출형"
+          },
+          "firstTime": null,
+          "conditions": [
+            "demand_responsive"
+          ]
+        }
+      ],
+      "status": "ok"
+    },
+    {
+      "sheets": [
+        "732-1 성읍-표선읍"
+      ],
+      "routeNumbers": [
+        "732-1"
+      ],
+      "dayType": "unstated",
+      "serviceLabels": [
+        "옵서버스"
+      ],
+      "direction": "성읍민속마을 → 표선(제주민속촌)",
+      "effectiveFrom": "2025-06-20",
+      "summary": "서귀포공영버스(064-760-3111~3)",
+      "timepoints": [
+        "성읍문화마을",
+        "가시리도린동산",
+        "토산1리",
+        "세화3리입구",
+        "농기구수리센터",
+        "표선제주민속촌"
+      ],
+      "trips": [
+        {
+          "routeNumber": "732-1",
+          "times": [
+            "07:00",
+            "07:11",
+            "07:16",
+            "07:21",
+            "07:27",
+            "07:32"
+          ],
+          "firstTime": "07:00"
+        },
+        {
+          "routeNumber": "732-1",
+          "times": [
+            "08:33",
+            "08:44",
+            "08:49",
+            "08:54",
+            "09:00",
+            "09:05"
+          ],
+          "firstTime": "08:33"
+        },
+        {
+          "routeNumber": "732-1",
+          "times": [
+            "10:18",
+            "10:29",
+            "10:34",
+            "10:39",
+            "10:45",
+            "10:50"
+          ],
+          "firstTime": "10:18"
+        },
+        {
+          "routeNumber": "732-1",
+          "times": [
+            null,
+            null,
+            null,
+            null,
+            null,
+            null
+          ],
+          "window": {
+            "from": "14:00",
+            "to": "21:30",
+            "label": "실시간 호출형"
+          },
+          "firstTime": null,
+          "conditions": [
+            "demand_responsive"
+          ]
+        }
+      ],
+      "status": "ok"
+    }
+  ]
+}

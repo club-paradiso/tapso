@@ -1,22 +1,32 @@
 {
-  "schemaVersion": "tapso-jeju-timetable-v2",
+  "schemaVersion": "tapso-jeju-timetable-v3",
   "label": "OFFICIAL_DATED",
   "source": {
     "publisher": "제주특별자치도 (bus.jeju.go.kr)",
     "dataset": "data.go.kr 3043887",
     "page": "https://bus.jeju.go.kr/publicTrafficInformation/generalBusSchedule",
     "file": "405052.xlsx",
-    "sha256": "472ce05cadbb14face2dfde097037986a1445488d5f0ba57695640ad70f01998"
+    "sha256": "472ce05cadbb14face2dfde097037986a1445488d5f0ba57695640ad70f01998",
+    "scheduleId": "405052",
+    "listedName": "446"
   },
   "retrievedOn": "2026-10-03",
   "parser": {
     "name": "jeju-bis-xlsx",
-    "version": "2"
+    "version": "3"
   },
-  "routeNumber": "446",
+  "routeNumbers": [
+    "446"
+  ],
+  "status": "parsed",
   "services": [
     {
-      "sheet": "446 제주대(월평)-시청-용담-신제주R-백록초-도평",
+      "sheets": [
+        "446 제주대(월평)-시청-용담-신제주R-백록초-도평"
+      ],
+      "routeNumbers": [
+        "446"
+      ],
       "dayType": "unstated",
       "direction": "제주대(월평)→중앙로→도평",
       "effectiveFrom": "2023-09-07",
@@ -34,6 +44,7 @@
       ],
       "trips": [
         {
+          "routeNumber": "446",
           "times": [
             null,
             "06:00",
@@ -44,9 +55,11 @@
             "06:56",
             "07:06",
             "07:26"
-          ]
+          ],
+          "firstTime": "06:00"
         },
         {
+          "routeNumber": "446",
           "times": [
             "08:15",
             null,
@@ -57,9 +70,11 @@
             "09:19",
             "09:31",
             "09:51"
-          ]
+          ],
+          "firstTime": "08:15"
         },
         {
+          "routeNumber": "446",
           "times": [
             "08:40",
             null,
@@ -70,9 +85,11 @@
             "09:41",
             "09:51",
             "10:11"
-          ]
+          ],
+          "firstTime": "08:40"
         },
         {
+          "routeNumber": "446",
           "times": [
             null,
             "10:40",
@@ -83,9 +100,11 @@
             "11:41",
             "11:51",
             "12:11"
-          ]
+          ],
+          "firstTime": "10:40"
         },
         {
+          "routeNumber": "446",
           "times": [
             null,
             "13:30",
@@ -96,9 +115,11 @@
             "14:31",
             "14:43",
             "15:03"
-          ]
+          ],
+          "firstTime": "13:30"
         },
         {
+          "routeNumber": "446",
           "times": [
             null,
             "14:55",
@@ -109,9 +130,11 @@
             "15:56",
             "16:06",
             "16:26"
-          ]
+          ],
+          "firstTime": "14:55"
         },
         {
+          "routeNumber": "446",
           "times": [
             null,
             "16:10",
@@ -122,9 +145,11 @@
             "17:11",
             "17:21",
             "17:41"
-          ]
+          ],
+          "firstTime": "16:10"
         },
         {
+          "routeNumber": "446",
           "times": [
             "18:05",
             null,
@@ -135,9 +160,11 @@
             "19:09",
             "19:21",
             "19:41"
-          ]
+          ],
+          "firstTime": "18:05"
         },
         {
+          "routeNumber": "446",
           "times": [
             null,
             "19:40",
@@ -148,9 +175,11 @@
             "20:41",
             "20:51",
             "21:11"
-          ]
+          ],
+          "firstTime": "19:40"
         },
         {
+          "routeNumber": "446",
           "times": [
             null,
             "21:20",
@@ -161,12 +190,19 @@
             null,
             null,
             null
-          ]
+          ],
+          "firstTime": "21:20"
         }
-      ]
+      ],
+      "status": "ok"
     },
     {
-      "sheet": "446 도평-백록초-신제주R-용담-시청-제주대(월평)",
+      "sheets": [
+        "446 도평-백록초-신제주R-용담-시청-제주대(월평)"
+      ],
+      "routeNumbers": [
+        "446"
+      ],
       "dayType": "unstated",
       "direction": "도평→중앙로→제주대(월평)",
       "effectiveFrom": "2023-09-07",
@@ -184,6 +220,7 @@
       ],
       "trips": [
         {
+          "routeNumber": "446",
           "times": [
             "06:10",
             "06:25",
@@ -194,9 +231,11 @@
             "07:16",
             null,
             "07:36"
-          ]
+          ],
+          "firstTime": "06:10"
         },
         {
+          "routeNumber": "446",
           "times": [
             "06:40",
             "06:55",
@@ -207,9 +246,11 @@
             "07:46",
             null,
             "08:06"
-          ]
+          ],
+          "firstTime": "06:40"
         },
         {
+          "routeNumber": "446",
           "times": [
             "07:50",
             "08:10",
@@ -220,9 +261,11 @@
             "09:01",
             "09:21",
             null
-          ]
+          ],
+          "firstTime": "07:50"
         },
         {
+          "routeNumber": "446",
           "times": [
             "10:30",
             "10:50",
@@ -233,9 +276,11 @@
             "11:43",
             "12:08",
             null
-          ]
+          ],
+          "firstTime": "10:30"
         },
         {
+          "routeNumber": "446",
           "times": [
             "11:35",
             "11:55",
@@ -246,9 +291,11 @@
             "12:48",
             "13:08",
             null
-          ]
+          ],
+          "firstTime": "11:35"
         },
         {
+          "routeNumber": "446",
           "times": [
             "13:50",
             "14:10",
@@ -259,9 +306,11 @@
             "15:04",
             "15:24",
             null
-          ]
+          ],
+          "firstTime": "13:50"
         },
         {
+          "routeNumber": "446",
           "times": [
             "15:45",
             "16:05",
@@ -272,9 +321,11 @@
             "16:58",
             null,
             "17:23"
-          ]
+          ],
+          "firstTime": "15:45"
         },
         {
+          "routeNumber": "446",
           "times": [
             "17:05",
             "17:25",
@@ -285,9 +336,11 @@
             "18:16",
             "18:36",
             null
-          ]
+          ],
+          "firstTime": "17:05"
         },
         {
+          "routeNumber": "446",
           "times": [
             "18:50",
             "19:10",
@@ -298,9 +351,11 @@
             "20:01",
             "20:21",
             null
-          ]
+          ],
+          "firstTime": "18:50"
         },
         {
+          "routeNumber": "446",
           "times": [
             "21:30",
             "21:45",
@@ -311,9 +366,11 @@
             "22:35",
             null,
             null
-          ]
+          ],
+          "firstTime": "21:30"
         }
-      ]
+      ],
+      "status": "ok"
     }
   ]
 }

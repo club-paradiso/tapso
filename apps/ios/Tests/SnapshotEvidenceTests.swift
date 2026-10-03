@@ -97,7 +97,18 @@ final class SnapshotEvidenceTests: XCTestCase {
                 onDone: {},
                 returnService: .loaded(returnRows),
                 returnPin: { $0.route.routeId == "SYN-202-W" ? .pinned : .available }
-            )))
+            ))),
+            ("38-catalog-search", AnyView(CatalogDestinationSearchContent(query: "", index: catalogIndex, recentNames: ["합성시청[동]"], generatedAt: "2026-10-03T00:00:00.000Z", onChoose: { _ in }))),
+            ("39-catalog-results", AnyView(CatalogDestinationSearchContent(query: "합성", index: catalogIndex, recentNames: [], generatedAt: "2026-10-03T00:00:00.000Z", onChoose: { _ in }))),
+            ("40-catalog-route-select", AnyView(CatalogRouteSelectContent(
+                placeName: "합성대학교",
+                groups: catalogIndex.routeOptions(to: catalogIndex.places.first { $0.name == "합성대학교" }!),
+                onChoose: { _ in }
+            ))),
+            ("41-stop-picker-fixed-destination", stopPickerWithFixedDestination()),
+            ("42-timetable-today", AnyView(TimetableCard(routeNumber: "202", load: .loaded(timetable(Self.timetableToday)), onLoad: {}, onShowAll: { _ in }).padding())),
+            ("43-timetable-unavailable", AnyView(TimetableCard(routeNumber: "999", load: .loaded(timetable(Self.timetableNone)), onLoad: {}, onShowAll: { _ in }).padding())),
+            ("44-timetable-sheet", AnyView(TimetableSheetContent(view: timetable(Self.timetableToday))))
         ]
         for (name, view) in screens {
             for scheme in [ColorScheme.light, .dark] {
@@ -174,6 +185,64 @@ final class SnapshotEvidenceTests: XCTestCase {
         // The plate of the bus the sample check proposes, so check, ride and surfaces agree.
         vehiclePlate: DemoCatalog.proposals(for: .smooth, route: DemoCatalog.outbound)[0].maskedPlate
     )
+
+    /// SYNTHETIC: a small catalog in the real shape (two directions of 202, two branches of 202-1).
+    private var catalogIndex: DestinationSearchIndex {
+        let names = ["합성터미널", "합성시청[동]", "합성시청[서]", "합성대학교", "합성공항", "합성마을"]
+        let stops = names.enumerated().map { index, name in
+            JejuTransitCatalog.Stop(id: "SYN-\(index)", name: name, lat: 33.45 + Double(index) / 500, lng: 126.5 + Double(index) / 500)
+        }
+        return DestinationSearchIndex(catalog: JejuTransitCatalog(
+            catalogVersion: "0123456789abcdef",
+            generatedAt: "2026-10-03T00:00:00.000Z",
+            stops: stops,
+            routes: [
+                .init(routeId: "SYN202A", routeNo: "202", start: "합성터미널", end: "합성대학교", stops: [0, 1, 3]),
+                .init(routeId: "SYN202B", routeNo: "202", start: "합성대학교", end: "합성터미널", stops: [3, 2, 0]),
+                .init(routeId: "SYN2021", routeNo: "202-1", start: "합성터미널", end: "합성대학교", stops: [0, 4, 3]),
+                .init(routeId: "SYN2021X", routeNo: "202-1", start: "합성터미널", end: "합성대학교", stops: [0, 5, 3]),
+                // One stop list under two route IDs, as the provider lists some routes.
+                .init(routeId: "SYN510A", routeNo: "510", start: "합성공항", end: "합성대학교", stops: [4, 3]),
+                .init(routeId: "SYN510B", routeNo: "510", start: "합성공항", end: "합성대학교", stops: [4, 3]),
+            ]
+        ))
+    }
+
+    private func stopPickerWithFixedDestination() -> AnyView {
+        let index = catalogIndex
+        let route = index.catalog.routes[0]
+        let transitRoute = index.transitRoute(route)
+        let stops = LiveRouteStops(apiRoute: index.catalog.apiRoute(route), route: transitRoute, coordinatesAreSurveyed: true, topology: "linear")
+        return AnyView(LiveStopPickerContent(
+            stops: stops,
+            onChoose: { _, _ in },
+            fixedDestination: transitRoute.routeStop(sequence: 3),
+            timetable: AnyView(TimetableCard(routeNumber: "202", load: .loaded(timetable(Self.timetableToday)), onLoad: {}, onShowAll: { _ in }))
+        ))
+    }
+
+    private func timetable(_ json: String) -> TransitAPITimetable {
+        try! JSONDecoder().decode(TransitAPITimetable.self, from: Data(json.utf8))
+    }
+
+    /// SYNTHETIC timetable views in the server's shape (`fixtures/journey/timetable-views-v1.json` has the real ones).
+    private static let timetableToday = #"""
+    {"routeNo":"202","status":"available","label":"OFFICIAL_DATED","asOf":"2026-10-03","freshness":"fresh","date":"2026-10-07",
+     "serviceDay":{"date":"2026-10-07","weekday":"wed","publicHoliday":null,"calendarCovered":true},
+     "today":[{"direction":"합성터미널→합성대학교","first":{"time":"05:50","from":"합성터미널"},"last":{"time":"22:40","from":"합성터미널"},"dayLabel":"평일","applicability":"applies"},
+              {"direction":"합성대학교→합성터미널","first":{"time":"06:05","from":"합성대학교"},"last":{"time":"24:10","from":"합성대학교"},"dayLabel":"평일","applicability":"applies"}],
+     "services":[{"direction":"합성터미널→합성대학교","dayType":"weekday","dayLabel":"평일","applicability":"applies","effectiveFrom":"2026-06-24","inEffect":true,"status":"ok",
+       "timepoints":["합성터미널","합성시청","합성대학교"],
+       "trips":[{"routeNumber":"202","times":["05:50","06:02","06:20"],"firstTime":"05:50"},{"routeNumber":"202","times":["06:30","06:42","07:00"],"firstTime":"06:30"},
+                {"routeNumber":"202","times":["22:40","22:52","23:10"],"firstTime":"22:40"},{"routeNumber":"202","times":["23:20","23:32","23:50"],"firstTime":"23:20","conditions":["11,12,1,2월 막차"]}],
+       "first":{"time":"05:50","from":"합성터미널"},"last":{"time":"22:40","from":"합성터미널"},
+       "laterConditional":[{"time":"23:20","from":"합성터미널","conditions":["11,12,1,2월 막차"]}],"hasConditionalTrips":true}]}
+    """#
+
+    private static let timetableNone = #"""
+    {"routeNo":"999","status":"not_published","label":"OFFICIAL_DATED","asOf":"2026-10-03","freshness":"fresh","date":"2026-10-07",
+     "serviceDay":{"date":"2026-10-07","weekday":"wed","publicHoliday":null,"calendarCovered":true},"today":[],"services":[]}
+    """#
 
     /// SYNTHETIC: a demo route's stops standing in for a verified screenshot result.
     private func screenshotProposal(boarding: Int?) -> RouteImportProposal {

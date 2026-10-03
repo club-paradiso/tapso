@@ -1,0 +1,140 @@
+{
+  "schemaVersion": "tapso-jeju-timetable-v3",
+  "label": "OFFICIAL_DATED",
+  "source": {
+    "publisher": "제주특별자치도 (bus.jeju.go.kr)",
+    "dataset": "data.go.kr 3043887",
+    "page": "https://bus.jeju.go.kr/publicTrafficInformation/generalBusSchedule",
+    "file": "405144.xlsx",
+    "sha256": "4c066c7974d69f50a18709065fb9fa597e4d3a624dfc251ec7aefae0531f50ea",
+    "scheduleId": "405144",
+    "listedName": "348-1, 349-1(수요맞춤형)"
+  },
+  "retrievedOn": "2026-10-03",
+  "parser": {
+    "name": "jeju-bis-xlsx",
+    "version": "3"
+  },
+  "routeNumbers": [
+    "348-1",
+    "349-1"
+  ],
+  "serviceLabels": [
+    "수요맞춤형"
+  ],
+  "status": "parsed",
+  "services": [
+    {
+      "sheets": [
+        "348-1 월평-시청-인제-삼양동-함덕",
+        "349-1 월평-시청-인제-삼양동-함덕"
+      ],
+      "routeNumbers": [
+        "348-1",
+        "349-1"
+      ],
+      "dayType": "unstated",
+      "serviceLabels": [
+        "수요맞춤형"
+      ],
+      "direction": "월평→시청→인제→함덕",
+      "effectiveFrom": "2024-08-01",
+      "summary": "관광지순환버스(064-746-7310)",
+      "timepoints": [
+        "월평",
+        "제주시청",
+        "인제",
+        "삼양동주민센터 (삼양초)",
+        "삼화지구 (오름중)",
+        "조천",
+        "함덕"
+      ],
+      "trips": [
+        {
+          "routeNumber": "349-1",
+          "times": [
+            "17:12",
+            "17:32",
+            "17:39",
+            null,
+            "17:56",
+            "18:09",
+            "18:22"
+          ],
+          "firstTime": "17:12"
+        },
+        {
+          "routeNumber": "348-1",
+          "times": [
+            "17:52",
+            "18:12",
+            "18:19",
+            "18:33",
+            null,
+            "18:49",
+            "19:02"
+          ],
+          "firstTime": "17:52"
+        }
+      ],
+      "note": "토,공휴일 방학기간 운행안함",
+      "status": "ok"
+    },
+    {
+      "sheets": [
+        "348-1 함덕-삼양동-인제-시청-월평",
+        "349-1 함덕-삼양동-인제-시청-월평"
+      ],
+      "routeNumbers": [
+        "348-1",
+        "349-1"
+      ],
+      "dayType": "unstated",
+      "serviceLabels": [
+        "수요맞춤형"
+      ],
+      "direction": "함덕→인제→시청→월평",
+      "effectiveFrom": "2024-08-01",
+      "summary": "삼영교통(064-713-7000)",
+      "timepoints": [
+        "함덕",
+        "조천",
+        "삼화지구 (오름중)",
+        "삼양동주민센터 (삼양초)",
+        "인제 (천수동)",
+        "제주시청",
+        "월평"
+      ],
+      "trips": [
+        {
+          "routeNumber": "349-1",
+          "times": [
+            "06:45",
+            "07:00",
+            "07:15",
+            null,
+            "07:33",
+            "07:40",
+            "07:59"
+          ],
+          "firstTime": "06:45"
+        },
+        {
+          "routeNumber": "348-1",
+          "times": [
+            "07:00",
+            "07:15",
+            null,
+            "07:29",
+            "07:45",
+            "07:52",
+            "08:11"
+          ],
+          "firstTime": "07:00"
+        }
+      ],
+      "note": "토,공휴일 방학기간 운행안함",
+      "status": "ok"
+    }
+  ]
+}

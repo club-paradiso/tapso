@@ -1,0 +1,144 @@
+{
+  "schemaVersion": "tapso-jeju-timetable-v3",
+  "label": "OFFICIAL_DATED",
+  "source": {
+    "publisher": "제주특별자치도 (bus.jeju.go.kr)",
+    "dataset": "data.go.kr 3043887",
+    "page": "https://bus.jeju.go.kr/publicTrafficInformation/generalBusSchedule",
+    "file": "406031.xlsx",
+    "sha256": "3ec3dddc02d19805f91af8fd6c1d421c008e30667d00f01996e3742cef6f41d0",
+    "scheduleId": "406031",
+    "listedName": "732-2"
+  },
+  "retrievedOn": "2026-10-03",
+  "parser": {
+    "name": "jeju-bis-xlsx",
+    "version": "3"
+  },
+  "routeNumbers": [
+    "732-2"
+  ],
+  "serviceLabels": [
+    "옵서버스"
+  ],
+  "status": "parsed",
+  "services": [
+    {
+      "sheets": [
+        "732-2 표선체육관-가시리-(안좌동)-표선면-표선체육관"
+      ],
+      "routeNumbers": [
+        "732-2"
+      ],
+      "dayType": "unstated",
+      "serviceLabels": [
+        "옵서버스"
+      ],
+      "direction": "표선생활체육관 → 표선생활체육관 (순환)",
+      "effectiveFrom": "2025-06-20",
+      "summary": "서귀포공영버스(064-760-3111~4)",
+      "timepoints": [
+        "표선 생활체육관",
+        "예담요양원",
+        "표선면사무소",
+        "향기마을",
+        "동상동삼거리",
+        "안좌동",
+        "두수동",
+        "도린동산",
+        "향기마을",
+        "한마음교차로",
+        "표선면사무소",
+        "예담요양원",
+        "표선 생활체육관"
+      ],
+      "trips": [
+        {
+          "routeNumber": "732-2",
+          "times": [
+            "07:15",
+            "07:23",
+            "07:30",
+            "07:39",
+            "07:46",
+            "07:53",
+            "07:58",
+            null,
+            null,
+            "08:04",
+            "08:15",
+            "08:25",
+            "08:32"
+          ],
+          "firstTime": "07:15"
+        },
+        {
+          "routeNumber": "732-2",
+          "times": [
+            "09:10",
+            "09:18",
+            "09:25",
+            "09:34",
+            "09:41",
+            null,
+            null,
+            "09:45",
+            "09:53",
+            null,
+            "10:02",
+            "10:12",
+            "10:19"
+          ],
+          "firstTime": "09:10"
+        },
+        {
+          "routeNumber": "732-2",
+          "times": [
+            "11:20",
+            "11:28",
+            "11:35",
+            "11:44",
+            "11:51",
+            "11:58",
+            "12:03",
+            null,
+            "12:11",
+            null,
+            "12:20",
+            "12:30",
+            "12:37"
+          ],
+          "firstTime": "11:20"
+        },
+        {
+          "routeNumber": "732-2",
+          "times": [
+            null,
+            null,
+            null,
+            null,
+            null,
+            null,
+            null,
+            null,
+            null,
+            null,
+            null,
+            null,
+            null
+          ],
+          "window": {
+            "from": "14:00",
+            "to": "21:30",
+            "label": "실시간 호출형"
+          },
+          "firstTime": null,
+          "conditions": [
+            "demand_responsive"
+          ]
+        }
+      ],
+      "status": "ok"
+    }
+  ]
+}

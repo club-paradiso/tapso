@@ -1,0 +1,119 @@
+{
+  "schemaVersion": "tapso-jeju-timetable-v3",
+  "label": "OFFICIAL_DATED",
+  "source": {
+    "publisher": "제주특별자치도 (bus.jeju.go.kr)",
+    "dataset": "data.go.kr 3043887",
+    "page": "https://bus.jeju.go.kr/publicTrafficInformation/generalBusSchedule",
+    "file": "405127.xlsx",
+    "sha256": "07748f80c16b684d3205c84aa19ae991a40777a594cbd07b3f60a23a8d14c536",
+    "scheduleId": "405127",
+    "listedName": "820-3"
+  },
+  "retrievedOn": "2026-10-03",
+  "parser": {
+    "name": "jeju-bis-xlsx",
+    "version": "3"
+  },
+  "routeNumbers": [
+    "820-3"
+  ],
+  "serviceLabels": [
+    "임시노선"
+  ],
+  "status": "parsed",
+  "services": [
+    {
+      "sheets": [
+        "820-3 (영어교육도시-평화로-신제주로터리)(임시)"
+      ],
+      "routeNumbers": [
+        "820-3"
+      ],
+      "dayType": "unstated",
+      "serviceLabels": [
+        "임시노선"
+      ],
+      "direction": "영어교육도시 → 제주도청(신제주로터리)",
+      "effectiveFrom": "2019-01-14",
+      "summary": "관광지순환버스(064-746-7310)",
+      "timepoints": [
+        "국제교회 (영어교육도시)",
+        "제주오설록 티뮤지엄",
+        "신화역사공원",
+        "동광환승 정류장",
+        "제주 관광대학",
+        "무수천",
+        "정존마을",
+        "노형오거리",
+        "한라병원",
+        "제주도청 신제주로터리"
+      ],
+      "trips": [
+        {
+          "routeNumber": "820-3",
+          "times": [
+            "18:22",
+            "18:29",
+            "18:34",
+            "18:37",
+            "18:54",
+            "18:57",
+            "19:03",
+            "19:08",
+            "19:10",
+            "19:17"
+          ],
+          "firstTime": "18:22"
+        }
+      ],
+      "status": "ok"
+    },
+    {
+      "sheets": [
+        "820-3 (신제주로터리-평화로-영어교육도시)(임시)"
+      ],
+      "routeNumbers": [
+        "820-3"
+      ],
+      "dayType": "unstated",
+      "serviceLabels": [
+        "임시노선"
+      ],
+      "direction": "제주도청(신제주로터리) → 영어교육도시",
+      "effectiveFrom": "2019-01-14",
+      "summary": "관광지순환버스(064-746-7310)",
+      "timepoints": [
+        "제주도청 신제주로터리",
+        "한라병원",
+        "노형오거리",
+        "정존마을",
+        "무수천",
+        "제주 관광대학",
+        "동광환승 정류장",
+        "신화역사공원",
+        "오설록",
+        "국제교회 (영어교육도시)"
+      ],
+      "trips": [
+        {
+          "routeNumber": "820-3",
+          "times": [
+            "07:57",
+            "08:03",
+            "08:06",
+            "08:10",
+            "08:16",
+            "08:18",
+            "08:32",
+            "08:36",
+            "08:39",
+            "08:47"
+          ],
+          "firstTime": "07:57"
+        }
+      ],
+      "status": "ok"
+    }
+  ]
+}

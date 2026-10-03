@@ -1,22 +1,32 @@
 {
-  "schemaVersion": "tapso-jeju-timetable-v2",
+  "schemaVersion": "tapso-jeju-timetable-v3",
   "label": "OFFICIAL_DATED",
   "source": {
     "publisher": "제주특별자치도 (bus.jeju.go.kr)",
     "dataset": "data.go.kr 3043887",
     "page": "https://bus.jeju.go.kr/publicTrafficInformation/generalBusSchedule",
     "file": "405177.xlsx",
-    "sha256": "51722065b2f1d038d98d19893add3866a36537f16e5f7e5d7d45bc35000e74c0"
+    "sha256": "51722065b2f1d038d98d19893add3866a36537f16e5f7e5d7d45bc35000e74c0",
+    "scheduleId": "405177",
+    "listedName": "442"
   },
   "retrievedOn": "2026-10-03",
   "parser": {
     "name": "jeju-bis-xlsx",
-    "version": "2"
+    "version": "3"
   },
-  "routeNumber": "442",
+  "routeNumbers": [
+    "442"
+  ],
+  "status": "parsed",
   "services": [
     {
-      "sheet": "442 순환(별빛누리-연북로-용담-시청-별빛누리)",
+      "sheets": [
+        "442 순환(별빛누리-연북로-용담-시청-별빛누리)"
+      ],
+      "routeNumbers": [
+        "442"
+      ],
       "dayType": "unstated",
       "direction": "제주대(별빛누리)→사대부고→제주대(별빛누리)(순환)",
       "effectiveFrom": "2024-04-25",
@@ -36,6 +46,7 @@
       ],
       "trips": [
         {
+          "routeNumber": "442",
           "times": [
             null,
             null,
@@ -48,9 +59,11 @@
             "06:46",
             "06:58",
             null
-          ]
+          ],
+          "firstTime": "05:55"
         },
         {
+          "routeNumber": "442",
           "times": [
             null,
             "06:50",
@@ -63,9 +76,11 @@
             "08:06",
             "08:20",
             null
-          ]
+          ],
+          "firstTime": "06:50"
         },
         {
+          "routeNumber": "442",
           "times": [
             null,
             "07:10",
@@ -78,9 +93,11 @@
             "08:26",
             "08:40",
             null
-          ]
+          ],
+          "firstTime": "07:10"
         },
         {
+          "routeNumber": "442",
           "times": [
             null,
             "08:30",
@@ -93,9 +110,11 @@
             "09:46",
             "10:00",
             null
-          ]
+          ],
+          "firstTime": "08:30"
         },
         {
+          "routeNumber": "442",
           "times": [
             null,
             "10:00",
@@ -108,9 +127,11 @@
             "11:16",
             "11:30",
             "11:35"
-          ]
+          ],
+          "firstTime": "10:00"
         },
         {
+          "routeNumber": "442",
           "times": [
             null,
             "11:10",
@@ -123,9 +144,11 @@
             "12:26",
             "12:40",
             "12:45"
-          ]
+          ],
+          "firstTime": "11:10"
         },
         {
+          "routeNumber": "442",
           "times": [
             "12:55",
             "13:00",
@@ -138,9 +161,11 @@
             "14:16",
             "14:30",
             "14:35"
-          ]
+          ],
+          "firstTime": "12:55"
         },
         {
+          "routeNumber": "442",
           "times": [
             "14:55",
             "15:00",
@@ -153,9 +178,11 @@
             "16:16",
             "16:30",
             "16:35"
-          ]
+          ],
+          "firstTime": "14:55"
         },
         {
+          "routeNumber": "442",
           "times": [
             "16:25",
             "16:30",
@@ -168,9 +195,11 @@
             "17:46",
             "18:00",
             "18:05"
-          ]
+          ],
+          "firstTime": "16:25"
         },
         {
+          "routeNumber": "442",
           "times": [
             "17:25",
             "17:30",
@@ -183,9 +212,11 @@
             "18:46",
             "19:00",
             null
-          ]
+          ],
+          "firstTime": "17:25"
         },
         {
+          "routeNumber": "442",
           "times": [
             "18:45",
             "18:50",
@@ -198,9 +229,11 @@
             "20:06",
             "20:20",
             null
-          ]
+          ],
+          "firstTime": "18:45"
         },
         {
+          "routeNumber": "442",
           "times": [
             null,
             "20:10",
@@ -213,9 +246,11 @@
             "21:19",
             "21:29",
             null
-          ]
+          ],
+          "firstTime": "20:10"
         },
         {
+          "routeNumber": "442",
           "times": [
             null,
             "21:40",
@@ -228,12 +263,14 @@
             null,
             null,
             null
-          ]
+          ],
+          "firstTime": "21:40"
         }
       ],
-      "summaryConflicts": [
+      "acceptedConflicts": [
         "summary 첫차 05:50 disagrees with the trips (05:55)"
-      ]
+      ],
+      "status": "ok"
     }
   ]
 }

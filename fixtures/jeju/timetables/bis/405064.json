@@ -1,22 +1,32 @@
 {
-  "schemaVersion": "tapso-jeju-timetable-v2",
+  "schemaVersion": "tapso-jeju-timetable-v3",
   "label": "OFFICIAL_DATED",
   "source": {
     "publisher": "제주특별자치도 (bus.jeju.go.kr)",
     "dataset": "data.go.kr 3043887",
     "page": "https://bus.jeju.go.kr/publicTrafficInformation/generalBusSchedule",
     "file": "405064.xlsx",
-    "sha256": "136bf57ffbacad7f2662a55fa7147f09d0ff61e76510a6f222d9fefd90e46ca2"
+    "sha256": "136bf57ffbacad7f2662a55fa7147f09d0ff61e76510a6f222d9fefd90e46ca2",
+    "scheduleId": "405064",
+    "listedName": "475"
   },
   "retrievedOn": "2026-10-03",
   "parser": {
     "name": "jeju-bis-xlsx",
-    "version": "2"
+    "version": "3"
   },
-  "routeNumber": "475",
+  "routeNumbers": [
+    "475"
+  ],
+  "status": "parsed",
   "services": [
     {
-      "sheet": "475 순환(제주대-관음사-탐라교육원-관음사-제주대)",
+      "sheets": [
+        "475 순환(제주대-관음사-탐라교육원-관음사-제주대)"
+      ],
+      "routeNumbers": [
+        "475"
+      ],
       "dayType": "unstated",
       "direction": "제주대 → 제주대 (순환)",
       "effectiveFrom": "2021-03-04",
@@ -36,6 +46,7 @@
       ],
       "trips": [
         {
+          "routeNumber": "475",
           "times": [
             null,
             "06:20",
@@ -48,9 +59,11 @@
             "06:46",
             "06:52",
             "07:03"
-          ]
+          ],
+          "firstTime": "06:20"
         },
         {
+          "routeNumber": "475",
           "times": [
             "07:15",
             "07:26",
@@ -63,9 +76,11 @@
             "07:52",
             "07:58",
             null
-          ]
+          ],
+          "firstTime": "07:15"
         },
         {
+          "routeNumber": "475",
           "times": [
             null,
             "08:20",
@@ -78,9 +93,11 @@
             "08:46",
             "08:52",
             null
-          ]
+          ],
+          "firstTime": "08:20"
         },
         {
+          "routeNumber": "475",
           "times": [
             null,
             "09:15",
@@ -93,9 +110,11 @@
             "09:41",
             "09:47",
             null
-          ]
+          ],
+          "firstTime": "09:15"
         },
         {
+          "routeNumber": "475",
           "times": [
             null,
             "10:15",
@@ -108,9 +127,11 @@
             "10:41",
             "10:47",
             null
-          ]
+          ],
+          "firstTime": "10:15"
         },
         {
+          "routeNumber": "475",
           "times": [
             null,
             "11:45",
@@ -123,9 +144,11 @@
             "12:11",
             "12:17",
             null
-          ]
+          ],
+          "firstTime": "11:45"
         },
         {
+          "routeNumber": "475",
           "times": [
             null,
             "13:15",
@@ -138,9 +161,11 @@
             "13:41",
             "13:47",
             null
-          ]
+          ],
+          "firstTime": "13:15"
         },
         {
+          "routeNumber": "475",
           "times": [
             null,
             "14:35",
@@ -153,9 +178,11 @@
             "15:01",
             "15:07",
             null
-          ]
+          ],
+          "firstTime": "14:35"
         },
         {
+          "routeNumber": "475",
           "times": [
             null,
             "15:30",
@@ -168,9 +195,11 @@
             "15:56",
             "16:02",
             null
-          ]
+          ],
+          "firstTime": "15:30"
         },
         {
+          "routeNumber": "475",
           "times": [
             null,
             "16:25",
@@ -183,9 +212,11 @@
             "16:51",
             "16:57",
             null
-          ]
+          ],
+          "firstTime": "16:25"
         },
         {
+          "routeNumber": "475",
           "times": [
             null,
             "17:15",
@@ -198,9 +229,11 @@
             "17:41",
             "17:47",
             null
-          ]
+          ],
+          "firstTime": "17:15"
         },
         {
+          "routeNumber": "475",
           "times": [
             null,
             "18:10",
@@ -213,9 +246,11 @@
             "18:36",
             "18:42",
             null
-          ]
+          ],
+          "firstTime": "18:10"
         },
         {
+          "routeNumber": "475",
           "times": [
             null,
             "19:00",
@@ -228,9 +263,11 @@
             "19:26",
             "19:32",
             null
-          ]
+          ],
+          "firstTime": "19:00"
         },
         {
+          "routeNumber": "475",
           "times": [
             null,
             "19:45",
@@ -243,9 +280,11 @@
             "20:11",
             "20:17",
             null
-          ]
+          ],
+          "firstTime": "19:45"
         }
-      ]
+      ],
+      "status": "ok"
     }
   ]
 }

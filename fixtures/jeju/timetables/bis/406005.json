@@ -1,24 +1,34 @@
 {
-  "schemaVersion": "tapso-jeju-timetable-v2",
+  "schemaVersion": "tapso-jeju-timetable-v3",
   "label": "OFFICIAL_DATED",
   "source": {
     "publisher": "제주특별자치도 (bus.jeju.go.kr)",
     "dataset": "data.go.kr 3043887",
     "page": "https://bus.jeju.go.kr/publicTrafficInformation/generalBusSchedule",
     "file": "406005.xlsx",
-    "sha256": "9cb900e760a1a61702026eee7df75c54ad30aab7cfb3047220b48677d57594f6"
+    "sha256": "9cb900e760a1a61702026eee7df75c54ad30aab7cfb3047220b48677d57594f6",
+    "scheduleId": "406005",
+    "listedName": "531"
   },
   "retrievedOn": "2026-10-03",
   "parser": {
     "name": "jeju-bis-xlsx",
-    "version": "2"
+    "version": "3"
   },
-  "routeNumber": "531",
+  "routeNumbers": [
+    "531"
+  ],
+  "status": "parsed",
   "services": [
     {
-      "sheet": "531 대평-중문-대천-중앙R-오일장-하례리",
+      "sheets": [
+        "531 대평-중문-대천-중앙R-오일장-하례리"
+      ],
+      "routeNumbers": [
+        "531"
+      ],
       "dayType": "unstated",
-      "direction": "대평리→버스터미널 → \n중앙R →하례리입구",
+      "direction": "대평리→버스터미널 → 중앙R →하례리입구",
       "effectiveFrom": "2024-08-15",
       "summary": "첫차 6:10, 막차 22:06, 배차간격 30~80분, 서귀포운수(064-732-4934)",
       "timepoints": [
@@ -33,6 +43,7 @@
       ],
       "trips": [
         {
+          "routeNumber": "531",
           "times": [
             "06:10",
             null,
@@ -43,9 +54,11 @@
             "07:24",
             "07:39"
           ],
-          "note": "남주고경유"
+          "note": "남주고경유",
+          "firstTime": "06:10"
         },
         {
+          "routeNumber": "531",
           "times": [
             "06:45",
             null,
@@ -56,9 +69,11 @@
             "07:59",
             "08:13"
           ],
-          "note": "남주고경유"
+          "note": "남주고경유",
+          "firstTime": "06:45"
         },
         {
+          "routeNumber": "531",
           "times": [
             "07:10",
             null,
@@ -68,9 +83,11 @@
             null,
             "08:21",
             "08:35"
-          ]
+          ],
+          "firstTime": "07:10"
         },
         {
+          "routeNumber": "531",
           "times": [
             "07:45",
             "08:02",
@@ -81,9 +98,11 @@
             "09:01",
             "09:15"
           ],
-          "note": "색달경유"
+          "note": "색달경유",
+          "firstTime": "07:45"
         },
         {
+          "routeNumber": "531",
           "times": [
             "08:30",
             null,
@@ -93,9 +112,11 @@
             null,
             "09:41",
             "09:55"
-          ]
+          ],
+          "firstTime": "08:30"
         },
         {
+          "routeNumber": "531",
           "times": [
             "09:50",
             null,
@@ -105,9 +126,11 @@
             null,
             "11:01",
             "11:15"
-          ]
+          ],
+          "firstTime": "09:50"
         },
         {
+          "routeNumber": "531",
           "times": [
             "10:25",
             null,
@@ -117,9 +140,11 @@
             null,
             "11:36",
             "11:50"
-          ]
+          ],
+          "firstTime": "10:25"
         },
         {
+          "routeNumber": "531",
           "times": [
             "11:40",
             null,
@@ -129,9 +154,11 @@
             null,
             "12:51",
             "13:05"
-          ]
+          ],
+          "firstTime": "11:40"
         },
         {
+          "routeNumber": "531",
           "times": [
             "12:35",
             null,
@@ -141,9 +168,11 @@
             null,
             "13:46",
             "14:01"
-          ]
+          ],
+          "firstTime": "12:35"
         },
         {
+          "routeNumber": "531",
           "times": [
             "13:00",
             null,
@@ -153,9 +182,11 @@
             null,
             "14:11",
             "14:25"
-          ]
+          ],
+          "firstTime": "13:00"
         },
         {
+          "routeNumber": "531",
           "times": [
             "14:25",
             null,
@@ -165,9 +196,11 @@
             null,
             "15:36",
             "15:50"
-          ]
+          ],
+          "firstTime": "14:25"
         },
         {
+          "routeNumber": "531",
           "times": [
             "15:25",
             null,
@@ -177,9 +210,11 @@
             null,
             "16:36",
             "16:50"
-          ]
+          ],
+          "firstTime": "15:25"
         },
         {
+          "routeNumber": "531",
           "times": [
             "16:25",
             null,
@@ -189,9 +224,11 @@
             null,
             "17:36",
             "17:50"
-          ]
+          ],
+          "firstTime": "16:25"
         },
         {
+          "routeNumber": "531",
           "times": [
             "17:25",
             null,
@@ -201,9 +238,11 @@
             null,
             "18:36",
             "18:50"
-          ]
+          ],
+          "firstTime": "17:25"
         },
         {
+          "routeNumber": "531",
           "times": [
             "18:35",
             null,
@@ -213,9 +252,11 @@
             null,
             "19:46",
             "20:00"
-          ]
+          ],
+          "firstTime": "18:35"
         },
         {
+          "routeNumber": "531",
           "times": [
             "19:05",
             null,
@@ -225,9 +266,11 @@
             null,
             "20:16",
             "20:31"
-          ]
+          ],
+          "firstTime": "19:05"
         },
         {
+          "routeNumber": "531",
           "times": [
             "19:55",
             null,
@@ -237,9 +280,11 @@
             null,
             "21:06",
             "21:21"
-          ]
+          ],
+          "firstTime": "19:55"
         },
         {
+          "routeNumber": "531",
           "times": [
             "21:15",
             null,
@@ -249,9 +294,11 @@
             null,
             "22:26",
             "22:41"
-          ]
+          ],
+          "firstTime": "21:15"
         },
         {
+          "routeNumber": "531",
           "times": [
             "22:06",
             null,
@@ -261,14 +308,21 @@
             null,
             null,
             null
-          ]
+          ],
+          "firstTime": "22:06"
         }
-      ]
+      ],
+      "status": "ok"
     },
     {
-      "sheet": "531 하례리-오일장-중앙R-대천-중문-대평",
+      "sheets": [
+        "531 하례리-오일장-중앙R-대천-중문-대평"
+      ],
+      "routeNumbers": [
+        "531"
+      ],
       "dayType": "unstated",
-      "direction": "하례리입구→중앙R→\n 버스터미널→대평리",
+      "direction": "하례리입구→중앙R→ 버스터미널→대평리",
       "effectiveFrom": "2024-08-15",
       "summary": "첫차(측골 출발) 6:20, 막차 21:05, 배차간격 30~80분, 서귀포운수(064-732-4934)",
       "timepoints": [
@@ -283,6 +337,7 @@
       ],
       "trips": [
         {
+          "routeNumber": "531",
           "times": [
             null,
             null,
@@ -297,9 +352,11 @@
             "place": "측골",
             "time": "06:20",
             "column": "오일장"
-          }
+          },
+          "firstTime": "06:20"
         },
         {
+          "routeNumber": "531",
           "times": [
             null,
             null,
@@ -314,9 +371,11 @@
             "place": "측골",
             "time": "07:06",
             "column": "오일장"
-          }
+          },
+          "firstTime": "07:06"
         },
         {
+          "routeNumber": "531",
           "times": [
             "08:15",
             "08:26",
@@ -327,9 +386,14 @@
             null,
             "09:40"
           ],
-          "note": "매월4,9일 서귀포향토오일시장안 경유"
+          "note": "매월4,9일 서귀포향토오일시장안 경유",
+          "firstTime": "08:15",
+          "conditions": [
+            "매월4,9일 서귀포향토오일시장안 경유"
+          ]
         },
         {
+          "routeNumber": "531",
           "times": [
             "08:50",
             "09:01",
@@ -340,9 +404,14 @@
             null,
             "10:15"
           ],
-          "note": "매월4,9일 서귀포향토오일시장안 경유"
+          "note": "매월4,9일 서귀포향토오일시장안 경유",
+          "firstTime": "08:50",
+          "conditions": [
+            "매월4,9일 서귀포향토오일시장안 경유"
+          ]
         },
         {
+          "routeNumber": "531",
           "times": [
             "10:05",
             "10:16",
@@ -353,9 +422,14 @@
             null,
             "11:30"
           ],
-          "note": "매월4,9일 서귀포향토오일시장안 경유"
+          "note": "매월4,9일 서귀포향토오일시장안 경유",
+          "firstTime": "10:05",
+          "conditions": [
+            "매월4,9일 서귀포향토오일시장안 경유"
+          ]
         },
         {
+          "routeNumber": "531",
           "times": [
             "11:00",
             "11:11",
@@ -366,9 +440,14 @@
             null,
             "12:25"
           ],
-          "note": "매월4,9일 서귀포향토오일시장안 경유"
+          "note": "매월4,9일 서귀포향토오일시장안 경유",
+          "firstTime": "11:00",
+          "conditions": [
+            "매월4,9일 서귀포향토오일시장안 경유"
+          ]
         },
         {
+          "routeNumber": "531",
           "times": [
             "11:25",
             "11:36",
@@ -379,9 +458,14 @@
             null,
             "12:50"
           ],
-          "note": "매월4,9일 서귀포향토오일시장안 경유"
+          "note": "매월4,9일 서귀포향토오일시장안 경유",
+          "firstTime": "11:25",
+          "conditions": [
+            "매월4,9일 서귀포향토오일시장안 경유"
+          ]
         },
         {
+          "routeNumber": "531",
           "times": [
             "12:50",
             "13:01",
@@ -392,9 +476,14 @@
             null,
             "14:15"
           ],
-          "note": "매월4,9일 서귀포향토오일시장안 경유"
+          "note": "매월4,9일 서귀포향토오일시장안 경유",
+          "firstTime": "12:50",
+          "conditions": [
+            "매월4,9일 서귀포향토오일시장안 경유"
+          ]
         },
         {
+          "routeNumber": "531",
           "times": [
             "13:50",
             "14:01",
@@ -405,9 +494,14 @@
             null,
             "15:15"
           ],
-          "note": "매월4,9일 서귀포향토오일시장안 경유"
+          "note": "매월4,9일 서귀포향토오일시장안 경유",
+          "firstTime": "13:50",
+          "conditions": [
+            "매월4,9일 서귀포향토오일시장안 경유"
+          ]
         },
         {
+          "routeNumber": "531",
           "times": [
             "14:50",
             "15:01",
@@ -418,9 +512,14 @@
             "16:03",
             "16:15"
           ],
-          "note": "매월4,9일 서귀포향토오일시장안 경유색달경유"
+          "note": "매월4,9일 서귀포향토오일시장안 경유색달경유",
+          "firstTime": "14:50",
+          "conditions": [
+            "매월4,9일 서귀포향토오일시장안 경유색달경유"
+          ]
         },
         {
+          "routeNumber": "531",
           "times": [
             "15:50",
             "16:01",
@@ -431,9 +530,14 @@
             null,
             "17:15"
           ],
-          "note": "매월4,9일 서귀포향토오일시장안 경유"
+          "note": "매월4,9일 서귀포향토오일시장안 경유",
+          "firstTime": "15:50",
+          "conditions": [
+            "매월4,9일 서귀포향토오일시장안 경유"
+          ]
         },
         {
+          "routeNumber": "531",
           "times": [
             "17:00",
             "17:11",
@@ -444,9 +548,14 @@
             null,
             "18:25"
           ],
-          "note": "매월4,9일 서귀포향토오일시장안 경유"
+          "note": "매월4,9일 서귀포향토오일시장안 경유",
+          "firstTime": "17:00",
+          "conditions": [
+            "매월4,9일 서귀포향토오일시장안 경유"
+          ]
         },
         {
+          "routeNumber": "531",
           "times": [
             "17:30",
             "17:41",
@@ -457,9 +566,14 @@
             null,
             "18:55"
           ],
-          "note": "매월4,9일 서귀포향토오일시장안 경유"
+          "note": "매월4,9일 서귀포향토오일시장안 경유",
+          "firstTime": "17:30",
+          "conditions": [
+            "매월4,9일 서귀포향토오일시장안 경유"
+          ]
         },
         {
+          "routeNumber": "531",
           "times": [
             "18:20",
             "18:31",
@@ -469,9 +583,11 @@
             "19:25",
             null,
             "19:45"
-          ]
+          ],
+          "firstTime": "18:20"
         },
         {
+          "routeNumber": "531",
           "times": [
             "19:40",
             "19:51",
@@ -481,9 +597,11 @@
             "20:45",
             null,
             "21:05"
-          ]
+          ],
+          "firstTime": "19:40"
         },
         {
+          "routeNumber": "531",
           "times": [
             "20:20",
             "20:31",
@@ -494,9 +612,14 @@
             null,
             "21:56"
           ],
-          "note": "남주고 경유(평일)"
+          "note": "남주고 경유(평일)",
+          "firstTime": "20:20",
+          "conditions": [
+            "남주고 경유(평일)"
+          ]
         },
         {
+          "routeNumber": "531",
           "times": [
             "21:05",
             "21:16",
@@ -506,9 +629,11 @@
             "22:10",
             null,
             "22:30"
-          ]
+          ],
+          "firstTime": "21:05"
         }
-      ]
+      ],
+      "status": "ok"
     }
   ]
 }

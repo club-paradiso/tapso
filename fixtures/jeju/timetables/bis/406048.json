@@ -1,0 +1,59 @@
+{
+  "schemaVersion": "tapso-jeju-timetable-v3",
+  "label": "OFFICIAL_DATED",
+  "source": {
+    "publisher": "제주특별자치도 (bus.jeju.go.kr)",
+    "dataset": "data.go.kr 3043887",
+    "page": "https://bus.jeju.go.kr/publicTrafficInformation/generalBusSchedule",
+    "file": "406048.xlsx",
+    "sha256": "966cb4910d740398a255e4f60587e1e0730f51136f66aa3583c6bd188f54c30b",
+    "scheduleId": "406048",
+    "listedName": "5002"
+  },
+  "retrievedOn": "2026-10-03",
+  "parser": {
+    "name": "jeju-bis-xlsx",
+    "version": "3"
+  },
+  "routeNumbers": [
+    "5002"
+  ],
+  "status": "parsed",
+  "services": [
+    {
+      "sheets": [
+        "5002 (서귀여고-중앙R-신효-위미-남원-표선)심야"
+      ],
+      "routeNumbers": [
+        "5002"
+      ],
+      "dayType": "unstated",
+      "direction": "서귀여고-표선 (심야)",
+      "summary": "첫차/막차 23:00, 배차간격 1일 1회, 동서교통(064-732-4934)",
+      "timepoints": [
+        "서귀여고",
+        "중앙로터리",
+        "신효",
+        "위미3리",
+        "남원읍사무소",
+        "표선환승정류장"
+      ],
+      "trips": [
+        {
+          "routeNumber": "5002",
+          "times": [
+            "23:00",
+            "23:10",
+            "23:23",
+            "23:36",
+            "23:41",
+            "24:13"
+          ],
+          "firstTime": "23:00"
+        }
+      ],
+      "crossesMidnight": true,
+      "status": "ok"
+    }
+  ]
+}

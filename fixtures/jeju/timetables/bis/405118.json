@@ -1,0 +1,160 @@
+{
+  "schemaVersion": "tapso-jeju-timetable-v3",
+  "label": "OFFICIAL_DATED",
+  "source": {
+    "publisher": "제주특별자치도 (bus.jeju.go.kr)",
+    "dataset": "data.go.kr 3043887",
+    "page": "https://bus.jeju.go.kr/publicTrafficInformation/generalBusSchedule",
+    "file": "405118.xlsx",
+    "sha256": "1367a4a953fbac7175bc0a2e89f3e699403e3ac2fda1d4048e07c47a9773febe",
+    "scheduleId": "405118",
+    "listedName": "491"
+  },
+  "retrievedOn": "2026-10-03",
+  "parser": {
+    "name": "jeju-bis-xlsx",
+    "version": "3"
+  },
+  "routeNumbers": [
+    "491"
+  ],
+  "serviceLabels": [
+    "임시"
+  ],
+  "status": "parsed",
+  "services": [
+    {
+      "sheets": [
+        "491 순환(신성여중고-아라동-신성여중고)_3안"
+      ],
+      "routeNumbers": [
+        "491"
+      ],
+      "dayType": "unstated",
+      "serviceLabels": [
+        "임시"
+      ],
+      "direction": "신성여중고→제주여고→신성여중고",
+      "summary": "관광지순환버스(064-746-7310)",
+      "timepoints": [
+        "신성여자중고등학교",
+        "아라초등학교",
+        "제주여자고등학교",
+        "탐라중",
+        "이도수선화",
+        "신성여자중고등학교"
+      ],
+      "trips": [
+        {
+          "routeNumber": "491",
+          "times": [
+            "16:10",
+            "16:15",
+            "16:20",
+            "16:25",
+            "16:28",
+            "16:35"
+          ],
+          "firstTime": "16:10"
+        },
+        {
+          "routeNumber": "491",
+          "times": [
+            "16:25",
+            "16:30",
+            "16:35",
+            "16:40",
+            "16:43",
+            "16:50"
+          ],
+          "firstTime": "16:25"
+        },
+        {
+          "routeNumber": "491",
+          "times": [
+            "16:35",
+            "16:40",
+            "16:45",
+            "16:50",
+            "16:53",
+            "17:00"
+          ],
+          "firstTime": "16:35"
+        },
+        {
+          "routeNumber": "491",
+          "times": [
+            "16:50",
+            "16:55",
+            "17:00",
+            "17:05",
+            "17:08",
+            "17:15"
+          ],
+          "firstTime": "16:50"
+        },
+        {
+          "routeNumber": "491",
+          "times": [
+            "17:10",
+            "17:15",
+            "17:20",
+            "17:25",
+            "17:28",
+            "17:35"
+          ],
+          "firstTime": "17:10"
+        },
+        {
+          "routeNumber": "491",
+          "times": [
+            "17:35",
+            "17:40",
+            "17:45",
+            "17:50",
+            "17:53",
+            "18:00"
+          ],
+          "firstTime": "17:35"
+        },
+        {
+          "routeNumber": "491",
+          "times": [
+            "18:00",
+            "18:05",
+            "18:10",
+            "18:15",
+            "18:18",
+            "18:25"
+          ],
+          "firstTime": "18:00"
+        },
+        {
+          "routeNumber": "491",
+          "times": [
+            "18:55",
+            "19:00",
+            "19:05",
+            "19:10",
+            "19:13",
+            "19:20"
+          ],
+          "firstTime": "18:55"
+        },
+        {
+          "routeNumber": "491",
+          "times": [
+            "19:20",
+            "19:25",
+            "19:30",
+            "19:35",
+            "19:38",
+            "19:45"
+          ],
+          "firstTime": "19:20"
+        }
+      ],
+      "status": "ok"
+    }
+  ]
+}

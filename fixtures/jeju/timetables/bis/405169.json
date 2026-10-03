@@ -1,0 +1,69 @@
+{
+  "schemaVersion": "tapso-jeju-timetable-v3",
+  "label": "OFFICIAL_DATED",
+  "source": {
+    "publisher": "제주특별자치도 (bus.jeju.go.kr)",
+    "dataset": "data.go.kr 3043887",
+    "page": "https://bus.jeju.go.kr/publicTrafficInformation/generalBusSchedule",
+    "file": "405169.xlsx",
+    "sha256": "a4447dac540bec4a02f28435551388b99412f56078e56dfa99de38479621fe4c",
+    "scheduleId": "405169",
+    "listedName": "320-1"
+  },
+  "retrievedOn": "2026-10-03",
+  "parser": {
+    "name": "jeju-bis-xlsx",
+    "version": "3"
+  },
+  "routeNumbers": [
+    "320-1"
+  ],
+  "serviceLabels": [
+    "임시"
+  ],
+  "status": "parsed",
+  "services": [
+    {
+      "sheets": [
+        "320-1 (임시운행)하귀-제주여중고-영주고"
+      ],
+      "routeNumbers": [
+        "320-1"
+      ],
+      "dayType": "unstated",
+      "serviceLabels": [
+        "임시"
+      ],
+      "direction": "하귀→외도→제주제일고 →제주여중고→신성여중고→영주고",
+      "effectiveFrom": "2021-03-02",
+      "summary": "관광지순환버스㈜ 064-746-7310",
+      "timepoints": [
+        "하귀하나로마트",
+        "외도부영아파트",
+        "한라대학교",
+        "제주제일고",
+        "한라도서관 입구",
+        "제주여중고 (정문)",
+        "신성여중고",
+        "영주고"
+      ],
+      "trips": [
+        {
+          "routeNumber": "320-1",
+          "times": [
+            "07:05",
+            "07:14",
+            "07:31",
+            "07:35",
+            "07:48",
+            "07:55",
+            "08:00",
+            "08:08"
+          ],
+          "firstTime": "07:05"
+        }
+      ],
+      "status": "ok"
+    }
+  ]
+}

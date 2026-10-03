@@ -1,22 +1,32 @@
 {
-  "schemaVersion": "tapso-jeju-timetable-v2",
+  "schemaVersion": "tapso-jeju-timetable-v3",
   "label": "OFFICIAL_DATED",
   "source": {
     "publisher": "제주특별자치도 (bus.jeju.go.kr)",
     "dataset": "data.go.kr 3043887",
     "page": "https://bus.jeju.go.kr/publicTrafficInformation/generalBusSchedule",
     "file": "406037.xlsx",
-    "sha256": "96583f8dcfe9bf5fd366e285a2b6effa0656aac23f68cd1575d63e7012decfe3"
+    "sha256": "96583f8dcfe9bf5fd366e285a2b6effa0656aac23f68cd1575d63e7012decfe3",
+    "scheduleId": "406037",
+    "listedName": "743"
   },
   "retrievedOn": "2026-10-03",
   "parser": {
     "name": "jeju-bis-xlsx",
-    "version": "2"
+    "version": "3"
   },
-  "routeNumber": "743",
+  "routeNumbers": [
+    "743"
+  ],
+  "status": "parsed",
   "services": [
     {
-      "sheet": "743 (남원-의귀초)(순환)",
+      "sheets": [
+        "743 (남원-의귀초)(순환)"
+      ],
+      "routeNumbers": [
+        "743"
+      ],
       "dayType": "unstated",
       "direction": "남원생활체육관 → 의귀초 (순환)",
       "effectiveFrom": "2022-10-04",
@@ -42,6 +52,7 @@
       ],
       "trips": [
         {
+          "routeNumber": "743",
           "times": [
             "07:10",
             "07:14",
@@ -60,9 +71,11 @@
             "08:02",
             "08:06",
             "08:10"
-          ]
+          ],
+          "firstTime": "07:10"
         },
         {
+          "routeNumber": "743",
           "times": [
             "08:40",
             "08:44",
@@ -81,9 +94,11 @@
             "09:32",
             "09:36",
             "09:40"
-          ]
+          ],
+          "firstTime": "08:40"
         },
         {
+          "routeNumber": "743",
           "times": [
             "10:10",
             "10:14",
@@ -102,9 +117,11 @@
             "11:02",
             "11:06",
             "11:10"
-          ]
+          ],
+          "firstTime": "10:10"
         },
         {
+          "routeNumber": "743",
           "times": [
             "11:40",
             "11:44",
@@ -123,9 +140,11 @@
             "12:32",
             "12:36",
             "12:40"
-          ]
+          ],
+          "firstTime": "11:40"
         },
         {
+          "routeNumber": "743",
           "times": [
             "14:30",
             "14:34",
@@ -144,9 +163,11 @@
             "15:22",
             "15:26",
             "15:30"
-          ]
+          ],
+          "firstTime": "14:30"
         },
         {
+          "routeNumber": "743",
           "times": [
             "16:00",
             "16:04",
@@ -165,9 +186,11 @@
             "16:52",
             "16:56",
             "17:00"
-          ]
+          ],
+          "firstTime": "16:00"
         },
         {
+          "routeNumber": "743",
           "times": [
             "17:30",
             "17:34",
@@ -186,9 +209,11 @@
             "18:22",
             "18:26",
             "18:30"
-          ]
+          ],
+          "firstTime": "17:30"
         },
         {
+          "routeNumber": "743",
           "times": [
             "19:00",
             "19:04",
@@ -207,9 +232,11 @@
             "19:52",
             "19:56",
             "20:00"
-          ]
+          ],
+          "firstTime": "19:00"
         }
-      ]
+      ],
+      "status": "ok"
     }
   ]
 }

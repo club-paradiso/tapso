@@ -1,24 +1,34 @@
 {
-  "schemaVersion": "tapso-jeju-timetable-v2",
+  "schemaVersion": "tapso-jeju-timetable-v3",
   "label": "OFFICIAL_DATED",
   "source": {
     "publisher": "제주특별자치도 (bus.jeju.go.kr)",
     "dataset": "data.go.kr 3043887",
     "page": "https://bus.jeju.go.kr/publicTrafficInformation/generalBusSchedule",
     "file": "405182.xlsx",
-    "sha256": "09359987be2ca80a15591d9add2ba0d66f1df3f46e18506a7f69ae2286cd2660"
+    "sha256": "09359987be2ca80a15591d9add2ba0d66f1df3f46e18506a7f69ae2286cd2660",
+    "scheduleId": "405182",
+    "listedName": "424"
   },
   "retrievedOn": "2026-10-03",
   "parser": {
     "name": "jeju-bis-xlsx",
-    "version": "2"
+    "version": "3"
   },
-  "routeNumber": "424",
+  "routeNumbers": [
+    "424"
+  ],
+  "status": "parsed",
   "services": [
     {
-      "sheet": "424 (순환)터미널-시청-황사평-화북-천수동-터미널",
+      "sheets": [
+        "424 (순환)터미널-시청-황사평-화북-천수동-터미널"
+      ],
+      "routeNumbers": [
+        "424"
+      ],
       "dayType": "unstated",
-      "direction": "버스터미널→시청→영평동→\n황사평→화북→버스터미널(순환)",
+      "direction": "버스터미널→시청→영평동→ 황사평→화북→버스터미널(순환)",
       "effectiveFrom": "2019-12-26",
       "summary": "첫차 05:51, 막차 20:35, 배차간격 89~125분, 금남여객(064-753-4423)",
       "timepoints": [
@@ -32,6 +42,7 @@
       ],
       "trips": [
         {
+          "routeNumber": "424",
           "times": [
             "05:51",
             "05:59",
@@ -40,9 +51,11 @@
             "06:34",
             "06:41",
             "06:53"
-          ]
+          ],
+          "firstTime": "05:51"
         },
         {
+          "routeNumber": "424",
           "times": [
             "07:27",
             "07:35",
@@ -51,9 +64,11 @@
             "08:10",
             "08:17",
             "08:29"
-          ]
+          ],
+          "firstTime": "07:27"
         },
         {
+          "routeNumber": "424",
           "times": [
             "09:10",
             "09:18",
@@ -62,9 +77,11 @@
             "09:53",
             "10:00",
             "10:12"
-          ]
+          ],
+          "firstTime": "09:10"
         },
         {
+          "routeNumber": "424",
           "times": [
             "11:10",
             "11:18",
@@ -73,9 +90,11 @@
             "11:53",
             "12:00",
             "12:12"
-          ]
+          ],
+          "firstTime": "11:10"
         },
         {
+          "routeNumber": "424",
           "times": [
             "13:00",
             "13:08",
@@ -84,9 +103,11 @@
             "13:43",
             "13:50",
             "14:02"
-          ]
+          ],
+          "firstTime": "13:00"
         },
         {
+          "routeNumber": "424",
           "times": [
             "14:50",
             "14:58",
@@ -95,9 +116,11 @@
             "15:33",
             "15:40",
             "15:52"
-          ]
+          ],
+          "firstTime": "14:50"
         },
         {
+          "routeNumber": "424",
           "times": [
             "16:30",
             "16:38",
@@ -106,9 +129,11 @@
             "17:13",
             "17:20",
             "17:32"
-          ]
+          ],
+          "firstTime": "16:30"
         },
         {
+          "routeNumber": "424",
           "times": [
             "18:30",
             "18:38",
@@ -117,9 +142,11 @@
             "19:13",
             "19:20",
             "19:32"
-          ]
+          ],
+          "firstTime": "18:30"
         },
         {
+          "routeNumber": "424",
           "times": [
             "20:35",
             "20:43",
@@ -128,9 +155,11 @@
             "21:18",
             "21:25",
             "21:37"
-          ]
+          ],
+          "firstTime": "20:35"
         }
-      ]
+      ],
+      "status": "ok"
     }
   ]
 }

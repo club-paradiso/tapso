@@ -1,0 +1,131 @@
+{
+  "schemaVersion": "tapso-jeju-timetable-v3",
+  "label": "OFFICIAL_DATED",
+  "source": {
+    "publisher": "제주특별자치도 (bus.jeju.go.kr)",
+    "dataset": "data.go.kr 3043887",
+    "page": "https://bus.jeju.go.kr/publicTrafficInformation/generalBusSchedule",
+    "file": "406053.xlsx",
+    "sha256": "284389786054e87a3f86e6c30b22a1c00dd699909f28c39a1969fdaf2ebb95c9",
+    "scheduleId": "406053",
+    "listedName": "691"
+  },
+  "retrievedOn": "2026-10-03",
+  "parser": {
+    "name": "jeju-bis-xlsx",
+    "version": "3"
+  },
+  "routeNumbers": [
+    "691"
+  ],
+  "status": "parsed",
+  "services": [
+    {
+      "sheets": [
+        "691 천지연-서홍동-신시가지-서귀여고-천지연"
+      ],
+      "routeNumbers": [
+        "691"
+      ],
+      "dayType": "unstated",
+      "direction": "천지연→ 천지연(순환)",
+      "effectiveFrom": "2025-05-28",
+      "summary": "서귀포공영버스(064-760-3111~3)",
+      "timepoints": [
+        "천지연",
+        "서귀포YWCA",
+        "동문로터리 (농협앞)",
+        "제주은행",
+        "중앙로터리(동)",
+        "서홍새마을금고",
+        "서호북문",
+        "중앙 도서관",
+        "국세공무원교육원",
+        "혁신도시LH아파트",
+        "서귀포 여고",
+        "남성마을",
+        "서귀포 농협",
+        "남군농협",
+        "송산동주민센터",
+        "천지연"
+      ],
+      "trips": [
+        {
+          "routeNumber": "691",
+          "times": [
+            null,
+            null,
+            null,
+            null,
+            null,
+            null,
+            null,
+            "06:43",
+            "06:51",
+            "06:53",
+            "06:57",
+            "07:03",
+            "07:07",
+            "07:10",
+            "07:12",
+            "07:15"
+          ],
+          "offTable": [
+            {
+              "place": "신시가지",
+              "time": "06:40",
+              "role": "at",
+              "column": "서호북문"
+            }
+          ],
+          "firstTime": "06:40"
+        },
+        {
+          "routeNumber": "691",
+          "times": [
+            "07:00",
+            "07:03",
+            "07:05",
+            "07:07",
+            "07:11",
+            "07:18",
+            "07:25",
+            "07:35",
+            "07:41",
+            "07:43",
+            "07:47",
+            "07:53",
+            "07:57",
+            "08:00",
+            "08:04",
+            "08:10"
+          ],
+          "firstTime": "07:00"
+        },
+        {
+          "routeNumber": "691",
+          "times": [
+            "07:20",
+            "07:23",
+            "07:25",
+            "07:27",
+            "07:31",
+            "07:38",
+            "07:45",
+            "07:55",
+            null,
+            null,
+            null,
+            null,
+            null,
+            null,
+            null,
+            null
+          ],
+          "firstTime": "07:20"
+        }
+      ],
+      "status": "ok"
+    }
+  ]
+}

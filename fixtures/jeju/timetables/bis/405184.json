@@ -1,0 +1,69 @@
+{
+  "schemaVersion": "tapso-jeju-timetable-v3",
+  "label": "OFFICIAL_DATED",
+  "source": {
+    "publisher": "제주특별자치도 (bus.jeju.go.kr)",
+    "dataset": "data.go.kr 3043887",
+    "page": "https://bus.jeju.go.kr/publicTrafficInformation/generalBusSchedule",
+    "file": "405184.xlsx",
+    "sha256": "f3416e69f376b44f569c186227f6a2009d97f68fb0f62754834d472d4aaca240",
+    "scheduleId": "405184",
+    "listedName": "320-2"
+  },
+  "retrievedOn": "2026-10-03",
+  "parser": {
+    "name": "jeju-bis-xlsx",
+    "version": "3"
+  },
+  "routeNumbers": [
+    "320-2"
+  ],
+  "serviceLabels": [
+    "임시수요맞춤"
+  ],
+  "status": "parsed",
+  "services": [
+    {
+      "sheets": [
+        "320-2 (임시운행)수산(하귀)-한라대-연북로-제주대"
+      ],
+      "routeNumbers": [
+        "320-2"
+      ],
+      "dayType": "unstated",
+      "serviceLabels": [
+        "임시수요맞춤"
+      ],
+      "direction": "하귀(수산)→외도부영→도평→한라대-연북로 →제주여중고→제주대병원→제주대",
+      "effectiveFrom": "2026-04-22",
+      "summary": "삼영교통(064-713-7000)",
+      "timepoints": [
+        "하귀(수산)",
+        "외도부영아파트",
+        "한라대학교",
+        "롯데마트",
+        "한라도서관 입구",
+        "제주여중고 (정문)",
+        "제주대병원",
+        "제주대"
+      ],
+      "trips": [
+        {
+          "routeNumber": "320-2",
+          "times": [
+            "07:14",
+            "07:41",
+            "08:00",
+            "08:07",
+            "08:19",
+            "08:28",
+            "08:37",
+            "08:44"
+          ],
+          "firstTime": "07:14"
+        }
+      ],
+      "status": "ok"
+    }
+  ]
+}

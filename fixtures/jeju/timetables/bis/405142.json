@@ -1,0 +1,74 @@
+{
+  "schemaVersion": "tapso-jeju-timetable-v3",
+  "label": "OFFICIAL_DATED",
+  "source": {
+    "publisher": "제주특별자치도 (bus.jeju.go.kr)",
+    "dataset": "data.go.kr 3043887",
+    "page": "https://bus.jeju.go.kr/publicTrafficInformation/generalBusSchedule",
+    "file": "405142.xlsx",
+    "sha256": "742c6d2728c40e5a26e165282d1d13ac85dc6ca076eec6579ca630704024fd72",
+    "scheduleId": "405142",
+    "listedName": "312-1(수요맞춤형)"
+  },
+  "retrievedOn": "2026-10-03",
+  "parser": {
+    "name": "jeju-bis-xlsx",
+    "version": "3"
+  },
+  "routeNumbers": [
+    "312-1"
+  ],
+  "serviceLabels": [
+    "수요맞춤형"
+  ],
+  "status": "parsed",
+  "services": [
+    {
+      "sheets": [
+        "312-1 수목원-한라병원-시청-중앙로-삼화-함덕"
+      ],
+      "routeNumbers": [
+        "312-1"
+      ],
+      "dayType": "unstated",
+      "serviceLabels": [
+        "수요맞춤형"
+      ],
+      "direction": "한라수목원→보건소→ 삼화지구→함덕",
+      "effectiveFrom": "2024-08-01",
+      "summary": "관광지순환버스(064-746-7310)",
+      "timepoints": [
+        "한라 수목원",
+        "한라병원",
+        "제원아파트",
+        "제주도청 (신제주로타리)",
+        "보건소",
+        "제주시청",
+        "중앙로 사거리",
+        "삼화지구 (도련초)",
+        "조천",
+        "함덕 회차지"
+      ],
+      "trips": [
+        {
+          "routeNumber": "312-1",
+          "times": [
+            "07:30",
+            "07:43",
+            "07:48",
+            "07:54",
+            "08:01",
+            "08:08",
+            "08:16",
+            "08:42",
+            "08:56",
+            "09:10"
+          ],
+          "firstTime": "07:30"
+        }
+      ],
+      "note": "토,공휴일 운행 안함",
+      "status": "ok"
+    }
+  ]
+}

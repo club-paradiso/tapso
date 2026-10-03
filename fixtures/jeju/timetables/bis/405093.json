@@ -1,0 +1,167 @@
+{
+  "schemaVersion": "tapso-jeju-timetable-v3",
+  "label": "OFFICIAL_DATED",
+  "source": {
+    "publisher": "제주특별자치도 (bus.jeju.go.kr)",
+    "dataset": "data.go.kr 3043887",
+    "page": "https://bus.jeju.go.kr/publicTrafficInformation/generalBusSchedule",
+    "file": "405093.xlsx",
+    "sha256": "bbcd9d6307518b36e98fb15ad56d1ad2b4716a4c7418b588009df7f39f08d455",
+    "scheduleId": "405093",
+    "listedName": "793-2"
+  },
+  "retrievedOn": "2026-10-03",
+  "parser": {
+    "name": "jeju-bis-xlsx",
+    "version": "3"
+  },
+  "routeNumbers": [
+    "793-2"
+  ],
+  "serviceLabels": [
+    "옵서버스"
+  ],
+  "status": "parsed",
+  "services": [
+    {
+      "sheets": [
+        "793-2 하귀-수산-용흥-하가-애월"
+      ],
+      "routeNumbers": [
+        "793-2"
+      ],
+      "dayType": "unstated",
+      "serviceLabels": [
+        "옵서버스"
+      ],
+      "direction": "하귀→신엄→하가→애월",
+      "effectiveFrom": "2025-05-28",
+      "summary": "제주시공영버스(064-728-3211)",
+      "timepoints": [
+        "하귀",
+        "수산(당동)",
+        "신엄",
+        "용흥리마을회관",
+        "상가리동동",
+        "하가",
+        "고내",
+        "애월"
+      ],
+      "trips": [
+        {
+          "routeNumber": "793-2",
+          "times": [
+            "07:40",
+            "07:50",
+            "07:56",
+            "07:59",
+            "08:08",
+            "08:10",
+            "08:14",
+            "08:20"
+          ],
+          "firstTime": "07:40"
+        },
+        {
+          "routeNumber": "793-2",
+          "times": [
+            "10:30",
+            "10:40",
+            "10:46",
+            "10:49",
+            "10:55",
+            "10:58",
+            "11:04",
+            "11:10"
+          ],
+          "firstTime": "10:30"
+        },
+        {
+          "routeNumber": "793-2",
+          "times": [
+            "12:26",
+            "12:36",
+            "12:42",
+            "12:45",
+            "12:51",
+            "12:54",
+            "13:00",
+            "13:06"
+          ],
+          "firstTime": "12:26"
+        }
+      ],
+      "status": "ok"
+    },
+    {
+      "sheets": [
+        "793-2 애월-하가-용흥-수산-하귀"
+      ],
+      "routeNumbers": [
+        "793-2"
+      ],
+      "dayType": "unstated",
+      "serviceLabels": [
+        "옵서버스"
+      ],
+      "direction": "애월→하가→신엄→하귀",
+      "effectiveFrom": "2025-05-28",
+      "summary": "제주시공영버스(064-728-3211)",
+      "timepoints": [
+        "애월",
+        "고내",
+        "하가",
+        "상가리동동",
+        "용흥리마을회관",
+        "신엄",
+        "수산(당동)",
+        "하귀"
+      ],
+      "trips": [
+        {
+          "routeNumber": "793-2",
+          "times": [
+            "06:45",
+            "06:51",
+            "06:57",
+            "07:00",
+            "07:07",
+            "07:11",
+            "07:17",
+            "07:28"
+          ],
+          "firstTime": "06:45"
+        },
+        {
+          "routeNumber": "793-2",
+          "times": [
+            "08:32",
+            "08:38",
+            "08:44",
+            "08:47",
+            "08:54",
+            "08:58",
+            "09:04",
+            "09:13"
+          ],
+          "firstTime": "08:32"
+        },
+        {
+          "routeNumber": "793-2",
+          "times": [
+            "11:20",
+            "11:26",
+            "11:32",
+            "11:35",
+            "11:42",
+            "11:46",
+            "11:52",
+            "12:03"
+          ],
+          "firstTime": "11:20"
+        }
+      ],
+      "status": "ok"
+    }
+  ]
+}

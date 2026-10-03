@@ -18,6 +18,7 @@ import { createBurstLimiter } from "./rateLimit.ts";
 import { resolveTagoServiceKey, serviceKeyWarning } from "./serviceKey.ts";
 import { readSessionKeyPrefix } from "./sessionKeyPrefix.ts";
 import { MemoryJourneySessionStore, type JourneySessionStore } from "./sessionStore.ts";
+import { fileStaticTransitData } from "./staticTransitData.ts";
 import { TagoTransitProvider } from "./tagoProvider.ts";
 import { UpstashJourneySessionStore } from "./upstashSessionStore.ts";
 
@@ -128,6 +129,7 @@ export function createTransitApi(env: ServerEnv = process.env as ServerEnv): Tra
         ? { liveActivityPusher: new LiveActivityPusher(new ApnsLiveActivitySender(apns, new Http2ApnsTransport()), sessions) }
         : {}),
       providerHealth,
+      staticData: fileStaticTransitData(),
       ...(limiter ? { limiter } : {}),
       ...(operatorLimiter ? { operatorLimiter } : {}),
       ...(operator.configured ? { operatorToken: operator.token } : {}),

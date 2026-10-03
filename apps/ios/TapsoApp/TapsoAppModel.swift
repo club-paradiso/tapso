@@ -31,6 +31,24 @@ enum SetupStep: Hashable {
     case liveRoutes
     /// Live: boarding and destination on one variant's real stop list.
     case liveStops(routeID: String)
+    /// Destination-first on the canonical catalog: the variants that reach a place.
+    case catalogRoutes(placeName: String)
+}
+
+/// A destination chosen from the canonical catalog. The live stop list opens with it fixed,
+/// once the server's current list confirms the same stop at the same provider sequence.
+struct CatalogDestination: Equatable {
+    let routeID: String
+    let sequence: Int
+    let stopID: String
+    let placeName: String
+}
+
+/// One route number's official timetables, as last read this session.
+enum TimetableLoad: Equatable {
+    case loading
+    case loaded(TransitAPITimetable)
+    case failed(TransitAPIFailure)
 }
 
 /// The ride being set up: where to get off, which bus, where to board.
@@ -291,6 +309,15 @@ final class TapsoAppModel {
     private(set) var screenshotDestinationRoute: RouteID?
     /// After a live ride: today's last buses of the route number, for the way back.
     private(set) var returnService: ReturnService = .idle
+    /// The server accepted this ride's Live Activity push token: the Lock Screen can update while TAPSO is closed.
+    private(set) var liveActivityPushRegistered = false
+    /// The canonical Jeju catalog on this phone, searched locally.
+    private(set) var catalogIndex: DestinationSearchIndex?
+    private(set) var catalogStatus: CatalogStatus = .idle
+    /// A destination chosen from the catalog, while its route's stop list is set up.
+    private(set) var catalogDestination: CatalogDestination?
+    /// Official timetables per route number (`GET /v1/timetables`), never live.
+    private(set) var timetables: [String: TimetableLoad] = [:]
     /// The way back pinned to the Lock Screen as a countdown, if one is running.
     private(set) var pinnedReturn: PinnedReturn?
     /// The countdown could not start: Live Activities are off for TAPSO.
@@ -301,6 +328,9 @@ final class TapsoAppModel {
     @ObservationIgnored private let returnReminders: ReturnReminderClient?
     @ObservationIgnored private let api: TapsoAPIClient
     @ObservationIgnored private let routeCatalog: LiveRouteImportCatalog
+    @ObservationIgnored private let catalogFile: TransitCatalogFile
+    @ObservationIgnored private var catalogETag: String?
+    @ObservationIgnored private var catalogRefreshInFlight = false
     @ObservationIgnored private let screenshotImporter: ScreenshotRouteImporter
     @ObservationIgnored private let originalEraser: any ScreenshotOriginalEraser
     @ObservationIgnored private var screenshotTask: Task<Void, Never>?
@@ -337,9 +367,11 @@ final class TapsoAppModel {
         api: TapsoAPIClient = TapsoAPIClient(),
         routeCatalog: LiveRouteImportCatalog? = nil,
         screenshotImporter: ScreenshotRouteImporter? = nil,
-        originalEraser: (any ScreenshotOriginalEraser)? = nil
+        originalEraser: (any ScreenshotOriginalEraser)? = nil,
+        catalogFile: TransitCatalogFile? = nil
     ) {
         self.store = store
+        self.catalogFile = catalogFile ?? .standard
         self.liveActivity = liveActivity
         self.returnReminders = returnReminders
         self.api = api
@@ -432,6 +464,7 @@ final class TapsoAppModel {
     // MARK: Destination-first setup
 
     func openSearch() {
+        catalogDestination = nil
         path = [.search]
     }
 
@@ -639,6 +672,11 @@ final class TapsoAppModel {
             Task { await self.rideAgainLive(journey) }
             return
         }
+        // A journey from the synthetic demo replays only in a demo build.
+        guard TapsoBuild.showsDemo else {
+            openSearch()
+            return
+        }
         guard RideDraft(journey).route != nil else { return }
         draft = RideDraft(journey)
         path = [.vehicleCheck]
@@ -661,8 +699,146 @@ final class TapsoAppModel {
         store.saveLibrary(library)
     }
 
+    /// Stop names found in a shared place's text: real catalog places once the catalog is on the
+    /// phone (at least three letters, at most five, longest first); the demo's only in a demo build.
     func stopNames(inSharedText text: String) -> [String] {
-        StopNameMatcher.matches(in: text, among: DemoCatalog.destinationNames)
+        if let index = catalogIndex {
+            let names = index.places.map(\.name).filter { StopNameMatcher.normalized($0).count >= 3 }
+            return Array(StopNameMatcher.matches(in: text, among: names).prefix(5))
+        }
+        return TapsoBuild.showsDemo ? StopNameMatcher.matches(in: text, among: DemoCatalog.destinationNames) : []
+    }
+
+    /// The catalog in use is the phone's copy: the last update did not arrive.
+    var catalogUpdateFailed: Bool {
+        if case let .ready(_, _, refreshFailed) = catalogStatus { return refreshFailed }
+        return false
+    }
+
+    /// Whether `stopNames(inSharedText:)` came from the synthetic demo.
+    var sharedTextMatchesAreSynthetic: Bool { catalogIndex == nil }
+
+    // MARK: Canonical catalog (`GET /v1/catalog`)
+
+    /// Loads the copy on the phone, then asks the server for a newer one. A copy that
+    /// does not decode and check is never used; the one in hand stays.
+    func refreshCatalog() async {
+        guard !catalogRefreshInFlight else { return }
+        catalogRefreshInFlight = true
+        defer { catalogRefreshInFlight = false }
+        if catalogIndex == nil, let cached = catalogFile.load(), let index = await Self.searchIndex(from: cached.data) {
+            catalogETag = cached.etag
+            installCatalog(index, refreshFailed: false)
+        }
+        if catalogIndex == nil { catalogStatus = .loading }
+        do {
+            switch try await api.catalog(ifNoneMatch: catalogIndex == nil ? nil : catalogETag) {
+            case .notModified:
+                if let index = catalogIndex { installCatalog(index, refreshFailed: false) }
+            case let .updated(data, etag):
+                guard let index = await Self.searchIndex(from: data) else {
+                    catalogRefreshFailed(.unexpectedResponse)
+                    return
+                }
+                catalogFile.save(data, etag: etag)
+                catalogETag = etag
+                installCatalog(index, refreshFailed: false)
+            }
+        } catch is CancellationError {
+            if catalogIndex == nil { catalogStatus = .idle }
+        } catch {
+            catalogRefreshFailed(Self.failure(error))
+        }
+    }
+
+    private func installCatalog(_ index: DestinationSearchIndex, refreshFailed: Bool) {
+        catalogIndex = index
+        catalogStatus = .ready(version: index.catalog.catalogVersion, generatedAt: index.catalog.generatedAt, refreshFailed: refreshFailed)
+    }
+
+    private func catalogRefreshFailed(_ failure: TransitAPIFailure) {
+        if let index = catalogIndex {
+            installCatalog(index, refreshFailed: true)
+        } else {
+            catalogStatus = .failed(failure)
+        }
+    }
+
+    private nonisolated static func searchIndex(from data: Data) async -> DestinationSearchIndex? {
+        await Task.detached(priority: .userInitiated) { () -> DestinationSearchIndex? in
+            guard let catalog = try? JejuTransitCatalog.decode(data) else { return nil }
+            return DestinationSearchIndex(catalog: catalog)
+        }.value
+    }
+
+    func catalogPlace(named name: String) -> DestinationPlace? {
+        let key = DestinationSearchIndex.placeName(name)
+        return catalogIndex?.places.first { $0.name == key }
+    }
+
+    /// A place chosen in search: a single way there opens its stop list, several are listed.
+    func chooseCatalogPlace(_ place: DestinationPlace) {
+        guard let index = catalogIndex else { return }
+        let options = index.routeOptions(to: place).flatMap(\.options)
+        if options.count == 1, let only = options.first {
+            Task { await chooseCatalogRoute(only, placeName: place.name) }
+        } else if !options.isEmpty {
+            path.append(.catalogRoutes(placeName: place.name))
+        }
+    }
+
+    /// One variant chosen for a place: the server's current stop list opens with the place fixed.
+    func chooseCatalogRoute(_ option: DestinationRouteOption, placeName: String) async {
+        guard let index = catalogIndex else { return }
+        screenshotDestination = nil
+        screenshotDestinationRoute = nil
+        catalogDestination = CatalogDestination(
+            routeID: option.route.routeId,
+            sequence: option.destinationSequence,
+            stopID: option.destinationStopID,
+            placeName: placeName
+        )
+        await chooseLiveRoute(index.catalog.apiRoute(option.route))
+    }
+
+    /// The catalog's destination on the server's current list: the same stop at the same sequence, or nothing.
+    func fixedDestination(on stops: LiveRouteStops) -> RouteStop? {
+        guard let destination = catalogDestination, destination.routeID == stops.apiRoute.routeId else { return nil }
+        guard let stop = stops.route.routeStop(sequence: destination.sequence), stop.stop.id.rawValue == destination.stopID else { return nil }
+        return stop
+    }
+
+    /// The route changed since the catalog was built: the rider chooses the destination again.
+    func catalogDestinationMoved(on stops: LiveRouteStops) -> Bool {
+        catalogDestination?.routeID == stops.apiRoute.routeId && fixedDestination(on: stops) == nil
+    }
+
+    /// A recent destination from Home: the catalog's place, the demo's in a demo build, or search.
+    func chooseRecentDestination(named name: String) {
+        if let place = catalogPlace(named: name) {
+            path = [.search]
+            chooseCatalogPlace(place)
+        } else if TapsoBuild.showsDemo, !DemoCatalog.routeOptions(toDestinationNamed: name).isEmpty {
+            path = [.search]
+            chooseDestination(named: name)
+        } else {
+            openSearch()
+        }
+    }
+
+    // MARK: Official timetables (`GET /v1/timetables`)
+
+    func loadTimetable(routeNumber: String) async {
+        if case .loaded = timetables[routeNumber] { return }
+        if timetables[routeNumber] == .loading { return }
+        timetables[routeNumber] = .loading
+        do {
+            timetables[routeNumber] = .loaded(try await api.timetable(routeNumber: routeNumber))
+        } catch is CancellationError {
+            timetables[routeNumber] = nil
+        } catch {
+            timetables[routeNumber] = .failed(Self.failure(error))
+        }
     }
 
     /// The sample ride: 365 from 제주버스터미널 to 제주시청(아라방면), synthetic data.
@@ -1076,9 +1252,10 @@ final class TapsoAppModel {
 
     // MARK: Live rides (TAPSO API)
 
-    /// Live setup starts from the route number: TAPSO's API has no stop search yet,
-    /// and inventing one from a stale list would send riders to the wrong stop.
+    /// Live setup from a route number. Destination-first setup runs on the catalog
+    /// (`chooseCatalogPlace`) and joins this flow at the variant's stop list.
     func openLiveSearch() {
+        catalogDestination = nil
         screenshotDestination = nil
         screenshotDestinationRoute = nil
         searchTask?.cancel()
@@ -1150,7 +1327,7 @@ final class TapsoAppModel {
     /// Leaving the vehicle check by any route (back, cancel, a new search) stops its polling.
     func pathDidChange(_ newPath: [SetupStep]) {
         if !newPath.contains(.mapImport), screenshotImport != .idle { cancelScreenshotImport() }
-        if newPath.isEmpty { screenshotDestination = nil; screenshotDestinationRoute = nil }
+        if newPath.isEmpty { screenshotDestination = nil; screenshotDestinationRoute = nil; catalogDestination = nil }
         guard !newPath.contains(.vehicleCheck), activeRide == nil else { return }
         searchTask?.cancel()
         endLiveSetupSession()
@@ -1613,12 +1790,14 @@ final class TapsoAppModel {
     /// updating from the app, as it does without push.
     private func registerPushTokens() {
         pushTokenTask?.cancel()
+        liveActivityPushRegistered = false
         guard !hybridTrackingEnabled, let sessionID = activeRide?.live?.sessionID, let tokens = liveActivity?.pushTokens() else { return }
         let api = self.api
         pushTokenTask = Task {
             for await token in tokens {
                 guard !Task.isCancelled else { return }
-                try? await api.registerLiveActivityToken(sessionID: sessionID, token: token)
+                let accepted = (try? await api.registerLiveActivityToken(sessionID: sessionID, token: token)) != nil
+                if accepted { self.liveActivityPushRegistered = true }
             }
         }
     }

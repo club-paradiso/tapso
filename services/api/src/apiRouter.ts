@@ -28,6 +28,9 @@ import { logEvent } from "./observability.ts";
 import type { LiveActivityPusher } from "./liveActivityPusher.ts";
 import type { ProviderHealth } from "./providerHealth.ts";
 import { TAGO_CADENCE_POLICY_V1 } from "./sourceFreshness.ts";
+import { routeTimetableView, timetableFreshness, timetableIndex } from "./officialTimetable.ts";
+import { koreanDate } from "./serviceDay.ts";
+import type { StaticTransitData } from "./staticTransitData.ts";
 
 /**
  * The single source of the freshness posture every surface publishes.
@@ -96,6 +99,8 @@ export const MAX_CAPTURE_BYTES = 4 * 1_024 * 1_024;
 const CITY_CODE_PATTERN = /^[0-9]{1,6}$/;
 const ROUTE_ID_PATTERN = /^[A-Za-z0-9_-]{1,64}$/;
 const ROUTE_NUMBER_PATTERN = /^[A-Za-z0-9가-힣-]{1,16}$/;
+/** An official timetable route number: "365", "202-1". */
+const TIMETABLE_ROUTE_PATTERN = /^[0-9]{1,4}(?:-[0-9]{1,2})?$/;
 const SESSION_ID_PATTERN = /^[A-Za-z0-9_-]{1,64}$/;
 
 export type LogLevel = "info" | "warn" | "error";
@@ -141,6 +146,11 @@ export interface TransitApiDependencies {
   liveActivityPusher?: Pick<LiveActivityPusher, "afterRead" | "beforeEnd">;
   /** This instance's recent upstream outcomes and latency, shown in `/health`. */
   providerHealth?: Pick<ProviderHealth, "snapshot">;
+  /**
+   * The reviewed data files served as-is: the canonical catalog, the official
+   * timetable bundle and the holiday calendar. Absent reads as none deployed.
+   */
+  staticData?: StaticTransitData;
   /** The shared operator secret. Deliberately not part of `config`, which `/health` echoes. */
   operatorToken?: string;
   now?: () => Date;
@@ -157,6 +167,8 @@ type Route =
   | "stops"
   | "vehicles"
   | "matches"
+  | "catalog"
+  | "timetables"
   | "session_create"
   | "session_read"
   | "session_end"
@@ -255,6 +267,8 @@ function resolvePath(path: string): Resolved | undefined {
   if (path === "/v1/stops") return { route: "stops", methods: ["GET"] };
   if (path === "/v1/vehicles") return { route: "vehicles", methods: ["GET"] };
   if (path === "/v1/matches") return { route: "matches", methods: ["POST"] };
+  if (path === "/v1/catalog") return { route: "catalog", methods: ["GET"] };
+  if (path === "/v1/timetables") return { route: "timetables", methods: ["GET"] };
   if (path === "/v1/sessions") return { route: "session_create", methods: ["POST"] };
 
   // Operator-only ride capture. Authenticated, uncached, and never linked from
@@ -311,7 +325,42 @@ async function dispatch(
   const { config, provider, discovery } = dependencies;
 
   if (resolved.route === "health") {
-    return { response: json(healthPayload(config, support.now(), dependencies.sessions, dependencies.liveActivityPush, dependencies.providerHealth), 200, { "cache-control": "no-store" }) };
+    return { response: json(healthPayload(config, support.now(), dependencies.sessions, dependencies.liveActivityPush, dependencies.providerHealth, dependencies.staticData), 200, { "cache-control": "no-store" }) };
+  }
+
+  if (resolved.route === "catalog") {
+    const loaded = dependencies.staticData?.catalog();
+    if (!loaded?.ok) throw apiError("CATALOG_UNAVAILABLE", loaded ? loaded.reason : "no catalog is deployed");
+    // The version is a hash of the content, so it is the entity tag: a client
+    // that already holds this catalog gets 304 and keeps its copy.
+    const etag = `"${loaded.value.catalogVersion}"`;
+    const headers = { etag, "cache-control": "public, max-age=3600, s-maxage=86400, must-revalidate" };
+    if (request.headers.get("if-none-match") === etag) return { response: new Response(null, { status: 304, headers }) };
+    return { response: new Response(loaded.bytes, { status: 200, headers: { ...headers, "content-type": "application/json; charset=utf-8" } }) };
+  }
+
+  if (resolved.route === "timetables") {
+    const timetables = dependencies.staticData?.timetables();
+    const holidays = dependencies.staticData?.holidays();
+    if (!timetables?.ok) throw apiError("TIMETABLES_UNAVAILABLE", timetables ? timetables.reason : "no timetable bundle is deployed");
+    if (!holidays?.ok) throw apiError("TIMETABLES_UNAVAILABLE", holidays ? holidays.reason : "no holiday calendar is deployed");
+    const routeNumber = optionalParam(url, "routeNo", TIMETABLE_ROUTE_PATTERN);
+    const today = koreanDate(support.now());
+    const date = optionalParam(url, "date", /^\d{4}-\d{2}-\d{2}$/) ?? today;
+    const bundle = timetables.value;
+    const meta = { label: "OFFICIAL_DATED", asOf: bundle.retrievedOn, freshness: timetableFreshness(bundle, today), bundleVersion: bundle.bundleVersion };
+    if (routeNumber === undefined) {
+      return { response: json({ items: timetableIndex(bundle), meta: { ...meta, census: bundle.census.counts } }, 200, { "cache-control": "public, max-age=0, s-maxage=3600, must-revalidate" }) };
+    }
+    let view;
+    try {
+      view = routeTimetableView(bundle, holidays.value, routeNumber, date);
+    } catch {
+      throw apiError("INVALID_INPUT", "date is not a calendar date");
+    }
+    // Ten minutes: "today" turns over at midnight in Korea, and a view for a
+    // stated date never changes until the bundle does.
+    return { response: json({ item: view, meta }, 200, { "cache-control": "public, max-age=0, s-maxage=600, must-revalidate" }) };
   }
 
   if (resolved.route === "cities") {
@@ -681,6 +730,7 @@ function healthPayload(
   sessions: JourneySessionCoordinator | undefined,
   liveActivityPush: TransitApiDependencies["liveActivityPush"],
   providerHealth: TransitApiDependencies["providerHealth"],
+  staticData?: StaticTransitData,
 ): Record<string, unknown> {
   return {
     ok: true,
@@ -718,8 +768,26 @@ function healthPayload(
     freshness: freshnessPosture(config),
     // The app asks ActivityKit for a push token only when this says enabled.
     liveActivityPush: liveActivityPush ?? { enabled: false },
+    // Which reviewed data files this build serves, by version only.
+    staticData: staticDataHealth(staticData),
     // Per warm instance, never global, and never an input to a rider decision.
     ...(providerHealth ? { providerHealth: providerHealth.snapshot() } : {}),
+  };
+}
+
+function staticDataHealth(staticData: StaticTransitData | undefined): Record<string, unknown> {
+  if (!staticData) return { catalog: { available: false }, timetables: { available: false } };
+  const catalog = staticData.catalog();
+  const timetables = staticData.timetables();
+  const holidays = staticData.holidays();
+  return {
+    catalog: catalog.ok
+      ? { available: true, catalogVersion: catalog.value.catalogVersion, generatedAt: catalog.value.generatedAt, routes: catalog.value.routes.length, stops: catalog.value.stops.length }
+      : { available: false, reason: catalog.reason },
+    timetables: timetables.ok
+      ? { available: true, bundleVersion: timetables.value.bundleVersion, retrievedOn: timetables.value.retrievedOn, parser: timetables.value.parser, datasets: timetables.value.datasets.length }
+      : { available: false, reason: timetables.reason },
+    holidays: holidays.ok ? { available: true, validThrough: holidays.value.validThrough, generator: holidays.value.generator } : { available: false, reason: holidays.reason },
   };
 }
 
@@ -1052,6 +1120,8 @@ const STATUS_BY_CODE: Record<string, number> = {
   // never reported as a session that does not exist.
   SESSION_STORE_UNAVAILABLE: 503,
   OPERATOR_DISABLED: 503,
+  CATALOG_UNAVAILABLE: 503,
+  TIMETABLES_UNAVAILABLE: 503,
 };
 
 function errorResponse(

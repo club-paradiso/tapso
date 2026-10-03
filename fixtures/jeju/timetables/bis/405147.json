@@ -1,0 +1,187 @@
+{
+  "schemaVersion": "tapso-jeju-timetable-v3",
+  "label": "OFFICIAL_DATED",
+  "source": {
+    "publisher": "제주특별자치도 (bus.jeju.go.kr)",
+    "dataset": "data.go.kr 3043887",
+    "page": "https://bus.jeju.go.kr/publicTrafficInformation/generalBusSchedule",
+    "file": "405147.xlsx",
+    "sha256": "f611575e28e9b4c038d35a25f2e449a27016be097507759391428c231cdef6a4",
+    "scheduleId": "405147",
+    "listedName": "151-1(수요맞춤형)"
+  },
+  "retrievedOn": "2026-10-03",
+  "parser": {
+    "name": "jeju-bis-xlsx",
+    "version": "3"
+  },
+  "routeNumbers": [
+    "151-1"
+  ],
+  "serviceLabels": [
+    "수요맞춤형"
+  ],
+  "status": "parsed",
+  "services": [
+    {
+      "sheets": [
+        "151-1 대정(운진항)-영어교육-동광-공항-제주터미널"
+      ],
+      "routeNumbers": [
+        "151-1"
+      ],
+      "dayType": "unstated",
+      "serviceLabels": [
+        "수요맞춤형"
+      ],
+      "direction": "모슬포(운진항)→동광→제주터미널",
+      "effectiveFrom": "2025-01-01",
+      "summary": "관광지순환버스(064-746-7310)",
+      "timepoints": [
+        "모슬포남항(운진항)",
+        "대정환승정류장",
+        "인성리",
+        "신평리(경유)",
+        "구억리",
+        "한국국제학교",
+        "신화역사공원",
+        "동광환승정류소",
+        "관광대",
+        "한라병원",
+        "공항",
+        "제주버스터미널"
+      ],
+      "trips": [
+        {
+          "routeNumber": "151-1",
+          "times": [
+            "05:50",
+            "05:53",
+            "06:01",
+            null,
+            "06:05",
+            "06:10",
+            null,
+            "06:21",
+            "06:36",
+            "06:49",
+            "07:02",
+            "07:12"
+          ],
+          "marks": {
+            "6": "○"
+          },
+          "firstTime": "05:50"
+        },
+        {
+          "routeNumber": "151-1",
+          "times": [
+            null,
+            null,
+            null,
+            null,
+            null,
+            "07:25",
+            null,
+            "07:36",
+            "07:51",
+            "08:04",
+            "08:17",
+            null
+          ],
+          "marks": {
+            "6": "○"
+          },
+          "firstTime": "07:25"
+        },
+        {
+          "routeNumber": "151-1",
+          "times": [
+            "07:30",
+            "07:33",
+            "07:41",
+            null,
+            "07:45",
+            "07:51",
+            null,
+            "08:03",
+            "08:20",
+            "08:33",
+            "08:46",
+            "08:56"
+          ],
+          "marks": {
+            "6": "○"
+          },
+          "firstTime": "07:30"
+        }
+      ],
+      "status": "ok"
+    },
+    {
+      "sheets": [
+        "151-1 제주터미널-공항-동광-영어교육-대정(운진항)"
+      ],
+      "routeNumbers": [
+        "151-1"
+      ],
+      "dayType": "unstated",
+      "serviceLabels": [
+        "수요맞춤형"
+      ],
+      "direction": "제주터미널→동광→모슬포남항(운진항)",
+      "effectiveFrom": "2025-01-01",
+      "summary": "관광지순환버스(064-746-7310)",
+      "timepoints": [
+        "제주버스터미널",
+        "공항",
+        "한라병원",
+        "관광대",
+        "동광환승정류소",
+        "한국국제학교",
+        "구억리",
+        "신평리(경유)",
+        "인성리",
+        "모슬포남항(운진항)"
+      ],
+      "trips": [
+        {
+          "routeNumber": "151-1",
+          "times": [
+            "05:30",
+            null,
+            "05:38",
+            "05:50",
+            "06:06",
+            "06:16",
+            "06:19",
+            null,
+            "06:23",
+            "06:35"
+          ],
+          "cellNotes": {
+            "1": "공항 미경유"
+          },
+          "firstTime": "05:30"
+        },
+        {
+          "routeNumber": "151-1",
+          "times": [
+            "22:20",
+            "22:30",
+            "22:40",
+            "22:58",
+            "23:15",
+            "23:20",
+            "23:23",
+            null,
+            "23:27",
+            "23:40"
+          ],
+          "firstTime": "22:20"
+        }
+      ],
+      "status": "ok"
+    }
+  ]
+}

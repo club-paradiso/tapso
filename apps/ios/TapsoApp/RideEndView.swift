@@ -7,6 +7,7 @@ import TapsoTransit
 struct RideEndView: View {
     @Bindable var model: TapsoAppModel
     let outcome: RideOutcome
+    @State private var timetableSheet: TransitAPITimetable?
 
     var body: some View {
         ScrollView {
@@ -28,8 +29,20 @@ struct RideEndView: View {
                 returnPin: { model.pinAvailability(for: $0) },
                 onPinReturn: { row in Task { await model.pinReturnReminder(row) } },
                 onUnpinReturn: { Task { await model.unpinReturnReminder() } },
-                returnReminderUnavailable: model.returnReminderUnavailable
+                returnReminderUnavailable: model.returnReminderUnavailable,
+                // The route's official timetable for the way back: TAGO publishes no Jeju service day.
+                timetable: outcome.cityCode == nil ? nil : AnyView(TimetableCard(
+                    routeNumber: outcome.routeNumber,
+                    load: model.timetables[outcome.routeNumber],
+                    onLoad: { Task { await model.loadTimetable(routeNumber: outcome.routeNumber) } },
+                    onShowAll: { timetableSheet = $0 }
+                ))
             )
+        }
+        .sheet(isPresented: Binding(get: { timetableSheet != nil }, set: { if !$0 { timetableSheet = nil } })) {
+            if let view = timetableSheet {
+                TimetableSheet(view: view)
+            }
         }
         .background(TapsoColor.backgroundPrimary)
         .task { await model.loadReturnService(for: outcome) }
@@ -54,6 +67,8 @@ struct RideEndContent: View {
     var onPinReturn: (ReturnServiceRow) -> Void = { _ in }
     var onUnpinReturn: () -> Void = {}
     var returnReminderUnavailable = false
+    /// The route's official timetable card, after a live ride.
+    var timetable: AnyView? = nil
 
     private var passed: Bool { outcome.moment == .passedDestination }
     /// The shared place the walk goes to, when the ride started from one.
@@ -146,6 +161,10 @@ struct RideEndContent: View {
                             .fixedSize(horizontal: false, vertical: true)
                     }
                 }
+            }
+
+            if let timetable {
+                timetable
             }
 
             ReturnTripCard(

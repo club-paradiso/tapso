@@ -1,24 +1,35 @@
 {
-  "schemaVersion": "tapso-jeju-timetable-v2",
+  "schemaVersion": "tapso-jeju-timetable-v3",
   "label": "OFFICIAL_DATED",
   "source": {
     "publisher": "제주특별자치도 (bus.jeju.go.kr)",
     "dataset": "data.go.kr 3043887",
     "page": "https://bus.jeju.go.kr/publicTrafficInformation/generalBusSchedule",
     "file": "405066.xlsx",
-    "sha256": "333839fdda7f43cb0fbb8851e92fb19501e238650af2ccb4238e5834eed6ff6b"
+    "sha256": "333839fdda7f43cb0fbb8851e92fb19501e238650af2ccb4238e5834eed6ff6b",
+    "scheduleId": "405066",
+    "listedName": "490"
   },
   "retrievedOn": "2026-10-03",
   "parser": {
     "name": "jeju-bis-xlsx",
-    "version": "2"
+    "version": "3"
   },
-  "routeNumber": "490",
+  "routeNumbers": [
+    "490"
+  ],
+  "status": "parsed",
   "services": [
     {
-      "sheet": "490 순환(제주대-첨단과학기술단지-제주대)",
+      "sheets": [
+        "490 순환(제주대-첨단과학기술단지-제주대)"
+      ],
+      "routeNumbers": [
+        "490"
+      ],
       "dayType": "unstated",
       "direction": "제주대 → 제주대 (순환)",
+      "effectiveNote": "미입력",
       "summary": "첫차 6:00, 막차 22:45, 배차간격 15분, 삼화여객(064-753-1621)",
       "timepoints": [
         "제주대학교",
@@ -28,550 +39,687 @@
       ],
       "trips": [
         {
+          "routeNumber": "490",
           "times": [
             "06:00",
             "06:06",
             "06:11",
             "06:15"
-          ]
+          ],
+          "firstTime": "06:00"
         },
         {
+          "routeNumber": "490",
           "times": [
             "06:15",
             "06:21",
             "06:26",
             "06:30"
-          ]
+          ],
+          "firstTime": "06:15"
         },
         {
+          "routeNumber": "490",
           "times": [
             "06:30",
             "06:36",
             "06:41",
             "06:45"
-          ]
+          ],
+          "firstTime": "06:30"
         },
         {
+          "routeNumber": "490",
           "times": [
             "06:45",
             "06:51",
             "06:56",
             "07:00"
-          ]
+          ],
+          "firstTime": "06:45"
         },
         {
+          "routeNumber": "490",
           "times": [
             "07:00",
             "07:06",
             "07:11",
             "07:15"
-          ]
+          ],
+          "firstTime": "07:00"
         },
         {
+          "routeNumber": "490",
           "times": [
             "07:15",
             "07:21",
             "07:26",
             "07:30"
-          ]
+          ],
+          "firstTime": "07:15"
         },
         {
+          "routeNumber": "490",
           "times": [
             "07:30",
             "07:36",
             "07:41",
             "07:45"
-          ]
+          ],
+          "firstTime": "07:30"
         },
         {
+          "routeNumber": "490",
           "times": [
             "07:45",
             "07:51",
             "07:56",
             "08:00"
-          ]
+          ],
+          "firstTime": "07:45"
         },
         {
+          "routeNumber": "490",
           "times": [
             "08:00",
             "08:06",
             "08:11",
             "08:15"
-          ]
+          ],
+          "firstTime": "08:00"
         },
         {
+          "routeNumber": "490",
           "times": [
             "08:15",
             "08:21",
             "08:26",
             "08:30"
-          ]
+          ],
+          "firstTime": "08:15"
         },
         {
+          "routeNumber": "490",
           "times": [
             "08:30",
             "08:36",
             "08:41",
             "08:45"
-          ]
+          ],
+          "firstTime": "08:30"
         },
         {
+          "routeNumber": "490",
           "times": [
             "08:45",
             "08:51",
             "08:56",
             "09:00"
-          ]
+          ],
+          "firstTime": "08:45"
         },
         {
+          "routeNumber": "490",
           "times": [
             "09:00",
             "09:06",
             "09:11",
             "09:15"
-          ]
+          ],
+          "firstTime": "09:00"
         },
         {
+          "routeNumber": "490",
           "times": [
             "09:15",
             "09:21",
             "09:26",
             "09:30"
-          ]
+          ],
+          "firstTime": "09:15"
         },
         {
+          "routeNumber": "490",
           "times": [
             "09:30",
             "09:36",
             "09:41",
             "09:45"
-          ]
+          ],
+          "firstTime": "09:30"
         },
         {
+          "routeNumber": "490",
           "times": [
             "09:45",
             "09:51",
             "09:56",
             "10:00"
-          ]
+          ],
+          "firstTime": "09:45"
         },
         {
+          "routeNumber": "490",
           "times": [
             "10:00",
             "10:06",
             "10:11",
             "10:15"
-          ]
+          ],
+          "firstTime": "10:00"
         },
         {
+          "routeNumber": "490",
           "times": [
             "10:15",
             "10:21",
             "10:26",
             "10:30"
-          ]
+          ],
+          "firstTime": "10:15"
         },
         {
+          "routeNumber": "490",
           "times": [
             "10:30",
             "10:36",
             "10:41",
             "10:45"
-          ]
+          ],
+          "firstTime": "10:30"
         },
         {
+          "routeNumber": "490",
           "times": [
             "10:45",
             "10:51",
             "10:56",
             "11:00"
-          ]
+          ],
+          "firstTime": "10:45"
         },
         {
+          "routeNumber": "490",
           "times": [
             "11:00",
             "11:06",
             "11:11",
             "11:15"
-          ]
+          ],
+          "firstTime": "11:00"
         },
         {
+          "routeNumber": "490",
           "times": [
             "11:15",
             "11:21",
             "11:26",
             "11:30"
-          ]
+          ],
+          "firstTime": "11:15"
         },
         {
+          "routeNumber": "490",
           "times": [
             "11:30",
             "11:36",
             "11:41",
             "11:45"
-          ]
+          ],
+          "firstTime": "11:30"
         },
         {
+          "routeNumber": "490",
           "times": [
             "11:45",
             "11:51",
             "11:56",
             "12:00"
-          ]
+          ],
+          "firstTime": "11:45"
         },
         {
+          "routeNumber": "490",
           "times": [
             "12:00",
             "12:06",
             "12:11",
             "12:15"
-          ]
+          ],
+          "firstTime": "12:00"
         },
         {
+          "routeNumber": "490",
           "times": [
             "12:15",
             "12:21",
             "12:26",
             "12:30"
-          ]
+          ],
+          "firstTime": "12:15"
         },
         {
+          "routeNumber": "490",
           "times": [
             "12:30",
             "12:36",
             "12:41",
             "12:45"
-          ]
+          ],
+          "firstTime": "12:30"
         },
         {
+          "routeNumber": "490",
           "times": [
             "12:45",
             "12:51",
             "12:56",
             "13:00"
-          ]
+          ],
+          "firstTime": "12:45"
         },
         {
+          "routeNumber": "490",
           "times": [
             "13:00",
             "13:06",
             "13:11",
             "13:15"
-          ]
+          ],
+          "firstTime": "13:00"
         },
         {
+          "routeNumber": "490",
           "times": [
             "13:15",
             "13:21",
             "13:26",
             "13:30"
-          ]
+          ],
+          "firstTime": "13:15"
         },
         {
+          "routeNumber": "490",
           "times": [
             "13:30",
             "13:36",
             "13:41",
             "13:45"
-          ]
+          ],
+          "firstTime": "13:30"
         },
         {
+          "routeNumber": "490",
           "times": [
             "13:45",
             "13:51",
             "13:56",
             "14:00"
-          ]
+          ],
+          "firstTime": "13:45"
         },
         {
+          "routeNumber": "490",
           "times": [
             "14:00",
             "14:06",
             "14:11",
             "14:15"
-          ]
+          ],
+          "firstTime": "14:00"
         },
         {
+          "routeNumber": "490",
           "times": [
             "14:15",
             "14:21",
             "14:26",
             "14:30"
-          ]
+          ],
+          "firstTime": "14:15"
         },
         {
+          "routeNumber": "490",
           "times": [
             "14:30",
             "14:36",
             "14:41",
             "14:45"
-          ]
+          ],
+          "firstTime": "14:30"
         },
         {
+          "routeNumber": "490",
           "times": [
             "14:45",
             "14:51",
             "14:56",
             "15:00"
-          ]
+          ],
+          "firstTime": "14:45"
         },
         {
+          "routeNumber": "490",
           "times": [
             "15:00",
             "15:06",
             "15:11",
             "15:15"
-          ]
+          ],
+          "firstTime": "15:00"
         },
         {
+          "routeNumber": "490",
           "times": [
             "15:15",
             "15:21",
             "15:26",
             "15:30"
-          ]
+          ],
+          "firstTime": "15:15"
         },
         {
+          "routeNumber": "490",
           "times": [
             "15:30",
             "15:36",
             "15:41",
             "15:45"
-          ]
+          ],
+          "firstTime": "15:30"
         },
         {
+          "routeNumber": "490",
           "times": [
             "15:45",
             "15:51",
             "15:56",
             "16:00"
-          ]
+          ],
+          "firstTime": "15:45"
         },
         {
+          "routeNumber": "490",
           "times": [
             "16:00",
             "16:06",
             "16:11",
             "16:15"
-          ]
+          ],
+          "firstTime": "16:00"
         },
         {
+          "routeNumber": "490",
           "times": [
             "16:15",
             "16:21",
             "16:26",
             "16:30"
-          ]
+          ],
+          "firstTime": "16:15"
         },
         {
+          "routeNumber": "490",
           "times": [
             "16:30",
             "16:36",
             "16:41",
             "16:45"
-          ]
+          ],
+          "firstTime": "16:30"
         },
         {
+          "routeNumber": "490",
           "times": [
             "16:45",
             "16:51",
             "16:56",
             "17:00"
-          ]
+          ],
+          "firstTime": "16:45"
         },
         {
+          "routeNumber": "490",
           "times": [
             "17:00",
             "17:06",
             "17:11",
             "17:15"
-          ]
+          ],
+          "firstTime": "17:00"
         },
         {
+          "routeNumber": "490",
           "times": [
             "17:15",
             "17:21",
             "17:26",
             "17:30"
-          ]
+          ],
+          "firstTime": "17:15"
         },
         {
+          "routeNumber": "490",
           "times": [
             "17:30",
             "17:36",
             "17:41",
             "17:45"
-          ]
+          ],
+          "firstTime": "17:30"
         },
         {
+          "routeNumber": "490",
           "times": [
             "17:45",
             "17:51",
             "17:56",
             "18:00"
-          ]
+          ],
+          "firstTime": "17:45"
         },
         {
+          "routeNumber": "490",
           "times": [
             "18:00",
             "18:06",
             "18:11",
             "18:15"
-          ]
+          ],
+          "firstTime": "18:00"
         },
         {
+          "routeNumber": "490",
           "times": [
             "18:15",
             "18:21",
             "18:26",
             "18:30"
-          ]
+          ],
+          "firstTime": "18:15"
         },
         {
+          "routeNumber": "490",
           "times": [
             "18:30",
             "18:36",
             "18:41",
             "18:45"
-          ]
+          ],
+          "firstTime": "18:30"
         },
         {
+          "routeNumber": "490",
           "times": [
             "18:45",
             "18:51",
             "18:56",
             "19:00"
-          ]
+          ],
+          "firstTime": "18:45"
         },
         {
+          "routeNumber": "490",
           "times": [
             "19:00",
             "19:06",
             "19:11",
             "19:15"
-          ]
+          ],
+          "firstTime": "19:00"
         },
         {
+          "routeNumber": "490",
           "times": [
             "19:15",
             "19:21",
             "19:26",
             "19:30"
-          ]
+          ],
+          "firstTime": "19:15"
         },
         {
+          "routeNumber": "490",
           "times": [
             "19:30",
             "19:36",
             "19:41",
             "19:45"
-          ]
+          ],
+          "firstTime": "19:30"
         },
         {
+          "routeNumber": "490",
           "times": [
             "19:45",
             "19:51",
             "19:56",
             "20:00"
-          ]
+          ],
+          "firstTime": "19:45"
         },
         {
+          "routeNumber": "490",
           "times": [
             "20:00",
             "20:06",
             "20:11",
             "20:15"
-          ]
+          ],
+          "firstTime": "20:00"
         },
         {
+          "routeNumber": "490",
           "times": [
             "20:15",
             "20:21",
             "20:26",
             "20:30"
-          ]
+          ],
+          "firstTime": "20:15"
         },
         {
+          "routeNumber": "490",
           "times": [
             "20:30",
             "20:36",
             "20:41",
             "20:45"
-          ]
+          ],
+          "firstTime": "20:30"
         },
         {
+          "routeNumber": "490",
           "times": [
             "20:45",
             "20:51",
             "20:56",
             "21:00"
-          ]
+          ],
+          "firstTime": "20:45"
         },
         {
+          "routeNumber": "490",
           "times": [
             "21:00",
             "21:06",
             "21:11",
             "21:15"
-          ]
+          ],
+          "firstTime": "21:00"
         },
         {
+          "routeNumber": "490",
           "times": [
             "21:15",
             "21:21",
             "21:26",
             "21:30"
-          ]
+          ],
+          "firstTime": "21:15"
         },
         {
+          "routeNumber": "490",
           "times": [
             "21:30",
             "21:36",
             "21:41",
             "21:45"
-          ]
+          ],
+          "firstTime": "21:30"
         },
         {
+          "routeNumber": "490",
           "times": [
             "21:45",
             "21:51",
             "21:56",
             "22:00"
-          ]
+          ],
+          "firstTime": "21:45"
         },
         {
+          "routeNumber": "490",
           "times": [
             "22:00",
             "22:06",
             "22:11",
             "22:15"
-          ]
+          ],
+          "firstTime": "22:00"
         },
         {
+          "routeNumber": "490",
           "times": [
             "22:15",
             "22:21",
             "22:26",
             "22:30"
-          ]
+          ],
+          "firstTime": "22:15"
         },
         {
+          "routeNumber": "490",
           "times": [
             "22:30",
             "22:36",
             "22:41",
             "22:45"
-          ]
+          ],
+          "firstTime": "22:30"
         },
         {
+          "routeNumber": "490",
           "times": [
             "22:45",
             "22:51",
             "22:56",
             "23:00"
-          ]
+          ],
+          "firstTime": "22:45"
         }
-      ]
+      ],
+      "status": "ok"
     }
   ]
 }

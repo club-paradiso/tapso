@@ -1,22 +1,32 @@
 {
-  "schemaVersion": "tapso-jeju-timetable-v2",
+  "schemaVersion": "tapso-jeju-timetable-v3",
   "label": "OFFICIAL_DATED",
   "source": {
     "publisher": "제주특별자치도 (bus.jeju.go.kr)",
     "dataset": "data.go.kr 3043887",
     "page": "https://bus.jeju.go.kr/publicTrafficInformation/generalBusSchedule",
     "file": "406046.xlsx",
-    "sha256": "58fa0903f6823fb95fbc41cebf4dafd16ef4df340701741a575e13de033f29b7"
+    "sha256": "58fa0903f6823fb95fbc41cebf4dafd16ef4df340701741a575e13de033f29b7",
+    "scheduleId": "406046",
+    "listedName": "880"
   },
   "retrievedOn": "2026-10-03",
   "parser": {
     "name": "jeju-bis-xlsx",
-    "version": "2"
+    "version": "3"
   },
-  "routeNumber": "880",
+  "routeNumbers": [
+    "880"
+  ],
+  "status": "parsed",
   "services": [
     {
-      "sheet": "880 서귀포시티투어(오일장-중앙R-천지연-오일장)",
+      "sheets": [
+        "880 서귀포시티투어(오일장-중앙R-천지연-오일장)"
+      ],
+      "routeNumbers": [
+        "880"
+      ],
       "dayType": "unstated",
       "direction": "오일장 ↔오일장(순환)",
       "effectiveFrom": "2023-11-01",
@@ -38,6 +48,7 @@
       ],
       "trips": [
         {
+          "routeNumber": "880",
           "times": [
             "09:00",
             "09:05",
@@ -52,9 +63,11 @@
             "09:53",
             "09:59",
             "10:05"
-          ]
+          ],
+          "firstTime": "09:00"
         },
         {
+          "routeNumber": "880",
           "times": [
             "09:35",
             "09:40",
@@ -69,9 +82,11 @@
             "10:28",
             "10:34",
             "10:40"
-          ]
+          ],
+          "firstTime": "09:35"
         },
         {
+          "routeNumber": "880",
           "times": [
             "10:10",
             "10:15",
@@ -86,9 +101,11 @@
             "11:03",
             "11:09",
             "11:15"
-          ]
+          ],
+          "firstTime": "10:10"
         },
         {
+          "routeNumber": "880",
           "times": [
             "10:50",
             "10:55",
@@ -103,9 +120,11 @@
             "11:43",
             "11:49",
             "11:55"
-          ]
+          ],
+          "firstTime": "10:50"
         },
         {
+          "routeNumber": "880",
           "times": [
             "11:25",
             "11:30",
@@ -120,9 +139,11 @@
             "12:18",
             "12:24",
             "12:30"
-          ]
+          ],
+          "firstTime": "11:25"
         },
         {
+          "routeNumber": "880",
           "times": [
             "12:00",
             "12:05",
@@ -137,9 +158,11 @@
             "12:53",
             "12:59",
             "13:05"
-          ]
+          ],
+          "firstTime": "12:00"
         },
         {
+          "routeNumber": "880",
           "times": [
             "13:30",
             "13:35",
@@ -154,9 +177,11 @@
             "14:23",
             "14:29",
             "14:35"
-          ]
+          ],
+          "firstTime": "13:30"
         },
         {
+          "routeNumber": "880",
           "times": [
             "14:05",
             "14:10",
@@ -171,9 +196,11 @@
             "14:58",
             "15:04",
             "15:10"
-          ]
+          ],
+          "firstTime": "14:05"
         },
         {
+          "routeNumber": "880",
           "times": [
             "14:40",
             "14:45",
@@ -188,9 +215,11 @@
             "15:33",
             "15:39",
             "15:45"
-          ]
+          ],
+          "firstTime": "14:40"
         },
         {
+          "routeNumber": "880",
           "times": [
             "15:20",
             "15:25",
@@ -205,9 +234,11 @@
             "16:13",
             "16:19",
             "16:25"
-          ]
+          ],
+          "firstTime": "15:20"
         },
         {
+          "routeNumber": "880",
           "times": [
             "15:55",
             "16:00",
@@ -222,9 +253,11 @@
             "16:48",
             "16:54",
             "17:00"
-          ]
+          ],
+          "firstTime": "15:55"
         },
         {
+          "routeNumber": "880",
           "times": [
             "16:30",
             "16:35",
@@ -239,9 +272,11 @@
             "17:23",
             "17:29",
             "17:35"
-          ]
+          ],
+          "firstTime": "16:30"
         },
         {
+          "routeNumber": "880",
           "times": [
             "17:10",
             "17:15",
@@ -256,9 +291,11 @@
             "18:03",
             "18:09",
             "18:15"
-          ]
+          ],
+          "firstTime": "17:10"
         },
         {
+          "routeNumber": "880",
           "times": [
             "17:45",
             "17:50",
@@ -273,9 +310,11 @@
             "18:38",
             "18:44",
             "18:50"
-          ]
+          ],
+          "firstTime": "17:45"
         },
         {
+          "routeNumber": "880",
           "times": [
             "18:20",
             "18:25",
@@ -290,9 +329,11 @@
             "19:13",
             "19:19",
             "19:25"
-          ]
+          ],
+          "firstTime": "18:20"
         },
         {
+          "routeNumber": "880",
           "times": [
             "19:20",
             "19:25",
@@ -307,9 +348,11 @@
             "20:13",
             "20:19",
             "20:25"
-          ]
+          ],
+          "firstTime": "19:20"
         },
         {
+          "routeNumber": "880",
           "times": [
             "19:55",
             "20:00",
@@ -324,9 +367,11 @@
             "20:48",
             "20:54",
             "21:00"
-          ]
+          ],
+          "firstTime": "19:55"
         },
         {
+          "routeNumber": "880",
           "times": [
             "20:30",
             "20:35",
@@ -341,9 +386,11 @@
             "21:23",
             "21:29",
             "21:35"
-          ]
+          ],
+          "firstTime": "20:30"
         }
-      ]
+      ],
+      "status": "ok"
     }
   ]
 }

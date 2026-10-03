@@ -1,22 +1,32 @@
 {
-  "schemaVersion": "tapso-jeju-timetable-v2",
+  "schemaVersion": "tapso-jeju-timetable-v3",
   "label": "OFFICIAL_DATED",
   "source": {
     "publisher": "제주특별자치도 (bus.jeju.go.kr)",
     "dataset": "data.go.kr 3043887",
     "page": "https://bus.jeju.go.kr/publicTrafficInformation/generalBusSchedule",
     "file": "405041.xlsx",
-    "sha256": "034b10eec3c40276bd9ea3f1a4279d828c83b7eb7b45ebb465fd3571bddbe95d"
+    "sha256": "034b10eec3c40276bd9ea3f1a4279d828c83b7eb7b45ebb465fd3571bddbe95d",
+    "scheduleId": "405041",
+    "listedName": "331"
   },
   "retrievedOn": "2026-10-03",
   "parser": {
     "name": "jeju-bis-xlsx",
-    "version": "2"
+    "version": "3"
   },
-  "routeNumber": "331",
+  "routeNumbers": [
+    "331"
+  ],
+  "status": "parsed",
   "services": [
     {
-      "sheet": "331 삼양1(3)동-동광초-시청-공항-오일시장-수목원",
+      "sheets": [
+        "331 삼양1(3)동-동광초-시청-공항-오일시장-수목원"
+      ],
+      "routeNumbers": [
+        "331"
+      ],
       "dayType": "unstated",
       "direction": "삼양1동(3동)→한라수목원",
       "effectiveFrom": "2024-08-01",
@@ -33,6 +43,7 @@
       ],
       "trips": [
         {
+          "routeNumber": "331",
           "times": [
             null,
             null,
@@ -42,9 +53,11 @@
             "06:49",
             "06:59",
             "07:14"
-          ]
+          ],
+          "firstTime": "06:40"
         },
         {
+          "routeNumber": "331",
           "times": [
             null,
             "06:25",
@@ -54,9 +67,11 @@
             "07:07",
             "07:17",
             "07:32"
-          ]
+          ],
+          "firstTime": "06:25"
         },
         {
+          "routeNumber": "331",
           "times": [
             "07:00",
             null,
@@ -66,9 +81,11 @@
             "07:42",
             "07:52",
             "08:07"
-          ]
+          ],
+          "firstTime": "07:00"
         },
         {
+          "routeNumber": "331",
           "times": [
             null,
             "07:50",
@@ -78,9 +95,11 @@
             "08:32",
             "08:42",
             "08:57"
-          ]
+          ],
+          "firstTime": "07:50"
         },
         {
+          "routeNumber": "331",
           "times": [
             null,
             "08:40",
@@ -90,9 +109,11 @@
             "09:22",
             "09:32",
             "09:47"
-          ]
+          ],
+          "firstTime": "08:40"
         },
         {
+          "routeNumber": "331",
           "times": [
             null,
             "09:30",
@@ -102,9 +123,11 @@
             "10:12",
             "10:22",
             "10:37"
-          ]
+          ],
+          "firstTime": "09:30"
         },
         {
+          "routeNumber": "331",
           "times": [
             "10:20",
             null,
@@ -114,9 +137,11 @@
             "11:02",
             "11:12",
             "11:27"
-          ]
+          ],
+          "firstTime": "10:20"
         },
         {
+          "routeNumber": "331",
           "times": [
             null,
             "11:10",
@@ -126,9 +151,11 @@
             "11:52",
             "12:02",
             "12:17"
-          ]
+          ],
+          "firstTime": "11:10"
         },
         {
+          "routeNumber": "331",
           "times": [
             null,
             "12:00",
@@ -138,9 +165,11 @@
             "12:42",
             "12:52",
             "13:07"
-          ]
+          ],
+          "firstTime": "12:00"
         },
         {
+          "routeNumber": "331",
           "times": [
             null,
             "12:55",
@@ -150,9 +179,11 @@
             "13:37",
             "13:47",
             "14:02"
-          ]
+          ],
+          "firstTime": "12:55"
         },
         {
+          "routeNumber": "331",
           "times": [
             null,
             "13:45",
@@ -162,9 +193,11 @@
             "14:27",
             "14:37",
             "14:52"
-          ]
+          ],
+          "firstTime": "13:45"
         },
         {
+          "routeNumber": "331",
           "times": [
             null,
             "14:40",
@@ -174,9 +207,11 @@
             "15:22",
             "15:32",
             "15:47"
-          ]
+          ],
+          "firstTime": "14:40"
         },
         {
+          "routeNumber": "331",
           "times": [
             "15:25",
             null,
@@ -186,9 +221,11 @@
             "16:07",
             "16:17",
             "16:32"
-          ]
+          ],
+          "firstTime": "15:25"
         },
         {
+          "routeNumber": "331",
           "times": [
             null,
             "16:15",
@@ -198,9 +235,11 @@
             "16:57",
             "17:07",
             "17:22"
-          ]
+          ],
+          "firstTime": "16:15"
         },
         {
+          "routeNumber": "331",
           "times": [
             null,
             "17:05",
@@ -210,9 +249,11 @@
             "17:47",
             "17:57",
             "18:12"
-          ]
+          ],
+          "firstTime": "17:05"
         },
         {
+          "routeNumber": "331",
           "times": [
             null,
             "17:55",
@@ -222,9 +263,11 @@
             "18:37",
             "18:47",
             "19:02"
-          ]
+          ],
+          "firstTime": "17:55"
         },
         {
+          "routeNumber": "331",
           "times": [
             null,
             "18:45",
@@ -234,9 +277,11 @@
             "19:27",
             "19:37",
             "19:52"
-          ]
+          ],
+          "firstTime": "18:45"
         },
         {
+          "routeNumber": "331",
           "times": [
             "19:35",
             null,
@@ -246,9 +291,11 @@
             "20:17",
             "20:27",
             "20:42"
-          ]
+          ],
+          "firstTime": "19:35"
         },
         {
+          "routeNumber": "331",
           "times": [
             null,
             "20:25",
@@ -258,9 +305,11 @@
             "21:07",
             "21:17",
             "21:32"
-          ]
+          ],
+          "firstTime": "20:25"
         },
         {
+          "routeNumber": "331",
           "times": [
             null,
             "21:10",
@@ -270,9 +319,11 @@
             "21:52",
             "22:02",
             "22:17"
-          ]
+          ],
+          "firstTime": "21:10"
         },
         {
+          "routeNumber": "331",
           "times": [
             null,
             "21:50",
@@ -282,12 +333,19 @@
             "22:32",
             "22:42",
             "22:57"
-          ]
+          ],
+          "firstTime": "21:50"
         }
-      ]
+      ],
+      "status": "ok"
     },
     {
-      "sheet": "331 수목원-오일시장-공항-시청-동광초-삼양1(3)동",
+      "sheets": [
+        "331 수목원-오일시장-공항-시청-동광초-삼양1(3)동"
+      ],
+      "routeNumbers": [
+        "331"
+      ],
       "dayType": "unstated",
       "direction": "한라수목원→삼양1동(3동)",
       "effectiveFrom": "2024-08-01",
@@ -304,6 +362,7 @@
       ],
       "trips": [
         {
+          "routeNumber": "331",
           "times": [
             null,
             null,
@@ -313,9 +372,11 @@
             "06:37",
             null,
             "06:54"
-          ]
+          ],
+          "firstTime": "06:25"
         },
         {
+          "routeNumber": "331",
           "times": [
             "06:10",
             "06:25",
@@ -325,9 +386,11 @@
             "06:59",
             "07:16",
             null
-          ]
+          ],
+          "firstTime": "06:10"
         },
         {
+          "routeNumber": "331",
           "times": [
             "06:35",
             "06:50",
@@ -337,9 +400,11 @@
             "07:24",
             "07:41",
             null
-          ]
+          ],
+          "firstTime": "06:35"
         },
         {
+          "routeNumber": "331",
           "times": [
             "07:20",
             "07:35",
@@ -349,9 +414,11 @@
             "08:09",
             "08:26",
             null
-          ]
+          ],
+          "firstTime": "07:20"
         },
         {
+          "routeNumber": "331",
           "times": [
             "08:10",
             "08:25",
@@ -361,9 +428,11 @@
             "08:59",
             null,
             "09:16"
-          ]
+          ],
+          "firstTime": "08:10"
         },
         {
+          "routeNumber": "331",
           "times": [
             "09:00",
             "09:15",
@@ -373,9 +442,11 @@
             "09:49",
             "10:06",
             null
-          ]
+          ],
+          "firstTime": "09:00"
         },
         {
+          "routeNumber": "331",
           "times": [
             "09:50",
             "10:05",
@@ -385,9 +456,11 @@
             "10:39",
             "10:56",
             null
-          ]
+          ],
+          "firstTime": "09:50"
         },
         {
+          "routeNumber": "331",
           "times": [
             "10:40",
             "10:55",
@@ -397,9 +470,11 @@
             "11:29",
             "11:46",
             null
-          ]
+          ],
+          "firstTime": "10:40"
         },
         {
+          "routeNumber": "331",
           "times": [
             "11:30",
             "11:45",
@@ -409,9 +484,11 @@
             "12:19",
             "12:36",
             null
-          ]
+          ],
+          "firstTime": "11:30"
         },
         {
+          "routeNumber": "331",
           "times": [
             "12:30",
             "12:45",
@@ -421,9 +498,11 @@
             "13:19",
             "13:36",
             null
-          ]
+          ],
+          "firstTime": "12:30"
         },
         {
+          "routeNumber": "331",
           "times": [
             "13:20",
             "13:35",
@@ -433,9 +512,11 @@
             "14:09",
             null,
             "14:26"
-          ]
+          ],
+          "firstTime": "13:20"
         },
         {
+          "routeNumber": "331",
           "times": [
             "14:10",
             "14:25",
@@ -445,9 +526,11 @@
             "14:59",
             "15:16",
             null
-          ]
+          ],
+          "firstTime": "14:10"
         },
         {
+          "routeNumber": "331",
           "times": [
             "15:00",
             "15:15",
@@ -457,9 +540,11 @@
             "15:49",
             "16:06",
             null
-          ]
+          ],
+          "firstTime": "15:00"
         },
         {
+          "routeNumber": "331",
           "times": [
             "15:50",
             "16:05",
@@ -469,9 +554,11 @@
             "16:39",
             "16:56",
             null
-          ]
+          ],
+          "firstTime": "15:50"
         },
         {
+          "routeNumber": "331",
           "times": [
             "16:40",
             "16:55",
@@ -481,9 +568,11 @@
             "17:29",
             "17:46",
             null
-          ]
+          ],
+          "firstTime": "16:40"
         },
         {
+          "routeNumber": "331",
           "times": [
             "17:30",
             "17:45",
@@ -493,9 +582,11 @@
             "18:19",
             null,
             "18:36"
-          ]
+          ],
+          "firstTime": "17:30"
         },
         {
+          "routeNumber": "331",
           "times": [
             "18:20",
             "18:35",
@@ -505,9 +596,11 @@
             "19:09",
             "19:26",
             null
-          ]
+          ],
+          "firstTime": "18:20"
         },
         {
+          "routeNumber": "331",
           "times": [
             "19:10",
             "19:25",
@@ -517,9 +610,11 @@
             "19:59",
             "20:16",
             null
-          ]
+          ],
+          "firstTime": "19:10"
         },
         {
+          "routeNumber": "331",
           "times": [
             "20:00",
             "20:15",
@@ -529,9 +624,11 @@
             "20:49",
             "21:06",
             null
-          ]
+          ],
+          "firstTime": "20:00"
         },
         {
+          "routeNumber": "331",
           "times": [
             "20:40",
             "20:55",
@@ -541,9 +638,11 @@
             "21:29",
             "21:46",
             null
-          ]
+          ],
+          "firstTime": "20:40"
         },
         {
+          "routeNumber": "331",
           "times": [
             "21:20",
             "21:35",
@@ -553,9 +652,11 @@
             "22:09",
             "22:26",
             null
-          ]
+          ],
+          "firstTime": "21:20"
         }
-      ]
+      ],
+      "status": "ok"
     }
   ]
 }

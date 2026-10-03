@@ -1,0 +1,185 @@
+{
+  "schemaVersion": "tapso-jeju-timetable-v3",
+  "label": "OFFICIAL_DATED",
+  "source": {
+    "publisher": "제주특별자치도 (bus.jeju.go.kr)",
+    "dataset": "data.go.kr 3043887",
+    "page": "https://bus.jeju.go.kr/publicTrafficInformation/generalBusSchedule",
+    "file": "405156.xlsx",
+    "sha256": "82c36d1ad3bf7b78f71d0363385b228ab8afb47f2d17483625609fe8e866af0c",
+    "scheduleId": "405156",
+    "listedName": "1100-1"
+  },
+  "retrievedOn": "2026-10-03",
+  "parser": {
+    "name": "jeju-bis-xlsx",
+    "version": "3"
+  },
+  "routeNumbers": [
+    "1100-1"
+  ],
+  "serviceLabels": [
+    "한라눈꽃버스"
+  ],
+  "status": "parsed",
+  "services": [
+    {
+      "sheets": [
+        "1100-1 서귀포등기소-어리목-서귀포등기소"
+      ],
+      "routeNumbers": [
+        "1100-1"
+      ],
+      "dayType": "unstated",
+      "serviceLabels": [
+        "한라눈꽃버스"
+      ],
+      "direction": "서귀포등기소 → 어리목 → 서귀포등기소",
+      "effectiveFrom": "2026-01-01",
+      "summary": "관광지순환버스(064-746-7310)",
+      "timepoints": [
+        "어리목",
+        "1100고지",
+        "영실지소",
+        "중문사거리",
+        "서귀포터미널",
+        "서귀포등기소",
+        "서귀포등기소",
+        "서귀포터미널",
+        "중문사거리",
+        "영실지소",
+        "1100고지",
+        "어리목"
+      ],
+      "trips": [
+        {
+          "routeNumber": "1100-1",
+          "times": [
+            null,
+            null,
+            null,
+            null,
+            null,
+            null,
+            "08:40",
+            "08:50",
+            "09:05",
+            "09:26",
+            "09:35",
+            "09:45"
+          ],
+          "firstTime": "08:40"
+        },
+        {
+          "routeNumber": "1100-1",
+          "times": [
+            null,
+            null,
+            null,
+            null,
+            null,
+            null,
+            "10:00",
+            "10:10",
+            "10:25",
+            "10:46",
+            "10:55",
+            "11:05"
+          ],
+          "firstTime": "10:00"
+        },
+        {
+          "routeNumber": "1100-1",
+          "times": [
+            "10:25",
+            "10:35",
+            "10:44",
+            "11:09",
+            "11:24",
+            "11:34",
+            "11:39",
+            "11:49",
+            "12:04",
+            "12:25",
+            "12:34",
+            "12:44"
+          ],
+          "firstTime": "10:25"
+        },
+        {
+          "routeNumber": "1100-1",
+          "times": [
+            "11:45",
+            "11:55",
+            "12:04",
+            "12:29",
+            "12:44",
+            "12:54",
+            "12:59",
+            "13:09",
+            "13:24",
+            "13:45",
+            "13:54",
+            "14:04"
+          ],
+          "firstTime": "11:45"
+        },
+        {
+          "routeNumber": "1100-1",
+          "times": [
+            "13:30",
+            "13:40",
+            "13:49",
+            "14:14",
+            "14:29",
+            "14:39",
+            "14:44",
+            "14:54",
+            "15:09",
+            "15:30",
+            "15:39",
+            "15:49"
+          ],
+          "firstTime": "13:30"
+        },
+        {
+          "routeNumber": "1100-1",
+          "times": [
+            "14:50",
+            "15:00",
+            "15:09",
+            "15:34",
+            "15:49",
+            "15:59",
+            null,
+            null,
+            null,
+            null,
+            null,
+            null
+          ],
+          "firstTime": "14:50"
+        },
+        {
+          "routeNumber": "1100-1",
+          "times": [
+            "16:50",
+            "17:00",
+            "17:09",
+            "17:34",
+            "17:49",
+            "17:59",
+            null,
+            null,
+            null,
+            null,
+            null,
+            null
+          ],
+          "firstTime": "16:50"
+        }
+      ],
+      "status": "ok"
+    }
+  ]
+}

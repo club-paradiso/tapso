@@ -1,0 +1,80 @@
+{
+  "schemaVersion": "tapso-jeju-timetable-v3",
+  "label": "OFFICIAL_DATED",
+  "source": {
+    "publisher": "제주특별자치도 (bus.jeju.go.kr)",
+    "dataset": "data.go.kr 3043887",
+    "page": "https://bus.jeju.go.kr/publicTrafficInformation/generalBusSchedule",
+    "file": "405136.xlsx",
+    "sha256": "4fa84fbf017d00e1b1903cf7bbfd9e980c367ecc9c8ff6aa4c8b92cf727b937c",
+    "scheduleId": "405136",
+    "listedName": "182-1(수요맞춤형)"
+  },
+  "retrievedOn": "2026-10-03",
+  "parser": {
+    "name": "jeju-bis-xlsx",
+    "version": "3"
+  },
+  "routeNumbers": [
+    "182-1"
+  ],
+  "serviceLabels": [
+    "수요맞춤형"
+  ],
+  "status": "parsed",
+  "services": [
+    {
+      "sheets": [
+        "182-1 터미널-공항-평화로-서귀포-516로-공항"
+      ],
+      "routeNumbers": [
+        "182-1"
+      ],
+      "dayType": "unstated",
+      "serviceLabels": [
+        "수요맞춤형"
+      ],
+      "direction": "공항→평화로→서귀포 →5·16도로→공항",
+      "effectiveFrom": "2024-08-01",
+      "summary": "관광지순환버스(064-746-7310)",
+      "timepoints": [
+        "공항",
+        "제주도청(신제주로터리)",
+        "한라병원",
+        "동광육거리(동광환승정류장)",
+        "중문환승정류장(중문우체국)",
+        "서귀포터미널 앞(월드컵경기장)",
+        "서귀포터미널 앞(월드컵경기장)",
+        "서귀포중앙로터리",
+        "비석거리",
+        "성판악",
+        "제주대학교입구",
+        "제주시청",
+        "공항"
+      ],
+      "trips": [
+        {
+          "routeNumber": "182-1",
+          "times": [
+            "07:05",
+            "07:10",
+            "07:15",
+            "07:45",
+            "08:00",
+            "08:15",
+            "08:25",
+            "08:35",
+            "08:39",
+            "09:05",
+            "09:20",
+            "09:35",
+            "09:50"
+          ],
+          "firstTime": "07:05"
+        }
+      ],
+      "note": "토,공휴일운행 안함",
+      "status": "ok"
+    }
+  ]
+}

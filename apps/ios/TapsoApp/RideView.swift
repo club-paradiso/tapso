@@ -138,6 +138,17 @@ struct RideSnapshot {
     /// Past the stop: the Rescue plan for the way back.
     let rescue: PassedStopAdvice?
     let kakaoAvailable: Bool
+    /// What keeps the Lock Screen current while TAPSO is closed, said plainly on the ride screen.
+    let backgroundUpdates: BackgroundUpdates
+
+    enum BackgroundUpdates: Equatable {
+        /// The synthetic demo plays only while the app is open.
+        case demo
+        /// A live ride without a registered push token: updates arrive while TAPSO is open.
+        case liveForegroundOnly
+        /// The server accepted the Live Activity push token and updates it in the background.
+        case livePush
+    }
 
     @MainActor
     init(model: TapsoAppModel, guidance: RideGuidance) {
@@ -154,7 +165,8 @@ struct RideSnapshot {
             resumed: model.resumedAfterRelaunch,
             mapHandoffFailed: model.mapHandoffFailed,
             rescue: model.passedStopAdvice,
-            kakaoAvailable: model.rescueMapRequest(for: .kakaoMap) != nil
+            kakaoAvailable: model.rescueMapRequest(for: .kakaoMap) != nil,
+            backgroundUpdates: !model.isLiveRide ? .demo : (model.liveActivityPushRegistered ? .livePush : .liveForegroundOnly)
         )
     }
 
@@ -171,7 +183,8 @@ struct RideSnapshot {
         resumed: Bool = false,
         mapHandoffFailed: MapApp? = nil,
         rescue: PassedStopAdvice? = nil,
-        kakaoAvailable: Bool = false
+        kakaoAvailable: Bool = false,
+        backgroundUpdates: BackgroundUpdates = .demo
     ) {
         self.guidance = guidance
         self.routeNumber = routeNumber
@@ -186,11 +199,20 @@ struct RideSnapshot {
         self.mapHandoffFailed = mapHandoffFailed
         self.rescue = rescue
         self.kakaoAvailable = kakaoAvailable
+        self.backgroundUpdates = backgroundUpdates
     }
 }
 
 struct RideContent: View {
     let snapshot: RideSnapshot
+
+    private var closeAppKey: LocalizedStringKey {
+        switch snapshot.backgroundUpdates {
+        case .demo: "ride.closeApp"
+        case .liveForegroundOnly: "ride.closeApp.live"
+        case .livePush: "ride.closeApp.livePush"
+        }
+    }
     let onFinish: () -> Void
     let onMapSearch: (MapApp) -> Void
     let onDismissResume: () -> Void
@@ -256,7 +278,7 @@ struct RideContent: View {
                 tint: TapsoColor.journeyDegraded
             )
         } else if guidance.moment == .riding {
-            Label("ride.closeApp", systemImage: "iphone.gen3.radiowaves.left.and.right")
+            Label(closeAppKey, systemImage: "iphone.gen3.radiowaves.left.and.right")
                 .font(.footnote)
                 .foregroundStyle(TapsoColor.textSecondary)
                 .fixedSize(horizontal: false, vertical: true)

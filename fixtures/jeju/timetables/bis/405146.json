@@ -1,0 +1,74 @@
+{
+  "schemaVersion": "tapso-jeju-timetable-v3",
+  "label": "OFFICIAL_DATED",
+  "source": {
+    "publisher": "제주특별자치도 (bus.jeju.go.kr)",
+    "dataset": "data.go.kr 3043887",
+    "page": "https://bus.jeju.go.kr/publicTrafficInformation/generalBusSchedule",
+    "file": "405146.xlsx",
+    "sha256": "e62270336ad2ac59a1e9091d29c0b63fd193d31af07a18505ec50b313c80a5c4",
+    "scheduleId": "405146",
+    "listedName": "902"
+  },
+  "retrievedOn": "2026-10-03",
+  "parser": {
+    "name": "jeju-bis-xlsx",
+    "version": "3"
+  },
+  "routeNumbers": [
+    "902"
+  ],
+  "serviceLabels": [
+    "자율주행"
+  ],
+  "status": "parsed",
+  "services": [
+    {
+      "sheets": [
+        "902 제주시청-공항-동광-중문-서귀포등기소"
+      ],
+      "routeNumbers": [
+        "902"
+      ],
+      "dayType": "unstated",
+      "serviceLabels": [
+        "자율주행"
+      ],
+      "direction": "롯데마트(남)->제주공항->롯데마트(북)(순환)",
+      "effectiveFrom": "2025-06-12",
+      "summary": "㈜라이드플럭스 (064-748-8039)",
+      "timepoints": [
+        "롯데마트(남)",
+        "신제주로터리(동)",
+        "제주국제공항6",
+        "신제주로터리(수)",
+        "롯데마트(북)"
+      ],
+      "trips": [
+        {
+          "routeNumber": "902",
+          "times": [
+            "17:00",
+            "17:06",
+            "17:14",
+            "17:22",
+            "17:28"
+          ],
+          "firstTime": "17:00"
+        },
+        {
+          "routeNumber": "902",
+          "times": [
+            "17:45",
+            "17:51",
+            "17:59",
+            "18:07",
+            "18:13"
+          ],
+          "firstTime": "17:45"
+        }
+      ],
+      "status": "ok"
+    }
+  ]
+}

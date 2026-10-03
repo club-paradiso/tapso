@@ -1,24 +1,34 @@
 {
-  "schemaVersion": "tapso-jeju-timetable-v2",
+  "schemaVersion": "tapso-jeju-timetable-v3",
   "label": "OFFICIAL_DATED",
   "source": {
     "publisher": "제주특별자치도 (bus.jeju.go.kr)",
     "dataset": "data.go.kr 3043887",
     "page": "https://bus.jeju.go.kr/publicTrafficInformation/generalBusSchedule",
     "file": "406011.xlsx",
-    "sha256": "ae8f5431185d94e7ecafbded7d31db263bd724602805c1dbb0de3a9bae074920"
+    "sha256": "ae8f5431185d94e7ecafbded7d31db263bd724602805c1dbb0de3a9bae074920",
+    "scheduleId": "406011",
+    "listedName": "623"
   },
   "retrievedOn": "2026-10-03",
   "parser": {
     "name": "jeju-bis-xlsx",
-    "version": "2"
+    "version": "3"
   },
-  "routeNumber": "623",
+  "routeNumbers": [
+    "623"
+  ],
+  "status": "parsed",
   "services": [
     {
-      "sheet": "623 하례리입구-중앙R-하례리입구(순환)",
+      "sheets": [
+        "623 하례리입구-중앙R-하례리입구(순환)"
+      ],
+      "routeNumbers": [
+        "623"
+      ],
       "dayType": "unstated",
-      "direction": "하례리입구↔중앙R↔하례리입구(순환)\n<위미중 경유>",
+      "direction": "하례리입구↔중앙R↔하례리입구(순환) <위미중 경유>",
       "effectiveFrom": "2024-08-01",
       "summary": "첫차 7:15, 막차 19:50, 1일 7회 운행, 금남여객(064-753-4423)",
       "timepoints": [
@@ -36,6 +46,7 @@
       ],
       "trips": [
         {
+          "routeNumber": "623",
           "times": [
             "07:15",
             "07:20",
@@ -48,9 +59,11 @@
             null,
             "08:15",
             "08:23"
-          ]
+          ],
+          "firstTime": "07:15"
         },
         {
+          "routeNumber": "623",
           "times": [
             "08:41",
             "08:46",
@@ -63,9 +76,11 @@
             "09:57",
             "10:01",
             "10:09"
-          ]
+          ],
+          "firstTime": "08:41"
         },
         {
+          "routeNumber": "623",
           "times": [
             "10:49",
             "10:54",
@@ -78,9 +93,11 @@
             "12:05",
             "12:09",
             "12:17"
-          ]
+          ],
+          "firstTime": "10:49"
         },
         {
+          "routeNumber": "623",
           "times": [
             "13:07",
             "13:12",
@@ -93,9 +110,11 @@
             "14:23",
             "14:27",
             "14:35"
-          ]
+          ],
+          "firstTime": "13:07"
         },
         {
+          "routeNumber": "623",
           "times": [
             "15:15",
             "15:20",
@@ -108,9 +127,11 @@
             null,
             "16:15",
             "16:23"
-          ]
+          ],
+          "firstTime": "15:15"
         },
         {
+          "routeNumber": "623",
           "times": [
             "17:30",
             "17:35",
@@ -123,9 +144,11 @@
             "18:46",
             "18:50",
             "18:58"
-          ]
+          ],
+          "firstTime": "17:30"
         },
         {
+          "routeNumber": "623",
           "times": [
             "19:50",
             "19:55",
@@ -138,9 +161,11 @@
             "20:58",
             "21:02",
             "21:10"
-          ]
+          ],
+          "firstTime": "19:50"
         }
-      ]
+      ],
+      "status": "ok"
     }
   ]
 }
