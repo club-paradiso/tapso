@@ -119,7 +119,7 @@ struct HomeContent: View {
     private var brand: some View {
         HStack(spacing: TapsoSpace.xs) {
             DolBuddy(moment: .riding, size: 28)
-            Text(verbatim: "TAPSO")
+            Text(verbatim: "TAPSŌ")
                 .font(.system(.title3, design: .rounded, weight: .black))
                 .tracking(1.2)
                 .foregroundStyle(TapsoColor.textPrimary)

@@ -22,7 +22,9 @@ struct ScreenshotImportSection: View {
             onStart: { proposal in
                 Task { await model.startScreenshotRoute(proposal) }
             },
-            onOtherRoute: { model.chooseAnotherRoute(like: $0) }
+            onOtherRoute: { model.chooseAnotherRoute(like: $0) },
+            originalDeletion: model.originalDeletion,
+            onDeleteOriginal: { Task { await model.deleteOriginalScreenshot() } }
         )
         .onChange(of: picked) { _, item in
             guard let item else { return }
@@ -37,12 +39,13 @@ struct ScreenshotImportSection: View {
             model.screenshotCouldNotLoad()
             return
         }
-        model.importScreenshot(data)
+        model.importScreenshot(data, assetID: item.itemIdentifier)
     }
 
     @ViewBuilder
     private func pickerButton(prominent: Bool) -> some View {
-        PhotosPicker(selection: $picked, matching: .screenshots) {
+        // `.shared()` makes the picker report the photo's identifier, for the rider's own "delete the original".
+        PhotosPicker(selection: $picked, matching: .screenshots, photoLibrary: .shared()) {
             if prominent {
                 Label("mapImport.shot.action", systemImage: "photo.on.rectangle")
                     .font(.headline)
@@ -75,8 +78,71 @@ struct ScreenshotImportContent: View {
     let anotherPicker: AnyView
     var onStart: (RouteImportProposal) -> Void = { _ in }
     var onOtherRoute: (RouteImportProposal) -> Void = { _ in }
+    var originalDeletion: OriginalDeletionState = .unavailable
+    var onDeleteOriginal: () -> Void = {}
 
     var body: some View {
+        VStack(alignment: .leading, spacing: TapsoSpace.md) {
+            stateContent
+            if showsOriginalNote {
+                originalNote
+            }
+        }
+    }
+
+    /// Once there is a result to look at, say what happened to the picture, and offer to delete the original.
+    private var showsOriginalNote: Bool {
+        switch state {
+        case .confirm, .choose, .failed: true
+        case .idle, .reading: false
+        }
+    }
+
+    @ViewBuilder
+    private var originalNote: some View {
+        VStack(alignment: .leading, spacing: TapsoSpace.xs) {
+            switch originalDeletion {
+            case .unavailable:
+                Text("mapImport.shot.kept")
+            case .available:
+                Text("mapImport.shot.kept")
+                Button(action: onDeleteOriginal) {
+                    Label("mapImport.shot.delete", systemImage: "trash")
+                        .font(.subheadline.weight(.semibold))
+                        .frame(minHeight: TapsoSize.minimumTouch, alignment: .leading)
+                }
+                .tint(TapsoColor.journeyDegraded)
+                .accessibilityHint(Text("mapImport.shot.delete.hint"))
+                .accessibilityIdentifier("screenshot-import-delete-original")
+            case .deleting:
+                HStack(spacing: TapsoSpace.xs) {
+                    ProgressView()
+                    Text("mapImport.shot.deleting")
+                }
+            case .deleted:
+                Label("mapImport.shot.deleted", systemImage: "checkmark.circle.fill")
+            case let .failed(failure):
+                if failure == .denied {
+                    Text("mapImport.shot.deleteDenied")
+                } else {
+                    Text("mapImport.shot.deleteFailed")
+                }
+                Button(action: onDeleteOriginal) {
+                    Label("mapImport.shot.delete", systemImage: "trash")
+                        .font(.subheadline.weight(.semibold))
+                        .frame(minHeight: TapsoSize.minimumTouch, alignment: .leading)
+                }
+                .tint(TapsoColor.journeyDegraded)
+            }
+        }
+        .font(.footnote)
+        .foregroundStyle(TapsoColor.textSecondary)
+        .fixedSize(horizontal: false, vertical: true)
+        .frame(maxWidth: .infinity, alignment: .leading)
+    }
+
+    @ViewBuilder
+    private var stateContent: some View {
         switch state {
         case .idle:
             VStack(alignment: .leading, spacing: TapsoSpace.sm) {

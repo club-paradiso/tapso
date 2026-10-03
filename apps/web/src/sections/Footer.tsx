@@ -10,7 +10,7 @@ export function Footer() {
           <p className="footer-logo">
             <BrandMark size={36} />
             <span>
-              TAPSO <span>탑서</span>
+              TAPSŌ <span>탑서</span>
             </span>
           </p>
           <p className="footer-motto">

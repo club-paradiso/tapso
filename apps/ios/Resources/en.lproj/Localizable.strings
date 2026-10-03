@@ -381,3 +381,10 @@
 "share.screenshot.saved.body" = "Open TAPSO within 30 minutes and it checks this route.";
 "share.screenshot.nothing.title" = "Couldn't read a route";
 "share.screenshot.nothing.body" = "Share a screen from your map app that shows the bus number and stops.";
+"mapImport.shot.kept" = "TAPSO didn't save the photo. The original is still in Photos.";
+"mapImport.shot.delete" = "Delete this screenshot from Photos";
+"mapImport.shot.delete.hint" = "Deletes the original in Photos. TAPSO asks for photo access the first time, and iOS confirms once more.";
+"mapImport.shot.deleting" = "Deleting…";
+"mapImport.shot.deleted" = "Deleted from Photos. It's in Recently Deleted.";
+"mapImport.shot.deleteDenied" = "Photo access wasn't allowed, so it wasn't deleted. Delete it in Photos.";
+"mapImport.shot.deleteFailed" = "Couldn't delete it. Delete it in Photos.";
