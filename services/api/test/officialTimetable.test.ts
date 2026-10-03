@@ -1,8 +1,9 @@
 /**
- * The official Jeju timetable dataset: schema, validation, staleness and the
- * last bus. The Route 365 dataset is the real file's parse (downloaded
- * 2026-10-03, `fixtures/jeju/timetables/365.json`); every other dataset here
- * is SYNTHETIC (invented times and places, a repeated-letter checksum).
+ * The official Jeju timetable bundle (v3): validation, freshness, the
+ * service-day engine and the per-route view. The committed bundle and Route
+ * 365 dataset are the real files' parse (downloaded 2026-10-03); every other
+ * dataset here is SYNTHETIC (invented places and times, a repeated-letter
+ * checksum).
  */
 
 import assert from "node:assert/strict";
@@ -14,20 +15,26 @@ import {
   TIMETABLE_SCHEMA_VERSION,
   TIMETABLE_USABLE_DAYS,
   TimetableDatasetError,
-  lastDeparture,
-  lastTimeAt,
+  routeTimetableView,
   timetableFreshness,
+  timetableIndex,
+  validateTimetableBundle,
   validateTimetableDataset,
   type OfficialTimetableDataset,
+  type TimetableBundle,
   type TimetableService,
 } from "../src/officialTimetable.ts";
+import { dayTypeApplies, koreanDate, serviceDay, validateHolidayCalendar, type HolidayCalendar } from "../src/serviceDay.ts";
 
-const route442 = JSON.parse(readFileSync(new URL("../../../fixtures/jeju/timetables/442.json", import.meta.url), "utf8")) as unknown;
-const route365 = JSON.parse(readFileSync(new URL("../../../fixtures/jeju/timetables/365.json", import.meta.url), "utf8")) as unknown;
+const read = (path: string): unknown => JSON.parse(readFileSync(new URL(path, import.meta.url), "utf8"));
+const realBundle = validateTimetableBundle(read("../data/jeju-timetables.json"));
+const calendar = validateHolidayCalendar(read("../data/kr-public-holidays.json"));
+const route365 = read("../../../fixtures/jeju/timetables/365.json");
 
 function service(overrides: Partial<TimetableService> = {}): TimetableService {
   return {
-    sheet: "SYNTHETIC",
+    sheets: ["SYNTHETIC"],
+    routeNumbers: ["999"],
     dayType: "weekday",
     dayLabel: "평일",
     direction: "합성A→합성B",
@@ -35,122 +42,210 @@ function service(overrides: Partial<TimetableService> = {}): TimetableService {
     summary: "SYNTHETIC",
     timepoints: ["합성A", "합성B"],
     trips: [
-      { times: [null, "06:10"], startsAt: { place: "합성C", time: "06:00", column: "합성A" } },
-      { times: ["12:30", "12:40"] },
-      { times: ["22:10", "22:20"] },
+      { routeNumber: "999", times: [null, "06:10"], firstTime: "06:00", startsAt: { place: "합성C", time: "06:00", column: "합성A" } },
+      { routeNumber: "999", times: ["12:30", "12:40"], firstTime: "12:30" },
+      { routeNumber: "999", times: ["22:10", "22:20"], firstTime: "22:10" },
+      { routeNumber: "999", times: ["23:00", "23:10"], firstTime: "23:00", conditions: ["11,12,1,2월 막차"], note: "11,12,1,2월 막차" },
     ],
+    status: "ok",
     ...overrides,
   };
 }
 
-function dataset(overrides: Partial<OfficialTimetableDataset> = {}): OfficialTimetableDataset {
+function dataset(services: TimetableService[] = [service()], overrides: Partial<OfficialTimetableDataset> = {}): OfficialTimetableDataset {
   return {
     schemaVersion: TIMETABLE_SCHEMA_VERSION,
     label: "OFFICIAL_DATED",
-    source: {
-      publisher: "SYNTHETIC",
-      dataset: "data.go.kr 3043887",
-      page: "https://bus.jeju.go.kr/publicTrafficInformation/generalBusSchedule",
-      file: "SYNTHETIC.xlsx",
-      sha256: "a".repeat(64),
-    },
-    retrievedOn: "2026-10-01",
-    parser: { name: "synthetic", version: "0" },
-    routeNumber: "999",
-    services: [service(), service({ dayType: "daily", trips: [{ times: ["06:30", "06:40"] }, { times: ["21:40", "21:50"] }] })],
+    source: { publisher: "SYNTHETIC", dataset: "SYNTHETIC", page: "https://synthetic.invalid", file: "999.xlsx", sha256: "a".repeat(64), scheduleId: "SYN999" },
+    retrievedOn: "2026-10-03",
+    parser: { name: "jeju-bis-xlsx", version: "3" },
+    routeNumbers: ["999"],
+    status: "parsed",
+    services,
     ...overrides,
   };
 }
 
-test("the committed Route 365 dataset validates and says what the file says", () => {
-  const real = validateTimetableDataset(route365);
-  assert.equal(real.routeNumber, "365");
-  assert.equal(real.retrievedOn, "2026-10-03");
-  assert.equal(real.source.sha256, "8eafd16b3393be8c15ff26098edadde73fd10cd66d4584e9a6aa95b08b6d07a4");
-  const weekday = "한라대→공항→시청→제주대";
-  assert.deepEqual(lastDeparture(real, weekday, "weekday", "2026-10-03"), { time: "21:55", asOf: "2026-10-03", freshness: "fresh", effectiveFrom: "2026-06-24" });
-  assert.deepEqual(lastTimeAt(real, weekday, "제주시청", "weekday", "2026-10-03")?.time, "22:44");
-  assert.deepEqual(lastTimeAt(real, "제주대→시청→공항→한라대", "공항", "saturday_sunday_holiday", "2026-10-04")?.time, "22:37");
-  // 영주고 is served only by morning weekday trips.
-  assert.equal(lastTimeAt(real, weekday, "영주고", "weekday", "2026-10-03")?.time, "08:10");
-  assert.equal(lastTimeAt(real, weekday, "영주고", "saturday_sunday_holiday", "2026-10-04"), undefined, "the holiday sheet has no 영주고 column");
-  // The first trip starts at 월성마을, which no column heads.
-  assert.deepEqual(real.services[0]!.trips[0]!.startsAt, { place: "월성마을", time: "06:03", column: "공항" });
+function bundle(datasets: OfficialTimetableDataset[], retrievedOn = "2026-10-03"): TimetableBundle {
+  return {
+    schemaVersion: "tapso-jeju-timetable-bundle-v1",
+    label: "OFFICIAL_DATED",
+    bundleVersion: "0000000000000000",
+    source: { page: "https://synthetic.invalid", dataset: "SYNTHETIC" },
+    retrievedOn,
+    retrievedAt: `${retrievedOn}T10:00:00+09:00`,
+    parser: { name: "jeju-bis-xlsx", version: "3" },
+    census: { entries: datasets.length + 1, counts: { parsed: datasets.length, no_timetable: 1 }, noTimetable: [{ scheduleId: "SYN888", name: "888", reason: "site_has_none" }], refused: [] },
+    datasets,
+  };
+}
+
+/** A SYNTHETIC calendar: one weekday holiday, 2026-10-05. */
+const synthetic: HolidayCalendar = {
+  schemaVersion: "tapso-kr-public-holidays-v1",
+  validFrom: "2026-01-01",
+  validThrough: "2026-12-31",
+  generator: { library: "SYNTHETIC", version: "0", category: "public" },
+  sources: [],
+  holidays: [{ date: "2026-10-05", name: "합성 대체 휴일" }],
+};
+
+test("the committed bundle validates in full and agrees with the census counts", () => {
+  assert.deepEqual(realBundle.rejected, []);
+  const { bundle: real } = realBundle;
+  assert.equal(real.datasets.length, real.census.counts.parsed! + real.census.counts.source_conflict!);
+  assert.equal(real.census.entries, Object.values(real.census.counts).reduce((sum, count) => sum + count, 0));
+  assert.deepEqual(real.census.refused, [], "no committed file is outside the parser's grammar");
+  for (const entry of real.datasets) assert.equal(entry.label, "OFFICIAL_DATED");
 });
 
-test("the committed Route 442 dataset: a circular route with no stated day type", () => {
-  const real = validateTimetableDataset(route442);
-  const direction = "제주대(별빛누리)→사대부고→제주대(별빛누리)(순환)";
-  const service = real.services[0]!;
-  assert.equal(service.dayType, "unstated");
-  assert.equal(service.dayLabel, undefined);
-  assert.equal(service.effectiveFrom, "2024-04-25");
-  assert.equal(service.trips.length, 13);
-  // The file's summary says 첫차 05:50; trip 1 says 05:55. The trips are kept and the conflict recorded.
-  assert.deepEqual(service.summaryConflicts, ["summary 첫차 05:50 disagrees with the trips (05:55)"]);
-  assert.equal(service.trips[0]!.times[2], "05:55");
-  assert.equal(lastDeparture(real, direction, "unstated", "2026-10-03")?.time, "21:40");
-  assert.equal(lastDeparture(real, direction, "weekday", "2026-10-03"), undefined, "a stated day type never finds an unstated sheet");
-  assert.equal(lastTimeAt(real, direction, "사대부고", "unstated", "2026-10-03")?.time, "22:23");
-  assert.equal(lastTimeAt(real, direction, "제주대학교", "unstated", "2026-10-03"), undefined, "named twice on a loop: ambiguous");
-  assert.equal(lastTimeAt(real, direction, 10, "unstated", "2026-10-03")?.time, "18:05", "the loop's last arrival back at 제주대학교");
-  assert.equal(lastTimeAt(real, direction, 0, "unstated", "2026-10-03")?.time, "18:45");
+test("the hand-downloaded Route 365 file and the census copy say the same thing", () => {
+  const mine = validateTimetableDataset(route365);
+  const census = realBundle.bundle.datasets.find((entry) => entry.routeNumbers.includes("365"))!;
+  assert.deepEqual(mine.services.map((entry) => entry.trips), census.services.map((entry) => entry.trips));
 });
 
-test("a well-formed dataset validates", () => {
-  assert.equal(validateTimetableDataset(dataset()).routeNumber, "999");
+test("Route 365 on a substitute holiday uses its 토,공휴일 table, from the real calendar", () => {
+  const view = routeTimetableView(realBundle.bundle, calendar, "365", "2026-10-05");
+  assert.equal(view.serviceDay.publicHoliday?.name, "개천절 대체 휴일");
+  assert.equal(view.status, "available");
+  assert.equal(view.freshness, "fresh");
+  assert.deepEqual(view.today.map((entry) => entry.dayLabel), ["토,공휴일", "토,공휴일"]);
+  const weekday = routeTimetableView(realBundle.bundle, calendar, "365", "2026-10-07");
+  assert.deepEqual(weekday.today.map((entry) => entry.dayLabel), ["평일", "평일"]);
+  assert.deepEqual(weekday.today[0]!.first, { time: "06:00", from: "한라대" });
 });
 
-test("validation refuses what it cannot vouch for", () => {
-  const trips = (value: TimetableService["trips"]) => ({ ...dataset(), services: [service({ trips: value })] });
-  const bad: Array<[string, unknown]> = [
-    ["v1 schema", { ...dataset(), schemaVersion: "tapso-jeju-timetable-v1" }],
-    ["live label", { ...dataset(), label: "LIVE" }],
-    ["no checksum", { ...dataset(), source: { ...dataset().source, sha256: "" } }],
-    ["bad date", { ...dataset(), retrievedOn: "2026-02-30" }],
-    ["bad effective date", { ...dataset(), services: [service({ effectiveFrom: "2026-13-01" })] }],
-    ["descending within a trip", trips([{ times: ["12:00", "06:00"] }])],
-    ["after midnight", trips([{ times: ["23:50", "24:10"] }])],
-    ["start after the first time", trips([{ times: ["06:00", "06:10"], startsAt: { place: "합성C", time: "06:05", column: "합성A" } }])],
-    ["start under an unknown column", trips([{ times: [null, "06:10"], startsAt: { place: "합성C", time: "06:00", column: "합성Z" } }])],
-    ["out of order at a timepoint", trips([{ times: ["07:00", "07:10"] }, { times: ["06:00", "06:10"] }])],
-    ["wrong width", trips([{ times: ["06:00"] }])],
-    ["serves nothing", trips([{ times: [null, null] }])],
-    ["repeated service", { ...dataset(), services: [service(), service()] }],
-    ["unknown day type", { ...dataset(), services: [service({ dayType: "holiday" as never })] }],
-    ["one timepoint", { ...dataset(), services: [service({ timepoints: ["합성A"], trips: [{ times: ["06:00"] }] })] }],
-    ["no services", { ...dataset(), services: [] }],
-    ["unstated with a label", { ...dataset(), services: [service({ dayType: "unstated" })] }],
-    ["stated without a label", { ...dataset(), services: [service({ dayLabel: undefined })] }],
-    ["empty conflict", { ...dataset(), services: [service({ summaryConflicts: [""] })] }],
+test("a route whose table states no day type is listed but never claimed for today", () => {
+  const view = routeTimetableView(realBundle.bundle, calendar, "201", "2026-10-07");
+  assert.equal(view.status, "available");
+  assert.deepEqual(view.today, []);
+  assert.ok(view.services.every((entry) => entry.applicability === "unstated" && entry.first !== null));
+});
+
+test("a conflicting table is withheld: no trips, no first or last bus", () => {
+  const view = routeTimetableView(realBundle.bundle, calendar, "325", "2026-10-07");
+  const withheld = view.services.filter((entry) => entry.status === "source_conflict");
+  assert.ok(withheld.length > 0);
+  for (const entry of withheld) {
+    assert.deepEqual(entry.trips, []);
+    assert.equal(entry.first, null);
+    assert.ok(entry.conflicts!.length > 0);
+  }
+});
+
+test("status for routes the census has no timetable for, or never listed", () => {
+  assert.equal(routeTimetableView(realBundle.bundle, calendar, "888", "2026-10-07").status, "no_timetable");
+  assert.equal(routeTimetableView(realBundle.bundle, calendar, "9999", "2026-10-07").status, "not_published");
+  const index = timetableIndex(realBundle.bundle);
+  assert.equal(index.find((entry) => entry.routeNo === "365")?.status, "available");
+  assert.equal(index.find((entry) => entry.routeNo === "888")?.status, "no_timetable");
+});
+
+test("first and last ignore conditional trips, which are reported after the last", () => {
+  const view = routeTimetableView(bundle([dataset()]), synthetic, "999", "2026-10-07");
+  const [entry] = view.services;
+  assert.deepEqual(entry!.first, { time: "06:00", from: "합성C" });
+  assert.deepEqual(entry!.last, { time: "22:10", from: "합성A" });
+  assert.deepEqual(entry!.laterConditional, [{ time: "23:00", from: "합성A", conditions: ["11,12,1,2월 막차"] }]);
+  assert.deepEqual(view.today, [{ direction: "합성A→합성B", first: entry!.first, last: entry!.last, dayLabel: "평일", applicability: "applies" }]);
+});
+
+test("today is withheld when stale, before the 시행일, or when two services answer one direction", () => {
+  const stale = routeTimetableView(bundle([dataset()], "2026-06-01"), synthetic, "999", "2026-10-07");
+  assert.equal(stale.freshness, "stale");
+  assert.deepEqual(stale.today, []);
+  assert.equal(stale.services[0]!.first?.time, "06:00", "the dated record is still shown");
+
+  const early = routeTimetableView(bundle([dataset([service({ effectiveFrom: "2026-11-01" })])]), synthetic, "999", "2026-10-07");
+  assert.equal(early.services[0]!.inEffect, false);
+  assert.deepEqual(early.today, []);
+
+  const twice = routeTimetableView(bundle([dataset([service(), service({ sheets: ["SYNTHETIC-2"], dayType: "weekday" })])]), synthetic, "999", "2026-10-07");
+  assert.deepEqual(twice.today, []);
+});
+
+test("validation refuses what it cannot vouch for; a bad dataset is dropped, not served", () => {
+  assert.doesNotThrow(() => validateTimetableDataset(dataset()));
+  const cases: [string, OfficialTimetableDataset][] = [
+    ["schema", { ...dataset(), schemaVersion: "tapso-jeju-timetable-v2" as never }],
+    ["label", { ...dataset(), label: "LIVE" as never }],
+    ["checksum", dataset(undefined, { source: { ...dataset().source, sha256: "abc" } })],
+    ["unknown day type", dataset([service({ dayType: "daily" as never })])],
+    ["day label without a day type", dataset([service({ dayType: "unstated" })])],
+    ["a conflict without its reason", dataset([service({ status: "source_conflict" })])],
+    ["ok with conflicts", dataset([service({ conflicts: ["x"] })])],
+    ["a time past 29:59", dataset([service({ trips: [{ routeNumber: "999", times: ["30:00", null], firstTime: "30:00" }] })])],
+    ["times running backwards", dataset([service({ trips: [{ routeNumber: "999", times: ["06:10", "06:00"], firstTime: "06:10" }] })])],
+    ["wrong width", dataset([service({ trips: [{ routeNumber: "999", times: ["06:10"], firstTime: "06:10" }] })])],
+    ["another route's trip", dataset([service({ trips: [{ routeNumber: "998", times: ["06:10", null], firstTime: "06:10" }] })])],
   ];
-  for (const [why, value] of bad) assert.throws(() => validateTimetableDataset(value), TimetableDatasetError, why);
+  for (const [name, value] of cases) assert.throws(() => validateTimetableDataset(value), TimetableDatasetError, name);
+  // A conflicting service is not re-checked for order: it is never served.
+  assert.doesNotThrow(() => validateTimetableDataset(dataset([service({ status: "source_conflict", conflicts: ["trip 1: times run backwards"], trips: [{ routeNumber: "999", times: ["06:10", "06:00"], firstTime: "06:10" }] })])));
+  const mixed = validateTimetableBundle(bundle([dataset(), { ...dataset(), schemaVersion: "x" as never, source: { ...dataset().source, scheduleId: "SYN-BAD" } }]));
+  assert.equal(mixed.bundle.datasets.length, 1);
+  assert.equal(mixed.rejected[0]!.scheduleId, "SYN-BAD");
+});
+
+test("late-night times from 24:00 are valid and sort after the evening", () => {
+  const night = dataset([service({ dayType: "unstated", dayLabel: undefined, trips: [
+    { routeNumber: "999", times: ["23:40", "24:05"], firstTime: "23:40" },
+    { routeNumber: "999", times: ["24:20", "24:30"], firstTime: "24:20" },
+  ], crossesMidnight: true })]);
+  assert.doesNotThrow(() => validateTimetableDataset(night));
+  const view = routeTimetableView(bundle([night]), synthetic, "999", "2026-10-07");
+  assert.equal(view.services[0]!.last?.time, "24:20");
 });
 
 test("freshness is counted from the download date and fails closed", () => {
-  const at = (today: string) => timetableFreshness(dataset(), today);
-  assert.equal(at("2026-10-01"), "fresh");
-  assert.equal(at(addDays("2026-10-01", TIMETABLE_FRESH_DAYS)), "fresh");
-  assert.equal(at(addDays("2026-10-01", TIMETABLE_FRESH_DAYS + 1)), "aging");
-  assert.equal(at(addDays("2026-10-01", TIMETABLE_USABLE_DAYS)), "aging");
-  assert.equal(at(addDays("2026-10-01", TIMETABLE_USABLE_DAYS + 1)), "stale");
-  assert.equal(at("2026-09-30"), "unknown", "downloaded in the future");
-  assert.equal(at("not a date"), "unknown");
+  assert.equal(timetableFreshness({ retrievedOn: "2026-10-03" }, "2026-10-03"), "fresh");
+  assert.equal(timetableFreshness({ retrievedOn: "2026-10-03" }, addDays("2026-10-03", TIMETABLE_FRESH_DAYS + 1)), "aging");
+  assert.equal(timetableFreshness({ retrievedOn: "2026-10-03" }, addDays("2026-10-03", TIMETABLE_USABLE_DAYS + 1)), "stale");
+  assert.equal(timetableFreshness({ retrievedOn: "2026-10-04" }, "2026-10-03"), "unknown");
+  assert.equal(timetableFreshness({ retrievedOn: "2026-02-30" }, "2026-10-03"), "unknown");
 });
 
-test("a last bus comes only from a usable dataset and a service in effect, with its as-of date", () => {
-  const direction = "합성A→합성B";
-  assert.deepEqual(lastDeparture(dataset(), direction, "weekday", "2026-10-02"), { time: "22:10", asOf: "2026-10-01", freshness: "fresh", effectiveFrom: "2026-06-24" });
-  assert.equal(lastDeparture(dataset(), direction, "saturday", "2026-10-02")?.time, "21:40", "falls back to daily");
-  assert.equal(lastDeparture(dataset(), direction, "weekday", addDays("2026-10-01", TIMETABLE_USABLE_DAYS + 1)), undefined, "stale");
-  assert.equal(lastDeparture(dataset(), "다른 방향", "weekday", "2026-10-02"), undefined);
-  const notYet = dataset({ services: [service({ effectiveFrom: "2026-10-10" })] });
-  assert.equal(lastDeparture(notYet, direction, "weekday", "2026-10-05"), undefined, "not in effect yet");
-  // A trip that starts off the table departs at its start time.
-  const onlyFirst = dataset({ services: [service({ trips: [service().trips[0]!] })] });
-  assert.equal(lastDeparture(onlyFirst, direction, "weekday", "2026-10-02")?.time, "06:00");
-  assert.equal(lastTimeAt(dataset(), direction, "합성B", "weekday", "2026-10-02")?.time, "22:20");
-  assert.equal(lastTimeAt(dataset(), direction, "합성C", "weekday", "2026-10-02"), undefined, "a place no column heads");
+test("service days: weekday, Saturday, Sunday, weekday holiday, substitute holiday, outside the calendar", () => {
+  const cases: [string, string, Record<string, string>][] = [
+    // An ordinary Wednesday.
+    ["2026-10-07", "wed", { weekday: "applies", saturday: "does_not_apply", sunday_holiday: "does_not_apply", saturday_sunday_holiday: "does_not_apply", holiday_saturday_unstated: "does_not_apply", unstated: "unstated" }],
+    // An ordinary Saturday: "휴일" alone does not say whether it covers Saturday.
+    ["2026-10-10", "sat", { weekday: "does_not_apply", saturday: "applies", sunday_holiday: "does_not_apply", saturday_sunday_holiday: "applies", holiday_saturday_unstated: "uncertain" }],
+    ["2026-10-11", "sun", { weekday: "does_not_apply", saturday: "does_not_apply", sunday_holiday: "applies", saturday_sunday_holiday: "applies", holiday_saturday_unstated: "applies" }],
+    // 한글날, a Friday holiday.
+    ["2026-10-09", "fri", { weekday: "does_not_apply", sunday_holiday: "applies", saturday_sunday_holiday: "applies", holiday_saturday_unstated: "applies" }],
+    // 개천절 (Saturday) gives a substitute holiday on Monday 2026-10-05.
+    ["2026-10-05", "mon", { weekday: "does_not_apply", saturday_sunday_holiday: "applies" }],
+    // 개천절 itself on a Saturday: the 토요일 table yields to the holiday one.
+    ["2026-10-03", "sat", { saturday: "does_not_apply", sunday_holiday: "applies", saturday_sunday_holiday: "applies" }],
+    // Beyond the calendar a weekday cannot be known not to be a holiday.
+    ["2029-03-07", "wed", { weekday: "uncertain", saturday_sunday_holiday: "uncertain", sunday_holiday: "uncertain" }],
+    ["2029-03-10", "sat", { saturday_sunday_holiday: "applies", weekday: "does_not_apply", saturday: "uncertain" }],
+  ];
+  for (const [date, weekday, expected] of cases) {
+    const day = serviceDay(date, calendar);
+    assert.equal(day.weekday, weekday, date);
+    for (const [dayType, applicability] of Object.entries(expected)) assert.equal(dayTypeApplies(dayType, day), applicability, `${date} ${dayType}`);
+  }
+  assert.equal(dayTypeApplies("never_read_before", serviceDay("2026-10-07", calendar)), "uncertain");
+  assert.equal(serviceDay("2029-03-07", calendar).publicHoliday, undefined);
+  assert.equal(serviceDay("2026-10-07", calendar).publicHoliday, null);
+});
+
+test("the holiday calendar is the generated file, with its provenance, and refuses tampering", () => {
+  assert.equal(calendar.generator.library, "holidays");
+  assert.ok(calendar.sources.length >= 2);
+  for (const date of ["2026-02-17", "2026-03-02", "2026-06-03", "2026-09-25", "2026-10-05"]) {
+    assert.ok(calendar.holidays.some((entry) => entry.date === date), date);
+  }
+  assert.throws(() => validateHolidayCalendar({ ...calendar, holidays: [...calendar.holidays, calendar.holidays[0]] }));
+  assert.throws(() => validateHolidayCalendar({ ...calendar, holidays: [{ date: "2030-01-01", name: "x" }] }));
+});
+
+test("the Korean date turns over at 15:00 UTC", () => {
+  assert.equal(koreanDate(new Date("2026-10-03T14:59:59Z")), "2026-10-03");
+  assert.equal(koreanDate(new Date("2026-10-03T15:00:00Z")), "2026-10-04");
 });
 
 function addDays(date: string, count: number): string {

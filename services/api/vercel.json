@@ -8,7 +8,7 @@
   },
   "functions": {
     "api/**/*.ts": {
-      "includeFiles": "src/**"
+      "includeFiles": "{src,data}/**"
     }
   },
   "rewrites": [
@@ -35,6 +35,14 @@
     {
       "source": "/v1/vehicles",
       "destination": "/api/v1/vehicles"
+    },
+    {
+      "source": "/v1/timetables",
+      "destination": "/api/v1/timetables"
+    },
+    {
+      "source": "/v1/catalog",
+      "destination": "/api/v1/catalog"
     },
     {
       "source": "/v1/matches",
