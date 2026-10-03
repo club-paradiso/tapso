@@ -96,8 +96,19 @@ Page `05B · Dynamic Island Coexistence V3` in the existing file, sections
 inspects Music + Riding, Music + Prepare, Music + Next, Music + Arrival and
 Minimal double digit, edits freely, and says so; the next session re-reads
 the nodes, writes the edit diff, reconciles V2 and stops at Gate B. SwiftUI
-V3: NOT STARTED until Gate B approval. Frame and component ids are in the
-Gate A report of the session that built the page.
+V3: NOT STARTED until Gate B approval.
+
+Ids (file `kkx04GvqOzHje7Dw5ikO9X`): page `275:2`; sections `00` `275:3`, `01`
+`275:5`, `02` `275:7`, `03` `275:9`, `04` `275:11`, `05` `275:13`, `06`
+`275:15`, `07` `275:17`, `08` `275:19`, `09` `275:21`, `10` `275:23`, `11`
+`275:25`. Component sets: `RideStateSymbol / V3` `276:32`,
+`RemainingStopsIndicator / V3` `276:41`, `TrustQualifier / V3` `276:57`,
+`DynamicIslandMinimal / V3` `276:93`, `DynamicIslandCompactLeading / V3`
+`276:164`, `DynamicIslandCompactTrailing / V3` `276:204`,
+`DynamicIslandExpanded / V3` `276:490`. Frames to review first: Music +
+Riding (8) `278:719`, Music + Riding (12) `278:739`, Music + Prepare (2)
+`278:758`, Music + Next (1) `278:777`, Music + Arrival `278:795`, minimal /
+riding / 12 `278:282`.
 
 ## 6. Hybrid rollout plan (workstream E)
 

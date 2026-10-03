@@ -10,6 +10,7 @@ File: `TAPSO — Product / Marketing Design System`, key `kkx04GvqOzHje7Dw5ikO9X
 | 03 iOS — GO › iOS — GO · Product V2 + V3 | `205:3310` | Home to the rider's confirmation: V2 01–09 with Dark · 02, Dark · 08 and EN · 02, and the map hand-off V3 20–24 |
 | 04 iOS — RIDE › iOS — RIDE · Product V2 | `157:10` | The ride: V2 10–19 with their dark, EN and SE 375 variants |
 | 05 Live Activity · Dynamic Island | `160:1208` | One row per ride moment: compact, minimal, expanded, Lock Screen |
+| 05B · Dynamic Island Coexistence V3 | page `275:2` | V3 proposal awaiting Human Review Gate A (`TAPSO_V1_RELEASE_CLOSURE.md` §5): sections `00 Evidence` `275:3` … `11 Implementation Comparison` `275:25`; V3 component sets on `02 Components` `275:7`: `RideStateSymbol` `276:32`, `RemainingStopsIndicator` `276:41`, `TrustQualifier` `276:57`, `DynamicIslandMinimal` `276:93`, `DynamicIslandCompactLeading` `276:164`, `DynamicIslandCompactTrailing` `276:204`, `DynamicIslandExpanded` `276:490`. Not implemented; the shipped surfaces are still the V2 row above |
 | 07 Discover, 08 Eat, 10 Passport / Share | `205:4`, `205:5`, `205:7` | Status cards only: not designed, and why |
 | 09 Return / Rescue › Return / Rescue · Product V3 | `193:2956` | V3 25–27: the way back, rescue past your stop, the countdown |
 | 11 Marketing Web | `3:4` | The marketing site V3 as built, four widths (`218:2`, below); the V2 board `165:54` is on `13 Archive` |
