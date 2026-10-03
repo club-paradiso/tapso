@@ -443,18 +443,25 @@ test("explicit confirmation in shadow mode tracks, but invents no source freshne
   const sessions = new JourneySessionCoordinator(provider, { now: () => now, idFactory: () => "shadow-confirm" });
   const created = await sessions.create(sessionInput());
 
-  // Confirming with only one receipt on file must not manufacture cadence.
+  // The rider has identified the bus: its position is applied at once. One
+  // receipt is still no cadence evidence, and the view says so beside the
+  // count rather than withholding the count (`confirmedRideProgression.ts`).
   const early = await sessions.confirm(created.id, { vehicleId: "TAGO-A" });
   assert.equal(early.selectedVehicleId, "TAGO-A");
   assert.equal(early.selectionMode, "explicit");
-  assert.equal(early.state, "degraded");
-  assert.equal(early.progress, undefined, "a confirmation is not evidence of freshness");
-  assert.match(early.explanation, /cadence evidence/);
+  assert.equal(early.state, "tracking");
+  assert.equal(early.progress?.currentStopSequence, 1);
+  assert.equal(early.progress?.source, "provider_stop_sequence");
+  assert.equal(early.reliability?.trust, "live");
+  assert.equal(early.reliability?.matcherCadence, "unknown", "the matcher's verdict is published, not obeyed");
+  assert.equal(early.sourceFreshness?.["TAGO-A"]?.state, "unknown", "no source freshness is invented");
 
-  // Once real changing receipts exist, the same confirmed vehicle tracks.
+  // Repeated changing receipts advance it; the matcher's cadence becomes fresh on its own terms.
   now = new Date("2026-09-22T07:00:05Z");
   provider.vehiclesValue = [tagoRow("TAGO-A", now, 1, 33.5000)];
-  await sessions.refresh(created.id);
+  const held = await sessions.refresh(created.id);
+  assert.equal(held.state, "tracking", "a bus still at the stop is not a fault");
+  assert.equal(held.reliability?.observation, "unchanged");
   now = new Date("2026-09-22T07:00:10Z");
   provider.vehiclesValue = [tagoRow("TAGO-A", now, 2, 33.5010)];
   const tracking = await sessions.refresh(created.id);
@@ -462,8 +469,10 @@ test("explicit confirmation in shadow mode tracks, but invents no source freshne
   assert.equal(tracking.state, "tracking");
   assert.equal(tracking.selectionMode, "explicit", "confirmation never becomes an automatic selection");
   assert.equal(tracking.matchingMode, "shadow");
+  assert.equal(tracking.progress?.currentStopSequence, 2);
   assert.equal(tracking.progress?.observedAt, new Date(0).toISOString());
   assert.equal(tracking.progress?.evidenceAtIs, "tapso_server_receipt");
+  assert.equal(tracking.reliability?.matcherCadence, "fresh");
 });
 
 /* ------------------------------------------ transient provider degradation */

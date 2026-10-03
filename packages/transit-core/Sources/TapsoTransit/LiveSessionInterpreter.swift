@@ -88,7 +88,14 @@ public enum LiveSessionInterpreter {
                 isOffline: isOffline
             )
         case .degraded:
-            // Last accepted progress, labelled as last known; no alert can come from it.
+            // The server says the identified bus can no longer be followed safely
+            // (`reliability.trust == unavailable`): that is a lost bus, not late data.
+            if snapshot.reliability?.trust == "unavailable" {
+                return RideSignal(phase: .vehicleTemporarilyLost, remainingStops: remaining, freshness: .stale, isOffline: isOffline)
+            }
+            // Otherwise the last accepted progress, labelled as last known, while the
+            // server rechecks (a provider failure, a missing poll, a conflicting row).
+            // No alert can come from it.
             return RideSignal(
                 phase: reading?.state ?? .dataStale,
                 remainingStops: remaining,
@@ -101,6 +108,12 @@ public enum LiveSessionInterpreter {
         case .awaitingMatch, .confirmationRequired, .unrecognized:
             return checking(isOffline: isOffline)
         }
+    }
+
+    /// What the server said about the ride's reliability, for diagnostics and
+    /// field traces. `nil` from a server that sends no `reliability` block.
+    public static func reliability(for snapshot: JourneySessionSnapshot) -> JourneySessionSnapshot.Reliability? {
+        snapshot.reliability
     }
 
     /// The stop the server last placed the bus at, if any.

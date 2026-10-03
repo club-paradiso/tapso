@@ -136,7 +136,7 @@ final class LiveSessionInterpreterTests: XCTestCase {
             "degraded-provider-timeout": .delayed,
             "degraded-missing": .delayed,
             "lost": .vehicleLost,
-            "confirmed-cadence-unknown": .checking,
+            "confirmed-cadence-unknown": .riding,
             "awaiting-departed-only": .checking,
             "confirmation-one": .checking,
         ]
@@ -173,6 +173,43 @@ final class LiveSessionInterpreterTests: XCTestCase {
             XCTAssertEqual(guidance.moment, entry.moment, entry.id)
             XCTAssertEqual(guidance.milestone, entry.milestone, entry.id)
         }
+    }
+
+    /// The 3001 / 3913 false-delay case (`docs/validation/RIDE_3001_FALSE_DELAY_2026-10-04.md`):
+    /// the rider confirmed the bus, the provider answered, no provider timestamp exists and the
+    /// matcher's cadence is unknown. The ride is live, the count is shown, and nothing says "delayed".
+    func testAConfirmedBusWithUnknownMatcherCadenceIsLiveNotDelayed() throws {
+        let view = try XCTUnwrap(scenarios()["confirmed-cadence-unknown"])
+        XCTAssertEqual(view.sessionState, .tracking)
+        XCTAssertEqual(view.reliability?.trust, "live")
+        XCTAssertEqual(view.reliability?.matcherCadence, "unknown", "the matcher's verdict is published, not obeyed")
+        let guidance = RideGuidancePolicy.guidance(for: LiveSessionInterpreter.rideSignal(for: view))
+        XCTAssertEqual(guidance.moment, .riding)
+        XCTAssertEqual(guidance.trust, .live)
+        XCTAssertEqual(guidance.data, .live)
+        XCTAssertEqual(guidance.count, .live)
+        XCTAssertEqual(LiveSessionInterpreter.rideSignal(for: view).remainingStops, 6)
+    }
+
+    /// Every reliability block the server generates decodes, and its trust word agrees with the moment shown.
+    func testReliabilityDecodesAndAgreesWithTheMoment() throws {
+        var seen = 0
+        for (id, view) in try scenarios() where view.selectedVehicleId != nil {
+            let reliability = try XCTUnwrap(view.reliability, "\(id) carries reliability once a bus is selected")
+            seen += 1
+            let trust = RideGuidancePolicy.guidance(for: LiveSessionInterpreter.rideSignal(for: view)).trust
+            switch reliability.trust {
+            case "live": XCTAssertEqual(trust, .live, id)
+            case "rechecking": XCTAssertEqual(trust, .rechecking, id)
+            case "unavailable": XCTAssertEqual(trust, .unavailable, id)
+            default: XCTFail("\(id): unknown trust \(reliability.trust)")
+            }
+            if reliability.provider == "temporarily_unavailable" {
+                XCTAssertEqual(view.sessionState, .degraded, "\(id): a provider failure is rechecking, never a lost bus")
+                XCTAssertEqual(trust, .rechecking, id)
+            }
+        }
+        XCTAssertGreaterThanOrEqual(seen, 8)
     }
 
     /// Late, missing or unconfirmed data never produces a get-off alert.

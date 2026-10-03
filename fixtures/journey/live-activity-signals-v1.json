@@ -117,13 +117,13 @@
     {
       "id": "confirmed-cadence-unknown",
       "signal": {
-        "phase": "dataStale",
-        "remainingStops": -1,
-        "freshness": "aging",
+        "phase": "active",
+        "remainingStops": 6,
+        "freshness": "fresh",
         "destinationPassed": false,
         "isOffline": false
       },
-      "moment": "checking"
+      "moment": "riding"
     },
     {
       "id": "passed-destination",

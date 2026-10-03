@@ -13,7 +13,12 @@ struct RideView: View {
     var body: some View {
         NavigationStack {
             ScrollView {
-                if model.isLiveRide, let failure = model.liveFailure {
+                // One root condition, one message. A transient failure (a slow answer, a
+                // provider hiccup) already ages the ride into its calm rechecking banner,
+                // so it is not repeated above it; only a failure the ride cannot recover
+                // from, or one that left the guidance healthy, gets its own notice.
+                if model.isLiveRide, let failure = model.liveFailure,
+                   RideView.showsFailureNotice(failure, trust: model.guidance?.trust) {
                     LiveFailureNotice(failure: failure)
                         .padding(.horizontal, TapsoSpace.gutter)
                         .padding(.top, TapsoSpace.md)
@@ -117,6 +122,19 @@ struct RideView: View {
                 DemoControlsView(model: model)
                     .presentationDetents([.medium])
             }
+        }
+    }
+}
+
+extension RideView {
+    /// Whether a live failure deserves its own notice beside the guidance.
+    /// Never when the guidance already carries a rechecking or unavailable word
+    /// for a transient failure: that would be the same problem said twice.
+    static func showsFailureNotice(_ failure: TransitAPIFailure, trust: RideTrust?) -> Bool {
+        guard failure.isTransient else { return true }
+        switch trust {
+        case .rechecking, .unavailable: return false
+        case .live, .estimated, nil: return true
         }
     }
 }
