@@ -19,7 +19,7 @@ TAPSO's default architecture tracks a public transit vehicle, not continuous pas
   never sent. Choosing it uses the system photo picker, which gives TAPSO only
   that photo and no access to the library. To check the route, TAPSO's API
   receives the bus number(s) read from it, like a rider typing the number
-  (`product/SCREENSHOT_IMPORT_V1.md`).
+  (`product/SCREENSHOT_IMPORT_V1.md`). Shared to TAPSO from the Photos share sheet, a screenshot is read the same way inside the share extension, which leaves only what it read (bus numbers and stop-like lines, never the picture) in the App Group for at most 30 minutes, until the app takes it; the extension makes no network request.
 - The marketing site collects an email address, a coarse rider type, and a
   consent record, only after an explicit unchecked consent box is ticked. It
   stores no name, phone number, address, demographics, location, or IP address,

@@ -56,6 +56,10 @@ public struct ScreenshotReading: Codable, Hashable, Sendable {
         self.lineCount = lineCount
     }
 
+    /// Worth handing to the app: a bus number and at least one line that may name a stop.
+    /// Anything less cannot become a route, so a share extension says so instead of saving it.
+    public var isUsable: Bool { !busNumbers.isEmpty && !stopLines.isEmpty }
+
     public static let empty = ScreenshotReading(busNumbers: [], stopLines: [], ocrConfidence: 0, lineCount: 0)
 }
 

@@ -42,3 +42,7 @@ Not verified: the Vision test is skipped where the runtime lacks `ko-KR` (CI's l
 ## Next action
 
 Check whether the Vision test ran or skipped in the `ios` CI log, then run `DEVICE_TEST_PLAN.md` cases 17–20 with real screenshots from the three map apps. Then: Share Extension images (store a `ScreenshotReading` in the App Group inbox), real-screenshot fixtures sanitised by the owner, and an alias table if a source for stop aliases is found.
+
+## Follow-up: Share Extension images (2026-10-03)
+
+Done in PR `claude/share-extension-images`: image activation rule, Vision in the extension, `ScreenshotReading` through `HandoffInbox`, app-side `receiveScreenshotReading`. Same CI verification as above applies; device case 21 is open.

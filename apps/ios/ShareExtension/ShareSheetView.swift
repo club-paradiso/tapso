@@ -14,7 +14,14 @@ final class ShareModel {
         case found(SharedPlace)
         case saved(SharedPlace)
         case copied(SharedPlace)
+        /// A shared screenshot, read on the device: claims for the app to verify, not a route.
+        case screenshotFound(ScreenshotReading)
+        case screenshotSaved(ScreenshotReading)
+        case screenshotNothing
     }
+
+    /// An extension has far less memory than the app, so the picture is read smaller.
+    private static let screenshotPixelLimit = 2_000
 
     private(set) var phase: Phase = .reading
     @ObservationIgnored var onFinish: () -> Void = {}
@@ -35,9 +42,18 @@ final class ShareModel {
 
     /// Keeps only the parsed place, for the app to take once (`HandoffInbox`).
     func save() {
-        guard case let .found(place) = phase, let inbox else { return }
-        inbox.put(place, at: Date())
-        phase = .saved(place)
+        guard let inbox else { return }
+        switch phase {
+        case let .found(place):
+            inbox.put(place, at: Date())
+            phase = .saved(place)
+        case let .screenshotFound(reading):
+            // Only what was read: bus numbers and stop-like lines. The picture is never kept.
+            inbox.put(reading, at: Date())
+            phase = .screenshotSaved(reading)
+        default:
+            break
+        }
     }
 
     /// The fallback without an App Group: the rider's own copy, pasted in TAPSO.
@@ -67,6 +83,11 @@ final class ShareModel {
         pending = []
         var texts: [String] = []
         var links: [String] = []
+        let providers = items.flatMap { $0.attachments ?? [] }
+        if let image = providers.first(where: { $0.hasItemConformingToTypeIdentifier(UTType.image.identifier) }) {
+            await readScreenshot(from: image)
+            return
+        }
         for item in items {
             if let text = item.attributedContentText?.string, !text.isEmpty {
                 texts.append(text)
@@ -87,6 +108,29 @@ final class ShareModel {
             phase = .found(place)
         } else {
             phase = .nothing
+        }
+    }
+
+    private func readScreenshot(from provider: NSItemProvider) async {
+        guard let data = await Self.loadImageData(from: provider) else {
+            phase = .screenshotNothing
+            return
+        }
+        let interpreter = LocalVisionRouteInterpreter(
+            recognizer: VisionScreenshotTextRecognizer(maxPixelDimension: Self.screenshotPixelLimit)
+        )
+        guard let reading = try? await interpreter.interpret(imageData: data), reading.isUsable else {
+            phase = .screenshotNothing
+            return
+        }
+        phase = .screenshotFound(reading)
+    }
+
+    private static func loadImageData(from provider: NSItemProvider) async -> Data? {
+        await withCheckedContinuation { continuation in
+            _ = provider.loadDataRepresentation(forTypeIdentifier: UTType.image.identifier) { data, _ in
+                continuation.resume(returning: data)
+            }
         }
     }
 
@@ -165,6 +209,24 @@ struct ShareSheetView: View {
             ShareMessage(systemImage: "doc.on.clipboard", title: "share.copied.title", message: "share.copied.body")
             Button("share.done") { model.finish() }
                 .buttonStyle(ShareActionStyle())
+        case let .screenshotFound(reading):
+            ShareScreenshotSummary(reading: reading)
+            if model.canHandOff {
+                Button("share.save") { model.save() }
+                    .buttonStyle(ShareActionStyle())
+            } else {
+                Text("share.screenshot.unavailable")
+                    .font(.subheadline)
+                    .foregroundStyle(TapsoColor.textSecondary)
+                    .fixedSize(horizontal: false, vertical: true)
+            }
+        case let .screenshotSaved(reading):
+            ShareScreenshotSummary(reading: reading)
+            ShareMessage(systemImage: "checkmark.circle.fill", title: "share.saved.title", message: "share.screenshot.saved.body")
+            Button("share.done") { model.finish() }
+                .buttonStyle(ShareActionStyle())
+        case .screenshotNothing:
+            ShareMessage(systemImage: "questionmark.circle", title: "share.screenshot.nothing.title", message: "share.screenshot.nothing.body")
         }
     }
 }
@@ -207,6 +269,33 @@ struct SharePlaceSummary: View {
         if place.isInJeju == true { return "mapImport.location.jeju" }
         if place.isInJeju == false { return "mapImport.location.outside" }
         return place.isLinkOnly ? "mapImport.location.linkOnly" : "mapImport.location.nameOnly"
+    }
+}
+
+/// What the extension read from a shared screenshot: the bus numbers and how many lines may name a stop.
+/// Unverified: the app checks them against TAPSO's routes before anything starts.
+struct ShareScreenshotSummary: View {
+    let reading: ScreenshotReading
+
+    var body: some View {
+        VStack(alignment: .leading, spacing: TapsoSpace.xs) {
+            Text("share.screenshot.title")
+                .font(.footnote.weight(.semibold))
+                .foregroundStyle(TapsoColor.textSecondary)
+            Text(verbatim: detail)
+                .font(.title3.weight(.bold))
+                .foregroundStyle(TapsoColor.textPrimary)
+        }
+        .fixedSize(horizontal: false, vertical: true)
+        .frame(maxWidth: .infinity, alignment: .leading)
+        .padding(TapsoSpace.md)
+        .background(TapsoColor.backgroundSecondary, in: RoundedRectangle(cornerRadius: TapsoRadius.lg, style: .continuous))
+        .accessibilityElement(children: .combine)
+    }
+
+    private var detail: String {
+        let numbers = reading.busNumbers.map { $0.number + "번" }.joined(separator: ", ")
+        return String(format: String(localized: "share.screenshot.detail"), numbers, reading.stopLines.count)
     }
 }
 

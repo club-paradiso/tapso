@@ -64,12 +64,19 @@ public struct ScreenshotRouteImporter: Sendable {
         }
         if Task.isCancelled { return .notFound(.interrupted) }
 
+        return await importRoute(from: reading)
+    }
+
+    /// A reading made elsewhere on the device, such as the share extension's. It is checked
+    /// exactly like one made here: the reading is a claim, TAPSO's route data decides.
+    public func importRoute(from reading: ScreenshotReading) async -> RouteImportResult {
         // Nothing to look up unless there is something legible and a number to look up.
         if reading.lineCount == 0 || reading.ocrConfidence < RouteImportResolver.hopelessOCR || reading.busNumbers.isEmpty {
             return resolver.resolve(reading, routes: [])
         }
 
-        let fetched = await variants(for: reading.busNumbers.map(\.number))
+        // A reading from outside this process is untrusted: never look up more numbers than the extractor keeps.
+        let fetched = await variants(for: reading.busNumbers.prefix(TransitEntityExtractor.maxBusNumbers).map(\.number))
         if Task.isCancelled { return .notFound(.interrupted) }
         if fetched.failures == fetched.attempts { return .notFound(.routeDataUnavailable) }
         return resolver.resolve(reading, routes: fetched.routes)
