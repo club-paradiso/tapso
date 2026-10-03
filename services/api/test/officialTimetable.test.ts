@@ -1,10 +1,12 @@
 /**
- * The format-independent half of the official Jeju timetable pipeline:
- * schema, validation and the staleness rule. Every dataset here is SYNTHETIC
- * (invented times, a zero checksum pattern); no real timetable is in the repo.
+ * The official Jeju timetable dataset: schema, validation, staleness and the
+ * last bus. The Route 365 dataset is the real file's parse (downloaded
+ * 2026-10-03, `fixtures/jeju/timetables/365.json`); every other dataset here
+ * is SYNTHETIC (invented times and places, a repeated-letter checksum).
  */
 
 import assert from "node:assert/strict";
+import { readFileSync } from "node:fs";
 import test from "node:test";
 
 import {
@@ -13,10 +15,33 @@ import {
   TIMETABLE_USABLE_DAYS,
   TimetableDatasetError,
   lastDeparture,
+  lastTimeAt,
   timetableFreshness,
   validateTimetableDataset,
   type OfficialTimetableDataset,
+  type TimetableService,
 } from "../src/officialTimetable.ts";
+
+const route442 = JSON.parse(readFileSync(new URL("../../../fixtures/jeju/timetables/442.json", import.meta.url), "utf8")) as unknown;
+const route365 = JSON.parse(readFileSync(new URL("../../../fixtures/jeju/timetables/365.json", import.meta.url), "utf8")) as unknown;
+
+function service(overrides: Partial<TimetableService> = {}): TimetableService {
+  return {
+    sheet: "SYNTHETIC",
+    dayType: "weekday",
+    dayLabel: "평일",
+    direction: "합성A→합성B",
+    effectiveFrom: "2026-06-24",
+    summary: "SYNTHETIC",
+    timepoints: ["합성A", "합성B"],
+    trips: [
+      { times: [null, "06:10"], startsAt: { place: "합성C", time: "06:00", column: "합성A" } },
+      { times: ["12:30", "12:40"] },
+      { times: ["22:10", "22:20"] },
+    ],
+    ...overrides,
+  };
+}
 
 function dataset(overrides: Partial<OfficialTimetableDataset> = {}): OfficialTimetableDataset {
   return {
@@ -25,56 +50,107 @@ function dataset(overrides: Partial<OfficialTimetableDataset> = {}): OfficialTim
     source: {
       publisher: "SYNTHETIC",
       dataset: "data.go.kr 3043887",
-      page: "https://bus.jeju.go.kr/publicTrafficInformation/generalBusSchedule?viewtype=2",
-      file: "SYNTHETIC-365.xlsx",
+      page: "https://bus.jeju.go.kr/publicTrafficInformation/generalBusSchedule",
+      file: "SYNTHETIC.xlsx",
       sha256: "a".repeat(64),
     },
     retrievedOn: "2026-10-01",
     parser: { name: "synthetic", version: "0" },
-    routeNumber: "365",
-    services: [
-      { origin: "합성 기점", dayType: "weekday", departures: ["06:00", "12:30", "22:10"] },
-      { origin: "합성 기점", dayType: "daily", departures: ["06:30", "21:40"] },
-    ],
+    routeNumber: "999",
+    services: [service(), service({ dayType: "daily", trips: [{ times: ["06:30", "06:40"] }, { times: ["21:40", "21:50"] }] })],
     ...overrides,
   };
 }
 
+test("the committed Route 365 dataset validates and says what the file says", () => {
+  const real = validateTimetableDataset(route365);
+  assert.equal(real.routeNumber, "365");
+  assert.equal(real.retrievedOn, "2026-10-03");
+  assert.equal(real.source.sha256, "8eafd16b3393be8c15ff26098edadde73fd10cd66d4584e9a6aa95b08b6d07a4");
+  const weekday = "한라대→공항→시청→제주대";
+  assert.deepEqual(lastDeparture(real, weekday, "weekday", "2026-10-03"), { time: "21:55", asOf: "2026-10-03", freshness: "fresh", effectiveFrom: "2026-06-24" });
+  assert.deepEqual(lastTimeAt(real, weekday, "제주시청", "weekday", "2026-10-03")?.time, "22:44");
+  assert.deepEqual(lastTimeAt(real, "제주대→시청→공항→한라대", "공항", "saturday_sunday_holiday", "2026-10-04")?.time, "22:37");
+  // 영주고 is served only by morning weekday trips.
+  assert.equal(lastTimeAt(real, weekday, "영주고", "weekday", "2026-10-03")?.time, "08:10");
+  assert.equal(lastTimeAt(real, weekday, "영주고", "saturday_sunday_holiday", "2026-10-04"), undefined, "the holiday sheet has no 영주고 column");
+  // The first trip starts at 월성마을, which no column heads.
+  assert.deepEqual(real.services[0]!.trips[0]!.startsAt, { place: "월성마을", time: "06:03", column: "공항" });
+});
+
+test("the committed Route 442 dataset: a circular route with no stated day type", () => {
+  const real = validateTimetableDataset(route442);
+  const direction = "제주대(별빛누리)→사대부고→제주대(별빛누리)(순환)";
+  const service = real.services[0]!;
+  assert.equal(service.dayType, "unstated");
+  assert.equal(service.dayLabel, undefined);
+  assert.equal(service.effectiveFrom, "2024-04-25");
+  assert.equal(service.trips.length, 13);
+  // The file's summary says 첫차 05:50; trip 1 says 05:55. The trips are kept and the conflict recorded.
+  assert.deepEqual(service.summaryConflicts, ["summary 첫차 05:50 disagrees with the trips (05:55)"]);
+  assert.equal(service.trips[0]!.times[2], "05:55");
+  assert.equal(lastDeparture(real, direction, "unstated", "2026-10-03")?.time, "21:40");
+  assert.equal(lastDeparture(real, direction, "weekday", "2026-10-03"), undefined, "a stated day type never finds an unstated sheet");
+  assert.equal(lastTimeAt(real, direction, "사대부고", "unstated", "2026-10-03")?.time, "22:23");
+  assert.equal(lastTimeAt(real, direction, "제주대학교", "unstated", "2026-10-03"), undefined, "named twice on a loop: ambiguous");
+  assert.equal(lastTimeAt(real, direction, 10, "unstated", "2026-10-03")?.time, "18:05", "the loop's last arrival back at 제주대학교");
+  assert.equal(lastTimeAt(real, direction, 0, "unstated", "2026-10-03")?.time, "18:45");
+});
+
 test("a well-formed dataset validates", () => {
-  assert.equal(validateTimetableDataset(dataset()).routeNumber, "365");
+  assert.equal(validateTimetableDataset(dataset()).routeNumber, "999");
 });
 
 test("validation refuses what it cannot vouch for", () => {
+  const trips = (value: TimetableService["trips"]) => ({ ...dataset(), services: [service({ trips: value })] });
   const bad: Array<[string, unknown]> = [
+    ["v1 schema", { ...dataset(), schemaVersion: "tapso-jeju-timetable-v1" }],
     ["live label", { ...dataset(), label: "LIVE" }],
     ["no checksum", { ...dataset(), source: { ...dataset().source, sha256: "" } }],
     ["bad date", { ...dataset(), retrievedOn: "2026-02-30" }],
-    ["unsorted", { ...dataset(), services: [{ origin: "합성 기점", dayType: "weekday", departures: ["12:00", "06:00"] }] }],
-    ["after midnight", { ...dataset(), services: [{ origin: "합성 기점", dayType: "weekday", departures: ["24:10"] }] }],
-    ["repeated service", { ...dataset(), services: [dataset().services[0], dataset().services[0]] }],
-    ["unknown day type", { ...dataset(), services: [{ origin: "합성 기점", dayType: "holiday", departures: ["06:00"] }] }],
+    ["bad effective date", { ...dataset(), services: [service({ effectiveFrom: "2026-13-01" })] }],
+    ["descending within a trip", trips([{ times: ["12:00", "06:00"] }])],
+    ["after midnight", trips([{ times: ["23:50", "24:10"] }])],
+    ["start after the first time", trips([{ times: ["06:00", "06:10"], startsAt: { place: "합성C", time: "06:05", column: "합성A" } }])],
+    ["start under an unknown column", trips([{ times: [null, "06:10"], startsAt: { place: "합성C", time: "06:00", column: "합성Z" } }])],
+    ["out of order at a timepoint", trips([{ times: ["07:00", "07:10"] }, { times: ["06:00", "06:10"] }])],
+    ["wrong width", trips([{ times: ["06:00"] }])],
+    ["serves nothing", trips([{ times: [null, null] }])],
+    ["repeated service", { ...dataset(), services: [service(), service()] }],
+    ["unknown day type", { ...dataset(), services: [service({ dayType: "holiday" as never })] }],
+    ["one timepoint", { ...dataset(), services: [service({ timepoints: ["합성A"], trips: [{ times: ["06:00"] }] })] }],
     ["no services", { ...dataset(), services: [] }],
+    ["unstated with a label", { ...dataset(), services: [service({ dayType: "unstated" })] }],
+    ["stated without a label", { ...dataset(), services: [service({ dayLabel: undefined })] }],
+    ["empty conflict", { ...dataset(), services: [service({ summaryConflicts: [""] })] }],
   ];
   for (const [why, value] of bad) assert.throws(() => validateTimetableDataset(value), TimetableDatasetError, why);
 });
 
 test("freshness is counted from the download date and fails closed", () => {
-  const at = (today: string, extra: Partial<OfficialTimetableDataset> = {}) => timetableFreshness(dataset(extra), today);
+  const at = (today: string) => timetableFreshness(dataset(), today);
   assert.equal(at("2026-10-01"), "fresh");
   assert.equal(at(addDays("2026-10-01", TIMETABLE_FRESH_DAYS)), "fresh");
   assert.equal(at(addDays("2026-10-01", TIMETABLE_FRESH_DAYS + 1)), "aging");
   assert.equal(at(addDays("2026-10-01", TIMETABLE_USABLE_DAYS)), "aging");
   assert.equal(at(addDays("2026-10-01", TIMETABLE_USABLE_DAYS + 1)), "stale");
   assert.equal(at("2026-09-30"), "unknown", "downloaded in the future");
-  assert.equal(at("2026-10-05", { effectiveFrom: "2026-10-10" }), "unknown", "not in effect yet");
   assert.equal(at("not a date"), "unknown");
 });
 
-test("a last departure comes only from a usable dataset, with its as-of date", () => {
-  assert.deepEqual(lastDeparture(dataset(), "합성 기점", "weekday", "2026-10-02"), { time: "22:10", asOf: "2026-10-01", freshness: "fresh" });
-  assert.deepEqual(lastDeparture(dataset(), "합성 기점", "saturday", "2026-10-02"), { time: "21:40", asOf: "2026-10-01", freshness: "fresh" }, "falls back to daily");
-  assert.equal(lastDeparture(dataset(), "합성 기점", "weekday", addDays("2026-10-01", TIMETABLE_USABLE_DAYS + 1)), undefined);
-  assert.equal(lastDeparture(dataset(), "다른 기점", "weekday", "2026-10-02"), undefined);
+test("a last bus comes only from a usable dataset and a service in effect, with its as-of date", () => {
+  const direction = "합성A→합성B";
+  assert.deepEqual(lastDeparture(dataset(), direction, "weekday", "2026-10-02"), { time: "22:10", asOf: "2026-10-01", freshness: "fresh", effectiveFrom: "2026-06-24" });
+  assert.equal(lastDeparture(dataset(), direction, "saturday", "2026-10-02")?.time, "21:40", "falls back to daily");
+  assert.equal(lastDeparture(dataset(), direction, "weekday", addDays("2026-10-01", TIMETABLE_USABLE_DAYS + 1)), undefined, "stale");
+  assert.equal(lastDeparture(dataset(), "다른 방향", "weekday", "2026-10-02"), undefined);
+  const notYet = dataset({ services: [service({ effectiveFrom: "2026-10-10" })] });
+  assert.equal(lastDeparture(notYet, direction, "weekday", "2026-10-05"), undefined, "not in effect yet");
+  // A trip that starts off the table departs at its start time.
+  const onlyFirst = dataset({ services: [service({ trips: [service().trips[0]!] })] });
+  assert.equal(lastDeparture(onlyFirst, direction, "weekday", "2026-10-02")?.time, "06:00");
+  assert.equal(lastTimeAt(dataset(), direction, "합성B", "weekday", "2026-10-02")?.time, "22:20");
+  assert.equal(lastTimeAt(dataset(), direction, "합성C", "weekday", "2026-10-02"), undefined, "a place no column heads");
 });
 
 function addDays(date: string, count: number): string {
