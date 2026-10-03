@@ -87,6 +87,8 @@ Decision:
 
 `services/api/data/jeju-transit-catalog.json` (`tapso-jeju-catalog-v1`, label `OFFICIAL_DERIVED`): every route variant TAGO names for city 39 and its ordered stops, read through TAPSO's production API by `scripts/catalog/build-jeju-catalog.ts` in `.github/workflows/jeju-catalog.yml`. Route IDs are discovered three ways (no route number, digits 1-9, every timetable census number) and unioned, because TAGO's number search is not exact and whether its unfiltered list is complete is not documented. A variant whose stop list cannot be read is listed under `unavailable`, never dropped. Not live: no vehicle data is in it. The per-variant live probe (`artifacts/route-coverage/jeju-live-probe.json`) records counts only, never a vehicle number.
 
+First committed build, 2026-10-03 (run 37109317794): version `794f3bcb831d783e`, 989 variants with ordered stops, 4,338 stops (all with a position), 3 variants with a one-stop list under `unavailable`, 252 route numbers. The unfiltered query answered HTTP 504; the 265 other queries answered. 32 stop lists appear twice under one number with two route IDs (`OBSERVED`; the provider does not say why).
+
 ## Runtime provider
 
 Government-specific DTOs stop inside the TAGO provider adapter:

@@ -44,8 +44,19 @@ const gates: Gate[] = [];
     try {
       catalog = validateCatalog(json("services/api/data/jeju-transit-catalog.json"));
       evidence.push(`catalog ${catalog.catalogVersion}: ${catalog.routes.length} variants, ${catalog.stops.length} stops, ${catalog.unavailable.length} without a stop list, built ${catalog.generatedAt}`);
-      const discovery = catalog.source.discovery.find((entry) => entry.method === "all_routes");
-      evidence.push(`discovery: ${catalog.source.discovery.length} queries${discovery ? `, all-routes query found ${discovery.routeIds}` : ""}`);
+      evidence.push(`discovery: ${catalog.source.discovery.length} queries`);
+      // The catalog keeps route-ID counts only; the build's report keeps each query's HTTP status.
+      // A failed query is said as failed, never as "found 0".
+      const reportPath = "artifacts/route-coverage/jeju-catalog-discovery.json";
+      if (existsSync(file(reportPath))) {
+        const report = json(reportPath) as { catalogVersion?: string; discovery?: { method: string; query: string; status: number }[] };
+        if (report.catalogVersion === catalog.catalogVersion) {
+          const failed = (report.discovery ?? []).filter((entry) => entry.status !== 200);
+          evidence.push(failed.length === 0
+            ? "every discovery query answered HTTP 200"
+            : `${failed.length} discovery queries failed (${failed.map((entry) => `${entry.method}${entry.query ? ` ${entry.query}` : ""} HTTP ${entry.status}`).join(", ")}); the catalog's route IDs come from the queries that answered, so a route reachable only through a failed query would be missing`);
+        }
+      }
     } catch (error) {
       status = "FAIL";
       evidence.push(`catalog invalid: ${(error as Error).message}`);

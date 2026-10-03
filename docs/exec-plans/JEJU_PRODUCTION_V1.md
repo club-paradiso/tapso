@@ -42,7 +42,8 @@ iPhone: catalog cached in Application Support → DestinationSearchIndex (local,
 | Item | Label | Source |
 |---|---|---|
 | TAGO `getRouteNoList` number search is not exact ("810" lists 810-1, 810-2) | `VERIFIED` | data-source probe run 37091997278 |
-| TAGO without `routeNo` lists every route | `UNVERIFIED` until the catalog run reports it; discovery also probes digits 1-9 and every census number, so the catalog does not depend on it | `build-jeju-catalog.ts` |
+| TAGO without `routeNo` lists every route | `UNVERIFIED`: the unfiltered query answered HTTP 504 through TAPSO's API after four attempts (catalog run 37109317794). The catalog comes from the digit 1-9 and census-number searches, which all answered 200 | `artifacts/route-coverage/jeju-catalog-discovery.json` |
+| Jeju route numbers are numeric (`N`, `N-N`) | `OBSERVED` in every route the 265 answering searches returned; a non-numeric name reachable only through the failed unfiltered query would be missing | same |
 | BIS summary 첫차/막차 refer to the table's first/last row, or to the earliest/latest trip from a place the summary names ("첫차(제주 출발)") | `VERIFIED` on the census (rows are ordered by the core section: Route 365 row 1 starts 06:03 at 월성마을, a later row 06:00 at 한라대) | `jeju_xlsx.py` `check_service` |
 | "휴일" covers Sundays and public holidays; whether it covers Saturday is unstated | `VERIFIED` from the files: sheet names use "(휴일)" for both "토,공휴일" (320, 360, 365, 415) and "일,공휴일" (741-1, 741-2, 742-2) | census |
 | Korean public holidays 2024-2028 | `OFFICIAL_DERIVED` via python-holidays 0.105 (cites 공휴일에 관한 법률 2026 amendment and 인사혁신처); 임시공휴일 after its release need an override entry | `scripts/calendar/generate_kr_holidays.py` |
@@ -53,9 +54,9 @@ iPhone: catalog cached in Application Support → DestinationSearchIndex (local,
 | # | Milestone | Status | Evidence |
 |---|---|---|---|
 | A | Demo out of the Release journey path | `DONE` | `TapsoBuild.showsDemo`; gate 2 source checks; demo copy replaced on live surfaces |
-| B | Canonical catalog pipeline | `DONE` in code; data `PENDING` the first workflow run | `transitCatalog.ts` (6 tests), `jeju-catalog.yml` |
+| B | Canonical catalog pipeline | `DONE`: catalog `794f3bcb831d783e` committed (989 variants), the same version from two independent builds | `transitCatalog.ts` (6 tests), `jeju-catalog.yml` runs 37106503237 (built, then cut by the old 60-minute limit) and 37109317794 |
 | C | Real destination search | `DONE` in code; `UNVERIFIED` on a device | `DestinationSearchIndex` (7 Swift tests), app flow test |
-| D | Variant handling | `DONE` | grouping by exact number, same-ended branches told apart by a stop, first-stop destinations excluded, revisited stops offered per visit |
+| D | Variant handling | `DONE` | grouping by exact number, same-ended branches told apart by a stop, identical stop lists under two route IDs numbered as separate services (32 pairs), first-stop destinations excluded, revisited stops offered per visit |
 | E-H | Timetable census, failure classification, strict validation, normalized dataset | `DONE` | §6 |
 | I | Holiday/service-day engine | `DONE` | `serviceDay.ts`, 8 dated cases incl. substitute holiday and out-of-calendar |
 | J | Runtime timetable API | `DONE` in code; production after merge | `GET /v1/timetables`, `staticData.test.ts` |
@@ -97,6 +98,15 @@ Parser v2 refused 167. Format families read by v3, each with a fixture test in `
 | Seasonal rows | 43-1 "동절기" in the route column; 921 "11,12,1,2월 막차" | conditional; never a first or last bus |
 
 Source conflicts (kept, reported, never served): summary first/last disagreeing with the trips (e.g. 325 막차 21:20 vs 21:05), times running backwards (645, 1111, 922), malformed times never corrected (415 "08;46", 741-1, 751-2), two sheets for one direction that differ (231/232 direction tables, 3001, 3005). Each is listed with its reason in the census report.
+
+### Catalog (2026-10-03, run 37109317794)
+
+Catalog `794f3bcb831d783e`: **989 route variants with ordered stops, 4,338 stops, 3 variants without a usable stop list** (777, 888-8 and 999: the provider lists one stop), 252 route numbers. Every stop has a position; none has road geometry. Types as the provider labels them: 간선 402, 급행 280, 지선 261, 순환 32, unlabelled 14. Topology: 931 linear, 42 revisiting a stop, 16 loops. Stops per variant: 2 to 193, median 49. Variants per number: 1 to 28 (346: 28, 202: 24, 232: 21, 201: 20).
+
+- **Twins.** 32 pairs of variants share one number and one stop list under two route IDs (e.g. 202 `JEB405320213`/`JEB405320237`). Each reports its own buses, so they are never merged: the app numbers them ("같은 정류장을 도는 별도 운행 1/2") and tells the rider to come back and choose the other if their bus does not appear; the readiness report warns on both.
+- **Virtual stops.** 156 variants include a 가상정류소 (provider-defined, not a kerbside stop); they are kept as listed and flagged.
+- **Timetable coverage by number.** 247 of the 252 catalog numbers have a published BIS entry: 227 served, 18 source conflicts, 2 without a timetable; 5 have none (202-3, 358-2, 777, 888-8, 999). 9 published numbers are not in TAGO at all (369, 590, 888, 921, 922, 924, 1100, 1100-1, 1950): timetable only, no live tracking.
+- **Discovery.** 266 queries: the unfiltered list failed (HTTP 504), 9 digit searches and 256 census numbers answered; 8 census numbers matched no TAGO route.
 
 ## 7. Decisions
 
@@ -150,4 +160,5 @@ Evidence goes to `artifacts/device-validation/` as `hybrid-<route>-<date>.json` 
 ## 12. Progress log
 
 - 2026-10-03: audit (§2); catalog pipeline and workflow pushed; first catalog run started (run 37106503237).
+- 2026-10-03: first catalog run built `794f3bcb831d783e` in 43 minutes, then the old single-step workflow's 60-minute limit cut it during the probe and nothing was committed; the split workflow (run 37109317794) committed the same version. 32 same-stop twins found in it and numbered in the app (§6, catalog).
 - 2026-10-03: parser v3 and census (§6); runtime timetable API and holiday calendar; Swift search index and timetable reading (232 Swift tests on Linux and macOS CI); iOS search, timetable card and Release demo gating; readiness audit and release gates.
