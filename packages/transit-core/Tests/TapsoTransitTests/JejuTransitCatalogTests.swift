@@ -26,13 +26,16 @@ final class JejuTransitCatalogTests: XCTestCase {
                 // A loop that passes 합성오일장 twice, with provider sequences other than 1…n.
                 .init(routeId: "SYN440", routeNo: "440", topology: "repeating", stops: [8, 6, 5, 6, 8], sequences: [3, 4, 5, 6, 7]),
                 .init(routeId: "SYN1100", routeNo: "1100", start: "합성기점", end: "색달동[야크마을]", stops: [9, 4, 7]),
+                // The provider lists one stop list under two route IDs (real: 32 pairs on 2026-10-03, e.g. 202).
+                .init(routeId: "SYN510B", routeNo: "510", start: "합성기점", end: "합성마을", stops: [9, 6, 5]),
+                .init(routeId: "SYN510A", routeNo: "510", start: "합성기점", end: "합성마을", stops: [9, 6, 5]),
             ]
         )
     }
 
     func testDecodingChecksWhatTheServerChecked() throws {
         let data = try JSONEncoder().encode(catalog())
-        XCTAssertEqual(try JejuTransitCatalog.decode(data).routes.count, 6)
+        XCTAssertEqual(try JejuTransitCatalog.decode(data).routes.count, 8)
         var raw = try XCTUnwrap(JSONSerialization.jsonObject(with: data) as? [String: Any])
         raw["schemaVersion"] = "tapso-jeju-catalog-v0"
         XCTAssertThrowsError(try JejuTransitCatalog.decode(JSONSerialization.data(withJSONObject: raw)))
@@ -76,6 +79,22 @@ final class JejuTransitCatalogTests: XCTestCase {
         XCTAssertEqual(reaching[0].options.map(\.route.routeId), ["SYN202A"], "202B starts there: nowhere to board before it")
         let branches = reaching[1].options
         XCTAssertEqual(Set(branches.compactMap(\.via)), ["합성공항", "합성마을"], "same ends: told apart by a stop only one serves")
+        XCTAssertTrue(branches.allSatisfy { $0.twin == nil }, "a stop already tells them apart")
+    }
+
+    func testIdenticalVariantsUnderTwoRouteIDsAreNumberedNotMerged() throws {
+        let index = DestinationSearchIndex(catalog: catalog())
+        let market = try XCTUnwrap(index.places.first { $0.name == "합성오일장" })
+        let group = try XCTUnwrap(index.routeOptions(to: market).first { $0.routeNo == "510" })
+        XCTAssertEqual(group.options.count, 2, "both route IDs stay: their buses report on their own ID")
+        XCTAssertTrue(group.options.allSatisfy { $0.via == nil })
+        let numbered = Dictionary(uniqueKeysWithValues: group.options.map { ($0.route.routeId, $0.twin) })
+        XCTAssertEqual(numbered["SYN510A"], DestinationRouteOption.Twin(ordinal: 1, count: 2), "route ID order, not catalog order")
+        XCTAssertEqual(numbered["SYN510B"], DestinationRouteOption.Twin(ordinal: 2, count: 2))
+
+        // A loop visiting a stop twice is one variant offered twice, not twins.
+        let loop = try XCTUnwrap(index.routeOptions(to: market).first { $0.routeNo == "440" })
+        XCTAssertTrue(loop.options.allSatisfy { $0.twin == nil })
     }
 
     func testAStopVisitedTwiceOffersEachVisitWithTheProviderSequence() throws {

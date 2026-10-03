@@ -399,6 +399,8 @@
 "search.catalog.asOfStale" = "Official route data as of %@ · couldn't get an update";
 "route.catalog.note" = "Buses with the same number are different buses when their direction or stops differ. Only buses that pass your stop are shown.";
 "route.catalog.via" = "via %@";
+"route.catalog.twin" = "Same stops, separate service %1$d of %2$d";
+"route.catalog.twinNote" = "Services with the same stops track their buses separately. If your bus does not appear on the one you chose, come back and choose the other.";
 "live.stops.fixedDestination" = "Getting off at %@";
 "live.stops.toDestination" = "%ld stops before your stop";
 "live.stops.toDestination.one" = "%ld stop before your stop";

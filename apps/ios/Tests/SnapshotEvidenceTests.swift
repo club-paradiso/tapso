@@ -201,6 +201,9 @@ final class SnapshotEvidenceTests: XCTestCase {
                 .init(routeId: "SYN202B", routeNo: "202", start: "합성대학교", end: "합성터미널", stops: [3, 2, 0]),
                 .init(routeId: "SYN2021", routeNo: "202-1", start: "합성터미널", end: "합성대학교", stops: [0, 4, 3]),
                 .init(routeId: "SYN2021X", routeNo: "202-1", start: "합성터미널", end: "합성대학교", stops: [0, 5, 3]),
+                // One stop list under two route IDs, as the provider lists some routes.
+                .init(routeId: "SYN510A", routeNo: "510", start: "합성공항", end: "합성대학교", stops: [4, 3]),
+                .init(routeId: "SYN510B", routeNo: "510", start: "합성공항", end: "합성대학교", stops: [4, 3]),
             ]
         ))
     }

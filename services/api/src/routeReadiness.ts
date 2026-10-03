@@ -11,8 +11,9 @@
  *   sequence inside the route.
  * - SUPPORTED_WITH_WARNING: rideable, with something the rider or the audit
  *   must account for (a stop list that revisits stops, stops without
- *   positions, virtual stops, no bus reporting when probed so stop-sequence
- *   evidence could not be checked).
+ *   positions, virtual stops, the same stop list under another route ID of the
+ *   number, no bus reporting when probed so stop-sequence evidence could not
+ *   be checked).
  * - UNSUPPORTED: the provider gave no usable stop list, the live endpoint
  *   failed, or a bus reported a stop sequence outside the route.
  * - UNKNOWN: the live endpoint was never probed for this variant.
@@ -74,6 +75,12 @@ export function assessReadiness(
   // A probe of another catalog version says nothing about this one's variants.
   const probes = probe && probe.catalogVersion === catalog.catalogVersion ? probe.probes : {};
   const variants: VariantReadiness[] = [];
+  // The provider lists some stop lists under two route IDs of one number; each reports its own buses.
+  const twinsByKey = new Map<string, string[]>();
+  for (const route of catalog.routes) {
+    const key = `${route.routeNo}|${route.stops.join(",")}|${(route.sequences ?? []).join(",")}`;
+    twinsByKey.set(key, [...(twinsByKey.get(key) ?? []), route.routeId]);
+  }
 
   for (const route of catalog.routes) {
     const stops = route.stops.map((index) => catalog.stops[index]!);
@@ -104,6 +111,8 @@ export function assessReadiness(
     if (route.topology === "repeating") reasons.push("the stop list revisits stops: boarding and destination must be chosen by order");
     if (withPosition < stops.length) reasons.push(`${stops.length - withPosition} of ${stops.length} stops have no position`);
     if (virtual > 0) reasons.push(`${virtual} virtual stop(s) (가상정류소) in the list`);
+    const twins = (twinsByKey.get(`${route.routeNo}|${route.stops.join(",")}|${(route.sequences ?? []).join(",")}`) ?? []).filter((id) => id !== route.routeId);
+    if (twins.length > 0) reasons.push(`same stop list as ${twins.join(", ")} under ${route.routeNo}: the app numbers them as separate services, and a rider on the other one's bus must choose again`);
     if (tracking === "SUPPORTED" && reasons.length > 0) tracking = "SUPPORTED_WITH_WARNING";
 
     const timetable = timetableByRoute.get(route.routeNo) ?? "not_published";

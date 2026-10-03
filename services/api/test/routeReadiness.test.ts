@@ -74,3 +74,21 @@ test("a probe of another catalog version counts for nothing", () => {
   assert.equal(report.totals.UNKNOWN, 5);
   assert.equal(report.probedAt, undefined);
 });
+
+test("one stop list under two route IDs of a number is a warning on both", () => {
+  const twins = buildCatalog({
+    generatedAt: "2026-10-03T00:00:00.000Z",
+    cityCode: "39",
+    via: "https://synthetic.invalid",
+    discovery: [],
+    routes: [{ routeId: "SYN-T1", routeNumber: "202" }, { routeId: "SYN-T2", routeNumber: "202" }, { routeId: "SYN-T3", routeNumber: "201" }],
+    stopsByRoute: new Map<string, StopOnRoute[] | { error: string }>([["SYN-T1", stops("t", 4)], ["SYN-T2", stops("t", 4)], ["SYN-T3", stops("t", 4)]]),
+  });
+  const probe = { status: 200, vehicles: 1, withStopSequence: 1, sequenceInRange: 1 };
+  const report = assessReadiness(twins, bundle, { probedAt: "x", catalogVersion: twins.catalogVersion, probes: { "SYN-T1": probe, "SYN-T2": probe, "SYN-T3": probe } });
+  const by = Object.fromEntries(report.variants.map((variant) => [variant.routeId, variant]));
+  assert.equal(by["SYN-T1"]!.tracking, "SUPPORTED_WITH_WARNING");
+  assert.match(by["SYN-T1"]!.reasons.join(" "), /same stop list as SYN-T2 under 202/);
+  assert.match(by["SYN-T2"]!.reasons.join(" "), /same stop list as SYN-T1 under 202/);
+  assert.equal(by["SYN-T3"]!.tracking, "SUPPORTED", "another number with the same stops is a different route, not a twin");
+});

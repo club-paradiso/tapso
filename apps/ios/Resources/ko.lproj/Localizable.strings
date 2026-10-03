@@ -399,6 +399,8 @@
 "search.catalog.asOfStale" = "공식 노선 정보 기준 %@ · 최신 정보를 받지 못했어요";
 "route.catalog.note" = "같은 번호라도 방향과 경유지가 다르면 다른 버스예요. 내릴 곳을 지나는 버스만 보여요.";
 "route.catalog.via" = "%@ 경유";
+"route.catalog.twin" = "같은 정류장을 도는 별도 운행 %1$d/%2$d";
+"route.catalog.twinNote" = "정류장이 같아도 운행이 다르면 버스가 따로 잡혀요. 고른 운행에서 내 버스가 안 보이면 돌아와 다른 운행을 골라 주세요.";
 "live.stops.fixedDestination" = "내릴 곳: %@";
 "live.stops.toDestination" = "내릴 곳까지 %ld정거장";
 "live.stops.toDestination.one" = "내릴 곳까지 %ld정거장";

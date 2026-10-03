@@ -154,6 +154,12 @@ struct CatalogRouteSelectContent: View {
             ForEach(groups) { group in
                 VStack(alignment: .leading, spacing: TapsoSpace.xs) {
                     RouteBadge(number: group.routeNo)
+                    if group.options.contains(where: { $0.twin != nil }) {
+                        Text("route.catalog.twinNote")
+                            .font(.caption)
+                            .foregroundStyle(TapsoColor.textSecondary)
+                            .fixedSize(horizontal: false, vertical: true)
+                    }
                     ForEach(group.options) { option in
                         Button { onChoose(option) } label: {
                             row(option)
@@ -196,6 +202,9 @@ struct CatalogRouteSelectContent: View {
         var parts = [String(format: RideText.string("live.route.from"), option.origin)]
         if let via = option.via {
             parts.append(String(format: RideText.string("route.catalog.via"), via))
+        } else if let twin = option.twin {
+            // Same stops under another route ID: the buses report on their own ID, so say they are separate.
+            parts.append(String(format: RideText.string("route.catalog.twin"), twin.ordinal, twin.count))
         }
         parts.append(String(format: RideText.string("route.boardingCount"), option.boardingCount))
         return parts.joined(separator: " · ")

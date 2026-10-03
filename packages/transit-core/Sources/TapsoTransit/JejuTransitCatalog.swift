@@ -136,6 +136,16 @@ public struct DestinationRouteOption: Hashable, Sendable, Identifiable {
     public let boardingCount: Int
     /// A stop that tells this variant apart from another with the same ends; `nil` when its ends already do.
     public let via: String?
+    /// Set when no stop tells this variant apart from a same-ended one: the provider lists
+    /// the same stops under more than one route ID (2026-10-03 catalog: 32 such pairs).
+    /// Their buses report on their own route ID, so the rider must see they are distinct.
+    public var twin: Twin? = nil
+
+    public struct Twin: Hashable, Sendable {
+        /// 1-based, in provider route ID order: stable across catalog builds of the same data.
+        public let ordinal: Int
+        public let count: Int
+    }
 }
 
 /// Variants of one route number reaching the place, shown together but never merged.
@@ -255,7 +265,7 @@ public struct DestinationSearchIndex: Sendable {
     }
 
     private func disambiguate(_ options: [DestinationRouteOption]) -> [DestinationRouteOption] {
-        options.map { option in
+        let named = options.map { option in
             let twins = options.filter { $0.id != option.id && $0.origin == option.origin && $0.terminus == option.terminus }
             guard !twins.isEmpty else { return option }
             // The first stop this variant serves that a same-ended twin does not.
@@ -273,6 +283,21 @@ public struct DestinationSearchIndex: Sendable {
                 boardingCount: option.boardingCount,
                 via: via
             )
+        }
+        // Same ends and no stop of their own: number them, in route ID order.
+        let unresolved = named.filter { option in
+            option.via == nil && named.contains { $0.id != option.id && $0.origin == option.origin && $0.terminus == option.terminus }
+        }
+        let clusters = Dictionary(grouping: unresolved) { "\($0.origin)\u{1F}\($0.terminus)" }
+        return named.map { option in
+            // A stop visited twice on one variant is not a twin: only distinct route IDs count.
+            guard let cluster = clusters["\(option.origin)\u{1F}\(option.terminus)"],
+                  cluster.contains(where: { $0.id == option.id }) else { return option }
+            let routeIds = Set(cluster.map(\.route.routeId)).sorted()
+            guard routeIds.count > 1, let position = routeIds.firstIndex(of: option.route.routeId) else { return option }
+            var numbered = option
+            numbered.twin = DestinationRouteOption.Twin(ordinal: position + 1, count: routeIds.count)
+            return numbered
         }
     }
 
