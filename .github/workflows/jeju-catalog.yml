@@ -1,0 +1,81 @@
+name: Jeju transit catalog
+
+# Builds services/api/data/jeju-transit-catalog.json (every official Jeju route
+# variant TAGO names, with ordered stops) from TAPSO's production API, plus a
+# per-variant live endpoint probe and the production-readiness audit. The agent
+# environment cannot reach the API, so this runs on GitHub. No secret is needed.
+#
+# - On a topic branch, a change to ops/jeju-catalog/request.json runs it once and
+#   commits the result to that branch.
+# - Weekly on main, it refreshes onto the branch data/jeju-catalog-refresh and
+#   opens a pull request when the catalog changed. It never commits to main.
+on:
+  push:
+    paths:
+      - ops/jeju-catalog/request.json
+      - .github/workflows/jeju-catalog.yml
+  schedule:
+    - cron: "41 18 * * 0"  # Monday 03:41 KST
+  workflow_dispatch:
+
+permissions:
+  contents: write
+  pull-requests: write
+
+concurrency:
+  group: jeju-catalog-${{ github.ref }}
+  cancel-in-progress: false
+
+jobs:
+  build:
+    runs-on: ubuntu-latest
+    timeout-minutes: 60
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-node@v4
+        with:
+          node-version: 22
+      - name: Pick the branch the result goes to
+        id: target
+        run: |
+          if [ "${GITHUB_REF_NAME}" = "main" ]; then
+            echo "branch=data/jeju-catalog-refresh" >> "$GITHUB_OUTPUT"
+            git checkout -B data/jeju-catalog-refresh
+          else
+            echo "branch=${GITHUB_REF_NAME}" >> "$GITHUB_OUTPUT"
+          fi
+      - name: Build the catalog and probe every variant's live endpoint (paced, read-only)
+        run: |
+          live=""
+          if node -e 'process.exit(JSON.parse(require("fs").readFileSync("ops/jeju-catalog/request.json","utf8")).live ? 0 : 1)'; then live="--live"; fi
+          node --experimental-strip-types scripts/catalog/build-jeju-catalog.ts $live
+      - name: Production-readiness audit (offline, from the files just written)
+        run: |
+          if [ -f scripts/route-coverage/production-readiness.ts ]; then
+            node --experimental-strip-types scripts/route-coverage/production-readiness.ts
+          fi
+      - name: Commit the result
+        env:
+          GH_TOKEN: ${{ github.token }}
+          TARGET: ${{ steps.target.outputs.branch }}
+        run: |
+          set -euo pipefail
+          git config user.name "github-actions[bot]"
+          git config user.email "41898282+github-actions[bot]@users.noreply.github.com"
+          git add services/api/data/jeju-transit-catalog.json artifacts/route-coverage
+          if git diff --cached --quiet; then echo "nothing changed"; exit 0; fi
+          version=$(node -e 'console.log(JSON.parse(require("fs").readFileSync("services/api/data/jeju-transit-catalog.json","utf8")).catalogVersion)')
+          git commit -m "data: Jeju transit catalog ${version} ($(TZ=Asia/Seoul date +%F))" -m "Workflow run ${GITHUB_RUN_ID}."
+          if [ "${GITHUB_REF_NAME}" = "main" ]; then
+            git push --force origin "HEAD:${TARGET}"
+            gh pr create --base main --head "${TARGET}" --draft \
+              --title "data: refresh the Jeju transit catalog (${version})" \
+              --body "Weekly catalog refresh from workflow run ${GITHUB_RUN_ID}. Review artifacts/route-coverage/jeju-production-readiness.md for added, removed and changed variants before merging." \
+              || echo "a pull request already exists or Actions may not open one; the branch ${TARGET} holds the refresh"
+          else
+            for attempt in 1 2 3; do
+              git pull --rebase origin "${TARGET}" && git push origin "HEAD:${TARGET}" && exit 0
+              sleep $((attempt * 5))
+            done
+            exit 1
+          fi

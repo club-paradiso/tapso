@@ -1,0 +1,5 @@
+{
+  "purpose": "Build the canonical Jeju transit catalog and the per-variant live endpoint probe (.github/workflows/jeju-catalog.yml). A change to this file on a topic branch runs the build once and commits the result to that branch.",
+  "requestedAt": "2026-10-03",
+  "live": true
+}
