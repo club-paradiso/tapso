@@ -1,0 +1,41 @@
+{
+  "schemaVersion": "tapso-jeju-timetable-v2",
+  "label": "OFFICIAL_DATED",
+  "source": {
+    "publisher": "제주특별자치도 (bus.jeju.go.kr)",
+    "dataset": "data.go.kr 3043887",
+    "page": "https://bus.jeju.go.kr/publicTrafficInformation/generalBusSchedule",
+    "file": "406049.xlsx",
+    "sha256": "2c32ddca925df3c76409150dc71a32adec6de3f223f8dbaddaa2a447c56c0ee9"
+  },
+  "retrievedOn": "2026-10-03",
+  "parser": {
+    "name": "jeju-bis-xlsx",
+    "version": "2"
+  },
+  "routeNumber": "5003",
+  "services": [
+    {
+      "sheet": "5003 (서귀여고-중앙R-동문R-토평마을회관)심야",
+      "dayType": "unstated",
+      "direction": "서귀여고-토평마을회관 (심야)",
+      "summary": "첫차/막차 23:00, 배차간격 1일 1회, 동서교통(064-732-4934)",
+      "timepoints": [
+        "서귀여고",
+        "중앙로터리",
+        "동문로터리",
+        "토평마을회관"
+      ],
+      "trips": [
+        {
+          "times": [
+            "23:00",
+            "23:10",
+            "23:22",
+            "23:32"
+          ]
+        }
+      ]
+    }
+  ]
+}

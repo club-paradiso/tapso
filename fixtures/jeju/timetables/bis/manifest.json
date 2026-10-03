@@ -1,0 +1,2933 @@
+{
+  "label": "OFFICIAL_DATED",
+  "source": "https://bus.jeju.go.kr/publicTrafficInformation/generalBusSchedule",
+  "dataset": "data.go.kr 3043887",
+  "retrievedOn": "2026-10-03",
+  "retrievedAt": "2026-10-03T10:47:45+09:00",
+  "parser": {
+    "name": "jeju-bis-xlsx",
+    "version": "2"
+  },
+  "routeGroups": [
+    "4",
+    "3",
+    "1",
+    "2",
+    "5",
+    "0",
+    "6",
+    "7",
+    "8",
+    "9",
+    "13",
+    "11",
+    "14",
+    "16"
+  ],
+  "counts": {
+    "parsed": 68,
+    "parse_refused": 166,
+    "no_timetable": 1
+  },
+  "timetables": [
+    {
+      "id": "405001",
+      "name": "101",
+      "groups": [
+        "4"
+      ],
+      "file": "raw/405001.xlsx",
+      "bytes": 8896,
+      "sha256": "3548d1cd3c2a01a9b6a7251524661bcd87fa2a58d98ce189d918bc6c1b9a7aa2",
+      "outcome": "parsed",
+      "routeNumber": "101",
+      "services": 2
+    },
+    {
+      "id": "405002",
+      "name": "102",
+      "groups": [
+        "4"
+      ],
+      "file": "raw/405002.xlsx",
+      "bytes": 9584,
+      "sha256": "cd19d8d744a3b8876b6820f8bb67bdda8f15dc028d1629c3c71035ed2021778d",
+      "outcome": "parse_refused",
+      "reason": "sheet '102 제주터미널-공항-애월-한림-대정2' cell K8: unreadable value '5:30(출발)'"
+    },
+    {
+      "id": "405003",
+      "name": "111",
+      "groups": [
+        "4"
+      ],
+      "file": "raw/405003.xlsx",
+      "bytes": 7871,
+      "sha256": "1aebc5499efd190d4d1ef6b3c50d544b69746f5e79d76ad2abaf4e425dba90c5",
+      "outcome": "parsed",
+      "routeNumber": "111",
+      "services": 2
+    },
+    {
+      "id": "405004",
+      "name": "121, 122",
+      "groups": [
+        "4"
+      ],
+      "file": "raw/405004.xlsx",
+      "bytes": 11428,
+      "sha256": "3bb2c6324754992c32de15d96ba469ca7266e5b1df1971959a3c163e981311c2",
+      "outcome": "parse_refused",
+      "reason": "sheet '121 표선(제주민속촌)-성읍-대천동-동광양-공항' cell C8: unreadable value '121번'"
+    },
+    {
+      "id": "405005",
+      "name": "131, 132",
+      "groups": [
+        "4"
+      ],
+      "file": "raw/405005.xlsx",
+      "bytes": 11989,
+      "sha256": "ed3800a56a5bd49f70455fcb455890e97d4983917f93e93b2b65790552a25f67",
+      "outcome": "parse_refused",
+      "reason": "sheet '131 공항-동광양-봉개-교래-수망리-남원체육관' cell C8: unreadable value '131'"
+    },
+    {
+      "id": "405006",
+      "name": "151",
+      "groups": [
+        "4"
+      ],
+      "file": "raw/405006.xlsx",
+      "bytes": 9592,
+      "sha256": "2e32e3a03898d8f2772aab766c92b5c65f67f2c4561fce16706c3c9e43af889c",
+      "outcome": "parse_refused",
+      "reason": "sheet '151 대정(운진항-영어교육-동광-평화로-공항-제주터미널' cell D26: unreadable value '19:03\\n(대정여고 앞)'"
+    },
+    {
+      "id": "405007",
+      "name": "181",
+      "groups": [
+        "4"
+      ],
+      "file": "raw/405007.xlsx",
+      "bytes": 7449,
+      "sha256": "4685f8ed7f383d9664d2179c36bd33f5f6ea1092756df141ff076ca6bef2d1a0",
+      "outcome": "parse_refused",
+      "reason": "sheet '181 공항-516도로-서귀포-평화로-공항-제주터미널' cell J27: unreadable value '21:57\\n(종료)'"
+    },
+    {
+      "id": "405008",
+      "name": "182",
+      "groups": [
+        "4"
+      ],
+      "file": "raw/405008.xlsx",
+      "bytes": 7173,
+      "sha256": "0a4f3ab042bca57cbde772bd6b8deb88564e81233f4ac8a8d1f25b9100f3daba",
+      "outcome": "parse_refused",
+      "reason": "sheet '182 제주터미널-공항-평화로-서귀포-516로-공항' cell I8: unreadable value '6:05(출발)'"
+    },
+    {
+      "id": "405009",
+      "name": "201",
+      "groups": [
+        "3"
+      ],
+      "file": "raw/405009.xlsx",
+      "bytes": 18060,
+      "sha256": "7373a4f415f15678bf14a172d9b1c91d10c66e7d27fd994b3557b7d598161348",
+      "outcome": "parse_refused",
+      "reason": "sheet '201 서귀포터미널-남원-성산-세화-조천-제주터미널' row 8: trip 1 has no time"
+    },
+    {
+      "id": "405010",
+      "name": "202",
+      "groups": [
+        "3"
+      ],
+      "file": "raw/405010.xlsx",
+      "bytes": 17964,
+      "sha256": "2f7bffe777814408ea8b283d9ce37b563f10331884805ac10795eefc5b982e3d",
+      "outcome": "parse_refused",
+      "reason": "sheet '202 제주터미널-애월-한림-대정-중문-서귀터미널' cell J8: unreadable value '5:50(출발)'"
+    },
+    {
+      "id": "405011",
+      "name": "211, 212",
+      "groups": [
+        "3"
+      ],
+      "file": "raw/405011.xlsx",
+      "bytes": 16125,
+      "sha256": "f675aabfc5c4a586678c73f35e1dd2b3f746a551098b7b94bf017473c91d60e2",
+      "outcome": "parse_refused",
+      "reason": "sheet '211 제주터미널-봉개-대천동-수산-상산포항' cell C8: unreadable value '211'"
+    },
+    {
+      "id": "405012",
+      "name": "221, 222",
+      "groups": [
+        "3"
+      ],
+      "file": "raw/405012.xlsx",
+      "bytes": 16036,
+      "sha256": "06f6b13f5107e8f606c17cea9b96ef6de9a94a1074737ea26976cdd21b3263ad",
+      "outcome": "parse_refused",
+      "reason": "sheet '221 표선-성읍-대천동-봉개-동광양-제주터미널' cell C8: unreadable value '221번'"
+    },
+    {
+      "id": "405013",
+      "name": "231, 232",
+      "groups": [
+        "3"
+      ],
+      "file": "raw/405013.xlsx",
+      "bytes": 15188,
+      "sha256": "cc21f0fc1b68ced125a7b1e406c416e6f1d523650eed5c2ceae0811af61d726f",
+      "outcome": "parse_refused",
+      "reason": "sheet '231 제주터미널-봉개-교래-의귀-남원-서귀포등기소' cell B2: expected '<route>번(<day>)', found '231번, 232번'"
+    },
+    {
+      "id": "405014",
+      "name": "240",
+      "groups": [
+        "3"
+      ],
+      "file": "raw/405014.xlsx",
+      "bytes": 7377,
+      "sha256": "9b90dc9dc7381313f86a327e5867cad8f683fbd1dc61f2a122bf6a90388f472e",
+      "outcome": "parse_refused",
+      "reason": "sheet '240 국제컨벤션센터-중문-어리목-제주터미널' cell G9: unreadable value 'O'"
+    },
+    {
+      "id": "405015",
+      "name": "251, 251-1, 252, 253, 254",
+      "groups": [
+        "3"
+      ],
+      "file": "raw/405015.xlsx",
+      "bytes": 71599,
+      "sha256": "600f0f198843cb6bb136d0fe384d6d52b7f8fd4a992bb00310553b4187e9c36d",
+      "outcome": "parse_refused",
+      "reason": "sheet '251 대정-사계-화순-평화로-한라병원-제주터미널' cell B2: expected '<route>번(<day>)', found '251번/251-1번\\n252번/253번/254번'"
+    },
+    {
+      "id": "405016",
+      "name": "255",
+      "groups": [
+        "3"
+      ],
+      "file": "raw/405016.xlsx",
+      "bytes": 8683,
+      "sha256": "4550278507867c29c067530dc50d3ce6981f0fe08689aded445827898bf9d6e7",
+      "outcome": "parsed",
+      "routeNumber": "255",
+      "services": 2
+    },
+    {
+      "id": "405017",
+      "name": "260",
+      "groups": [
+        "3"
+      ],
+      "file": "raw/405017.xlsx",
+      "bytes": 8221,
+      "sha256": "f201cf133f4a56a9005f2fcb6a52df6a0bbdd1a682d73f838c7a1919b8e9953e",
+      "outcome": "parse_refused",
+      "reason": "sheet '260 제주터미널-봉개-대흘-송당-해녀박물관' cell H8: unreadable value '7:18(세화고경유)'"
+    },
+    {
+      "id": "405018",
+      "name": "270",
+      "groups": [
+        "3"
+      ],
+      "file": "raw/405018.xlsx",
+      "bytes": 9993,
+      "sha256": "87650ae3f85176f60964309837af9058ef0e55c4c152f52e41a2697805044cc6",
+      "outcome": "parse_refused",
+      "reason": "sheet '270 애월-한라대-민오름-제주대' cell F14: unreadable value 'X\\n(월산마을입구)'"
+    },
+    {
+      "id": "405019",
+      "name": "281",
+      "groups": [
+        "3"
+      ],
+      "file": "raw/405019.xlsx",
+      "bytes": 14566,
+      "sha256": "00cfa1ac8e993846c1c8351ec7d4b9e6042371aacfb476ae5e34d786d922534f",
+      "outcome": "parse_refused",
+      "reason": "sheet '281 서귀포터미널-서귀중앙R-516도로-시청-제주터미널' cell D8: unreadable value '5:50 (출발)'"
+    },
+    {
+      "id": "405020",
+      "name": "282",
+      "groups": [
+        "3"
+      ],
+      "file": "raw/405020.xlsx",
+      "bytes": 16783,
+      "sha256": "3591dca2bfa3aadab33e4ddb5ce89e91449638c6b65519fab1b726bc5da6b548",
+      "outcome": "parse_refused",
+      "reason": "sheet '282 서귀포터미널-중문-평화로-한라병원-제주터미널' cell I8: unreadable value '○'"
+    },
+    {
+      "id": "405021",
+      "name": "291, 292, 293",
+      "groups": [
+        "3"
+      ],
+      "file": "raw/405021.xlsx",
+      "bytes": 32592,
+      "sha256": "40fbe4a8aa3770c79b67779eb63326eb8dc54effb0915568f9bc34ea01da46b1",
+      "outcome": "parse_refused",
+      "reason": "sheet '291 제주터미널-한라병원-장전-봉성-한림' cell C8: unreadable value '291번'"
+    },
+    {
+      "id": "405022",
+      "name": "434",
+      "groups": [
+        "2"
+      ],
+      "file": "raw/405022.xlsx",
+      "bytes": 6253,
+      "sha256": "da9407f520bb9c01467d9f9609215d5abc0003d4e3b1bf2b3a9a8ef8b4c35bd0",
+      "outcome": "parse_refused",
+      "reason": "sheet '434 순환(한라도서관-오등동-중앙로-한라도서관)' cell N20: unreadable value '중앙마을\\n회차'"
+    },
+    {
+      "id": "405023",
+      "name": "311",
+      "groups": [
+        "1"
+      ],
+      "file": "raw/405023.xlsx",
+      "bytes": 9987,
+      "sha256": "caa4798bac4510efd5d77453ba309bb892b6a71047cbfe81578257f3f4fb00df",
+      "outcome": "parse_refused",
+      "reason": "sheet '311 수목원-한라병원-시청-인제-삼양초-함덕' cell K14: unreadable value '◎'"
+    },
+    {
+      "id": "405024",
+      "name": "315",
+      "groups": [
+        "1"
+      ],
+      "file": "raw/405024.xlsx",
+      "bytes": 9735,
+      "sha256": "a63f29d5ae5de0eed54de3127bbe8814fb732a541a90408484bdbbb08299cb12",
+      "outcome": "parse_refused",
+      "reason": "sheet '315 하귀-외도-노형-신제주R-터미널-중앙로-부두' cell L27: unreadable value '21:19\\n(부두하차승객없을시 해양경찰서 종료)'"
+    },
+    {
+      "id": "405025",
+      "name": "316",
+      "groups": [
+        "1"
+      ],
+      "file": "raw/405025.xlsx",
+      "bytes": 8700,
+      "sha256": "bd7e0806629f7e0f14df9e970a355bfe088991827a05d9a746e05b37a7f51e6e",
+      "outcome": "parse_refused",
+      "reason": "sheet '316 하귀-외도-노형-신제주R-공항-동문R-삼양1동' cell J28: unreadable value '22:22             (승객 없을시 삼양선사유적지 종료)'"
+    },
+    {
+      "id": "405026",
+      "name": "320",
+      "groups": [
+        "1"
+      ],
+      "file": "raw/405026.xlsx",
+      "bytes": 15294,
+      "sha256": "2fc3f065cd1629f21807128eb2dc8906cc02c87eddd64cdd15000f9330db0cf7",
+      "outcome": "parse_refused",
+      "reason": "sheet '320 (평일)하귀-한라대-연북로-탐라중-삼화지구' cell C16: unreadable value '08:17\\n(하귀하나로)'"
+    },
+    {
+      "id": "405027",
+      "name": "325",
+      "groups": [
+        "1",
+        "11"
+      ],
+      "file": "raw/405027.xlsx",
+      "bytes": 9455,
+      "sha256": "b8f63a6bb0ab63b0ad121a560345ddfa39ff669ad473fa9bfd6d645319f6f022",
+      "outcome": "parse_refused",
+      "reason": "sheet '325 함덕-삼양-동문R-공항-신제주R-원노형-수목원': summary 막차 21:20 disagrees with the trips (21:05)"
+    },
+    {
+      "id": "405028",
+      "name": "367",
+      "groups": [
+        "1"
+      ],
+      "file": "raw/405028.xlsx",
+      "bytes": 4766,
+      "sha256": "e1d21d94c239864f85044521d8dd0e7f8079c3ef1e2d4105cae373e2875d9bcc",
+      "outcome": "parse_refused",
+      "reason": "sheet '367 (등하교)_한라대(월평)-연북로-월평(한라대)' cell C8: unreadable value '(연동지구)'"
+    },
+    {
+      "id": "405029",
+      "name": "335, 336",
+      "groups": [
+        "1"
+      ],
+      "file": "raw/405029.xlsx",
+      "bytes": 18690,
+      "sha256": "8d6b4e8649af78b861fb4d46c8470ef96238f611e744929dce2b752de6f39e56",
+      "outcome": "parse_refused",
+      "reason": "sheet '335 봉개-관광대' cell B2: expected '<route>번(<day>)', found '335번, 336번'"
+    },
+    {
+      "id": "405030",
+      "name": "341, 342",
+      "groups": [
+        "1"
+      ],
+      "file": "raw/405030.xlsx",
+      "bytes": 18504,
+      "sha256": "de61a96015b3ef27ff654eb31df74d767ae007a1f9483b8a54102a8089f1a4ba",
+      "outcome": "parse_refused",
+      "reason": "sheet '341 제주대-시청-인제-삼양동-함덕' cell C8: unreadable value '342번'"
+    },
+    {
+      "id": "405031",
+      "name": "43-1, 43-2, 43-3",
+      "groups": [
+        "1"
+      ],
+      "file": "raw/405031.xlsx",
+      "bytes": 23992,
+      "sha256": "ddfdf04819534b6f0b556c411850b524353cfdba5748d7e1a571d784bdd84509",
+      "outcome": "parse_refused",
+      "reason": "sheet '43-1 절물-봉개-한마음병원-시청-터미널-공항' cell B2: expected '<route>번(<day>)', found '43-1번, 43-2번, 43-3번'"
+    },
+    {
+      "id": "405032",
+      "name": "345",
+      "groups": [
+        "1"
+      ],
+      "file": "raw/405032.xlsx",
+      "bytes": 7565,
+      "sha256": "de413df0424254a6208c7e2b83ce1f9966e5994013af2027b5d359e61f749d79",
+      "outcome": "parsed",
+      "routeNumber": "345",
+      "services": 1
+    },
+    {
+      "id": "405033",
+      "name": "346",
+      "groups": [
+        "1"
+      ],
+      "file": "raw/405033.xlsx",
+      "bytes": 9447,
+      "sha256": "ceb492e391c243da131861d32974a9e7a8afdce82589b9f020847c74888dd66c",
+      "outcome": "parse_refused",
+      "reason": "sheet '346 삼화지구-오현고-서해A-제일중(탐라중)-영주고' cell K27: unreadable value '21:27\\n(중앙여고 종료)'"
+    },
+    {
+      "id": "405034",
+      "name": "347",
+      "groups": [
+        "1"
+      ],
+      "file": "raw/405034.xlsx",
+      "bytes": 7448,
+      "sha256": "19b616ca87f86c0fd5532ab91a704d73315ddd4fbfa6db16e34f23b6c431fb7d",
+      "outcome": "parse_refused",
+      "reason": "sheet '347 (순환)월평-신성여고-탐라중-삼화지구-탐라중-월평' cell J37: unreadable value '22:57\\n(종료)'"
+    },
+    {
+      "id": "405035",
+      "name": "351",
+      "groups": [
+        "1"
+      ],
+      "file": "raw/405035.xlsx",
+      "bytes": 9908,
+      "sha256": "3574d75fb582aae3dfd05c1ec04c94d70e915514d5729d25a0828d4201ece0bf",
+      "outcome": "parse_refused",
+      "reason": "sheet '351 제주대-봉개' cell J40: unreadable value '봉개 하차 승객\\n없을 시\\n대기고 종료'"
+    },
+    {
+      "id": "405036",
+      "name": "355, 356",
+      "groups": [
+        "1"
+      ],
+      "file": "raw/405036.xlsx",
+      "bytes": 22378,
+      "sha256": "02f080373e74cd4459c387f175f6f0b51e840f0b4b19c5ae35ca44277a6ffc12",
+      "outcome": "parse_refused",
+      "reason": "sheet '355 하귀-한라병원-신제주R-터미널-시청-제주대' cell C8: unreadable value '355번'"
+    },
+    {
+      "id": "405037",
+      "name": "360",
+      "groups": [
+        "1"
+      ],
+      "file": "raw/405037.xlsx",
+      "bytes": 21573,
+      "sha256": "0aa4bc029d0b3c4acc95e8de262a3502fb6b11f5ca5dbcb514d884dcfdcc4e0d",
+      "outcome": "parse_refused",
+      "reason": "sheet '360 (평일)노형부영→제주대' cell H81: unreadable value '22:54\\n(제주대병원 종료)'"
+    },
+    {
+      "id": "405038",
+      "name": "436, 437",
+      "groups": [
+        "2"
+      ],
+      "file": "raw/405038.xlsx",
+      "bytes": 8430,
+      "sha256": "a18a130b52909a8748bea31bd2677e57e39cda3f1ef2c766a41960e140cde25c",
+      "outcome": "parse_refused",
+      "reason": "the sheets name more than one route: ['436', '437']"
+    },
+    {
+      "id": "405039",
+      "name": "370",
+      "groups": [
+        "1"
+      ],
+      "file": "raw/405039.xlsx",
+      "bytes": 7084,
+      "sha256": "5a6d2266b5c03d06c58d723ee0ab8b887a7555f9a017fd20a24b602772cdfa83",
+      "outcome": "parsed",
+      "routeNumber": "370",
+      "services": 2
+    },
+    {
+      "id": "405040",
+      "name": "380",
+      "groups": [
+        "1"
+      ],
+      "file": "raw/405040.xlsx",
+      "bytes": 7619,
+      "sha256": "e2d6f56b6a418d0f5d77a81f75e0fc00b389d9578e8e46a487459ef2eddc2a1c",
+      "outcome": "parse_refused",
+      "reason": "sheet '380 함덕-사라봉-중앙로터리-제주대학교병원': summary 첫차 6:45 disagrees with the trips (06:30)"
+    },
+    {
+      "id": "405041",
+      "name": "331",
+      "groups": [
+        "1"
+      ],
+      "file": "raw/405041.xlsx",
+      "bytes": 8319,
+      "sha256": "034b10eec3c40276bd9ea3f1a4279d828c83b7eb7b45ebb465fd3571bddbe95d",
+      "outcome": "parsed",
+      "routeNumber": "331",
+      "services": 2
+    },
+    {
+      "id": "405042",
+      "name": "415",
+      "groups": [
+        "2"
+      ],
+      "file": "raw/405042.xlsx",
+      "bytes": 15642,
+      "sha256": "3d17abee7715a962fe0476e2cca2010ea20e1e14c228f07cca2b841e56cd945d",
+      "outcome": "parse_refused",
+      "reason": "sheet '415 평일(부두-중앙로-한마음병원-신제주R-수목원)' cell I14: unreadable value '08;46'"
+    },
+    {
+      "id": "405043",
+      "name": "356-1",
+      "groups": [
+        "1"
+      ],
+      "file": "raw/405043.xlsx",
+      "bytes": 4712,
+      "sha256": "02c0829352fb436eef502b34ec146a96f3c53a075dfdc35e1e08678e28a003cf",
+      "outcome": "parse_refused",
+      "reason": "sheet '356-1 (임시운행)하귀-신제주R-중앙여고-제주대' cell B2: expected '<route>번(<day>)', found '임시 356-1'"
+    },
+    {
+      "id": "405044",
+      "name": "462",
+      "groups": [
+        "2"
+      ],
+      "file": "raw/405044.xlsx",
+      "bytes": 5789,
+      "sha256": "cffe8ae6636a34ec267b9a6dcda87c357cf0ce6c6653ae328461f35b46b9fd72",
+      "outcome": "parsed",
+      "routeNumber": "462",
+      "services": 1
+    },
+    {
+      "id": "405045",
+      "name": "368",
+      "groups": [
+        "1"
+      ],
+      "file": "raw/405045.xlsx",
+      "bytes": 4666,
+      "sha256": "166f560ea18b7080651ba657707965245d0f274998396da517ebf30ba97fa00b",
+      "outcome": "parse_refused",
+      "reason": "sheet '368 (등교)한라대-한라병원-연북로-제주여고-월평' cell C8: unreadable value '(노형지구)'"
+    },
+    {
+      "id": "405046",
+      "name": "366",
+      "groups": [
+        "1"
+      ],
+      "file": "raw/405046.xlsx",
+      "bytes": 4700,
+      "sha256": "ce8e09f5050f04aac2edf1a9239458dd96130e6795fb13c55e4082ba689de390",
+      "outcome": "parse_refused",
+      "reason": "sheet '366 (등교)한라대-연동대림-한라병원-연북로-제주대' cell C8: unreadable value '(연동지구)'"
+    },
+    {
+      "id": "405047",
+      "name": "423",
+      "groups": [
+        "2"
+      ],
+      "file": "raw/405047.xlsx",
+      "bytes": 5161,
+      "sha256": "3132d553aa7f8a42c6e75039dbf4629655ef6d2d7cb439baf9e53c7ffe87b93e",
+      "outcome": "parsed",
+      "routeNumber": "423",
+      "services": 1
+    },
+    {
+      "id": "405048",
+      "name": "300,301",
+      "groups": [
+        "1",
+        "11"
+      ],
+      "file": "raw/405048.xlsx",
+      "bytes": 19383,
+      "sha256": "4daf202c680488080ccf04ab29ee780c25251f0d28401ea9053d721125eb7c61",
+      "outcome": "parse_refused",
+      "reason": "sheet '300 (도심급행)하귀-한라병원-시청-함덕' cell C8: unreadable value '300번'"
+    },
+    {
+      "id": "405049",
+      "name": "440",
+      "groups": [
+        "2"
+      ],
+      "file": "raw/405049.xlsx",
+      "bytes": 8000,
+      "sha256": "e4f41ffea99f656bfa20efbd337c7c7107bdb12314d118689c5ef6611cb11fa4",
+      "outcome": "parsed",
+      "routeNumber": "440",
+      "services": 2
+    },
+    {
+      "id": "405050",
+      "name": "300,301",
+      "groups": [
+        "1",
+        "11"
+      ],
+      "file": "raw/405050.xlsx",
+      "bytes": 19384,
+      "sha256": "bd208b851088814cde51c9e0b74993abfbb34127609b799164a5775565ad1976",
+      "outcome": "parse_refused",
+      "reason": "sheet '300 (도심급행)하귀-한라병원-시청-함덕' cell C8: unreadable value '300번'"
+    },
+    {
+      "id": "405051",
+      "name": "425",
+      "groups": [
+        "2"
+      ],
+      "file": "raw/405051.xlsx",
+      "bytes": 7780,
+      "sha256": "e2af20ddd959ed3cfb042ad0e71beff75277e3da83630cefee4a32a878006bb0",
+      "outcome": "parse_refused",
+      "reason": "sheet '425 국제대-영평-한마음병원-인화동-이화A-부두': summary 막차 21:57 disagrees with the trips (21:27)"
+    },
+    {
+      "id": "405052",
+      "name": "446",
+      "groups": [
+        "2"
+      ],
+      "file": "raw/405052.xlsx",
+      "bytes": 7232,
+      "sha256": "472ce05cadbb14face2dfde097037986a1445488d5f0ba57695640ad70f01998",
+      "outcome": "parsed",
+      "routeNumber": "446",
+      "services": 2
+    },
+    {
+      "id": "405053",
+      "name": "447",
+      "groups": [
+        "2"
+      ],
+      "file": "raw/405053.xlsx",
+      "bytes": 7174,
+      "sha256": "f08042981d0d84982daf7cfd59895fed20d1e8ec776ed1ac7535a61b5265b0ee",
+      "outcome": "parse_refused",
+      "reason": "sheet '447 도평-외도-도두-용담-중앙로-시청-제주대' cell H19: unreadable value '21:50\\n시청종료'"
+    },
+    {
+      "id": "405054",
+      "name": "451, 451-1",
+      "groups": [
+        "2"
+      ],
+      "file": "raw/405054.xlsx",
+      "bytes": 6967,
+      "sha256": "cf0ad4f02597376863c49ee2573bf6e8b63f4e1642f24c5f2a6dde58da0212f0",
+      "outcome": "parse_refused",
+      "reason": "sheet '451 순환(도두동-연동-외도-도두동)' cell C8: unreadable value '451번'"
+    },
+    {
+      "id": "405055",
+      "name": "452, 452-1",
+      "groups": [
+        "2"
+      ],
+      "file": "raw/405055.xlsx",
+      "bytes": 7033,
+      "sha256": "f346d66ae72ed6427b89301237b73f89be6071db71548b79c4145730ece814cd",
+      "outcome": "parse_refused",
+      "reason": "sheet '452 순환(도두동-외도-연동-오일장-도두동)' cell C8: unreadable value '452번'"
+    },
+    {
+      "id": "405056",
+      "name": "453",
+      "groups": [
+        "2"
+      ],
+      "file": "raw/405056.xlsx",
+      "bytes": 5515,
+      "sha256": "7abaac80dc4b7d3fc8aa667a7847e1b11f4cf85de6fea58cd54b60761e5b1c23",
+      "outcome": "parse_refused",
+      "reason": "sheet '453 순환(도두동-오일장-신제주R-공항-용담-도두동)' cell C8: unreadable value '(외도부영 5:55)\\n6:10'"
+    },
+    {
+      "id": "405057",
+      "name": "454",
+      "groups": [
+        "2"
+      ],
+      "file": "raw/405057.xlsx",
+      "bytes": 5577,
+      "sha256": "17929edd049e46cf249d4c8c00d26d255c98bd7c67ebbfb644c8dfe4a0fe4fd1",
+      "outcome": "parsed",
+      "routeNumber": "454",
+      "services": 1
+    },
+    {
+      "id": "405058",
+      "name": "455",
+      "groups": [
+        "2"
+      ],
+      "file": "raw/405058.xlsx",
+      "bytes": 10077,
+      "sha256": "3f3a3cd47a8caee0d96d145d0430146bfb584ca42488b5528c4de5ab411eaf66",
+      "outcome": "parse_refused",
+      "reason": "sheet '455 제주대-시청-중앙로-용담-공항-신제주' cell K11: unreadable value '\\n(9:47)'"
+    },
+    {
+      "id": "405059",
+      "name": "365",
+      "groups": [
+        "1"
+      ],
+      "file": "raw/405059.xlsx",
+      "bytes": 19255,
+      "sha256": "2e18a8b915cd3fd5f7cc83aeb647e6615f55f104120b0c79c646eb501dc39038",
+      "outcome": "parsed",
+      "routeNumber": "365",
+      "services": 4
+    },
+    {
+      "id": "405061",
+      "name": "471",
+      "groups": [
+        "2"
+      ],
+      "file": "raw/405061.xlsx",
+      "bytes": 7439,
+      "sha256": "2ce089987a7a4d0cb039d3b8d426a0f64db2aa8615111e7594395a0403869ac8",
+      "outcome": "parsed",
+      "routeNumber": "471",
+      "services": 2
+    },
+    {
+      "id": "405062",
+      "name": "472",
+      "groups": [
+        "2"
+      ],
+      "file": "raw/405062.xlsx",
+      "bytes": 7270,
+      "sha256": "8f3fe89022930ee90154e5503080b98a83f9d1f374a5ded8f6bbdabf9b1a9277",
+      "outcome": "parsed",
+      "routeNumber": "472",
+      "services": 2
+    },
+    {
+      "id": "405063",
+      "name": "473",
+      "groups": [
+        "2"
+      ],
+      "file": "raw/405063.xlsx",
+      "bytes": 6896,
+      "sha256": "d5b5791c4d482bcee98cea195648b8c714cf7c9fc2c9151f5e988a2b1722fbe9",
+      "outcome": "parsed",
+      "routeNumber": "473",
+      "services": 2
+    },
+    {
+      "id": "405064",
+      "name": "475",
+      "groups": [
+        "2"
+      ],
+      "file": "raw/405064.xlsx",
+      "bytes": 5760,
+      "sha256": "136bf57ffbacad7f2662a55fa7147f09d0ff61e76510a6f222d9fefd90e46ca2",
+      "outcome": "parsed",
+      "routeNumber": "475",
+      "services": 1
+    },
+    {
+      "id": "405065",
+      "name": "477",
+      "groups": [
+        "2"
+      ],
+      "file": "raw/405065.xlsx",
+      "bytes": 6566,
+      "sha256": "e5b21f5f299cc289bc572ac561f62da92351d2365f224454213666728899f2e0",
+      "outcome": "parsed",
+      "routeNumber": "477",
+      "services": 1
+    },
+    {
+      "id": "405066",
+      "name": "490",
+      "groups": [
+        "2"
+      ],
+      "file": "raw/405066.xlsx",
+      "bytes": 6857,
+      "sha256": "333839fdda7f43cb0fbb8851e92fb19501e238650af2ccb4238e5834eed6ff6b",
+      "outcome": "parsed",
+      "routeNumber": "490",
+      "services": 1
+    },
+    {
+      "id": "405067",
+      "name": "600, 601",
+      "groups": [
+        "6"
+      ],
+      "file": "raw/405067.xlsx",
+      "bytes": 16734,
+      "sha256": "0a4eb1d2a33e41251f77abb94f1311bbcb3213eba1390db316694e450d8a920c",
+      "outcome": "parse_refused",
+      "reason": "sheet '600 제주공항-평화로-서귀포칼호텔' cell B2: expected '<route>번(<day>)', found '600번, 601번\\n(공항리무진)'"
+    },
+    {
+      "id": "405068",
+      "name": "701-1",
+      "groups": [
+        "5"
+      ],
+      "file": "raw/405068.xlsx",
+      "bytes": 5597,
+      "sha256": "79003bef916384cce9b7dd7cae6de1836e8c39e329c53177bfa9de9c055207f9",
+      "outcome": "parsed",
+      "routeNumber": "701-1",
+      "services": 1
+    },
+    {
+      "id": "405069",
+      "name": "701-2",
+      "groups": [
+        "5"
+      ],
+      "file": "raw/405069.xlsx",
+      "bytes": 5561,
+      "sha256": "3d7b3d72137f35f4a7f373f64405419ce4cdfa5aa814a40b42bb05c1b9a2f566",
+      "outcome": "parsed",
+      "routeNumber": "701-2",
+      "services": 1
+    },
+    {
+      "id": "405070",
+      "name": "431",
+      "groups": [
+        "2",
+        "11"
+      ],
+      "file": "raw/405070.xlsx",
+      "bytes": 5944,
+      "sha256": "d2dadfb517bd26fe7faee4ddbf5967e7edbe43288981aeba3ab8bf62049a09c1",
+      "outcome": "parsed",
+      "routeNumber": "431",
+      "services": 1
+    },
+    {
+      "id": "405071",
+      "name": "702-1",
+      "groups": [
+        "5"
+      ],
+      "file": "raw/405071.xlsx",
+      "bytes": 5645,
+      "sha256": "6c231e8200887fb0b1837315114d2c147ea10d83b4c6180c68776b4d2b0178f6",
+      "outcome": "parse_refused",
+      "reason": "sheet '702-1 조천-와산-와흘-신안동(동수동)-조천' row 10: times are not strictly ascending"
+    },
+    {
+      "id": "405072",
+      "name": "702-2",
+      "groups": [
+        "5"
+      ],
+      "file": "raw/405072.xlsx",
+      "bytes": 5626,
+      "sha256": "c540e1142815e9d6c1ec154af66486eb58aa723dcf78bf9dd0237cba3d304971",
+      "outcome": "parse_refused",
+      "reason": "sheet '702-2 조천-동수동(신안동)-와흘-와산-조천' row 8: times are not strictly ascending"
+    },
+    {
+      "id": "405073",
+      "name": "703-1",
+      "groups": [
+        "5"
+      ],
+      "file": "raw/405073.xlsx",
+      "bytes": 5244,
+      "sha256": "7a46a94f6be49f02eebafe619be135211ccc3e7ec622fcaf056176a59dd33909",
+      "outcome": "parsed",
+      "routeNumber": "703-1",
+      "services": 1
+    },
+    {
+      "id": "405074",
+      "name": "703-2",
+      "groups": [
+        "5"
+      ],
+      "file": "raw/405074.xlsx",
+      "bytes": 5253,
+      "sha256": "237a4899c7117e2d32596a4a9719d78d0323b8e33f5368bf6d893eb7111128fb",
+      "outcome": "parsed",
+      "routeNumber": "703-2",
+      "services": 1
+    },
+    {
+      "id": "405075",
+      "name": "704-1, 704-3",
+      "groups": [
+        "5"
+      ],
+      "file": "raw/405075.xlsx",
+      "bytes": 6664,
+      "sha256": "5214f0fcc1ac11ccfbfaa2a6089b53a7088e09971a13552d3ecc0052e041c6e6",
+      "outcome": "parse_refused",
+      "reason": "sheet '704-1 조천-선흘-선인동(거문오름)-와산-조천' cell B2: day label '옵서버스' is not one TAPSO has read before"
+    },
+    {
+      "id": "405076",
+      "name": "704-2, 704-3",
+      "groups": [
+        "5"
+      ],
+      "file": "raw/405076.xlsx",
+      "bytes": 6674,
+      "sha256": "c2c5d1c19e7a56d9c72472b55933b682791a11b895262e056abf2f946e941d76",
+      "outcome": "parse_refused",
+      "reason": "sheet '704-2 조천-와산-선인동(거문오름)-선흘-조천' cell B2: day label '옵서버스' is not one TAPSO has read before"
+    },
+    {
+      "id": "405077",
+      "name": "704-4",
+      "groups": [
+        "5"
+      ],
+      "file": "raw/405077.xlsx",
+      "bytes": 6128,
+      "sha256": "8bbc6aa96dffa8524068ee8d2c21ce75ea367e2ba86a1f0acadd48ab4df45837",
+      "outcome": "parse_refused",
+      "reason": "sheet '704-4 송당리-덕천리-동백동산-북촌리해동-조천(변경후' cell B2: day label '옵서버스' is not one TAPSO has read before"
+    },
+    {
+      "id": "405078",
+      "name": "711-1",
+      "groups": [
+        "5"
+      ],
+      "file": "raw/405078.xlsx",
+      "bytes": 6790,
+      "sha256": "be2d4994156b0d946fdc090e6d6afe3d61b0a5be43c366b0f392e1bb32640f32",
+      "outcome": "parse_refused",
+      "reason": "sheet '711-1 해녀박물관-세화-비자림-송당-만장굴-김녕리' cell B2: day label '옵서버스' is not one TAPSO has read before"
+    },
+    {
+      "id": "405079",
+      "name": "711-2",
+      "groups": [
+        "5"
+      ],
+      "file": "raw/405079.xlsx",
+      "bytes": 6837,
+      "sha256": "1ef3bbd22693a89e9cbb1030b33f1731ff37b3e944bb96a3d7bc8bc8550ddc57",
+      "outcome": "parse_refused",
+      "reason": "sheet '711-2 종달항-세화-평대-한동-만장굴-김녕리' cell B2: day label '옵서버스' is not one TAPSO has read before"
+    },
+    {
+      "id": "405080",
+      "name": "771-1",
+      "groups": [
+        "5"
+      ],
+      "file": "raw/405080.xlsx",
+      "bytes": 6667,
+      "sha256": "f005ef0723efacb6631bfdc7d20a60ce158116fdc2396c83d125713e96ee60da",
+      "outcome": "parsed",
+      "routeNumber": "771-1",
+      "services": 2
+    },
+    {
+      "id": "405081",
+      "name": "771-2",
+      "groups": [
+        "5"
+      ],
+      "file": "raw/405081.xlsx",
+      "bytes": 6675,
+      "sha256": "4a63c488e185b19cb0f3c24838ab55954d235dac2a6a48bd5577e39e30a81a3b",
+      "outcome": "parsed",
+      "routeNumber": "771-2",
+      "services": 2
+    },
+    {
+      "id": "405082",
+      "name": "772-1",
+      "groups": [
+        "5"
+      ],
+      "file": "raw/405082.xlsx",
+      "bytes": 6877,
+      "sha256": "8be5fb16b53f1769166440fd329b1ed26418b068f8ca35a6dcd2b2e1cd2f9e8d",
+      "outcome": "parse_refused",
+      "reason": "sheet '772-1 (평일)고산-청수-저지-신창-한경면-고산' cell B2: expected '<route>번(<day>)', found '772-1번(평일)\\n(옵서버스)'"
+    },
+    {
+      "id": "405083",
+      "name": "781-1",
+      "groups": [
+        "5"
+      ],
+      "file": "raw/405083.xlsx",
+      "bytes": 5493,
+      "sha256": "6323795d5fe246a25200811d9655f78ab303ffa43e585dcb64429535eb1d49a1",
+      "outcome": "parsed",
+      "routeNumber": "781-1",
+      "services": 1
+    },
+    {
+      "id": "405084",
+      "name": "782-1",
+      "groups": [
+        "5"
+      ],
+      "file": "raw/405084.xlsx",
+      "bytes": 5477,
+      "sha256": "0a4ffdd6a53da244c87783a20dc00241c0a0580c09a92709615c259aa1166bd6",
+      "outcome": "parsed",
+      "routeNumber": "782-1",
+      "services": 1
+    },
+    {
+      "id": "405085",
+      "name": "783-1",
+      "groups": [
+        "5"
+      ],
+      "file": "raw/405085.xlsx",
+      "bytes": 6602,
+      "sha256": "aca7b1cfacb12a9a80e795eee97ed652bd416495fd66ba56b8a63a02a23ac3b5",
+      "outcome": "parse_refused",
+      "reason": "sheet '783-1 동광-금악-고림-한림여중-한림' cell B2: day label '옵서버스' is not one TAPSO has read before"
+    },
+    {
+      "id": "405086",
+      "name": "783-2",
+      "groups": [
+        "5"
+      ],
+      "file": "raw/405086.xlsx",
+      "bytes": 6948,
+      "sha256": "e5d16f783e54a008ea5840c1505dbd9a13f136021cdafc00e96a4794abeaf43d",
+      "outcome": "parse_refused",
+      "reason": "sheet '783-2 동광-양돈단지-금악-신명-한림여중-한림체육관' cell B2: day label '옵서버스' is not one TAPSO has read before"
+    },
+    {
+      "id": "405087",
+      "name": "784-1",
+      "groups": [
+        "5"
+      ],
+      "file": "raw/405087.xlsx",
+      "bytes": 7630,
+      "sha256": "07a1ac390813ab64d97b884f00291dbeb48b5a2188adb064901b503cfa21de06",
+      "outcome": "parse_refused",
+      "reason": "sheet '784-1 동광-저지-농공단지-금능-한림' cell K11: unreadable value '11:58\\n(농공단지 입구)'"
+    },
+    {
+      "id": "405088",
+      "name": "784-2",
+      "groups": [
+        "5"
+      ],
+      "file": "raw/405088.xlsx",
+      "bytes": 7418,
+      "sha256": "8c7d6ecd6e3dfb8c32f9ec8f05f5ffd23cde55bd1da0067a931bd68abe564920",
+      "outcome": "parsed",
+      "routeNumber": "784-2",
+      "services": 2
+    },
+    {
+      "id": "405089",
+      "name": "785",
+      "groups": [
+        "5"
+      ],
+      "file": "raw/405089.xlsx",
+      "bytes": 12601,
+      "sha256": "13af870ef72bbb153b04259e3efc5c6e59fc9031b8e618e305039b80317a4bd7",
+      "outcome": "parsed",
+      "routeNumber": "785",
+      "services": 4
+    },
+    {
+      "id": "405090",
+      "name": "791",
+      "groups": [
+        "5"
+      ],
+      "file": "raw/405090.xlsx",
+      "bytes": 6105,
+      "sha256": "c57560a8b9d873c9cacc78669d874fd3443fd46f5b533a60ed77dafbc2e79df1",
+      "outcome": "parse_refused",
+      "reason": "sheet '791 하귀-유수암상동-하귀(변경후)' cell B2: day label '옵서버스' is not one TAPSO has read before"
+    },
+    {
+      "id": "405091",
+      "name": "792-1",
+      "groups": [
+        "5"
+      ],
+      "file": "raw/405091.xlsx",
+      "bytes": 5306,
+      "sha256": "27eeceaa187d00bbc31cdad08af26aed8e20275622c0e734c8c6fee98f51e4ab",
+      "outcome": "parse_refused",
+      "reason": "sheet '792-1 하귀-수산-장전-유수암-용흥-신엄-하귀(변경후' cell B2: day label '옵서버스' is not one TAPSO has read before"
+    },
+    {
+      "id": "405092",
+      "name": "793-1",
+      "groups": [
+        "5"
+      ],
+      "file": "raw/405092.xlsx",
+      "bytes": 7093,
+      "sha256": "01051feee1aa946cb570cb050bb25984b8b14a4e0477111ba795b4f4491f6d6b",
+      "outcome": "parse_refused",
+      "reason": "sheet '793-1 하귀-광령2리(광령3리)-애월' cell B2: day label '옵서버스' is not one TAPSO has read before"
+    },
+    {
+      "id": "405093",
+      "name": "793-2",
+      "groups": [
+        "5"
+      ],
+      "file": "raw/405093.xlsx",
+      "bytes": 6155,
+      "sha256": "bbcd9d6307518b36e98fb15ad56d1ad2b4716a4c7418b588009df7f39f08d455",
+      "outcome": "parse_refused",
+      "reason": "sheet '793-2 하귀-수산-용흥-하가-애월' cell B2: day label '옵서버스' is not one TAPSO has read before"
+    },
+    {
+      "id": "405094",
+      "name": "794-1",
+      "groups": [
+        "5"
+      ],
+      "file": "raw/405094.xlsx",
+      "bytes": 6501,
+      "sha256": "7b50c49aef5449fad691d5d09bb3a4df5dce545aae1648d83f8b4dfdb113d429",
+      "outcome": "parsed",
+      "routeNumber": "794-1",
+      "services": 1
+    },
+    {
+      "id": "405095",
+      "name": "794-2",
+      "groups": [
+        "5"
+      ],
+      "file": "raw/405095.xlsx",
+      "bytes": 5605,
+      "sha256": "7484ead7abbc4590151a18bb4a7ff35c6de430662ea56b81bb57ba536f990c55",
+      "outcome": "parsed",
+      "routeNumber": "794-2",
+      "services": 1
+    },
+    {
+      "id": "405096",
+      "name": "795",
+      "groups": [
+        "5"
+      ],
+      "file": "raw/405096.xlsx",
+      "bytes": 6751,
+      "sha256": "5a417553915c80658d16bd2868078b0ae26512c9c1bfbe3618ac614ae45a88c5",
+      "outcome": "parse_refused",
+      "reason": "sheet '795 (순환)하귀-애월-금성리-애월-하귀' row 8: trip 1 has no time"
+    },
+    {
+      "id": "405097",
+      "name": "800, 801",
+      "groups": [
+        "6"
+      ],
+      "file": "raw/405097.xlsx",
+      "bytes": 15295,
+      "sha256": "b1c57d0f6e4b35f359f0e6545a76c329ef4bd75b9d729edde825913f2ca20434",
+      "outcome": "parse_refused",
+      "reason": "sheet '800 제주터미널-공항-평화로-서귀포혁신도시(서귀포등기소' cell C8: unreadable value '801번'"
+    },
+    {
+      "id": "405098",
+      "name": "643",
+      "groups": [
+        "2"
+      ],
+      "file": "raw/405098.xlsx",
+      "bytes": 6240,
+      "sha256": "6915e37c930dbf64fde90749556747fd15e3a52f7a2bf5302d8a58e0c38a6b2f",
+      "outcome": "parse_refused",
+      "reason": "sheet '643 강창학경기장-신시가지-중앙R-강정-강창학경기장' cell K23: unreadable value '법환초교\\n종   료'"
+    },
+    {
+      "id": "405100",
+      "name": "900",
+      "groups": [
+        "0"
+      ],
+      "file": "raw/405100.xlsx",
+      "bytes": 7237,
+      "sha256": "8d755d67b07eeaf01b2f7de1826324e543a600d06652e42108ca0f3d8964a775",
+      "outcome": "parse_refused",
+      "reason": "sheet '900 동복리마을버스(조천-김녕)' cell B2: expected '<route>번(<day>)', found '동복리마을버스(900번)'"
+    },
+    {
+      "id": "405101",
+      "name": "910",
+      "groups": [
+        "0"
+      ],
+      "file": "raw/405101.xlsx",
+      "bytes": 5984,
+      "sha256": "d8795bfcda787e34f1b32774c8d9f977c6385f801d938085fb62ac1f0ade74d3",
+      "outcome": "parse_refused",
+      "reason": "sheet '910 추자도 마을버스' cell B2: expected '<route>번(<day>)', found '추자도마을버스\\n(910번)'"
+    },
+    {
+      "id": "405102",
+      "name": "921",
+      "groups": [
+        "0"
+      ],
+      "file": "raw/405102.xlsx",
+      "bytes": 7307,
+      "sha256": "0b9f5774b22ecc3aecd7863b5cd6a028bbec8ab941037b0f62c155bdf69ef6cd",
+      "outcome": "parse_refused",
+      "reason": "sheet '921 (홀수일)우도 마을버스(해안도로_하우목동항 순환)' cell B2: expected '<route>번(<day>)', found '921 우도마을버스\\n(해안도로 순환)'"
+    },
+    {
+      "id": "405103",
+      "name": "922",
+      "groups": [
+        "0"
+      ],
+      "file": "raw/405103.xlsx",
+      "bytes": 6599,
+      "sha256": "689047a21437f546d6f74155dc81fb5986cbbd5715f2e5652135c2ec80946dc0",
+      "outcome": "parse_refused",
+      "reason": "sheet '922 (짝수일)우도 마을버스(해안도로_동천진동항 순환)' cell B2: expected '<route>번(<day>)', found '922 우도마을버스\\n(관광지순환)'"
+    },
+    {
+      "id": "405104",
+      "name": "924",
+      "groups": [
+        "0"
+      ],
+      "file": "raw/405104.xlsx",
+      "bytes": 7632,
+      "sha256": "512dc9c7b193d0bf646ba2031acefa29840d6bca52cda60450ac3336c081b290",
+      "outcome": "parse_refused",
+      "reason": "sheet '924 우도 마을버스(마을안길)' cell B2: expected '<route>번(<day>)', found '924 우도마을버스 \\n(마을안길)'"
+    },
+    {
+      "id": "405105",
+      "name": "1111",
+      "groups": [
+        "8"
+      ],
+      "file": "raw/405105.xlsx",
+      "bytes": 6875,
+      "sha256": "d84854c9a2e168aaaf962edc5cd03b0970f01c258fc31fe51837f2c406730696",
+      "outcome": "parse_refused",
+      "reason": "sheet '1111 제주시티투어' row 13: times are not strictly ascending"
+    },
+    {
+      "id": "405106",
+      "name": "3001",
+      "groups": [
+        "9"
+      ],
+      "file": "raw/405106.xlsx",
+      "bytes": 6621,
+      "sha256": "4d85c101e9c8ae4d2130f44f215020362c491e2139362a0eda66664103530a0a",
+      "outcome": "parse_refused",
+      "reason": "sheet '3001 (공항-연동-공항-중앙로-공항)심야' row 10: times are not strictly ascending"
+    },
+    {
+      "id": "405107",
+      "name": "3002",
+      "groups": [
+        "9"
+      ],
+      "file": "raw/405107.xlsx",
+      "bytes": 5947,
+      "sha256": "b1ef0187039bc0ac6185aa619ed6ddc099da1e90d44a455dd36cc2eb75e85bc8",
+      "outcome": "parsed",
+      "routeNumber": "3002",
+      "services": 2
+    },
+    {
+      "id": "405108",
+      "name": "3003",
+      "groups": [
+        "9"
+      ],
+      "file": "raw/405108.xlsx",
+      "bytes": 6128,
+      "sha256": "d0b0f7217b1f3a7ad638d55b21f638fbcb7c56df4a86840880071194c836c9c5",
+      "outcome": "parse_refused",
+      "reason": "sheet '3003 (한라대-남녕고-공항-중앙여중-시청-제대)심야' row 9: times are not strictly ascending"
+    },
+    {
+      "id": "405109",
+      "name": "3004",
+      "groups": [
+        "9"
+      ],
+      "file": "raw/405109.xlsx",
+      "bytes": 7042,
+      "sha256": "fda2f08b92124695a2619057255add460076dddbd60b267fab5c1f0cefed9840",
+      "outcome": "parse_refused",
+      "reason": "sheet '3004 (월평(여고)-시청-사대부고-공항-제주고)심야' row 9: times are not strictly ascending"
+    },
+    {
+      "id": "405110",
+      "name": "3005",
+      "groups": [
+        "9"
+      ],
+      "file": "raw/405110.xlsx",
+      "bytes": 6100,
+      "sha256": "e4343db0559c807416600c164a17afc44d34cb5ebb906d83f6d3e4f9d3490431",
+      "outcome": "parse_refused",
+      "reason": "sheet '3005 (한라대-제원A-이도주공A-대림A-대기고)심야' row 9: times are not strictly ascending"
+    },
+    {
+      "id": "405111",
+      "name": "3006",
+      "groups": [
+        "9"
+      ],
+      "file": "raw/405111.xlsx",
+      "bytes": 5894,
+      "sha256": "a56630c24cf5ab613cf656e5f476f2ba54da5e2718aa3500fbe3b2cc7dbe83fe",
+      "outcome": "parsed",
+      "routeNumber": "3006",
+      "services": 2
+    },
+    {
+      "id": "405112",
+      "name": "3007",
+      "groups": [
+        "9"
+      ],
+      "file": "raw/405112.xlsx",
+      "bytes": 4766,
+      "sha256": "fed28a3e59739ea11d313b529d7f53335f5114ffc7264c138e4d92fbf7f868e7",
+      "outcome": "parse_refused",
+      "reason": "sheet '3007 (우당-여상-중앙여중-수선화A-화북-우당)심야' row 9: times are not strictly ascending"
+    },
+    {
+      "id": "405113",
+      "name": "3008",
+      "groups": [
+        "9"
+      ],
+      "file": "raw/405113.xlsx",
+      "bytes": 5821,
+      "sha256": "cfa0fcb91b2e998f58aa0f19c40ab6f856d92fbee1fdec5acf46fde77b4bdfdb",
+      "outcome": "parse_refused",
+      "reason": "sheet '3008 (한라대-백록초-용담-공항-외도초-한라대)심야' row 9: times are not strictly ascending"
+    },
+    {
+      "id": "405114",
+      "name": "202-1",
+      "groups": [
+        "3"
+      ],
+      "file": "raw/405114.xlsx",
+      "bytes": 5922,
+      "sha256": "d8f158b3c00b6fdc0fdd47cf6f1ecf87e951cc468598eca025f9f46c60070b7c",
+      "outcome": "parse_refused",
+      "reason": "sheet '202-1 (임시운행)신제주R-애월-한림고' cell B2: expected '<route>번(<day>)', found '임시 202-1'"
+    },
+    {
+      "id": "405115",
+      "name": "202-2",
+      "groups": [
+        "3"
+      ],
+      "file": "raw/405115.xlsx",
+      "bytes": 5937,
+      "sha256": "68b80f4ce56e608fdb1e1d4a0d35f3e1dda5593b81cd9dfb99e676c82891d1f3",
+      "outcome": "parse_refused",
+      "reason": "sheet '202-2 (임시운행)한림-애월-신제주R' cell B2: expected '<route>번(<day>)', found '임시 202-2'"
+    },
+    {
+      "id": "405116",
+      "name": "792-2",
+      "groups": [
+        "5"
+      ],
+      "file": "raw/405116.xlsx",
+      "bytes": 5291,
+      "sha256": "bf9296fbb0e98ab683235bcb70a0b92b03aec02c01fef96c27cb6a44836db137",
+      "outcome": "parse_refused",
+      "reason": "sheet '792-2 하귀-신엄-용흥-유수암-장전-수산-하귀(변경후' cell B2: day label '옵서버스' is not one TAPSO has read before"
+    },
+    {
+      "id": "405117",
+      "name": "772-2",
+      "groups": [
+        "5"
+      ],
+      "file": "raw/405117.xlsx",
+      "bytes": 6907,
+      "sha256": "0c3c7fcdb5d467857f84d83d7719bf33ef53fa758e3f10b097699ac82e44db01",
+      "outcome": "parse_refused",
+      "reason": "sheet '772-2 (평일)고산-한경면-신창-저지-청수-고산' cell B2: expected '<route>번(<day>)', found '772-2번(평일)\\n(옵서버스)'"
+    },
+    {
+      "id": "405118",
+      "name": "491",
+      "groups": [
+        "2"
+      ],
+      "file": "raw/405118.xlsx",
+      "bytes": 5010,
+      "sha256": "1367a4a953fbac7175bc0a2e89f3e699403e3ac2fda1d4048e07c47a9773febe",
+      "outcome": "parse_refused",
+      "reason": "sheet '491 순환(신성여중고-아라동-신성여중고)_3안' cell B2: expected '<route>번(<day>)', found '임시 491'"
+    },
+    {
+      "id": "405119",
+      "name": "437",
+      "groups": [
+        "2"
+      ],
+      "file": "raw/405119.xlsx",
+      "bytes": 6094,
+      "sha256": "7ad567c25106a67c62cd15117c2f79f157a1db393139aa8a4779e7fad8284b8c",
+      "outcome": "parsed",
+      "routeNumber": "437",
+      "services": 1
+    },
+    {
+      "id": "405120",
+      "name": "369",
+      "groups": [
+        "1"
+      ],
+      "file": "raw/405120.xlsx",
+      "bytes": 4672,
+      "sha256": "6ede57b095a2ac8155678a2cd1f0c7414b80afddeb596806099dcbe284044cbc",
+      "outcome": "parse_refused",
+      "reason": "sheet '369 (하교)월평-제주여고-연북로-한라병원-한라대' cell C8: unreadable value '(노형지구)'"
+    },
+    {
+      "id": "405121",
+      "name": "426",
+      "groups": [
+        "2"
+      ],
+      "file": "raw/405121.xlsx",
+      "bytes": 8335,
+      "sha256": "0b819e86eda9208bf3cba242d2461f18c3b74fd88790c18e3660fad10a3df4d4",
+      "outcome": "parsed",
+      "routeNumber": "426",
+      "services": 2
+    },
+    {
+      "id": "405122",
+      "name": "461",
+      "groups": [
+        "2"
+      ],
+      "file": "raw/405122.xlsx",
+      "bytes": 5896,
+      "sha256": "ae794a09bf825e61dc55e7e33d3fe865cc35014d1db58b3ced453f8f91ea4068",
+      "outcome": "parse_refused",
+      "reason": "sheet '461 순환(버스터미널-탑동-해안마을-버스터미널)' cell C22: unreadable value '22:05 터미널(제주은행)'"
+    },
+    {
+      "id": "405123",
+      "name": "1112",
+      "groups": [
+        "8"
+      ],
+      "file": "raw/405123.xlsx",
+      "bytes": 4862,
+      "sha256": "7432d8c6170df110432b131eaff35084c02636010bf99b3d41b58a382ecce88f",
+      "outcome": "parse_refused",
+      "reason": "sheet '1112 제주시티투어(도심코스)' cell B2: day label '해안코스' is not one TAPSO has read before"
+    },
+    {
+      "id": "405124",
+      "name": "781-2",
+      "groups": [
+        "5"
+      ],
+      "file": "raw/405124.xlsx",
+      "bytes": 5494,
+      "sha256": "11cf0e03318d8037c48f4fe2d4db46330949c6cb6dcfa0d58156f8cff5c9cea0",
+      "outcome": "parsed",
+      "routeNumber": "781-2",
+      "services": 1
+    },
+    {
+      "id": "405125",
+      "name": "782-2",
+      "groups": [
+        "5"
+      ],
+      "file": "raw/405125.xlsx",
+      "bytes": 5422,
+      "sha256": "b65534ca796890e6f9b4d0f8f848705bc7e97c38e8b34854aa178eff8d2ba2a2",
+      "outcome": "parsed",
+      "routeNumber": "782-2",
+      "services": 1
+    },
+    {
+      "id": "405126",
+      "name": "302",
+      "groups": [
+        "1",
+        "11"
+      ],
+      "file": "raw/405126.xlsx",
+      "bytes": 15349,
+      "sha256": "0f051b912cf2bb485e0be4c85b14381b63cab8f95dffa6852adbf56badceebd1",
+      "outcome": "parse_refused",
+      "reason": "sheet '302 (평일)(도심급행)제주공항-중앙로사거리-제주대' cell G15: unreadable value '영주고\\n 7:47'"
+    },
+    {
+      "id": "405127",
+      "name": "820-3",
+      "groups": [
+        "8"
+      ],
+      "file": "raw/405127.xlsx",
+      "bytes": 5871,
+      "sha256": "07748f80c16b684d3205c84aa19ae991a40777a594cbd07b3f60a23a8d14c536",
+      "outcome": "parse_refused",
+      "reason": "sheet '820-3 (영어교육도시-평화로-신제주로터리)(임시)' cell B2: day label '임시노선' is not one TAPSO has read before"
+    },
+    {
+      "id": "405128",
+      "name": "312",
+      "groups": [
+        "1"
+      ],
+      "file": "raw/405128.xlsx",
+      "bytes": 9321,
+      "sha256": "76486e7982f6eb2356def9e563d84e2d031680aeb384d3f53c341d9a6363d926",
+      "outcome": "parse_refused",
+      "reason": "sheet '312 함덕-삼화-중앙로-시청-한라병원-수목원' cell L26: unreadable value '21:45\\n(한라대종료)'"
+    },
+    {
+      "id": "405129",
+      "name": "1113",
+      "groups": [
+        "8"
+      ],
+      "file": "raw/405129.xlsx",
+      "bytes": 4398,
+      "sha256": "b617f060b5410c6f88c4282789266b80a959ef9da677ad9788030b287896853f",
+      "outcome": "parse_refused",
+      "reason": "sheet '1113 제주시티투어(야간코스)' cell B2: day label '야간코스' is not one TAPSO has read before"
+    },
+    {
+      "id": "405130",
+      "name": "421",
+      "groups": [
+        "2"
+      ],
+      "file": "raw/405130.xlsx",
+      "bytes": 5715,
+      "sha256": "5fafae00a75c984fcc2d9763e2bde39c0a96f5e19ce1806feab2ee168bba703b",
+      "outcome": "parse_refused",
+      "reason": "sheet '421 (순환)제주대-황사평-화북-동문R-제주여고-제주대' cell K20: unreadable value '22:39\\n(영평하동 종료)'"
+    },
+    {
+      "id": "405131",
+      "name": "800-1(새벽심야)",
+      "groups": [
+        "6"
+      ],
+      "file": "raw/405131.xlsx",
+      "bytes": 5878,
+      "sha256": "a15b1cd260f90f7c42a26d9aa0017832c1a8da6d2dd8ee4ff4a32e5867fa9f0d",
+      "outcome": "parse_refused",
+      "reason": "sheet '800-1 공항-평화로-서귀포혁신도시(서귀포등기소' cell B2: day label '심야' is not one TAPSO has read before"
+    },
+    {
+      "id": "405133",
+      "name": "901",
+      "groups": [
+        "7"
+      ],
+      "file": "raw/405133.xlsx",
+      "bytes": 5879,
+      "sha256": "ee3ab8a040e77c9769c0cb984203a8cf910220aedd6e9875ed8fb28a2f44f7e1",
+      "outcome": "parse_refused",
+      "reason": "sheet '901 제주시청-공항-동광-중문-서귀포등기소' cell B2: day label '자율주행' is not one TAPSO has read before"
+    },
+    {
+      "id": "405134",
+      "name": "705",
+      "groups": [
+        "5"
+      ],
+      "file": "raw/405134.xlsx",
+      "bytes": 13495,
+      "sha256": "7fec93ca6763336ebc745a916f4ef7f04ef7e70d30a0dbdc84f001fe29bdb9fe",
+      "outcome": "parse_refused",
+      "reason": "sheet '705 함덕-첨단-제주대-월평 (휴일)' cell B2: day label '휴일' is not one TAPSO has read before"
+    },
+    {
+      "id": "405135",
+      "name": "111-1(수요맞춤형)",
+      "groups": [
+        "4"
+      ],
+      "file": "raw/405135.xlsx",
+      "bytes": 6134,
+      "sha256": "5a2edd3296956137ce485bd916330c3cb76cffe289cbde92bd1c6dbc22410a69",
+      "outcome": "parse_refused",
+      "reason": "sheet '111-1 공항-시청-제주대학교병원-대천동-수산-성산포항' cell B2: expected '<route>번(<day>)', found '수요맞춤형 111-1번'"
+    },
+    {
+      "id": "405136",
+      "name": "182-1(수요맞춤형)",
+      "groups": [
+        "4"
+      ],
+      "file": "raw/405136.xlsx",
+      "bytes": 4982,
+      "sha256": "4fa84fbf017d00e1b1903cf7bbfd9e980c367ecc9c8ff6aa4c8b92cf727b937c",
+      "outcome": "parse_refused",
+      "reason": "sheet '182-1 터미널-공항-평화로-서귀포-516로-공항' cell B2: expected '<route>번(<day>)', found '수요맞춤형 182-1번'"
+    },
+    {
+      "id": "405138",
+      "name": "465",
+      "groups": [
+        "2"
+      ],
+      "file": "raw/405138.xlsx",
+      "bytes": 6978,
+      "sha256": "ce9b2fb41ec120caf717bc6d921fd968bab3bf4db89b57de7c05c9f13eb5256e",
+      "outcome": "parse_refused",
+      "reason": "sheet '465 순환(신비마을-공항-인제-터미널-공항-신비마을)' cell J8: unreadable value '인화초교\\n6:20'"
+    },
+    {
+      "id": "405139",
+      "name": "222-1(수요맞춤형)",
+      "groups": [
+        "3"
+      ],
+      "file": "raw/405139.xlsx",
+      "bytes": 4767,
+      "sha256": "b8878d0ce58edba917e56d3bf05885e20449c48639ffb65e2cf9bc0a783c221c",
+      "outcome": "parse_refused",
+      "reason": "sheet '222-1 표선-성읍-대천동-시청-제주터미널' cell B2: expected '<route>번(<day>)', found '수요맞춤형 222-1번'"
+    },
+    {
+      "id": "405141",
+      "name": "311-1(수요맞춤형)",
+      "groups": [
+        "1"
+      ],
+      "file": "raw/405141.xlsx",
+      "bytes": 4853,
+      "sha256": "9d1cfba59bf4a925290344bf12f6a8ea414203ff27ead22ba7bbaa20a85840d8",
+      "outcome": "parse_refused",
+      "reason": "sheet '311-1 함덕-삼양초-인제-시청-한라병원-수목원' cell B2: expected '<route>번(<day>)', found '수요맞춤형 311-1번'"
+    },
+    {
+      "id": "405142",
+      "name": "312-1(수요맞춤형)",
+      "groups": [
+        "1"
+      ],
+      "file": "raw/405142.xlsx",
+      "bytes": 4819,
+      "sha256": "742c6d2728c40e5a26e165282d1d13ac85dc6ca076eec6579ca630704024fd72",
+      "outcome": "parse_refused",
+      "reason": "sheet '312-1 수목원-한라병원-시청-중앙로-삼화-함덕' cell B2: expected '<route>번(<day>)', found '수요맞춤형 312-1번'"
+    },
+    {
+      "id": "405143",
+      "name": "326-1(수요맞춤형)",
+      "groups": [
+        "1"
+      ],
+      "file": "raw/405143.xlsx",
+      "bytes": 4917,
+      "sha256": "7962a0a12e7cd2924d1d00aff9f311c033bd73a7b4a7ad5b5c0f96c3946e7c04",
+      "outcome": "parse_refused",
+      "reason": "sheet '326-1 함덕-공항-신제주R-s중앙병원-수목원' cell B2: expected '<route>번(<day>)', found '수요맞춤형 326-1번'"
+    },
+    {
+      "id": "405144",
+      "name": "348-1, 349-1(수요맞춤형)",
+      "groups": [
+        "1"
+      ],
+      "file": "raw/405144.xlsx",
+      "bytes": 7977,
+      "sha256": "4c066c7974d69f50a18709065fb9fa597e4d3a624dfc251ec7aefae0531f50ea",
+      "outcome": "parse_refused",
+      "reason": "sheet '348-1 월평-시청-인제-삼양동-함덕' cell B2: expected '<route>번(<day>)', found '수요맞춤형 348-1번,349-1번'"
+    },
+    {
+      "id": "405145",
+      "name": "357-1, 358-1(수요맞춤형)",
+      "groups": [
+        "1"
+      ],
+      "file": "raw/405145.xlsx",
+      "bytes": 8666,
+      "sha256": "f844f7fbdc19c68122d49b2862d3b54a9b00d5ff7b1cfacf5884ae72e8440b2b",
+      "outcome": "parse_refused",
+      "reason": "sheet '357-1 월평-시청-터미널-신제주R-한라병원-수산' cell B2: expected '<route>번(<day>)', found '수요맞춤형 357-1번,358-1번'"
+    },
+    {
+      "id": "405146",
+      "name": "902",
+      "groups": [
+        "7"
+      ],
+      "file": "raw/405146.xlsx",
+      "bytes": 4577,
+      "sha256": "e62270336ad2ac59a1e9091d29c0b63fd193d31af07a18505ec50b313c80a5c4",
+      "outcome": "parse_refused",
+      "reason": "sheet '902 제주시청-공항-동광-중문-서귀포등기소' cell B2: day label '자율주행' is not one TAPSO has read before"
+    },
+    {
+      "id": "405147",
+      "name": "151-1(수요맞춤형)",
+      "groups": [
+        "4"
+      ],
+      "file": "raw/405147.xlsx",
+      "bytes": 6296,
+      "sha256": "f611575e28e9b4c038d35a25f2e449a27016be097507759391428c231cdef6a4",
+      "outcome": "parse_refused",
+      "reason": "sheet '151-1 대정(운진항)-영어교육-동광-공항-제주터미널' cell B2: expected '<route>번(<day>)', found '수요맞춤형 151-1번'"
+    },
+    {
+      "id": "405148",
+      "name": "441",
+      "groups": [
+        "2"
+      ],
+      "file": "raw/405148.xlsx",
+      "bytes": 6315,
+      "sha256": "2e36635675f8bc306182a058e5b9106b245a31f0d6a1218a37afb533497e86de",
+      "outcome": "parsed",
+      "routeNumber": "441",
+      "services": 1
+    },
+    {
+      "id": "405149",
+      "name": "434-1(수요맞춤형)",
+      "groups": [
+        "2"
+      ],
+      "file": "raw/405149.xlsx",
+      "bytes": 4898,
+      "sha256": "78110b4dae440ba609d2a271d2bf5567f2932e50f936c2b0cea65cd040fc7153",
+      "outcome": "parse_refused",
+      "reason": "sheet '434-1 순환(한라도서관-오등동-중앙로-한라도서관)' cell B2: expected '<route>번(<day>)', found '수요맞춤형 434-1번'"
+    },
+    {
+      "id": "405150",
+      "name": "435-1(수요맞춤형)",
+      "groups": [
+        "2"
+      ],
+      "file": "raw/405150.xlsx",
+      "bytes": 4877,
+      "sha256": "7b5da5d3c53fb812a2155feaf717038dc96f6331b50f0f4159fbb6485c4755a1",
+      "outcome": "parse_refused",
+      "reason": "sheet '435-1 순환(한라도서관-중앙로-오등동-한라도서관)' cell B2: expected '<route>번(<day>)', found '수요맞춤형 435-1번'"
+    },
+    {
+      "id": "405151",
+      "name": "445",
+      "groups": [
+        "2"
+      ],
+      "file": "raw/405151.xlsx",
+      "bytes": 5885,
+      "sha256": "248a06ad9592adec9853c4d07da0cad260ed9b22ee1b8525f2fe4f83cf72cd7a",
+      "outcome": "parse_refused",
+      "reason": "sheet '445 순환(도평-사대부고-중앙로-터미널-한라병원-도평)' cell D11: unreadable value '○'"
+    },
+    {
+      "id": "405152",
+      "name": "231, 232",
+      "groups": [
+        "3"
+      ],
+      "file": "raw/405152.xlsx",
+      "bytes": 15189,
+      "sha256": "03efc6826af85d212d4687ac0a99a99e6a443f7d943287f1bd9737cc72df86ea",
+      "outcome": "parse_refused",
+      "reason": "sheet '231 제주터미널-봉개-교래-의귀-남원-서귀포등기소' cell B2: expected '<route>번(<day>)', found '231번, 232번'"
+    },
+    {
+      "id": "405153",
+      "name": "1950",
+      "groups": [
+        "8"
+      ],
+      "file": "raw/405153.xlsx",
+      "bytes": 6206,
+      "sha256": "a405dc233073658308f417ba09f334c10b54197a83c9eb83fddaefa4d3603978",
+      "outcome": "parse_refused",
+      "reason": "sheet '1950 관음사 탐방로-제주터미널' cell B2: day label '임시' is not one TAPSO has read before"
+    },
+    {
+      "id": "405155",
+      "name": "1100",
+      "groups": [
+        "8"
+      ],
+      "file": "raw/405155.xlsx",
+      "bytes": 10220,
+      "sha256": "33af02a038bd89e132d66fba81763bad498102c138d1387b6e5c4b935108aa5f",
+      "outcome": "parse_refused",
+      "reason": "sheet '1100 터미널-어리목-영실 시간표(평일)' cell B2: expected '<route>번(<day>)', found '1100번(한라눈꽃버스)\\n(평일)'"
+    },
+    {
+      "id": "405156",
+      "name": "1100-1",
+      "groups": [
+        "8"
+      ],
+      "file": "raw/405156.xlsx",
+      "bytes": 5399,
+      "sha256": "82c36d1ad3bf7b78f71d0363385b228ab8afb47f2d17483625609fe8e866af0c",
+      "outcome": "parse_refused",
+      "reason": "sheet '1100-1 서귀포등기소-어리목-서귀포등기소' cell B2: day label '한라눈꽃버스' is not one TAPSO has read before"
+    },
+    {
+      "id": "405157",
+      "name": "202-4",
+      "groups": [
+        "3"
+      ],
+      "file": "raw/405157.xlsx",
+      "bytes": 5747,
+      "sha256": "7d39a24ff3d64f2415e1cc6788dc54037b4297ba7504d5e6e9fde4fd0aebeade",
+      "outcome": "parse_refused",
+      "reason": "sheet '202-4 한담동(애월)-하귀-제주버스터미널' cell B2: expected '<route>번(<day>)', found '수요맞춤형 202-4번 '"
+    },
+    {
+      "id": "405161",
+      "name": "810-1",
+      "groups": [
+        "8"
+      ],
+      "file": "raw/405161.xlsx",
+      "bytes": 7198,
+      "sha256": "e2ad64d3fa6a9d5176191129de55f41624ffec43358da51f68967019dde1353b",
+      "outcome": "parsed",
+      "routeNumber": "810-1",
+      "services": 1
+    },
+    {
+      "id": "405162",
+      "name": "422",
+      "groups": [
+        "2"
+      ],
+      "file": "raw/405162.xlsx",
+      "bytes": 5691,
+      "sha256": "0f86da4463a815843a5d08e343237a0295c60abcf4cfba8f0f9833e073e649ec",
+      "outcome": "parse_refused",
+      "reason": "sheet '422 (순환)제주대-제주여고-동문R-화북-황사평-제주대' cell J20: unreadable value '22:20\\n(영평하동 종료)'"
+    },
+    {
+      "id": "405163",
+      "name": "820-2",
+      "groups": [
+        "8"
+      ],
+      "file": "raw/405163.xlsx",
+      "bytes": 7536,
+      "sha256": "32770ae58d3e2875e06a38290e55c9f50f6f82e1e5088558095cb0076f7b4af0",
+      "outcome": "parsed",
+      "routeNumber": "820-2",
+      "services": 1
+    },
+    {
+      "id": "405164",
+      "name": "432",
+      "groups": [
+        "2",
+        "11"
+      ],
+      "file": "raw/405164.xlsx",
+      "bytes": 6609,
+      "sha256": "4b0fe9632e8fdfe21a45a52fccb7645a4c15eee0d90bb44f8706430ce395bc05",
+      "outcome": "parsed",
+      "routeNumber": "432",
+      "services": 1
+    },
+    {
+      "id": "405165",
+      "name": "641",
+      "groups": [
+        "2"
+      ],
+      "file": "raw/405165.xlsx",
+      "bytes": 5849,
+      "sha256": "12e1cd100594ad58688c066f9537e11ebdc0c63710553f6f68e60b35a8f5c7f5",
+      "outcome": "parse_refused",
+      "reason": "sheet '641 천지연-중앙R-고근산-신시가지-법환-천지연' cell F21: unreadable value '고근산\\n(종료)'"
+    },
+    {
+      "id": "405166",
+      "name": "412",
+      "groups": [
+        "2"
+      ],
+      "file": "raw/405166.xlsx",
+      "bytes": 6944,
+      "sha256": "7a5c39050d0f802f43bd80c390b767e77616db2aacfc19c953c584ca4c7ddf59",
+      "outcome": "parse_refused",
+      "reason": "sheet '412 순환(부두-시청-영평-봉개-삼화지구-동문R-부두)' cell L30: unreadable value '20:26 \\n해양경찰서종점'"
+    },
+    {
+      "id": "405167",
+      "name": "820-1",
+      "groups": [
+        "8"
+      ],
+      "file": "raw/405167.xlsx",
+      "bytes": 7417,
+      "sha256": "31fa51d6fbce60184a61ab507a49970e77d17ac0e917bf579703d3b8aa5e5c13",
+      "outcome": "parsed",
+      "routeNumber": "820-1",
+      "services": 1
+    },
+    {
+      "id": "405168",
+      "name": "43-1,43-2,43-3",
+      "groups": [
+        "1",
+        "11"
+      ],
+      "file": "raw/405168.xlsx",
+      "bytes": 24151,
+      "sha256": "52493aef4d8c9541ce4ccaee40cc05cf1a009fa6cb5b794d775c9547c4b7fb8f",
+      "outcome": "parse_refused",
+      "reason": "sheet '43-1 절물-봉개-한마음병원-시청-터미널-공항' cell B2: expected '<route>번(<day>)', found '43-1번, 43-2번, 43-3번'"
+    },
+    {
+      "id": "405169",
+      "name": "320-1",
+      "groups": [
+        "1"
+      ],
+      "file": "raw/405169.xlsx",
+      "bytes": 4711,
+      "sha256": "a4447dac540bec4a02f28435551388b99412f56078e56dfa99de38479621fe4c",
+      "outcome": "parse_refused",
+      "reason": "sheet '320-1 (임시운행)하귀-제주여중고-영주고' cell B2: expected '<route>번(<day>)', found '임시 320-1'"
+    },
+    {
+      "id": "405170",
+      "name": "332",
+      "groups": [
+        "1"
+      ],
+      "file": "raw/405170.xlsx",
+      "bytes": 8259,
+      "sha256": "7307f6645349e1f15fe9cf476ac34974624e10f8ff8451c03a0c5eb6340745bb",
+      "outcome": "parse_refused",
+      "reason": "sheet '332 수목원-제원APT-공항-중앙로-인제-삼양1(3)동' cell J10: unreadable value '8:02\\n(삼양3동 종료)'"
+    },
+    {
+      "id": "405171",
+      "name": "642",
+      "groups": [
+        "2"
+      ],
+      "file": "raw/405171.xlsx",
+      "bytes": 5898,
+      "sha256": "0ccda279f28272649cef93b206b3452d470aef6901bff485852399ac285b1394",
+      "outcome": "parse_refused",
+      "reason": "sheet '642 천지연-법환-신시가지-고근산-중앙R-천지연' cell H22: unreadable value '고근산\\n(종료)'"
+    },
+    {
+      "id": "405172",
+      "name": "444",
+      "groups": [
+        "2"
+      ],
+      "file": "raw/405172.xlsx",
+      "bytes": 5878,
+      "sha256": "84226428c28475d90b37c6970bb75a1fe638e98dd662b8326afc356f587a397b",
+      "outcome": "parse_refused",
+      "reason": "sheet '444 순환(도평-한라병원-터미널-중앙로-사대부고-도평)' cell K11: unreadable value '○'"
+    },
+    {
+      "id": "405173",
+      "name": "466",
+      "groups": [
+        "2"
+      ],
+      "file": "raw/405173.xlsx",
+      "bytes": 7166,
+      "sha256": "1e34b63d81ecb1db724247de2ba1380b7292787545ba784b754d3e2cc2f89ef3",
+      "outcome": "parse_refused",
+      "reason": "sheet '466 순환(신비마을-공항-터미널-동문R-공항-신비마을)' cell P24: unreadable value '신비마을 하차 \\n승객 없는 경우 \\n축산생명연구원 종료'"
+    },
+    {
+      "id": "405174",
+      "name": "644",
+      "groups": [
+        "2"
+      ],
+      "file": "raw/405174.xlsx",
+      "bytes": 6228,
+      "sha256": "ff883f890e93ab14f507635818dcbb5ed84d7038143856609fdb6be6ffdb1e47",
+      "outcome": "parse_refused",
+      "reason": "sheet '644 강창학경기장-강정-중앙R-신시가지-강창학경기장' cell K23: unreadable value '서홍새마을금고 종료'"
+    },
+    {
+      "id": "405175",
+      "name": "411",
+      "groups": [
+        "2"
+      ],
+      "file": "raw/405175.xlsx",
+      "bytes": 7751,
+      "sha256": "6a5c6a15e28eff60f2947350a938d3a7866fbf1959c110383ddc92eea2d4131a",
+      "outcome": "parsed",
+      "routeNumber": "411",
+      "services": 1
+    },
+    {
+      "id": "405176",
+      "name": "435",
+      "groups": [
+        "2"
+      ],
+      "file": "raw/405176.xlsx",
+      "bytes": 6250,
+      "sha256": "662d13cc7cd7e191a746df9a0735352e03994dee16cf1ed5d16ee34ac0333a26",
+      "outcome": "parsed",
+      "routeNumber": "435",
+      "services": 1
+    },
+    {
+      "id": "405177",
+      "name": "442",
+      "groups": [
+        "2"
+      ],
+      "file": "raw/405177.xlsx",
+      "bytes": 6278,
+      "sha256": "51722065b2f1d038d98d19893add3866a36537f16e5f7e5d7d45bc35000e74c0",
+      "outcome": "parse_refused",
+      "reason": "sheet '442 순환(별빛누리-연북로-용담-시청-별빛누리)': summary 첫차 05:50 disagrees with the trips (05:55)"
+    },
+    {
+      "id": "405178",
+      "name": "810-2",
+      "groups": [
+        "8"
+      ],
+      "file": "raw/405178.xlsx",
+      "bytes": 6288,
+      "sha256": "b67f7a260813a852ee148521baa429058110642d27e11b5a0ac89492eb1d94d6",
+      "outcome": "parse_refused",
+      "reason": "sheet '810-2 (세계자유산센터 방향)' cell Y8: unreadable value '-'"
+    },
+    {
+      "id": "405179",
+      "name": "102-1(수요맞춤형)",
+      "groups": [
+        "4"
+      ],
+      "file": "raw/405179.xlsx",
+      "bytes": 5705,
+      "sha256": "d709b8aa4b6f5453515df0b8fd1b3005e747e198f7e156b2e71886358be2c978",
+      "outcome": "parsed",
+      "routeNumber": "102-1",
+      "services": 2
+    },
+    {
+      "id": "405180",
+      "name": "451-1",
+      "groups": [
+        "2"
+      ],
+      "file": "raw/405180.xlsx",
+      "bytes": 5221,
+      "sha256": "e4638f5024bcb52df0e530361835db8de86cfdf8592fdd63ba5567cae75a4a8f",
+      "outcome": "parse_refused",
+      "reason": "sheet '451-1 순환(도두동-다호마을-연동-외도-도두동)' cell C8: unreadable value '451-1번'"
+    },
+    {
+      "id": "405181",
+      "name": "452-1",
+      "groups": [
+        "2"
+      ],
+      "file": "raw/405181.xlsx",
+      "bytes": 5222,
+      "sha256": "6aa4a6bac0e699f38271c5d7471604d80fa626491c5fc23490a909c51431c8a3",
+      "outcome": "parse_refused",
+      "reason": "sheet '452-1 순환(도두동-외도-연동-다호마을-도두동)' cell C8: unreadable value '452-1번'"
+    },
+    {
+      "id": "405182",
+      "name": "424",
+      "groups": [
+        "2"
+      ],
+      "file": "raw/405182.xlsx",
+      "bytes": 5149,
+      "sha256": "09359987be2ca80a15591d9add2ba0d66f1df3f46e18506a7f69ae2286cd2660",
+      "outcome": "parsed",
+      "routeNumber": "424",
+      "services": 1
+    },
+    {
+      "id": "405184",
+      "name": "320-2",
+      "groups": [
+        "1"
+      ],
+      "file": "raw/405184.xlsx",
+      "bytes": 4778,
+      "sha256": "f3416e69f376b44f569c186227f6a2009d97f68fb0f62754834d472d4aaca240",
+      "outcome": "parse_refused",
+      "reason": "sheet '320-2 (임시운행)수산(하귀)-한라대-연북로-제주대' cell B2: day label '임시수요맞춤' is not one TAPSO has read before"
+    },
+    {
+      "id": "405185",
+      "name": "303",
+      "groups": [
+        "1"
+      ],
+      "file": "raw/405185.xlsx",
+      "bytes": 9916,
+      "sha256": "dbd33537886d3912535746d0e62bf3aa383f1bfd1d1c12ec3a5fbf05b7039efa",
+      "outcome": "parse_refused",
+      "reason": "sheet '303 (도심급행)함덕-동문로터리-공항-한라수목원' cell J8: unreadable value '동진'"
+    },
+    {
+      "id": "405186",
+      "name": "337",
+      "groups": [
+        "1"
+      ],
+      "file": "raw/405186.xlsx",
+      "bytes": 6819,
+      "sha256": "1d5375c269381fe41bf3ea612c9181e17e2743285cd5b5bcc3d7e0696924b232",
+      "outcome": "parse_refused",
+      "reason": "sheet '337 봉개→해안': summary 첫차 7:10 disagrees with the trips (07:02)"
+    },
+    {
+      "id": "406001",
+      "name": "295",
+      "groups": [
+        "3"
+      ],
+      "file": "raw/406001.xlsx",
+      "bytes": 7822,
+      "sha256": "7b7d98a248bbf20c49764c830b38e1f17b95d113d3d780391ce2dbd7f9c379da",
+      "outcome": "parse_refused",
+      "reason": "sheet '295 성산항-신산리-가시리-서귀포터미널' cell O8: unreadable value '신례,법호'"
+    },
+    {
+      "id": "406002",
+      "name": "510",
+      "groups": [
+        "1",
+        "11"
+      ],
+      "file": "raw/406002.xlsx",
+      "bytes": 13041,
+      "sha256": "75b8f8789d403cda4009fbf60cbc66b30ca496c19135b214d7d9e3b41dc8051e",
+      "outcome": "parse_refused",
+      "reason": "sheet '510 (남원읍-효돈초-중앙R-터미널-중문-컨벤션)평일' cell G10: unreadable value '비석거리출발\\n6:26'"
+    },
+    {
+      "id": "406003",
+      "name": "520",
+      "groups": [
+        "1"
+      ],
+      "file": "raw/406003.xlsx",
+      "bytes": 9741,
+      "sha256": "5277639948d677a9286a3604c3d4ba4fc40b79150592ed9547b1f1cb41369003",
+      "outcome": "parsed",
+      "routeNumber": "520",
+      "services": 2
+    },
+    {
+      "id": "406005",
+      "name": "531",
+      "groups": [
+        "1"
+      ],
+      "file": "raw/406005.xlsx",
+      "bytes": 8136,
+      "sha256": "9cb900e760a1a61702026eee7df75c54ad30aab7cfb3047220b48677d57594f6",
+      "outcome": "parsed",
+      "routeNumber": "531",
+      "services": 2
+    },
+    {
+      "id": "406006",
+      "name": "532",
+      "groups": [
+        "1"
+      ],
+      "file": "raw/406006.xlsx",
+      "bytes": 7348,
+      "sha256": "5074c0fe9a4ae0b326e76a838e713e0e75fe535db81a69144084b9f7f4446c70",
+      "outcome": "parse_refused",
+      "reason": "sheet '532 화순-안덕-중문-대천-중앙R-오일장-하례리' cell J18: unreadable value '22:10 \\n토평마을회관 종료'"
+    },
+    {
+      "id": "406007",
+      "name": "611, 612",
+      "groups": [
+        "2"
+      ],
+      "file": "raw/406007.xlsx",
+      "bytes": 14077,
+      "sha256": "d44c82ce65145ad954b9a54096be7c682310a8216bd369f9120900d175bb42b2",
+      "outcome": "parse_refused",
+      "reason": "sheet '611 천지연-서문R-서귀여중-비석거리-돈내코-충혼묘지' cell C8: unreadable value '611번'"
+    },
+    {
+      "id": "406008",
+      "name": "615",
+      "groups": [
+        "2"
+      ],
+      "file": "raw/406008.xlsx",
+      "bytes": 9221,
+      "sha256": "c2e73f9cf5e13fbe81a749f4d3611851789574caa0f4c74792d84ec3839727e6",
+      "outcome": "parsed",
+      "routeNumber": "615",
+      "services": 2
+    },
+    {
+      "id": "406009",
+      "name": "621",
+      "groups": [
+        "2",
+        "11"
+      ],
+      "file": "raw/406009.xlsx",
+      "bytes": 5716,
+      "sha256": "daef1f823223934e146b4439170eeeb35bb796743c0095e631868c447a0232ab",
+      "outcome": "parse_refused",
+      "reason": "sheet '621 하례입구-신례초-오일시장-중앙R-신례초-하례입구': summary 막차 20:15 disagrees with the trips (20:20)"
+    },
+    {
+      "id": "406010",
+      "name": "622",
+      "groups": [
+        "2"
+      ],
+      "file": "raw/406010.xlsx",
+      "bytes": 6857,
+      "sha256": "4d67bcc4a354ff7c522941f85b7dd856cfc0d35d1a9ae7ccc6147c812bb0e25b",
+      "outcome": "parse_refused",
+      "reason": "sheet '622 공영버스 차고지-외돌개' cell G10: unreadable value '13:18\\n동문로터리 종료'"
+    },
+    {
+      "id": "406011",
+      "name": "623",
+      "groups": [
+        "2",
+        "11"
+      ],
+      "file": "raw/406011.xlsx",
+      "bytes": 5372,
+      "sha256": "ae8f5431185d94e7ecafbded7d31db263bd724602805c1dbb0de3a9bae074920",
+      "outcome": "parsed",
+      "routeNumber": "623",
+      "services": 1
+    },
+    {
+      "id": "406012",
+      "name": "624",
+      "groups": [
+        "2",
+        "11"
+      ],
+      "file": "raw/406012.xlsx",
+      "bytes": 5500,
+      "sha256": "ece7e910d4feab731fdf67fbd604d7de3d7f3bca2fb6ad515da538f627853f99",
+      "outcome": "parsed",
+      "routeNumber": "624",
+      "services": 1
+    },
+    {
+      "id": "406013",
+      "name": "625",
+      "groups": [
+        "2",
+        "11"
+      ],
+      "file": "raw/406013.xlsx",
+      "bytes": 8431,
+      "sha256": "714423c7258169a004b7025d29df77dd7506c04fa742e6f1a76fd6764979b548",
+      "outcome": "parsed",
+      "routeNumber": "625",
+      "services": 2
+    },
+    {
+      "id": "406014",
+      "name": "627",
+      "groups": [
+        "2"
+      ],
+      "file": "raw/406014.xlsx",
+      "bytes": 6599,
+      "sha256": "8ca21ef34efb695c1e4a06fa64ee0ce5124fee2a313970fc98f3ffc09370adfe",
+      "outcome": "parse_refused",
+      "reason": "sheet '627 외돌개-하례입구-공업단지입구' cell D8: unreadable value '솔동산입구\\n8:25'"
+    },
+    {
+      "id": "406015",
+      "name": "630",
+      "groups": [
+        "2",
+        "11"
+      ],
+      "file": "raw/406015.xlsx",
+      "bytes": 8255,
+      "sha256": "02c37be29f71f49ad74e7c313b6d9ffb2bc702fa8657a10c999523066d658981",
+      "outcome": "parsed",
+      "routeNumber": "630",
+      "services": 2
+    },
+    {
+      "id": "406016",
+      "name": "633",
+      "groups": [
+        "2"
+      ],
+      "file": "raw/406016.xlsx",
+      "bytes": 7127,
+      "sha256": "6ebd043f6eb893ff29cde181e31b63c5a946b201cfd160a9b248b3621945367b",
+      "outcome": "parsed",
+      "routeNumber": "633",
+      "services": 2
+    },
+    {
+      "id": "406017",
+      "name": "635",
+      "groups": [
+        "2",
+        "11"
+      ],
+      "file": "raw/406017.xlsx",
+      "bytes": 7216,
+      "sha256": "fc12d8c6f187c063e0719ce561da69a1d059e9fe19b0553340acbe3614d5a3b2",
+      "outcome": "parsed",
+      "routeNumber": "635",
+      "services": 2
+    },
+    {
+      "id": "406020",
+      "name": "645",
+      "groups": [
+        "2",
+        "11"
+      ],
+      "file": "raw/406020.xlsx",
+      "bytes": 10131,
+      "sha256": "14a2a9055513382f0b77afa9a71279859808765e704bb7b198cf1e2c7bb18d81",
+      "outcome": "parse_refused",
+      "reason": "sheet '645 약천사-신시가지-서귀여중-중앙R-신시가지-약천사' row 33: times are not strictly ascending"
+    },
+    {
+      "id": "406021",
+      "name": "651, 652",
+      "groups": [
+        "2"
+      ],
+      "file": "raw/406021.xlsx",
+      "bytes": 14648,
+      "sha256": "037923010367f7015ff58b3103080544556a522d305e40608b9c242988d46a4d",
+      "outcome": "parse_refused",
+      "reason": "sheet '651 서복전시관-서귀여고-법환-강정-월평-중문-회수' cell B2: expected '<route>번(<day>)', found '651번 652번'"
+    },
+    {
+      "id": "406022",
+      "name": "655",
+      "groups": [
+        "2"
+      ],
+      "file": "raw/406022.xlsx",
+      "bytes": 8502,
+      "sha256": "81c449018e9c1322e35875c5918fd867d775cc4cf331c8075285e1d593b32837",
+      "outcome": "parsed",
+      "routeNumber": "655",
+      "services": 2
+    },
+    {
+      "id": "406023",
+      "name": "690",
+      "groups": [
+        "2"
+      ],
+      "file": "raw/406023.xlsx",
+      "bytes": 7986,
+      "sha256": "f2558f663bdf80eecf9be210988795e51650acc534a6ca5dd8889d329e4353b9",
+      "outcome": "parse_refused",
+      "reason": "sheet '690 평안요양원-중앙로터리-강정-대포포구' cell K9: unreadable value '9:35\\n(천제연종료)'"
+    },
+    {
+      "id": "406024",
+      "name": "721-2",
+      "groups": [
+        "5"
+      ],
+      "file": "raw/406024.xlsx",
+      "bytes": 6498,
+      "sha256": "dc3c55dcd888470f08a25f7b82c6efe2405645310910cbe0aaa9b5514b5b3286",
+      "outcome": "parse_refused",
+      "reason": "sheet '721-2 대천동-수산초-성산읍-고성리' cell B2: day label '옵서버스' is not one TAPSO has read before"
+    },
+    {
+      "id": "406025",
+      "name": "721-3",
+      "groups": [
+        "5"
+      ],
+      "file": "raw/406025.xlsx",
+      "bytes": 6495,
+      "sha256": "a68dfb46de0e297cc6f8b5f759bee3c99ec0a48fe8dca18537ec29e9bf39526f",
+      "outcome": "parse_refused",
+      "reason": "sheet '721-3 성읍-수산초-성산읍-섭지코지-고성리' cell B2: day label '옵서버스' is not one TAPSO has read before"
+    },
+    {
+      "id": "406026",
+      "name": "722-1",
+      "groups": [
+        "5"
+      ],
+      "file": "raw/406026.xlsx",
+      "bytes": 9114,
+      "sha256": "30f76ec9071d3e3e287268ffaf4949e117c8e9a6af611cf68ba44c68c831c727",
+      "outcome": "parse_refused",
+      "reason": "sheet '722-1 (평일)고성리-성읍문화마을' cell B2: expected '<route>번(<day>)', found '722-1번(평일)\\n(옵서버스)'"
+    },
+    {
+      "id": "406027",
+      "name": "722-2",
+      "groups": [
+        "5"
+      ],
+      "file": "raw/406027.xlsx",
+      "bytes": 7140,
+      "sha256": "b87fe1a4d645d1e63d3c62bc7b2a57a4e487c8043d91b48a933611c16cb19444",
+      "outcome": "parse_refused",
+      "reason": "sheet '722-2 고성리-성읍문화마을' cell B2: day label '옵서버스' is not one TAPSO has read before"
+    },
+    {
+      "id": "406028",
+      "name": "731-1",
+      "groups": [
+        "5"
+      ],
+      "file": "raw/406028.xlsx",
+      "bytes": 6169,
+      "sha256": "7c19ed984eb57b1232befa38590a1138d167959d7bb4da4624be1db3a73e846d",
+      "outcome": "parse_refused",
+      "reason": "sheet '731-1 성읍문화마을-삼달1리-신풍리-표선고-제주민속촌' cell B2: day label '옵서버스' is not one TAPSO has read before"
+    },
+    {
+      "id": "406029",
+      "name": "731-2",
+      "groups": [
+        "5"
+      ],
+      "file": "raw/406029.xlsx",
+      "bytes": 6271,
+      "sha256": "58d6ca605f259683e260f759863a62cb24f12149bc22263209cbb04c50170ff3",
+      "outcome": "parse_refused",
+      "reason": "sheet '731-2 성읍민속마을-삼달교차-신천리-표선고-제주민속촌' cell B2: day label '옵서버스' is not one TAPSO has read before"
+    },
+    {
+      "id": "406030",
+      "name": "732-1",
+      "groups": [
+        "5"
+      ],
+      "file": "raw/406030.xlsx",
+      "bytes": 6237,
+      "sha256": "1a258be4dca6d51f4df3f196c60eb7791d035d87210bb30ef72afad94d5c4138",
+      "outcome": "parse_refused",
+      "reason": "sheet '732-1 표선읍-성읍' cell B2: day label '옵서버스' is not one TAPSO has read before"
+    },
+    {
+      "id": "406031",
+      "name": "732-2",
+      "groups": [
+        "5"
+      ],
+      "file": "raw/406031.xlsx",
+      "bytes": 5534,
+      "sha256": "3ec3dddc02d19805f91af8fd6c1d421c008e30667d00f01996e3742cef6f41d0",
+      "outcome": "parse_refused",
+      "reason": "sheet '732-2 표선체육관-가시리-(안좌동)-표선면-표선체육관' cell B2: day label '옵서버스' is not one TAPSO has read before"
+    },
+    {
+      "id": "406032",
+      "name": "732-3",
+      "groups": [
+        "5"
+      ],
+      "file": "raw/406032.xlsx",
+      "bytes": 6472,
+      "sha256": "697f5e23c47c946bcb4fea5d4f4c8f1124e2be7dc3c673065552a0bd87c0381d",
+      "outcome": "parse_refused",
+      "reason": "sheet '732-3 제주민속촌-세화1리-세화3리-토산1리' cell B2: day label '옵서버스' is not one TAPSO has read before"
+    },
+    {
+      "id": "406033",
+      "name": "741-1",
+      "groups": [
+        "5"
+      ],
+      "file": "raw/406033.xlsx",
+      "bytes": 8808,
+      "sha256": "ddcbd8ae55d02d47113d7be8536f1b9aaa3810ef6c49faaffc9dbcae2092f733",
+      "outcome": "parse_refused",
+      "reason": "sheet '741-1 (평일)남원체육관-토산초-신흥1리-남원체육관' cell B2: day label '평일,옵서버스' is not one TAPSO has read before"
+    },
+    {
+      "id": "406034",
+      "name": "741-2",
+      "groups": [
+        "5"
+      ],
+      "file": "raw/406034.xlsx",
+      "bytes": 8760,
+      "sha256": "a49078411b287a2e88d9741cadb833ad590bfc2536b2ba2b62f87d10d28c314d",
+      "outcome": "parse_refused",
+      "reason": "sheet '741-2 (평일)남원읍-고수동' cell B2: day label '평일,옵서버스' is not one TAPSO has read before"
+    },
+    {
+      "id": "406035",
+      "name": "742-1",
+      "groups": [
+        "5"
+      ],
+      "file": "raw/406035.xlsx",
+      "bytes": 5959,
+      "sha256": "7ac0202864175e73b881b465967eabb11b149329c2e83ed7e466b886ce4e8a65",
+      "outcome": "parsed",
+      "routeNumber": "742-1",
+      "services": 1
+    },
+    {
+      "id": "406036",
+      "name": "742-2",
+      "groups": [
+        "5"
+      ],
+      "file": "raw/406036.xlsx",
+      "bytes": 8077,
+      "sha256": "5ae10c86b3153cc719fa16b753e070b2c89b66fea496403000ece17b10ac9a4c",
+      "outcome": "parse_refused",
+      "reason": "sheet '742-2 (평일)남원읍-한남리' cell B2: day label '평,옵서버스' is not one TAPSO has read before"
+    },
+    {
+      "id": "406037",
+      "name": "743",
+      "groups": [
+        "5"
+      ],
+      "file": "raw/406037.xlsx",
+      "bytes": 5978,
+      "sha256": "96583f8dcfe9bf5fd366e285a2b6effa0656aac23f68cd1575d63e7012decfe3",
+      "outcome": "parsed",
+      "routeNumber": "743",
+      "services": 1
+    },
+    {
+      "id": "406038",
+      "name": "744",
+      "groups": [
+        "5"
+      ],
+      "file": "raw/406038.xlsx",
+      "bytes": 5940,
+      "sha256": "5a55bfedcb7a629ba4623105ac06466de269057fcb96f39ed8794cb42d91b70a",
+      "outcome": "parsed",
+      "routeNumber": "744",
+      "services": 1
+    },
+    {
+      "id": "406039",
+      "name": "751-1",
+      "groups": [
+        "5"
+      ],
+      "file": "raw/406039.xlsx",
+      "bytes": 9226,
+      "sha256": "1e1ad550740d6ce318c5404c8380b8a2edb615eb67185170eb3b7219bdc71954",
+      "outcome": "parse_refused",
+      "reason": "sheet '751-1 (평일)안덕면-서광서리-국제학교-보성리-운진항' cell C13: unreadable value '14:00 ~ 21:30 (실시간 호출형)'"
+    },
+    {
+      "id": "406040",
+      "name": "751-2",
+      "groups": [
+        "5"
+      ],
+      "file": "raw/406040.xlsx",
+      "bytes": 9120,
+      "sha256": "6e07dbcef4762ef5aa3b3cbea80c2450f7dbea5a6bcbe27a3334e78dd31d5af7",
+      "outcome": "parse_refused",
+      "reason": "sheet '751-2 대평-안덕농협-(국제학교)-신평-운진항(평일)' cell C12: unreadable value '14:00 ~ 21:30 (실시간 호출형)'"
+    },
+    {
+      "id": "406041",
+      "name": "752-1",
+      "groups": [
+        "5"
+      ],
+      "file": "raw/406041.xlsx",
+      "bytes": 5786,
+      "sha256": "33f18b63e879c378823a162f83efed0050c3efd37a9d1436786c4e34f73ed872",
+      "outcome": "parse_refused",
+      "reason": "sheet '752-1 운진항-안덕농협-신화공원-안성리-운진항' cell K8: unreadable value '덕수2리교차로'"
+    },
+    {
+      "id": "406042",
+      "name": "752-2",
+      "groups": [
+        "5"
+      ],
+      "file": "raw/406042.xlsx",
+      "bytes": 5839,
+      "sha256": "93170e014401f3d00d729ff6456cafe4c8d66529285780394184c58f32d77b4c",
+      "outcome": "parse_refused",
+      "reason": "sheet '752-2 운진항-신화공원-동광-안덕농협-운진항' cell F9: unreadable value '덕수2리교차로'"
+    },
+    {
+      "id": "406043",
+      "name": "761-1",
+      "groups": [
+        "5"
+      ],
+      "file": "raw/406043.xlsx",
+      "bytes": 6298,
+      "sha256": "8d87b3502924ec8933f9cee3741a5005170ceceb83e4668c7435ac5106d8da56",
+      "outcome": "parsed",
+      "routeNumber": "761-1",
+      "services": 2
+    },
+    {
+      "id": "406044",
+      "name": "761-2",
+      "groups": [
+        "5"
+      ],
+      "file": "raw/406044.xlsx",
+      "bytes": 8990,
+      "sha256": "b2b86322d35bf462d1b76a1800bbf868544eb6d980450c2a21d6dbb4b07b1cba",
+      "outcome": "parse_refused",
+      "reason": "sheet '761-2 (평일)고산1리-무릉리-농공단지-동일1리-운진' cell C14: unreadable value '14:00 ~ 21:30 (실시간 호출형)'"
+    },
+    {
+      "id": "406045",
+      "name": "761-3",
+      "groups": [
+        "5"
+      ],
+      "file": "raw/406045.xlsx",
+      "bytes": 6030,
+      "sha256": "2c493f32c35183b27650430cfb1dae3a96be379792afb778635eeda449e60ff9",
+      "outcome": "parsed",
+      "routeNumber": "761-3",
+      "services": 2
+    },
+    {
+      "id": "406046",
+      "name": "880",
+      "groups": [
+        "8"
+      ],
+      "file": "raw/406046.xlsx",
+      "bytes": 6632,
+      "sha256": "58fa0903f6823fb95fbc41cebf4dafd16ef4df340701741a575e13de033f29b7",
+      "outcome": "parsed",
+      "routeNumber": "880",
+      "services": 1
+    },
+    {
+      "id": "406047",
+      "name": "5001",
+      "groups": [
+        "9"
+      ],
+      "file": "raw/406047.xlsx",
+      "bytes": 4624,
+      "sha256": "9701745531655b1e35bbc4b4015aa7353000c0006ece463cd1007ff9a54a4353",
+      "outcome": "parse_refused",
+      "reason": "sheet '5001 (남주고-중앙R-신효-위미-남원-표선)심야' row 8: times are not strictly ascending"
+    },
+    {
+      "id": "406048",
+      "name": "5002",
+      "groups": [
+        "9"
+      ],
+      "file": "raw/406048.xlsx",
+      "bytes": 4629,
+      "sha256": "966cb4910d740398a255e4f60587e1e0730f51136f66aa3583c6bd188f54c30b",
+      "outcome": "parse_refused",
+      "reason": "sheet '5002 (서귀여고-중앙R-신효-위미-남원-표선)심야' row 8: times are not strictly ascending"
+    },
+    {
+      "id": "406049",
+      "name": "5003",
+      "groups": [
+        "9"
+      ],
+      "file": "raw/406049.xlsx",
+      "bytes": 4658,
+      "sha256": "2c32ddca925df3c76409150dc71a32adec6de3f223f8dbaddaa2a447c56c0ee9",
+      "outcome": "parsed",
+      "routeNumber": "5003",
+      "services": 1
+    },
+    {
+      "id": "406050",
+      "name": "5004",
+      "groups": [
+        "9"
+      ],
+      "file": "raw/406050.xlsx",
+      "bytes": 4863,
+      "sha256": "d2aebf0645ceee8d8457bf33828d335653015312382d7ebe678bbdc6c5d95014",
+      "outcome": "parsed",
+      "routeNumber": "5004",
+      "services": 1
+    },
+    {
+      "id": "406051",
+      "name": "5005",
+      "groups": [
+        "9"
+      ],
+      "file": "raw/406051.xlsx",
+      "bytes": 4879,
+      "sha256": "4a9dd972664309aa1c817a83a94ce051b2e2f455fdeb7b250d9f607cce164135",
+      "outcome": "parsed",
+      "routeNumber": "5005",
+      "services": 1
+    },
+    {
+      "id": "406052",
+      "name": "5006",
+      "groups": [
+        "9"
+      ],
+      "file": "raw/406052.xlsx",
+      "bytes": 4746,
+      "sha256": "bf76892cc7d9f8f06ebed655532b4da082064e133e5fa298fccb93a60ddc8447",
+      "outcome": "parsed",
+      "routeNumber": "5006",
+      "services": 1
+    },
+    {
+      "id": "406053",
+      "name": "691",
+      "groups": [
+        "2"
+      ],
+      "file": "raw/406053.xlsx",
+      "bytes": 5126,
+      "sha256": "284389786054e87a3f86e6c30b22a1c00dd699909f28c39a1969fdaf2ebb95c9",
+      "outcome": "parse_refused",
+      "reason": "sheet '691 천지연-서홍동-신시가지-서귀여고-천지연' cell I8: unreadable value '신시가지\\n06:40'"
+    },
+    {
+      "id": "406054",
+      "name": "692",
+      "groups": [
+        "2"
+      ],
+      "file": "raw/406054.xlsx",
+      "bytes": 4908,
+      "sha256": "583c421b6ba5df6d39b982bdd2a80571515bce6065b452d1c866eaf3a4ed59be",
+      "outcome": "parsed",
+      "routeNumber": "692",
+      "services": 1
+    },
+    {
+      "id": "406056",
+      "name": "500",
+      "groups": [
+        "1"
+      ],
+      "file": "raw/406056.xlsx",
+      "bytes": 7881,
+      "sha256": "16c4ecea517894f4c4a81fae1f24a99a37715636c68bc1c2208226d844b9b485",
+      "outcome": "parse_refused",
+      "reason": "sheet '500 모슬포남항-화순-중문-월드컵경기장-중앙R-' cell B2: day label '도심급행' is not one TAPSO has read before"
+    },
+    {
+      "id": "406057",
+      "name": "590",
+      "groups": [
+        "1"
+      ],
+      "file": "raw/406057.xlsx",
+      "bytes": 7268,
+      "sha256": "a855bad964792da159d95307822964ae36e75a4652e0831593c4e84ed981833c",
+      "outcome": "parse_refused",
+      "reason": "sheet '590 신화월드-중문관광단지-강정크루즈터미널' cell B2: expected '<route>번(<day>)', found '임시 590번'"
+    },
+    {
+      "id": "406058",
+      "name": "295-1(수요맞춤형)",
+      "groups": [
+        "3"
+      ],
+      "file": "raw/406058.xlsx",
+      "bytes": 4775,
+      "sha256": "39ee0e7c163fea868c1c78ab47f9225be0695fa984884d4471c35092ff746eaa",
+      "outcome": "parse_refused",
+      "reason": "sheet '295-1 신흥2리-의귀-중앙로터리(서)-의귀-신흥2리' cell B2: expected '<route>번(<day>)', found '수요맞춤형 295-1번'"
+    },
+    {
+      "id": "406059",
+      "name": "501",
+      "groups": [
+        "1"
+      ],
+      "file": "raw/406059.xlsx",
+      "bytes": 7309,
+      "sha256": "817be03795f49dc9e7d5c91d61fcadc7e2390e049a16142f2dc90f21d8d06e5b",
+      "outcome": "parse_refused",
+      "reason": "sheet '501 월드컵경기장-남원-표선-성산항' cell B2: day label '도심급행' is not one TAPSO has read before"
+    },
+    {
+      "id": "406060",
+      "name": "753",
+      "groups": [
+        "5"
+      ],
+      "file": "raw/406060.xlsx",
+      "bytes": 5522,
+      "sha256": "61319296358ee73bb4b198a2b86efe492b06b306ea326611f1379b8a2a04e883",
+      "outcome": "parsed",
+      "routeNumber": "753",
+      "services": 1
+    },
+    {
+      "id": "406061",
+      "name": "500-2",
+      "groups": [
+        "1"
+      ],
+      "file": "raw/406061.xlsx",
+      "bytes": 4769,
+      "sha256": "2c22841a6614cad26587135fc88474e0219409dbc423f7a9ad84092f0bdc7c62",
+      "outcome": "parse_refused",
+      "reason": "sheet '500-2 중앙R-남원-표선-성산고-표선-남원-버스터미널' cell C8: unreadable value '500-2번'"
+    },
+    {
+      "id": "406062",
+      "name": "680",
+      "groups": [
+        "2"
+      ],
+      "file": "raw/406062.xlsx",
+      "bytes": 5782,
+      "sha256": "b420fbfe9c1264e3aa22ebd3ee06eff6adaa4b4032d9f72c1b49b2571eefb626",
+      "outcome": "parse_refused",
+      "reason": "sheet '680 강정항↔강정항(순환)' cell B2: day label '순환' is not one TAPSO has read before"
+    },
+    {
+      "id": "406066",
+      "name": "888",
+      "groups": [
+        "2"
+      ],
+      "outcome": "no_timetable"
+    }
+  ]
+}
