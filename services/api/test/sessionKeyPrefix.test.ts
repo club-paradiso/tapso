@@ -51,6 +51,8 @@ function session(overrides: Partial<StoredJourneySession> = {}): StoredJourneySe
  */
 function sharedDatabase() {
   const rows = new Map<string, string>();
+  /** Each namespace's push index, kept apart from the rows. */
+  const sets = new Map<string, Set<string>>();
   const commands: string[][] = [];
   const fetchImpl = (async (_url: string | URL | Request, init: RequestInit = {}) => {
     const command = JSON.parse(String(init.body)) as string[];
@@ -70,14 +72,20 @@ function sharedDatabase() {
       case "DEL":
         return reply(rows.delete(args[0]!) ? 1 : 0);
       case "EVAL": {
-        // Mirrors CAS_SCRIPT: EVAL <script> 1 <key> <expected> <value> <px>
-        const [, , key, expected, value] = args;
+        // Mirrors CAS_SCRIPT: EVAL <script> 2 <key> <index> <expected> <value> <px> <indexed> <id>
+        const [, , key, index, expected, value, , indexed, id] = args;
         const current = rows.get(key!);
         if (current === undefined) return reply([0, ""]);
         if (Number(current.slice(0, current.indexOf(":"))) !== Number(expected)) return reply([-1, current]);
         rows.set(key!, value!);
+        const members = sets.get(index!) ?? new Set<string>();
+        if (indexed === "1") members.add(id!);
+        else members.delete(id!);
+        sets.set(index!, members);
         return reply([1, ""]);
       }
+      case "SREM":
+        return reply(sets.get(args[0]!)?.delete(args[1]!) ? 1 : 0);
       default:
         throw new Error(`the fake database does not implement ${name}`);
     }
@@ -90,7 +98,7 @@ function sharedDatabase() {
     fetchImpl,
     ...(keyPrefix === undefined ? {} : { keyPrefix }),
   });
-  return { rows, commands, store };
+  return { rows, sets, commands, store };
 }
 
 /* ---------------------------------------------------------------- validation */
@@ -219,9 +227,10 @@ test("a custom preview namespace is used for every command the store sends", asy
   assert.equal((await preview.save(session({ selectedVehicleId: "A" }), 1)).outcome, "saved");
   await preview.delete("session-1");
 
-  assert.deepEqual(commands.map((command) => command[0]), ["SET", "GET", "EVAL", "DEL"]);
+  assert.deepEqual(commands.map((command) => command[0]), ["SET", "GET", "EVAL", "DEL", "SREM"]);
   const keys = commands.map((command) => (command[0] === "EVAL" ? command[3] : command[1]));
-  assert.deepEqual(keys, Array(4).fill(`${PREVIEW}session-1`));
+  assert.deepEqual(keys, [...Array(4).fill(`${PREVIEW}session-1`), `${PREVIEW}push-index`]);
+  assert.equal(commands[2]![4], `${PREVIEW}push-index`, "the push index lives in the same namespace");
 });
 
 test("preview and production namespaces cannot see or mutate each other's sessions", async () => {

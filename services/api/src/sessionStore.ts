@@ -110,7 +110,32 @@ export type SaveOutcome =
   | { outcome: "saved"; version: number }
   | { outcome: "conflict"; stored?: VersionedJourneySession };
 
+/**
+ * The ids of sessions that hold a Live Activity push token
+ * (`docs/exec-plans/LIVE_ACTIVITY_PUSH.md`, milestone 5). Only the scheduler's
+ * tick reads it, to find rides whose app may be suspended. It holds ids, never
+ * tokens.
+ *
+ * The store keeps it in step with the rows: every `save` adds the id when the
+ * saved row holds a token and removes it when not, in the same atomic step as
+ * the compare-and-set, so a stored token always has its entry. `delete`
+ * removes the entry after the row. An entry can still outlive its row (a TTL
+ * expiry, a failure between the delete and the removal); the tick prunes it.
+ */
+export interface LiveActivityPushIndex {
+  /** Up to `limit` ids, in no particular order. */
+  sample(limit: number): Promise<string[]>;
+  /**
+   * Drop the entry unless its row changed since it was read at `version`: a
+   * row that is gone, or still at that version, loses it; a row written since
+   * (a token registered meanwhile) keeps it. Atomic with the check.
+   */
+  removeIfUnchanged(id: string, version: number | undefined): Promise<void>;
+}
+
 export interface JourneySessionStore {
+  /** Absent on a store that cannot index; the coordinator then indexes nothing. */
+  readonly pushIndex?: LiveActivityPushIndex;
   /**
    * Undefined only when no row exists. An expired row is returned as-is; the
    * coordinator owns the expiry decision so `410` stays distinguishable
@@ -141,6 +166,19 @@ export interface JourneySessionStore {
  */
 export class MemoryJourneySessionStore implements JourneySessionStore {
   private readonly rows = new Map<string, { session: string; version: number }>();
+  private readonly indexed = new Set<string>();
+  readonly pushIndex: LiveActivityPushIndex = {
+    sample: async (limit) => [...this.indexed].slice(0, Math.max(0, limit)),
+    removeIfUnchanged: async (id, version) => {
+      const row = this.rows.get(id);
+      if (!row || row.version === version) this.indexed.delete(id);
+    },
+  };
+
+  /** Test hook: put an entry in without a row, as a crash or a TTL expiry would leave one. */
+  indexForTest(id: string): void {
+    this.indexed.add(id);
+  }
   private readonly now: () => Date;
 
   constructor(options: { now?: () => Date } = {}) {
@@ -174,11 +212,14 @@ export class MemoryJourneySessionStore implements JourneySessionStore {
     if (existing.version !== expectedVersion) return { outcome: "conflict", stored: existing };
     const version = expectedVersion + 1;
     this.rows.set(session.id, { session: serialize(session), version });
+    if (session.liveActivityPush) this.indexed.add(session.id);
+    else this.indexed.delete(session.id);
     return { outcome: "saved", version };
   }
 
   async delete(id: string): Promise<void> {
     this.rows.delete(id);
+    this.indexed.delete(id);
   }
 
   /** Bounded growth for a long-lived local process. */

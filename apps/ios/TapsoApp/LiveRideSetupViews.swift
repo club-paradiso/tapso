@@ -254,7 +254,8 @@ struct LiveStopPickerView: View {
                     onChoose: { boarding, destination in
                         model.chooseLiveStops(boarding: boarding, destination: destination, on: stops)
                     },
-                    place: model.handoffPlace
+                    place: model.handoffPlace,
+                    suggestedDestination: model.screenshotDestinationRoute == stops.route.id ? model.screenshotDestination : nil
                 )
             }
         }
@@ -269,6 +270,8 @@ struct LiveStopPickerContent: View {
     let onChoose: (RouteStop, RouteStop) -> Void
     /// A place shared from a map app: the destination step suggests the stops near it.
     var place: SharedPlace? = nil
+    /// A stop a screenshot showed as the place to get off: offered once the rider has chosen where to board.
+    var suggestedDestination: RouteStop? = nil
 
     @State private var boarding: RouteStop?
     @State private var query = ""
@@ -314,12 +317,18 @@ struct LiveStopPickerContent: View {
                     .font(.subheadline.weight(.semibold))
                 }
                 QuestionTitle("live.stops.destination")
+                if let suggestedDestination, suggestedDestination.sequence > boarding.sequence {
+                    screenshotSuggestion(suggestedDestination)
+                }
                 if let place {
                     suggestions(for: place, after: boarding)
                 }
             } else {
                 if let place {
                     HandoffPlaceLine(place: place)
+                }
+                if let suggestedDestination {
+                    ScreenshotDestinationLine(name: suggestedDestination.stop.name)
                 }
                 QuestionTitle("live.stops.boarding")
             }
@@ -389,6 +398,26 @@ struct LiveStopPickerContent: View {
         }
     }
 
+    /// The stop the screenshot showed. The rider still chooses.
+    private func screenshotSuggestion(_ routeStop: RouteStop) -> some View {
+        VStack(alignment: .leading, spacing: 0) {
+            Text("mapImport.shot.suggested")
+                .font(.subheadline.weight(.semibold))
+                .foregroundStyle(TapsoColor.textSecondary)
+            StopRow(
+                name: routeStop.stop.name,
+                detail: detail(for: routeStop),
+                systemImage: "star.circle.fill",
+                tint: TapsoColor.tangerine
+            ) {
+                choose(routeStop)
+            }
+        }
+        .padding(TapsoSpace.md)
+        .background(TapsoColor.tangerine.opacity(0.08), in: RoundedRectangle(cornerRadius: TapsoRadius.md, style: .continuous))
+        .accessibilityElement(children: .contain)
+    }
+
     private func suggestionDetail(_ suggestion: HandoffStopSuggestion) -> String {
         let order = detail(for: suggestion.routeStop)
         guard let meters = suggestion.straightLineMeters else { return order }
@@ -420,6 +449,28 @@ struct HandoffPlaceLine: View {
     var body: some View {
         Label {
             Text(String(format: RideText.string("live.handoff.place"), place.name ?? place.address ?? ""))
+                .font(.footnote.weight(.semibold))
+                .foregroundStyle(TapsoColor.textPrimary)
+                .fixedSize(horizontal: false, vertical: true)
+        } icon: {
+            Image(systemName: "mappin.and.ellipse")
+                .foregroundStyle(TapsoColor.tangerine)
+        }
+        .padding(.horizontal, TapsoSpace.sm)
+        .padding(.vertical, TapsoSpace.xs)
+        .background(TapsoColor.tangerine.opacity(0.12), in: Capsule())
+        .accessibilityElement(children: .combine)
+    }
+}
+
+/// The stop a screenshot showed as the place to get off, kept in view while the rider chooses where to board.
+/// Figma: no Figma component yet; drawn inside the screens.
+struct ScreenshotDestinationLine: View {
+    let name: String
+
+    var body: some View {
+        Label {
+            Text(String(format: RideText.string("mapImport.shot.seen"), name))
                 .font(.footnote.weight(.semibold))
                 .foregroundStyle(TapsoColor.textPrimary)
                 .fixedSize(horizontal: false, vertical: true)

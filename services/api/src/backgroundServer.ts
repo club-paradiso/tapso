@@ -6,6 +6,7 @@ import { BackgroundRideCaptureCoordinator } from "./backgroundRideCapture.ts";
 import { resolveBetaTesterMode } from "./betaHttp.ts";
 import { BetaService } from "./betaService.ts";
 import { BETA_TESTER_KEY_PREFIX, UpstashBetaTesterStore } from "./betaTester.ts";
+import { LiveActivityTicker, readTickerConfig } from "./liveActivityTicker.ts";
 import { UpstashCaptureJournal } from "./captureJournal.ts";
 import { UpstashFieldValidationStore } from "./fieldValidation.ts";
 import { resolveOperatorToken } from "./operatorAuth.ts";
@@ -72,6 +73,10 @@ const captures = new BackgroundRideCaptureCoordinator(provider, {
   },
 });
 const allowedOrigins = originList(process.env.TRANSIT_ALLOWED_ORIGINS);
+// The Live Activity scheduler's clock (milestone 5). Off unless configured.
+const tickerConfig = readTickerConfig(process.env);
+if (!tickerConfig.enabled && tickerConfig.problem) console.warn(JSON.stringify({ level: "warn", event: "live_activity_ticker_config", message: tickerConfig.problem }));
+const ticker = new LiveActivityTicker(tickerConfig);
 
 // Beta testers need the same database: their rides are stored exactly like
 // operator submissions, and their invites and ride journals live beside them
@@ -101,6 +106,7 @@ export const backgroundServer = createServer(createBackgroundRequestHandler({
     fieldValidationStorage: fieldValidationStore ? "upstash" : "unconfigured",
     betaTesters: beta ? "enabled" : betaMode.mode === "enabled" ? "unconfigured" : betaMode.mode,
     betaRestartRecovery: beta && journal ? "durable_journal" : "not_applicable",
+    liveActivityTicker: ticker.status(),
   }),
 }));
 
@@ -108,6 +114,7 @@ if (process.env.NODE_ENV !== "test") {
   backgroundServer.listen(port, host, () => {
     console.info(`TAPSO ride collector listening on http://${host}:${port}`);
   });
+  ticker.start();
   if (beta) {
     // Pick up beta rides a previous process was collecting, now and while a
     // redeploy overlap may still hold their leases.

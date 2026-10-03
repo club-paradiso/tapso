@@ -203,9 +203,12 @@ test("a compare-and-set that wins reports the next version", async () => {
   assert.deepEqual(result, { outcome: "saved", version: 5 });
   const command = body(calls[0]!);
   assert.equal(command[0], "EVAL");
-  assert.equal(command[2], "1", "one key");
-  assert.equal(command[4], "4", "the expected version is what makes this a compare-and-set");
-  assert.match(command[5]!, /^5:\{/);
+  assert.equal(command[2], "2", "the row and the push index");
+  assert.equal(command[3], "tapso:journey-session:session-1");
+  assert.equal(command[4], "tapso:journey-session:push-index");
+  assert.equal(command[5], "4", "the expected version is what makes this a compare-and-set");
+  assert.match(command[6]!, /^5:\{/);
+  assert.deepEqual(command.slice(8), ["0", "session-1"], "a row without a token leaves the index in the same step");
 });
 
 test("a compare-and-set that loses returns the winner's row instead of overwriting", async () => {
