@@ -195,6 +195,31 @@ final class RidePresentationTests: XCTestCase {
         XCTAssertEqual(relaunched.activeRide?.alertedMilestones, [.prepare, .nextStop])
     }
 
+    func testHybridRestoreDoesNotMakeAnOldOfficialMilestoneFresh() async throws {
+        let defaults = UserDefaults(suiteName: "tapso.tests.\(UUID().uuidString)")!
+        let first = makeModel(defaults: defaults)
+        first.startDemo()
+        await first.confirmVehicle(first.vehicleCheck.proposals[0])
+        let store = JourneyStore(defaults: defaults)
+        var saved = try XCTUnwrap(store.loadActiveRide())
+        let route = try XCTUnwrap(saved.draft.route)
+        let destination = try XCTUnwrap(saved.draft.destinationRouteStop?.sequence)
+        let signal = RideSignal(phase: .nextStopIsDestination, remainingStops: 1, freshness: .fresh)
+        let now = Date()
+        var engine = HybridPositionEngine(vehicleID: "synthetic-bus", route: route,
+                                          destinationSequence: destination, surveyed: false)
+        saved.live = LiveRideState(sessionID: "synthetic-session", vehicleID: "synthetic-bus", signal: signal,
+                                   currentStopSequence: destination - 1, endedByServer: false)
+        saved.hybridPosition = engine.evaluate(official: signal, sequence: destination - 1,
+                                              evidenceAt: now, selectedVehicleID: "synthetic-bus", device: nil, now: now)
+        saved.lastObservedAt = now
+        store.saveActiveRide(saved)
+        let restored = makeModel(defaults: defaults)
+        XCTAssertEqual(restored.guidance?.moment, .checking)
+        XCTAssertNil(restored.guidance?.milestone, "process restart cannot recreate GPS continuity or renew official evidence")
+        XCTAssertNil(restored.activeRide?.hybridPosition)
+    }
+
     func testConfirmingTwiceStartsOneRide() async {
         let model = makeModel()
         model.startDemo()

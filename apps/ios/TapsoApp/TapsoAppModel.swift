@@ -334,6 +334,11 @@ final class TapsoAppModel {
             if age != .fresh {
                 saved.freshnessOverride = age
             }
+            if saved.hybridPosition != nil {
+                // A recent evaluation is not a recent official observation. Device continuity
+                // is memory-only and must be re-established after process termination.
+                saved.freshnessOverride = .unknown
+            }
             saved.hybridPosition = nil
             activeRide = saved
             resumedAfterRelaunch = true
