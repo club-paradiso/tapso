@@ -26,11 +26,16 @@ struct VisionScreenshotTextRecognizer: ScreenshotTextRecognizer {
         guard let source = CGImageSourceCreateWithData(imageData as CFData, nil) else {
             throw ScreenshotRecognitionError.unreadableImage
         }
+        let properties = CGImageSourceCopyPropertiesAtIndex(source, 0, nil) as? [CFString: Any]
+        let width = (properties?[kCGImagePropertyPixelWidth] as? Int) ?? maxPixelDimension
+        let height = (properties?[kCGImagePropertyPixelHeight] as? Int) ?? maxPixelDimension
+        // Never scale up: ImageIO resizes to the maximum even when the source is smaller.
+        let longestSide = min(max(width, height), maxPixelDimension)
         let options: [CFString: Any] = [
             kCGImageSourceCreateThumbnailFromImageAlways: true,
             kCGImageSourceCreateThumbnailWithTransform: true,
             kCGImageSourceShouldCacheImmediately: true,
-            kCGImageSourceThumbnailMaxPixelSize: maxPixelDimension,
+            kCGImageSourceThumbnailMaxPixelSize: longestSide,
         ]
         guard let image = CGImageSourceCreateThumbnailAtIndex(source, 0, options as CFDictionary) else {
             throw ScreenshotRecognitionError.unreadableImage
@@ -68,9 +73,17 @@ struct VisionScreenshotTextRecognizer: ScreenshotTextRecognizer {
                 )
             )
         }
+        // Blocks on one visual row (a `출발` label and its stop name) never share an exact y:
+        // group them by half a block height, then read each row left to right.
+        let heights = blocks.compactMap { $0.box?.height }.sorted()
+        let tolerance = (heights.isEmpty ? 0.01 : heights[heights.count / 2]) / 2
+        func row(_ block: RecognizedTextBlock) -> Int {
+            Int(((block.box?.y ?? 0) / max(tolerance, 0.001)).rounded(.down))
+        }
         let ordered = blocks.sorted { lhs, rhs in
-            guard let left = lhs.box, let right = rhs.box else { return false }
-            return left.y != right.y ? left.y < right.y : left.x < right.x
+            let left = row(lhs), right = row(rhs)
+            if left != right { return left < right }
+            return (lhs.box?.x ?? 0) < (rhs.box?.x ?? 0)
         }
         return RecognizedScreenshotText(blocks: ordered)
     }

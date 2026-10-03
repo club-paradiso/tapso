@@ -255,7 +255,7 @@ struct LiveStopPickerView: View {
                         model.chooseLiveStops(boarding: boarding, destination: destination, on: stops)
                     },
                     place: model.handoffPlace,
-                    suggestedDestination: model.screenshotDestination
+                    suggestedDestination: model.screenshotDestinationRoute == stops.route.id ? model.screenshotDestination : nil
                 )
             }
         }

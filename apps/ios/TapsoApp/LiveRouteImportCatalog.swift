@@ -17,11 +17,11 @@ actor LiveRouteImportCatalog: RouteImportCandidateSource {
 
     func variants(forRouteNumber number: String) async throws -> [TransitRoute] {
         let routes = try await api.routes(number: number)
-        let api = self.api
+        let client = api
         let fetched = await withTaskGroup(of: LiveRouteStops?.self, returning: [LiveRouteStops].self) { group in
             for route in routes {
                 group.addTask {
-                    guard let list = try? await api.stops(routeID: route.routeId) else { return nil }
+                    guard let list = try? await client.stops(routeID: route.routeId) else { return nil }
                     let built = TransitRoute.live(route, stops: list.items)
                     return LiveRouteStops(
                         apiRoute: route,

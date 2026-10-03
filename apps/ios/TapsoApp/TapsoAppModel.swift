@@ -280,6 +280,8 @@ final class TapsoAppModel {
     private(set) var screenshotImport: ScreenshotImportState = .idle
     /// A stop the screenshot showed as the place to get off, while the rider chooses where to board.
     private(set) var screenshotDestination: RouteStop?
+    /// The route that stop belongs to: the suggestion is offered on no other route.
+    private(set) var screenshotDestinationRoute: RouteID?
     /// After a live ride: today's last buses of the route number, for the way back.
     private(set) var returnService: ReturnService = .idle
     /// The way back pinned to the Lock Screen as a countdown, if one is running.
@@ -448,6 +450,7 @@ final class TapsoAppModel {
         sharedPlace = nil
         sharedPlaceUnreadable = false
         screenshotDestination = nil
+        screenshotDestinationRoute = nil
         screenshotImport = .reading
         let importer = screenshotImporter
         screenshotTask = Task { [weak self] in
@@ -496,6 +499,7 @@ final class TapsoAppModel {
             chooseLiveStops(boarding: boarding, destination: proposal.destination, on: stops)
         } else {
             screenshotDestination = proposal.destination
+            screenshotDestinationRoute = proposal.route.id
             liveStops = .loaded(stops)
             path.append(.liveStops(routeID: stops.apiRoute.routeId))
         }
@@ -511,6 +515,8 @@ final class TapsoAppModel {
 
     /// Live: the rider names the bus that goes there; the stop list then suggests where to get off.
     func continueWithLiveRoute() {
+        screenshotDestination = nil
+        screenshotDestinationRoute = nil
         searchTask?.cancel()
         liveRouteSearch = .idle
         liveFailure = nil
@@ -989,6 +995,8 @@ final class TapsoAppModel {
     /// Live setup starts from the route number: TAPSO's API has no stop search yet,
     /// and inventing one from a stale list would send riders to the wrong stop.
     func openLiveSearch() {
+        screenshotDestination = nil
+        screenshotDestinationRoute = nil
         searchTask?.cancel()
         liveRouteSearch = .idle
         liveFailure = nil
@@ -1058,7 +1066,7 @@ final class TapsoAppModel {
     /// Leaving the vehicle check by any route (back, cancel, a new search) stops its polling.
     func pathDidChange(_ newPath: [SetupStep]) {
         if !newPath.contains(.mapImport), screenshotImport != .idle { cancelScreenshotImport() }
-        if newPath.isEmpty { screenshotDestination = nil }
+        if newPath.isEmpty { screenshotDestination = nil; screenshotDestinationRoute = nil }
         guard !newPath.contains(.vehicleCheck), activeRide == nil else { return }
         searchTask?.cancel()
         endLiveSetupSession()
