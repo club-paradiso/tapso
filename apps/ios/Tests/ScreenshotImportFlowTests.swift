@@ -316,7 +316,7 @@ final class ScreenshotImportFlowTests: XCTestCase {
 
     // MARK: Helpers
 
-    private func makeModel(screen: [String], confidence: Double = 0.95, eraser: any ScreenshotOriginalEraser = FakeEraser(outcome: .deleted)) -> TapsoAppModel {
+    private func makeModel(screen: [String], confidence: Double = 0.95, eraser: (any ScreenshotOriginalEraser)? = nil) -> TapsoAppModel {
         stubTransitAPI()
         let client = TapsoAPIClient.stubbed()
         let catalog = LiveRouteImportCatalog(api: client)
@@ -330,7 +330,7 @@ final class ScreenshotImportFlowTests: XCTestCase {
             api: client,
             routeCatalog: catalog,
             screenshotImporter: importer,
-            originalEraser: eraser
+            originalEraser: eraser ?? FakeEraser(outcome: .deleted)
         )
         model.speed = .manual
         return model

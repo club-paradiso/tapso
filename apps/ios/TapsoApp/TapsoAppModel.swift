@@ -322,7 +322,7 @@ final class TapsoAppModel {
         api: TapsoAPIClient = TapsoAPIClient(),
         routeCatalog: LiveRouteImportCatalog? = nil,
         screenshotImporter: ScreenshotRouteImporter? = nil,
-        originalEraser: any ScreenshotOriginalEraser = PhotoLibraryScreenshotEraser()
+        originalEraser: (any ScreenshotOriginalEraser)? = nil
     ) {
         self.store = store
         self.liveActivity = liveActivity
@@ -330,7 +330,8 @@ final class TapsoAppModel {
         self.api = api
         let catalog = routeCatalog ?? LiveRouteImportCatalog(api: api)
         self.routeCatalog = catalog
-        self.originalEraser = originalEraser
+        // `nil` rather than a default argument: Xcode 16.4's SILGen crashes on an existential default here.
+        self.originalEraser = originalEraser ?? PhotoLibraryScreenshotEraser()
         self.screenshotImporter = screenshotImporter ?? ScreenshotRouteImporter(
             interpreter: LocalVisionRouteInterpreter(recognizer: VisionScreenshotTextRecognizer()),
             source: catalog
