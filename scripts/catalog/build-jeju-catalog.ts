@@ -32,7 +32,7 @@ import { mkdir, readFile, writeFile } from "node:fs/promises";
 import path from "node:path";
 
 import type { StopOnRoute } from "../../services/api/src/domain.ts";
-import { buildCatalog, type CatalogRouteRow } from "../../services/api/src/transitCatalog.ts";
+import { buildCatalog, validateCatalog, type CatalogRouteRow, type TransitCatalog } from "../../services/api/src/transitCatalog.ts";
 
 const args = process.argv.slice(2);
 const option = (name: string): string | undefined => {
@@ -43,6 +43,9 @@ const BASE = option("--base") ?? process.env.TAPSO_API_BASE ?? "https://tapso-ap
 const CITY = "39";
 const PACE_MS = Number(option("--pace-ms") ?? 700);
 const LIVE = args.includes("--live");
+// Probe the catalog already written, without rebuilding it (the workflow commits
+// the catalog first, so a slow probe can never cost the catalog).
+const PROBE_ONLY = args.includes("--probe-only");
 const ROOT = path.resolve(import.meta.dirname, "..", "..");
 
 const pause = (ms: number) => new Promise((resolve) => setTimeout(resolve, ms));
@@ -99,6 +102,13 @@ async function censusRouteNumbers(): Promise<string[]> {
   } catch {
     return [];
   }
+}
+
+if (PROBE_ONLY) {
+  const catalog = JSON.parse(await readFile(path.join(ROOT, "services/api/data/jeju-transit-catalog.json"), "utf8"));
+  await probe(validateCatalog(catalog));
+  console.log(`CALLS ${calls}`);
+  process.exit(0);
 }
 
 const rows: CatalogRouteRow[] = [];
@@ -162,7 +172,10 @@ await writeFile(
 );
 console.log(`CATALOG ${catalog.catalogVersion} routes ${catalog.routes.length} stops ${catalog.stops.length} unavailable ${catalog.unavailable.length}`);
 
-if (LIVE) {
+if (LIVE) await probe(catalog);
+console.log(`CALLS ${calls}`);
+
+async function probe(catalog: TransitCatalog): Promise<void> {
   const probes: Record<string, { status: number; vehicles: number; withStopSequence: number; sequenceInRange: number }> = {};
   for (const route of catalog.routes) {
     const { status, body } = await getJson(`/v1/vehicles?routeId=${encodeURIComponent(route.routeId)}&cityCode=${CITY}`);
@@ -178,4 +191,3 @@ if (LIVE) {
   );
   console.log(`LIVE_PROBE ${Object.keys(probes).length} variants`);
 }
-console.log(`CALLS ${calls}`);

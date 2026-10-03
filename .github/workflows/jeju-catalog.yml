@@ -13,7 +13,6 @@ on:
   push:
     paths:
       - ops/jeju-catalog/request.json
-      - .github/workflows/jeju-catalog.yml
   schedule:
     - cron: "41 18 * * 0"  # Monday 03:41 KST
   workflow_dispatch:
@@ -29,7 +28,7 @@ concurrency:
 jobs:
   build:
     runs-on: ubuntu-latest
-    timeout-minutes: 60
+    timeout-minutes: 150
     steps:
       - uses: actions/checkout@v4
       - uses: actions/setup-node@v4
@@ -44,11 +43,31 @@ jobs:
           else
             echo "branch=${GITHUB_REF_NAME}" >> "$GITHUB_OUTPUT"
           fi
-      - name: Build the catalog and probe every variant's live endpoint (paced, read-only)
+      - name: Build the catalog (paced, read-only)
+        run: node --experimental-strip-types scripts/catalog/build-jeju-catalog.ts
+      - name: Commit the catalog before the slower probe
+        env:
+          GH_TOKEN: ${{ github.token }}
+          TARGET: ${{ steps.target.outputs.branch }}
         run: |
-          live=""
-          if node -e 'process.exit(JSON.parse(require("fs").readFileSync("ops/jeju-catalog/request.json","utf8")).live ? 0 : 1)'; then live="--live"; fi
-          node --experimental-strip-types scripts/catalog/build-jeju-catalog.ts $live
+          set -euo pipefail
+          git config user.name "github-actions[bot]"
+          git config user.email "41898282+github-actions[bot]@users.noreply.github.com"
+          git add services/api/data/jeju-transit-catalog.json artifacts/route-coverage
+          if git diff --cached --quiet; then echo "catalog unchanged"; exit 0; fi
+          version=$(node -e 'console.log(JSON.parse(require("fs").readFileSync("services/api/data/jeju-transit-catalog.json","utf8")).catalogVersion)')
+          git commit -m "data: Jeju transit catalog ${version} ($(TZ=Asia/Seoul date +%F))" -m "Workflow run ${GITHUB_RUN_ID}."
+          if [ "${GITHUB_REF_NAME}" != "main" ]; then
+            for attempt in 1 2 3; do
+              git pull --rebase origin "${TARGET}" && git push origin "HEAD:${TARGET}" && break
+              sleep $((attempt * 5))
+            done
+          fi
+      - name: Probe every variant's live endpoint (counts only, no vehicle number)
+        run: |
+          if node -e 'process.exit(JSON.parse(require("fs").readFileSync("ops/jeju-catalog/request.json","utf8")).live ? 0 : 1)'; then
+            node --experimental-strip-types scripts/catalog/build-jeju-catalog.ts --probe-only
+          fi
       - name: Production-readiness audit (offline, from the files just written)
         run: |
           if [ -f scripts/route-coverage/production-readiness.ts ]; then
