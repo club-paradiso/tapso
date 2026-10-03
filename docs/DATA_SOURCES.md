@@ -71,7 +71,7 @@ Decision:
   - Layout of the real file: one sheet per direction and day type ("평일" and "토,공휴일"); each sheet has a summary line (first and last bus, headway, operator), a 시행일, and a table of trips over named timepoints. A cell is `HH:MM`, `X` (not served), or a time with "(<place> 출발)" for a trip that starts before its first timepoint.
   - The schema follows the file: `tapso-jeju-timetable-v2` keeps one service per direction and day type, with its timepoints, trips and own 시행일. `lastDeparture` gives the 막차 and `lastTimeAt` the last time at a named timepoint. Between timepoints the table says nothing, and TAPSO does not interpolate.
   - The two day types have different 시행일 in the same file: weekday 2026-06-24, Saturday and holiday 2024-08-01. A service is used only once its 시행일 has passed.
-  - "토,공휴일" becomes `saturday_sunday_holiday`: Sunday is a public holiday under 관공서의 공휴일에 관한 규정 제2조 제1호. Deciding which day type a date falls in needs a holiday calendar, which TAPSO does not have yet; nothing reads the dataset at runtime yet.
+  - "토,공휴일" becomes `saturday_sunday_holiday`: Sunday is a public holiday under 관공서의 공휴일에 관한 규정 제2조 제1호. (Superseded 2026-10-03: the holiday calendar and the runtime reader exist; see the census entry below.)
   - The parser fails closed: an unknown day label, a time past midnight, times out of order, or a summary 첫차 or 막차 that disagrees with the trips stops the import with the cell named.
 - 2026-10-03: **Route 442 is imported** (`OFFICIAL_DATED`, downloaded by the owner at 10:36 KST, `fixtures/jeju/timetables/raw/442.xlsx`, SHA-256 `59038f87…67a0c2`). Its layout differs from 365's, and parser version 2 reads both:
   - One sheet titled "442번" with no day type. Its day type is `unstated`: it is not assumed to run every day, and only a lookup for `unstated` finds it.
@@ -80,6 +80,12 @@ Decision:
   - Header names wrapped over lines keep one space at the wrap ("제주여자 중고등학교").
   - **The file contradicts itself.** Its summary says "첫차(제주여고 출발) 05:50", but trip 1 reads "5:55 (출발)" under 제주여자중고등학교. The parser accepts this one conflict and no other (`KNOWN_SUMMARY_CONFLICTS`, keyed by route, sheet and the exact times, not by checksum: the site writes a fresh workbook on every download). It keeps the trips and records the conflict in `summaryConflicts`. Any other file still stops on a mismatch. Which time is right is `UNKNOWN`. The 막차 (21:40) agrees.
   - 시행일 2024-04-25. An independent openpyxl read matched all 124 times.
+
+- 2026-10-03, **every timetable classified** (parser v3, `docs/exec-plans/JEJU_PRODUCTION_V1.md` §6): of 235 entries, 201 parsed, 30 `source_conflict` (the file contradicts itself; kept and reported, never served), 4 without a timetable (one empty on the site, three suspension notices), 0 refused. The schema is `tapso-jeju-timetable-v3`; the runtime bundle `services/api/data/jeju-timetables.json` is served by `GET /v1/timetables`, with day types decided by `services/api/data/kr-public-holidays.json` (python-holidays 0.105, 2024-2028, sources in the file). The import workflow now refreshes weekly into a reviewed pull request with a change report.
+
+## Jeju transit catalog
+
+`services/api/data/jeju-transit-catalog.json` (`tapso-jeju-catalog-v1`, label `OFFICIAL_DERIVED`): every route variant TAGO names for city 39 and its ordered stops, read through TAPSO's production API by `scripts/catalog/build-jeju-catalog.ts` in `.github/workflows/jeju-catalog.yml`. Route IDs are discovered three ways (no route number, digits 1-9, every timetable census number) and unioned, because TAGO's number search is not exact and whether its unfiltered list is complete is not documented. A variant whose stop list cannot be read is listed under `unavailable`, never dropped. Not live: no vehicle data is in it. The per-variant live probe (`artifacts/route-coverage/jeju-live-probe.json`) records counts only, never a vehicle number.
 
 ## Runtime provider
 

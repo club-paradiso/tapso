@@ -1,5 +1,13 @@
 # Architecture decisions
 
+## Destination search runs on a reviewed catalog file, on the phone (2026-10-03)
+
+**Decision:** every Jeju route variant and its ordered stops are built by a pipeline (`scripts/catalog/build-jeju-catalog.ts`, GitHub Actions, reviewed data PR) into one versioned file the API serves as-is (`GET /v1/catalog`, ETag = content version); the app caches it and searches locally. Identity stays the provider's: one variant per route ID, one stop per stop ID; only a compass marker is dropped to group two poles of one place. A destination chosen in the catalog is re-checked against the server's current stop list before boarding is offered. *Rejected:* a stop-search endpoint per keystroke (latency, quota, fails with TAGO); collapsing "202" and "202-1" or a route's directions into one choice. See `exec-plans/JEJU_PRODUCTION_V1.md`.
+
+## Official timetables are served only where the file agrees with itself (2026-10-03)
+
+**Decision:** parser v3 reads the BIS workbooks by format family and fails closed; a service whose summary disagrees with its trips, whose times run backwards, or whose sheets differ is `source_conflict` and never served. "Today" is claimed only where the table's own day label covers the date under the Korean holiday calendar; "휴일" never decides an ordinary Saturday; tables with no day type are shown as such. *Rejected:* correcting typos, interpolating between timepoints, treating holidays as Sundays without a label saying so.
+
 ## Native SwiftUI client
 
 **Decision:** SwiftUI + ActivityKit + WidgetKit. Dynamic Island is central and a wrapper framework adds no value.

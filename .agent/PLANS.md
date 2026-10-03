@@ -11,4 +11,4 @@ An ExecPlan is a living implementation document for work spanning multiple modul
 
 Update the plan during implementation. A future contributor must be able to resume from repository evidence alone. Never mark credentialed or device-only work complete without proof.
 
-Current plans: `docs/exec-plans/PRODUCT_V3_JEJU_NATIVE.md` (Product V3, the Jeju-native companion) and `docs/exec-plans/HUMAN_LABOR_ELIMINATION.md` (rider-free matcher evidence). `docs/exec-plans/SCREENSHOT_ROUTE_IMPORT.md` (screenshot route import V1). `docs/exec-plans/INITIAL_BUILD.md` is the original build plan.
+Current plans: `docs/exec-plans/JEJU_PRODUCTION_V1.md` (all-route Jeju production transit: catalog, timetables, real destination search, release gates), `docs/exec-plans/PRODUCT_V3_JEJU_NATIVE.md` (Product V3, the Jeju-native companion) and `docs/exec-plans/HUMAN_LABOR_ELIMINATION.md` (rider-free matcher evidence). `docs/exec-plans/SCREENSHOT_ROUTE_IMPORT.md` (screenshot route import V1). `docs/exec-plans/INITIAL_BUILD.md` is the original build plan.

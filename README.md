@@ -2,7 +2,7 @@
 
 TAPSO is an iPhone-first Jeju bus ride companion: choose a route and destination, identify the physical bus, close the app, and get a glanceable warning before the destination. The primary surface during a ride is a native ActivityKit Live Activity and Dynamic Island, not a map.
 
-This repository contains a production-shaped first vertical slice. Its deterministic demo runs the Swift core's remaining-stop and journey-state logic and the ActivityKit paths on synthetic fixtures. Vehicle matching is not shared with it: real journey sessions are matched on the server by the TypeScript `directed-route-progress-v1` policy, and the Swift `VehicleMatchingEngine` drives only the demo and is not authoritative (see [VEHICLE_MATCHING.md](docs/VEHICLE_MATCHING.md)).
+Riders search where they get off across every Jeju route TAGO names (the canonical catalog, searched on the phone), choose the exact variant, board on the server's current stop list, and confirm their bus; official BIS timetables are shown where a valid one exists. A synthetic demo remains in Debug builds only, for development and tests: it runs the Swift core's remaining-stop and journey-state logic and the ActivityKit paths on synthetic fixtures. Vehicle matching is not shared with it: real journey sessions are matched on the server by the TypeScript `directed-route-progress-v1` policy, and the Swift `VehicleMatchingEngine` drives only the demo and is not authoritative (see [VEHICLE_MATCHING.md](docs/VEHICLE_MATCHING.md)).
 
 Public product site: [tapso-nu.vercel.app](https://tapso-nu.vercel.app)
 
@@ -12,7 +12,10 @@ Public product site: [tapso-nu.vercel.app](https://tapso-nu.vercel.app)
 |---|---|---|
 | Swift transit core | `VERIFIED` | Swift tests (CI job `transit-core`) cover progress, freshness, journey transitions, debug evidence, and the demo-only `VehicleMatchingEngine` |
 | Native iOS app | `VERIFIED` | CI job `ios` builds the committed project (app + WidgetKit extension) and runs its tests on an iPhone simulator on every push |
-| Product V2 ride-companion UX | `IMPLEMENTED` on synthetic data | Destination-first setup, one-tap repeat rides, rider-confirmed vehicle check, distinct riding / two-stop / next-stop / arrival / passed layouts, calm delayed / lost / offline / checking states, relaunch recovery, paste intake from map apps, NAVER Map hand-off. One `RideGuidancePolicy` in the Swift core drives the app, Lock Screen and Dynamic Island. Simulator snapshot evidence in Korean and English from CI. See [docs/product](docs/product/) |
+| Jeju transit catalog | `IMPLEMENTED`; data from `.github/workflows/jeju-catalog.yml` | Every TAGO route variant for Jeju with ordered stops, versioned, served by `GET /v1/catalog`, searched on the phone (`DestinationSearchIndex`). Route-by-route readiness in `artifacts/route-coverage/jeju-production-readiness.md`. See [JEJU_PRODUCTION_V1.md](docs/exec-plans/JEJU_PRODUCTION_V1.md) |
+| Official timetables | `IMPLEMENTED`; `OFFICIAL_DATED` 2026-10-03 | All 235 BIS timetable entries classified (201 parsed, 30 source conflicts withheld, 4 none, 0 refused); `GET /v1/timetables` with a Korean holiday calendar; timetable card in the app. See [jeju-timetable-census.md](artifacts/timetables/jeju-timetable-census.md) |
+| Release gates | `IMPLEMENTED` | `scripts/release-gates/jeju-v1.ts` → `artifacts/release-gates/jeju-v1.md`; CI enforces data, search and data-quality gates |
+| Product V2 ride-companion UX | `IMPLEMENTED`; destination search on real data since JEJU_PRODUCTION_V1 | Destination-first setup, one-tap repeat rides, rider-confirmed vehicle check, distinct riding / two-stop / next-stop / arrival / passed layouts, calm delayed / lost / offline / checking states, relaunch recovery, paste intake from map apps, NAVER Map hand-off. One `RideGuidancePolicy` in the Swift core drives the app, Lock Screen and Dynamic Island. Simulator snapshot evidence in Korean and English from CI. See [docs/product](docs/product/) |
 | Live rides (beta) | `IMPLEMENTED`, `BLOCKED_BY_CREDENTIALS` in production | Route number → official variant → real stop list → server journey session → rider-confirmed bus → server progress, through one client (`TapsoAPIClient.swift`) to TAPSO's own API only; the server ranks in shadow mode and the rider selects. Tested against server-generated payloads and a stubbed transport. Production sessions answer `503 SESSIONS_UNAVAILABLE` until enabled, and the app says so. See [LIVE_JOURNEY_V3.md](docs/product/LIVE_JOURNEY_V3.md) |
 | Map hand-off V3 | `IMPLEMENTED`; share extension `UNVERIFIED` on a device | TAPSO in the share sheet of KakaoMap, NAVER Map and Apple Maps (plus paste): the place is read on the phone, never fetched or sent; stops near it are suggested on the rider's route; the walk after the bus goes to the place through NAVER Map, KakaoMap or Apple Maps. See [MAP_HANDOFF_V3.md](docs/product/MAP_HANDOFF_V3.md) |
 | Rescue: past your stop | `IMPLEMENTED` (demo and live); `UNVERIFIED` on a device | When the bus is placed beyond the destination, the ride screen names the next stop to get off at and, when stop coordinates are surveyed, the straight-line distance back (the walk itself is longer); the map app is always last; riding back is never offered without a verified opposite direction. See [JEJU_SAFETY_LAYER_V3.md](docs/product/JEJU_SAFETY_LAYER_V3.md) |
@@ -51,7 +54,7 @@ xcodebuild -project apps/ios/Tapso.xcodeproj -scheme Tapso \
   -destination 'platform=iOS Simulator,name=iPhone 17' build
 ```
 
-Open `apps/ios/Tapso.xcodeproj` and run the `Tapso` scheme. Search for where you get off (or tap **샘플 여정 체험하기**), confirm the proposed bus, then press Home to watch the Dynamic Island and lock the phone for the Lock Screen. The **체험 설정** sheet picks a synthetic scenario and playback speed. Everything the demo shows is synthetic and it makes no network request. **버스 번호로 타기** (실시간 · 베타) uses TAPSO's production API instead; until production journey sessions are enabled it stops at the vehicle check and says so.
+Open `apps/ios/Tapso.xcodeproj` and run the `Tapso` scheme. Search for where you get off: the app downloads the Jeju catalog from TAPSO's API once, then searches it on the phone. Choose the bus, the boarding stop and the bus itself, then press Home to watch the Dynamic Island and lock the phone for the Lock Screen. **버스 번호로 타기** starts from a route number instead. In a Debug build, **샘플 여정 체험하기** and the **체험 설정** sheet run the synthetic demo, which makes no network request; a Release build has neither.
 
 After adding or removing a Swift file under `apps/ios`, run `python3 scripts/ios/sync_xcodeproj.py` (or regenerate with XcodeGen) and `python3 scripts/ios/check_localization.py`.
 
@@ -75,6 +78,8 @@ GET  /v1/cities
 GET  /v1/routes?cityCode=…&routeNo=365
 GET  /v1/stops?routeId=…&cityCode=…
 GET  /v1/vehicles?routeId=…&cityCode=…
+GET  /v1/catalog                       (the Jeju transit catalog file; ETag)
+GET  /v1/timetables[?routeNo=365&date=…] (official timetables, dated, never live)
 POST /v1/matches
 POST /v1/sessions
 GET  /v1/sessions/:id

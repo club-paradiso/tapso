@@ -1252,8 +1252,8 @@ final class TapsoAppModel {
 
     // MARK: Live rides (TAPSO API)
 
-    /// Live setup starts from the route number: TAPSO's API has no stop search yet,
-    /// and inventing one from a stale list would send riders to the wrong stop.
+    /// Live setup from a route number. Destination-first setup runs on the catalog
+    /// (`chooseCatalogPlace`) and joins this flow at the variant's stop list.
     func openLiveSearch() {
         catalogDestination = nil
         screenshotDestination = nil
