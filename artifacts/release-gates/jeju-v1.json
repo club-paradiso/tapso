@@ -1,0 +1,72 @@
+{
+ "schemaVersion": "tapso-release-gates-v1",
+ "gates": [
+  {
+   "id": "GATE 1 — DATA",
+   "requirement": "Complete route catalog; timetable census complete with a deterministic status per entry",
+   "status": "PASS",
+   "evidence": [
+    "catalog 794f3bcb831d783e: 989 variants, 4338 stops, 3 without a stop list, built 2026-10-03T08:56:42.191Z",
+    "discovery: 266 queries",
+    "1 discovery queries failed (all_routes HTTP 504); the catalog's route IDs come from the queries that answered, so a route reachable only through a failed query would be missing",
+    "timetable census: 235 entries, {\"parsed\":201,\"source_conflict\":30,\"no_timetable\":4}"
+   ]
+  },
+  {
+   "id": "GATE 2 — SEARCH",
+   "requirement": "Production search uses the real catalog; no DemoCatalog in the Release journey path",
+   "status": "PASS",
+   "evidence": [
+    "source checks: catalog-first search; sample ride, demo chip, demo search and demo replay are Debug-only"
+   ]
+  },
+  {
+   "id": "GATE 3 — LIVE",
+   "requirement": "Representative route families pass the live compatibility audit",
+   "status": "PENDING_EVIDENCE",
+   "evidence": [
+    "no readiness report: run the catalog workflow with live: true"
+   ]
+  },
+  {
+   "id": "GATE 4 — TRACKING",
+   "requirement": "Hybrid tracking passes deterministic simulations; real-device validation threshold met",
+   "status": "BLOCKED",
+   "evidence": [
+    "27 deterministic hybrid scenarios in HybridPositionEngineTests (CI job transit-core)",
+    "no real-device ride evidence (artifacts/device-validation/hybrid-*)"
+   ],
+   "blocker": "BLOCKED_BY_PHYSICAL_DEVICE: a signed build on an iPhone and ridden routes",
+   "next": "Run the device protocol in JEJU_PRODUCTION_V1.md §11 with -tapsoHybridTracking on the representative route classes"
+  },
+  {
+   "id": "GATE 5 — BACKGROUND",
+   "requirement": "A suspended-app ride still receives progress (Live Activity push)",
+   "status": "BLOCKED",
+   "evidence": [
+    "APNs sender, token registration, scheduler and app token flow implemented (LIVE_ACTIVITY_PUSH.md milestones 1-5)",
+    "production /health reports liveActivityPush disabled; no device push evidence"
+   ],
+   "blocker": "BLOCKED_BY_APPLE_ACCOUNT and BLOCKED_BY_PHYSICAL_DEVICE: paid Apple team, Push Notifications capability, .p8 key in Vercel, a device",
+   "next": "Owner: APNS_* variables on tapso-api, aps-environment entitlement, then LIVE_ACTIVITY_PUSH.md milestone 6 on a device"
+  },
+  {
+   "id": "GATE 6 — DATA QUALITY",
+   "requirement": "Parser failures resolved or explicitly classified; no unknown layout silently accepted",
+   "status": "PASS",
+   "evidence": [
+    "0 refused (each with a family), 30 source conflicts (each with reasons)",
+    "fail-closed grammar tests in scripts/timetables/test_jeju_xlsx.py (unknown labels, near-time typos, values outside the table)"
+   ]
+  },
+  {
+   "id": "GATE 7 — RELEASE",
+   "requirement": "iOS, API, parser, integration and snapshot tests, lint/type/build, CI green",
+   "status": "PENDING_EVIDENCE",
+   "evidence": [
+    "decided by CI on the pull request head (.github/workflows/ci.yml), not by this script"
+   ],
+   "next": "Merge only on a green head"
+  }
+ ]
+}
