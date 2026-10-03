@@ -68,6 +68,7 @@
 		9D5E3B6CEF9138AE20C99988 /* VisionScreenshotTextRecognizer.swift in Sources */ = {isa = PBXBuildFile; fileRef = C91A93C001D9AF658DA966C6 /* VisionScreenshotTextRecognizer.swift */; };
 		22E0764272F0461035C8207B /* ScreenshotImportFlowTests.swift in Sources */ = {isa = PBXBuildFile; fileRef = 6DB796C0ED563974A2B95EA4 /* ScreenshotImportFlowTests.swift */; };
 		C698235F4923522CB7ED7EFA /* RideLocationSampler.swift in Sources */ = {isa = PBXBuildFile; fileRef = 813AFBE6918965418D110364 /* RideLocationSampler.swift */; };
+		363E0A0519C802CACA510480 /* VisionScreenshotTextRecognizer.swift in Sources */ = {isa = PBXBuildFile; fileRef = C91A93C001D9AF658DA966C6 /* VisionScreenshotTextRecognizer.swift */; };
 /* End PBXBuildFile section */
 
 /* Begin PBXContainerItemProxy section */
@@ -565,6 +566,7 @@
 				9B0B7C3D8D7B164B3D39EE9B /* ShareSheetView.swift in Sources */,
 				2D38E55EBC33EF8E1A5CD659 /* ShareViewController.swift in Sources */,
 				74BD126939816D3AFF1CC528 /* TapsoTokens.swift in Sources */,
+				363E0A0519C802CACA510480 /* VisionScreenshotTextRecognizer.swift in Sources */,
 			);
 			runOnlyForDeploymentPostprocessing = 0;
 		};

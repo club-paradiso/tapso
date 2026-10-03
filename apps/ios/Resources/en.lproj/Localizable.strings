@@ -375,3 +375,9 @@
 "ride.predicted.eyebrow" = "Estimated position";
 "ride.predicted.headline" = "Estimated position";
 "ride.predicted.detail" = "Estimated from the route stops";
+"share.screenshot.title" = "Read from your screenshot";
+"share.screenshot.detail" = "%@ · %ld possible stops";
+"share.screenshot.unavailable" = "This install can't hand it to the app directly. In TAPSO, use Import a route and choose the screenshot.";
+"share.screenshot.saved.body" = "Open TAPSO within 30 minutes and it checks this route.";
+"share.screenshot.nothing.title" = "Couldn't read a route";
+"share.screenshot.nothing.body" = "Share a screen from your map app that shows the bus number and stops.";

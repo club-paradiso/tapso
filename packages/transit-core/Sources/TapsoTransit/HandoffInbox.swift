@@ -11,10 +11,16 @@ import Foundation
 /// Minimal by design: only the parsed `SharedPlace` (never the raw shared
 /// text), one place at a time, read once and deleted, and ignored after
 /// `lifetime`.
+///
+/// A shared screenshot (`docs/product/SCREENSHOT_IMPORT_V1.md`) travels the same
+/// way, as a `ScreenshotReading`: the bus numbers and stop lines the extension read
+/// on the device, never the image. The inbox holds one thing: putting a reading
+/// replaces a waiting place and the other way round.
 public struct HandoffInbox {
     public static let appGroup = "group.com.lucanomics.tapso"
     public static let lifetime: TimeInterval = 30 * 60
     private static let key = "tapso.handoff.v1"
+    private static let readingKey = "tapso.handoff.screenshot.v1"
 
     private let defaults: UserDefaults
 
@@ -37,7 +43,27 @@ public struct HandoffInbox {
     /// Replaces whatever was waiting.
     public func put(_ place: SharedPlace, at date: Date) {
         guard let data = try? JSONEncoder().encode(Entry(place: place, savedAt: date)) else { return }
+        defaults.removeObject(forKey: Self.readingKey)
         defaults.set(data, forKey: Self.key)
+    }
+
+    /// Replaces whatever was waiting with what a shared screenshot said.
+    public func put(_ reading: ScreenshotReading, at date: Date) {
+        guard let data = try? JSONEncoder().encode(ReadingEntry(reading: reading, savedAt: date)) else { return }
+        defaults.removeObject(forKey: Self.key)
+        defaults.set(data, forKey: Self.readingKey)
+    }
+
+    /// The waiting screenshot reading, once. Same lifetime rules as `take(now:)`.
+    public func takeReading(now: Date) -> ScreenshotReading? {
+        defer { defaults.removeObject(forKey: Self.readingKey) }
+        guard
+            let data = defaults.data(forKey: Self.readingKey),
+            let entry = try? JSONDecoder().decode(ReadingEntry.self, from: data)
+        else { return nil }
+        let age = now.timeIntervalSince(entry.savedAt)
+        guard age >= -60, age <= Self.lifetime else { return nil }
+        return entry.reading
     }
 
     /// The waiting place, once. Anything older than `lifetime`, or dated in the future, is discarded.
@@ -50,6 +76,11 @@ public struct HandoffInbox {
         let age = now.timeIntervalSince(entry.savedAt)
         guard age >= -60, age <= Self.lifetime else { return nil }
         return entry.place
+    }
+
+    private struct ReadingEntry: Codable {
+        let reading: ScreenshotReading
+        let savedAt: Date
     }
 
     private struct Entry: Codable {

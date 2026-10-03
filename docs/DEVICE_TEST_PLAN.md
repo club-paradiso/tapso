@@ -60,6 +60,8 @@
 19. Pick a screenshot that is not a route (a chat, a photo), one with a bus TAPSO does not serve, and a blurry one: each says plainly what is wrong and offers another photo or "직접 찾기". Cancel the picker: the screen is unchanged. Airplane mode: "경로 정보를 불러오지 못했어요".
 20. VoiceOver reads the confirmation as one sentence (bus, from, to, stop count); Dynamic Type at the largest sizes does not clip the stop names; pasting a link and "직접 찾기" still work.
 
+21. In Photos, open a route screenshot › Share › TAPSO: the sheet shows the bus number and "정류장 후보 N곳", then "탑서에 남기기". Open TAPSO within 30 minutes: the import screen shows "이 경로 맞나요?" for that route; reopening does not show it again. Share a photo that is not a map: "경로를 읽지 못했어요" and nothing is kept. Share a large screenshot several times in a row: the extension does not get killed for memory.
+
 ## Rescue and way-back cases (`product/JEJU_SAFETY_LAYER_V3.md`, `LIVE_ACTIVITY_SPEC.md`)
 
 15. Live: stay on past the destination. When TAPSO says "목적지를 지났어요", note the stop it names and where the bus actually stops next; compare the straight-line metres with the walk NAVER Map gives; check that no ride back is offered and the map buttons open a walking route to the stop (or the shared place).

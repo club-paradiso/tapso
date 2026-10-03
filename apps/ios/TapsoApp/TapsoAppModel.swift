@@ -441,10 +441,13 @@ final class TapsoAppModel {
         sharedPlaceUnreadable = place == nil
     }
 
-    /// Picks up a place TAPSO's share extension left in the App Group, once.
+    /// Picks up a place, or a screenshot's reading, TAPSO's share extension left in the App Group, once.
     func collectHandoff(from inbox: HandoffInbox? = HandoffInbox.shared(), now: Date = Date()) {
-        guard let place = inbox?.take(now: now) else { return }
-        receiveSharedPlace(place)
+        if let place = inbox?.take(now: now) {
+            receiveSharedPlace(place)
+        } else if let reading = inbox?.takeReading(now: now) {
+            receiveScreenshotReading(reading)
+        }
     }
 
     /// A shared place opens the map-import screen from Home. During a ride, or in
@@ -467,6 +470,20 @@ final class TapsoAppModel {
     /// Reads a screenshot the rider picked: text on the device, then TAPSO's own routes for the bus
     /// numbers read. The picture is never stored or sent, and nothing starts until the rider confirms.
     func importScreenshot(_ imageData: Data) {
+        beginScreenshotImport { importer in await importer.importRoute(from: imageData) }
+    }
+
+    /// A screenshot shared to TAPSO from the Photos share sheet: the extension read it on the device and
+    /// left only its reading. It is checked against TAPSO's route data exactly like a picked one. The
+    /// import screen opens when nothing else is going on; during a ride the result waits there.
+    func receiveScreenshotReading(_ reading: ScreenshotReading) {
+        if activeRide == nil, outcome == nil, path.isEmpty || path.first == .mapImport {
+            path = [.mapImport]
+        }
+        beginScreenshotImport { importer in await importer.importRoute(from: reading) }
+    }
+
+    private func beginScreenshotImport(_ work: @escaping @Sendable (ScreenshotRouteImporter) async -> RouteImportResult) {
         screenshotTask?.cancel()
         sharedPlace = nil
         sharedPlaceUnreadable = false
@@ -475,7 +492,7 @@ final class TapsoAppModel {
         screenshotImport = .reading
         let importer = screenshotImporter
         screenshotTask = Task { [weak self] in
-            let result = await importer.importRoute(from: imageData)
+            let result = await work(importer)
             guard !Task.isCancelled else { return }
             self?.finishScreenshotImport(result)
         }

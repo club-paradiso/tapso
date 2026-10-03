@@ -375,3 +375,9 @@
 "ride.predicted.eyebrow" = "예상 위치";
 "ride.predicted.headline" = "예상 위치";
 "ride.predicted.detail" = "정류장 기준 예상 위치";
+"share.screenshot.title" = "스크린샷에서 읽었어요";
+"share.screenshot.detail" = "%@ · 정류장 후보 %ld곳";
+"share.screenshot.unavailable" = "이 설치본은 앱으로 바로 넘길 수 없어요. 탑서에서 ‘경로 가져오기’로 스크린샷을 직접 골라 주세요.";
+"share.screenshot.saved.body" = "30분 안에 탑서를 열면 이 경로를 확인해요.";
+"share.screenshot.nothing.title" = "경로를 읽지 못했어요";
+"share.screenshot.nothing.body" = "버스 번호와 정류장이 보이는 지도 앱 화면을 공유해 주세요.";

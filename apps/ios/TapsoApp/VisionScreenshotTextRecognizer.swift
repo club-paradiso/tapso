@@ -13,16 +13,20 @@ import Vision
 /// and `StopNameSimilarity` handles near-misses against TAPSO's real stop list.
 struct VisionScreenshotTextRecognizer: ScreenshotTextRecognizer {
     /// Longest side after downscaling. A full-screen iPhone screenshot is about 2,800 px; more only costs time.
-    static let maxPixelDimension = 3_000
+    static let defaultMaxPixelDimension = 3_000
     static let preferredLanguages = ["ko-KR", "en-US"]
 
+    /// The share extension lowers this: an extension has far less memory than the app.
+    var maxPixelDimension = VisionScreenshotTextRecognizer.defaultMaxPixelDimension
+
     func recognizeText(in imageData: Data) async throws -> RecognizedScreenshotText {
-        try await Task.detached(priority: .userInitiated) {
-            try Self.recognize(imageData)
+        let limit = maxPixelDimension
+        return try await Task.detached(priority: .userInitiated) {
+            try Self.recognize(imageData, maxPixelDimension: limit)
         }.value
     }
 
-    private static func recognize(_ imageData: Data) throws -> RecognizedScreenshotText {
+    private static func recognize(_ imageData: Data, maxPixelDimension: Int) throws -> RecognizedScreenshotText {
         guard let source = CGImageSourceCreateWithData(imageData as CFData, nil) else {
             throw ScreenshotRecognitionError.unreadableImage
         }
