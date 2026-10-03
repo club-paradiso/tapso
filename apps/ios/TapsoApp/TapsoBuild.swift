@@ -6,9 +6,14 @@ import Foundation
 enum TapsoBuild {
     #if DEBUG
     static let showsDemo = true
-    static let configuration = "DEBUG"
     #else
     static let showsDemo = false
+    #endif
+
+    /// The configuration the binary was built with, for the identity line below.
+    #if DEBUG
+    static let configuration = "DEBUG"
+    #else
     static let configuration = "RELEASE"
     #endif
 
