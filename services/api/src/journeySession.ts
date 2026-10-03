@@ -161,7 +161,10 @@ export function vehicleChoicePresentation(level: ReadinessLevel): VehicleChoiceP
 /** Enough for a busy variant; a longer list is a list nobody reads at a bus stop. */
 export const RIDER_VISIBLE_VEHICLE_LIMIT = 8;
 
+export type TrackingIntegrity = "route_conflict" | "direction_conflict" | "backward_conflict";
+
 export interface JourneySessionView {
+  trackingIntegrity?: TrackingIntegrity;
   id: string;
   routeId: string;
   cityCode: string;
@@ -914,10 +917,10 @@ export class JourneySessionCoordinator {
     const evidence = sourceFreshness ? { sourceFreshness } : {};
 
     if (observation.routeId !== record.routeId) {
-      return this.view(record, { ...evidence, state: "degraded", explanation: "Selected vehicle reported the wrong route; no rematch was attempted." });
+      return this.view(record, { ...evidence, state: "degraded", trackingIntegrity: "route_conflict", explanation: "Selected vehicle reported the wrong route; no rematch was attempted." });
     }
     if (record.directionCode && observation.directionCode && observation.directionCode !== record.directionCode) {
-      return this.view(record, { ...evidence, state: "degraded", explanation: "Selected vehicle direction conflicts with the ride plan; no rematch was attempted." });
+      return this.view(record, { ...evidence, state: "degraded", trackingIntegrity: "direction_conflict", explanation: "Selected vehicle direction conflicts with the ride plan; no rematch was attempted." });
     }
 
     let evidenceAtIs: EvidenceTimeKind;
@@ -979,6 +982,7 @@ export class JourneySessionCoordinator {
         ...evidence,
         state: "degraded",
         progress: retainedProgress(record.lastProgress),
+        trackingIntegrity: "backward_conflict",
         explanation: "Backward stop movement was ignored; last accepted progress retained.",
       });
     }
@@ -1078,6 +1082,7 @@ export class JourneySessionCoordinator {
     record: SessionRecord,
     state: {
       state: JourneySessionState;
+      trackingIntegrity?: TrackingIntegrity;
       explanation: string;
       progress?: JourneyProgressView;
       candidates?: RankedCandidate[];
@@ -1099,6 +1104,7 @@ export class JourneySessionCoordinator {
       selectionMode: record.selectionMode,
       matchConfidence: record.matchConfidence,
       state: state.state,
+      ...(state.trackingIntegrity ? { trackingIntegrity: state.trackingIntegrity } : {}),
       progress: state.progress,
       candidates: state.candidates,
       ...(state.vehicleChoice ? { vehicleChoice: state.vehicleChoice } : {}),

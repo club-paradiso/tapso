@@ -97,19 +97,22 @@ public struct RideSignal: Codable, Hashable, Sendable {
     public let freshness: DataFreshness
     public let destinationPassed: Bool
     public let isOffline: Bool
+    public let isEstimated: Bool?
 
     public init(
         phase: JourneyState,
         remainingStops: Int,
         freshness: DataFreshness,
         destinationPassed: Bool = false,
-        isOffline: Bool = false
+        isOffline: Bool = false,
+        isEstimated: Bool = false
     ) {
         self.phase = phase
         self.remainingStops = remainingStops
         self.freshness = freshness
         self.destinationPassed = destinationPassed
         self.isOffline = isOffline
+        self.isEstimated = isEstimated
     }
 }
 
@@ -170,6 +173,9 @@ public enum RideGuidancePolicy {
             return .ended
         }
         guard signal.remainingStops >= 0 else { return .checking }
+        if signal.isEstimated == true {
+            return signal.freshness == .fresh && signal.remainingStops > 2 ? .riding : .checking
+        }
         if signal.isOffline {
             return .offline
         }
@@ -216,7 +222,9 @@ public enum RideGuidancePolicy {
             colorRole: colorRole(for: moment),
             symbolName: symbolName(for: moment),
             recovery: recovery(for: moment),
-            copy: copy(for: moment),
+            copy: signal.isEstimated == true && moment == .riding
+                ? RideCopy(headline: "ride.predicted.headline", detail: "ride.predicted.detail", compact: nil, eyebrow: "ride.predicted.eyebrow")
+                : copy(for: moment),
             relevanceScore: relevanceScore(for: moment),
             count: countPresentation(for: moment)
         )

@@ -63,6 +63,7 @@
 		A4BC18B0C6700F5DEE8A832F /* TapsoReturnAttributes.swift in Sources */ = {isa = PBXBuildFile; fileRef = DB410939543F5C21ABBF6A70 /* TapsoReturnAttributes.swift */; };
 		650AC169EC77845B280C25D9 /* TapsoReturnAttributes.swift in Sources */ = {isa = PBXBuildFile; fileRef = DB410939543F5C21ABBF6A70 /* TapsoReturnAttributes.swift */; };
 		5839FD3A610C398D8FFF2F14 /* TapsoReturnActivityWidget.swift in Sources */ = {isa = PBXBuildFile; fileRef = 2B52DB562472A43D4D48F471 /* TapsoReturnActivityWidget.swift */; };
+		C698235F4923522CB7ED7EFA /* RideLocationSampler.swift in Sources */ = {isa = PBXBuildFile; fileRef = 813AFBE6918965418D110364 /* RideLocationSampler.swift */; };
 /* End PBXBuildFile section */
 
 /* Begin PBXContainerItemProxy section */
@@ -152,6 +153,7 @@
 		D102FEDCF3DA956AE2EC37A9 /* ReturnActivitySurfaces.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = ReturnActivitySurfaces.swift; sourceTree = "<group>"; };
 		DB410939543F5C21ABBF6A70 /* TapsoReturnAttributes.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = TapsoReturnAttributes.swift; sourceTree = "<group>"; };
 		2B52DB562472A43D4D48F471 /* TapsoReturnActivityWidget.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = TapsoReturnActivityWidget.swift; sourceTree = "<group>"; };
+		813AFBE6918965418D110364 /* RideLocationSampler.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = RideLocationSampler.swift; sourceTree = "<group>"; };
 /* End PBXFileReference section */
 
 /* Begin PBXFrameworksBuildPhase section */
@@ -263,6 +265,7 @@
 				01DE7451FA463336C39A13CA /* LiveRideSetupViews.swift */,
 				1BA1E189F8D5241F18ABD214 /* RideEndView.swift */,
 				857A4229A2F4867FB62DD336 /* RideFeedback.swift */,
+				813AFBE6918965418D110364 /* RideLocationSampler.swift */,
 				B71E19ABC4E943435650D65F /* RideView.swift */,
 				004C91C027949523F56247EA /* SetupViews.swift */,
 				6BBD1C360D871CE9BD6C1F6E /* Tapso.entitlements */,
@@ -493,6 +496,7 @@
 				9E47BA264E7738D256848D31 /* ReturnActivitySurfaces.swift in Sources */,
 				E90C569F723A43A0F30ED146 /* RideEndView.swift in Sources */,
 				3D1562DEB72025EBE17ABDCD /* RideFeedback.swift in Sources */,
+				C698235F4923522CB7ED7EFA /* RideLocationSampler.swift in Sources */,
 				BB8FAE7699DAE3EAEA47D888 /* RideSurfaceComponents.swift in Sources */,
 				FC181FC49F83051C0EF18002 /* RideView.swift in Sources */,
 				8CA644A203D52AA38D49E70F /* SetupViews.swift in Sources */,

@@ -225,6 +225,7 @@ test("never silently switches vehicles and retains monotonic stop progress", asy
   const regressed = await sessions.refresh(initial.id);
   assert.equal(regressed.selectedVehicleId, "BUS-A");
   assert.equal(regressed.state, "degraded");
+  assert.equal(regressed.trackingIntegrity, "backward_conflict", "device fusion must not mask a contradictory observation");
   assert.equal(regressed.progress?.currentStopSequence, 3);
   assert.equal(regressed.progress?.source, "retained_last_known");
 });

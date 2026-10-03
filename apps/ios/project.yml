@@ -36,6 +36,7 @@ targets:
         ITSAppUsesNonExemptEncryption: false
         LSRequiresIPhoneOS: true
         NSSupportsLiveActivities: true
+        NSLocationWhenInUseUsageDescription: 승차 중 버스 위치를 보완하고 내릴 정류장을 확인하는 데 사용합니다.
         UIApplicationSceneManifest:
           UIApplicationSupportsMultipleScenes: false
         UILaunchScreen: {}

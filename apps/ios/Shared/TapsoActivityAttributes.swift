@@ -14,6 +14,8 @@ public struct TapsoActivityAttributes: ActivityAttributes, Sendable {
         public let destinationPassed: Bool?
         /// The phone has no connection. Optional so older payloads still decode.
         public let isOffline: Bool?
+        public let isEstimated: Bool?
+        public let trackingValidUntil: Date?
 
         public init(
             phase: JourneyState,
@@ -23,7 +25,9 @@ public struct TapsoActivityAttributes: ActivityAttributes, Sendable {
             freshness: DataFreshness,
             updatedAt: Date,
             destinationPassed: Bool = false,
-            isOffline: Bool = false
+            isOffline: Bool = false,
+            isEstimated: Bool = false,
+            trackingValidUntil: Date? = nil
         ) {
             self.phase = phase
             self.currentStopName = currentStopName
@@ -33,6 +37,8 @@ public struct TapsoActivityAttributes: ActivityAttributes, Sendable {
             self.updatedAt = updatedAt
             self.destinationPassed = destinationPassed
             self.isOffline = isOffline
+            self.isEstimated = isEstimated
+            self.trackingValidUntil = trackingValidUntil
         }
 
         /// The same facts every other surface reads.
@@ -42,7 +48,8 @@ public struct TapsoActivityAttributes: ActivityAttributes, Sendable {
                 remainingStops: remainingStops,
                 freshness: freshness,
                 destinationPassed: destinationPassed ?? false,
-                isOffline: isOffline ?? false
+                isOffline: isOffline ?? false,
+                isEstimated: isEstimated ?? false
             )
         }
 

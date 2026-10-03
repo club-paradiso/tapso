@@ -337,3 +337,10 @@
 "returnTrip.activity.late.title" = "Time to be at the stop has passed";
 "returnTrip.activity.late.body" = "The last bus leaves its first stop at %@. Look for another way in a map app.";
 "returnTrip.activity.late.short" = "Passed";
+
+// Hybrid ride tracking
+"ride.refresh" = "Check location again";
+"ride.refreshing" = "Checking location…";
+"ride.predicted.eyebrow" = "Estimated position";
+"ride.predicted.headline" = "Estimated position";
+"ride.predicted.detail" = "Estimated from the route stops";

@@ -75,9 +75,7 @@ struct LockScreenRideView: View {
                     .lineLimit(1)
                     .truncationMode(.middle)
                 Spacer(minLength: 4)
-                if guidance.data != .live {
-                    TrustBadge(kind: .data(guidance.data), onDark: true)
-                } else if moment == .riding {
+                if moment == .riding {
                     DolBuddy(moment: moment, size: 22)
                 }
             }
@@ -379,6 +377,9 @@ func guidanceAccountingForStaleness(
     _ state: TapsoActivityAttributes.ContentState,
     isStale: Bool
 ) -> RideGuidance {
+    if let expiry = state.trackingValidUntil, Date() > expiry {
+        return RideGuidancePolicy.guidance(for: RideSignal(phase: .vehicleRecovery, remainingStops: -1, freshness: .unknown))
+    }
     guard isStale, state.freshness == .fresh else { return state.guidance }
     let signal = state.signal
     return RideGuidancePolicy.guidance(for: RideSignal(
@@ -386,7 +387,8 @@ func guidanceAccountingForStaleness(
         remainingStops: signal.remainingStops,
         freshness: .stale,
         destinationPassed: signal.destinationPassed,
-        isOffline: signal.isOffline
+        isOffline: signal.isOffline,
+        isEstimated: signal.isEstimated ?? false
     ))
 }
 

@@ -157,6 +157,8 @@ struct ActiveRide: Codable, Hashable {
     /// Present for a live ride; `nil` for the demo.
     var live: LiveRideState?
 
+    var hybridPosition: HybridRidePosition?
+
     var isLive: Bool { live != nil }
 
     /// When the ride's data last reached the app, in real time.
@@ -182,6 +184,7 @@ struct ActiveRide: Codable, Hashable {
         if session.state == .completed || session.state == .cancelled {
             return RideSignal(phase: session.state, remainingStops: 0, freshness: .fresh)
         }
+        if !live.endedByServer, let hybridPosition { return hybridPosition.signal(at: Date()) }
         // Silence since the server last answered can only make the data older, never fresher.
         let server = live.signal
         return RideSignal(
@@ -295,6 +298,18 @@ final class TapsoAppModel {
     @ObservationIgnored private var lastMoment: RideMoment?
     /// The live session being set up, before a bus is confirmed.
     @ObservationIgnored private var liveSetupSession: JourneySessionSnapshot?
+    // Opt-in until real-device validation; no debug surfaces in release builds.
+    let hybridTrackingEnabled = ProcessInfo.processInfo.arguments.contains("-tapsoHybridTracking")
+    private(set) var isRecheckingPosition = false
+    private(set) var hybridDiagnosticLines: [String] = []
+    @ObservationIgnored private let locationSampler = RideLocationSampler()
+    @ObservationIgnored private var hybridEngine: HybridPositionEngine?
+    @ObservationIgnored private var hybridSessionID: String?
+    @ObservationIgnored private var lastManualRefresh: Date?
+    @ObservationIgnored private var readInFlight = false
+    @ObservationIgnored private var rideInForeground = true
+    @ObservationIgnored private var retainedDeviceSample: DevicePositionSample?
+    @ObservationIgnored private var hybridPermissionRequested = false
 
     /// Seconds between session reads while the rider waits at the stop and while riding.
     /// Each read costs one bus-feed request on the server.
@@ -319,6 +334,7 @@ final class TapsoAppModel {
             if age != .fresh {
                 saved.freshnessOverride = age
             }
+            saved.hybridPosition = nil
             activeRide = saved
             resumedAfterRelaunch = true
             lastMoment = saved.guidance.moment
@@ -340,7 +356,7 @@ final class TapsoAppModel {
 
     var currentStopName: String {
         if let ride = activeRide, ride.isLive {
-            let sequence = ride.live?.currentStopSequence
+            let sequence = ride.hybridPosition?.currentStopSequence ?? ride.live?.currentStopSequence
             return sequence.flatMap { ride.draft.route?.routeStop(sequence: $0)?.stop.name } ?? ride.draft.boarding?.name ?? ""
         }
         return activeRide?.session.latestProgress?.currentStop.stop.name ?? activeRide?.draft.boarding?.name ?? ""
@@ -357,7 +373,7 @@ final class TapsoAppModel {
             let route = ride.draft.route,
             let destination = ride.draft.destinationRouteStop?.sequence
         else { return [] }
-        let current = ride.live?.currentStopSequence
+        let current = ride.hybridPosition?.currentStopSequence ?? ride.live?.currentStopSequence
             ?? ride.session.latestProgress?.currentStop.sequence
             ?? ride.draft.boardingRouteStop?.sequence
             ?? destination
@@ -657,6 +673,11 @@ final class TapsoAppModel {
             await liveActivity?.endAll()
             return
         }
+        if hybridTrackingEnabled, isLiveRide {
+            // A restored old activity may have an APNs token. End it before local authority begins.
+            await liveActivity?.endAll()
+            await reconcileRidePosition(manual: false)
+        }
         if let state = contentState() {
             if liveActivity?.activityID == nil {
                 await startLiveActivity()
@@ -673,6 +694,7 @@ final class TapsoAppModel {
     }
 
     func finishRide() async {
+        resetHybridTracking()
         playbackTask?.cancel()
         pushTokenTask?.cancel()
         guard var ride = activeRide, let destination = ride.draft.destination else { return }
@@ -698,6 +720,7 @@ final class TapsoAppModel {
     }
 
     func cancelRide() async {
+        resetHybridTracking()
         playbackTask?.cancel()
         pushTokenTask?.cancel()
         guard var ride = activeRide else { return }
@@ -1145,6 +1168,7 @@ final class TapsoAppModel {
         if draft.finalPlace != nil { sharedPlace = nil }
         path = []
 
+        if hybridTrackingEnabled { await reconcileRidePosition(manual: false) }
         await startLiveActivity()
         guard activeRide != nil else {
             await liveActivity?.endAll()
@@ -1161,9 +1185,105 @@ final class TapsoAppModel {
             while !Task.isCancelled {
                 try? await Task.sleep(for: Self.liveRideInterval)
                 guard !Task.isCancelled, let self else { return }
-                guard await self.refreshLiveRide(sessionID: sessionID) else { return }
+                guard self.rideInForeground else { continue }
+                if self.hybridTrackingEnabled {
+                    await self.reconcileRidePosition(manual: false)
+                    if self.activeRide?.live?.endedByServer != false { return }
+                } else {
+                    guard await self.refreshLiveRide(sessionID: sessionID) else { return }
+                }
             }
         }
+    }
+
+    func rideSceneChanged(isActive: Bool) async {
+        rideInForeground = isActive
+        guard hybridTrackingEnabled, isLiveRide else { return }
+        if isActive {
+            await reconcileRidePosition(manual: false)
+        } else {
+            locationSampler.stop()
+            retainedDeviceSample = nil
+        }
+    }
+
+    func recheckRidePosition() async {
+        guard !isRecheckingPosition, !readInFlight, let live = activeRide?.live, !live.endedByServer else { return }
+        let now = Date()
+        guard lastManualRefresh.map({ now.timeIntervalSince($0) >= 10 }) ?? true else { return }
+        lastManualRefresh = now
+        isRecheckingPosition = true
+        defer { isRecheckingPosition = false }
+        UIImpactFeedbackGenerator(style: .light).impactOccurred()
+        if hybridTrackingEnabled {
+            await reconcileRidePosition(manual: true)
+        } else {
+            _ = await refreshLiveRide(sessionID: live.sessionID)
+        }
+    }
+
+    private func resetHybridTracking() {
+        locationSampler.stop()
+        hybridEngine = nil
+        hybridSessionID = nil
+        retainedDeviceSample = nil
+        hybridDiagnosticLines = []
+        hybridPermissionRequested = false
+    }
+
+    private func reconcileRidePosition(manual: Bool) async {
+        guard !readInFlight, rideInForeground, let ride = activeRide, let live = ride.live,
+              !live.endedByServer, let route = ride.draft.route,
+              let destination = ride.draft.destinationRouteStop?.sequence else { return }
+        readInFlight = true
+        defer { readInFlight = false }
+        let sessionID = live.sessionID
+        if hybridSessionID != sessionID {
+            hybridEngine = HybridPositionEngine(vehicleID: live.vehicleID, route: route,
+                destinationSequence: destination, surveyed: ride.draft.coordinatesAreSurveyed == true)
+            hybridSessionID = sessionID
+            retainedDeviceSample = nil
+        }
+        let urgent = manual || ride.signal.remainingStops <= 3 || ride.hybridPosition?.state != .live
+        let requestPermission = !hybridPermissionRequested
+        hybridPermissionRequested = true
+        async let sample = locationSampler.sample(urgent: urgent, requestPermission: requestPermission)
+        var snapshot: JourneySessionSnapshot?
+        var failure: TransitAPIFailure?
+        do { snapshot = try await api.session(id: sessionID) }
+        catch is CancellationError { return }
+        catch { failure = Self.failure(error) }
+        let freshDevice = await sample
+        guard var current = activeRide, current.live?.sessionID == sessionID else { return }
+        if let freshDevice { retainedDeviceSample = freshDevice }
+        if let failure, !failure.isTransient { current.live?.endedByServer = true }
+        if let snapshot {
+            current.live?.signal = LiveSessionInterpreter.rideSignal(for: snapshot)
+            if let sequence = snapshot.progress?.currentStopSequence { current.live?.currentStopSequence = sequence }
+        }
+        let evidenceAt = snapshot?.progress?.evidenceAt.flatMap { ISO8601DateFormatter.tapsoEvidence.date(from: $0) }
+        let usableOfficial = snapshot?.progress?.source != "retained_last_known" ? snapshot.map { LiveSessionInterpreter.rideSignal(for: $0) } : nil
+        let result = hybridEngine?.evaluate(official: usableOfficial, sequence: snapshot?.progress?.currentStopSequence,
+            evidenceAt: evidenceAt, selectedVehicleID: snapshot?.trackingIntegrity != nil ? nil : (snapshot == nil ? live.vehicleID : snapshot?.selectedVehicleId),
+            device: retainedDeviceSample, now: Date())
+        current.hybridPosition = result
+        current.isOffline = false // Connectivity alone is not passenger reliability.
+        current.freshnessOverride = nil
+        current.lastObservedAt = result?.evaluatedAt
+        activeRide = current
+        liveFailure = current.live?.endedByServer == true ? failure : nil
+        #if DEBUG
+        if let result {
+            let deviceAge = retainedDeviceSample.map { Int(Date().timeIntervalSince($0.timestamp) / 5) * 5 } ?? -1
+            let accuracy = retainedDeviceSample.map { Int($0.accuracy / 10) * 10 } ?? -1
+            let officialAge = evidenceAt.map { Int(Date().timeIntervalSince($0) / 5) * 5 } ?? -1
+            let line = "\(Int(result.evaluatedAt.timeIntervalSince1970)) state=\(result.state.rawValue) confidence=\(Int(result.confidence * 100)) reason=\(result.reason) route100m=\(result.routeDistanceBucket ?? -1) stop=\(result.currentStopSequence ?? -1) remaining=\(result.remainingStops) officialAge5s=\(officialAge) gpsAge5s=\(deviceAge) accuracy10m=\(accuracy) legacy=\(current.live?.signal.freshness.rawValue ?? "unknown")"
+            hybridDiagnosticLines.append(line)
+            if hybridDiagnosticLines.count > 200 { hybridDiagnosticLines.removeFirst(hybridDiagnosticLines.count - 200) }
+        }
+        #endif
+        store.saveActiveRide(activeRide)
+        await rideDidChange()
     }
 
     /// One session read during the ride. False when polling should stop.
@@ -1310,7 +1430,7 @@ final class TapsoAppModel {
             vehiclePlate: ride.plate
         )
         // Only a live ride has a server session to push to; a demo ride never asks for a token.
-        let push = ride.live != nil ? await api.liveActivityPushEnabled() : false
+        let push = ride.live != nil && !hybridTrackingEnabled ? await api.liveActivityPushEnabled() : false
         do {
             try await liveActivity.start(attributes: attributes, state: state, push: push)
             liveActivityUnavailable = false
@@ -1326,7 +1446,7 @@ final class TapsoAppModel {
     /// updating from the app, as it does without push.
     private func registerPushTokens() {
         pushTokenTask?.cancel()
-        guard let sessionID = activeRide?.live?.sessionID, let tokens = liveActivity?.pushTokens() else { return }
+        guard !hybridTrackingEnabled, let sessionID = activeRide?.live?.sessionID, let tokens = liveActivity?.pushTokens() else { return }
         let api = self.api
         pushTokenTask = Task {
             for await token in tokens {
@@ -1351,7 +1471,9 @@ final class TapsoAppModel {
             freshness: signal.freshness,
             updatedAt: ride.lastUpdateAt,
             destinationPassed: signal.destinationPassed,
-            isOffline: signal.isOffline
+            isOffline: signal.isOffline,
+            isEstimated: signal.isEstimated ?? false,
+            trackingValidUntil: ride.hybridPosition?.validUntil
         )
     }
 }
@@ -1378,4 +1500,12 @@ struct LiveRouteStops: Equatable {
     let coordinatesAreSurveyed: Bool
     /// `linear`, `loop` or `repeating` (`classifyTopology` on the server).
     let topology: String
+}
+
+private extension ISO8601DateFormatter {
+    static var tapsoEvidence: ISO8601DateFormatter {
+        let formatter = ISO8601DateFormatter()
+        formatter.formatOptions = [.withInternetDateTime, .withFractionalSeconds]
+        return formatter
+    }
 }
