@@ -243,8 +243,9 @@ struct DestinationRecap: View {
     }
 }
 
-/// Start from a place shared by a map app: pasted here, or sent from the share
-/// sheet by TAPSO's share extension. Read on the device; nothing is fetched or sent.
+/// Start from a map app's route: a screenshot of it, a place shared from the share
+/// sheet by TAPSO's share extension, or text pasted here. Read on the device; no
+/// picture or shared link is fetched or sent.
 /// Figma: `03 iOS — GO` › `V2 / 06 Map-app handoff intake` (`157:379`) and `V3 / 20–22`
 /// (`193:2961`, `193:2990`, `193:3019`).
 struct MapImportView: View {
@@ -257,6 +258,7 @@ struct MapImportView: View {
                 place: model.sharedPlace,
                 unreadable: model.sharedPlaceUnreadable,
                 demoMatches: model.sharedPlace.map { model.stopNames(inSharedText: $0.searchText) } ?? [],
+                screenshot: AnyView(ScreenshotImportSection(model: model)),
                 paste: AnyView(
                     PasteButton(payloadType: String.self) { strings in
                         pasted = strings.joined(separator: "\n")
@@ -288,6 +290,8 @@ struct MapImportContent: View {
     var unreadable = false
     /// Synthetic demo destinations named in the shared place, for the sample ride.
     var demoMatches: [String] = []
+    /// The screenshot entry (`ScreenshotImportSection`): the primary way in.
+    var screenshot: AnyView = AnyView(EmptyView())
     let paste: AnyView
     var onLive: () -> Void = {}
     let onChooseDemo: (String) -> Void
@@ -301,12 +305,18 @@ struct MapImportContent: View {
                 SharedPlaceCard(place: place, onClear: onClear)
                 actions(for: place)
             } else {
+                screenshot
                 VStack(alignment: .leading, spacing: TapsoSpace.sm) {
-                    step(1, "mapImport.step1")
-                    step(2, "mapImport.step2")
-                    step(3, "mapImport.step3")
+                    SectionTitle("mapImport.other")
+                    Text("mapImport.other.hint")
+                        .font(.footnote)
+                        .foregroundStyle(TapsoColor.textSecondary)
+                        .fixedSize(horizontal: false, vertical: true)
+                    paste
+                    Button("mapImport.search", action: onSearch)
+                        .buttonStyle(SecondaryButtonStyle())
+                        .accessibilityIdentifier("map-import-search")
                 }
-                paste
                 if unreadable {
                     NoticeCard(
                         systemImage: "link",
@@ -376,21 +386,6 @@ struct MapImportContent: View {
                 }
             }
         }
-    }
-
-    private func step(_ number: Int, _ key: LocalizedStringKey) -> some View {
-        HStack(alignment: .firstTextBaseline, spacing: TapsoSpace.sm) {
-            Text(number, format: .number)
-                .font(.footnote.weight(.black))
-                .foregroundStyle(TapsoColor.textOnAccent)
-                .frame(width: 22, height: 22)
-                .background(TapsoColor.journeyActive, in: Circle())
-            Text(key)
-                .font(.subheadline)
-                .foregroundStyle(TapsoColor.textPrimary)
-                .fixedSize(horizontal: false, vertical: true)
-        }
-        .accessibilityElement(children: .combine)
     }
 }
 

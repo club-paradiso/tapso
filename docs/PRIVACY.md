@@ -14,6 +14,12 @@ TAPSO's default architecture tracks a public transit vehicle, not continuous pas
   keeps it afterwards only with the active ride on the device. The clipboard is
   read only when the rider taps Paste, and written only when they tap Copy in
   the share sheet (`product/MAP_HANDOFF_V3.md`).
+- A screenshot picked in TAPSO's route import is read on the phone with Apple's
+  Vision framework and dropped: it is never saved or uploaded, and its text is
+  never sent. Choosing it uses the system photo picker, which gives TAPSO only
+  that photo and no access to the library. To check the route, TAPSO's API
+  receives the bus number(s) read from it, like a rider typing the number
+  (`product/SCREENSHOT_IMPORT_V1.md`).
 - The marketing site collects an email address, a coarse rider type, and a
   consent record, only after an explicit unchecked consent box is ticked. It
   stores no name, phone number, address, demographics, location, or IP address,
