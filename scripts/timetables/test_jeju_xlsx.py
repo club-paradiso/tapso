@@ -150,6 +150,17 @@ class Refusals(unittest.TestCase):
     def test_a_title_without_a_day_type(self) -> None:
         self.assertEqual(self.parse(synthetic_sheet(title="999번"))["services"][0]["dayType"], "unstated")
 
+    def test_a_known_conflict_is_accepted_only_for_its_route_sheet_and_times(self) -> None:
+        sheet = synthetic_sheet(title="442번", summary="첫차(제주여고 출발) 05:50", rows=[["05:55", "06:00", ""]])
+        with tempfile.TemporaryDirectory() as directory:
+            path = workbook(Path(directory) / "synthetic.xlsx", {"442 순환(별빛누리-연북로-용담-시청-별빛누리)": sheet})
+            self.assertEqual(jeju_xlsx.parse_file(path, "2026-10-03")["services"][0]["summaryConflicts"], ["summary 첫차 05:50 disagrees with the trips (05:55)"])
+            other = workbook(Path(directory) / "other.xlsx", {"442 다른 시트": sheet})
+            with self.assertRaises(jeju_xlsx.TimetableParseError):
+                jeju_xlsx.parse_file(other, "2026-10-03")
+        moved = synthetic_sheet(title="442번", summary="첫차 05:50", rows=[["05:56", "06:00", ""]])
+        self.assertRefused("05:50 disagrees with the trips (05:56)", moved)
+
     def test_a_missing_trip_number(self) -> None:
         sheet = synthetic_sheet()
         sheet["B9"] = "3"
