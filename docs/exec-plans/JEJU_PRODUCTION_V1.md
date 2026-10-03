@@ -61,7 +61,7 @@ iPhone: catalog cached in Application Support → DestinationSearchIndex (local,
 | I | Holiday/service-day engine | `DONE` | `serviceDay.ts`, 8 dated cases incl. substitute holiday and out-of-calendar |
 | J | Runtime timetable API | `DONE` in code; production after merge | `GET /v1/timetables`, `staticData.test.ts` |
 | K | iOS timetable experience | `DONE` in code; `UNVERIFIED` on a device | `TimetableCard`, `TimetableSheet`, `OfficialTimetableTests` |
-| L, X | All-route live compatibility audit | `DONE` in code; data `PENDING` the probe | `routeReadiness.ts`, `jeju-production-readiness.{json,md}` |
+| L, X | All-route live compatibility audit | `DONE`: all 989 variants probed (2026-10-03 09:32 UTC, 18:32 KST Saturday); gate 3 `PENDING_EVIDENCE` because no 순환버스 bus reported at that moment | `routeReadiness.ts`, `jeju-production-readiness.{json,md}`, §6 |
 | M | Hybrid engine productionization | `UNCHANGED`: stays behind `-tapsoHybridTracking` until device evidence (gate 4) | `HYBRID_POSITION.md` |
 | N | Route geometry | `NOT AVAILABLE`: no official road shape; stop coordinates only, reported per variant | readiness report |
 | O | Historical segment timing | Foundation only (`SegmentTimingEstimate`, ≥5 samples); no ingestion | `HybridPositionEngine.swift` |
@@ -107,6 +107,12 @@ Catalog `794f3bcb831d783e`: **989 route variants with ordered stops, 4,338 stops
 - **Virtual stops.** 156 variants include a 가상정류소 (provider-defined, not a kerbside stop); they are kept as listed and flagged.
 - **Timetable coverage by number.** 247 of the 252 catalog numbers have a published BIS entry: 227 served, 18 source conflicts, 2 without a timetable; 5 have none (202-3, 358-2, 777, 888-8, 999). 9 published numbers are not in TAGO at all (369, 590, 888, 921, 922, 924, 1100, 1100-1, 1950): timetable only, no live tracking.
 - **Discovery.** 266 queries: the unfiltered list failed (HTTP 504), 9 digit searches and 256 census numbers answered; 8 census numbers matched no TAGO route.
+
+### Live probe (2026-10-03 09:32 UTC = 18:32 KST, a Saturday)
+
+Every one of the 989 variants' vehicle endpoints answered HTTP 200. Buses were reporting on 245 variants (422 buses); 421 carried a stop sequence inside their route, and one bus on 431 (`JEB405243101`, a loop) carried none, so that variant is `UNSUPPORTED` until it is probed clean. Readiness (992 entries, with the 3 unavailable): **170 SUPPORTED, 818 SUPPORTED_WITH_WARNING, 4 UNSUPPORTED, 0 UNKNOWN.** The warnings are: no bus at probe time so the stop-sequence check could not run (744; for 580 variants the only reason), virtual stops (156), same-stop twins (64), stops revisited (42).
+
+By TAGO route type, variants rideable / checked with a reporting bus / total: 간선 401/141/402, 급행 280/67/280, 지선 261/35/261, 순환 32/0/32, unlabelled 14/1/14. By shape, every linear (227) and revisiting (12) variant with a reporting bus passed; loops 5 of 6. A probe is one moment: 순환버스 had no bus reporting at 18:32 on a Saturday, so gate 3 waits on a probe while they run.
 
 ## 7. Decisions
 
@@ -161,4 +167,5 @@ Evidence goes to `artifacts/device-validation/` as `hybrid-<route>-<date>.json` 
 
 - 2026-10-03: audit (§2); catalog pipeline and workflow pushed; first catalog run started (run 37106503237).
 - 2026-10-03: first catalog run built `794f3bcb831d783e` in 43 minutes, then the old single-step workflow's 60-minute limit cut it during the probe and nothing was committed; the split workflow (run 37109317794) committed the same version. 32 same-stop twins found in it and numbered in the app (§6, catalog).
+- 2026-10-03: live probe of all 989 variants committed by run 37109317794; readiness rerun with the twin rule; gate 3 now requires a checked bus per route family (it had counted unchecked variants), so it reads `PENDING_EVIDENCE` on 순환버스.
 - 2026-10-03: parser v3 and census (§6); runtime timetable API and holiday calendar; Swift search index and timetable reading (232 Swift tests on Linux and macOS CI); iOS search, timetable card and Release demo gating; readiness audit and release gates.

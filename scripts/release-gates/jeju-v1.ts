@@ -103,6 +103,7 @@ const gates: Gate[] = [];
 {
   const evidence: string[] = [];
   let status: Status;
+  let next: string | undefined;
   const reportPath = "artifacts/route-coverage/jeju-production-readiness.json";
   if (!existsSync(file(reportPath))) {
     status = "PENDING_EVIDENCE";
@@ -115,23 +116,34 @@ const gates: Gate[] = [];
       status = "PENDING_EVIDENCE";
       evidence.push("the report does not cover the committed catalog with a live probe");
     } else {
-      // Representative families: TAGO's own route type for each variant.
-      const families = new Map<string, { rideable: number; total: number }>();
+      // Representative families: TAGO's own route type for each variant. A family passes only on
+      // evidence: some variant whose reporting buses all carried an in-route stop sequence. A variant
+      // with no bus at probe time is rideable but unchecked, and never stands in for evidence.
+      const families = new Map<string, { rideable: number; evidenced: number; failed: number; total: number }>();
       for (const route of catalog.routes) {
         const variant = report.variants.find((entry) => entry.routeId === route.routeId);
         const family = route.routeType ?? "unstated";
-        const entry = families.get(family) ?? { rideable: 0, total: 0 };
+        const entry = families.get(family) ?? { rideable: 0, evidenced: 0, failed: 0, total: 0 };
         entry.total += 1;
-        if (variant && (variant.tracking === "SUPPORTED" || variant.tracking === "SUPPORTED_WITH_WARNING")) entry.rideable += 1;
+        if (variant && (variant.tracking === "SUPPORTED" || variant.tracking === "SUPPORTED_WITH_WARNING")) {
+          entry.rideable += 1;
+          if (variant.live === "answered_with_buses") entry.evidenced += 1;
+        }
+        if (variant?.live === "answered_with_buses" && variant.tracking === "UNSUPPORTED") entry.failed += 1;
         families.set(family, entry);
       }
-      const missing = [...families].filter(([, entry]) => entry.rideable === 0).map(([family]) => family);
-      evidence.push(`route families (TAGO routetp): ${[...families].map(([family, entry]) => `${family} ${entry.rideable}/${entry.total}`).join(", ")}`);
-      status = missing.length === 0 ? "PASS" : "FAIL";
-      if (missing.length > 0) evidence.push(`no rideable variant in: ${missing.join(", ")}`);
+      evidence.push(`route families (TAGO routetp), variants rideable / checked with a reporting bus / total: ${[...families].map(([family, entry]) => `${family} ${entry.rideable}/${entry.evidenced}/${entry.total}`).join(", ")}`);
+      const failing = [...families].filter(([, entry]) => entry.evidenced === 0 && entry.failed > 0).map(([family]) => family);
+      const unchecked = [...families].filter(([, entry]) => entry.evidenced === 0 && entry.failed === 0).map(([family]) => family);
+      status = failing.length > 0 ? "FAIL" : unchecked.length > 0 ? "PENDING_EVIDENCE" : "PASS";
+      if (failing.length > 0) evidence.push(`every reporting bus failed the stop-sequence check in: ${failing.join(", ")}`);
+      if (unchecked.length > 0) {
+        evidence.push(`no bus reported in any variant of: ${unchecked.join(", ")} (a probe is one moment)`);
+        next = `Probe again while ${unchecked.join(", ")} run (ops/jeju-catalog/request.json with live: true)`;
+      }
     }
   }
-  gates.push({ id: "GATE 3 — LIVE", requirement: "Representative route families pass the live compatibility audit", status, evidence });
+  gates.push({ id: "GATE 3 — LIVE", requirement: "Representative route families pass the live compatibility audit", status, evidence, ...(next ? { next } : {}) });
 }
 
 // GATE 4 — TRACKING
