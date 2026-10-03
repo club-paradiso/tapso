@@ -61,6 +61,20 @@ targets:
         embed: true
       - target: TapsoShare
         embed: true
+    postBuildScripts:
+      # Build identity (TAPSO_V1_RELEASE_CLOSURE.md, workstream A): the short Git
+      # SHA goes into the built Info.plist as `TapsoGitCommit`, so a tester can
+      # prove which commit the phone runs (`TapsoBuild.identity()`). Never fails
+      # the build: outside a checkout it writes `unknown`.
+      - name: Write Git commit into Info.plist
+        basedOnDependencyAnalysis: false
+        script: |
+          PLIST="${TARGET_BUILD_DIR}/${INFOPLIST_PATH}"
+          [ -f "$PLIST" ] || exit 0
+          SHA=$(cd "${SRCROOT}" && /usr/bin/git rev-parse --short=7 HEAD 2>/dev/null || echo unknown)
+          if [ "$SHA" != "unknown" ] && ! (cd "${SRCROOT}" && /usr/bin/git diff --quiet 2>/dev/null); then SHA="${SHA}-dirty"; fi
+          /usr/libexec/PlistBuddy -c "Delete :TapsoGitCommit" "$PLIST" >/dev/null 2>&1 || true
+          /usr/libexec/PlistBuddy -c "Add :TapsoGitCommit string ${SHA}" "$PLIST"
     scheme:
       testTargets:
         - TapsoTests
