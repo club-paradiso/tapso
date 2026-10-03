@@ -2,16 +2,24 @@ name: Jeju timetable import
 
 # Downloads every route timetable file bus.jeju.go.kr offers and parses each
 # (scripts/timetables/fetch_jeju_bis.py), because the agent environment cannot
-# reach the site. The result is committed to the branch that ran it, never to
-# main: it lands on main only through a reviewed pull request. No secret.
-# Run by hand (Actions → Jeju timetable import → Run workflow, on a topic
-# branch). A parser change does not need a new download:
+# reach the site, then rebuilds the runtime bundle and the census report with
+# what changed since the last import (scripts/timetables/build_bundle.py). No
+# secret. Never commits to main:
+# - run by hand on a topic branch, it commits the import to that branch;
+# - weekly from main, it pushes to data/jeju-timetable-refresh and opens a
+#   draft pull request when anything changed, with the change report as its body.
+# A changed file is never served until that pull request is reviewed and merged;
+# a file the parser refuses or finds contradictory is reported, never forced.
+# A parser change does not need a new download:
 # `fetch_jeju_bis.py fixtures/jeju/timetables/bis --reparse`.
 on:
   workflow_dispatch:
+  schedule:
+    - cron: "17 19 * * 0"  # Monday 04:17 KST
 
 permissions:
   contents: write
+  pull-requests: write
 
 concurrency:
   group: jeju-timetables
@@ -19,7 +27,6 @@ concurrency:
 
 jobs:
   import:
-    if: github.ref != 'refs/heads/main'
     runs-on: ubuntu-latest
     timeout-minutes: 45
     steps:
@@ -39,15 +46,34 @@ jobs:
           openssl verify -CAfile /etc/ssl/certs/ca-certificates.crt -untrusted issuer.pem leaf.pem
           cp issuer.pem "$RUNNER_TEMP/bis-intermediate.pem"
           rm -f chain.txt leaf.pem issuer.raw issuer.pem
+      - name: Keep the previous import for the change report
+        run: |
+          mkdir -p "$RUNNER_TEMP/previous"
+          cp fixtures/jeju/timetables/bis/*.json "$RUNNER_TEMP/previous/" 2>/dev/null || true
       - name: Download and parse every timetable (one request per second)
         run: python3 scripts/timetables/fetch_jeju_bis.py fixtures/jeju/timetables/bis --intermediate "$RUNNER_TEMP/bis-intermediate.pem"
-      - name: Commit the import to this branch
+      - name: Parser tests against the new files, then the bundle and the change report
+        run: |
+          python3 -m unittest discover -s scripts/timetables -p 'test_*.py'
+          python3 scripts/timetables/build_bundle.py --previous "$RUNNER_TEMP/previous/manifest.json"
+      - name: Commit the import
+        env:
+          GH_TOKEN: ${{ github.token }}
         run: |
           set -euo pipefail
           git config user.name "github-actions[bot]"
           git config user.email "41898282+github-actions[bot]@users.noreply.github.com"
-          git add fixtures/jeju/timetables/bis
+          if [ "${GITHUB_REF_NAME}" = "main" ]; then git checkout -B data/jeju-timetable-refresh; fi
+          git add fixtures/jeju/timetables/bis services/api/data/jeju-timetables.json artifacts/timetables
           if git diff --cached --quiet; then echo "nothing changed"; exit 0; fi
           counts=$(python3 -c 'import json;print(json.load(open("fixtures/jeju/timetables/bis/manifest.json"))["counts"])')
           git commit -m "timetable: import every bus.jeju.go.kr timetable ($(TZ=Asia/Seoul date +%F)) $counts" -m "Workflow run ${GITHUB_RUN_ID}."
-          git push origin "HEAD:${GITHUB_REF_NAME}"
+          if [ "${GITHUB_REF_NAME}" = "main" ]; then
+            git push --force origin HEAD:data/jeju-timetable-refresh
+            gh pr create --base main --head data/jeju-timetable-refresh --draft \
+              --title "data: refresh Jeju official timetables ($(TZ=Asia/Seoul date +%F))" \
+              --body-file artifacts/timetables/jeju-timetable-census.md \
+              || echo "a pull request already exists or Actions may not open one; data/jeju-timetable-refresh holds the refresh"
+          else
+            git push origin "HEAD:${GITHUB_REF_NAME}"
+          fi

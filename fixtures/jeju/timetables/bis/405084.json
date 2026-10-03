@@ -1,22 +1,32 @@
 {
-  "schemaVersion": "tapso-jeju-timetable-v2",
+  "schemaVersion": "tapso-jeju-timetable-v3",
   "label": "OFFICIAL_DATED",
   "source": {
     "publisher": "제주특별자치도 (bus.jeju.go.kr)",
     "dataset": "data.go.kr 3043887",
     "page": "https://bus.jeju.go.kr/publicTrafficInformation/generalBusSchedule",
     "file": "405084.xlsx",
-    "sha256": "0a4ffdd6a53da244c87783a20dc00241c0a0580c09a92709615c259aa1166bd6"
+    "sha256": "0a4ffdd6a53da244c87783a20dc00241c0a0580c09a92709615c259aa1166bd6",
+    "scheduleId": "405084",
+    "listedName": "782-1"
   },
   "retrievedOn": "2026-10-03",
   "parser": {
     "name": "jeju-bis-xlsx",
-    "version": "2"
+    "version": "3"
   },
-  "routeNumber": "782-1",
+  "routeNumbers": [
+    "782-1"
+  ],
+  "status": "parsed",
   "services": [
     {
-      "sheet": "782-1 한림2리-대림-봉성-귀덕초-한림2리",
+      "sheets": [
+        "782-1 한림2리-대림-봉성-귀덕초-한림2리"
+      ],
+      "routeNumbers": [
+        "782-1"
+      ],
       "dayType": "unstated",
       "direction": "한림2리 → 한림2리 (순환)",
       "effectiveFrom": "2024-02-01",
@@ -35,6 +45,7 @@
       ],
       "trips": [
         {
+          "routeNumber": "782-1",
           "times": [
             "06:40",
             "06:45",
@@ -46,9 +57,11 @@
             "07:18",
             "07:25",
             "07:30"
-          ]
+          ],
+          "firstTime": "06:40"
         },
         {
+          "routeNumber": "782-1",
           "times": [
             "07:40",
             "07:45",
@@ -60,9 +73,11 @@
             "08:18",
             "08:25",
             "08:30"
-          ]
+          ],
+          "firstTime": "07:40"
         },
         {
+          "routeNumber": "782-1",
           "times": [
             "08:58",
             "09:03",
@@ -74,9 +89,11 @@
             "09:36",
             "09:43",
             "09:48"
-          ]
+          ],
+          "firstTime": "08:58"
         },
         {
+          "routeNumber": "782-1",
           "times": [
             "10:10",
             "10:15",
@@ -88,9 +105,11 @@
             "10:48",
             "10:55",
             "11:00"
-          ]
+          ],
+          "firstTime": "10:10"
         },
         {
+          "routeNumber": "782-1",
           "times": [
             "11:20",
             "11:25",
@@ -102,9 +121,11 @@
             "11:58",
             "12:05",
             "12:10"
-          ]
+          ],
+          "firstTime": "11:20"
         },
         {
+          "routeNumber": "782-1",
           "times": [
             "13:20",
             "13:25",
@@ -116,9 +137,11 @@
             "13:58",
             "14:05",
             "14:10"
-          ]
+          ],
+          "firstTime": "13:20"
         },
         {
+          "routeNumber": "782-1",
           "times": [
             "14:30",
             "14:35",
@@ -130,9 +153,11 @@
             "15:08",
             "15:15",
             "15:20"
-          ]
+          ],
+          "firstTime": "14:30"
         },
         {
+          "routeNumber": "782-1",
           "times": [
             "15:40",
             "15:45",
@@ -144,9 +169,11 @@
             "16:18",
             "16:25",
             "16:30"
-          ]
+          ],
+          "firstTime": "15:40"
         },
         {
+          "routeNumber": "782-1",
           "times": [
             "16:50",
             "16:55",
@@ -158,9 +185,11 @@
             "17:28",
             "17:35",
             "17:40"
-          ]
+          ],
+          "firstTime": "16:50"
         },
         {
+          "routeNumber": "782-1",
           "times": [
             "18:40",
             "18:45",
@@ -172,9 +201,11 @@
             "19:18",
             "19:25",
             "19:30"
-          ]
+          ],
+          "firstTime": "18:40"
         },
         {
+          "routeNumber": "782-1",
           "times": [
             "19:50",
             "19:55",
@@ -186,9 +217,11 @@
             "20:28",
             "20:35",
             "20:40"
-          ]
+          ],
+          "firstTime": "19:50"
         }
-      ]
+      ],
+      "status": "ok"
     }
   ]
 }

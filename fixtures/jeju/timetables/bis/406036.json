@@ -1,0 +1,393 @@
+{
+  "schemaVersion": "tapso-jeju-timetable-v3",
+  "label": "OFFICIAL_DATED",
+  "source": {
+    "publisher": "제주특별자치도 (bus.jeju.go.kr)",
+    "dataset": "data.go.kr 3043887",
+    "page": "https://bus.jeju.go.kr/publicTrafficInformation/generalBusSchedule",
+    "file": "406036.xlsx",
+    "sha256": "5ae10c86b3153cc719fa16b753e070b2c89b66fea496403000ece17b10ac9a4c",
+    "scheduleId": "406036",
+    "listedName": "742-2"
+  },
+  "retrievedOn": "2026-10-03",
+  "parser": {
+    "name": "jeju-bis-xlsx",
+    "version": "3"
+  },
+  "routeNumbers": [
+    "742-2"
+  ],
+  "serviceLabels": [
+    "옵서버스"
+  ],
+  "status": "parsed",
+  "services": [
+    {
+      "sheets": [
+        "742-2 (평일)남원읍-한남리"
+      ],
+      "routeNumbers": [
+        "742-2"
+      ],
+      "dayType": "weekday",
+      "dayLabel": "평",
+      "serviceLabels": [
+        "옵서버스"
+      ],
+      "direction": "금호리조트→한남리→ 태흥3리→금호리조트(순환)",
+      "effectiveFrom": "2024-09-23",
+      "summary": "서귀포공영버스(064-760-3111~3)",
+      "timepoints": [
+        "금호리조트",
+        "남원읍사무소",
+        "남원2리사무소",
+        "한남리사무소",
+        "제3의귀교",
+        "신흥2리사무소",
+        "신흥1리사무소",
+        "태흥3리사무소",
+        "서소동",
+        "남원읍사무소",
+        "금호리조트"
+      ],
+      "trips": [
+        {
+          "routeNumber": "742-2",
+          "times": [
+            "06:57",
+            "07:03",
+            "07:09",
+            "07:14",
+            "07:20",
+            "07:28",
+            "07:36",
+            "07:41",
+            "07:45",
+            "07:48",
+            "07:54"
+          ],
+          "firstTime": "06:57"
+        },
+        {
+          "routeNumber": "742-2",
+          "times": [
+            "08:20",
+            "08:26",
+            "08:32",
+            "08:37",
+            "08:43",
+            "08:51",
+            "08:59",
+            "09:04",
+            "09:08",
+            "09:11",
+            "09:17"
+          ],
+          "firstTime": "08:20"
+        },
+        {
+          "routeNumber": "742-2",
+          "times": [
+            "10:10",
+            "10:16",
+            "10:22",
+            "10:27",
+            "10:33",
+            "10:41",
+            "10:49",
+            "10:54",
+            "10:58",
+            "11:01",
+            "11:07"
+          ],
+          "firstTime": "10:10"
+        },
+        {
+          "routeNumber": "742-2",
+          "times": [
+            "11:50",
+            "11:56",
+            "12:02",
+            "12:07",
+            "12:13",
+            "12:21",
+            "12:29",
+            "12:34",
+            "12:38",
+            "12:41",
+            "12:47"
+          ],
+          "firstTime": "11:50"
+        },
+        {
+          "routeNumber": "742-2",
+          "times": [
+            "14:10",
+            "14:16",
+            "14:22",
+            "14:27",
+            "14:33",
+            "14:41",
+            "14:49",
+            "14:54",
+            "14:58",
+            "15:01",
+            "15:07"
+          ],
+          "firstTime": "14:10"
+        },
+        {
+          "routeNumber": "742-2",
+          "times": [
+            null,
+            null,
+            null,
+            null,
+            null,
+            null,
+            null,
+            null,
+            null,
+            null,
+            null
+          ],
+          "window": {
+            "from": "14:30",
+            "to": "21:00",
+            "label": "실시간 호출형"
+          },
+          "firstTime": null,
+          "conditions": [
+            "demand_responsive"
+          ]
+        }
+      ],
+      "status": "ok"
+    },
+    {
+      "sheets": [
+        "742-2 (토요일)남원읍-한남리"
+      ],
+      "routeNumbers": [
+        "742-2"
+      ],
+      "dayType": "saturday",
+      "dayLabel": "토요일",
+      "serviceLabels": [
+        "옵서버스"
+      ],
+      "direction": "금호리조트→한남리→ 태흥3리→금호리조트(순환)",
+      "effectiveFrom": "2024-09-23",
+      "summary": "서귀포공영버스(064-760-3111~3)",
+      "timepoints": [
+        "금호리조트",
+        "남원읍사무소",
+        "남원2리사무소",
+        "한남리사무소",
+        "제3의귀교",
+        "신흥2리사무소",
+        "신흥1리사무소",
+        "태흥3리사무소",
+        "서소동",
+        "남원읍사무소",
+        "금호리조트"
+      ],
+      "trips": [
+        {
+          "routeNumber": "742-2",
+          "times": [
+            "06:57",
+            "07:03",
+            "07:09",
+            "07:14",
+            "07:20",
+            "07:28",
+            "07:36",
+            "07:41",
+            "07:45",
+            "07:48",
+            "07:54"
+          ],
+          "firstTime": "06:57"
+        },
+        {
+          "routeNumber": "742-2",
+          "times": [
+            "08:20",
+            "08:26",
+            "08:32",
+            "08:37",
+            "08:43",
+            "08:51",
+            "08:59",
+            "09:04",
+            "09:08",
+            "09:11",
+            "09:17"
+          ],
+          "firstTime": "08:20"
+        },
+        {
+          "routeNumber": "742-2",
+          "times": [
+            "10:10",
+            "10:16",
+            "10:22",
+            "10:27",
+            "10:33",
+            "10:41",
+            "10:49",
+            "10:54",
+            "10:58",
+            "11:01",
+            "11:07"
+          ],
+          "firstTime": "10:10"
+        },
+        {
+          "routeNumber": "742-2",
+          "times": [
+            "11:50",
+            "11:56",
+            "12:02",
+            "12:07",
+            "12:13",
+            "12:21",
+            "12:29",
+            "12:34",
+            "12:38",
+            "12:41",
+            "12:47"
+          ],
+          "firstTime": "11:50"
+        },
+        {
+          "routeNumber": "742-2",
+          "times": [
+            "14:10",
+            "14:16",
+            "14:22",
+            "14:27",
+            "14:33",
+            "14:41",
+            "14:49",
+            "14:54",
+            "14:58",
+            "15:01",
+            "15:07"
+          ],
+          "firstTime": "14:10"
+        },
+        {
+          "routeNumber": "742-2",
+          "times": [
+            null,
+            null,
+            null,
+            null,
+            null,
+            null,
+            null,
+            null,
+            null,
+            null,
+            null
+          ],
+          "window": {
+            "from": "15:10",
+            "to": "21:00",
+            "label": "실시간 호출형"
+          },
+          "firstTime": null,
+          "conditions": [
+            "demand_responsive"
+          ]
+        }
+      ],
+      "status": "ok"
+    },
+    {
+      "sheets": [
+        "742-2 (휴일)남원읍-한남리"
+      ],
+      "routeNumbers": [
+        "742-2"
+      ],
+      "dayType": "sunday_holiday",
+      "dayLabel": "일,공휴일",
+      "serviceLabels": [
+        "옵서버스"
+      ],
+      "direction": "금호리조트→한남리→ 태흥3리→금호리조트(순환)",
+      "effectiveFrom": "2024-09-23",
+      "summary": "서귀포공영버스(064-760-3111~3)",
+      "timepoints": [
+        "금호리조트",
+        "남원읍사무소",
+        "남원2리사무소",
+        "한남리사무소",
+        "제3의귀교",
+        "신흥2리사무소",
+        "신흥1리사무소",
+        "태흥3리사무소",
+        "서소동",
+        "남원읍사무소",
+        "금호리조트"
+      ],
+      "trips": [
+        {
+          "routeNumber": "742-2",
+          "times": [
+            null,
+            null,
+            null,
+            null,
+            null,
+            null,
+            null,
+            null,
+            null,
+            null,
+            null
+          ],
+          "window": {
+            "from": "06:50",
+            "to": "12:30",
+            "label": "오전 실시간 호출형"
+          },
+          "firstTime": null,
+          "conditions": [
+            "demand_responsive"
+          ]
+        },
+        {
+          "routeNumber": "742-2",
+          "times": [
+            null,
+            null,
+            null,
+            null,
+            null,
+            null,
+            null,
+            null,
+            null,
+            null,
+            null
+          ],
+          "window": {
+            "from": "14:00",
+            "to": "21:00",
+            "label": "실시간 호출형"
+          },
+          "firstTime": null,
+          "conditions": [
+            "demand_responsive"
+          ]
+        }
+      ],
+      "status": "ok"
+    }
+  ]
+}

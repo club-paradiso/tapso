@@ -1,22 +1,32 @@
 {
-  "schemaVersion": "tapso-jeju-timetable-v2",
+  "schemaVersion": "tapso-jeju-timetable-v3",
   "label": "OFFICIAL_DATED",
   "source": {
     "publisher": "제주특별자치도 (bus.jeju.go.kr)",
     "dataset": "data.go.kr 3043887",
     "page": "https://bus.jeju.go.kr/publicTrafficInformation/generalBusSchedule",
     "file": "405161.xlsx",
-    "sha256": "e2ad64d3fa6a9d5176191129de55f41624ffec43358da51f68967019dde1353b"
+    "sha256": "e2ad64d3fa6a9d5176191129de55f41624ffec43358da51f68967019dde1353b",
+    "scheduleId": "405161",
+    "listedName": "810-1"
   },
   "retrievedOn": "2026-10-03",
   "parser": {
     "name": "jeju-bis-xlsx",
-    "version": "2"
+    "version": "3"
   },
-  "routeNumber": "810-1",
+  "routeNumbers": [
+    "810-1"
+  ],
+  "status": "parsed",
   "services": [
     {
-      "sheet": "810-1 (거슨세미오름 방향)",
+      "sheets": [
+        "810-1 (거슨세미오름 방향)"
+      ],
+      "routeNumbers": [
+        "810-1"
+      ],
       "dayType": "unstated",
       "direction": "거슨세미오름 방향",
       "effectiveFrom": "2024-05-11",
@@ -53,6 +63,7 @@
       ],
       "trips": [
         {
+          "routeNumber": "810-1",
           "times": [
             "08:20",
             "08:30",
@@ -82,9 +93,11 @@
             "10:03",
             "10:08",
             "10:10"
-          ]
+          ],
+          "firstTime": "08:20"
         },
         {
+          "routeNumber": "810-1",
           "times": [
             "09:20",
             "09:30",
@@ -114,9 +127,11 @@
             "11:03",
             "11:05",
             "11:10"
-          ]
+          ],
+          "firstTime": "09:20"
         },
         {
+          "routeNumber": "810-1",
           "times": [
             null,
             null,
@@ -146,9 +161,11 @@
             "11:53",
             "11:55",
             "12:00"
-          ]
+          ],
+          "firstTime": "11:00"
         },
         {
+          "routeNumber": "810-1",
           "times": [
             null,
             null,
@@ -178,9 +195,11 @@
             "12:53",
             "12:55",
             "13:00"
-          ]
+          ],
+          "firstTime": "12:00"
         },
         {
+          "routeNumber": "810-1",
           "times": [
             null,
             null,
@@ -210,9 +229,11 @@
             "13:53",
             "13:55",
             "14:00"
-          ]
+          ],
+          "firstTime": "13:00"
         },
         {
+          "routeNumber": "810-1",
           "times": [
             null,
             null,
@@ -242,9 +263,11 @@
             "14:53",
             "14:55",
             "15:00"
-          ]
+          ],
+          "firstTime": "14:00"
         },
         {
+          "routeNumber": "810-1",
           "times": [
             null,
             null,
@@ -274,9 +297,11 @@
             "15:53",
             "15:55",
             "16:00"
-          ]
+          ],
+          "firstTime": "15:00"
         },
         {
+          "routeNumber": "810-1",
           "times": [
             null,
             null,
@@ -306,9 +331,11 @@
             "16:53",
             "16:55",
             "17:00"
-          ]
+          ],
+          "firstTime": "16:00"
         },
         {
+          "routeNumber": "810-1",
           "times": [
             null,
             null,
@@ -338,9 +365,11 @@
             "17:53",
             "17:55",
             "18:00"
-          ]
+          ],
+          "firstTime": "17:00"
         },
         {
+          "routeNumber": "810-1",
           "times": [
             null,
             null,
@@ -370,9 +399,11 @@
             "18:53",
             "18:55",
             "19:00"
-          ]
+          ],
+          "firstTime": "18:00"
         }
-      ]
+      ],
+      "status": "ok"
     }
   ]
 }

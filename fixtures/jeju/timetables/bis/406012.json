@@ -1,22 +1,32 @@
 {
-  "schemaVersion": "tapso-jeju-timetable-v2",
+  "schemaVersion": "tapso-jeju-timetable-v3",
   "label": "OFFICIAL_DATED",
   "source": {
     "publisher": "제주특별자치도 (bus.jeju.go.kr)",
     "dataset": "data.go.kr 3043887",
     "page": "https://bus.jeju.go.kr/publicTrafficInformation/generalBusSchedule",
     "file": "406012.xlsx",
-    "sha256": "ece7e910d4feab731fdf67fbd604d7de3d7f3bca2fb6ad515da538f627853f99"
+    "sha256": "ece7e910d4feab731fdf67fbd604d7de3d7f3bca2fb6ad515da538f627853f99",
+    "scheduleId": "406012",
+    "listedName": "624"
   },
   "retrievedOn": "2026-10-03",
   "parser": {
     "name": "jeju-bis-xlsx",
-    "version": "2"
+    "version": "3"
   },
-  "routeNumber": "624",
+  "routeNumbers": [
+    "624"
+  ],
+  "status": "parsed",
   "services": [
     {
-      "sheet": "624 하례리입구-중앙R-하례리입구(순환)",
+      "sheets": [
+        "624 하례리입구-중앙R-하례리입구(순환)"
+      ],
+      "routeNumbers": [
+        "624"
+      ],
       "dayType": "unstated",
       "direction": "하례리입구↔중앙R↔하례리입구(순환) <위미중 경유>",
       "effectiveFrom": "2024-08-01",
@@ -36,6 +46,7 @@
       ],
       "trips": [
         {
+          "routeNumber": "624",
           "times": [
             "06:00",
             "06:08",
@@ -48,9 +59,11 @@
             null,
             "07:15",
             "07:20"
-          ]
+          ],
+          "firstTime": "06:00"
         },
         {
+          "routeNumber": "624",
           "times": [
             "07:36",
             "07:44",
@@ -64,9 +77,11 @@
             "08:37",
             "08:42"
           ],
-          "note": "위미중 경유"
+          "note": "위미중 경유",
+          "firstTime": "07:36"
         },
         {
+          "routeNumber": "624",
           "times": [
             "09:51",
             "09:59",
@@ -79,9 +94,11 @@
             "11:10",
             "11:14",
             "11:19"
-          ]
+          ],
+          "firstTime": "09:51"
         },
         {
+          "routeNumber": "624",
           "times": [
             "12:21",
             "12:29",
@@ -94,9 +111,11 @@
             "13:40",
             "13:44",
             "13:49"
-          ]
+          ],
+          "firstTime": "12:21"
         },
         {
+          "routeNumber": "624",
           "times": [
             "15:01",
             "15:09",
@@ -110,9 +129,11 @@
             "16:02",
             "16:07"
           ],
-          "note": "위미중 경유"
+          "note": "위미중 경유",
+          "firstTime": "15:01"
         },
         {
+          "routeNumber": "624",
           "times": [
             "16:51",
             "16:59",
@@ -125,9 +146,11 @@
             "18:10",
             "18:14",
             "18:19"
-          ]
+          ],
+          "firstTime": "16:51"
         },
         {
+          "routeNumber": "624",
           "times": [
             "19:11",
             "19:19",
@@ -140,9 +163,11 @@
             null,
             "20:26",
             "20:31"
-          ]
+          ],
+          "firstTime": "19:11"
         },
         {
+          "routeNumber": "624",
           "times": [
             "21:01",
             "21:09",
@@ -156,9 +181,11 @@
             "22:16",
             null
           ],
-          "note": "신례교 종료"
+          "note": "신례교 종료",
+          "firstTime": "21:01"
         }
-      ]
+      ],
+      "status": "ok"
     }
   ]
 }

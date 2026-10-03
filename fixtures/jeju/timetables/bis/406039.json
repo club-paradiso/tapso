@@ -1,0 +1,445 @@
+{
+  "schemaVersion": "tapso-jeju-timetable-v3",
+  "label": "OFFICIAL_DATED",
+  "source": {
+    "publisher": "제주특별자치도 (bus.jeju.go.kr)",
+    "dataset": "data.go.kr 3043887",
+    "page": "https://bus.jeju.go.kr/publicTrafficInformation/generalBusSchedule",
+    "file": "406039.xlsx",
+    "sha256": "1e1ad550740d6ce318c5404c8380b8a2edb615eb67185170eb3b7219bdc71954",
+    "scheduleId": "406039",
+    "listedName": "751-1"
+  },
+  "retrievedOn": "2026-10-03",
+  "parser": {
+    "name": "jeju-bis-xlsx",
+    "version": "3"
+  },
+  "routeNumbers": [
+    "751-1"
+  ],
+  "status": "parsed",
+  "services": [
+    {
+      "sheets": [
+        "751-1 (평일)안덕면-서광서리-국제학교-보성리-운진항"
+      ],
+      "routeNumbers": [
+        "751-1"
+      ],
+      "dayType": "weekday",
+      "dayLabel": "평일",
+      "direction": "안덕면사무소 → 대정(운진항)",
+      "effectiveFrom": "2026-04-20",
+      "summary": "서귀포공영버스(064-760-3111~3)",
+      "timepoints": [
+        "안덕면사무소",
+        "안덕농협",
+        "덕수초등학교",
+        "서광서리 (응전동)",
+        "한국 국제학교",
+        "인성리",
+        "모슬포남항"
+      ],
+      "trips": [
+        {
+          "routeNumber": "751-1",
+          "times": [
+            "06:40",
+            "06:49",
+            "06:54",
+            "07:03",
+            "07:18",
+            "07:34",
+            "07:47"
+          ],
+          "firstTime": "06:40"
+        },
+        {
+          "routeNumber": "751-1",
+          "times": [
+            "08:32",
+            "08:41",
+            "08:45",
+            "08:54",
+            "09:09",
+            "09:24",
+            "09:37"
+          ],
+          "firstTime": "08:32"
+        },
+        {
+          "routeNumber": "751-1",
+          "times": [
+            "09:12",
+            "09:21",
+            "09:26",
+            "09:35",
+            "09:50",
+            "10:06",
+            "10:19"
+          ],
+          "firstTime": "09:12"
+        },
+        {
+          "routeNumber": "751-1",
+          "times": [
+            "12:02",
+            "12:11",
+            "12:15",
+            "12:24",
+            "12:39",
+            "12:54",
+            "13:07"
+          ],
+          "firstTime": "12:02"
+        },
+        {
+          "routeNumber": "751-1",
+          "times": [
+            "12:22",
+            "12:31",
+            "12:36",
+            "12:45",
+            "13:00",
+            "13:16",
+            "13:29"
+          ],
+          "firstTime": "12:22"
+        },
+        {
+          "routeNumber": "751-1",
+          "times": [
+            null,
+            null,
+            null,
+            null,
+            null,
+            null,
+            null
+          ],
+          "window": {
+            "from": "14:00",
+            "to": "21:30",
+            "label": "실시간 호출형"
+          },
+          "firstTime": null,
+          "conditions": [
+            "demand_responsive"
+          ]
+        },
+        {
+          "routeNumber": "751-1",
+          "times": [
+            "16:12",
+            "16:21",
+            "16:25",
+            "16:34",
+            "16:49",
+            "17:04",
+            "17:17"
+          ],
+          "firstTime": "16:12"
+        },
+        {
+          "routeNumber": "751-1",
+          "times": [
+            null,
+            null,
+            null,
+            null,
+            null,
+            null,
+            null
+          ],
+          "window": {
+            "from": "14:00",
+            "to": "21:30",
+            "label": "실시간 호출형"
+          },
+          "firstTime": null,
+          "conditions": [
+            "demand_responsive"
+          ]
+        }
+      ],
+      "status": "ok"
+    },
+    {
+      "sheets": [
+        "751-1 (평일)운진항-보성-국제학교-서광서리-안덕면"
+      ],
+      "routeNumbers": [
+        "751-1"
+      ],
+      "dayType": "weekday",
+      "dayLabel": "평일",
+      "direction": "대정(운진항) → 안덕면사무소",
+      "effectiveFrom": "2026-04-20",
+      "summary": "서귀포공영버스(064-760-3111~3)",
+      "timepoints": [
+        "모슬포남항",
+        "인성리",
+        "한국 국제학교",
+        "서광서리응전동",
+        "덕수초등학교",
+        "안덕농협",
+        "안덕면사무소"
+      ],
+      "trips": [
+        {
+          "routeNumber": "751-1",
+          "times": [
+            "07:20",
+            "07:33",
+            "07:49",
+            "08:04",
+            "08:13",
+            "08:18",
+            "08:27"
+          ],
+          "firstTime": "07:20"
+        },
+        {
+          "routeNumber": "751-1",
+          "times": [
+            "08:00",
+            "08:12",
+            "08:28",
+            "08:43",
+            "08:52",
+            "08:57",
+            "09:07"
+          ],
+          "firstTime": "08:00"
+        },
+        {
+          "routeNumber": "751-1",
+          "times": [
+            "10:50",
+            "11:03",
+            "11:19",
+            "11:34",
+            "11:43",
+            "11:48",
+            "11:57"
+          ],
+          "firstTime": "10:50"
+        },
+        {
+          "routeNumber": "751-1",
+          "times": [
+            "11:10",
+            "11:22",
+            "11:38",
+            "11:53",
+            "12:02",
+            "12:07",
+            "12:17"
+          ],
+          "firstTime": "11:10"
+        },
+        {
+          "routeNumber": "751-1",
+          "times": [
+            null,
+            null,
+            null,
+            null,
+            null,
+            null,
+            null
+          ],
+          "window": {
+            "from": "14:00",
+            "to": "21:30",
+            "label": "실시간 호출형"
+          },
+          "firstTime": null,
+          "conditions": [
+            "demand_responsive"
+          ]
+        },
+        {
+          "routeNumber": "751-1",
+          "times": [
+            "18:20",
+            "18:33",
+            "18:49",
+            "19:04",
+            "19:13",
+            "19:18",
+            "19:27"
+          ],
+          "firstTime": "18:20"
+        },
+        {
+          "routeNumber": "751-1",
+          "times": [
+            null,
+            null,
+            null,
+            null,
+            null,
+            null,
+            null
+          ],
+          "window": {
+            "from": "14:00",
+            "to": "21:30",
+            "label": "실시간 호출형"
+          },
+          "firstTime": null,
+          "conditions": [
+            "demand_responsive"
+          ]
+        }
+      ],
+      "status": "ok"
+    },
+    {
+      "sheets": [
+        "751-1 (휴일)운진항-보성-국제학교-서광서리-안덕면"
+      ],
+      "routeNumbers": [
+        "751-1"
+      ],
+      "dayType": "saturday_sunday_holiday",
+      "dayLabel": "토.공휴일",
+      "direction": "대정(운진항)→안덕면사무소",
+      "effectiveFrom": "2026-02-25",
+      "summary": "서귀포공영버스(064-760-3111~3)",
+      "timepoints": [
+        "모슬포남항 (운진항)",
+        "인성리",
+        "한국 국제학교",
+        "서광서리 (응전동)",
+        "덕수초등학교",
+        "안덕농협",
+        "안덕면사무소"
+      ],
+      "trips": [
+        {
+          "routeNumber": "751-1",
+          "times": [
+            "07:20",
+            "07:33",
+            "07:49",
+            "08:04",
+            "08:13",
+            "08:18",
+            "08:27"
+          ],
+          "firstTime": "07:20"
+        },
+        {
+          "routeNumber": "751-1",
+          "times": [
+            "10:50",
+            "11:03",
+            "11:19",
+            "11:34",
+            "11:43",
+            "11:48",
+            "11:57"
+          ],
+          "firstTime": "10:50"
+        },
+        {
+          "routeNumber": "751-1",
+          "times": [
+            null,
+            null,
+            null,
+            null,
+            null,
+            null,
+            null
+          ],
+          "window": {
+            "from": "14:00",
+            "to": "21:30",
+            "label": "실시간 호출형"
+          },
+          "firstTime": null,
+          "conditions": [
+            "demand_responsive"
+          ]
+        }
+      ],
+      "status": "ok"
+    },
+    {
+      "sheets": [
+        "751-1 (휴일)안덕면-서광서리-국제학교-보성리-운진항"
+      ],
+      "routeNumbers": [
+        "751-1"
+      ],
+      "dayType": "saturday_sunday_holiday",
+      "dayLabel": "토.공휴일",
+      "direction": "안덕면사무소→대정(운진항)",
+      "effectiveFrom": "2026-02-25",
+      "summary": "서귀포공영버스(064-760-3111~3)",
+      "timepoints": [
+        "안덕면사무소",
+        "안덕농협",
+        "덕수초등학교",
+        "서광서리 (응전동)",
+        "한국 국제학교",
+        "인성리",
+        "모슬포남항 (운진항)"
+      ],
+      "trips": [
+        {
+          "routeNumber": "751-1",
+          "times": [
+            "08:32",
+            "08:41",
+            "08:45",
+            "08:54",
+            "09:09",
+            "09:24",
+            "09:37"
+          ],
+          "firstTime": "08:32"
+        },
+        {
+          "routeNumber": "751-1",
+          "times": [
+            "12:02",
+            "12:11",
+            "12:15",
+            "12:24",
+            "12:39",
+            "12:54",
+            "13:07"
+          ],
+          "firstTime": "12:02"
+        },
+        {
+          "routeNumber": "751-1",
+          "times": [
+            null,
+            null,
+            null,
+            null,
+            null,
+            null,
+            null
+          ],
+          "window": {
+            "from": "14:00",
+            "to": "21:30",
+            "label": "실시간 호출형"
+          },
+          "firstTime": null,
+          "conditions": [
+            "demand_responsive"
+          ]
+        }
+      ],
+      "status": "ok"
+    }
+  ]
+}

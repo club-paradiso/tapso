@@ -1,22 +1,32 @@
 {
-  "schemaVersion": "tapso-jeju-timetable-v2",
+  "schemaVersion": "tapso-jeju-timetable-v3",
   "label": "OFFICIAL_DATED",
   "source": {
     "publisher": "제주특별자치도 (bus.jeju.go.kr)",
     "dataset": "data.go.kr 3043887",
     "page": "https://bus.jeju.go.kr/publicTrafficInformation/generalBusSchedule",
     "file": "406054.xlsx",
-    "sha256": "583c421b6ba5df6d39b982bdd2a80571515bce6065b452d1c866eaf3a4ed59be"
+    "sha256": "583c421b6ba5df6d39b982bdd2a80571515bce6065b452d1c866eaf3a4ed59be",
+    "scheduleId": "406054",
+    "listedName": "692"
   },
   "retrievedOn": "2026-10-03",
   "parser": {
     "name": "jeju-bis-xlsx",
-    "version": "2"
+    "version": "3"
   },
-  "routeNumber": "692",
+  "routeNumbers": [
+    "692"
+  ],
+  "status": "parsed",
   "services": [
     {
-      "sheet": "692 천지연-서귀여고-신시가지-서귀여고-천지연",
+      "sheets": [
+        "692 천지연-서귀여고-신시가지-서귀여고-천지연"
+      ],
+      "routeNumbers": [
+        "692"
+      ],
       "dayType": "unstated",
       "direction": "천지연→ 천지연(순환)",
       "effectiveFrom": "2025-05-28",
@@ -41,6 +51,7 @@
       ],
       "trips": [
         {
+          "routeNumber": "692",
           "times": [
             "06:50",
             "06:53",
@@ -58,9 +69,11 @@
             "07:52",
             "07:55",
             "08:00"
-          ]
+          ],
+          "firstTime": "06:50"
         }
-      ]
+      ],
+      "status": "ok"
     }
   ]
 }

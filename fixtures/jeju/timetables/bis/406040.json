@@ -1,0 +1,416 @@
+{
+  "schemaVersion": "tapso-jeju-timetable-v3",
+  "label": "OFFICIAL_DATED",
+  "source": {
+    "publisher": "제주특별자치도 (bus.jeju.go.kr)",
+    "dataset": "data.go.kr 3043887",
+    "page": "https://bus.jeju.go.kr/publicTrafficInformation/generalBusSchedule",
+    "file": "406040.xlsx",
+    "sha256": "6e07dbcef4762ef5aa3b3cbea80c2450f7dbea5a6bcbe27a3334e78dd31d5af7",
+    "scheduleId": "406040",
+    "listedName": "751-2"
+  },
+  "retrievedOn": "2026-10-03",
+  "parser": {
+    "name": "jeju-bis-xlsx",
+    "version": "3"
+  },
+  "routeNumbers": [
+    "751-2"
+  ],
+  "status": "source_conflict",
+  "services": [
+    {
+      "sheets": [
+        "751-2 대평-안덕농협-(국제학교)-신평-운진항(평일)"
+      ],
+      "routeNumbers": [
+        "751-2"
+      ],
+      "dayType": "weekday",
+      "dayLabel": "평일",
+      "direction": "대평리 → 대정(운진항)",
+      "effectiveFrom": "2026-04-20",
+      "summary": "서귀포공영버스(064-760-3111~3)",
+      "timepoints": [
+        "대평리",
+        "안덕농협",
+        "서광서리",
+        "한국국제학교",
+        "인성리",
+        "모슬포남항(운진항)"
+      ],
+      "trips": [
+        {
+          "routeNumber": "751-2",
+          "times": [
+            "06:40",
+            "06:55",
+            "07:12",
+            "07:29",
+            "07:45",
+            "07:58"
+          ],
+          "firstTime": "06:40"
+        },
+        {
+          "routeNumber": "751-2",
+          "times": [
+            "07:53",
+            "08:08",
+            "08:25",
+            null,
+            "08:44",
+            "08:57"
+          ],
+          "firstTime": "07:53"
+        },
+        {
+          "routeNumber": "751-2",
+          "times": [
+            "09:39",
+            "09:54",
+            "10:11",
+            "10:28",
+            "10:44",
+            "10:57"
+          ],
+          "firstTime": "09:39"
+        },
+        {
+          "routeNumber": "751-2",
+          "times": [
+            "11:33",
+            "11:48",
+            "12:05",
+            null,
+            "12:24",
+            "12:37"
+          ],
+          "firstTime": "11:33"
+        },
+        {
+          "routeNumber": "751-2",
+          "times": [
+            null,
+            null,
+            null,
+            null,
+            null,
+            null
+          ],
+          "window": {
+            "from": "14:00",
+            "to": "21:30",
+            "label": "실시간 호출형"
+          },
+          "note": "출",
+          "firstTime": null,
+          "conditions": [
+            "demand_responsive"
+          ]
+        },
+        {
+          "routeNumber": "751-2",
+          "times": [
+            "17:59",
+            "18:14",
+            "18:31",
+            "18:48",
+            "19:04",
+            "19:17"
+          ],
+          "firstTime": "17:59"
+        },
+        {
+          "routeNumber": "751-2",
+          "times": [
+            null,
+            null,
+            null,
+            null,
+            null,
+            null
+          ],
+          "window": {
+            "from": "14:00",
+            "to": "21:30",
+            "label": "실시간 호출형"
+          },
+          "note": "출",
+          "firstTime": null,
+          "conditions": [
+            "demand_responsive"
+          ]
+        }
+      ],
+      "status": "ok"
+    },
+    {
+      "sheets": [
+        "751-2 운진항-신평-(국제학교)-안덕농협-대평(평일)"
+      ],
+      "routeNumbers": [
+        "751-2"
+      ],
+      "dayType": "weekday",
+      "dayLabel": "평일",
+      "direction": "대정(운진항) → 대평리",
+      "effectiveFrom": "2026-04-20",
+      "summary": "서귀포공영버스(064-760-3111~3)",
+      "timepoints": [
+        "모슬포남항",
+        "인성리",
+        "한국국제학교",
+        "서광서리",
+        "안덕농협",
+        "대평리"
+      ],
+      "trips": [
+        {
+          "routeNumber": "751-2",
+          "times": [
+            "06:30",
+            "06:43",
+            "06:59",
+            "07:16",
+            "07:33",
+            "07:48"
+          ],
+          "firstTime": "06:30"
+        },
+        {
+          "routeNumber": "751-2",
+          "times": [
+            "08:30",
+            "08:43",
+            null,
+            "09:02",
+            "09:19",
+            "09:34"
+          ],
+          "firstTime": "08:30"
+        },
+        {
+          "routeNumber": "751-2",
+          "times": [
+            "10:10",
+            "10:23",
+            "10:39",
+            "10:56",
+            "11:13",
+            "11:28"
+          ],
+          "firstTime": "10:10"
+        },
+        {
+          "routeNumber": "751-2",
+          "times": [
+            "11:45",
+            "11:58",
+            null,
+            null,
+            "12:34",
+            null
+          ],
+          "firstTime": "11:45"
+        },
+        {
+          "routeNumber": "751-2",
+          "times": [
+            null,
+            null,
+            null,
+            null,
+            null,
+            null
+          ],
+          "window": {
+            "from": "14:00",
+            "to": "21:30",
+            "label": "실시간 호출형"
+          },
+          "note": "출",
+          "firstTime": null,
+          "conditions": [
+            "demand_responsive"
+          ]
+        },
+        {
+          "routeNumber": "751-2",
+          "times": [
+            "16:50",
+            "17:03",
+            "17:19",
+            "17:36",
+            "17:53",
+            "18:08"
+          ],
+          "firstTime": "16:50"
+        },
+        {
+          "routeNumber": "751-2",
+          "times": [
+            null,
+            null,
+            null,
+            null,
+            null,
+            null
+          ],
+          "window": {
+            "from": "14:00",
+            "to": "21:30",
+            "label": "실시간 호출형"
+          },
+          "note": "출",
+          "firstTime": null,
+          "conditions": [
+            "demand_responsive"
+          ]
+        }
+      ],
+      "status": "source_conflict",
+      "conflicts": [
+        "trip 4: F11: malformed time '12;17' in the source",
+        "trip 4: H11: malformed time '12;49' in the source"
+      ]
+    },
+    {
+      "sheets": [
+        "751-2 대평리-대정(운진항)(휴일))"
+      ],
+      "routeNumbers": [
+        "751-2"
+      ],
+      "dayType": "saturday_sunday_holiday",
+      "dayLabel": "토.공휴일",
+      "direction": "대평리 → 대정(운진항)",
+      "effectiveFrom": "2026-02-25",
+      "summary": "서귀포공영버스(064-760-3111~3)",
+      "timepoints": [
+        "대평리",
+        "안덕계곡",
+        "안덕농협",
+        "서광서리",
+        "한국 국제학교",
+        "인성리",
+        "모슬포남항 (운진항)"
+      ],
+      "trips": [
+        {
+          "routeNumber": "751-2",
+          "times": [
+            "06:40",
+            "06:50",
+            "06:55",
+            "07:12",
+            "07:29",
+            "07:45",
+            "07:58"
+          ],
+          "firstTime": "06:40"
+        },
+        {
+          "routeNumber": "751-2",
+          "times": [
+            "09:39",
+            "09:49",
+            "09:54",
+            "10:11",
+            "10:28",
+            "10:44",
+            "10:57"
+          ],
+          "firstTime": "09:39"
+        },
+        {
+          "routeNumber": "751-2",
+          "times": [
+            null,
+            null,
+            null,
+            null,
+            null,
+            null,
+            null
+          ],
+          "window": {
+            "from": "14:00",
+            "to": "21:30",
+            "label": "실시간 호출형"
+          },
+          "firstTime": null,
+          "conditions": [
+            "demand_responsive"
+          ]
+        }
+      ],
+      "status": "ok"
+    },
+    {
+      "sheets": [
+        "751-2 운진항-신평-안덕농협-대평(휴일)"
+      ],
+      "routeNumbers": [
+        "751-2"
+      ],
+      "dayType": "saturday_sunday_holiday",
+      "dayLabel": "토.공휴일",
+      "direction": "대정(운진항) → 대평리",
+      "effectiveFrom": "2026-02-25",
+      "summary": "서귀포공영버스(064-760-3111~3)",
+      "timepoints": [
+        "모슬포남항 (운진항)",
+        "인성리",
+        "서광서리",
+        "안덕농협",
+        "대평리"
+      ],
+      "trips": [
+        {
+          "routeNumber": "751-2",
+          "times": [
+            "08:30",
+            "08:43",
+            "09:02",
+            "09:19",
+            "09:34"
+          ],
+          "firstTime": "08:30"
+        },
+        {
+          "routeNumber": "751-2",
+          "times": [
+            "11:45",
+            "11:58",
+            "12:17",
+            "12:34",
+            "12:49"
+          ],
+          "firstTime": "11:45"
+        },
+        {
+          "routeNumber": "751-2",
+          "times": [
+            null,
+            null,
+            null,
+            null,
+            null
+          ],
+          "window": {
+            "from": "14:00",
+            "to": "21:30",
+            "label": "실시간 호출형"
+          },
+          "firstTime": null,
+          "conditions": [
+            "demand_responsive"
+          ]
+        }
+      ],
+      "status": "ok"
+    }
+  ]
+}

@@ -1,0 +1,81 @@
+{
+  "schemaVersion": "tapso-jeju-timetable-v3",
+  "label": "OFFICIAL_DATED",
+  "source": {
+    "publisher": "제주특별자치도 (bus.jeju.go.kr)",
+    "dataset": "data.go.kr 3043887",
+    "page": "https://bus.jeju.go.kr/publicTrafficInformation/generalBusSchedule",
+    "file": "405150.xlsx",
+    "sha256": "7b5da5d3c53fb812a2155feaf717038dc96f6331b50f0f4159fbb6485c4755a1",
+    "scheduleId": "405150",
+    "listedName": "435-1(수요맞춤형)"
+  },
+  "retrievedOn": "2026-10-03",
+  "parser": {
+    "name": "jeju-bis-xlsx",
+    "version": "3"
+  },
+  "routeNumbers": [
+    "435-1"
+  ],
+  "serviceLabels": [
+    "수요맞춤형"
+  ],
+  "status": "parsed",
+  "services": [
+    {
+      "sheets": [
+        "435-1 순환(한라도서관-중앙로-오등동-한라도서관)"
+      ],
+      "routeNumbers": [
+        "435-1"
+      ],
+      "dayType": "unstated",
+      "serviceLabels": [
+        "수요맞춤형"
+      ],
+      "direction": "한라도서관→중앙로→오등동→한라도서관 (순환)",
+      "effectiveFrom": "2024-08-12",
+      "summary": "제주시공영버스(728-3211)",
+      "timepoints": [
+        "한라도서관",
+        "정실",
+        "연미마을",
+        "중앙여자중학교",
+        "중앙로사거리",
+        "제주여상",
+        "민속자연사박물관",
+        "제주시청",
+        "제주여고",
+        "오등동",
+        "GM빌라",
+        "정실",
+        "연미마을",
+        "한라도서관"
+      ],
+      "trips": [
+        {
+          "routeNumber": "435-1",
+          "times": [
+            "15:45",
+            "15:50",
+            "16:02",
+            "16:15",
+            "16:21",
+            "16:28",
+            "16:34",
+            "16:39",
+            "16:47",
+            "16:55",
+            "16:57",
+            "17:00",
+            "17:12",
+            "17:20"
+          ],
+          "firstTime": "15:45"
+        }
+      ],
+      "status": "ok"
+    }
+  ]
+}

@@ -1,24 +1,34 @@
 {
-  "schemaVersion": "tapso-jeju-timetable-v2",
+  "schemaVersion": "tapso-jeju-timetable-v3",
   "label": "OFFICIAL_DATED",
   "source": {
     "publisher": "제주특별자치도 (bus.jeju.go.kr)",
     "dataset": "data.go.kr 3043887",
     "page": "https://bus.jeju.go.kr/publicTrafficInformation/generalBusSchedule",
     "file": "405089.xlsx",
-    "sha256": "13af870ef72bbb153b04259e3efc5c6e59fc9031b8e618e305039b80317a4bd7"
+    "sha256": "13af870ef72bbb153b04259e3efc5c6e59fc9031b8e618e305039b80317a4bd7",
+    "scheduleId": "405089",
+    "listedName": "785"
   },
   "retrievedOn": "2026-10-03",
   "parser": {
     "name": "jeju-bis-xlsx",
-    "version": "2"
+    "version": "3"
   },
-  "routeNumber": "785",
+  "routeNumbers": [
+    "785"
+  ],
+  "status": "parsed",
   "services": [
     {
-      "sheet": "785 (평일)한림체육관-금악-저지-조수1리-한경면사무소",
+      "sheets": [
+        "785 (평일)한림체육관-금악-저지-조수1리-한경면사무소"
+      ],
+      "routeNumbers": [
+        "785"
+      ],
       "dayType": "unstated",
-      "direction": "한림체육관후문 → 한경면사무소\n(평일)",
+      "direction": "한림체육관후문 → 한경면사무소 (평일)",
       "effectiveFrom": "2026-01-01",
       "summary": "첫차 6:37, 막차 20:20, 제주시공영버스(064-728-3211)",
       "timepoints": [
@@ -39,6 +49,7 @@
       ],
       "trips": [
         {
+          "routeNumber": "785",
           "times": [
             "06:37",
             "06:47",
@@ -54,9 +65,11 @@
             null,
             "07:30",
             "07:35"
-          ]
+          ],
+          "firstTime": "06:37"
         },
         {
+          "routeNumber": "785",
           "times": [
             "07:50",
             "08:00",
@@ -72,9 +85,11 @@
             "08:53",
             null,
             null
-          ]
+          ],
+          "firstTime": "07:50"
         },
         {
+          "routeNumber": "785",
           "times": [
             "08:34",
             "08:44",
@@ -90,9 +105,11 @@
             "09:35",
             null,
             null
-          ]
+          ],
+          "firstTime": "08:34"
         },
         {
+          "routeNumber": "785",
           "times": [
             "09:51",
             "10:01",
@@ -108,9 +125,11 @@
             "10:52",
             null,
             null
-          ]
+          ],
+          "firstTime": "09:51"
         },
         {
+          "routeNumber": "785",
           "times": [
             "11:35",
             "11:45",
@@ -126,9 +145,11 @@
             "12:36",
             null,
             null
-          ]
+          ],
+          "firstTime": "11:35"
         },
         {
+          "routeNumber": "785",
           "times": [
             "11:47",
             "11:57",
@@ -144,9 +165,11 @@
             null,
             "12:40",
             "12:45"
-          ]
+          ],
+          "firstTime": "11:47"
         },
         {
+          "routeNumber": "785",
           "times": [
             "12:27",
             "12:37",
@@ -162,9 +185,11 @@
             "13:28",
             null,
             null
-          ]
+          ],
+          "firstTime": "12:27"
         },
         {
+          "routeNumber": "785",
           "times": [
             "14:30",
             "14:40",
@@ -180,9 +205,11 @@
             null,
             "15:23",
             "15:28"
-          ]
+          ],
+          "firstTime": "14:30"
         },
         {
+          "routeNumber": "785",
           "times": [
             "15:20",
             "15:30",
@@ -198,9 +225,11 @@
             "16:21",
             null,
             null
-          ]
+          ],
+          "firstTime": "15:20"
         },
         {
+          "routeNumber": "785",
           "times": [
             "16:00",
             "16:10",
@@ -216,9 +245,11 @@
             null,
             "16:53",
             "16:58"
-          ]
+          ],
+          "firstTime": "16:00"
         },
         {
+          "routeNumber": "785",
           "times": [
             "17:45",
             "17:55",
@@ -234,9 +265,11 @@
             "18:46",
             null,
             null
-          ]
+          ],
+          "firstTime": "17:45"
         },
         {
+          "routeNumber": "785",
           "times": [
             "18:50",
             "19:00",
@@ -252,9 +285,11 @@
             "19:51",
             null,
             null
-          ]
+          ],
+          "firstTime": "18:50"
         },
         {
+          "routeNumber": "785",
           "times": [
             "19:30",
             "19:40",
@@ -270,9 +305,11 @@
             "20:31",
             null,
             null
-          ]
+          ],
+          "firstTime": "19:30"
         },
         {
+          "routeNumber": "785",
           "times": [
             "20:20",
             "20:30",
@@ -288,14 +325,21 @@
             null,
             null,
             null
-          ]
+          ],
+          "firstTime": "20:20"
         }
-      ]
+      ],
+      "status": "ok"
     },
     {
-      "sheet": "785 (평일)한경면사무소-저지-금악-한림고-한림체육관",
+      "sheets": [
+        "785 (평일)한경면사무소-저지-금악-한림고-한림체육관"
+      ],
+      "routeNumbers": [
+        "785"
+      ],
       "dayType": "unstated",
-      "direction": "한경면사무소 → 한림체육관후문\n(평일)",
+      "direction": "한경면사무소 → 한림체육관후문 (평일)",
       "effectiveFrom": "2026-01-01",
       "summary": "첫차(신창 농산물유통센터) 6:37, 막차(신창 농산물유통센터) 20:10, 제주시공영버스(064-728-3211)",
       "timepoints": [
@@ -316,6 +360,7 @@
       ],
       "trips": [
         {
+          "routeNumber": "785",
           "times": [
             null,
             null,
@@ -331,9 +376,11 @@
             "07:17",
             "07:28",
             "07:39"
-          ]
+          ],
+          "firstTime": "06:37"
         },
         {
+          "routeNumber": "785",
           "times": [
             null,
             null,
@@ -349,9 +396,11 @@
             "08:00",
             "08:11",
             "08:22"
-          ]
+          ],
+          "firstTime": "07:20"
         },
         {
+          "routeNumber": "785",
           "times": [
             "07:50",
             "07:55",
@@ -367,9 +416,11 @@
             "08:27",
             "08:40",
             "08:51"
-          ]
+          ],
+          "firstTime": "07:50"
         },
         {
+          "routeNumber": "785",
           "times": [
             null,
             null,
@@ -385,9 +436,11 @@
             "10:40",
             "10:51",
             "11:02"
-          ]
+          ],
+          "firstTime": "10:00"
         },
         {
+          "routeNumber": "785",
           "times": [
             null,
             null,
@@ -403,9 +456,11 @@
             "11:15",
             "11:26",
             "11:37"
-          ]
+          ],
+          "firstTime": "10:35"
         },
         {
+          "routeNumber": "785",
           "times": [
             null,
             null,
@@ -421,9 +476,11 @@
             "11:50",
             "12:01",
             "12:12"
-          ]
+          ],
+          "firstTime": "11:10"
         },
         {
+          "routeNumber": "785",
           "times": [
             "12:55",
             "13:00",
@@ -439,9 +496,11 @@
             "13:32",
             "13:43",
             null
-          ]
+          ],
+          "firstTime": "12:55"
         },
         {
+          "routeNumber": "785",
           "times": [
             null,
             null,
@@ -457,9 +516,11 @@
             "15:10",
             "15:21",
             "15:32"
-          ]
+          ],
+          "firstTime": "14:30"
         },
         {
+          "routeNumber": "785",
           "times": [
             "15:45",
             "15:50",
@@ -475,9 +536,11 @@
             "16:22",
             "16:33",
             "16:44"
-          ]
+          ],
+          "firstTime": "15:45"
         },
         {
+          "routeNumber": "785",
           "times": [
             null,
             null,
@@ -493,9 +556,11 @@
             "17:20",
             "17:31",
             "17:42"
-          ]
+          ],
+          "firstTime": "16:40"
         },
         {
+          "routeNumber": "785",
           "times": [
             "17:20",
             "17:25",
@@ -511,9 +576,11 @@
             "17:57",
             "18:10",
             "18:21"
-          ]
+          ],
+          "firstTime": "17:20"
         },
         {
+          "routeNumber": "785",
           "times": [
             null,
             null,
@@ -529,9 +596,11 @@
             "19:40",
             "19:51",
             "20:02"
-          ]
+          ],
+          "firstTime": "19:00"
         },
         {
+          "routeNumber": "785",
           "times": [
             null,
             null,
@@ -547,14 +616,21 @@
             "20:50",
             "21:01",
             "21:12"
-          ]
+          ],
+          "firstTime": "20:10"
         }
-      ]
+      ],
+      "status": "ok"
     },
     {
-      "sheet": "785 (휴일) 한림체육관-금악-저지-한경면사무소",
+      "sheets": [
+        "785 (휴일) 한림체육관-금악-저지-한경면사무소"
+      ],
+      "routeNumbers": [
+        "785"
+      ],
       "dayType": "unstated",
-      "direction": "한림체육관후문→저지→한경면사무소\n(토·공휴일)",
+      "direction": "한림체육관후문→저지→한경면사무소 (토·공휴일)",
       "effectiveFrom": "2026-01-01",
       "summary": "첫차 6:40, 막차 20:15, 제주시공영버스(064-728-3211)",
       "timepoints": [
@@ -575,6 +651,7 @@
       ],
       "trips": [
         {
+          "routeNumber": "785",
           "times": [
             "06:40",
             "06:50",
@@ -590,9 +667,11 @@
             "07:41",
             null,
             null
-          ]
+          ],
+          "firstTime": "06:40"
         },
         {
+          "routeNumber": "785",
           "times": [
             "08:00",
             "08:10",
@@ -608,9 +687,11 @@
             null,
             "08:53",
             "08:58"
-          ]
+          ],
+          "firstTime": "08:00"
         },
         {
+          "routeNumber": "785",
           "times": [
             "09:55",
             "10:05",
@@ -626,9 +707,11 @@
             "10:56",
             null,
             null
-          ]
+          ],
+          "firstTime": "09:55"
         },
         {
+          "routeNumber": "785",
           "times": [
             "11:30",
             "11:40",
@@ -644,9 +727,11 @@
             "12:31",
             null,
             null
-          ]
+          ],
+          "firstTime": "11:30"
         },
         {
+          "routeNumber": "785",
           "times": [
             "12:25",
             "12:35",
@@ -662,9 +747,11 @@
             null,
             "13:18",
             "13:23"
-          ]
+          ],
+          "firstTime": "12:25"
         },
         {
+          "routeNumber": "785",
           "times": [
             "14:30",
             "14:40",
@@ -680,9 +767,11 @@
             "15:31",
             null,
             null
-          ]
+          ],
+          "firstTime": "14:30"
         },
         {
+          "routeNumber": "785",
           "times": [
             "15:45",
             "15:55",
@@ -698,9 +787,11 @@
             null,
             "16:38",
             "16:43"
-          ]
+          ],
+          "firstTime": "15:45"
         },
         {
+          "routeNumber": "785",
           "times": [
             "17:00",
             "17:10",
@@ -716,9 +807,11 @@
             "18:01",
             null,
             null
-          ]
+          ],
+          "firstTime": "17:00"
         },
         {
+          "routeNumber": "785",
           "times": [
             "19:20",
             "19:30",
@@ -734,9 +827,11 @@
             "20:21",
             null,
             null
-          ]
+          ],
+          "firstTime": "19:20"
         },
         {
+          "routeNumber": "785",
           "times": [
             "20:15",
             "20:25",
@@ -752,14 +847,21 @@
             null,
             null,
             null
-          ]
+          ],
+          "firstTime": "20:15"
         }
-      ]
+      ],
+      "status": "ok"
     },
     {
-      "sheet": "785 (휴일) 한경면사무소-저지-금악-한림체육관",
+      "sheets": [
+        "785 (휴일) 한경면사무소-저지-금악-한림체육관"
+      ],
+      "routeNumbers": [
+        "785"
+      ],
       "dayType": "unstated",
-      "direction": "한경면사무소→저지→한림체육관\n(토·공휴일)",
+      "direction": "한경면사무소→저지→한림체육관 (토·공휴일)",
       "effectiveFrom": "2026-01-01",
       "summary": "첫차(신창 농산물유통센터) 6:37, 막차(신창 농산물유통센터) 18:15, 제주시공영버스(064-728-3211)",
       "timepoints": [
@@ -780,6 +882,7 @@
       ],
       "trips": [
         {
+          "routeNumber": "785",
           "times": [
             null,
             null,
@@ -795,9 +898,11 @@
             "07:17",
             "07:28",
             "07:39"
-          ]
+          ],
+          "firstTime": "06:37"
         },
         {
+          "routeNumber": "785",
           "times": [
             null,
             null,
@@ -813,9 +918,11 @@
             "08:35",
             "08:46",
             "08:57"
-          ]
+          ],
+          "firstTime": "07:55"
         },
         {
+          "routeNumber": "785",
           "times": [
             "10:00",
             "10:05",
@@ -831,9 +938,11 @@
             "10:37",
             "10:48",
             "10:59"
-          ]
+          ],
+          "firstTime": "10:00"
         },
         {
+          "routeNumber": "785",
           "times": [
             null,
             null,
@@ -849,9 +958,11 @@
             "11:50",
             "12:01",
             "12:12"
-          ]
+          ],
+          "firstTime": "11:10"
         },
         {
+          "routeNumber": "785",
           "times": [
             "14:20",
             "14:25",
@@ -867,9 +978,11 @@
             "14:57",
             "15:08",
             "15:19"
-          ]
+          ],
+          "firstTime": "14:20"
         },
         {
+          "routeNumber": "785",
           "times": [
             null,
             null,
@@ -885,9 +998,11 @@
             "16:25",
             "16:36",
             "16:47"
-          ]
+          ],
+          "firstTime": "15:45"
         },
         {
+          "routeNumber": "785",
           "times": [
             "17:20",
             "17:25",
@@ -903,9 +1018,11 @@
             "17:57",
             "18:08",
             "18:19"
-          ]
+          ],
+          "firstTime": "17:20"
         },
         {
+          "routeNumber": "785",
           "times": [
             null,
             null,
@@ -921,9 +1038,11 @@
             "18:55",
             "19:06",
             "19:17"
-          ]
+          ],
+          "firstTime": "18:15"
         }
-      ]
+      ],
+      "status": "ok"
     }
   ]
 }

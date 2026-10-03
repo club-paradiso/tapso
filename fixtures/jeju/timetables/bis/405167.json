@@ -1,22 +1,32 @@
 {
-  "schemaVersion": "tapso-jeju-timetable-v2",
+  "schemaVersion": "tapso-jeju-timetable-v3",
   "label": "OFFICIAL_DATED",
   "source": {
     "publisher": "제주특별자치도 (bus.jeju.go.kr)",
     "dataset": "data.go.kr 3043887",
     "page": "https://bus.jeju.go.kr/publicTrafficInformation/generalBusSchedule",
     "file": "405167.xlsx",
-    "sha256": "31fa51d6fbce60184a61ab507a49970e77d17ac0e917bf579703d3b8aa5e5c13"
+    "sha256": "31fa51d6fbce60184a61ab507a49970e77d17ac0e917bf579703d3b8aa5e5c13",
+    "scheduleId": "405167",
+    "listedName": "820-1"
   },
   "retrievedOn": "2026-10-03",
   "parser": {
     "name": "jeju-bis-xlsx",
-    "version": "2"
+    "version": "3"
   },
-  "routeNumber": "820-1",
+  "routeNumbers": [
+    "820-1"
+  ],
+  "status": "parsed",
   "services": [
     {
-      "sheet": "820-1 정보없음",
+      "sheets": [
+        "820-1 정보없음"
+      ],
+      "routeNumbers": [
+        "820-1"
+      ],
       "dayType": "unstated",
       "direction": "세계자동차박물관 방향",
       "effectiveFrom": "2024-05-11",
@@ -56,6 +66,7 @@
       ],
       "trips": [
         {
+          "routeNumber": "820-1",
           "times": [
             "09:00",
             "09:03",
@@ -88,9 +99,11 @@
             null,
             null,
             null
-          ]
+          ],
+          "firstTime": "09:00"
         },
         {
+          "routeNumber": "820-1",
           "times": [
             "09:30",
             "09:33",
@@ -123,9 +136,11 @@
             null,
             null,
             null
-          ]
+          ],
+          "firstTime": "09:30"
         },
         {
+          "routeNumber": "820-1",
           "times": [
             "10:30",
             "10:33",
@@ -158,9 +173,11 @@
             null,
             null,
             null
-          ]
+          ],
+          "firstTime": "10:30"
         },
         {
+          "routeNumber": "820-1",
           "times": [
             "11:30",
             "11:33",
@@ -193,9 +210,11 @@
             null,
             null,
             null
-          ]
+          ],
+          "firstTime": "11:30"
         },
         {
+          "routeNumber": "820-1",
           "times": [
             "12:30",
             "12:33",
@@ -228,9 +247,11 @@
             null,
             null,
             null
-          ]
+          ],
+          "firstTime": "12:30"
         },
         {
+          "routeNumber": "820-1",
           "times": [
             "13:30",
             "13:33",
@@ -263,9 +284,11 @@
             null,
             null,
             null
-          ]
+          ],
+          "firstTime": "13:30"
         },
         {
+          "routeNumber": "820-1",
           "times": [
             "14:30",
             "14:33",
@@ -298,9 +321,11 @@
             null,
             null,
             null
-          ]
+          ],
+          "firstTime": "14:30"
         },
         {
+          "routeNumber": "820-1",
           "times": [
             "15:30",
             "15:33",
@@ -333,9 +358,11 @@
             null,
             null,
             null
-          ]
+          ],
+          "firstTime": "15:30"
         },
         {
+          "routeNumber": "820-1",
           "times": [
             "16:00",
             "16:03",
@@ -368,9 +395,11 @@
             "17:38",
             "17:44",
             "17:50"
-          ]
+          ],
+          "firstTime": "16:00"
         },
         {
+          "routeNumber": "820-1",
           "times": [
             "17:00",
             "17:03",
@@ -403,9 +432,11 @@
             "18:38",
             "18:44",
             "18:50"
-          ]
+          ],
+          "firstTime": "17:00"
         }
-      ]
+      ],
+      "status": "ok"
     }
   ]
 }

@@ -1,0 +1,67 @@
+{
+  "schemaVersion": "tapso-jeju-timetable-v3",
+  "label": "OFFICIAL_DATED",
+  "source": {
+    "publisher": "제주특별자치도 (bus.jeju.go.kr)",
+    "dataset": "data.go.kr 3043887",
+    "page": "https://bus.jeju.go.kr/publicTrafficInformation/generalBusSchedule",
+    "file": "405046.xlsx",
+    "sha256": "ce8e09f5050f04aac2edf1a9239458dd96130e6795fb13c55e4082ba689de390",
+    "scheduleId": "405046",
+    "listedName": "366"
+  },
+  "retrievedOn": "2026-10-03",
+  "parser": {
+    "name": "jeju-bis-xlsx",
+    "version": "3"
+  },
+  "routeNumbers": [
+    "366"
+  ],
+  "status": "parsed",
+  "services": [
+    {
+      "sheets": [
+        "366 (등교)한라대-연동대림-한라병원-연북로-제주대"
+      ],
+      "routeNumbers": [
+        "366"
+      ],
+      "dayType": "weekday",
+      "dayLabel": "평일",
+      "direction": "한라대 → 제주대",
+      "summary": "○ 등교시간 1회 운행, 극동여객(064-753-0310)",
+      "timepoints": [
+        "등 교",
+        "한라대",
+        "연동대림",
+        "한라병원",
+        "제원아파트",
+        "코스모스4로",
+        "제주여중고",
+        "제주대(영주고)"
+      ],
+      "trips": [
+        {
+          "routeNumber": "366",
+          "times": [
+            null,
+            "07:10",
+            "07:15",
+            "07:24",
+            "07:27",
+            "07:32",
+            "07:47",
+            "08:02"
+          ],
+          "cellNotes": {
+            "0": "(연동지구)"
+          },
+          "firstTime": "07:10"
+        }
+      ],
+      "note": "토.휴일.방학기간 운행 안함",
+      "status": "ok"
+    }
+  ]
+}

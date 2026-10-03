@@ -1,24 +1,34 @@
 {
-  "schemaVersion": "tapso-jeju-timetable-v2",
+  "schemaVersion": "tapso-jeju-timetable-v3",
   "label": "OFFICIAL_DATED",
   "source": {
     "publisher": "제주특별자치도 (bus.jeju.go.kr)",
     "dataset": "data.go.kr 3043887",
     "page": "https://bus.jeju.go.kr/publicTrafficInformation/generalBusSchedule",
     "file": "405179.xlsx",
-    "sha256": "d709b8aa4b6f5453515df0b8fd1b3005e747e198f7e156b2e71886358be2c978"
+    "sha256": "d709b8aa4b6f5453515df0b8fd1b3005e747e198f7e156b2e71886358be2c978",
+    "scheduleId": "405179",
+    "listedName": "102-1(수요맞춤형)"
   },
   "retrievedOn": "2026-10-03",
   "parser": {
     "name": "jeju-bis-xlsx",
-    "version": "2"
+    "version": "3"
   },
-  "routeNumber": "102-1",
+  "routeNumbers": [
+    "102-1"
+  ],
+  "status": "parsed",
   "services": [
     {
-      "sheet": "102-1 한림고-제주터미널",
+      "sheets": [
+        "102-1 한림고-제주터미널"
+      ],
+      "routeNumbers": [
+        "102-1"
+      ],
       "dayType": "unstated",
-      "direction": "한림고→서일주로\n→제주버스터미널",
+      "direction": "한림고→서일주로 →제주버스터미널",
       "effectiveFrom": "2026-02-12",
       "summary": "수용맞춤형버스 8:40, 막차 16:05, 제주여객(064-753-2056)",
       "timepoints": [
@@ -33,6 +43,7 @@
       ],
       "trips": [
         {
+          "routeNumber": "102-1",
           "times": [
             "08:40",
             "08:45",
@@ -42,9 +53,11 @@
             "09:32",
             "09:42",
             "09:49"
-          ]
+          ],
+          "firstTime": "08:40"
         },
         {
+          "routeNumber": "102-1",
           "times": [
             "16:05",
             "16:10",
@@ -54,14 +67,21 @@
             "17:02",
             "17:12",
             "17:21"
-          ]
+          ],
+          "firstTime": "16:05"
         }
-      ]
+      ],
+      "status": "ok"
     },
     {
-      "sheet": "102-1 제주터미널-한림고",
+      "sheets": [
+        "102-1 제주터미널-한림고"
+      ],
+      "routeNumbers": [
+        "102-1"
+      ],
       "dayType": "unstated",
-      "direction": "제주버스터미널→서일주로\n→한림고",
+      "direction": "제주버스터미널→서일주로 →한림고",
       "effectiveFrom": "2026-02-12",
       "summary": "수용맞춤형버스 7:00, 막차 14:25, 제주여객(064-753-2056)",
       "timepoints": [
@@ -76,6 +96,7 @@
       ],
       "trips": [
         {
+          "routeNumber": "102-1",
           "times": [
             "07:00",
             "07:10",
@@ -85,9 +106,11 @@
             "07:47",
             "08:03",
             "08:08"
-          ]
+          ],
+          "firstTime": "07:00"
         },
         {
+          "routeNumber": "102-1",
           "times": [
             "14:25",
             "14:35",
@@ -97,9 +120,11 @@
             "15:12",
             "15:28",
             "15:33"
-          ]
+          ],
+          "firstTime": "14:25"
         }
-      ]
+      ],
+      "status": "ok"
     }
   ]
 }

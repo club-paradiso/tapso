@@ -1,22 +1,32 @@
 {
-  "schemaVersion": "tapso-jeju-timetable-v2",
+  "schemaVersion": "tapso-jeju-timetable-v3",
   "label": "OFFICIAL_DATED",
   "source": {
     "publisher": "제주특별자치도 (bus.jeju.go.kr)",
     "dataset": "data.go.kr 3043887",
     "page": "https://bus.jeju.go.kr/publicTrafficInformation/generalBusSchedule",
     "file": "405124.xlsx",
-    "sha256": "11cf0e03318d8037c48f4fe2d4db46330949c6cb6dcfa0d58156f8cff5c9cea0"
+    "sha256": "11cf0e03318d8037c48f4fe2d4db46330949c6cb6dcfa0d58156f8cff5c9cea0",
+    "scheduleId": "405124",
+    "listedName": "781-2"
   },
   "retrievedOn": "2026-10-03",
   "parser": {
     "name": "jeju-bis-xlsx",
-    "version": "2"
+    "version": "3"
   },
-  "routeNumber": "781-2",
+  "routeNumbers": [
+    "781-2"
+  ],
+  "status": "parsed",
   "services": [
     {
-      "sheet": "781-2 한림2리-대림-귀덕1-상대-한림2리",
+      "sheets": [
+        "781-2 한림2리-대림-귀덕1-상대-한림2리"
+      ],
+      "routeNumbers": [
+        "781-2"
+      ],
       "dayType": "unstated",
       "direction": "한림2리 → 한림2리 (순환)",
       "effectiveFrom": "2024-02-01",
@@ -35,6 +45,7 @@
       ],
       "trips": [
         {
+          "routeNumber": "781-2",
           "times": [
             "07:00",
             "07:03",
@@ -46,9 +57,11 @@
             "07:34",
             "07:36",
             "07:40"
-          ]
+          ],
+          "firstTime": "07:00"
         },
         {
+          "routeNumber": "781-2",
           "times": [
             "08:00",
             "08:03",
@@ -60,9 +73,11 @@
             "08:34",
             "08:36",
             "08:40"
-          ]
+          ],
+          "firstTime": "08:00"
         },
         {
+          "routeNumber": "781-2",
           "times": [
             "09:00",
             "09:03",
@@ -74,9 +89,11 @@
             "09:34",
             "09:36",
             "09:40"
-          ]
+          ],
+          "firstTime": "09:00"
         },
         {
+          "routeNumber": "781-2",
           "times": [
             "10:00",
             "10:03",
@@ -88,9 +105,11 @@
             "10:34",
             "10:36",
             "10:40"
-          ]
+          ],
+          "firstTime": "10:00"
         },
         {
+          "routeNumber": "781-2",
           "times": [
             "11:00",
             "11:03",
@@ -102,9 +121,11 @@
             "11:34",
             "11:36",
             "11:40"
-          ]
+          ],
+          "firstTime": "11:00"
         },
         {
+          "routeNumber": "781-2",
           "times": [
             "13:00",
             "13:03",
@@ -116,9 +137,11 @@
             "13:34",
             "13:36",
             "13:40"
-          ]
+          ],
+          "firstTime": "13:00"
         },
         {
+          "routeNumber": "781-2",
           "times": [
             "14:10",
             "14:13",
@@ -130,9 +153,11 @@
             "14:44",
             "14:46",
             "14:50"
-          ]
+          ],
+          "firstTime": "14:10"
         },
         {
+          "routeNumber": "781-2",
           "times": [
             "15:15",
             "15:18",
@@ -144,9 +169,11 @@
             "15:49",
             "15:51",
             "15:55"
-          ]
+          ],
+          "firstTime": "15:15"
         },
         {
+          "routeNumber": "781-2",
           "times": [
             "16:20",
             "16:23",
@@ -158,9 +185,11 @@
             "16:54",
             "16:56",
             "17:00"
-          ]
+          ],
+          "firstTime": "16:20"
         },
         {
+          "routeNumber": "781-2",
           "times": [
             "17:20",
             "17:23",
@@ -172,9 +201,11 @@
             "17:54",
             "17:56",
             "18:00"
-          ]
+          ],
+          "firstTime": "17:20"
         },
         {
+          "routeNumber": "781-2",
           "times": [
             "19:00",
             "19:03",
@@ -186,9 +217,11 @@
             "19:34",
             "19:36",
             "19:40"
-          ]
+          ],
+          "firstTime": "19:00"
         },
         {
+          "routeNumber": "781-2",
           "times": [
             "20:00",
             "20:03",
@@ -200,9 +233,11 @@
             "20:34",
             "20:36",
             "20:40"
-          ]
+          ],
+          "firstTime": "20:00"
         }
-      ]
+      ],
+      "status": "ok"
     }
   ]
 }

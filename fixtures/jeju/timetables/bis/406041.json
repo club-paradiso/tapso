@@ -1,0 +1,212 @@
+{
+  "schemaVersion": "tapso-jeju-timetable-v3",
+  "label": "OFFICIAL_DATED",
+  "source": {
+    "publisher": "제주특별자치도 (bus.jeju.go.kr)",
+    "dataset": "data.go.kr 3043887",
+    "page": "https://bus.jeju.go.kr/publicTrafficInformation/generalBusSchedule",
+    "file": "406041.xlsx",
+    "sha256": "33f18b63e879c378823a162f83efed0050c3efd37a9d1436786c4e34f73ed872",
+    "scheduleId": "406041",
+    "listedName": "752-1"
+  },
+  "retrievedOn": "2026-10-03",
+  "parser": {
+    "name": "jeju-bis-xlsx",
+    "version": "3"
+  },
+  "routeNumbers": [
+    "752-1"
+  ],
+  "status": "parsed",
+  "services": [
+    {
+      "sheets": [
+        "752-1 운진항-안덕농협-신화공원-안성리-운진항"
+      ],
+      "routeNumbers": [
+        "752-1"
+      ],
+      "dayType": "unstated",
+      "direction": "대정(운진항) → 대정(운진항) (순환)",
+      "effectiveFrom": "2026-04-10",
+      "summary": "서귀포공영버스(064-760-3111~3)",
+      "timepoints": [
+        "모슬포남항 (운진항)",
+        "산이수동",
+        "안덕농협",
+        "화순 금모래해변",
+        "상창 보건진료소",
+        "광평리",
+        "동광 환승정류장",
+        "신화역사공원",
+        "응전동 (서광서리)",
+        "먼머루",
+        "안성리",
+        "모슬포남항 (운진항)"
+      ],
+      "trips": [
+        {
+          "routeNumber": "752-1",
+          "times": [
+            null,
+            null,
+            null,
+            null,
+            null,
+            "06:50",
+            "06:58",
+            null,
+            null,
+            null,
+            "07:10",
+            "07:23"
+          ],
+          "cellNotes": {
+            "8": "덕수2리교차로"
+          },
+          "firstTime": "06:50"
+        },
+        {
+          "routeNumber": "752-1",
+          "times": [
+            "06:50",
+            "07:03",
+            "07:18",
+            null,
+            "07:29",
+            "07:41",
+            "07:49",
+            null,
+            null,
+            null,
+            "08:01",
+            "08:14"
+          ],
+          "cellNotes": {
+            "8": "덕수2리교차로"
+          },
+          "firstTime": "06:50"
+        },
+        {
+          "routeNumber": "752-1",
+          "times": [
+            "07:45",
+            "07:58",
+            "08:13",
+            "08:17",
+            "08:31",
+            "08:43",
+            "08:51",
+            "08:59",
+            "09:06",
+            null,
+            "09:12",
+            "09:25"
+          ],
+          "firstTime": "07:45"
+        },
+        {
+          "routeNumber": "752-1",
+          "times": [
+            "08:45",
+            "08:58",
+            "09:13",
+            null,
+            "09:24",
+            "09:36",
+            "09:44",
+            "09:52",
+            null,
+            "09:59",
+            "10:05",
+            "10:18"
+          ],
+          "firstTime": "08:45"
+        },
+        {
+          "routeNumber": "752-1",
+          "times": [
+            "09:55",
+            "10:08",
+            "10:23",
+            "10:27",
+            "10:41",
+            "10:53",
+            "11:01",
+            "11:09",
+            "11:16",
+            null,
+            "11:22",
+            "11:35"
+          ],
+          "firstTime": "09:55"
+        },
+        {
+          "routeNumber": "752-1",
+          "times": [
+            "11:00",
+            "11:13",
+            "11:28",
+            null,
+            "11:39",
+            "11:51",
+            "11:59",
+            "12:07",
+            null,
+            "12:14",
+            "12:20",
+            "12:33"
+          ],
+          "firstTime": "11:00"
+        },
+        {
+          "routeNumber": "752-1",
+          "times": [
+            "11:50",
+            "12:03",
+            "12:18",
+            null,
+            "12:29",
+            "12:41",
+            "12:49",
+            null,
+            null,
+            null,
+            null,
+            null
+          ],
+          "note": "동광환승정류장 (4번 정류소) 종점",
+          "firstTime": "11:50"
+        },
+        {
+          "routeNumber": "752-1",
+          "times": [
+            null,
+            null,
+            null,
+            null,
+            null,
+            null,
+            null,
+            null,
+            null,
+            null,
+            null,
+            null
+          ],
+          "window": {
+            "from": "14:00",
+            "to": "21:30",
+            "label": "실시간 호출형"
+          },
+          "firstTime": null,
+          "conditions": [
+            "demand_responsive"
+          ]
+        }
+      ],
+      "status": "ok"
+    }
+  ]
+}

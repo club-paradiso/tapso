@@ -1,22 +1,32 @@
 {
-  "schemaVersion": "tapso-jeju-timetable-v2",
+  "schemaVersion": "tapso-jeju-timetable-v3",
   "label": "OFFICIAL_DATED",
   "source": {
     "publisher": "제주특별자치도 (bus.jeju.go.kr)",
     "dataset": "data.go.kr 3043887",
     "page": "https://bus.jeju.go.kr/publicTrafficInformation/generalBusSchedule",
     "file": "406013.xlsx",
-    "sha256": "714423c7258169a004b7025d29df77dd7506c04fa742e6f1a76fd6764979b548"
+    "sha256": "714423c7258169a004b7025d29df77dd7506c04fa742e6f1a76fd6764979b548",
+    "scheduleId": "406013",
+    "listedName": "625"
   },
   "retrievedOn": "2026-10-03",
   "parser": {
     "name": "jeju-bis-xlsx",
-    "version": "2"
+    "version": "3"
   },
-  "routeNumber": "625",
+  "routeNumbers": [
+    "625"
+  ],
+  "status": "parsed",
   "services": [
     {
-      "sheet": "625 토평-오일시장-중앙R-헬스케어타운",
+      "sheets": [
+        "625 토평-오일시장-중앙R-헬스케어타운"
+      ],
+      "routeNumbers": [
+        "625"
+      ],
       "dayType": "unstated",
       "direction": "토평→중앙로터리→헬스케어타운",
       "effectiveFrom": "2026-03-03",
@@ -32,6 +42,7 @@
       ],
       "trips": [
         {
+          "routeNumber": "625",
           "times": [
             "06:13",
             "06:16",
@@ -40,9 +51,11 @@
             null,
             "06:48",
             null
-          ]
+          ],
+          "firstTime": "06:13"
         },
         {
+          "routeNumber": "625",
           "times": [
             "06:53",
             "06:56",
@@ -52,9 +65,14 @@
             "07:28",
             null
           ],
-          "note": "남주고 경유(평일)"
+          "note": "남주고 경유(평일)",
+          "firstTime": "06:53",
+          "conditions": [
+            "남주고 경유(평일)"
+          ]
         },
         {
+          "routeNumber": "625",
           "times": [
             "07:10",
             "07:13",
@@ -64,9 +82,14 @@
             "07:45",
             null
           ],
-          "note": "남주고 경유(평일)"
+          "note": "남주고 경유(평일)",
+          "firstTime": "07:10",
+          "conditions": [
+            "남주고 경유(평일)"
+          ]
         },
         {
+          "routeNumber": "625",
           "times": [
             "07:43",
             "07:46",
@@ -76,9 +99,14 @@
             "08:18",
             null
           ],
-          "note": "남주고 경유(평일)"
+          "note": "남주고 경유(평일)",
+          "firstTime": "07:43",
+          "conditions": [
+            "남주고 경유(평일)"
+          ]
         },
         {
+          "routeNumber": "625",
           "times": [
             "08:30",
             "08:33",
@@ -87,9 +115,11 @@
             null,
             "09:05",
             null
-          ]
+          ],
+          "firstTime": "08:30"
         },
         {
+          "routeNumber": "625",
           "times": [
             "09:03",
             "09:06",
@@ -98,9 +128,11 @@
             null,
             "09:38",
             "09:46"
-          ]
+          ],
+          "firstTime": "09:03"
         },
         {
+          "routeNumber": "625",
           "times": [
             "09:48",
             "09:51",
@@ -109,9 +141,11 @@
             null,
             "10:23",
             null
-          ]
+          ],
+          "firstTime": "09:48"
         },
         {
+          "routeNumber": "625",
           "times": [
             "10:33",
             "10:36",
@@ -120,9 +154,11 @@
             null,
             "11:08",
             "11:16"
-          ]
+          ],
+          "firstTime": "10:33"
         },
         {
+          "routeNumber": "625",
           "times": [
             "11:23",
             "11:26",
@@ -131,9 +167,11 @@
             null,
             "11:58",
             null
-          ]
+          ],
+          "firstTime": "11:23"
         },
         {
+          "routeNumber": "625",
           "times": [
             "12:03",
             "12:06",
@@ -142,9 +180,11 @@
             null,
             "12:38",
             null
-          ]
+          ],
+          "firstTime": "12:03"
         },
         {
+          "routeNumber": "625",
           "times": [
             "12:48",
             "12:51",
@@ -153,9 +193,11 @@
             null,
             "13:23",
             "13:31"
-          ]
+          ],
+          "firstTime": "12:48"
         },
         {
+          "routeNumber": "625",
           "times": [
             "13:33",
             "13:36",
@@ -164,9 +206,11 @@
             null,
             "14:08",
             null
-          ]
+          ],
+          "firstTime": "13:33"
         },
         {
+          "routeNumber": "625",
           "times": [
             "14:10",
             "14:13",
@@ -175,9 +219,11 @@
             null,
             "14:45",
             "14:53"
-          ]
+          ],
+          "firstTime": "14:10"
         },
         {
+          "routeNumber": "625",
           "times": [
             "15:40",
             "15:43",
@@ -186,9 +232,11 @@
             null,
             "16:15",
             null
-          ]
+          ],
+          "firstTime": "15:40"
         },
         {
+          "routeNumber": "625",
           "times": [
             "15:53",
             "15:56",
@@ -197,9 +245,11 @@
             null,
             "16:28",
             null
-          ]
+          ],
+          "firstTime": "15:53"
         },
         {
+          "routeNumber": "625",
           "times": [
             "16:43",
             "16:46",
@@ -208,9 +258,11 @@
             null,
             "17:18",
             null
-          ]
+          ],
+          "firstTime": "16:43"
         },
         {
+          "routeNumber": "625",
           "times": [
             "17:25",
             "17:28",
@@ -219,9 +271,11 @@
             null,
             "18:00",
             null
-          ]
+          ],
+          "firstTime": "17:25"
         },
         {
+          "routeNumber": "625",
           "times": [
             "17:58",
             "18:01",
@@ -230,9 +284,11 @@
             null,
             "18:33",
             null
-          ]
+          ],
+          "firstTime": "17:58"
         },
         {
+          "routeNumber": "625",
           "times": [
             "18:43",
             "18:46",
@@ -241,9 +297,11 @@
             null,
             "19:18",
             null
-          ]
+          ],
+          "firstTime": "18:43"
         },
         {
+          "routeNumber": "625",
           "times": [
             "19:18",
             "19:21",
@@ -252,9 +310,11 @@
             null,
             "19:53",
             null
-          ]
+          ],
+          "firstTime": "19:18"
         },
         {
+          "routeNumber": "625",
           "times": [
             "19:53",
             "19:56",
@@ -263,9 +323,11 @@
             null,
             "20:28",
             null
-          ]
+          ],
+          "firstTime": "19:53"
         },
         {
+          "routeNumber": "625",
           "times": [
             "20:33",
             "20:36",
@@ -274,9 +336,11 @@
             null,
             "21:08",
             null
-          ]
+          ],
+          "firstTime": "20:33"
         },
         {
+          "routeNumber": "625",
           "times": [
             "21:08",
             "21:11",
@@ -285,12 +349,19 @@
             null,
             "21:43",
             null
-          ]
+          ],
+          "firstTime": "21:08"
         }
-      ]
+      ],
+      "status": "ok"
     },
     {
-      "sheet": "625 헬스케어타운-중앙R-오일시장-토평",
+      "sheets": [
+        "625 헬스케어타운-중앙R-오일시장-토평"
+      ],
+      "routeNumbers": [
+        "625"
+      ],
       "dayType": "unstated",
       "direction": "헬스케어타운→중앙로터리→토평",
       "effectiveFrom": "2026-03-03",
@@ -307,6 +378,7 @@
       ],
       "trips": [
         {
+          "routeNumber": "625",
           "times": [
             null,
             "06:15",
@@ -316,9 +388,11 @@
             null,
             "06:45",
             "06:50"
-          ]
+          ],
+          "firstTime": "06:15"
         },
         {
+          "routeNumber": "625",
           "times": [
             null,
             "06:48",
@@ -328,9 +402,11 @@
             null,
             "07:18",
             "07:23"
-          ]
+          ],
+          "firstTime": "06:48"
         },
         {
+          "routeNumber": "625",
           "times": [
             null,
             "07:28",
@@ -340,9 +416,11 @@
             null,
             "07:58",
             "08:03"
-          ]
+          ],
+          "firstTime": "07:28"
         },
         {
+          "routeNumber": "625",
           "times": [
             null,
             "07:45",
@@ -353,9 +431,14 @@
             "08:24",
             "08:29"
           ],
-          "note": "남주고 경유\n(평일)"
+          "note": "남주고 경유 (평일)",
+          "firstTime": "07:45",
+          "conditions": [
+            "남주고 경유 (평일)"
+          ]
         },
         {
+          "routeNumber": "625",
           "times": [
             null,
             "08:18",
@@ -365,9 +448,11 @@
             null,
             "08:48",
             "08:53"
-          ]
+          ],
+          "firstTime": "08:18"
         },
         {
+          "routeNumber": "625",
           "times": [
             null,
             "09:05",
@@ -377,9 +462,11 @@
             null,
             "09:35",
             "09:40"
-          ]
+          ],
+          "firstTime": "09:05"
         },
         {
+          "routeNumber": "625",
           "times": [
             "09:46",
             "09:53",
@@ -389,9 +476,11 @@
             null,
             "10:23",
             "10:28"
-          ]
+          ],
+          "firstTime": "09:46"
         },
         {
+          "routeNumber": "625",
           "times": [
             null,
             "10:23",
@@ -401,9 +490,11 @@
             null,
             "10:53",
             "10:58"
-          ]
+          ],
+          "firstTime": "10:23"
         },
         {
+          "routeNumber": "625",
           "times": [
             "11:16",
             "11:23",
@@ -413,9 +504,11 @@
             null,
             "11:53",
             "11:58"
-          ]
+          ],
+          "firstTime": "11:16"
         },
         {
+          "routeNumber": "625",
           "times": [
             null,
             "11:58",
@@ -425,9 +518,11 @@
             null,
             "12:28",
             "12:33"
-          ]
+          ],
+          "firstTime": "11:58"
         },
         {
+          "routeNumber": "625",
           "times": [
             null,
             "12:38",
@@ -437,9 +532,11 @@
             null,
             "13:08",
             "13:13"
-          ]
+          ],
+          "firstTime": "12:38"
         },
         {
+          "routeNumber": "625",
           "times": [
             "13:31",
             "13:38",
@@ -449,9 +546,11 @@
             null,
             "14:08",
             "14:13"
-          ]
+          ],
+          "firstTime": "13:31"
         },
         {
+          "routeNumber": "625",
           "times": [
             null,
             "14:08",
@@ -461,9 +560,11 @@
             null,
             "14:38",
             "14:43"
-          ]
+          ],
+          "firstTime": "14:08"
         },
         {
+          "routeNumber": "625",
           "times": [
             "14:53",
             "15:00",
@@ -474,9 +575,14 @@
             "15:30",
             "15:35"
           ],
-          "note": "남주고 경유\n(평일)"
+          "note": "남주고 경유 (평일)",
+          "firstTime": "14:53",
+          "conditions": [
+            "남주고 경유 (평일)"
+          ]
         },
         {
+          "routeNumber": "625",
           "times": [
             null,
             "16:15",
@@ -487,9 +593,14 @@
             "16:45",
             "16:50"
           ],
-          "note": "남주고 경유\n(평일)"
+          "note": "남주고 경유 (평일)",
+          "firstTime": "16:15",
+          "conditions": [
+            "남주고 경유 (평일)"
+          ]
         },
         {
+          "routeNumber": "625",
           "times": [
             null,
             "16:28",
@@ -499,9 +610,11 @@
             null,
             "16:58",
             "17:03"
-          ]
+          ],
+          "firstTime": "16:28"
         },
         {
+          "routeNumber": "625",
           "times": [
             null,
             "17:18",
@@ -511,9 +624,11 @@
             null,
             "17:48",
             "17:53"
-          ]
+          ],
+          "firstTime": "17:18"
         },
         {
+          "routeNumber": "625",
           "times": [
             null,
             "18:00",
@@ -524,9 +639,14 @@
             "18:30",
             "18:35"
           ],
-          "note": "남주고 경유\n(평일)"
+          "note": "남주고 경유 (평일)",
+          "firstTime": "18:00",
+          "conditions": [
+            "남주고 경유 (평일)"
+          ]
         },
         {
+          "routeNumber": "625",
           "times": [
             null,
             "18:33",
@@ -536,9 +656,11 @@
             null,
             "19:03",
             "19:08"
-          ]
+          ],
+          "firstTime": "18:33"
         },
         {
+          "routeNumber": "625",
           "times": [
             null,
             "19:18",
@@ -548,9 +670,11 @@
             null,
             "19:48",
             "19:53"
-          ]
+          ],
+          "firstTime": "19:18"
         },
         {
+          "routeNumber": "625",
           "times": [
             null,
             "19:53",
@@ -560,9 +684,11 @@
             null,
             "20:23",
             "20:28"
-          ]
+          ],
+          "firstTime": "19:53"
         },
         {
+          "routeNumber": "625",
           "times": [
             null,
             "20:28",
@@ -572,9 +698,11 @@
             null,
             "20:58",
             "21:03"
-          ]
+          ],
+          "firstTime": "20:28"
         },
         {
+          "routeNumber": "625",
           "times": [
             null,
             "21:08",
@@ -585,9 +713,14 @@
             "21:38",
             "21:43"
           ],
-          "note": "남주고 경유\n(평일)"
+          "note": "남주고 경유 (평일)",
+          "firstTime": "21:08",
+          "conditions": [
+            "남주고 경유 (평일)"
+          ]
         },
         {
+          "routeNumber": "625",
           "times": [
             null,
             "21:43",
@@ -597,9 +730,11 @@
             null,
             "22:12",
             "22:16"
-          ]
+          ],
+          "firstTime": "21:43"
         }
-      ]
+      ],
+      "status": "ok"
     }
   ]
 }

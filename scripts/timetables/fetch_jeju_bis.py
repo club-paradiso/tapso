@@ -103,18 +103,30 @@ def json_body(status: int, body: bytes, what: str) -> object:
 
 
 def parse_into(out: Path, record: dict, retrieved_on: str) -> None:
-    """Parse one downloaded file; set the record's outcome. Writes or removes OUT/<id>.json."""
+    """Parse one downloaded file; set the record's outcome. Writes or removes OUT/<id>.json.
+
+    Outcomes: `parsed` (every service agrees with itself), `source_conflict` (the
+    file parses, and at least one service contradicts itself; that service is
+    never served), `no_timetable` (the site has none, or the file is the
+    source's suspension notice), `parse_refused` (outside the parser's grammar;
+    kept raw with the reason and its format family)."""
     path = out / record["file"]
     target = out / f"{record['id']}.json"
-    for key in ("routeNumber", "services", "reason"):
+    for key in ("routeNumber", "routeNumbers", "services", "reason", "family", "conflicts"):
         record.pop(key, None)
     try:
-        dataset = jeju_xlsx.parse_file(path, retrieved_on, file_name=path.name)
+        dataset = jeju_xlsx.parse_file(path, retrieved_on, file_name=path.name, listed_name=record["name"], schedule_id=record["id"])
         target.write_text(json.dumps(dataset, ensure_ascii=False, indent=2) + "\n", encoding="utf-8")
-        record.update(outcome="parsed", routeNumber=dataset["routeNumber"], services=len(dataset["services"]))
+        record.update(outcome=dataset["status"], routeNumbers=dataset["routeNumbers"], services=len(dataset["services"]))
+        conflicts = [f"{service['sheets'][0]}: {message}" for service in dataset["services"] for message in service.get("conflicts", [])]
+        if conflicts:
+            record["conflicts"] = conflicts
+    except jeju_xlsx.SuspendedNotice as notice:
+        target.unlink(missing_ok=True)
+        record.update(outcome="no_timetable", reason=f"suspension_notice: {notice}")
     except jeju_xlsx.TimetableParseError as error:
         target.unlink(missing_ok=True)
-        record.update(outcome="parse_refused", reason=str(error))
+        record.update(outcome="parse_refused", reason=str(error), family=error.family)
 
 
 def tally(manifest: list[dict]) -> dict[str, int]:

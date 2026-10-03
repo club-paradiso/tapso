@@ -1,0 +1,191 @@
+{
+  "schemaVersion": "tapso-jeju-timetable-v3",
+  "label": "OFFICIAL_DATED",
+  "source": {
+    "publisher": "제주특별자치도 (bus.jeju.go.kr)",
+    "dataset": "data.go.kr 3043887",
+    "page": "https://bus.jeju.go.kr/publicTrafficInformation/generalBusSchedule",
+    "file": "405153.xlsx",
+    "sha256": "a405dc233073658308f417ba09f334c10b54197a83c9eb83fddaefa4d3603978",
+    "scheduleId": "405153",
+    "listedName": "1950"
+  },
+  "retrievedOn": "2026-10-03",
+  "parser": {
+    "name": "jeju-bis-xlsx",
+    "version": "3"
+  },
+  "routeNumbers": [
+    "1950"
+  ],
+  "serviceLabels": [
+    "임시"
+  ],
+  "status": "parsed",
+  "services": [
+    {
+      "sheets": [
+        "1950 관음사 탐방로-제주터미널"
+      ],
+      "routeNumbers": [
+        "1950"
+      ],
+      "dayType": "unstated",
+      "serviceLabels": [
+        "임시"
+      ],
+      "direction": "관음사 탐방로 입구 → 한라병원 → 국제공항 → 제주터미널",
+      "effectiveFrom": "2024-11-27",
+      "summary": "제주시 공영버스(064-728-3211)",
+      "timepoints": [
+        "관음사 탐방로(북)",
+        "한라수목원",
+        "한라병원",
+        "신제주로터리",
+        "제주국제공항 (하차전용)",
+        "제주터미널 (남)(외부)"
+      ],
+      "trips": [
+        {
+          "routeNumber": "1950",
+          "times": [
+            "16:00",
+            "16:23",
+            "16:35",
+            "16:40",
+            "16:50",
+            "17:00"
+          ],
+          "firstTime": "16:00"
+        },
+        {
+          "routeNumber": "1950",
+          "times": [
+            "17:00",
+            "17:23",
+            "17:35",
+            "17:40",
+            "17:50",
+            "18:00"
+          ],
+          "note": "평일 운행안함 주말, 공휴일 운행",
+          "firstTime": "17:00",
+          "conditions": [
+            "평일 운행안함 주말, 공휴일 운행"
+          ]
+        },
+        {
+          "routeNumber": "1950",
+          "times": [
+            "18:40",
+            "19:03",
+            "19:15",
+            "19:20",
+            "19:30",
+            "19:40"
+          ],
+          "note": "평일 운행안함 주말, 공휴일 운행",
+          "firstTime": "18:40",
+          "conditions": [
+            "평일 운행안함 주말, 공휴일 운행"
+          ]
+        },
+        {
+          "routeNumber": "1950",
+          "times": [
+            "19:00",
+            "19:23",
+            "19:35",
+            "19:40",
+            "19:50",
+            "20:00"
+          ],
+          "firstTime": "19:00"
+        }
+      ],
+      "status": "ok"
+    },
+    {
+      "sheets": [
+        "1950 제주터미널-관음사 탐방로"
+      ],
+      "routeNumbers": [
+        "1950"
+      ],
+      "dayType": "unstated",
+      "serviceLabels": [
+        "임시"
+      ],
+      "direction": "제주터미널 → 국제공항 → 한라병원 → 관음사 탐방로 입구",
+      "effectiveFrom": "2024-11-27",
+      "summary": "제주시 공영버스(064-728-3211)",
+      "timepoints": [
+        "제주터미널 (북)(외부)",
+        "제주국제공항6",
+        "신제주로터리",
+        "한라병원",
+        "한라수목원",
+        "관음사 탐방로(남)"
+      ],
+      "trips": [
+        {
+          "routeNumber": "1950",
+          "times": [
+            "05:10",
+            null,
+            "05:20",
+            "05:25",
+            "05:37",
+            "06:00"
+          ],
+          "firstTime": "05:10"
+        },
+        {
+          "routeNumber": "1950",
+          "times": [
+            "06:00",
+            null,
+            "06:10",
+            "06:15",
+            "06:27",
+            "06:50"
+          ],
+          "note": "평일 운행안함 주말, 공휴일 운행",
+          "firstTime": "06:00",
+          "conditions": [
+            "평일 운행안함 주말, 공휴일 운행"
+          ]
+        },
+        {
+          "routeNumber": "1950",
+          "times": [
+            "07:30",
+            "07:40",
+            "07:50",
+            "07:55",
+            "08:07",
+            "08:30"
+          ],
+          "note": "평일 운행안함 주말, 공휴일 운행",
+          "firstTime": "07:30",
+          "conditions": [
+            "평일 운행안함 주말, 공휴일 운행"
+          ]
+        },
+        {
+          "routeNumber": "1950",
+          "times": [
+            "07:50",
+            "08:00",
+            "08:10",
+            "08:15",
+            "08:27",
+            "08:50"
+          ],
+          "firstTime": "07:50"
+        }
+      ],
+      "status": "ok"
+    }
+  ]
+}

@@ -1,22 +1,32 @@
 {
-  "schemaVersion": "tapso-jeju-timetable-v2",
+  "schemaVersion": "tapso-jeju-timetable-v3",
   "label": "OFFICIAL_DATED",
   "source": {
     "publisher": "제주특별자치도 (bus.jeju.go.kr)",
     "dataset": "data.go.kr 3043887",
     "page": "https://bus.jeju.go.kr/publicTrafficInformation/generalBusSchedule",
     "file": "405088.xlsx",
-    "sha256": "8c7d6ecd6e3dfb8c32f9ec8f05f5ffd23cde55bd1da0067a931bd68abe564920"
+    "sha256": "8c7d6ecd6e3dfb8c32f9ec8f05f5ffd23cde55bd1da0067a931bd68abe564920",
+    "scheduleId": "405088",
+    "listedName": "784-2"
   },
   "retrievedOn": "2026-10-03",
   "parser": {
     "name": "jeju-bis-xlsx",
-    "version": "2"
+    "version": "3"
   },
-  "routeNumber": "784-2",
+  "routeNumbers": [
+    "784-2"
+  ],
+  "status": "parsed",
   "services": [
     {
-      "sheet": "784-2 동광-신화역사-청수-조수-금능-한림체육관",
+      "sheets": [
+        "784-2 동광-신화역사-청수-조수-금능-한림체육관"
+      ],
+      "routeNumbers": [
+        "784-2"
+      ],
       "dayType": "unstated",
       "direction": "동광환승센터 → 한림체육관후문",
       "effectiveFrom": "2026-01-01",
@@ -36,6 +46,7 @@
       ],
       "trips": [
         {
+          "routeNumber": "784-2",
           "times": [
             "07:10",
             "07:15",
@@ -48,9 +59,11 @@
             "07:56",
             "08:01",
             "08:16"
-          ]
+          ],
+          "firstTime": "07:10"
         },
         {
+          "routeNumber": "784-2",
           "times": [
             "08:00",
             "08:05",
@@ -63,9 +76,11 @@
             "08:46",
             "08:51",
             "09:06"
-          ]
+          ],
+          "firstTime": "08:00"
         },
         {
+          "routeNumber": "784-2",
           "times": [
             "10:40",
             "10:45",
@@ -78,9 +93,11 @@
             "11:26",
             "11:31",
             "11:46"
-          ]
+          ],
+          "firstTime": "10:40"
         },
         {
+          "routeNumber": "784-2",
           "times": [
             "11:22",
             "11:27",
@@ -93,9 +110,11 @@
             "12:08",
             "12:13",
             "12:28"
-          ]
+          ],
+          "firstTime": "11:22"
         },
         {
+          "routeNumber": "784-2",
           "times": [
             "14:15",
             "14:20",
@@ -108,9 +127,11 @@
             "15:01",
             "15:06",
             "15:21"
-          ]
+          ],
+          "firstTime": "14:15"
         },
         {
+          "routeNumber": "784-2",
           "times": [
             "16:30",
             "16:35",
@@ -123,9 +144,11 @@
             "17:16",
             "17:21",
             "17:36"
-          ]
+          ],
+          "firstTime": "16:30"
         },
         {
+          "routeNumber": "784-2",
           "times": [
             "18:15",
             "18:20",
@@ -138,9 +161,11 @@
             "19:01",
             "19:06",
             "19:21"
-          ]
+          ],
+          "firstTime": "18:15"
         },
         {
+          "routeNumber": "784-2",
           "times": [
             "20:20",
             "20:25",
@@ -153,12 +178,19 @@
             "21:06",
             "21:11",
             "21:26"
-          ]
+          ],
+          "firstTime": "20:20"
         }
-      ]
+      ],
+      "status": "ok"
     },
     {
-      "sheet": "784-2 한림체육관-금능-조수-청수-신화역사-동광",
+      "sheets": [
+        "784-2 한림체육관-금능-조수-청수-신화역사-동광"
+      ],
+      "routeNumbers": [
+        "784-2"
+      ],
       "dayType": "unstated",
       "direction": "한림체육관후문 → 동광육거리",
       "effectiveFrom": "2026-01-01",
@@ -178,6 +210,7 @@
       ],
       "trips": [
         {
+          "routeNumber": "784-2",
           "times": [
             "06:40",
             "06:55",
@@ -190,9 +223,11 @@
             "07:36",
             "07:41",
             "07:46"
-          ]
+          ],
+          "firstTime": "06:40"
         },
         {
+          "routeNumber": "784-2",
           "times": [
             "08:34",
             "08:49",
@@ -205,9 +240,11 @@
             "09:30",
             "09:35",
             "09:40"
-          ]
+          ],
+          "firstTime": "08:34"
         },
         {
+          "routeNumber": "784-2",
           "times": [
             "10:06",
             "10:21",
@@ -220,9 +257,11 @@
             "11:02",
             "11:07",
             "11:12"
-          ]
+          ],
+          "firstTime": "10:06"
         },
         {
+          "routeNumber": "784-2",
           "times": [
             "12:05",
             "12:20",
@@ -235,9 +274,11 @@
             "13:01",
             "13:06",
             "13:11"
-          ]
+          ],
+          "firstTime": "12:05"
         },
         {
+          "routeNumber": "784-2",
           "times": [
             "12:38",
             "12:53",
@@ -250,9 +291,11 @@
             "13:34",
             "13:39",
             "13:44"
-          ]
+          ],
+          "firstTime": "12:38"
         },
         {
+          "routeNumber": "784-2",
           "times": [
             "15:00",
             "15:15",
@@ -265,9 +308,11 @@
             "15:56",
             "16:01",
             "16:06"
-          ]
+          ],
+          "firstTime": "15:00"
         },
         {
+          "routeNumber": "784-2",
           "times": [
             "16:30",
             "16:45",
@@ -280,9 +325,11 @@
             "17:26",
             "17:31",
             "17:36"
-          ]
+          ],
+          "firstTime": "16:30"
         },
         {
+          "routeNumber": "784-2",
           "times": [
             "18:50",
             "19:05",
@@ -295,9 +342,11 @@
             "19:46",
             "19:51",
             "19:56"
-          ]
+          ],
+          "firstTime": "18:50"
         },
         {
+          "routeNumber": "784-2",
           "times": [
             "20:00",
             "20:15",
@@ -310,9 +359,11 @@
             "20:56",
             "21:01",
             "21:06"
-          ]
+          ],
+          "firstTime": "20:00"
         }
-      ]
+      ],
+      "status": "ok"
     }
   ]
 }

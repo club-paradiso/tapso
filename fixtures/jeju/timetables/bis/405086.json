@@ -1,0 +1,291 @@
+{
+  "schemaVersion": "tapso-jeju-timetable-v3",
+  "label": "OFFICIAL_DATED",
+  "source": {
+    "publisher": "제주특별자치도 (bus.jeju.go.kr)",
+    "dataset": "data.go.kr 3043887",
+    "page": "https://bus.jeju.go.kr/publicTrafficInformation/generalBusSchedule",
+    "file": "405086.xlsx",
+    "sha256": "e5d16f783e54a008ea5840c1505dbd9a13f136021cdafc00e96a4794abeaf43d",
+    "scheduleId": "405086",
+    "listedName": "783-2"
+  },
+  "retrievedOn": "2026-10-03",
+  "parser": {
+    "name": "jeju-bis-xlsx",
+    "version": "3"
+  },
+  "routeNumbers": [
+    "783-2"
+  ],
+  "serviceLabels": [
+    "옵서버스"
+  ],
+  "status": "source_conflict",
+  "services": [
+    {
+      "sheets": [
+        "783-2 동광-양돈단지-금악-신명-한림여중-한림체육관"
+      ],
+      "routeNumbers": [
+        "783-2"
+      ],
+      "dayType": "unstated",
+      "serviceLabels": [
+        "옵서버스"
+      ],
+      "direction": "동광환승센터 → 한림체육관후문",
+      "effectiveFrom": "2026-08-31",
+      "summary": "제주시공영버스(064-728-3211)",
+      "timepoints": [
+        "동광",
+        "이시돌삼거리",
+        "이시돌상단지",
+        "양돈단지",
+        "금악",
+        "고림동",
+        "신명동",
+        "한림2리",
+        "한림여중",
+        "한림오일시장",
+        "한림체육관후문"
+      ],
+      "trips": [
+        {
+          "routeNumber": "783-2",
+          "times": [
+            "07:31",
+            "07:38",
+            "07:44",
+            "07:52",
+            "07:56",
+            "08:00",
+            "08:03",
+            "08:08",
+            "08:12",
+            null,
+            "08:22"
+          ],
+          "note": "오일시장 미경유",
+          "firstTime": "07:31"
+        },
+        {
+          "routeNumber": "783-2",
+          "times": [
+            "10:35",
+            "10:42",
+            "10:48",
+            "10:56",
+            "11:00",
+            "11:04",
+            "11:07",
+            "11:12",
+            "11:16",
+            null,
+            "11:30"
+          ],
+          "marks": {
+            "9": "○"
+          },
+          "firstTime": "10:35"
+        },
+        {
+          "routeNumber": "783-2",
+          "times": [
+            "15:30",
+            "15:37",
+            "15:43",
+            "15:51",
+            "15:55",
+            "15:59",
+            "16:02",
+            "16:07",
+            "16:11",
+            null,
+            "16:25"
+          ],
+          "marks": {
+            "9": "○"
+          },
+          "firstTime": "15:30"
+        },
+        {
+          "routeNumber": "783-2",
+          "times": [
+            "18:10",
+            null,
+            null,
+            null,
+            null,
+            null,
+            null,
+            null,
+            null,
+            null,
+            "21:00"
+          ],
+          "cellNotes": {
+            "1": "옵서버스 운행"
+          },
+          "firstTime": "18:10"
+        }
+      ],
+      "status": "ok"
+    },
+    {
+      "sheets": [
+        "783-2 한림체육관-한림여중-금악-양돈단지-동광"
+      ],
+      "routeNumbers": [
+        "783-2"
+      ],
+      "dayType": "unstated",
+      "serviceLabels": [
+        "옵서버스"
+      ],
+      "direction": "한림체육관후문 → 동광육거리",
+      "effectiveFrom": "2026-08-31",
+      "summary": "제주시공영버스(064-728-3211)",
+      "timepoints": [
+        "한림체육관후문",
+        "한림오일시장",
+        "한림여중",
+        "동명리",
+        "신명동",
+        "고림동",
+        "금악",
+        "양돈단지",
+        "이시돌상단지",
+        "이시돌삼거리",
+        "동광"
+      ],
+      "trips": [
+        {
+          "routeNumber": "783-2",
+          "times": [
+            "06:30",
+            null,
+            "06:40",
+            "06:44",
+            "06:49",
+            "06:52",
+            "06:56",
+            "07:00",
+            "07:08",
+            "07:14",
+            "07:21"
+          ],
+          "note": "오일시장 미경유",
+          "firstTime": "06:30"
+        },
+        {
+          "routeNumber": "783-2",
+          "times": [
+            "08:35",
+            null,
+            "08:49",
+            "08:53",
+            "08:58",
+            "09:01",
+            "09:05",
+            "09:09",
+            "09:17",
+            "09:23",
+            "09:30"
+          ],
+          "marks": {
+            "1": "○"
+          },
+          "firstTime": "08:35"
+        },
+        {
+          "routeNumber": "783-2",
+          "times": [
+            "11:45",
+            null,
+            "11:59",
+            "00:03",
+            "12:08",
+            "12:11",
+            "12:15",
+            "12:19",
+            "12:27",
+            "12:33",
+            "12:40"
+          ],
+          "marks": {
+            "1": "○"
+          },
+          "firstTime": "11:45"
+        },
+        {
+          "routeNumber": "783-2",
+          "times": [
+            "14:20",
+            null,
+            "14:34",
+            "14:38",
+            "14:43",
+            "14:46",
+            "14:50",
+            "14:54",
+            "15:02",
+            "15:08",
+            "15:15"
+          ],
+          "marks": {
+            "1": "○"
+          },
+          "firstTime": "14:20"
+        },
+        {
+          "routeNumber": "783-2",
+          "times": [
+            "16:55",
+            null,
+            "17:09",
+            "17:13",
+            "17:18",
+            "17:21",
+            "17:25",
+            "17:29",
+            "17:37",
+            "17:43",
+            "17:50"
+          ],
+          "marks": {
+            "1": "○"
+          },
+          "firstTime": "16:55"
+        },
+        {
+          "routeNumber": "783-2",
+          "times": [
+            "18:10",
+            null,
+            null,
+            null,
+            null,
+            null,
+            null,
+            null,
+            null,
+            null,
+            "21:00"
+          ],
+          "cellNotes": {
+            "1": "옵서버스 운행"
+          },
+          "firstTime": "18:10"
+        }
+      ],
+      "status": "source_conflict",
+      "conflicts": [
+        "trip 3: times run backwards (11:59 then 00:03)"
+      ],
+      "warnings": [
+        "rows are not in time order at '동명리'"
+      ]
+    }
+  ]
+}

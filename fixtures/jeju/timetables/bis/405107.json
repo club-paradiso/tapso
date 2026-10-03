@@ -1,24 +1,35 @@
 {
-  "schemaVersion": "tapso-jeju-timetable-v2",
+  "schemaVersion": "tapso-jeju-timetable-v3",
   "label": "OFFICIAL_DATED",
   "source": {
     "publisher": "제주특별자치도 (bus.jeju.go.kr)",
     "dataset": "data.go.kr 3043887",
     "page": "https://bus.jeju.go.kr/publicTrafficInformation/generalBusSchedule",
     "file": "405107.xlsx",
-    "sha256": "b1ef0187039bc0ac6185aa619ed6ddc099da1e90d44a455dd36cc2eb75e85bc8"
+    "sha256": "b1ef0187039bc0ac6185aa619ed6ddc099da1e90d44a455dd36cc2eb75e85bc8",
+    "scheduleId": "405107",
+    "listedName": "3002"
   },
   "retrievedOn": "2026-10-03",
   "parser": {
     "name": "jeju-bis-xlsx",
-    "version": "2"
+    "version": "3"
   },
-  "routeNumber": "3002",
+  "routeNumbers": [
+    "3002"
+  ],
+  "status": "parsed",
   "services": [
     {
-      "sheet": "3002 (삼양-여상-시청-중앙고(아라주공))심야",
+      "sheets": [
+        "3002 (삼양-여상-시청-중앙고(아라주공))심야"
+      ],
+      "routeNumbers": [
+        "3002"
+      ],
       "dayType": "unstated",
       "direction": "삼양-중앙고(아라주공) (심야)",
+      "effectiveNote": "미입력",
       "summary": "첫차 22:20, 막차 23:00, 배차간격 1일 2회, 관광지순환버스(064-746-7310)",
       "timepoints": [
         "삼양",
@@ -34,6 +45,7 @@
       ],
       "trips": [
         {
+          "routeNumber": "3002",
           "times": [
             "22:20",
             "22:25",
@@ -45,9 +57,11 @@
             "22:56",
             "22:59",
             null
-          ]
+          ],
+          "firstTime": "22:20"
         },
         {
+          "routeNumber": "3002",
           "times": [
             "23:00",
             "23:03",
@@ -59,14 +73,22 @@
             null,
             null,
             "23:33"
-          ]
+          ],
+          "firstTime": "23:00"
         }
-      ]
+      ],
+      "status": "ok"
     },
     {
-      "sheet": "3002 (영주고(중앙고)-신성여고-시청-여상-삼양)심야",
+      "sheets": [
+        "3002 (영주고(중앙고)-신성여고-시청-여상-삼양)심야"
+      ],
+      "routeNumbers": [
+        "3002"
+      ],
       "dayType": "unstated",
       "direction": "영주고(중앙고)-삼양 (심야)",
+      "effectiveNote": "미입력",
       "summary": "첫차 22:10, 막차 23:05, 배차간격 1일 2회, 관광지순환버스(064-746-7310)",
       "timepoints": [
         "영주고",
@@ -82,6 +104,7 @@
       ],
       "trips": [
         {
+          "routeNumber": "3002",
           "times": [
             "22:10",
             "22:14",
@@ -93,9 +116,11 @@
             "22:42",
             "22:44",
             "22:46"
-          ]
+          ],
+          "firstTime": "22:10"
         },
         {
+          "routeNumber": "3002",
           "times": [
             null,
             "23:05",
@@ -107,9 +132,11 @@
             "23:31",
             "23:33",
             "23:36"
-          ]
+          ],
+          "firstTime": "23:05"
         }
-      ]
+      ],
+      "status": "ok"
     }
   ]
 }

@@ -1,0 +1,1141 @@
+{
+  "schemaVersion": "tapso-jeju-timetable-v3",
+  "label": "OFFICIAL_DATED",
+  "source": {
+    "publisher": "제주특별자치도 (bus.jeju.go.kr)",
+    "dataset": "data.go.kr 3043887",
+    "page": "https://bus.jeju.go.kr/publicTrafficInformation/generalBusSchedule",
+    "file": "405012.xlsx",
+    "sha256": "06f6b13f5107e8f606c17cea9b96ef6de9a94a1074737ea26976cdd21b3263ad",
+    "scheduleId": "405012",
+    "listedName": "221, 222"
+  },
+  "retrievedOn": "2026-10-03",
+  "parser": {
+    "name": "jeju-bis-xlsx",
+    "version": "3"
+  },
+  "routeNumbers": [
+    "221",
+    "222"
+  ],
+  "status": "parsed",
+  "services": [
+    {
+      "sheets": [
+        "221 표선-성읍-대천동-봉개-동광양-제주터미널",
+        "222 표선-성읍-대천동-봉개-동광양-제주터미널"
+      ],
+      "routeNumbers": [
+        "221",
+        "222"
+      ],
+      "dayType": "unstated",
+      "direction": "제주민속촌 → 제주터미널",
+      "effectiveFrom": "2026-02-12",
+      "summary": "[221번] 첫차 6:10, 막차 22:35, 배차간격 30~75분\n[222번] 첫차 7:20, 막차 21:35, 1일 10회 운행, 제주여객(064-753-2056)",
+      "timepoints": [
+        "제주민속촌",
+        "표선",
+        "토산1리 (경유)",
+        "가시리 (경유)",
+        "신풍 (경유)",
+        "삼달 (경유)",
+        "성읍 1리",
+        "대천동",
+        "제주대학교 병원",
+        "봉개",
+        "제주시청",
+        "제주터미널"
+      ],
+      "trips": [
+        {
+          "routeNumber": "221",
+          "times": [
+            "06:10",
+            "06:15",
+            null,
+            null,
+            null,
+            null,
+            "06:26",
+            "06:37",
+            null,
+            "06:55",
+            null,
+            "07:21"
+          ],
+          "firstTime": "06:10"
+        },
+        {
+          "routeNumber": "221",
+          "times": [
+            "06:50",
+            "06:55",
+            null,
+            null,
+            null,
+            null,
+            "07:06",
+            "07:17",
+            null,
+            "07:35",
+            null,
+            "08:01"
+          ],
+          "firstTime": "06:50"
+        },
+        {
+          "routeNumber": "222",
+          "times": [
+            "07:20",
+            "07:25",
+            "07:35",
+            "07:40",
+            null,
+            null,
+            "07:47",
+            "07:58",
+            "08:23",
+            null,
+            "08:39",
+            "08:45"
+          ],
+          "firstTime": "07:20"
+        },
+        {
+          "routeNumber": "221",
+          "times": [
+            "07:55",
+            "08:00",
+            null,
+            null,
+            null,
+            null,
+            "08:11",
+            "08:22",
+            null,
+            "08:40",
+            null,
+            "09:06"
+          ],
+          "firstTime": "07:55"
+        },
+        {
+          "routeNumber": "221",
+          "times": [
+            "08:30",
+            "08:35",
+            null,
+            null,
+            "08:45",
+            "08:48",
+            "08:53",
+            "09:04",
+            null,
+            "09:22",
+            null,
+            "09:48"
+          ],
+          "firstTime": "08:30"
+        },
+        {
+          "routeNumber": "222",
+          "times": [
+            "09:00",
+            "09:05",
+            null,
+            null,
+            null,
+            null,
+            "09:16",
+            "09:27",
+            "09:52",
+            null,
+            "10:08",
+            "10:14"
+          ],
+          "firstTime": "09:00"
+        },
+        {
+          "routeNumber": "221",
+          "times": [
+            "09:30",
+            "09:35",
+            null,
+            null,
+            null,
+            null,
+            "09:46",
+            "09:57",
+            null,
+            "10:15",
+            null,
+            "10:41"
+          ],
+          "firstTime": "09:30"
+        },
+        {
+          "routeNumber": "222",
+          "times": [
+            "10:00",
+            "10:05",
+            null,
+            null,
+            null,
+            null,
+            "10:16",
+            "10:27",
+            "10:52",
+            null,
+            "11:08",
+            "11:14"
+          ],
+          "firstTime": "10:00"
+        },
+        {
+          "routeNumber": "221",
+          "times": [
+            "10:35",
+            "10:40",
+            null,
+            null,
+            null,
+            null,
+            "10:51",
+            "11:02",
+            null,
+            "11:20",
+            null,
+            "11:46"
+          ],
+          "firstTime": "10:35"
+        },
+        {
+          "routeNumber": "222",
+          "times": [
+            "11:10",
+            "11:15",
+            null,
+            null,
+            null,
+            null,
+            "11:26",
+            "11:37",
+            "12:02",
+            null,
+            "12:18",
+            "12:24"
+          ],
+          "firstTime": "11:10"
+        },
+        {
+          "routeNumber": "221",
+          "times": [
+            "11:50",
+            "11:55",
+            null,
+            null,
+            null,
+            null,
+            "12:06",
+            "12:17",
+            null,
+            "12:35",
+            null,
+            "13:01"
+          ],
+          "firstTime": "11:50"
+        },
+        {
+          "routeNumber": "221",
+          "times": [
+            "12:35",
+            "12:40",
+            null,
+            null,
+            null,
+            null,
+            "12:51",
+            "13:02",
+            null,
+            "13:20",
+            null,
+            "13:46"
+          ],
+          "firstTime": "12:35"
+        },
+        {
+          "routeNumber": "222",
+          "times": [
+            "13:20",
+            "13:25",
+            null,
+            null,
+            null,
+            null,
+            "13:36",
+            "13:47",
+            "14:12",
+            null,
+            "14:28",
+            "14:34"
+          ],
+          "firstTime": "13:20"
+        },
+        {
+          "routeNumber": "221",
+          "times": [
+            "13:50",
+            "13:55",
+            null,
+            null,
+            null,
+            null,
+            "14:06",
+            "14:17",
+            null,
+            "14:35",
+            null,
+            "15:01"
+          ],
+          "firstTime": "13:50"
+        },
+        {
+          "routeNumber": "221",
+          "times": [
+            "14:30",
+            "14:35",
+            null,
+            null,
+            null,
+            null,
+            "14:46",
+            "14:57",
+            null,
+            "15:15",
+            null,
+            "15:41"
+          ],
+          "firstTime": "14:30"
+        },
+        {
+          "routeNumber": "222",
+          "times": [
+            "15:05",
+            "15:10",
+            "15:20",
+            "15:25",
+            null,
+            null,
+            "15:32",
+            "15:43",
+            "16:08",
+            null,
+            "16:24",
+            "16:30"
+          ],
+          "firstTime": "15:05"
+        },
+        {
+          "routeNumber": "221",
+          "times": [
+            "15:40",
+            "15:45",
+            null,
+            null,
+            null,
+            null,
+            "15:56",
+            "16:07",
+            null,
+            "16:25",
+            null,
+            "16:51"
+          ],
+          "firstTime": "15:40"
+        },
+        {
+          "routeNumber": "221",
+          "times": [
+            "16:20",
+            "16:25",
+            null,
+            null,
+            null,
+            null,
+            "16:36",
+            "16:47",
+            null,
+            "17:05",
+            null,
+            "17:31"
+          ],
+          "firstTime": "16:20"
+        },
+        {
+          "routeNumber": "222",
+          "times": [
+            "16:50",
+            "16:55",
+            null,
+            null,
+            null,
+            null,
+            "17:06",
+            "17:17",
+            "17:42",
+            null,
+            "17:58",
+            "18:04"
+          ],
+          "firstTime": "16:50"
+        },
+        {
+          "routeNumber": "221",
+          "times": [
+            "17:35",
+            "17:40",
+            null,
+            null,
+            null,
+            null,
+            "17:51",
+            "18:02",
+            null,
+            "18:20",
+            null,
+            "18:46"
+          ],
+          "firstTime": "17:35"
+        },
+        {
+          "routeNumber": "222",
+          "times": [
+            "18:10",
+            "18:15",
+            null,
+            null,
+            null,
+            null,
+            "18:26",
+            "18:37",
+            "19:02",
+            null,
+            "19:18",
+            "19:24"
+          ],
+          "firstTime": "18:10"
+        },
+        {
+          "routeNumber": "221",
+          "times": [
+            "18:45",
+            "18:50",
+            null,
+            null,
+            null,
+            null,
+            "19:01",
+            "19:12",
+            null,
+            "19:30",
+            null,
+            "19:56"
+          ],
+          "firstTime": "18:45"
+        },
+        {
+          "routeNumber": "221",
+          "times": [
+            "19:25",
+            "19:30",
+            null,
+            null,
+            null,
+            null,
+            "19:41",
+            "19:52",
+            null,
+            "20:10",
+            null,
+            "20:36"
+          ],
+          "firstTime": "19:25"
+        },
+        {
+          "routeNumber": "222",
+          "times": [
+            "20:05",
+            "20:10",
+            null,
+            null,
+            null,
+            null,
+            "20:21",
+            "20:32",
+            "20:57",
+            null,
+            "21:13",
+            "21:19"
+          ],
+          "firstTime": "20:05"
+        },
+        {
+          "routeNumber": "221",
+          "times": [
+            "20:35",
+            "20:40",
+            null,
+            null,
+            null,
+            null,
+            "20:51",
+            "21:02",
+            null,
+            "21:20",
+            null,
+            "21:46"
+          ],
+          "firstTime": "20:35"
+        },
+        {
+          "routeNumber": "221",
+          "times": [
+            "21:05",
+            "21:10",
+            null,
+            null,
+            null,
+            null,
+            "21:21",
+            "21:32",
+            null,
+            "21:50",
+            null,
+            "22:16"
+          ],
+          "firstTime": "21:05"
+        },
+        {
+          "routeNumber": "222",
+          "times": [
+            "21:35",
+            "21:40",
+            null,
+            null,
+            null,
+            null,
+            "21:51",
+            "22:02",
+            "22:27",
+            null,
+            "22:43",
+            "22:49"
+          ],
+          "firstTime": "21:35"
+        },
+        {
+          "routeNumber": "221",
+          "times": [
+            "22:00",
+            "22:03",
+            null,
+            null,
+            null,
+            null,
+            "22:12",
+            "22:21",
+            null,
+            "22:38",
+            null,
+            "23:00"
+          ],
+          "firstTime": "22:00"
+        },
+        {
+          "routeNumber": "221",
+          "times": [
+            "22:35",
+            "22:38",
+            null,
+            null,
+            null,
+            null,
+            "22:47",
+            "22:56",
+            null,
+            "23:13",
+            null,
+            "23:35"
+          ],
+          "firstTime": "22:35"
+        }
+      ],
+      "status": "ok"
+    },
+    {
+      "sheets": [
+        "221 제주터미널-동광양-봉개-대천동-성읍-표선",
+        "222 제주터미널-동광양-봉개-대천동-성읍-표선"
+      ],
+      "routeNumbers": [
+        "221",
+        "222"
+      ],
+      "dayType": "unstated",
+      "direction": "제주터미널 → 제주민속촌",
+      "effectiveFrom": "2026-02-12",
+      "summary": "[221번] 첫차(동광양출발) 5:10, 막차 21:25, 배차간격 20~80분\n[222번] 첫차 6:30, 막차 20:40, 1일 10회 운행, 제주여객(064-753-2056)",
+      "timepoints": [
+        "제주터미널",
+        "제주시청",
+        "봉개",
+        "제주대학교 병원",
+        "대천동",
+        "성읍1리",
+        "삼달 (경유)",
+        "신풍 (경유)",
+        "가시리 (경유)",
+        "토산1리 (경유)",
+        "표선",
+        "제주민속촌"
+      ],
+      "trips": [
+        {
+          "routeNumber": "221",
+          "times": [
+            null,
+            null,
+            "05:22",
+            null,
+            "05:39",
+            "05:48",
+            null,
+            null,
+            null,
+            null,
+            "05:57",
+            "06:00"
+          ],
+          "startsAt": {
+            "place": "동광양",
+            "time": "05:10",
+            "column": "제주시청"
+          },
+          "firstTime": "05:10"
+        },
+        {
+          "routeNumber": "221",
+          "times": [
+            null,
+            null,
+            "05:52",
+            null,
+            "06:09",
+            "06:18",
+            null,
+            null,
+            null,
+            null,
+            "06:27",
+            "06:30"
+          ],
+          "startsAt": {
+            "place": "동광양",
+            "time": "05:40",
+            "column": "제주시청"
+          },
+          "firstTime": "05:40"
+        },
+        {
+          "routeNumber": "221",
+          "times": [
+            "06:00",
+            null,
+            "06:22",
+            null,
+            "06:40",
+            "06:50",
+            null,
+            null,
+            null,
+            null,
+            "07:00",
+            "07:05"
+          ],
+          "firstTime": "06:00"
+        },
+        {
+          "routeNumber": "222",
+          "times": [
+            "06:30",
+            "06:34",
+            null,
+            "06:49",
+            "07:14",
+            "07:24",
+            null,
+            null,
+            null,
+            null,
+            "07:34",
+            "07:39"
+          ],
+          "firstTime": "06:30"
+        },
+        {
+          "routeNumber": "221",
+          "times": [
+            "06:50",
+            null,
+            "07:15",
+            null,
+            "07:33",
+            "07:44",
+            null,
+            null,
+            null,
+            null,
+            "07:55",
+            "08:00"
+          ],
+          "firstTime": "06:50"
+        },
+        {
+          "routeNumber": "221",
+          "times": [
+            "07:10",
+            null,
+            "07:35",
+            null,
+            "07:53",
+            "08:04",
+            null,
+            null,
+            null,
+            null,
+            "08:15",
+            "08:20"
+          ],
+          "firstTime": "07:10"
+        },
+        {
+          "routeNumber": "222",
+          "times": [
+            "07:40",
+            "07:44",
+            null,
+            "08:02",
+            "08:27",
+            "08:38",
+            null,
+            null,
+            null,
+            null,
+            "08:49",
+            "08:54"
+          ],
+          "firstTime": "07:40"
+        },
+        {
+          "routeNumber": "221",
+          "times": [
+            "08:20",
+            null,
+            "08:45",
+            null,
+            "09:03",
+            "09:14",
+            null,
+            null,
+            null,
+            null,
+            "09:25",
+            "09:30"
+          ],
+          "firstTime": "08:20"
+        },
+        {
+          "routeNumber": "222",
+          "times": [
+            "09:00",
+            "09:04",
+            null,
+            "09:22",
+            "09:47",
+            "09:58",
+            null,
+            null,
+            null,
+            null,
+            "10:09",
+            "10:14"
+          ],
+          "firstTime": "09:00"
+        },
+        {
+          "routeNumber": "221",
+          "times": [
+            "09:40",
+            null,
+            "10:05",
+            null,
+            "10:23",
+            "10:34",
+            null,
+            null,
+            null,
+            null,
+            "10:45",
+            "10:50"
+          ],
+          "firstTime": "09:40"
+        },
+        {
+          "routeNumber": "222",
+          "times": [
+            "10:20",
+            "10:24",
+            null,
+            "10:42",
+            "11:07",
+            "11:18",
+            null,
+            null,
+            null,
+            null,
+            "11:29",
+            "11:34"
+          ],
+          "firstTime": "10:20"
+        },
+        {
+          "routeNumber": "221",
+          "times": [
+            "11:00",
+            null,
+            "11:25",
+            null,
+            "11:43",
+            "11:54",
+            null,
+            null,
+            null,
+            null,
+            "12:05",
+            "12:10"
+          ],
+          "firstTime": "11:00"
+        },
+        {
+          "routeNumber": "222",
+          "times": [
+            "11:40",
+            "11:44",
+            null,
+            "12:02",
+            "12:27",
+            "12:38",
+            null,
+            null,
+            "12:45",
+            "12:50",
+            "13:01",
+            "13:06"
+          ],
+          "firstTime": "11:40"
+        },
+        {
+          "routeNumber": "221",
+          "times": [
+            "12:20",
+            null,
+            "12:45",
+            null,
+            "13:03",
+            "13:14",
+            null,
+            null,
+            null,
+            null,
+            "13:25",
+            "13:30"
+          ],
+          "firstTime": "12:20"
+        },
+        {
+          "routeNumber": "221",
+          "times": [
+            "13:00",
+            null,
+            "13:25",
+            null,
+            "13:43",
+            "13:54",
+            null,
+            null,
+            null,
+            null,
+            "14:05",
+            "14:10"
+          ],
+          "firstTime": "13:00"
+        },
+        {
+          "routeNumber": "222",
+          "times": [
+            "13:40",
+            "13:44",
+            null,
+            "14:02",
+            "14:27",
+            "14:38",
+            null,
+            null,
+            null,
+            null,
+            "14:49",
+            "14:54"
+          ],
+          "firstTime": "13:40"
+        },
+        {
+          "routeNumber": "221",
+          "times": [
+            "14:20",
+            null,
+            "14:45",
+            null,
+            "15:03",
+            "15:14",
+            null,
+            null,
+            null,
+            null,
+            "15:25",
+            "15:30"
+          ],
+          "firstTime": "14:20"
+        },
+        {
+          "routeNumber": "222",
+          "times": [
+            "14:55",
+            "14:59",
+            null,
+            "15:17",
+            "15:42",
+            "15:53",
+            null,
+            null,
+            null,
+            null,
+            "16:04",
+            "16:09"
+          ],
+          "firstTime": "14:55"
+        },
+        {
+          "routeNumber": "221",
+          "times": [
+            "15:20",
+            null,
+            "15:45",
+            null,
+            "16:03",
+            "16:14",
+            "16:19",
+            "16:22",
+            null,
+            null,
+            "16:33",
+            "16:38"
+          ],
+          "firstTime": "15:20"
+        },
+        {
+          "routeNumber": "221",
+          "times": [
+            "16:05",
+            null,
+            "16:30",
+            null,
+            "16:48",
+            "16:59",
+            null,
+            null,
+            null,
+            null,
+            "17:10",
+            "17:15"
+          ],
+          "firstTime": "16:05"
+        },
+        {
+          "routeNumber": "222",
+          "times": [
+            "16:40",
+            "16:44",
+            null,
+            "17:02",
+            "17:27",
+            "17:38",
+            null,
+            null,
+            null,
+            null,
+            "17:49",
+            "17:54"
+          ],
+          "firstTime": "16:40"
+        },
+        {
+          "routeNumber": "221",
+          "times": [
+            "17:15",
+            null,
+            "17:40",
+            null,
+            "17:58",
+            "18:09",
+            null,
+            null,
+            null,
+            null,
+            "18:20",
+            "18:25"
+          ],
+          "firstTime": "17:15"
+        },
+        {
+          "routeNumber": "221",
+          "times": [
+            "18:00",
+            null,
+            "18:25",
+            null,
+            "18:43",
+            "18:54",
+            null,
+            null,
+            null,
+            null,
+            "19:05",
+            "19:10"
+          ],
+          "firstTime": "18:00"
+        },
+        {
+          "routeNumber": "222",
+          "times": [
+            "18:25",
+            "18:29",
+            null,
+            "18:47",
+            "19:12",
+            "19:23",
+            null,
+            null,
+            "19:30",
+            "19:35",
+            "19:46",
+            "19:51"
+          ],
+          "firstTime": "18:25"
+        },
+        {
+          "routeNumber": "221",
+          "times": [
+            "19:00",
+            null,
+            "19:25",
+            null,
+            "19:43",
+            "19:54",
+            null,
+            null,
+            null,
+            null,
+            "20:05",
+            "20:10"
+          ],
+          "firstTime": "19:00"
+        },
+        {
+          "routeNumber": "221",
+          "times": [
+            "19:35",
+            null,
+            "20:00",
+            null,
+            "20:18",
+            "20:29",
+            null,
+            null,
+            null,
+            null,
+            "20:40",
+            "20:45"
+          ],
+          "firstTime": "19:35"
+        },
+        {
+          "routeNumber": "221",
+          "times": [
+            "20:10",
+            null,
+            "20:35",
+            null,
+            "20:53",
+            "21:04",
+            null,
+            null,
+            null,
+            null,
+            "21:15",
+            "21:20"
+          ],
+          "firstTime": "20:10"
+        },
+        {
+          "routeNumber": "222",
+          "times": [
+            "20:40",
+            "20:44",
+            null,
+            "20:59",
+            "21:24",
+            "21:34",
+            null,
+            null,
+            null,
+            null,
+            "21:44",
+            "21:49"
+          ],
+          "firstTime": "20:40"
+        },
+        {
+          "routeNumber": "221",
+          "times": [
+            "21:25",
+            null,
+            "21:47",
+            null,
+            "22:05",
+            "22:15",
+            null,
+            null,
+            null,
+            null,
+            "22:25",
+            "22:30"
+          ],
+          "firstTime": "21:25"
+        }
+      ],
+      "status": "ok"
+    }
+  ]
+}

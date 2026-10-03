@@ -1,22 +1,32 @@
 {
-  "schemaVersion": "tapso-jeju-timetable-v2",
+  "schemaVersion": "tapso-jeju-timetable-v3",
   "label": "OFFICIAL_DATED",
   "source": {
     "publisher": "제주특별자치도 (bus.jeju.go.kr)",
     "dataset": "data.go.kr 3043887",
     "page": "https://bus.jeju.go.kr/publicTrafficInformation/generalBusSchedule",
     "file": "405068.xlsx",
-    "sha256": "79003bef916384cce9b7dd7cae6de1836e8c39e329c53177bfa9de9c055207f9"
+    "sha256": "79003bef916384cce9b7dd7cae6de1836e8c39e329c53177bfa9de9c055207f9",
+    "scheduleId": "405068",
+    "listedName": "701-1"
   },
   "retrievedOn": "2026-10-03",
   "parser": {
     "name": "jeju-bis-xlsx",
-    "version": "2"
+    "version": "3"
   },
-  "routeNumber": "701-1",
+  "routeNumbers": [
+    "701-1"
+  ],
+  "status": "parsed",
   "services": [
     {
-      "sheet": "701-1 조천-대흘2리-돌문화공원-와흘-조천",
+      "sheets": [
+        "701-1 조천-대흘2리-돌문화공원-와흘-조천"
+      ],
+      "routeNumbers": [
+        "701-1"
+      ],
       "dayType": "unstated",
       "direction": "조천 → 조천 (순환)",
       "effectiveFrom": "2020-11-25",
@@ -38,6 +48,7 @@
       ],
       "trips": [
         {
+          "routeNumber": "701-1",
           "times": [
             "06:25",
             "06:31",
@@ -52,9 +63,11 @@
             "07:31",
             "07:35",
             "07:41"
-          ]
+          ],
+          "firstTime": "06:25"
         },
         {
+          "routeNumber": "701-1",
           "times": [
             "08:10",
             "08:16",
@@ -69,9 +82,11 @@
             "09:16",
             "09:20",
             "09:26"
-          ]
+          ],
+          "firstTime": "08:10"
         },
         {
+          "routeNumber": "701-1",
           "times": [
             "10:30",
             "10:36",
@@ -86,9 +101,11 @@
             "11:36",
             "11:40",
             "11:46"
-          ]
+          ],
+          "firstTime": "10:30"
         },
         {
+          "routeNumber": "701-1",
           "times": [
             "12:14",
             "12:20",
@@ -103,9 +120,11 @@
             "13:20",
             "13:24",
             "13:30"
-          ]
+          ],
+          "firstTime": "12:14"
         },
         {
+          "routeNumber": "701-1",
           "times": [
             "14:30",
             "14:36",
@@ -120,9 +139,11 @@
             "15:36",
             "15:40",
             "15:46"
-          ]
+          ],
+          "firstTime": "14:30"
         },
         {
+          "routeNumber": "701-1",
           "times": [
             "16:25",
             "16:31",
@@ -137,9 +158,11 @@
             "17:31",
             "17:35",
             "17:41"
-          ]
+          ],
+          "firstTime": "16:25"
         },
         {
+          "routeNumber": "701-1",
           "times": [
             "18:41",
             "18:47",
@@ -154,9 +177,11 @@
             "19:47",
             "19:51",
             "19:57"
-          ]
+          ],
+          "firstTime": "18:41"
         },
         {
+          "routeNumber": "701-1",
           "times": [
             "20:10",
             "20:16",
@@ -171,9 +196,11 @@
             "21:16",
             "21:20",
             "21:26"
-          ]
+          ],
+          "firstTime": "20:10"
         }
-      ]
+      ],
+      "status": "ok"
     }
   ]
 }

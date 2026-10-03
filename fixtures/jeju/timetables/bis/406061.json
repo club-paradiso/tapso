@@ -1,0 +1,65 @@
+{
+  "schemaVersion": "tapso-jeju-timetable-v3",
+  "label": "OFFICIAL_DATED",
+  "source": {
+    "publisher": "제주특별자치도 (bus.jeju.go.kr)",
+    "dataset": "data.go.kr 3043887",
+    "page": "https://bus.jeju.go.kr/publicTrafficInformation/generalBusSchedule",
+    "file": "406061.xlsx",
+    "sha256": "2c22841a6614cad26587135fc88474e0219409dbc423f7a9ad84092f0bdc7c62",
+    "scheduleId": "406061",
+    "listedName": "500-2"
+  },
+  "retrievedOn": "2026-10-03",
+  "parser": {
+    "name": "jeju-bis-xlsx",
+    "version": "3"
+  },
+  "routeNumbers": [
+    "500-2"
+  ],
+  "status": "parsed",
+  "services": [
+    {
+      "sheets": [
+        "500-2 중앙R-남원-표선-성산고-표선-남원-버스터미널"
+      ],
+      "routeNumbers": [
+        "500-2"
+      ],
+      "dayType": "unstated",
+      "direction": "서귀포중앙로터리→남원→표선→성산고등학교→표선→남원→서귀포버스터미널",
+      "effectiveFrom": "2025-05-09",
+      "summary": "금남여객(064-753-4423)",
+      "timepoints": [
+        "서귀포중앙로터리 (권역재활병원)",
+        "남원환승정류장",
+        "표선환승정류장",
+        "성산고등학교",
+        "성산일출봉입구",
+        "고성환승정류장",
+        "표선환승정류장",
+        "남원환승정류장",
+        "서귀포버스터미널"
+      ],
+      "trips": [
+        {
+          "routeNumber": "500-2",
+          "times": [
+            "06:55",
+            "07:17",
+            "07:34",
+            "08:01",
+            "08:04",
+            "08:10",
+            "08:30",
+            "08:50",
+            "09:28"
+          ],
+          "firstTime": "06:55"
+        }
+      ],
+      "status": "ok"
+    }
+  ]
+}

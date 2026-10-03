@@ -1,0 +1,59 @@
+{
+  "schemaVersion": "tapso-jeju-timetable-v3",
+  "label": "OFFICIAL_DATED",
+  "source": {
+    "publisher": "제주특별자치도 (bus.jeju.go.kr)",
+    "dataset": "data.go.kr 3043887",
+    "page": "https://bus.jeju.go.kr/publicTrafficInformation/generalBusSchedule",
+    "file": "406047.xlsx",
+    "sha256": "9701745531655b1e35bbc4b4015aa7353000c0006ece463cd1007ff9a54a4353",
+    "scheduleId": "406047",
+    "listedName": "5001"
+  },
+  "retrievedOn": "2026-10-03",
+  "parser": {
+    "name": "jeju-bis-xlsx",
+    "version": "3"
+  },
+  "routeNumbers": [
+    "5001"
+  ],
+  "status": "parsed",
+  "services": [
+    {
+      "sheets": [
+        "5001 (남주고-중앙R-신효-위미-남원-표선)심야"
+      ],
+      "routeNumbers": [
+        "5001"
+      ],
+      "dayType": "unstated",
+      "direction": "남주고-표선 (심야)",
+      "summary": "첫차/막차 23:00, 배차간격 1일 1회, 서귀포운수(064-732-4934)",
+      "timepoints": [
+        "남주고",
+        "중앙로터리",
+        "신효",
+        "위미3리",
+        "남원읍사무소",
+        "표선환승정류장"
+      ],
+      "trips": [
+        {
+          "routeNumber": "5001",
+          "times": [
+            "23:00",
+            "23:10",
+            "23:23",
+            "23:36",
+            "23:41",
+            "24:13"
+          ],
+          "firstTime": "23:00"
+        }
+      ],
+      "crossesMidnight": true,
+      "status": "ok"
+    }
+  ]
+}

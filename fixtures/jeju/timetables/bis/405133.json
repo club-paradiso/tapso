@@ -1,0 +1,115 @@
+{
+  "schemaVersion": "tapso-jeju-timetable-v3",
+  "label": "OFFICIAL_DATED",
+  "source": {
+    "publisher": "제주특별자치도 (bus.jeju.go.kr)",
+    "dataset": "data.go.kr 3043887",
+    "page": "https://bus.jeju.go.kr/publicTrafficInformation/generalBusSchedule",
+    "file": "405133.xlsx",
+    "sha256": "ee3ab8a040e77c9769c0cb984203a8cf910220aedd6e9875ed8fb28a2f44f7e1",
+    "scheduleId": "405133",
+    "listedName": "901"
+  },
+  "retrievedOn": "2026-10-03",
+  "parser": {
+    "name": "jeju-bis-xlsx",
+    "version": "3"
+  },
+  "routeNumbers": [
+    "901"
+  ],
+  "serviceLabels": [
+    "자율주행"
+  ],
+  "status": "parsed",
+  "services": [
+    {
+      "sheets": [
+        "901 제주시청-공항-동광-중문-서귀포등기소"
+      ],
+      "routeNumbers": [
+        "901"
+      ],
+      "dayType": "unstated",
+      "serviceLabels": [
+        "자율주행"
+      ],
+      "direction": "제주시청->서귀포등기소",
+      "effectiveFrom": "2025-06-12",
+      "summary": "㈜라이드플럭스 (064-748-8039)",
+      "timepoints": [
+        "제주시청",
+        "제주버스터미널",
+        "제주국제공항",
+        "제주도청",
+        "제주관광대학",
+        "동광환승정류장",
+        "중문환승정류장",
+        "제주월드컵경기장 서귀포버스터미널",
+        "서귀포등기소"
+      ],
+      "trips": [
+        {
+          "routeNumber": "901",
+          "times": [
+            "11:00",
+            "11:05",
+            "11:17",
+            "11:25",
+            "11:47",
+            "12:04",
+            "12:27",
+            "12:42",
+            "12:52"
+          ],
+          "firstTime": "11:00"
+        }
+      ],
+      "status": "ok"
+    },
+    {
+      "sheets": [
+        "901 서귀포등기소-중문-동광-공항-제주시청"
+      ],
+      "routeNumbers": [
+        "901"
+      ],
+      "dayType": "unstated",
+      "serviceLabels": [
+        "자율주행"
+      ],
+      "direction": "서귀포등기소->제주시청",
+      "effectiveFrom": "2025-06-12",
+      "summary": "㈜라이드플럭스 (064-748-8039)",
+      "timepoints": [
+        "서귀포등기소",
+        "제주월드컵경기장 서귀포버스터미널",
+        "중문환승정류장",
+        "동광환승정류장",
+        "제주관광대학",
+        "제주도청",
+        "제주국제공항",
+        "제주버스터미널",
+        "제주시청"
+      ],
+      "trips": [
+        {
+          "routeNumber": "901",
+          "times": [
+            "14:25",
+            "14:35",
+            "14:53",
+            "15:14",
+            "15:32",
+            "15:54",
+            "16:02",
+            "16:14",
+            "16:19"
+          ],
+          "firstTime": "14:25"
+        }
+      ],
+      "status": "ok"
+    }
+  ]
+}

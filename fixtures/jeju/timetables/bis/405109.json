@@ -1,0 +1,177 @@
+{
+  "schemaVersion": "tapso-jeju-timetable-v3",
+  "label": "OFFICIAL_DATED",
+  "source": {
+    "publisher": "제주특별자치도 (bus.jeju.go.kr)",
+    "dataset": "data.go.kr 3043887",
+    "page": "https://bus.jeju.go.kr/publicTrafficInformation/generalBusSchedule",
+    "file": "405109.xlsx",
+    "sha256": "fda2f08b92124695a2619057255add460076dddbd60b267fab5c1f0cefed9840",
+    "scheduleId": "405109",
+    "listedName": "3004"
+  },
+  "retrievedOn": "2026-10-03",
+  "parser": {
+    "name": "jeju-bis-xlsx",
+    "version": "3"
+  },
+  "routeNumbers": [
+    "3004"
+  ],
+  "status": "parsed",
+  "services": [
+    {
+      "sheets": [
+        "3004 (한라도서관-터미널-신제주R-노형R-제주고)심야"
+      ],
+      "routeNumbers": [
+        "3004"
+      ],
+      "dayType": "unstated",
+      "direction": "한라도서관-제주고 (심야)",
+      "effectiveNote": "미입력",
+      "summary": "첫차/막차 22:00, 배차간격 1일 1회, 관광지순환버스(064-746-7310)",
+      "timepoints": [
+        "한라도서관",
+        "터미널",
+        "신제주R",
+        "제원A",
+        "한라병원",
+        "노형R",
+        "제주고"
+      ],
+      "trips": [
+        {
+          "routeNumber": "3004",
+          "times": [
+            "22:00",
+            "22:09",
+            "22:12",
+            "22:17",
+            "22:20",
+            "22:22",
+            "22:27"
+          ],
+          "firstTime": "22:00"
+        }
+      ],
+      "status": "ok"
+    },
+    {
+      "sheets": [
+        "3004 (월평(여고)-시청-사대부고-공항-제주고)심야"
+      ],
+      "routeNumbers": [
+        "3004"
+      ],
+      "dayType": "unstated",
+      "direction": "월평(여고)-제주고 (심야)",
+      "effectiveNote": "미입력",
+      "summary": "첫차 22:15, 막차 23:25, 배차간격 1일 2회, 관광지순환버스(064-746-7310)",
+      "timepoints": [
+        "월평",
+        "신고",
+        "여고",
+        "시청",
+        "중앙로",
+        "사대부고",
+        "공항",
+        "서중",
+        "백록초",
+        "제주고"
+      ],
+      "trips": [
+        {
+          "routeNumber": "3004",
+          "times": [
+            "22:15",
+            "22:20",
+            "22:23",
+            "22:31",
+            "22:35",
+            "22:42",
+            "22:49",
+            "22:56",
+            "23:02",
+            "23:08"
+          ],
+          "firstTime": "22:15"
+        },
+        {
+          "routeNumber": "3004",
+          "times": [
+            null,
+            null,
+            "23:25",
+            "23:31",
+            "23:37",
+            "23:42",
+            "23:48",
+            "23:53",
+            "23:57",
+            "24:03"
+          ],
+          "firstTime": "23:25"
+        }
+      ],
+      "crossesMidnight": true,
+      "status": "ok"
+    },
+    {
+      "sheets": [
+        "3004 (제주고-서중-공항-사대부고-중앙로-시청-여고)"
+      ],
+      "routeNumbers": [
+        "3004"
+      ],
+      "dayType": "unstated",
+      "direction": "제주고-여고 (심야)",
+      "effectiveNote": "미입력",
+      "summary": "첫차 22:35, 막차 23:15, 배차간격 1일 2회, 관광지순환버스(064-746-7310)",
+      "timepoints": [
+        "제주고",
+        "탐라도서관",
+        "백록초",
+        "서중",
+        "공항",
+        "사대부고",
+        "중앙로",
+        "시청",
+        "여고"
+      ],
+      "trips": [
+        {
+          "routeNumber": "3004",
+          "times": [
+            "22:35",
+            "22:37",
+            "22:40",
+            "22:45",
+            "22:50",
+            "23:00",
+            "23:05",
+            "23:11",
+            "23:19"
+          ],
+          "firstTime": "22:35"
+        },
+        {
+          "routeNumber": "3004",
+          "times": [
+            "23:15",
+            "23:17",
+            "23:20",
+            "23:26",
+            "23:30",
+            "23:38",
+            "23:43",
+            "23:46",
+            "23:54"
+          ],
+          "firstTime": "23:15"
+        }
+      ],
+      "status": "ok"
+    }
+  ]
+}

@@ -1,0 +1,125 @@
+{
+  "schemaVersion": "tapso-jeju-timetable-v3",
+  "label": "OFFICIAL_DATED",
+  "source": {
+    "publisher": "제주특별자치도 (bus.jeju.go.kr)",
+    "dataset": "data.go.kr 3043887",
+    "page": "https://bus.jeju.go.kr/publicTrafficInformation/generalBusSchedule",
+    "file": "405180.xlsx",
+    "sha256": "e4638f5024bcb52df0e530361835db8de86cfdf8592fdd63ba5567cae75a4a8f",
+    "scheduleId": "405180",
+    "listedName": "451-1"
+  },
+  "retrievedOn": "2026-10-03",
+  "parser": {
+    "name": "jeju-bis-xlsx",
+    "version": "3"
+  },
+  "routeNumbers": [
+    "451-1"
+  ],
+  "status": "parsed",
+  "services": [
+    {
+      "sheets": [
+        "451-1 순환(도두동-다호마을-연동-외도-도두동)"
+      ],
+      "routeNumbers": [
+        "451-1"
+      ],
+      "dayType": "unstated",
+      "direction": "도두동 → 도두동 (순환)",
+      "effectiveFrom": "2026-02-12",
+      "summary": "[451-1번] 1일 4회 운행, 동진여객(064-757-5714)",
+      "timepoints": [
+        "도두동 (도리초등학교)",
+        "제주민속 오일장",
+        "신성 마을",
+        "다호 마을",
+        "그레이 스호텔",
+        "연동주 민센터",
+        "중흥S 클래스",
+        "제주 한라대학교",
+        "도평동",
+        "외도부영 1,2차 아파트",
+        "이호태우 해수욕장",
+        "도두동 (도리초등학교)"
+      ],
+      "trips": [
+        {
+          "routeNumber": "451-1",
+          "times": [
+            "06:25",
+            "06:31",
+            null,
+            "06:34",
+            "06:45",
+            "06:48",
+            "06:57",
+            "06:59",
+            "07:13",
+            "07:15",
+            "07:26",
+            "07:29"
+          ],
+          "firstTime": "06:25"
+        },
+        {
+          "routeNumber": "451-1",
+          "times": [
+            "10:10",
+            "10:16",
+            null,
+            "10:19",
+            "10:30",
+            "10:33",
+            "10:42",
+            "10:44",
+            "10:58",
+            "11:00",
+            "11:11",
+            "11:14"
+          ],
+          "firstTime": "10:10"
+        },
+        {
+          "routeNumber": "451-1",
+          "times": [
+            "15:15",
+            "15:21",
+            null,
+            "15:24",
+            "15:35",
+            "15:38",
+            "15:47",
+            "15:49",
+            "16:03",
+            "16:05",
+            "16:16",
+            "16:19"
+          ],
+          "firstTime": "15:15"
+        },
+        {
+          "routeNumber": "451-1",
+          "times": [
+            "19:35",
+            "19:41",
+            null,
+            "19:44",
+            "19:55",
+            "19:58",
+            "20:07",
+            "20:09",
+            "20:23",
+            "20:25",
+            "20:36",
+            "20:39"
+          ],
+          "firstTime": "19:35"
+        }
+      ],
+      "status": "ok"
+    }
+  ]
+}

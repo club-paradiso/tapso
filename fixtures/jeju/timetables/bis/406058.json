@@ -1,0 +1,93 @@
+{
+  "schemaVersion": "tapso-jeju-timetable-v3",
+  "label": "OFFICIAL_DATED",
+  "source": {
+    "publisher": "제주특별자치도 (bus.jeju.go.kr)",
+    "dataset": "data.go.kr 3043887",
+    "page": "https://bus.jeju.go.kr/publicTrafficInformation/generalBusSchedule",
+    "file": "406058.xlsx",
+    "sha256": "39ee0e7c163fea868c1c78ab47f9225be0695fa984884d4471c35092ff746eaa",
+    "scheduleId": "406058",
+    "listedName": "295-1(수요맞춤형)"
+  },
+  "retrievedOn": "2026-10-03",
+  "parser": {
+    "name": "jeju-bis-xlsx",
+    "version": "3"
+  },
+  "routeNumbers": [
+    "295-1"
+  ],
+  "serviceLabels": [
+    "수요맞춤형"
+  ],
+  "status": "parsed",
+  "services": [
+    {
+      "sheets": [
+        "295-1 신흥2리-의귀-중앙로터리(서)-의귀-신흥2리"
+      ],
+      "routeNumbers": [
+        "295-1"
+      ],
+      "dayType": "unstated",
+      "serviceLabels": [
+        "수요맞춤형"
+      ],
+      "direction": "신흥2리→의귀리→중앙로터리(서)",
+      "effectiveFrom": "2024-08-12",
+      "summary": "서귀포운수 (064-732-4934)",
+      "timepoints": [
+        "신흥2리 보건진료소",
+        "수망리",
+        "의귀리",
+        "대성동",
+        "위미리",
+        "중앙로터리(서)",
+        "위미리",
+        "대성동",
+        "의귀리",
+        "수망리",
+        "신흥2리 보건진료소"
+      ],
+      "trips": [
+        {
+          "routeNumber": "295-1",
+          "times": [
+            "06:45",
+            "06:52",
+            "06:55",
+            "07:03",
+            "07:07",
+            "07:30",
+            "07:53",
+            "07:57",
+            "08:05",
+            "08:08",
+            "08:15"
+          ],
+          "firstTime": "06:45"
+        },
+        {
+          "routeNumber": "295-1",
+          "times": [
+            "17:55",
+            "18:02",
+            "18:05",
+            "18:13",
+            "18:17",
+            "18:40",
+            "19:03",
+            "19:07",
+            "19:15",
+            "19:18",
+            "19:25"
+          ],
+          "firstTime": "17:55"
+        }
+      ],
+      "note": "토,공휴일 운행안함",
+      "status": "ok"
+    }
+  ]
+}

@@ -1,0 +1,284 @@
+{
+  "schemaVersion": "tapso-jeju-timetable-v3",
+  "label": "OFFICIAL_DATED",
+  "source": {
+    "publisher": "제주특별자치도 (bus.jeju.go.kr)",
+    "dataset": "data.go.kr 3043887",
+    "page": "https://bus.jeju.go.kr/publicTrafficInformation/generalBusSchedule",
+    "file": "405106.xlsx",
+    "sha256": "4d85c101e9c8ae4d2130f44f215020362c491e2139362a0eda66664103530a0a",
+    "scheduleId": "405106",
+    "listedName": "3001"
+  },
+  "retrievedOn": "2026-10-03",
+  "parser": {
+    "name": "jeju-bis-xlsx",
+    "version": "3"
+  },
+  "routeNumbers": [
+    "3001"
+  ],
+  "status": "source_conflict",
+  "services": [
+    {
+      "sheets": [
+        "3001 (공항-연동-공항-중앙로-공항)심야"
+      ],
+      "routeNumbers": [
+        "3001"
+      ],
+      "dayType": "unstated",
+      "direction": "공항-공항 (심야)",
+      "effectiveFrom": "2017-08-26",
+      "summary": "첫차 22:15, 막차 00:25, 배차간격 30~40분, 관광지순환버스(064-746-7310)",
+      "timepoints": [
+        "공 항",
+        "신제주R",
+        "제원A",
+        "연동대림A",
+        "제일고",
+        "한라병원",
+        "공 항",
+        "용문R",
+        "중앙로",
+        "광양",
+        "터미널",
+        "월성마을",
+        "공 항"
+      ],
+      "trips": [
+        {
+          "routeNumber": "3001",
+          "times": [
+            "22:15",
+            "22:22",
+            "22:25",
+            "22:30",
+            "22:33",
+            "22:39",
+            "22:45",
+            "22:49",
+            "22:55",
+            "23:00",
+            "23:05",
+            "23:10",
+            "23:15"
+          ],
+          "firstTime": "22:15"
+        },
+        {
+          "routeNumber": "3001",
+          "times": [
+            "22:45",
+            "22:52",
+            "22:55",
+            "23:00",
+            "23:03",
+            "23:09",
+            "23:15",
+            "23:19",
+            "23:25",
+            "23:30",
+            "23:35",
+            "23:40",
+            "23:45"
+          ],
+          "firstTime": "22:45"
+        },
+        {
+          "routeNumber": "3001",
+          "times": [
+            "23:25",
+            "23:32",
+            "23:35",
+            "23:40",
+            "23:43",
+            "23:49",
+            "23:55",
+            "23:59",
+            "24:05",
+            "24:10",
+            "24:15",
+            "24:20",
+            "24:25"
+          ],
+          "firstTime": "23:25"
+        },
+        {
+          "routeNumber": "3001",
+          "times": [
+            "23:55",
+            "24:02",
+            "24:05",
+            "24:10",
+            "24:13",
+            "24:19",
+            "24:25",
+            "24:29",
+            "24:35",
+            "24:40",
+            "24:45",
+            null,
+            null
+          ],
+          "firstTime": "23:55"
+        },
+        {
+          "routeNumber": "3001",
+          "times": [
+            "24:25",
+            "24:32",
+            "24:35",
+            "24:40",
+            "24:43",
+            "24:49",
+            null,
+            null,
+            null,
+            null,
+            null,
+            null,
+            null
+          ],
+          "firstTime": "24:25"
+        }
+      ],
+      "crossesMidnight": true,
+      "status": "source_conflict",
+      "conflicts": [
+        "another sheet for '공항-공항 (심야)' (unstated) has a different table"
+      ]
+    },
+    {
+      "sheets": [
+        "3001 (공항-중앙로-공항-연동-공항)심야"
+      ],
+      "routeNumbers": [
+        "3001"
+      ],
+      "dayType": "unstated",
+      "direction": "공항-공항 (심야)",
+      "effectiveFrom": "2017-08-26",
+      "summary": "첫차 22:15, 막차 00:25, 배차간격 30~40분, 관광지순환버스(064-746-7310)",
+      "timepoints": [
+        "공 항",
+        "월성마을",
+        "터미널",
+        "광양",
+        "중앙로",
+        "용문R",
+        "공 항",
+        "한라병원",
+        "제일고",
+        "연동대림 A",
+        "제원A",
+        "신제주R",
+        "공 항"
+      ],
+      "trips": [
+        {
+          "routeNumber": "3001",
+          "times": [
+            "22:00",
+            "22:05",
+            "22:10",
+            "22:15",
+            "22:20",
+            "22:26",
+            "22:30",
+            "22:38",
+            "22:44",
+            "22:47",
+            "22:52",
+            "22:55",
+            "23:00"
+          ],
+          "firstTime": "22:00"
+        },
+        {
+          "routeNumber": "3001",
+          "times": [
+            "22:30",
+            "22:35",
+            "22:40",
+            "22:45",
+            "22:50",
+            "22:56",
+            "23:00",
+            "23:08",
+            "23:14",
+            "23:17",
+            "23:22",
+            "23:25",
+            "23:30"
+          ],
+          "firstTime": "22:30"
+        },
+        {
+          "routeNumber": "3001",
+          "times": [
+            "23:10",
+            "23:15",
+            "23:20",
+            "23:25",
+            "23:30",
+            "23:36",
+            "23:40",
+            "23:48",
+            "23:54",
+            "23:57",
+            "24:02",
+            "24:05",
+            "24:10"
+          ],
+          "firstTime": "23:10"
+        },
+        {
+          "routeNumber": "3001",
+          "times": [
+            "23:40",
+            "23:45",
+            "23:50",
+            "23:55",
+            "24:00",
+            "24:06",
+            "24:10",
+            "24:18",
+            "24:24",
+            "24:27",
+            "24:32",
+            "24:35",
+            null
+          ],
+          "firstTime": "23:40"
+        },
+        {
+          "routeNumber": "3001",
+          "times": [
+            "24:10",
+            "24:15",
+            "24:20",
+            "24:25",
+            "24:30",
+            "24:36",
+            null,
+            null,
+            null,
+            null,
+            null,
+            null,
+            null
+          ],
+          "firstTime": "24:10"
+        }
+      ],
+      "crossesMidnight": true,
+      "status": "source_conflict",
+      "conflicts": [
+        "summary 첫차 22:15 disagrees with the trips (22:00)",
+        "summary 막차 00:25 disagrees with the trips (00:10)",
+        "another sheet for '공항-공항 (심야)' (unstated) has a different table"
+      ]
+    }
+  ]
+}

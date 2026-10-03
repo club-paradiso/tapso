@@ -1,22 +1,32 @@
 {
-  "schemaVersion": "tapso-jeju-timetable-v2",
+  "schemaVersion": "tapso-jeju-timetable-v3",
   "label": "OFFICIAL_DATED",
   "source": {
     "publisher": "제주특별자치도 (bus.jeju.go.kr)",
     "dataset": "data.go.kr 3043887",
     "page": "https://bus.jeju.go.kr/publicTrafficInformation/generalBusSchedule",
     "file": "405163.xlsx",
-    "sha256": "32770ae58d3e2875e06a38290e55c9f50f6f82e1e5088558095cb0076f7b4af0"
+    "sha256": "32770ae58d3e2875e06a38290e55c9f50f6f82e1e5088558095cb0076f7b4af0",
+    "scheduleId": "405163",
+    "listedName": "820-2"
   },
   "retrievedOn": "2026-10-03",
   "parser": {
     "name": "jeju-bis-xlsx",
-    "version": "2"
+    "version": "3"
   },
-  "routeNumber": "820-2",
+  "routeNumbers": [
+    "820-2"
+  ],
+  "status": "parsed",
   "services": [
     {
-      "sheet": "820-2 정보없음",
+      "sheets": [
+        "820-2 정보없음"
+      ],
+      "routeNumbers": [
+        "820-2"
+      ],
       "dayType": "unstated",
       "direction": "신화역사공원 방향",
       "effectiveFrom": "2024-05-11",
@@ -56,6 +66,7 @@
       ],
       "trips": [
         {
+          "routeNumber": "820-2",
           "times": [
             "08:20",
             "08:26",
@@ -88,9 +99,11 @@
             "10:04",
             "10:08",
             "10:10"
-          ]
+          ],
+          "firstTime": "08:20"
         },
         {
+          "routeNumber": "820-2",
           "times": [
             "09:20",
             "09:26",
@@ -123,9 +136,11 @@
             "11:04",
             "11:08",
             "11:10"
-          ]
+          ],
+          "firstTime": "09:20"
         },
         {
+          "routeNumber": "820-2",
           "times": [
             null,
             null,
@@ -158,9 +173,11 @@
             "11:54",
             "11:58",
             "12:00"
-          ]
+          ],
+          "firstTime": "11:00"
         },
         {
+          "routeNumber": "820-2",
           "times": [
             null,
             null,
@@ -193,9 +210,11 @@
             "12:54",
             "12:58",
             "13:00"
-          ]
+          ],
+          "firstTime": "12:00"
         },
         {
+          "routeNumber": "820-2",
           "times": [
             null,
             null,
@@ -228,9 +247,11 @@
             "13:54",
             "13:58",
             "14:00"
-          ]
+          ],
+          "firstTime": "13:00"
         },
         {
+          "routeNumber": "820-2",
           "times": [
             null,
             null,
@@ -263,9 +284,11 @@
             "14:54",
             "14:58",
             "15:00"
-          ]
+          ],
+          "firstTime": "14:00"
         },
         {
+          "routeNumber": "820-2",
           "times": [
             null,
             null,
@@ -298,9 +321,11 @@
             "15:54",
             "15:58",
             "16:00"
-          ]
+          ],
+          "firstTime": "15:00"
         },
         {
+          "routeNumber": "820-2",
           "times": [
             null,
             null,
@@ -333,9 +358,11 @@
             "16:54",
             "16:58",
             "17:00"
-          ]
+          ],
+          "firstTime": "16:00"
         },
         {
+          "routeNumber": "820-2",
           "times": [
             null,
             null,
@@ -368,9 +395,11 @@
             "17:54",
             "17:58",
             "18:00"
-          ]
+          ],
+          "firstTime": "17:00"
         },
         {
+          "routeNumber": "820-2",
           "times": [
             null,
             null,
@@ -403,9 +432,11 @@
             "18:24",
             "18:28",
             "18:30"
-          ]
+          ],
+          "firstTime": "17:30"
         }
-      ]
+      ],
+      "status": "ok"
     }
   ]
 }

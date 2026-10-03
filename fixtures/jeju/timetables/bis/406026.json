@@ -1,0 +1,430 @@
+{
+  "schemaVersion": "tapso-jeju-timetable-v3",
+  "label": "OFFICIAL_DATED",
+  "source": {
+    "publisher": "제주특별자치도 (bus.jeju.go.kr)",
+    "dataset": "data.go.kr 3043887",
+    "page": "https://bus.jeju.go.kr/publicTrafficInformation/generalBusSchedule",
+    "file": "406026.xlsx",
+    "sha256": "30f76ec9071d3e3e287268ffaf4949e117c8e9a6af611cf68ba44c68c831c727",
+    "scheduleId": "406026",
+    "listedName": "722-1"
+  },
+  "retrievedOn": "2026-10-03",
+  "parser": {
+    "name": "jeju-bis-xlsx",
+    "version": "3"
+  },
+  "routeNumbers": [
+    "722-1"
+  ],
+  "serviceLabels": [
+    "옵서버스"
+  ],
+  "status": "parsed",
+  "services": [
+    {
+      "sheets": [
+        "722-1 (평일)고성리-성읍문화마을"
+      ],
+      "routeNumbers": [
+        "722-1"
+      ],
+      "dayType": "weekday",
+      "dayLabel": "평일",
+      "serviceLabels": [
+        "옵서버스"
+      ],
+      "direction": "고성리→ 성읍문화마을",
+      "effectiveFrom": "2025-05-28",
+      "summary": "서귀포공영버스(064-760-3111~3)",
+      "timepoints": [
+        "고성환승정류장",
+        "온평초등학교",
+        "난산리사무소",
+        "성산농협신산지점",
+        "신풍리사무소",
+        "성읍문화마을"
+      ],
+      "trips": [
+        {
+          "routeNumber": "722-1",
+          "times": [
+            "07:00",
+            "07:08",
+            "07:13",
+            "07:21",
+            "07:30",
+            "07:43"
+          ],
+          "firstTime": "07:00"
+        },
+        {
+          "routeNumber": "722-1",
+          "times": [
+            "08:25",
+            "08:33",
+            "08:38",
+            "08:46",
+            "08:55",
+            "09:07"
+          ],
+          "firstTime": "08:25"
+        },
+        {
+          "routeNumber": "722-1",
+          "times": [
+            "09:16",
+            "09:24",
+            "09:29",
+            "09:37",
+            "09:46",
+            "09:59"
+          ],
+          "firstTime": "09:16"
+        },
+        {
+          "routeNumber": "722-1",
+          "times": [
+            "10:50",
+            "10:58",
+            "11:03",
+            "11:11",
+            "11:20",
+            "11:32"
+          ],
+          "firstTime": "10:50"
+        },
+        {
+          "routeNumber": "722-1",
+          "times": [
+            "11:56",
+            "12:04",
+            "12:09",
+            "12:17",
+            "12:26",
+            "12:39"
+          ],
+          "firstTime": "11:56"
+        },
+        {
+          "routeNumber": "722-1",
+          "times": [
+            null,
+            null,
+            null,
+            null,
+            null,
+            null
+          ],
+          "window": {
+            "from": "14:00",
+            "to": "20:30",
+            "label": "실시간 호출형"
+          },
+          "note": "출",
+          "firstTime": null,
+          "conditions": [
+            "demand_responsive"
+          ]
+        }
+      ],
+      "status": "ok"
+    },
+    {
+      "sheets": [
+        "722-1 (평일)성읍문화마을-고성리"
+      ],
+      "routeNumbers": [
+        "722-1"
+      ],
+      "dayType": "weekday",
+      "dayLabel": "평일",
+      "serviceLabels": [
+        "옵서버스"
+      ],
+      "direction": "성읍문화마을 → 고성리",
+      "effectiveFrom": "2025-05-28",
+      "summary": "서귀포공영버스(064-760-3111~3)",
+      "timepoints": [
+        "성읍문화마을",
+        "신풍리사무소",
+        "성산농협 신산지점",
+        "난산리사무소",
+        "온평초등학교",
+        "고성오일시장",
+        "성산고등학교",
+        "광치기해변",
+        "고성환승정류장"
+      ],
+      "trips": [
+        {
+          "routeNumber": "722-1",
+          "times": [
+            "07:20",
+            "07:33",
+            "07:42",
+            "07:50",
+            "07:55",
+            "08:05",
+            "08:09",
+            "08:17",
+            "08:22"
+          ],
+          "firstTime": "07:20"
+        },
+        {
+          "routeNumber": "722-1",
+          "times": [
+            "08:10",
+            "08:23",
+            "08:33",
+            "08:41",
+            "08:46",
+            "08:56",
+            "09:00",
+            "09:08",
+            "09:13"
+          ],
+          "firstTime": "08:10"
+        },
+        {
+          "routeNumber": "722-1",
+          "times": [
+            "09:45",
+            "09:58",
+            "10:07",
+            "10:15",
+            "10:20",
+            "10:30",
+            "10:34",
+            "10:42",
+            "10:47"
+          ],
+          "firstTime": "09:45"
+        },
+        {
+          "routeNumber": "722-1",
+          "times": [
+            "10:50",
+            "11:03",
+            "11:13",
+            "11:21",
+            "11:26",
+            "11:36",
+            "11:40",
+            "11:48",
+            "11:53"
+          ],
+          "firstTime": "10:50"
+        },
+        {
+          "routeNumber": "722-1",
+          "times": [
+            "12:15",
+            "12:28",
+            "12:37",
+            "12:45",
+            "12:50",
+            "13:00",
+            "13:04",
+            "13:12",
+            "13:17"
+          ],
+          "firstTime": "12:15"
+        },
+        {
+          "routeNumber": "722-1",
+          "times": [
+            null,
+            null,
+            null,
+            null,
+            null,
+            null,
+            null,
+            null,
+            null
+          ],
+          "window": {
+            "from": "14:00",
+            "to": "20:30",
+            "label": "실시간 호출형"
+          },
+          "firstTime": null,
+          "conditions": [
+            "demand_responsive"
+          ]
+        }
+      ],
+      "status": "ok"
+    },
+    {
+      "sheets": [
+        "722-1 (휴일)성읍문화마을-고성리"
+      ],
+      "routeNumbers": [
+        "722-1"
+      ],
+      "dayType": "saturday_sunday_holiday",
+      "dayLabel": "토.공휴일",
+      "serviceLabels": [
+        "옵서버스"
+      ],
+      "direction": "성읍문화마을→고성리",
+      "effectiveFrom": "2025-05-28",
+      "summary": "서귀포공영버스(064-760-3111~3)",
+      "timepoints": [
+        "성읍문화마을",
+        "신풍리사무소",
+        "성산농협 신산지점",
+        "난산리사무소",
+        "온평초등학교",
+        "고성오일시장",
+        "성산고등학교",
+        "광치기해변",
+        "고성환승정류장"
+      ],
+      "trips": [
+        {
+          "routeNumber": "722-1",
+          "times": [
+            "08:10",
+            "08:23",
+            "08:33",
+            "08:41",
+            "08:46",
+            "08:56",
+            "09:00",
+            "09:08",
+            "09:13"
+          ],
+          "firstTime": "08:10"
+        },
+        {
+          "routeNumber": "722-1",
+          "times": [
+            "10:50",
+            "11:03",
+            "11:13",
+            "11:21",
+            "11:26",
+            "11:36",
+            "11:40",
+            "11:48",
+            "11:53"
+          ],
+          "firstTime": "10:50"
+        },
+        {
+          "routeNumber": "722-1",
+          "times": [
+            null,
+            null,
+            null,
+            null,
+            null,
+            null,
+            null,
+            null,
+            null
+          ],
+          "window": {
+            "from": "14:00",
+            "to": "20:30",
+            "label": "실시간 호출형"
+          },
+          "firstTime": null,
+          "conditions": [
+            "demand_responsive"
+          ]
+        }
+      ],
+      "status": "ok"
+    },
+    {
+      "sheets": [
+        "722-1 (휴일)고성리-성읍문화마을"
+      ],
+      "routeNumbers": [
+        "722-1"
+      ],
+      "dayType": "saturday_sunday_holiday",
+      "dayLabel": "토.공휴일",
+      "serviceLabels": [
+        "옵서버스"
+      ],
+      "direction": "고성리→성읍문화마을",
+      "effectiveFrom": "2025-05-28",
+      "summary": "서귀포공영버스(064-760-3111~3)",
+      "timepoints": [
+        "고성리 (구.한국물류)",
+        "온평초등학교",
+        "난산리사무소",
+        "성산농협 신산지점",
+        "신풍리사무소",
+        "성읍문화마을"
+      ],
+      "trips": [
+        {
+          "routeNumber": "722-1",
+          "times": [
+            "07:00",
+            "07:08",
+            "07:13",
+            "07:21",
+            "07:30",
+            "07:43"
+          ],
+          "firstTime": "07:00"
+        },
+        {
+          "routeNumber": "722-1",
+          "times": [
+            "09:16",
+            "09:24",
+            "09:29",
+            "09:37",
+            "09:46",
+            "09:59"
+          ],
+          "firstTime": "09:16"
+        },
+        {
+          "routeNumber": "722-1",
+          "times": [
+            "11:56",
+            "12:04",
+            "12:09",
+            "12:17",
+            "12:26",
+            "12:39"
+          ],
+          "firstTime": "11:56"
+        },
+        {
+          "routeNumber": "722-1",
+          "times": [
+            null,
+            null,
+            null,
+            null,
+            null,
+            null
+          ],
+          "window": {
+            "from": "14:00",
+            "to": "20:30",
+            "label": "실시간 호출형"
+          },
+          "note": "출",
+          "firstTime": null,
+          "conditions": [
+            "demand_responsive"
+          ]
+        }
+      ],
+      "status": "ok"
+    }
+  ]
+}

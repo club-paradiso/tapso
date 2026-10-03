@@ -1,22 +1,32 @@
 {
-  "schemaVersion": "tapso-jeju-timetable-v2",
+  "schemaVersion": "tapso-jeju-timetable-v3",
   "label": "OFFICIAL_DATED",
   "source": {
     "publisher": "제주특별자치도 (bus.jeju.go.kr)",
     "dataset": "data.go.kr 3043887",
     "page": "https://bus.jeju.go.kr/publicTrafficInformation/generalBusSchedule",
     "file": "405081.xlsx",
-    "sha256": "4a63c488e185b19cb0f3c24838ab55954d235dac2a6a48bd5577e39e30a81a3b"
+    "sha256": "4a63c488e185b19cb0f3c24838ab55954d235dac2a6a48bd5577e39e30a81a3b",
+    "scheduleId": "405081",
+    "listedName": "771-2"
   },
   "retrievedOn": "2026-10-03",
   "parser": {
     "name": "jeju-bis-xlsx",
-    "version": "2"
+    "version": "3"
   },
-  "routeNumber": "771-2",
+  "routeNumbers": [
+    "771-2"
+  ],
+  "status": "parsed",
   "services": [
     {
-      "sheet": "771-2 동광-신화역사공원-오설록-청수-고산",
+      "sheets": [
+        "771-2 동광-신화역사공원-오설록-청수-고산"
+      ],
+      "routeNumbers": [
+        "771-2"
+      ],
       "dayType": "unstated",
       "direction": "동광환승센터→오설록→명리동→청수리→고산2리→고산",
       "effectiveFrom": "2019-12-26",
@@ -35,6 +45,7 @@
       ],
       "trips": [
         {
+          "routeNumber": "771-2",
           "times": [
             "07:50",
             "07:59",
@@ -46,9 +57,11 @@
             "08:21",
             "08:23",
             "08:28"
-          ]
+          ],
+          "firstTime": "07:50"
         },
         {
+          "routeNumber": "771-2",
           "times": [
             "09:30",
             "09:39",
@@ -60,9 +73,11 @@
             "10:01",
             "10:03",
             "10:08"
-          ]
+          ],
+          "firstTime": "09:30"
         },
         {
+          "routeNumber": "771-2",
           "times": [
             "12:05",
             "12:14",
@@ -74,9 +89,11 @@
             "12:36",
             "12:38",
             "12:43"
-          ]
+          ],
+          "firstTime": "12:05"
         },
         {
+          "routeNumber": "771-2",
           "times": [
             "14:20",
             "14:29",
@@ -88,9 +105,11 @@
             "14:51",
             "14:53",
             "14:58"
-          ]
+          ],
+          "firstTime": "14:20"
         },
         {
+          "routeNumber": "771-2",
           "times": [
             "16:10",
             "16:19",
@@ -102,9 +121,11 @@
             "16:41",
             "16:43",
             "16:48"
-          ]
+          ],
+          "firstTime": "16:10"
         },
         {
+          "routeNumber": "771-2",
           "times": [
             "19:15",
             "19:24",
@@ -116,14 +137,21 @@
             "19:46",
             "19:48",
             "19:53"
-          ]
+          ],
+          "firstTime": "19:15"
         }
-      ]
+      ],
+      "status": "ok"
     },
     {
-      "sheet": "771-2 고산-청수-오설록-신화역사공원-동광",
+      "sheets": [
+        "771-2 고산-청수-오설록-신화역사공원-동광"
+      ],
+      "routeNumbers": [
+        "771-2"
+      ],
       "dayType": "unstated",
-      "direction": "고산→고산2리→청수리→\n명리동→오설록→동광육거리",
+      "direction": "고산→고산2리→청수리→ 명리동→오설록→동광육거리",
       "effectiveFrom": "2019-12-26",
       "summary": "첫차 7:00, 막차 20:30,  제주시공영버스(064-728-3211)",
       "timepoints": [
@@ -140,6 +168,7 @@
       ],
       "trips": [
         {
+          "routeNumber": "771-2",
           "times": [
             "07:00",
             "07:05",
@@ -151,9 +180,11 @@
             "07:26",
             "07:29",
             "07:39"
-          ]
+          ],
+          "firstTime": "07:00"
         },
         {
+          "routeNumber": "771-2",
           "times": [
             "08:40",
             "08:45",
@@ -165,9 +196,11 @@
             "09:06",
             "09:09",
             "09:19"
-          ]
+          ],
+          "firstTime": "08:40"
         },
         {
+          "routeNumber": "771-2",
           "times": [
             "11:10",
             "11:15",
@@ -179,9 +212,11 @@
             "11:36",
             "11:39",
             "11:49"
-          ]
+          ],
+          "firstTime": "11:10"
         },
         {
+          "routeNumber": "771-2",
           "times": [
             "13:00",
             "13:05",
@@ -193,9 +228,11 @@
             "13:26",
             "13:29",
             "13:39"
-          ]
+          ],
+          "firstTime": "13:00"
         },
         {
+          "routeNumber": "771-2",
           "times": [
             "15:10",
             "15:15",
@@ -207,9 +244,11 @@
             "15:36",
             "15:39",
             "15:49"
-          ]
+          ],
+          "firstTime": "15:10"
         },
         {
+          "routeNumber": "771-2",
           "times": [
             "17:10",
             "17:15",
@@ -221,9 +260,11 @@
             "17:36",
             "17:39",
             "17:49"
-          ]
+          ],
+          "firstTime": "17:10"
         },
         {
+          "routeNumber": "771-2",
           "times": [
             "20:30",
             "20:35",
@@ -235,9 +276,11 @@
             "20:56",
             "20:59",
             "21:09"
-          ]
+          ],
+          "firstTime": "20:30"
         }
-      ]
+      ],
+      "status": "ok"
     }
   ]
 }

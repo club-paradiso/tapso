@@ -1,24 +1,35 @@
 {
-  "schemaVersion": "tapso-jeju-timetable-v2",
+  "schemaVersion": "tapso-jeju-timetable-v3",
   "label": "OFFICIAL_DATED",
   "source": {
     "publisher": "제주특별자치도 (bus.jeju.go.kr)",
     "dataset": "data.go.kr 3043887",
     "page": "https://bus.jeju.go.kr/publicTrafficInformation/generalBusSchedule",
     "file": "406016.xlsx",
-    "sha256": "6ebd043f6eb893ff29cde181e31b63c5a946b201cfd160a9b248b3621945367b"
+    "sha256": "6ebd043f6eb893ff29cde181e31b63c5a946b201cfd160a9b248b3621945367b",
+    "scheduleId": "406016",
+    "listedName": "633"
   },
   "retrievedOn": "2026-10-03",
   "parser": {
     "name": "jeju-bis-xlsx",
-    "version": "2"
+    "version": "3"
   },
-  "routeNumber": "633",
+  "routeNumbers": [
+    "633"
+  ],
+  "status": "parsed",
   "services": [
     {
-      "sheet": "633 삼성여고-동문R-서귀여중(여고)-중문-대평",
+      "sheets": [
+        "633 삼성여고-동문R-서귀여중(여고)-중문-대평"
+      ],
+      "routeNumbers": [
+        "633"
+      ],
       "dayType": "unstated",
       "direction": "삼성여고 → 대평리",
+      "effectiveNote": "미입력",
       "summary": "금남여객(064-767-0667)",
       "timepoints": [
         "삼성여고",
@@ -34,6 +45,7 @@
       ],
       "trips": [
         {
+          "routeNumber": "633",
           "times": [
             null,
             null,
@@ -45,9 +57,11 @@
             "06:35",
             "06:42",
             "07:00"
-          ]
+          ],
+          "firstTime": "06:20"
         },
         {
+          "routeNumber": "633",
           "times": [
             "08:05",
             "08:11",
@@ -59,9 +73,11 @@
             "08:40",
             "08:47",
             "09:05"
-          ]
+          ],
+          "firstTime": "08:05"
         },
         {
+          "routeNumber": "633",
           "times": [
             "08:25",
             "08:31",
@@ -73,9 +89,11 @@
             "09:00",
             "09:07",
             "09:25"
-          ]
+          ],
+          "firstTime": "08:25"
         },
         {
+          "routeNumber": "633",
           "times": [
             "11:00",
             "11:06",
@@ -87,9 +105,11 @@
             "11:35",
             "11:42",
             "12:00"
-          ]
+          ],
+          "firstTime": "11:00"
         },
         {
+          "routeNumber": "633",
           "times": [
             "12:20",
             "12:26",
@@ -101,9 +121,11 @@
             "12:55",
             "13:02",
             "13:20"
-          ]
+          ],
+          "firstTime": "12:20"
         },
         {
+          "routeNumber": "633",
           "times": [
             "15:00",
             "15:06",
@@ -115,9 +137,11 @@
             "15:35",
             "15:42",
             "16:00"
-          ]
+          ],
+          "firstTime": "15:00"
         },
         {
+          "routeNumber": "633",
           "times": [
             "16:20",
             "16:26",
@@ -129,9 +153,11 @@
             "16:55",
             "17:02",
             "17:20"
-          ]
+          ],
+          "firstTime": "16:20"
         },
         {
+          "routeNumber": "633",
           "times": [
             "18:10",
             "18:16",
@@ -143,9 +169,11 @@
             "18:45",
             "18:52",
             "19:10"
-          ]
+          ],
+          "firstTime": "18:10"
         },
         {
+          "routeNumber": "633",
           "times": [
             "19:35",
             "19:41",
@@ -157,9 +185,11 @@
             "20:10",
             "20:17",
             "20:35"
-          ]
+          ],
+          "firstTime": "19:35"
         },
         {
+          "routeNumber": "633",
           "times": [
             "21:00",
             "21:06",
@@ -171,14 +201,22 @@
             "21:35",
             "21:42",
             null
-          ]
+          ],
+          "firstTime": "21:00"
         }
-      ]
+      ],
+      "status": "ok"
     },
     {
-      "sheet": "633 대평-중문-서귀여중(여고)-동문R-삼성여고",
+      "sheets": [
+        "633 대평-중문-서귀여중(여고)-동문R-삼성여고"
+      ],
+      "routeNumbers": [
+        "633"
+      ],
       "dayType": "unstated",
       "direction": "대평리 → 삼성여고",
+      "effectiveNote": "미입력",
       "summary": "금남여객(064-767-0667)",
       "timepoints": [
         "대평",
@@ -194,6 +232,7 @@
       ],
       "trips": [
         {
+          "routeNumber": "633",
           "times": [
             "06:40",
             "06:58",
@@ -205,9 +244,11 @@
             "07:31",
             "07:34",
             "07:40"
-          ]
+          ],
+          "firstTime": "06:40"
         },
         {
+          "routeNumber": "633",
           "times": [
             "07:00",
             "07:18",
@@ -219,9 +260,11 @@
             "07:51",
             "07:54",
             "08:00"
-          ]
+          ],
+          "firstTime": "07:00"
         },
         {
+          "routeNumber": "633",
           "times": [
             "09:35",
             "09:53",
@@ -233,9 +276,11 @@
             null,
             "10:29",
             "10:35"
-          ]
+          ],
+          "firstTime": "09:35"
         },
         {
+          "routeNumber": "633",
           "times": [
             "10:50",
             "11:08",
@@ -247,9 +292,11 @@
             "11:41",
             "11:44",
             "11:50"
-          ]
+          ],
+          "firstTime": "10:50"
         },
         {
+          "routeNumber": "633",
           "times": [
             "13:25",
             "13:43",
@@ -261,9 +308,11 @@
             null,
             "14:19",
             "14:25"
-          ]
+          ],
+          "firstTime": "13:25"
         },
         {
+          "routeNumber": "633",
           "times": [
             "14:45",
             "15:03",
@@ -275,9 +324,11 @@
             "15:36",
             "15:39",
             "15:45"
-          ]
+          ],
+          "firstTime": "14:45"
         },
         {
+          "routeNumber": "633",
           "times": [
             "16:45",
             "17:03",
@@ -289,9 +340,11 @@
             null,
             "17:39",
             "17:45"
-          ]
+          ],
+          "firstTime": "16:45"
         },
         {
+          "routeNumber": "633",
           "times": [
             "18:10",
             "18:28",
@@ -303,9 +356,11 @@
             "19:01",
             "19:04",
             "19:10"
-          ]
+          ],
+          "firstTime": "18:10"
         },
         {
+          "routeNumber": "633",
           "times": [
             "19:35",
             "19:53",
@@ -317,9 +372,11 @@
             null,
             "20:29",
             "20:35"
-          ]
+          ],
+          "firstTime": "19:35"
         },
         {
+          "routeNumber": "633",
           "times": [
             "20:55",
             "21:13",
@@ -331,9 +388,11 @@
             "21:46",
             null,
             null
-          ]
+          ],
+          "firstTime": "20:55"
         }
-      ]
+      ],
+      "status": "ok"
     }
   ]
 }

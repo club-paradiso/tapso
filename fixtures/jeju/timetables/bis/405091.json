@@ -1,0 +1,157 @@
+{
+  "schemaVersion": "tapso-jeju-timetable-v3",
+  "label": "OFFICIAL_DATED",
+  "source": {
+    "publisher": "제주특별자치도 (bus.jeju.go.kr)",
+    "dataset": "data.go.kr 3043887",
+    "page": "https://bus.jeju.go.kr/publicTrafficInformation/generalBusSchedule",
+    "file": "405091.xlsx",
+    "sha256": "27eeceaa187d00bbc31cdad08af26aed8e20275622c0e734c8c6fee98f51e4ab",
+    "scheduleId": "405091",
+    "listedName": "792-1"
+  },
+  "retrievedOn": "2026-10-03",
+  "parser": {
+    "name": "jeju-bis-xlsx",
+    "version": "3"
+  },
+  "routeNumbers": [
+    "792-1"
+  ],
+  "serviceLabels": [
+    "옵서버스"
+  ],
+  "status": "parsed",
+  "services": [
+    {
+      "sheets": [
+        "792-1 하귀-수산-장전-유수암-용흥-신엄-하귀(변경후"
+      ],
+      "routeNumbers": [
+        "792-1"
+      ],
+      "dayType": "unstated",
+      "serviceLabels": [
+        "옵서버스"
+      ],
+      "direction": "하귀→유수암상동→하귀 (순환)",
+      "effectiveFrom": "2025-05-28",
+      "summary": "제주시공영버스(064-728-3211)",
+      "timepoints": [
+        "성수동",
+        "수산",
+        "당동",
+        "장전",
+        "소길",
+        "유수암상동",
+        "장전",
+        "용흥",
+        "신엄",
+        "성수동"
+      ],
+      "trips": [
+        {
+          "routeNumber": "792-1",
+          "times": [
+            "06:13",
+            "06:22",
+            "06:24",
+            "06:31",
+            "06:35",
+            "06:45",
+            "06:54",
+            "06:59",
+            "07:02",
+            "07:16"
+          ],
+          "firstTime": "06:13"
+        },
+        {
+          "routeNumber": "792-1",
+          "times": [
+            "07:23",
+            "07:32",
+            "07:34",
+            "07:41",
+            "07:45",
+            "07:55",
+            "08:04",
+            "08:09",
+            "08:12",
+            "08:26"
+          ],
+          "firstTime": "07:23"
+        },
+        {
+          "routeNumber": "792-1",
+          "times": [
+            "08:53",
+            "09:02",
+            "09:04",
+            "09:11",
+            "09:15",
+            "09:25",
+            "09:34",
+            "09:39",
+            "09:42",
+            "09:56"
+          ],
+          "firstTime": "08:53"
+        },
+        {
+          "routeNumber": "792-1",
+          "times": [
+            "10:48",
+            "10:57",
+            "10:59",
+            "11:06",
+            "11:10",
+            "11:20",
+            "11:29",
+            "11:34",
+            "11:37",
+            "11:51"
+          ],
+          "firstTime": "10:48"
+        },
+        {
+          "routeNumber": "792-1",
+          "times": [
+            "12:18",
+            "12:27",
+            "12:29",
+            "12:36",
+            "12:40",
+            "12:50",
+            "12:59",
+            "13:04",
+            "13:07",
+            "13:21"
+          ],
+          "firstTime": "12:18"
+        },
+        {
+          "routeNumber": "792-1",
+          "times": [
+            "15:38",
+            "15:47",
+            "15:49",
+            "15:56",
+            "16:00",
+            "16:10",
+            "16:19",
+            "16:24",
+            "16:27",
+            "16:41"
+          ],
+          "note": "토요일 및 공휴일 미운행",
+          "firstTime": "15:38",
+          "conditions": [
+            "토요일 및 공휴일 미운행"
+          ]
+        }
+      ],
+      "status": "ok"
+    }
+  ]
+}

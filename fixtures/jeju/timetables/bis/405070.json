@@ -1,24 +1,34 @@
 {
-  "schemaVersion": "tapso-jeju-timetable-v2",
+  "schemaVersion": "tapso-jeju-timetable-v3",
   "label": "OFFICIAL_DATED",
   "source": {
     "publisher": "제주특별자치도 (bus.jeju.go.kr)",
     "dataset": "data.go.kr 3043887",
     "page": "https://bus.jeju.go.kr/publicTrafficInformation/generalBusSchedule",
     "file": "405070.xlsx",
-    "sha256": "d2dadfb517bd26fe7faee4ddbf5967e7edbe43288981aeba3ab8bf62049a09c1"
+    "sha256": "d2dadfb517bd26fe7faee4ddbf5967e7edbe43288981aeba3ab8bf62049a09c1",
+    "scheduleId": "405070",
+    "listedName": "431"
   },
   "retrievedOn": "2026-10-03",
   "parser": {
     "name": "jeju-bis-xlsx",
-    "version": "2"
+    "version": "3"
   },
-  "routeNumber": "431",
+  "routeNumbers": [
+    "431"
+  ],
+  "status": "parsed",
   "services": [
     {
-      "sheet": "431 순환(터미널-사대부중-동여중-합동청사-터미널)",
+      "sheets": [
+        "431 순환(터미널-사대부중-동여중-합동청사-터미널)"
+      ],
+      "routeNumbers": [
+        "431"
+      ],
       "dayType": "unstated",
-      "direction": "제주터미널→사대부중고→\n탐라광장→시청→제주터미널(순환)",
+      "direction": "제주터미널→사대부중고→ 탐라광장→시청→제주터미널(순환)",
       "effectiveFrom": "2026-04-30",
       "summary": "첫차 06:00, 막차 21:00, 배차간격 40~70분, 극동여객(064-753-0310)",
       "timepoints": [
@@ -34,6 +44,7 @@
       ],
       "trips": [
         {
+          "routeNumber": "431",
           "times": [
             "06:00",
             "06:09",
@@ -44,9 +55,11 @@
             "06:51",
             "07:01",
             "07:10"
-          ]
+          ],
+          "firstTime": "06:00"
         },
         {
+          "routeNumber": "431",
           "times": [
             "06:40",
             "06:49",
@@ -57,9 +70,11 @@
             "07:31",
             "07:41",
             "07:50"
-          ]
+          ],
+          "firstTime": "06:40"
         },
         {
+          "routeNumber": "431",
           "times": [
             "07:40",
             "07:49",
@@ -70,9 +85,11 @@
             "08:31",
             "08:41",
             "08:50"
-          ]
+          ],
+          "firstTime": "07:40"
         },
         {
+          "routeNumber": "431",
           "times": [
             "08:50",
             "08:59",
@@ -83,9 +100,11 @@
             "09:41",
             "09:51",
             "10:00"
-          ]
+          ],
+          "firstTime": "08:50"
         },
         {
+          "routeNumber": "431",
           "times": [
             "09:50",
             "09:59",
@@ -96,9 +115,11 @@
             "10:41",
             "10:51",
             "11:00"
-          ]
+          ],
+          "firstTime": "09:50"
         },
         {
+          "routeNumber": "431",
           "times": [
             "10:50",
             "10:59",
@@ -109,9 +130,11 @@
             "11:41",
             "11:51",
             "12:00"
-          ]
+          ],
+          "firstTime": "10:50"
         },
         {
+          "routeNumber": "431",
           "times": [
             "11:50",
             "11:59",
@@ -122,9 +145,11 @@
             "12:41",
             "12:51",
             "13:00"
-          ]
+          ],
+          "firstTime": "11:50"
         },
         {
+          "routeNumber": "431",
           "times": [
             "13:00",
             "13:09",
@@ -135,9 +160,11 @@
             "13:51",
             "14:01",
             "14:10"
-          ]
+          ],
+          "firstTime": "13:00"
         },
         {
+          "routeNumber": "431",
           "times": [
             "14:00",
             "14:09",
@@ -148,9 +175,11 @@
             "14:51",
             "15:01",
             "15:10"
-          ]
+          ],
+          "firstTime": "14:00"
         },
         {
+          "routeNumber": "431",
           "times": [
             "15:15",
             "15:24",
@@ -161,9 +190,11 @@
             "16:06",
             "16:16",
             "16:25"
-          ]
+          ],
+          "firstTime": "15:15"
         },
         {
+          "routeNumber": "431",
           "times": [
             "16:15",
             "16:24",
@@ -174,9 +205,11 @@
             "17:06",
             "17:16",
             "17:25"
-          ]
+          ],
+          "firstTime": "16:15"
         },
         {
+          "routeNumber": "431",
           "times": [
             "17:20",
             "17:29",
@@ -187,9 +220,11 @@
             "18:11",
             "18:21",
             "18:30"
-          ]
+          ],
+          "firstTime": "17:20"
         },
         {
+          "routeNumber": "431",
           "times": [
             "18:20",
             "18:29",
@@ -200,9 +235,11 @@
             "19:11",
             "19:21",
             "19:30"
-          ]
+          ],
+          "firstTime": "18:20"
         },
         {
+          "routeNumber": "431",
           "times": [
             "19:20",
             "19:29",
@@ -213,9 +250,11 @@
             "20:11",
             "20:21",
             "20:30"
-          ]
+          ],
+          "firstTime": "19:20"
         },
         {
+          "routeNumber": "431",
           "times": [
             "20:20",
             "20:29",
@@ -226,9 +265,11 @@
             "21:11",
             "21:21",
             "21:30"
-          ]
+          ],
+          "firstTime": "20:20"
         },
         {
+          "routeNumber": "431",
           "times": [
             "21:00",
             "21:09",
@@ -239,9 +280,11 @@
             "21:51",
             "22:01",
             "22:10"
-          ]
+          ],
+          "firstTime": "21:00"
         }
-      ]
+      ],
+      "status": "ok"
     }
   ]
 }

@@ -1,0 +1,76 @@
+{
+  "schemaVersion": "tapso-jeju-timetable-v3",
+  "label": "OFFICIAL_DATED",
+  "source": {
+    "publisher": "제주특별자치도 (bus.jeju.go.kr)",
+    "dataset": "data.go.kr 3043887",
+    "page": "https://bus.jeju.go.kr/publicTrafficInformation/generalBusSchedule",
+    "file": "405141.xlsx",
+    "sha256": "9d1cfba59bf4a925290344bf12f6a8ea414203ff27ead22ba7bbaa20a85840d8",
+    "scheduleId": "405141",
+    "listedName": "311-1(수요맞춤형)"
+  },
+  "retrievedOn": "2026-10-03",
+  "parser": {
+    "name": "jeju-bis-xlsx",
+    "version": "3"
+  },
+  "routeNumbers": [
+    "311-1"
+  ],
+  "serviceLabels": [
+    "수요맞춤형"
+  ],
+  "status": "parsed",
+  "services": [
+    {
+      "sheets": [
+        "311-1 함덕-삼양초-인제-시청-한라병원-수목원"
+      ],
+      "routeNumbers": [
+        "311-1"
+      ],
+      "dayType": "unstated",
+      "serviceLabels": [
+        "수요맞춤형"
+      ],
+      "direction": "함덕→인제→보건소→한라수목원",
+      "effectiveFrom": "2024-08-01",
+      "summary": "관광지순환버스(064-746-7310)",
+      "timepoints": [
+        "함덕회차지",
+        "조천",
+        "삼양",
+        "인제(천수동)",
+        "제주시청",
+        "보건소",
+        "제주도청 (신제주로터리)",
+        "제원아파트",
+        "한라병원",
+        "한라대학",
+        "한라수목원"
+      ],
+      "trips": [
+        {
+          "routeNumber": "311-1",
+          "times": [
+            "07:15",
+            "07:28",
+            "07:41",
+            "07:55",
+            "08:04",
+            "08:11",
+            "08:18",
+            "08:24",
+            "08:29",
+            "08:39",
+            "08:45"
+          ],
+          "firstTime": "07:15"
+        }
+      ],
+      "note": "토,공휴일 운행 안함",
+      "status": "ok"
+    }
+  ]
+}

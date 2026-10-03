@@ -1,22 +1,32 @@
 {
-  "schemaVersion": "tapso-jeju-timetable-v2",
+  "schemaVersion": "tapso-jeju-timetable-v3",
   "label": "OFFICIAL_DATED",
   "source": {
     "publisher": "제주특별자치도 (bus.jeju.go.kr)",
     "dataset": "data.go.kr 3043887",
     "page": "https://bus.jeju.go.kr/publicTrafficInformation/generalBusSchedule",
     "file": "405080.xlsx",
-    "sha256": "f005ef0723efacb6631bfdc7d20a60ce158116fdc2396c83d125713e96ee60da"
+    "sha256": "f005ef0723efacb6631bfdc7d20a60ce158116fdc2396c83d125713e96ee60da",
+    "scheduleId": "405080",
+    "listedName": "771-1"
   },
   "retrievedOn": "2026-10-03",
   "parser": {
     "name": "jeju-bis-xlsx",
-    "version": "2"
+    "version": "3"
   },
-  "routeNumber": "771-1",
+  "routeNumbers": [
+    "771-1"
+  ],
+  "status": "parsed",
   "services": [
     {
-      "sheet": "771-1 동광-오설록-청수-저지-낙천-용수-고산",
+      "sheets": [
+        "771-1 동광-오설록-청수-저지-낙천-용수-고산"
+      ],
+      "routeNumbers": [
+        "771-1"
+      ],
       "dayType": "unstated",
       "direction": "동광환승센터 → 고산",
       "effectiveFrom": "2019-02-27",
@@ -37,6 +47,7 @@
       ],
       "trips": [
         {
+          "routeNumber": "771-1",
           "times": [
             "08:15",
             "08:25",
@@ -50,9 +61,11 @@
             "09:04",
             "09:12",
             "09:17"
-          ]
+          ],
+          "firstTime": "08:15"
         },
         {
+          "routeNumber": "771-1",
           "times": [
             "11:30",
             "11:40",
@@ -66,9 +79,11 @@
             "12:19",
             "12:27",
             "12:32"
-          ]
+          ],
+          "firstTime": "11:30"
         },
         {
+          "routeNumber": "771-1",
           "times": [
             "14:05",
             "14:15",
@@ -82,9 +97,11 @@
             "14:54",
             "15:02",
             "15:07"
-          ]
+          ],
+          "firstTime": "14:05"
         },
         {
+          "routeNumber": "771-1",
           "times": [
             "18:00",
             "18:10",
@@ -98,12 +115,19 @@
             "18:49",
             "18:57",
             "19:02"
-          ]
+          ],
+          "firstTime": "18:00"
         }
-      ]
+      ],
+      "status": "ok"
     },
     {
-      "sheet": "771-1 고산-용수-한경-저지-오설록-동광",
+      "sheets": [
+        "771-1 고산-용수-한경-저지-오설록-동광"
+      ],
+      "routeNumbers": [
+        "771-1"
+      ],
       "dayType": "unstated",
       "direction": "고산 → 동광환승센터",
       "effectiveFrom": "2019-02-27",
@@ -124,6 +148,7 @@
       ],
       "trips": [
         {
+          "routeNumber": "771-1",
           "times": [
             "07:00",
             "07:05",
@@ -137,9 +162,11 @@
             "07:49",
             "07:52",
             "08:02"
-          ]
+          ],
+          "firstTime": "07:00"
         },
         {
+          "routeNumber": "771-1",
           "times": [
             "10:17",
             "10:22",
@@ -153,9 +180,11 @@
             "11:06",
             "11:09",
             "11:19"
-          ]
+          ],
+          "firstTime": "10:17"
         },
         {
+          "routeNumber": "771-1",
           "times": [
             "12:42",
             "12:47",
@@ -169,9 +198,11 @@
             "13:31",
             "13:34",
             "13:44"
-          ]
+          ],
+          "firstTime": "12:42"
         },
         {
+          "routeNumber": "771-1",
           "times": [
             "16:30",
             "16:35",
@@ -185,9 +216,11 @@
             "17:19",
             "17:22",
             "17:32"
-          ]
+          ],
+          "firstTime": "16:30"
         },
         {
+          "routeNumber": "771-1",
           "times": [
             "19:30",
             "19:35",
@@ -201,9 +234,11 @@
             "20:19",
             "20:22",
             "20:32"
-          ]
+          ],
+          "firstTime": "19:30"
         }
-      ]
+      ],
+      "status": "ok"
     }
   ]
 }
