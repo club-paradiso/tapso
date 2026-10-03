@@ -15,6 +15,7 @@
  *   FORM <action> <method>             a form on the page
  *   INPUT <name>=<value>               its fields
  *   CODE <file>:<line>: <text>         script lines that name a request, a download or a route list
+ *   BLOCK inline:<line>: <text>        the page's timetable functions, every line
  */
 
 const BIS = "https://bus.jeju.go.kr";
@@ -73,6 +74,13 @@ for (const url of [PAGE, `${PAGE}?viewtype=2`]) {
   }
   const inline = [...page.body.matchAll(/<script(?![^>]+src)[^>]*>([\s\S]*?)<\/script>/gi)].map((match) => match[1]!).join("\n");
   printCode("inline", inline, 250);
+  // The timetable functions verbatim: a filtered view drops the request's method and parameters.
+  const lines = inline.split(/\r?\n/);
+  const start = lines.findIndex((line) => /function\s+showRouteNum/.test(line));
+  const end = lines.findIndex((line, index) => index > start && /function\s+checkDownloadComplete/.test(line));
+  if (start >= 0) {
+    for (let index = start; index < (end > start ? end : start + 60); index += 1) console.log(`BLOCK inline:${index + 1}: ${lines[index]!.trimEnd().slice(0, 300)}`);
+  }
   // Markup that triggers a request: onclick handlers and data attributes.
   printCode("markup", page.body.replace(/<script[\s\S]*?<\/script>/gi, ""), 80);
   for (const src of scripts.filter((link) => link.startsWith(BIS) && !/jquery|bootstrap|swiper|slick|polyfill/i.test(link))) {
