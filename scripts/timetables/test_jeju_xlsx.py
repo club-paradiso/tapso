@@ -1,0 +1,140 @@
+"""Tests for the official Jeju timetable parser.
+
+The real Route 365 file (downloaded 2026-10-03) is parsed as committed.
+Every other workbook here is SYNTHETIC, built in the test with the same
+layout, to show each way the parser refuses a file it cannot vouch for.
+"""
+
+from __future__ import annotations
+
+import json
+import tempfile
+import unittest
+import zipfile
+from pathlib import Path
+from xml.sax.saxutils import escape
+
+import jeju_xlsx
+
+ROOT = Path(__file__).resolve().parents[2]
+RAW_365 = ROOT / "fixtures/jeju/timetables/raw/365.xlsx"
+DATASET_365 = ROOT / "fixtures/jeju/timetables/365.json"
+
+
+def workbook(path: Path, sheets: dict[str, dict[str, str]]) -> Path:
+    """A minimal XLSX: inline strings only, one entry per sheet {cell: text}."""
+    with zipfile.ZipFile(path, "w") as archive:
+        names = list(sheets)
+        archive.writestr(
+            "xl/workbook.xml",
+            '<workbook xmlns="http://schemas.openxmlformats.org/spreadsheetml/2006/main" '
+            'xmlns:r="http://schemas.openxmlformats.org/officeDocument/2006/relationships"><sheets>'
+            + "".join(f'<sheet name="{escape(name)}" sheetId="{i + 1}" r:id="rId{i + 1}"/>' for i, name in enumerate(names))
+            + "</sheets></workbook>",
+        )
+        archive.writestr(
+            "xl/_rels/workbook.xml.rels",
+            '<Relationships xmlns="http://schemas.openxmlformats.org/package/2006/relationships">'
+            + "".join(f'<Relationship Id="rId{i + 1}" Target="worksheets/sheet{i + 1}.xml"/>' for i in range(len(names)))
+            + "</Relationships>",
+        )
+        for i, name in enumerate(names):
+            cells = "".join(
+                f'<c r="{ref}" t="inlineStr"><is><t>{escape(text)}</t></is></c>' for ref, text in sheets[name].items()
+            )
+            archive.writestr(
+                f"xl/worksheets/sheet{i + 1}.xml",
+                f'<worksheet xmlns="http://schemas.openxmlformats.org/spreadsheetml/2006/main"><sheetData><row>{cells}</row></sheetData></worksheet>',
+            )
+    return path
+
+
+def synthetic_sheet(title: str = "999번(평일)", summary: str = "첫차 6:00, 막차 7:00, SYNTHETIC", rows: list[list[str]] | None = None) -> dict[str, str]:
+    rows = rows if rows is not None else [["06:00", "06:10", ""], ["07:00", "07:10", ""]]
+    cells = {"B2": title, "B3": "합성A→합성B", "B5": summary, "H5": "(시행일 : 2026. 6. 24.)", "B7": "구분", "C7": "합성A", "D7": "합성B", "E7": "비  고"}
+    for index, row in enumerate(rows):
+        number = 8 + index
+        cells[f"B{number}"] = str(index + 1)
+        for column, text in zip("CDE", row):
+            if text:
+                cells[f"{column}{number}"] = text
+    return cells
+
+
+class Route365(unittest.TestCase):
+    def test_the_real_file_parses_to_the_committed_dataset(self) -> None:
+        dataset = jeju_xlsx.parse_file(RAW_365, "2026-10-03")
+        self.assertEqual(dataset, json.loads(DATASET_365.read_text(encoding="utf-8")))
+
+    def test_what_the_file_says(self) -> None:
+        dataset = jeju_xlsx.parse_file(RAW_365, "2026-10-03")
+        self.assertEqual(dataset["routeNumber"], "365")
+        self.assertEqual(dataset["label"], "OFFICIAL_DATED")
+        self.assertEqual(dataset["source"]["sha256"], "8eafd16b3393be8c15ff26098edadde73fd10cd66d4584e9a6aa95b08b6d07a4")
+        summary = [(s["dayType"], s["direction"], s.get("effectiveFrom"), len(s["trips"])) for s in dataset["services"]]
+        self.assertEqual(
+            summary,
+            [
+                ("weekday", "한라대→공항→시청→제주대", "2026-06-24", 66),
+                ("weekday", "제주대→시청→공항→한라대", "2026-06-24", 64),
+                ("saturday_sunday_holiday", "한라대→공항→시청→제주대", "2024-08-01", 53),
+                ("saturday_sunday_holiday", "제주대→시청→공항→한라대", "2024-08-01", 52),
+            ],
+        )
+        first = dataset["services"][0]["trips"][0]
+        self.assertEqual(first["startsAt"], {"place": "월성마을", "time": "06:03", "column": "공항"})
+        self.assertEqual(first["times"], [None, None, None, "06:14", "06:22", "06:41", None])
+        self.assertEqual(dataset["services"][0]["trips"][-1]["times"], ["21:55", "22:11", "22:23", "22:37", "22:44", "23:02", None])
+
+
+class Refusals(unittest.TestCase):
+    def parse(self, *sheets: dict[str, str]) -> dict:
+        with tempfile.TemporaryDirectory() as directory:
+            path = workbook(Path(directory) / "synthetic.xlsx", {f"합성{i}": sheet for i, sheet in enumerate(sheets)})
+            return jeju_xlsx.parse_file(path, "2026-10-03")
+
+    def test_a_well_formed_synthetic_file_parses(self) -> None:
+        dataset = self.parse(synthetic_sheet())
+        self.assertEqual(dataset["services"][0]["trips"], [{"times": ["06:00", "06:10"]}, {"times": ["07:00", "07:10"]}])
+        self.assertEqual(dataset["services"][0]["effectiveFrom"], "2026-06-24")
+
+    def assertRefused(self, fragment: str, *sheets: dict[str, str]) -> None:
+        with self.assertRaises(jeju_xlsx.TimetableParseError) as caught:
+            self.parse(*sheets)
+        self.assertIn(fragment, str(caught.exception))
+
+    def test_an_unknown_day_label(self) -> None:
+        self.assertRefused("not one TAPSO has read before", synthetic_sheet(title="999번(일요일)"))
+
+    def test_a_time_past_midnight(self) -> None:
+        self.assertRefused("unreadable value", synthetic_sheet(rows=[["23:50", "24:05", ""]], summary=""))
+
+    def test_times_out_of_order_within_a_trip(self) -> None:
+        self.assertRefused("not strictly ascending", synthetic_sheet(rows=[["06:10", "06:00", ""]], summary=""))
+
+    def test_trips_out_of_order_at_a_timepoint(self) -> None:
+        self.assertRefused("out of order at '합성A'", synthetic_sheet(rows=[["07:00", "07:10", ""], ["06:00", "06:10", ""]], summary=""))
+
+    def test_a_summary_that_disagrees_with_the_trips(self) -> None:
+        self.assertRefused("막차 7:30 disagrees", synthetic_sheet(summary="첫차 6:00, 막차 7:30"))
+
+    def test_an_unreadable_cell(self) -> None:
+        self.assertRefused("cell D8", synthetic_sheet(rows=[["06:00", "운휴", ""]], summary=""))
+
+    def test_a_start_off_the_table_after_a_time(self) -> None:
+        self.assertRefused("must come before every time", synthetic_sheet(rows=[["06:00", "06:10\n(합성C 출발)", ""]], summary=""))
+
+    def test_a_missing_trip_number(self) -> None:
+        sheet = synthetic_sheet()
+        sheet["B9"] = "3"
+        self.assertRefused("expected trip 2", sheet)
+
+    def test_two_routes_in_one_file(self) -> None:
+        self.assertRefused("more than one route", synthetic_sheet(), synthetic_sheet(title="998번(토,공휴일)"))
+
+    def test_the_same_direction_and_day_twice(self) -> None:
+        self.assertRefused("same direction and day type", synthetic_sheet(), synthetic_sheet())
+
+
+if __name__ == "__main__":
+    unittest.main()
