@@ -70,8 +70,8 @@ struct RideView: View {
                             .disabled(model.isRecheckingPosition)
                         }
                         #if DEBUG
-                        if model.hybridTrackingEnabled {
-                            Button("Tracking diagnostics", systemImage: "waveform.path") { showingDiagnostics = true }
+                        if model.isLiveRide {
+                            Button("Ride trace", systemImage: "waveform.path") { showingDiagnostics = true }
                         }
                         #endif
                         if !model.isLiveRide {
@@ -105,12 +105,28 @@ struct RideView: View {
                 #if DEBUG
                 NavigationStack {
                     ScrollView {
-                        Text(verbatim: model.hybridDiagnosticLines.joined(separator: "\n"))
-                            .font(.system(.caption, design: .monospaced))
-                            .textSelection(.enabled)
-                            .padding()
+                        VStack(alignment: .leading, spacing: TapsoSpace.md) {
+                            Text(verbatim: TapsoBuild.identity().line)
+                                .font(.footnote.monospacedDigit())
+                            Text(verbatim: model.rideTrace.text)
+                                .font(.system(.caption2, design: .monospaced))
+                                .textSelection(.enabled)
+                            if !model.hybridDiagnosticLines.isEmpty {
+                                Text(verbatim: "Hybrid engine\n" + model.hybridDiagnosticLines.joined(separator: "\n"))
+                                    .font(.system(.caption2, design: .monospaced))
+                                    .textSelection(.enabled)
+                            }
+                        }
+                        .padding()
                     }
-                    .navigationTitle("Tracking diagnostics")
+                    .navigationTitle("Ride trace")
+                    .toolbar {
+                        ToolbarItem(placement: .confirmationAction) {
+                            ShareLink(item: model.rideTrace.text, preview: SharePreview("TAPSO ride trace")) {
+                                Label("Share", systemImage: "square.and.arrow.up")
+                            }
+                        }
+                    }
                 }
                 #endif
             }

@@ -346,6 +346,10 @@ final class TapsoAppModel {
     let hybridTrackingEnabled = ProcessInfo.processInfo.arguments.contains("-tapsoHybridTracking")
     private(set) var isRecheckingPosition = false
     private(set) var hybridDiagnosticLines: [String] = []
+    #if DEBUG
+    /// The live ride's field trace (`RideTrace`): recorded automatically, exported from the ride screen.
+    private(set) var rideTrace = RideTrace()
+    #endif
     @ObservationIgnored private let locationSampler = RideLocationSampler()
     @ObservationIgnored private var hybridEngine: HybridPositionEngine?
     @ObservationIgnored private var hybridSessionID: String?
@@ -1533,6 +1537,7 @@ final class TapsoAppModel {
 
     func rideSceneChanged(isActive: Bool) async {
         rideInForeground = isActive
+        trace("lifecycle")
         guard hybridTrackingEnabled, isLiveRide else { return }
         if isActive {
             await reconcileRidePosition(manual: false)
@@ -1549,6 +1554,7 @@ final class TapsoAppModel {
         lastManualRefresh = now
         isRecheckingPosition = true
         defer { isRecheckingPosition = false }
+        trace("recheck")
         UIImpactFeedbackGenerator(style: .light).impactOccurred()
         if hybridTrackingEnabled {
             await reconcileRidePosition(manual: true)
@@ -1563,6 +1569,9 @@ final class TapsoAppModel {
         hybridSessionID = nil
         retainedDeviceSample = nil
         hybridDiagnosticLines = []
+        #if DEBUG
+        rideTrace.reset()
+        #endif
         hybridPermissionRequested = false
         lastManualRefresh = nil
     }
@@ -1622,9 +1631,37 @@ final class TapsoAppModel {
             hybridDiagnosticLines.append(line)
             if hybridDiagnosticLines.count > 200 { hybridDiagnosticLines.removeFirst(hybridDiagnosticLines.count - 200) }
         }
+        trace(failure == nil ? "hybrid" : "poll_failed", snapshot: snapshot, detail: failure?.name ?? "\(result?.source ?? "-") \(result?.reason ?? "-")")
         #endif
         store.saveActiveRide(activeRide)
         await rideDidChange()
+    }
+
+    /// Records one trace event for the active live ride (Debug builds only; a no-op otherwise).
+    private func trace(_ event: String, snapshot: JourneySessionSnapshot? = nil, milestone: RideMilestone? = nil, detail: String? = nil) {
+        #if DEBUG
+        guard let ride = activeRide, let live = ride.live, let route = ride.draft.route else { return }
+        let guidance = ride.guidance
+        rideTrace.record(RideTraceEvent(
+            at: Date(),
+            build: TapsoBuild.identity().line,
+            event: event,
+            route: route.number,
+            variant: route.id.rawValue,
+            vehicle: ride.plate,
+            providerSequence: snapshot?.progress?.currentStopSequence ?? live.currentStopSequence,
+            sessionState: snapshot?.state,
+            serverTrust: snapshot?.reliability?.trust,
+            moment: guidance.moment.rawValue,
+            trust: guidance.trust.rawValue,
+            remainingStops: ride.signal.remainingStops,
+            hybridState: ride.hybridPosition?.state.rawValue,
+            gpsAccuracyBucket: retainedDeviceSample.map { Int($0.accuracy / 10) * 10 },
+            lifecycle: rideInForeground ? "foreground" : "background",
+            milestone: milestone?.rawValue,
+            detail: detail
+        ))
+        #endif
     }
 
     /// One session read during the ride. False when polling should stop.
@@ -1644,12 +1681,14 @@ final class TapsoAppModel {
             ride.lastObservedAt = Date()
             activeRide = ride
             liveFailure = nil
+            trace("poll", snapshot: snapshot)
         } catch is CancellationError {
             return false
         } catch {
             guard var ride = activeRide, ride.live?.sessionID == sessionID else { return false }
             let failure = Self.failure(error)
             liveFailure = failure
+            trace("poll_failed", detail: failure.name)
             switch failure {
             case .sessionExpired, .sessionNotFound, .sessionsUnavailable, .serviceUnavailable, .rejected:
                 ride.live?.endedByServer = true
@@ -1745,9 +1784,11 @@ final class TapsoAppModel {
                 RideFeedback.play(guidance.haptic)
             }
             RideFeedback.announce(guidance, exitStopName: passedStopAdvice?.exitStop?.stop.name)
+            trace(newMilestone == nil ? "guidance" : "milestone", milestone: newMilestone)
         }
         if let state = contentState() {
             await liveActivity?.update(state: state, alerting: newMilestone)
+            trace("live_activity", milestone: newMilestone, detail: "freshness=\(state.freshness.rawValue) phase=\(state.phase.rawValue)")
         }
     }
 
