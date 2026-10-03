@@ -9,6 +9,26 @@ import { createTransitApiHandler } from "../src/apiRouter.ts";
 import { CachedTransitProvider } from "../src/cachedTransitProvider.ts";
 import type { RouteRequest, StopOnRoute, VehicleObservation } from "../src/domain.ts";
 import { JourneySessionCoordinator } from "../src/journeySession.ts";
+import { fileStaticTransitData, inMemoryStaticTransitData } from "../src/staticTransitData.ts";
+import { buildCatalog } from "../src/transitCatalog.ts";
+
+/** The committed timetable bundle and calendar, and a SYNTHETIC two-stop catalog. */
+const committed = fileStaticTransitData();
+const staticData = inMemoryStaticTransitData({
+  timetables: committed.timetables().ok ? (committed.timetables() as { value: never }).value : undefined,
+  holidays: committed.holidays().ok ? (committed.holidays() as { value: never }).value : undefined,
+  catalog: buildCatalog({
+    generatedAt: "2026-10-03T00:00:00.000Z",
+    cityCode: "39",
+    via: "https://synthetic.invalid",
+    discovery: [],
+    routes: [{ routeId: "SYN-1", routeNumber: "365" }],
+    stopsByRoute: new Map([["SYN-1", [
+      { stopId: "SYN-A", name: "Synthetic A", sequence: 1 },
+      { stopId: "SYN-B", name: "Synthetic B", sequence: 2 },
+    ]]]),
+  }),
+});
 
 /**
  * Synthetic fixtures only: an invented provider behind the real handler, so
@@ -53,6 +73,7 @@ function deployment(env: ServerEnv, events: string[] = []): Server {
     provider,
     sessions: new JourneySessionCoordinator(provider, { automaticMatchingEnabled: config.matching.automaticMatchingEnabled }),
     log: (_level, event) => { events.push(event); },
+    staticData,
   });
   return createServer(async (request, response) => {
     const chunks: Buffer[] = [];
@@ -94,7 +115,9 @@ async function smoke(env: ServerEnv, events: string[] = [], script = "scripts/sm
 test("the production smoke test passes end to end against the current API contract", async () => {
   const { code, output } = await smoke({});
   assert.equal(code, 0, output);
-  assert.match(output, /17 passed, 0 warned, 0 blocked by credentials, 0 failed/);
+  assert.match(output, /19 passed, 0 warned, 0 blocked by credentials, 0 failed/);
+  assert.match(output, /PASS +official timetables +route 365: available, as of 2026-10-03/);
+  assert.match(output, /PASS +transit catalog +catalog [0-9a-f]{16}: 1 variants, 2 stops/);
   assert.match(output, /PASS +session store +memory store; sessions disabled because a serverless deployment would lose rides on scale-out/);
   assert.match(output, /PASS +matching posture +shadow; matcher directed-route-progress-v1; demonstrated readiness READY_FOR_SHADOW/);
   assert.match(output, /PASS +vehicles .*matching shadow_only_pending_matching_readiness/);
