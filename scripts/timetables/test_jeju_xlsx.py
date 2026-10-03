@@ -1,6 +1,6 @@
 """Tests for the official Jeju timetable parser.
 
-The real Route 365 file (downloaded 2026-10-03) is parsed as committed.
+The real Route 365 and 442 files (downloaded 2026-10-03) are parsed as committed.
 Every other workbook here is SYNTHETIC, built in the test with the same
 layout, to show each way the parser refuses a file it cannot vouch for.
 """
@@ -19,6 +19,8 @@ import jeju_xlsx
 ROOT = Path(__file__).resolve().parents[2]
 RAW_365 = ROOT / "fixtures/jeju/timetables/raw/365.xlsx"
 DATASET_365 = ROOT / "fixtures/jeju/timetables/365.json"
+RAW_442 = ROOT / "fixtures/jeju/timetables/raw/442.xlsx"
+DATASET_442 = ROOT / "fixtures/jeju/timetables/442.json"
 
 
 def workbook(path: Path, sheets: dict[str, dict[str, str]]) -> Path:
@@ -87,6 +89,23 @@ class Route365(unittest.TestCase):
         self.assertEqual(dataset["services"][0]["trips"][-1]["times"], ["21:55", "22:11", "22:23", "22:37", "22:44", "23:02", None])
 
 
+class Route442(unittest.TestCase):
+    def test_the_real_file_parses_to_the_committed_dataset(self) -> None:
+        dataset = jeju_xlsx.parse_file(RAW_442, "2026-10-03")
+        self.assertEqual(dataset, json.loads(DATASET_442.read_text(encoding="utf-8")))
+
+    def test_a_circular_route_with_no_day_type_and_a_known_summary_conflict(self) -> None:
+        service = jeju_xlsx.parse_file(RAW_442, "2026-10-03")["services"][0]
+        self.assertEqual(service["dayType"], "unstated")
+        self.assertNotIn("dayLabel", service)
+        self.assertEqual(service["timepoints"][0], service["timepoints"][-1])
+        self.assertEqual(service["timepoints"][2], "제주여자 중고등학교")
+        # "5:55\n(출발)": the trip starts at that timepoint; blank cells are not served.
+        self.assertEqual(service["trips"][0], {"times": [None, None, "05:55", "06:00", "06:13", "06:24", "06:32", "06:38", "06:46", "06:58", None]})
+        self.assertEqual(service["trips"][-1]["times"][-3:], [None, None, None])
+        self.assertEqual(service["summaryConflicts"], ["summary 첫차 05:50 disagrees with the trips (05:55)"])
+
+
 class Refusals(unittest.TestCase):
     def parse(self, *sheets: dict[str, str]) -> dict:
         with tempfile.TemporaryDirectory() as directory:
@@ -123,6 +142,13 @@ class Refusals(unittest.TestCase):
 
     def test_a_start_off_the_table_after_a_time(self) -> None:
         self.assertRefused("must come before every time", synthetic_sheet(rows=[["06:00", "06:10\n(합성C 출발)", ""]], summary=""))
+
+    def test_a_start_here_is_a_time_at_that_timepoint_not_a_place(self) -> None:
+        dataset = self.parse(synthetic_sheet(rows=[["5:55\n(출발)", "06:10", ""]], summary=""))
+        self.assertEqual(dataset["services"][0]["trips"], [{"times": ["05:55", "06:10"]}])
+
+    def test_a_title_without_a_day_type(self) -> None:
+        self.assertEqual(self.parse(synthetic_sheet(title="999번"))["services"][0]["dayType"], "unstated")
 
     def test_a_missing_trip_number(self) -> None:
         sheet = synthetic_sheet()

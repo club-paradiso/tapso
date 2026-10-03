@@ -11,7 +11,7 @@
   "retrievedOn": "2026-10-03",
   "parser": {
     "name": "jeju-bis-xlsx",
-    "version": "1"
+    "version": "2"
   },
   "routeNumber": "365",
   "services": [

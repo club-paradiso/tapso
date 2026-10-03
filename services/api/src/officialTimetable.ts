@@ -11,7 +11,7 @@
  *   `fixtures/jeju/timetables/<route>.json` → `validateTimetableDataset` →
  *   `timetableFreshness` → `lastDeparture` / `lastTimeAt`
  *
- * v2 follows the first real file (Route 365, 2026-10-03): one service per
+ * v2 follows the real files (Routes 365 and 442, 2026-10-03): one service per
  * direction and day type, each a table of trips over named timepoints, and a
  * trip may start at a place before its first timepoint. A dataset that fails
  * validation is not used.
@@ -31,10 +31,12 @@ export const TIMETABLE_USABLE_DAYS = 90;
 
 /**
  * `saturday_sunday_holiday` is the file's "토,공휴일". Sunday is a public
- * holiday under 관공서의 공휴일에 관한 규정 제2조 제1호. Which day type a
+ * holiday under 관공서의 공휴일에 관한 규정 제2조 제1호. `unstated` is a sheet
+ * that names no day type at all (Route 442); it is never assumed to run every
+ * day, so only a lookup for `unstated` itself finds it. Which day type a
  * calendar date falls in is the caller's to decide, with a holiday calendar.
  */
-export type TimetableDayType = "weekday" | "saturday" | "sunday_holiday" | "saturday_sunday_holiday" | "daily";
+export type TimetableDayType = "weekday" | "saturday" | "sunday_holiday" | "saturday_sunday_holiday" | "daily" | "unstated";
 
 export interface OfficialTimetableDataset {
   schemaVersion: typeof TIMETABLE_SCHEMA_VERSION;
@@ -62,17 +64,19 @@ export interface TimetableService {
   /** The sheet name, verbatim. */
   sheet: string;
   dayType: TimetableDayType;
-  /** The file's own words for the day type, e.g. "평일", "토,공휴일". */
-  dayLabel: string;
+  /** The file's own words for the day type, e.g. "평일", "토,공휴일"; absent when it states none. */
+  dayLabel?: string;
   /** The file's own direction, e.g. "한라대→공항→시청→제주대". */
   direction: string;
   /** `YYYY-MM-DD`, the sheet's 시행일, if it states one. */
   effectiveFrom?: string;
   /** The sheet's summary line (first and last bus, headway, operator), verbatim. */
   summary: string;
-  /** Timepoint names in travel order, as the sheet heads its columns. */
+  /** Timepoint names in travel order, as the sheet heads its columns. A circular route repeats names. */
   timepoints: string[];
   trips: TimetableTrip[];
+  /** Where the sheet's own summary disagrees with its trips, accepted for this file only. The trips are what is used. */
+  summaryConflicts?: string[];
 }
 
 export interface TimetableTrip {
@@ -87,7 +91,7 @@ export class TimetableDatasetError extends Error {}
 
 const DATE = /^\d{4}-\d{2}-\d{2}$/;
 const TIME = /^([01]\d|2[0-3]):[0-5]\d$/;
-const DAY_TYPES: ReadonlySet<string> = new Set(["weekday", "saturday", "sunday_holiday", "saturday_sunday_holiday", "daily"]);
+const DAY_TYPES: ReadonlySet<string> = new Set(["weekday", "saturday", "sunday_holiday", "saturday_sunday_holiday", "daily", "unstated"]);
 
 /** Throws `TimetableDatasetError` naming the first problem; returns the dataset typed. */
 export function validateTimetableDataset(value: unknown): OfficialTimetableDataset {
@@ -114,9 +118,12 @@ export function validateTimetableDataset(value: unknown): OfficialTimetableDatas
     const at = `services[${index}]`;
     if (!isRecord(service)) fail(`${at} must be an object`);
     const entry = service as Record<string, unknown>;
-    for (const field of ["sheet", "dayLabel", "direction"] as const) {
+    for (const field of ["sheet", "direction"] as const) {
       if (!nonEmpty(entry[field])) fail(`${at}.${field} is required`);
     }
+    if ((entry.dayType === "unstated") !== (entry.dayLabel === undefined)) fail(`${at}.dayLabel is required exactly when a day type is stated`);
+    if (entry.dayLabel !== undefined && !nonEmpty(entry.dayLabel)) fail(`${at}.dayLabel must not be empty`);
+    if (entry.summaryConflicts !== undefined && (!Array.isArray(entry.summaryConflicts) || !entry.summaryConflicts.every(nonEmpty))) fail(`${at}.summaryConflicts must list what disagrees`);
     if (typeof entry.summary !== "string") fail(`${at}.summary must be a string`);
     if (!DAY_TYPES.has(String(entry.dayType))) fail(`${at}.dayType is not one of ${[...DAY_TYPES].join(", ")}`);
     if (entry.effectiveFrom !== undefined && !validDate(entry.effectiveFrom)) fail(`${at}.effectiveFrom must be a YYYY-MM-DD date`);
@@ -125,7 +132,6 @@ export function validateTimetableDataset(value: unknown): OfficialTimetableDatas
     seen.add(key);
     const timepoints = entry.timepoints;
     if (!Array.isArray(timepoints) || timepoints.length < 2 || !timepoints.every(nonEmpty)) fail(`${at}.timepoints must name at least two timepoints`);
-    if (new Set(timepoints as string[]).size !== (timepoints as string[]).length) fail(`${at}.timepoints repeats a name`);
     if (!Array.isArray(entry.trips) || entry.trips.length === 0) fail(`${at}.trips must be non-empty`);
     const width = (timepoints as string[]).length;
     const lastAt: Array<string | undefined> = new Array(width).fill(undefined);
@@ -210,11 +216,18 @@ export function lastDeparture(dataset: OfficialTimetableDataset, direction: stri
   return time === undefined ? undefined : dated(time, dataset, usable.service, usable.freshness);
 }
 
-/** The last scheduled time at one named timepoint. Between timepoints the table says nothing. */
-export function lastTimeAt(dataset: OfficialTimetableDataset, direction: string, timepoint: string, dayType: TimetableDayType, today: string): DatedTime | undefined {
+/**
+ * The last scheduled time at one timepoint, by name or by column index.
+ * Between timepoints the table says nothing. A name a circular route repeats
+ * is ambiguous and finds nothing: pass the column index.
+ */
+export function lastTimeAt(dataset: OfficialTimetableDataset, direction: string, timepoint: string | number, dayType: TimetableDayType, today: string): DatedTime | undefined {
   const usable = usableService(dataset, direction, dayType, today);
   if (!usable) return undefined;
-  const column = usable.service.timepoints.indexOf(timepoint);
+  const names = usable.service.timepoints;
+  const column = typeof timepoint === "number"
+    ? (Number.isInteger(timepoint) && timepoint >= 0 && timepoint < names.length ? timepoint : -1)
+    : (names.indexOf(timepoint) === names.lastIndexOf(timepoint) ? names.indexOf(timepoint) : -1);
   if (column < 0) return undefined;
   const time = usable.service.trips.map((trip) => trip.times[column]).filter((entry): entry is string => entry != null).at(-1);
   return time === undefined ? undefined : dated(time, dataset, usable.service, usable.freshness);

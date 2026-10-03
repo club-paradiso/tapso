@@ -4,18 +4,21 @@
 
     python3 scripts/timetables/jeju_xlsx.py RAW.xlsx --retrieved-on YYYY-MM-DD > OUT.json
 
-Written against the first real file, Route 365 downloaded 2026-10-03
-(`fixtures/jeju/timetables/raw/365.xlsx`). The layout it reads, per sheet:
+Written against the real files, Routes 365 and 442 downloaded 2026-10-03
+(`fixtures/jeju/timetables/raw/`). The layout it reads, per sheet:
 
-    B2  "<route>번(<day label>)"          e.g. "365번(평일)", "365번(토,공휴일)"
+    B2  "<route>번(<day label>)"          e.g. "365번(평일)", "365번(토,공휴일)";
+        or "<route>번" alone (Route 442): the file states no day type
     B3  direction                        e.g. "한라대→공항→시청→제주대"
     B5  summary: first and last bus, headway, operator
     row 5, any column: "(시행일 : 2026. 6. 24.)"
     the row whose B is "구분": timepoint names, then "비고"
     below it, one trip per row: B = 1, 2, 3 ...; each timepoint cell is
         "HH:MM" or "H:MM"                 the scheduled time there
-        "X"                               the trip does not serve it
+        "X" or blank                      the trip does not serve it
+        "H:MM\\n(출발)"                    the trip starts here, at that time (Route 442)
         "H:MM\\n(<place> 출발)"            the trip starts at <place>, off the table, at that time
+    A circular route heads the same timepoint more than once (Route 442).
 
 Anything else stops the parse with the sheet and cell named. Nothing is
 guessed: an unknown day label, a time past midnight, times out of order, or a
@@ -35,7 +38,7 @@ import xml.etree.ElementTree as ET
 from pathlib import Path
 
 PARSER_NAME = "jeju-bis-xlsx"
-PARSER_VERSION = "1"
+PARSER_VERSION = "2"
 SCHEMA_VERSION = "tapso-jeju-timetable-v2"
 SOURCE_PAGE = "https://bus.jeju.go.kr/publicTrafficInformation/generalBusSchedule"
 
@@ -55,8 +58,18 @@ DAY_LABELS = {
 }
 
 TIME = re.compile(r"^([01]?\d|2[0-3]):([0-5]\d)$")
-STARTS_AT = re.compile(r"^([01]?\d|2[0-3]):([0-5]\d)\s*\n\s*\(?\s*(.+?)\s*출발\s*\)?$")
-TITLE = re.compile(r"^(\S+?)번\s*\((.+)\)$")
+STARTS_HERE = re.compile(r"^([01]?\d|2[0-3]):([0-5]\d)\s*\n\s*\(\s*출발\s*\)$")
+STARTS_AT = re.compile(r"^([01]?\d|2[0-3]):([0-5]\d)\s*\n\s*\(?\s*([^()\n]+?)\s*출발\s*\)?$")
+TITLE = re.compile(r"^(\S+?)번(?:\s*\((.+)\))?$")
+
+# Files whose own summary line disagrees with their trips, by SHA-256, and the
+# summary words accepted as wrong. The trips are kept; the disagreement is
+# recorded in the dataset. A file not listed here still stops on any mismatch.
+KNOWN_SUMMARY_CONFLICTS = {
+    # Route 442, downloaded 2026-10-03: the summary says "첫차(제주여고 출발) 05:50",
+    # trip 1 reads "5:55 (출발)" under 제주여자중고등학교.
+    "59038f87cfc36cd684c94fe8540bed1885057f80cbe29e262623ab140067a0c2": {"첫차"},
+}
 EFFECTIVE = re.compile(r"시행일\s*:\s*(\d{4})\.\s*(\d{1,2})\.\s*(\d{1,2})\.?")
 SUMMARY_FIRST = re.compile(r"첫차[^0-9]*?(\d{1,2}:\d{2})")
 SUMMARY_LAST = re.compile(r"막차\s*(\d{1,2}:\d{2})")
@@ -120,7 +133,7 @@ def read_workbook(path: Path) -> list[tuple[str, dict[tuple[int, int], str]]]:
         return sheets
 
 
-def parse_sheet(name: str, cells: dict[tuple[int, int], str]) -> tuple[str, dict]:
+def parse_sheet(name: str, cells: dict[tuple[int, int], str], accepted_conflicts: set[str] = frozenset()) -> tuple[str, dict]:
     def at(column: int, row: int) -> str:
         return cells.get((column, row), "")
 
@@ -130,8 +143,9 @@ def parse_sheet(name: str, cells: dict[tuple[int, int], str]) -> tuple[str, dict
     title = TITLE.match(at(2, 2).strip())
     if not title:
         raise TimetableParseError(f"{where(2, 2)}: expected '<route>번(<day>)', found {at(2, 2)!r}")
-    route, day_label = title.group(1), re.sub(r"\s+", "", title.group(2))
-    if day_label not in DAY_LABELS:
+    route = title.group(1)
+    day_label = re.sub(r"\s+", "", title.group(2)) if title.group(2) else None
+    if day_label is not None and day_label not in DAY_LABELS:
         raise TimetableParseError(f"{where(2, 2)}: day label {day_label!r} is not one TAPSO has read before")
     direction = at(2, 3).strip()
     if not direction:
@@ -159,12 +173,11 @@ def parse_sheet(name: str, cells: dict[tuple[int, int], str]) -> tuple[str, dict
         if label == "비고":
             note_column = column
             break
-        timepoints.append(at(column, header).strip())
+        # Headers wrap long names over lines ("제주여자\n중고등학교"); the name keeps one space there.
+        timepoints.append(re.sub(r"\s+", " ", at(column, header).strip()))
         column += 1
     if len(timepoints) < 2:
         raise TimetableParseError(f"sheet {name!r}: fewer than two timepoints in row {header}")
-    if len(set(timepoints)) != len(timepoints):
-        raise TimetableParseError(f"sheet {name!r}: a timepoint is listed twice")
     last_column = (note_column or column - 1)
 
     trips = []
@@ -188,8 +201,10 @@ def parse_sheet(name: str, cells: dict[tuple[int, int], str]) -> tuple[str, dict
             match = TIME.match(text)
             if match:
                 times.append(hhmm(*match.groups()))
-            elif text.upper() == "X":
+            elif text.upper() == "X" or text == "":
                 times.append(None)
+            elif STARTS_HERE.match(text):
+                times.append(hhmm(*STARTS_HERE.match(text).groups()))
             elif STARTS_AT.match(text):
                 if starts_at is not None or any(time is not None for time in times):
                     raise TimetableParseError(f"{where(column, row)}: a start off the table must come before every time")
@@ -225,20 +240,25 @@ def parse_sheet(name: str, cells: dict[tuple[int, int], str]) -> tuple[str, dict
         if any(left > right for left, right in zip(column_times, column_times[1:])):
             raise TimetableParseError(f"sheet {name!r}: trips are out of order at {timepoint!r}")
     # The sheet's own summary must agree with its trips.
+    conflicts = []
     for pattern, expected, word in ((SUMMARY_FIRST, starts[0], "첫차"), (SUMMARY_LAST, starts[-1], "막차")):
         found = pattern.search(summary)
         if found and hhmm(*found.group(1).split(":")) != expected:
-            raise TimetableParseError(f"sheet {name!r}: summary {word} {found.group(1)} disagrees with the trips ({expected})")
+            message = f"summary {word} {found.group(1)} disagrees with the trips ({expected})"
+            if word not in accepted_conflicts:
+                raise TimetableParseError(f"sheet {name!r}: {message}")
+            conflicts.append(message)
 
     service = {
         "sheet": name,
-        "dayType": DAY_LABELS[day_label],
-        "dayLabel": day_label,
+        "dayType": DAY_LABELS[day_label] if day_label else "unstated",
+        **({"dayLabel": day_label} if day_label else {}),
         "direction": direction,
         **({"effectiveFrom": effective_from} if effective_from else {}),
         "summary": summary,
         "timepoints": timepoints,
         "trips": trips,
+        **({"summaryConflicts": conflicts} if conflicts else {}),
     }
     return route, service
 
@@ -247,11 +267,12 @@ def parse_file(path: Path, retrieved_on: str, file_name: str | None = None) -> d
     if not re.match(r"^\d{4}-\d{2}-\d{2}$", retrieved_on):
         raise TimetableParseError("--retrieved-on must be YYYY-MM-DD")
     sheets = read_workbook(path)
+    accepted = KNOWN_SUMMARY_CONFLICTS.get(hashlib.sha256(path.read_bytes()).hexdigest(), set())
     if not sheets:
         raise TimetableParseError("the workbook has no sheet")
     routes, services = set(), []
     for name, cells in sheets:
-        route, service = parse_sheet(name, cells)
+        route, service = parse_sheet(name, cells, accepted)
         routes.add(route)
         services.append(service)
     if len(routes) != 1:

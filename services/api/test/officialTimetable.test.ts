@@ -22,6 +22,7 @@ import {
   type TimetableService,
 } from "../src/officialTimetable.ts";
 
+const route442 = JSON.parse(readFileSync(new URL("../../../fixtures/jeju/timetables/442.json", import.meta.url), "utf8")) as unknown;
 const route365 = JSON.parse(readFileSync(new URL("../../../fixtures/jeju/timetables/365.json", import.meta.url), "utf8")) as unknown;
 
 function service(overrides: Partial<TimetableService> = {}): TimetableService {
@@ -77,6 +78,25 @@ test("the committed Route 365 dataset validates and says what the file says", ()
   assert.deepEqual(real.services[0]!.trips[0]!.startsAt, { place: "월성마을", time: "06:03", column: "공항" });
 });
 
+test("the committed Route 442 dataset: a circular route with no stated day type", () => {
+  const real = validateTimetableDataset(route442);
+  const direction = "제주대(별빛누리)→사대부고→제주대(별빛누리)(순환)";
+  const service = real.services[0]!;
+  assert.equal(service.dayType, "unstated");
+  assert.equal(service.dayLabel, undefined);
+  assert.equal(service.effectiveFrom, "2024-04-25");
+  assert.equal(service.trips.length, 13);
+  // The file's summary says 첫차 05:50; trip 1 says 05:55. The trips are kept and the conflict recorded.
+  assert.deepEqual(service.summaryConflicts, ["summary 첫차 05:50 disagrees with the trips (05:55)"]);
+  assert.equal(service.trips[0]!.times[2], "05:55");
+  assert.equal(lastDeparture(real, direction, "unstated", "2026-10-03")?.time, "21:40");
+  assert.equal(lastDeparture(real, direction, "weekday", "2026-10-03"), undefined, "a stated day type never finds an unstated sheet");
+  assert.equal(lastTimeAt(real, direction, "사대부고", "unstated", "2026-10-03")?.time, "22:23");
+  assert.equal(lastTimeAt(real, direction, "제주대학교", "unstated", "2026-10-03"), undefined, "named twice on a loop: ambiguous");
+  assert.equal(lastTimeAt(real, direction, 10, "unstated", "2026-10-03")?.time, "18:05", "the loop's last arrival back at 제주대학교");
+  assert.equal(lastTimeAt(real, direction, 0, "unstated", "2026-10-03")?.time, "18:45");
+});
+
 test("a well-formed dataset validates", () => {
   assert.equal(validateTimetableDataset(dataset()).routeNumber, "999");
 });
@@ -100,6 +120,9 @@ test("validation refuses what it cannot vouch for", () => {
     ["unknown day type", { ...dataset(), services: [service({ dayType: "holiday" as never })] }],
     ["one timepoint", { ...dataset(), services: [service({ timepoints: ["합성A"], trips: [{ times: ["06:00"] }] })] }],
     ["no services", { ...dataset(), services: [] }],
+    ["unstated with a label", { ...dataset(), services: [service({ dayType: "unstated" })] }],
+    ["stated without a label", { ...dataset(), services: [service({ dayLabel: undefined })] }],
+    ["empty conflict", { ...dataset(), services: [service({ summaryConflicts: [""] })] }],
   ];
   for (const [why, value] of bad) assert.throws(() => validateTimetableDataset(value), TimetableDatasetError, why);
 });
