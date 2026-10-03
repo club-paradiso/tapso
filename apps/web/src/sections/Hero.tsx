@@ -87,6 +87,10 @@ export function Hero() {
             <a className="text-link" href="#status">
               개발 현황
             </a>
+            {" · "}
+            <a className="text-link" href="#support">
+              개발 후원
+            </a>
           </p>
         </div>
 
