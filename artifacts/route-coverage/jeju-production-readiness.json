@@ -2,13 +2,13 @@
  "schemaVersion": "tapso-route-readiness-v1",
  "catalogVersion": "794f3bcb831d783e",
  "catalogGeneratedAt": "2026-10-03T08:56:42.191Z",
- "probedAt": "2026-10-03T09:32:19.465Z",
+ "probedAt": "2026-10-03T14:36:56.641Z",
  "timetableBundleVersion": "e149eb7a24bd6723",
  "timetableAsOf": "2026-10-03",
  "totals": {
-  "SUPPORTED": 170,
-  "SUPPORTED_WITH_WARNING": 818,
-  "UNSUPPORTED": 4,
+  "SUPPORTED": 13,
+  "SUPPORTED_WITH_WARNING": 976,
+  "UNSUPPORTED": 3,
   "UNKNOWN": 0
  },
  "timetableTotals": {
@@ -43,12 +43,14 @@
    "end": "제주절물자연휴양림",
    "stopCount": 44,
    "topology": "linear",
-   "live": "answered_with_buses",
+   "live": "answered_no_bus",
    "timetable": "available",
    "geometry": "STOP_COORDINATES_ONLY",
-   "tracking": "SUPPORTED",
-   "reasons": [],
-   "evidence": "probe HTTP 200, 1 bus(es), 1 with an in-route stop sequence; 44 stops, 44 with position, topology linear"
+   "tracking": "SUPPORTED_WITH_WARNING",
+   "reasons": [
+    "no bus reported when probed: stop-sequence evidence unchecked"
+   ],
+   "evidence": "probe HTTP 200, 0 bus(es), 0 with an in-route stop sequence; 44 stops, 44 with position, topology linear"
   },
   {
    "routeNo": "43-1",
@@ -185,12 +187,14 @@
    "end": "제주버스터미널(종점)",
    "stopCount": 48,
    "topology": "linear",
-   "live": "answered_with_buses",
+   "live": "answered_no_bus",
    "timetable": "available",
    "geometry": "STOP_COORDINATES_ONLY",
-   "tracking": "SUPPORTED",
-   "reasons": [],
-   "evidence": "probe HTTP 200, 1 bus(es), 1 with an in-route stop sequence; 48 stops, 48 with position, topology linear"
+   "tracking": "SUPPORTED_WITH_WARNING",
+   "reasons": [
+    "no bus reported when probed: stop-sequence evidence unchecked"
+   ],
+   "evidence": "probe HTTP 200, 0 bus(es), 0 with an in-route stop sequence; 48 stops, 48 with position, topology linear"
   },
   {
    "routeNo": "43-2",
@@ -199,12 +203,14 @@
    "end": "제주절물자연휴양림",
    "stopCount": 49,
    "topology": "linear",
-   "live": "answered_with_buses",
+   "live": "answered_no_bus",
    "timetable": "available",
    "geometry": "STOP_COORDINATES_ONLY",
-   "tracking": "SUPPORTED",
-   "reasons": [],
-   "evidence": "probe HTTP 200, 1 bus(es), 1 with an in-route stop sequence; 49 stops, 49 with position, topology linear"
+   "tracking": "SUPPORTED_WITH_WARNING",
+   "reasons": [
+    "no bus reported when probed: stop-sequence evidence unchecked"
+   ],
+   "evidence": "probe HTTP 200, 0 bus(es), 0 with an in-route stop sequence; 49 stops, 49 with position, topology linear"
   },
   {
    "routeNo": "43-2",
@@ -357,12 +363,14 @@
    "end": "남원환승정류장(남원읍사무소)",
    "stopCount": 23,
    "topology": "linear",
-   "live": "answered_with_buses",
+   "live": "answered_no_bus",
    "timetable": "available",
    "geometry": "STOP_COORDINATES_ONLY",
-   "tracking": "SUPPORTED",
-   "reasons": [],
-   "evidence": "probe HTTP 200, 4 bus(es), 4 with an in-route stop sequence; 23 stops, 23 with position, topology linear"
+   "tracking": "SUPPORTED_WITH_WARNING",
+   "reasons": [
+    "no bus reported when probed: stop-sequence evidence unchecked"
+   ],
+   "evidence": "probe HTTP 200, 0 bus(es), 0 with an in-route stop sequence; 23 stops, 23 with position, topology linear"
   },
   {
    "routeNo": "101",
@@ -371,12 +379,14 @@
    "end": "제주국제공항(하차전용)",
    "stopCount": 23,
    "topology": "linear",
-   "live": "answered_with_buses",
+   "live": "answered_no_bus",
    "timetable": "available",
    "geometry": "STOP_COORDINATES_ONLY",
-   "tracking": "SUPPORTED",
-   "reasons": [],
-   "evidence": "probe HTTP 200, 3 bus(es), 3 with an in-route stop sequence; 23 stops, 23 with position, topology linear"
+   "tracking": "SUPPORTED_WITH_WARNING",
+   "reasons": [
+    "no bus reported when probed: stop-sequence evidence unchecked"
+   ],
+   "evidence": "probe HTTP 200, 0 bus(es), 0 with an in-route stop sequence; 23 stops, 23 with position, topology linear"
   },
   {
    "routeNo": "101",
@@ -417,14 +427,12 @@
    "end": "성산일출봉입구",
    "stopCount": 19,
    "topology": "linear",
-   "live": "answered_no_bus",
+   "live": "answered_with_buses",
    "timetable": "available",
    "geometry": "STOP_COORDINATES_ONLY",
-   "tracking": "SUPPORTED_WITH_WARNING",
-   "reasons": [
-    "no bus reported when probed: stop-sequence evidence unchecked"
-   ],
-   "evidence": "probe HTTP 200, 0 bus(es), 0 with an in-route stop sequence; 19 stops, 19 with position, topology linear"
+   "tracking": "SUPPORTED",
+   "reasons": [],
+   "evidence": "probe HTTP 200, 1 bus(es), 1 with an in-route stop sequence; 19 stops, 19 with position, topology linear"
   },
   {
    "routeNo": "101",
@@ -465,14 +473,15 @@
    "end": "모슬포 남항 여객선 터미널(운진항)",
    "stopCount": 16,
    "topology": "linear",
-   "live": "answered_with_buses",
+   "live": "answered_no_bus",
    "timetable": "available",
    "geometry": "STOP_COORDINATES_ONLY",
    "tracking": "SUPPORTED_WITH_WARNING",
    "reasons": [
+    "no bus reported when probed: stop-sequence evidence unchecked",
     "1 virtual stop(s) (가상정류소) in the list"
    ],
-   "evidence": "probe HTTP 200, 1 bus(es), 1 with an in-route stop sequence; 16 stops, 16 with position, topology linear"
+   "evidence": "probe HTTP 200, 0 bus(es), 0 with an in-route stop sequence; 16 stops, 16 with position, topology linear"
   },
   {
    "routeNo": "102",
@@ -481,12 +490,14 @@
    "end": "제주버스터미널(종점)",
    "stopCount": 16,
    "topology": "linear",
-   "live": "answered_with_buses",
+   "live": "answered_no_bus",
    "timetable": "available",
    "geometry": "STOP_COORDINATES_ONLY",
-   "tracking": "SUPPORTED",
-   "reasons": [],
-   "evidence": "probe HTTP 200, 2 bus(es), 2 with an in-route stop sequence; 16 stops, 16 with position, topology linear"
+   "tracking": "SUPPORTED_WITH_WARNING",
+   "reasons": [
+    "no bus reported when probed: stop-sequence evidence unchecked"
+   ],
+   "evidence": "probe HTTP 200, 0 bus(es), 0 with an in-route stop sequence; 16 stops, 16 with position, topology linear"
   },
   {
    "routeNo": "102",
@@ -495,14 +506,15 @@
    "end": "모슬포 남항 여객선 터미널(운진항)",
    "stopCount": 16,
    "topology": "linear",
-   "live": "answered_with_buses",
+   "live": "answered_no_bus",
    "timetable": "available",
    "geometry": "STOP_COORDINATES_ONLY",
    "tracking": "SUPPORTED_WITH_WARNING",
    "reasons": [
+    "no bus reported when probed: stop-sequence evidence unchecked",
     "1 virtual stop(s) (가상정류소) in the list"
    ],
-   "evidence": "probe HTTP 200, 2 bus(es), 2 with an in-route stop sequence; 16 stops, 16 with position, topology linear"
+   "evidence": "probe HTTP 200, 0 bus(es), 0 with an in-route stop sequence; 16 stops, 16 with position, topology linear"
   },
   {
    "routeNo": "102",
@@ -511,12 +523,14 @@
    "end": "제주버스터미널(종점)",
    "stopCount": 16,
    "topology": "linear",
-   "live": "answered_with_buses",
+   "live": "answered_no_bus",
    "timetable": "available",
    "geometry": "STOP_COORDINATES_ONLY",
-   "tracking": "SUPPORTED",
-   "reasons": [],
-   "evidence": "probe HTTP 200, 1 bus(es), 1 with an in-route stop sequence; 16 stops, 16 with position, topology linear"
+   "tracking": "SUPPORTED_WITH_WARNING",
+   "reasons": [
+    "no bus reported when probed: stop-sequence evidence unchecked"
+   ],
+   "evidence": "probe HTTP 200, 0 bus(es), 0 with an in-route stop sequence; 16 stops, 16 with position, topology linear"
   },
   {
    "routeNo": "102",
@@ -672,12 +686,14 @@
    "end": "성산항(종점)",
    "stopCount": 16,
    "topology": "linear",
-   "live": "answered_with_buses",
+   "live": "answered_no_bus",
    "timetable": "available",
    "geometry": "STOP_COORDINATES_ONLY",
-   "tracking": "SUPPORTED",
-   "reasons": [],
-   "evidence": "probe HTTP 200, 2 bus(es), 2 with an in-route stop sequence; 16 stops, 16 with position, topology linear"
+   "tracking": "SUPPORTED_WITH_WARNING",
+   "reasons": [
+    "no bus reported when probed: stop-sequence evidence unchecked"
+   ],
+   "evidence": "probe HTTP 200, 0 bus(es), 0 with an in-route stop sequence; 16 stops, 16 with position, topology linear"
   },
   {
    "routeNo": "111",
@@ -686,12 +702,14 @@
    "end": "제주국제공항(하차전용)",
    "stopCount": 17,
    "topology": "linear",
-   "live": "answered_with_buses",
+   "live": "answered_no_bus",
    "timetable": "available",
    "geometry": "STOP_COORDINATES_ONLY",
-   "tracking": "SUPPORTED",
-   "reasons": [],
-   "evidence": "probe HTTP 200, 3 bus(es), 3 with an in-route stop sequence; 17 stops, 17 with position, topology linear"
+   "tracking": "SUPPORTED_WITH_WARNING",
+   "reasons": [
+    "no bus reported when probed: stop-sequence evidence unchecked"
+   ],
+   "evidence": "probe HTTP 200, 0 bus(es), 0 with an in-route stop sequence; 17 stops, 17 with position, topology linear"
   },
   {
    "routeNo": "111",
@@ -780,12 +798,14 @@
    "end": "제주국제공항(하차전용)",
    "stopCount": 17,
    "topology": "linear",
-   "live": "answered_with_buses",
+   "live": "answered_no_bus",
    "timetable": "available",
    "geometry": "STOP_COORDINATES_ONLY",
-   "tracking": "SUPPORTED",
-   "reasons": [],
-   "evidence": "probe HTTP 200, 1 bus(es), 1 with an in-route stop sequence; 17 stops, 17 with position, topology linear"
+   "tracking": "SUPPORTED_WITH_WARNING",
+   "reasons": [
+    "no bus reported when probed: stop-sequence evidence unchecked"
+   ],
+   "evidence": "probe HTTP 200, 0 bus(es), 0 with an in-route stop sequence; 17 stops, 17 with position, topology linear"
   },
   {
    "routeNo": "121",
@@ -794,12 +814,14 @@
    "end": "제주민속촌(종점)",
    "stopCount": 12,
    "topology": "linear",
-   "live": "answered_with_buses",
+   "live": "answered_no_bus",
    "timetable": "available",
    "geometry": "STOP_COORDINATES_ONLY",
-   "tracking": "SUPPORTED",
-   "reasons": [],
-   "evidence": "probe HTTP 200, 1 bus(es), 1 with an in-route stop sequence; 12 stops, 12 with position, topology linear"
+   "tracking": "SUPPORTED_WITH_WARNING",
+   "reasons": [
+    "no bus reported when probed: stop-sequence evidence unchecked"
+   ],
+   "evidence": "probe HTTP 200, 0 bus(es), 0 with an in-route stop sequence; 12 stops, 12 with position, topology linear"
   },
   {
    "routeNo": "121",
@@ -808,12 +830,14 @@
    "end": "제주국제공항(하차전용)",
    "stopCount": 12,
    "topology": "linear",
-   "live": "answered_with_buses",
+   "live": "answered_no_bus",
    "timetable": "available",
    "geometry": "STOP_COORDINATES_ONLY",
-   "tracking": "SUPPORTED",
-   "reasons": [],
-   "evidence": "probe HTTP 200, 1 bus(es), 1 with an in-route stop sequence; 12 stops, 12 with position, topology linear"
+   "tracking": "SUPPORTED_WITH_WARNING",
+   "reasons": [
+    "no bus reported when probed: stop-sequence evidence unchecked"
+   ],
+   "evidence": "probe HTTP 200, 0 bus(es), 0 with an in-route stop sequence; 12 stops, 12 with position, topology linear"
   },
   {
    "routeNo": "121",
@@ -839,14 +863,12 @@
    "end": "제주버스터미널(종점)",
    "stopCount": 11,
    "topology": "linear",
-   "live": "answered_no_bus",
+   "live": "answered_with_buses",
    "timetable": "available",
    "geometry": "STOP_COORDINATES_ONLY",
-   "tracking": "SUPPORTED_WITH_WARNING",
-   "reasons": [
-    "no bus reported when probed: stop-sequence evidence unchecked"
-   ],
-   "evidence": "probe HTTP 200, 0 bus(es), 0 with an in-route stop sequence; 11 stops, 11 with position, topology linear"
+   "tracking": "SUPPORTED",
+   "reasons": [],
+   "evidence": "probe HTTP 200, 1 bus(es), 1 with an in-route stop sequence; 11 stops, 11 with position, topology linear"
   },
   {
    "routeNo": "121",
@@ -935,12 +957,14 @@
    "end": "남원(금호리조트)(종점)",
    "stopCount": 14,
    "topology": "linear",
-   "live": "answered_with_buses",
+   "live": "answered_no_bus",
    "timetable": "available",
    "geometry": "STOP_COORDINATES_ONLY",
-   "tracking": "SUPPORTED",
-   "reasons": [],
-   "evidence": "probe HTTP 200, 1 bus(es), 1 with an in-route stop sequence; 14 stops, 14 with position, topology linear"
+   "tracking": "SUPPORTED_WITH_WARNING",
+   "reasons": [
+    "no bus reported when probed: stop-sequence evidence unchecked"
+   ],
+   "evidence": "probe HTTP 200, 0 bus(es), 0 with an in-route stop sequence; 14 stops, 14 with position, topology linear"
   },
   {
    "routeNo": "131",
@@ -949,12 +973,14 @@
    "end": "제주국제공항(하차전용)",
    "stopCount": 14,
    "topology": "linear",
-   "live": "answered_with_buses",
+   "live": "answered_no_bus",
    "timetable": "available",
    "geometry": "STOP_COORDINATES_ONLY",
-   "tracking": "SUPPORTED",
-   "reasons": [],
-   "evidence": "probe HTTP 200, 1 bus(es), 1 with an in-route stop sequence; 14 stops, 14 with position, topology linear"
+   "tracking": "SUPPORTED_WITH_WARNING",
+   "reasons": [
+    "no bus reported when probed: stop-sequence evidence unchecked"
+   ],
+   "evidence": "probe HTTP 200, 0 bus(es), 0 with an in-route stop sequence; 14 stops, 14 with position, topology linear"
   },
   {
    "routeNo": "131",
@@ -980,14 +1006,12 @@
    "end": "제주버스터미널(종점)",
    "stopCount": 11,
    "topology": "linear",
-   "live": "answered_no_bus",
+   "live": "answered_with_buses",
    "timetable": "available",
    "geometry": "STOP_COORDINATES_ONLY",
-   "tracking": "SUPPORTED_WITH_WARNING",
-   "reasons": [
-    "no bus reported when probed: stop-sequence evidence unchecked"
-   ],
-   "evidence": "probe HTTP 200, 0 bus(es), 0 with an in-route stop sequence; 11 stops, 11 with position, topology linear"
+   "tracking": "SUPPORTED",
+   "reasons": [],
+   "evidence": "probe HTTP 200, 1 bus(es), 1 with an in-route stop sequence; 11 stops, 11 with position, topology linear"
   },
   {
    "routeNo": "131",
@@ -1108,14 +1132,15 @@
    "end": "모슬포 남항 여객선 터미널(운진항)",
    "stopCount": 21,
    "topology": "linear",
-   "live": "answered_with_buses",
+   "live": "answered_no_bus",
    "timetable": "available",
    "geometry": "STOP_COORDINATES_ONLY",
    "tracking": "SUPPORTED_WITH_WARNING",
    "reasons": [
+    "no bus reported when probed: stop-sequence evidence unchecked",
     "1 virtual stop(s) (가상정류소) in the list"
    ],
-   "evidence": "probe HTTP 200, 1 bus(es), 1 with an in-route stop sequence; 21 stops, 21 with position, topology linear"
+   "evidence": "probe HTTP 200, 0 bus(es), 0 with an in-route stop sequence; 21 stops, 21 with position, topology linear"
   },
   {
    "routeNo": "151",
@@ -1124,12 +1149,14 @@
    "end": "제주버스터미널(종점)",
    "stopCount": 20,
    "topology": "linear",
-   "live": "answered_with_buses",
+   "live": "answered_no_bus",
    "timetable": "available",
    "geometry": "STOP_COORDINATES_ONLY",
-   "tracking": "SUPPORTED",
-   "reasons": [],
-   "evidence": "probe HTTP 200, 2 bus(es), 2 with an in-route stop sequence; 20 stops, 20 with position, topology linear"
+   "tracking": "SUPPORTED_WITH_WARNING",
+   "reasons": [
+    "no bus reported when probed: stop-sequence evidence unchecked"
+   ],
+   "evidence": "probe HTTP 200, 0 bus(es), 0 with an in-route stop sequence; 20 stops, 20 with position, topology linear"
   },
   {
    "routeNo": "151",
@@ -1285,15 +1312,14 @@
    "end": "모슬포 남항 여객선 터미널(운진항)",
    "stopCount": 21,
    "topology": "linear",
-   "live": "answered_no_bus",
+   "live": "answered_with_buses",
    "timetable": "available",
    "geometry": "STOP_COORDINATES_ONLY",
    "tracking": "SUPPORTED_WITH_WARNING",
    "reasons": [
-    "no bus reported when probed: stop-sequence evidence unchecked",
     "1 virtual stop(s) (가상정류소) in the list"
    ],
-   "evidence": "probe HTTP 200, 0 bus(es), 0 with an in-route stop sequence; 21 stops, 21 with position, topology linear"
+   "evidence": "probe HTTP 200, 1 bus(es), 1 with an in-route stop sequence; 21 stops, 21 with position, topology linear"
   },
   {
    "routeNo": "181",
@@ -1302,12 +1328,14 @@
    "end": "제주버스터미널(종점)",
    "stopCount": 30,
    "topology": "linear",
-   "live": "answered_with_buses",
+   "live": "answered_no_bus",
    "timetable": "available",
    "geometry": "STOP_COORDINATES_ONLY",
-   "tracking": "SUPPORTED",
-   "reasons": [],
-   "evidence": "probe HTTP 200, 3 bus(es), 3 with an in-route stop sequence; 30 stops, 30 with position, topology linear"
+   "tracking": "SUPPORTED_WITH_WARNING",
+   "reasons": [
+    "no bus reported when probed: stop-sequence evidence unchecked"
+   ],
+   "evidence": "probe HTTP 200, 0 bus(es), 0 with an in-route stop sequence; 30 stops, 30 with position, topology linear"
   },
   {
    "routeNo": "181",
@@ -1316,14 +1344,12 @@
    "end": "제주버스터미널(종점)",
    "stopCount": 29,
    "topology": "linear",
-   "live": "answered_no_bus",
+   "live": "answered_with_buses",
    "timetable": "available",
    "geometry": "STOP_COORDINATES_ONLY",
-   "tracking": "SUPPORTED_WITH_WARNING",
-   "reasons": [
-    "no bus reported when probed: stop-sequence evidence unchecked"
-   ],
-   "evidence": "probe HTTP 200, 0 bus(es), 0 with an in-route stop sequence; 29 stops, 29 with position, topology linear"
+   "tracking": "SUPPORTED",
+   "reasons": [],
+   "evidence": "probe HTTP 200, 1 bus(es), 1 with an in-route stop sequence; 29 stops, 29 with position, topology linear"
   },
   {
    "routeNo": "181",
@@ -1348,14 +1374,12 @@
    "end": "서귀포버스터미널",
    "stopCount": 19,
    "topology": "linear",
-   "live": "answered_no_bus",
+   "live": "answered_with_buses",
    "timetable": "available",
    "geometry": "STOP_COORDINATES_ONLY",
-   "tracking": "SUPPORTED_WITH_WARNING",
-   "reasons": [
-    "no bus reported when probed: stop-sequence evidence unchecked"
-   ],
-   "evidence": "probe HTTP 200, 0 bus(es), 0 with an in-route stop sequence; 19 stops, 19 with position, topology linear"
+   "tracking": "SUPPORTED",
+   "reasons": [],
+   "evidence": "probe HTTP 200, 1 bus(es), 1 with an in-route stop sequence; 19 stops, 19 with position, topology linear"
   },
   {
    "routeNo": "181",
@@ -1380,14 +1404,15 @@
    "end": "제주국제공항(하차전용)",
    "stopCount": 30,
    "topology": "linear",
-   "live": "answered_with_buses",
+   "live": "answered_no_bus",
    "timetable": "source_conflict",
    "geometry": "STOP_COORDINATES_ONLY",
    "tracking": "SUPPORTED_WITH_WARNING",
    "reasons": [
+    "no bus reported when probed: stop-sequence evidence unchecked",
     "1 virtual stop(s) (가상정류소) in the list"
    ],
-   "evidence": "probe HTTP 200, 4 bus(es), 4 with an in-route stop sequence; 30 stops, 30 with position, topology linear"
+   "evidence": "probe HTTP 200, 0 bus(es), 0 with an in-route stop sequence; 30 stops, 30 with position, topology linear"
   },
   {
    "routeNo": "182",
@@ -1496,14 +1521,15 @@
    "end": "서귀포버스터미널",
    "stopCount": 187,
    "topology": "linear",
-   "live": "answered_with_buses",
+   "live": "answered_no_bus",
    "timetable": "available",
    "geometry": "STOP_COORDINATES_ONLY",
    "tracking": "SUPPORTED_WITH_WARNING",
    "reasons": [
+    "no bus reported when probed: stop-sequence evidence unchecked",
     "1 virtual stop(s) (가상정류소) in the list"
    ],
-   "evidence": "probe HTTP 200, 2 bus(es), 2 with an in-route stop sequence; 187 stops, 187 with position, topology linear"
+   "evidence": "probe HTTP 200, 0 bus(es), 0 with an in-route stop sequence; 187 stops, 187 with position, topology linear"
   },
   {
    "routeNo": "201",
@@ -1512,14 +1538,15 @@
    "end": "제주버스터미널(종점)",
    "stopCount": 192,
    "topology": "linear",
-   "live": "answered_with_buses",
+   "live": "answered_no_bus",
    "timetable": "available",
    "geometry": "STOP_COORDINATES_ONLY",
    "tracking": "SUPPORTED_WITH_WARNING",
    "reasons": [
+    "no bus reported when probed: stop-sequence evidence unchecked",
     "1 virtual stop(s) (가상정류소) in the list"
    ],
-   "evidence": "probe HTTP 200, 4 bus(es), 4 with an in-route stop sequence; 192 stops, 192 with position, topology linear"
+   "evidence": "probe HTTP 200, 0 bus(es), 0 with an in-route stop sequence; 192 stops, 192 with position, topology linear"
   },
   {
    "routeNo": "201",
@@ -1528,14 +1555,15 @@
    "end": "서귀포버스터미널",
    "stopCount": 188,
    "topology": "linear",
-   "live": "answered_with_buses",
+   "live": "answered_no_bus",
    "timetable": "available",
    "geometry": "STOP_COORDINATES_ONLY",
    "tracking": "SUPPORTED_WITH_WARNING",
    "reasons": [
+    "no bus reported when probed: stop-sequence evidence unchecked",
     "1 virtual stop(s) (가상정류소) in the list"
    ],
-   "evidence": "probe HTTP 200, 5 bus(es), 5 with an in-route stop sequence; 188 stops, 188 with position, topology linear"
+   "evidence": "probe HTTP 200, 0 bus(es), 0 with an in-route stop sequence; 188 stops, 188 with position, topology linear"
   },
   {
    "routeNo": "201",
@@ -1544,14 +1572,15 @@
    "end": "제주버스터미널(종점)",
    "stopCount": 193,
    "topology": "linear",
-   "live": "answered_with_buses",
+   "live": "answered_no_bus",
    "timetable": "available",
    "geometry": "STOP_COORDINATES_ONLY",
    "tracking": "SUPPORTED_WITH_WARNING",
    "reasons": [
+    "no bus reported when probed: stop-sequence evidence unchecked",
     "1 virtual stop(s) (가상정류소) in the list"
    ],
-   "evidence": "probe HTTP 200, 3 bus(es), 3 with an in-route stop sequence; 193 stops, 193 with position, topology linear"
+   "evidence": "probe HTTP 200, 0 bus(es), 0 with an in-route stop sequence; 193 stops, 193 with position, topology linear"
   },
   {
    "routeNo": "201",
@@ -1560,14 +1589,15 @@
    "end": "서귀포버스터미널",
    "stopCount": 183,
    "topology": "linear",
-   "live": "answered_with_buses",
+   "live": "answered_no_bus",
    "timetable": "available",
    "geometry": "STOP_COORDINATES_ONLY",
    "tracking": "SUPPORTED_WITH_WARNING",
    "reasons": [
+    "no bus reported when probed: stop-sequence evidence unchecked",
     "1 virtual stop(s) (가상정류소) in the list"
    ],
-   "evidence": "probe HTTP 200, 3 bus(es), 3 with an in-route stop sequence; 183 stops, 183 with position, topology linear"
+   "evidence": "probe HTTP 200, 0 bus(es), 0 with an in-route stop sequence; 183 stops, 183 with position, topology linear"
   },
   {
    "routeNo": "201",
@@ -1576,14 +1606,15 @@
    "end": "제주버스터미널(종점)",
    "stopCount": 188,
    "topology": "linear",
-   "live": "answered_with_buses",
+   "live": "answered_no_bus",
    "timetable": "available",
    "geometry": "STOP_COORDINATES_ONLY",
    "tracking": "SUPPORTED_WITH_WARNING",
    "reasons": [
+    "no bus reported when probed: stop-sequence evidence unchecked",
     "1 virtual stop(s) (가상정류소) in the list"
    ],
-   "evidence": "probe HTTP 200, 2 bus(es), 2 with an in-route stop sequence; 188 stops, 188 with position, topology linear"
+   "evidence": "probe HTTP 200, 0 bus(es), 0 with an in-route stop sequence; 188 stops, 188 with position, topology linear"
   },
   {
    "routeNo": "201",
@@ -1592,14 +1623,15 @@
    "end": "서귀포버스터미널",
    "stopCount": 185,
    "topology": "linear",
-   "live": "answered_with_buses",
+   "live": "answered_no_bus",
    "timetable": "available",
    "geometry": "STOP_COORDINATES_ONLY",
    "tracking": "SUPPORTED_WITH_WARNING",
    "reasons": [
+    "no bus reported when probed: stop-sequence evidence unchecked",
     "1 virtual stop(s) (가상정류소) in the list"
    ],
-   "evidence": "probe HTTP 200, 1 bus(es), 1 with an in-route stop sequence; 185 stops, 185 with position, topology linear"
+   "evidence": "probe HTTP 200, 0 bus(es), 0 with an in-route stop sequence; 185 stops, 185 with position, topology linear"
   },
   {
    "routeNo": "201",
@@ -1608,14 +1640,15 @@
    "end": "제주버스터미널(종점)",
    "stopCount": 189,
    "topology": "linear",
-   "live": "answered_with_buses",
+   "live": "answered_no_bus",
    "timetable": "available",
    "geometry": "STOP_COORDINATES_ONLY",
    "tracking": "SUPPORTED_WITH_WARNING",
    "reasons": [
+    "no bus reported when probed: stop-sequence evidence unchecked",
     "1 virtual stop(s) (가상정류소) in the list"
    ],
-   "evidence": "probe HTTP 200, 3 bus(es), 3 with an in-route stop sequence; 189 stops, 189 with position, topology linear"
+   "evidence": "probe HTTP 200, 0 bus(es), 0 with an in-route stop sequence; 189 stops, 189 with position, topology linear"
   },
   {
    "routeNo": "201",
@@ -1658,14 +1691,15 @@
    "end": "서귀포버스터미널",
    "stopCount": 184,
    "topology": "linear",
-   "live": "answered_with_buses",
+   "live": "answered_no_bus",
    "timetable": "available",
    "geometry": "STOP_COORDINATES_ONLY",
    "tracking": "SUPPORTED_WITH_WARNING",
    "reasons": [
+    "no bus reported when probed: stop-sequence evidence unchecked",
     "1 virtual stop(s) (가상정류소) in the list"
    ],
-   "evidence": "probe HTTP 200, 1 bus(es), 1 with an in-route stop sequence; 184 stops, 184 with position, topology linear"
+   "evidence": "probe HTTP 200, 0 bus(es), 0 with an in-route stop sequence; 184 stops, 184 with position, topology linear"
   },
   {
    "routeNo": "201",
@@ -1674,14 +1708,15 @@
    "end": "제주버스터미널(종점)",
    "stopCount": 187,
    "topology": "linear",
-   "live": "answered_with_buses",
+   "live": "answered_no_bus",
    "timetable": "available",
    "geometry": "STOP_COORDINATES_ONLY",
    "tracking": "SUPPORTED_WITH_WARNING",
    "reasons": [
+    "no bus reported when probed: stop-sequence evidence unchecked",
     "1 virtual stop(s) (가상정류소) in the list"
    ],
-   "evidence": "probe HTTP 200, 1 bus(es), 1 with an in-route stop sequence; 187 stops, 187 with position, topology linear"
+   "evidence": "probe HTTP 200, 0 bus(es), 0 with an in-route stop sequence; 187 stops, 187 with position, topology linear"
   },
   {
    "routeNo": "201",
@@ -1739,15 +1774,14 @@
    "end": "성산일출봉입구",
    "stopCount": 101,
    "topology": "linear",
-   "live": "answered_no_bus",
+   "live": "answered_with_buses",
    "timetable": "available",
    "geometry": "STOP_COORDINATES_ONLY",
    "tracking": "SUPPORTED_WITH_WARNING",
    "reasons": [
-    "no bus reported when probed: stop-sequence evidence unchecked",
     "1 virtual stop(s) (가상정류소) in the list"
    ],
-   "evidence": "probe HTTP 200, 0 bus(es), 0 with an in-route stop sequence; 101 stops, 101 with position, topology linear"
+   "evidence": "probe HTTP 200, 1 bus(es), 1 with an in-route stop sequence; 101 stops, 101 with position, topology linear"
   },
   {
    "routeNo": "201",
@@ -1756,15 +1790,14 @@
    "end": "성산일출봉입구",
    "stopCount": 89,
    "topology": "linear",
-   "live": "answered_no_bus",
+   "live": "answered_with_buses",
    "timetable": "available",
    "geometry": "STOP_COORDINATES_ONLY",
    "tracking": "SUPPORTED_WITH_WARNING",
    "reasons": [
-    "no bus reported when probed: stop-sequence evidence unchecked",
     "1 virtual stop(s) (가상정류소) in the list"
    ],
-   "evidence": "probe HTTP 200, 0 bus(es), 0 with an in-route stop sequence; 89 stops, 89 with position, topology linear"
+   "evidence": "probe HTTP 200, 1 bus(es), 1 with an in-route stop sequence; 89 stops, 89 with position, topology linear"
   },
   {
    "routeNo": "201",
@@ -1840,14 +1873,15 @@
    "end": "제주버스터미널(종점)",
    "stopCount": 166,
    "topology": "linear",
-   "live": "answered_with_buses",
+   "live": "answered_no_bus",
    "timetable": "source_conflict",
    "geometry": "STOP_COORDINATES_ONLY",
    "tracking": "SUPPORTED_WITH_WARNING",
    "reasons": [
+    "no bus reported when probed: stop-sequence evidence unchecked",
     "1 virtual stop(s) (가상정류소) in the list"
    ],
-   "evidence": "probe HTTP 200, 6 bus(es), 6 with an in-route stop sequence; 166 stops, 166 with position, topology linear"
+   "evidence": "probe HTTP 200, 0 bus(es), 0 with an in-route stop sequence; 166 stops, 166 with position, topology linear"
   },
   {
    "routeNo": "202",
@@ -1874,14 +1908,15 @@
    "end": "제주버스터미널(종점)",
    "stopCount": 165,
    "topology": "linear",
-   "live": "answered_with_buses",
+   "live": "answered_no_bus",
    "timetable": "source_conflict",
    "geometry": "STOP_COORDINATES_ONLY",
    "tracking": "SUPPORTED_WITH_WARNING",
    "reasons": [
+    "no bus reported when probed: stop-sequence evidence unchecked",
     "1 virtual stop(s) (가상정류소) in the list"
    ],
-   "evidence": "probe HTTP 200, 6 bus(es), 6 with an in-route stop sequence; 165 stops, 165 with position, topology linear"
+   "evidence": "probe HTTP 200, 0 bus(es), 0 with an in-route stop sequence; 165 stops, 165 with position, topology linear"
   },
   {
    "routeNo": "202",
@@ -2191,15 +2226,16 @@
    "end": "서귀포환승정류장(서귀포등기소)",
    "stopCount": 168,
    "topology": "linear",
-   "live": "answered_with_buses",
+   "live": "answered_no_bus",
    "timetable": "source_conflict",
    "geometry": "STOP_COORDINATES_ONLY",
    "tracking": "SUPPORTED_WITH_WARNING",
    "reasons": [
+    "no bus reported when probed: stop-sequence evidence unchecked",
     "1 virtual stop(s) (가상정류소) in the list",
     "same stop list as JEB405320213 under 202: the app numbers them as separate services, and a rider on the other one's bus must choose again"
    ],
-   "evidence": "probe HTTP 200, 5 bus(es), 5 with an in-route stop sequence; 168 stops, 168 with position, topology linear"
+   "evidence": "probe HTTP 200, 0 bus(es), 0 with an in-route stop sequence; 168 stops, 168 with position, topology linear"
   },
   {
    "routeNo": "202",
@@ -2208,15 +2244,16 @@
    "end": "서귀포환승정류장(서귀포등기소)",
    "stopCount": 169,
    "topology": "linear",
-   "live": "answered_with_buses",
+   "live": "answered_no_bus",
    "timetable": "source_conflict",
    "geometry": "STOP_COORDINATES_ONLY",
    "tracking": "SUPPORTED_WITH_WARNING",
    "reasons": [
+    "no bus reported when probed: stop-sequence evidence unchecked",
     "1 virtual stop(s) (가상정류소) in the list",
     "same stop list as JEB405320215 under 202: the app numbers them as separate services, and a rider on the other one's bus must choose again"
    ],
-   "evidence": "probe HTTP 200, 5 bus(es), 5 with an in-route stop sequence; 169 stops, 169 with position, topology linear"
+   "evidence": "probe HTTP 200, 0 bus(es), 0 with an in-route stop sequence; 169 stops, 169 with position, topology linear"
   },
   {
    "routeNo": "202-1",
@@ -2305,14 +2342,15 @@
    "end": "한담동",
    "stopCount": 44,
    "topology": "linear",
-   "live": "answered_with_buses",
+   "live": "answered_no_bus",
    "timetable": "available",
    "geometry": "STOP_COORDINATES_ONLY",
    "tracking": "SUPPORTED_WITH_WARNING",
    "reasons": [
+    "no bus reported when probed: stop-sequence evidence unchecked",
     "1 virtual stop(s) (가상정류소) in the list"
    ],
-   "evidence": "probe HTTP 200, 1 bus(es), 1 with an in-route stop sequence; 44 stops, 44 with position, topology linear"
+   "evidence": "probe HTTP 200, 0 bus(es), 0 with an in-route stop sequence; 44 stops, 44 with position, topology linear"
   },
   {
    "routeNo": "202-4",
@@ -2354,12 +2392,14 @@
    "end": "제주버스터미널(종점)",
    "stopCount": 67,
    "topology": "linear",
-   "live": "answered_with_buses",
+   "live": "answered_no_bus",
    "timetable": "available",
    "geometry": "STOP_COORDINATES_ONLY",
-   "tracking": "SUPPORTED",
-   "reasons": [],
-   "evidence": "probe HTTP 200, 1 bus(es), 1 with an in-route stop sequence; 67 stops, 67 with position, topology linear"
+   "tracking": "SUPPORTED_WITH_WARNING",
+   "reasons": [
+    "no bus reported when probed: stop-sequence evidence unchecked"
+   ],
+   "evidence": "probe HTTP 200, 0 bus(es), 0 with an in-route stop sequence; 67 stops, 67 with position, topology linear"
   },
   {
    "routeNo": "211",
@@ -2401,14 +2441,15 @@
    "end": "성산항(종점)",
    "stopCount": 58,
    "topology": "linear",
-   "live": "answered_with_buses",
+   "live": "answered_no_bus",
    "timetable": "available",
    "geometry": "STOP_COORDINATES_ONLY",
    "tracking": "SUPPORTED_WITH_WARNING",
    "reasons": [
+    "no bus reported when probed: stop-sequence evidence unchecked",
     "1 virtual stop(s) (가상정류소) in the list"
    ],
-   "evidence": "probe HTTP 200, 1 bus(es), 1 with an in-route stop sequence; 58 stops, 58 with position, topology linear"
+   "evidence": "probe HTTP 200, 0 bus(es), 0 with an in-route stop sequence; 58 stops, 58 with position, topology linear"
   },
   {
    "routeNo": "211",
@@ -2417,12 +2458,14 @@
    "end": "제주버스터미널(종점)",
    "stopCount": 59,
    "topology": "linear",
-   "live": "answered_with_buses",
+   "live": "answered_no_bus",
    "timetable": "available",
    "geometry": "STOP_COORDINATES_ONLY",
-   "tracking": "SUPPORTED",
-   "reasons": [],
-   "evidence": "probe HTTP 200, 1 bus(es), 1 with an in-route stop sequence; 59 stops, 59 with position, topology linear"
+   "tracking": "SUPPORTED_WITH_WARNING",
+   "reasons": [
+    "no bus reported when probed: stop-sequence evidence unchecked"
+   ],
+   "evidence": "probe HTTP 200, 0 bus(es), 0 with an in-route stop sequence; 59 stops, 59 with position, topology linear"
   },
   {
    "routeNo": "212",
@@ -2464,14 +2507,15 @@
    "end": "성산항(종점)",
    "stopCount": 72,
    "topology": "linear",
-   "live": "answered_with_buses",
+   "live": "answered_no_bus",
    "timetable": "available",
    "geometry": "STOP_COORDINATES_ONLY",
    "tracking": "SUPPORTED_WITH_WARNING",
    "reasons": [
+    "no bus reported when probed: stop-sequence evidence unchecked",
     "1 virtual stop(s) (가상정류소) in the list"
    ],
-   "evidence": "probe HTTP 200, 1 bus(es), 1 with an in-route stop sequence; 72 stops, 72 with position, topology linear"
+   "evidence": "probe HTTP 200, 0 bus(es), 0 with an in-route stop sequence; 72 stops, 72 with position, topology linear"
   },
   {
    "routeNo": "212",
@@ -2480,12 +2524,14 @@
    "end": "제주버스터미널(종점)",
    "stopCount": 71,
    "topology": "linear",
-   "live": "answered_with_buses",
+   "live": "answered_no_bus",
    "timetable": "available",
    "geometry": "STOP_COORDINATES_ONLY",
-   "tracking": "SUPPORTED",
-   "reasons": [],
-   "evidence": "probe HTTP 200, 1 bus(es), 1 with an in-route stop sequence; 71 stops, 71 with position, topology linear"
+   "tracking": "SUPPORTED_WITH_WARNING",
+   "reasons": [
+    "no bus reported when probed: stop-sequence evidence unchecked"
+   ],
+   "evidence": "probe HTTP 200, 0 bus(es), 0 with an in-route stop sequence; 71 stops, 71 with position, topology linear"
   },
   {
    "routeNo": "212",
@@ -2626,14 +2672,15 @@
    "end": "제주민속촌(종점)",
    "stopCount": 55,
    "topology": "linear",
-   "live": "answered_with_buses",
+   "live": "answered_no_bus",
    "timetable": "available",
    "geometry": "STOP_COORDINATES_ONLY",
    "tracking": "SUPPORTED_WITH_WARNING",
    "reasons": [
+    "no bus reported when probed: stop-sequence evidence unchecked",
     "1 virtual stop(s) (가상정류소) in the list"
    ],
-   "evidence": "probe HTTP 200, 1 bus(es), 1 with an in-route stop sequence; 55 stops, 55 with position, topology linear"
+   "evidence": "probe HTTP 200, 0 bus(es), 0 with an in-route stop sequence; 55 stops, 55 with position, topology linear"
   },
   {
    "routeNo": "221",
@@ -2722,12 +2769,14 @@
    "end": "제주버스터미널(종점)",
    "stopCount": 57,
    "topology": "linear",
-   "live": "answered_with_buses",
+   "live": "answered_no_bus",
    "timetable": "available",
    "geometry": "STOP_COORDINATES_ONLY",
-   "tracking": "SUPPORTED",
-   "reasons": [],
-   "evidence": "probe HTTP 200, 1 bus(es), 1 with an in-route stop sequence; 57 stops, 57 with position, topology linear"
+   "tracking": "SUPPORTED_WITH_WARNING",
+   "reasons": [
+    "no bus reported when probed: stop-sequence evidence unchecked"
+   ],
+   "evidence": "probe HTTP 200, 0 bus(es), 0 with an in-route stop sequence; 57 stops, 57 with position, topology linear"
   },
   {
    "routeNo": "222",
@@ -2820,15 +2869,16 @@
    "end": "서귀포환승정류장(서귀포등기소)",
    "stopCount": 102,
    "topology": "linear",
-   "live": "answered_with_buses",
+   "live": "answered_no_bus",
    "timetable": "available",
    "geometry": "STOP_COORDINATES_ONLY",
    "tracking": "SUPPORTED_WITH_WARNING",
    "reasons": [
+    "no bus reported when probed: stop-sequence evidence unchecked",
     "1 virtual stop(s) (가상정류소) in the list",
     "same stop list as JEB405323123 under 231: the app numbers them as separate services, and a rider on the other one's bus must choose again"
    ],
-   "evidence": "probe HTTP 200, 1 bus(es), 1 with an in-route stop sequence; 102 stops, 102 with position, topology linear"
+   "evidence": "probe HTTP 200, 0 bus(es), 0 with an in-route stop sequence; 102 stops, 102 with position, topology linear"
   },
   {
    "routeNo": "231",
@@ -2854,15 +2904,16 @@
    "end": "서귀포환승정류장(서귀포등기소)",
    "stopCount": 109,
    "topology": "linear",
-   "live": "answered_with_buses",
+   "live": "answered_no_bus",
    "timetable": "available",
    "geometry": "STOP_COORDINATES_ONLY",
    "tracking": "SUPPORTED_WITH_WARNING",
    "reasons": [
+    "no bus reported when probed: stop-sequence evidence unchecked",
     "1 virtual stop(s) (가상정류소) in the list",
     "same stop list as JEB405323129 under 231: the app numbers them as separate services, and a rider on the other one's bus must choose again"
    ],
-   "evidence": "probe HTTP 200, 1 bus(es), 1 with an in-route stop sequence; 109 stops, 109 with position, topology linear"
+   "evidence": "probe HTTP 200, 0 bus(es), 0 with an in-route stop sequence; 109 stops, 109 with position, topology linear"
   },
   {
    "routeNo": "231",
@@ -2871,14 +2922,15 @@
    "end": "제주버스터미널(종점)",
    "stopCount": 108,
    "topology": "linear",
-   "live": "answered_with_buses",
+   "live": "answered_no_bus",
    "timetable": "available",
    "geometry": "STOP_COORDINATES_ONLY",
    "tracking": "SUPPORTED_WITH_WARNING",
    "reasons": [
+    "no bus reported when probed: stop-sequence evidence unchecked",
     "same stop list as JEB405323130 under 231: the app numbers them as separate services, and a rider on the other one's bus must choose again"
    ],
-   "evidence": "probe HTTP 200, 1 bus(es), 1 with an in-route stop sequence; 108 stops, 108 with position, topology linear"
+   "evidence": "probe HTTP 200, 0 bus(es), 0 with an in-route stop sequence; 108 stops, 108 with position, topology linear"
   },
   {
    "routeNo": "231",
@@ -3046,14 +3098,15 @@
    "end": "제주버스터미널(종점)",
    "stopCount": 98,
    "topology": "linear",
-   "live": "answered_with_buses",
+   "live": "answered_no_bus",
    "timetable": "available",
    "geometry": "STOP_COORDINATES_ONLY",
    "tracking": "SUPPORTED_WITH_WARNING",
    "reasons": [
+    "no bus reported when probed: stop-sequence evidence unchecked",
     "same stop list as JEB405323222 under 232: the app numbers them as separate services, and a rider on the other one's bus must choose again"
    ],
-   "evidence": "probe HTTP 200, 1 bus(es), 1 with an in-route stop sequence; 98 stops, 98 with position, topology linear"
+   "evidence": "probe HTTP 200, 0 bus(es), 0 with an in-route stop sequence; 98 stops, 98 with position, topology linear"
   },
   {
    "routeNo": "232",
@@ -3149,15 +3202,16 @@
    "end": "서귀포환승정류장(서귀포등기소)",
    "stopCount": 98,
    "topology": "linear",
-   "live": "answered_with_buses",
+   "live": "answered_no_bus",
    "timetable": "available",
    "geometry": "STOP_COORDINATES_ONLY",
    "tracking": "SUPPORTED_WITH_WARNING",
    "reasons": [
+    "no bus reported when probed: stop-sequence evidence unchecked",
     "1 virtual stop(s) (가상정류소) in the list",
     "same stop list as JEB405323201 under 232: the app numbers them as separate services, and a rider on the other one's bus must choose again"
    ],
-   "evidence": "probe HTTP 200, 1 bus(es), 1 with an in-route stop sequence; 98 stops, 98 with position, topology linear"
+   "evidence": "probe HTTP 200, 0 bus(es), 0 with an in-route stop sequence; 98 stops, 98 with position, topology linear"
   },
   {
    "routeNo": "232",
@@ -3385,14 +3439,15 @@
    "end": "제주국제컨벤션센터",
    "stopCount": 41,
    "topology": "linear",
-   "live": "answered_with_buses",
+   "live": "answered_no_bus",
    "timetable": "available",
    "geometry": "STOP_COORDINATES_ONLY",
    "tracking": "SUPPORTED_WITH_WARNING",
    "reasons": [
+    "no bus reported when probed: stop-sequence evidence unchecked",
     "1 virtual stop(s) (가상정류소) in the list"
    ],
-   "evidence": "probe HTTP 200, 1 bus(es), 1 with an in-route stop sequence; 41 stops, 41 with position, topology linear"
+   "evidence": "probe HTTP 200, 0 bus(es), 0 with an in-route stop sequence; 41 stops, 41 with position, topology linear"
   },
   {
    "routeNo": "240",
@@ -3401,12 +3456,14 @@
    "end": "제주버스터미널(종점)",
    "stopCount": 41,
    "topology": "linear",
-   "live": "answered_with_buses",
+   "live": "answered_no_bus",
    "timetable": "available",
    "geometry": "STOP_COORDINATES_ONLY",
-   "tracking": "SUPPORTED",
-   "reasons": [],
-   "evidence": "probe HTTP 200, 2 bus(es), 2 with an in-route stop sequence; 41 stops, 41 with position, topology linear"
+   "tracking": "SUPPORTED_WITH_WARNING",
+   "reasons": [
+    "no bus reported when probed: stop-sequence evidence unchecked"
+   ],
+   "evidence": "probe HTTP 200, 0 bus(es), 0 with an in-route stop sequence; 41 stops, 41 with position, topology linear"
   },
   {
    "routeNo": "240",
@@ -3514,14 +3571,15 @@
    "end": "모슬포 남항 여객선 터미널(운진항)",
    "stopCount": 64,
    "topology": "linear",
-   "live": "answered_with_buses",
+   "live": "answered_no_bus",
    "timetable": "source_conflict",
    "geometry": "STOP_COORDINATES_ONLY",
    "tracking": "SUPPORTED_WITH_WARNING",
    "reasons": [
+    "no bus reported when probed: stop-sequence evidence unchecked",
     "1 virtual stop(s) (가상정류소) in the list"
    ],
-   "evidence": "probe HTTP 200, 1 bus(es), 1 with an in-route stop sequence; 64 stops, 64 with position, topology linear"
+   "evidence": "probe HTTP 200, 0 bus(es), 0 with an in-route stop sequence; 64 stops, 64 with position, topology linear"
   },
   {
    "routeNo": "251",
@@ -3530,12 +3588,14 @@
    "end": "제주버스터미널(종점)",
    "stopCount": 59,
    "topology": "linear",
-   "live": "answered_with_buses",
+   "live": "answered_no_bus",
    "timetable": "source_conflict",
    "geometry": "STOP_COORDINATES_ONLY",
-   "tracking": "SUPPORTED",
-   "reasons": [],
-   "evidence": "probe HTTP 200, 1 bus(es), 1 with an in-route stop sequence; 59 stops, 59 with position, topology linear"
+   "tracking": "SUPPORTED_WITH_WARNING",
+   "reasons": [
+    "no bus reported when probed: stop-sequence evidence unchecked"
+   ],
+   "evidence": "probe HTTP 200, 0 bus(es), 0 with an in-route stop sequence; 59 stops, 59 with position, topology linear"
   },
   {
    "routeNo": "251",
@@ -3544,14 +3604,15 @@
    "end": "모슬포 남항 여객선 터미널(운진항)",
    "stopCount": 63,
    "topology": "linear",
-   "live": "answered_with_buses",
+   "live": "answered_no_bus",
    "timetable": "source_conflict",
    "geometry": "STOP_COORDINATES_ONLY",
    "tracking": "SUPPORTED_WITH_WARNING",
    "reasons": [
+    "no bus reported when probed: stop-sequence evidence unchecked",
     "1 virtual stop(s) (가상정류소) in the list"
    ],
-   "evidence": "probe HTTP 200, 1 bus(es), 1 with an in-route stop sequence; 63 stops, 63 with position, topology linear"
+   "evidence": "probe HTTP 200, 0 bus(es), 0 with an in-route stop sequence; 63 stops, 63 with position, topology linear"
   },
   {
    "routeNo": "251",
@@ -3576,14 +3637,15 @@
    "end": "모슬포 남항 여객선 터미널(운진항)",
    "stopCount": 39,
    "topology": "linear",
-   "live": "answered_with_buses",
+   "live": "answered_no_bus",
    "timetable": "source_conflict",
    "geometry": "STOP_COORDINATES_ONLY",
    "tracking": "SUPPORTED_WITH_WARNING",
    "reasons": [
+    "no bus reported when probed: stop-sequence evidence unchecked",
     "1 virtual stop(s) (가상정류소) in the list"
    ],
-   "evidence": "probe HTTP 200, 1 bus(es), 1 with an in-route stop sequence; 39 stops, 39 with position, topology linear"
+   "evidence": "probe HTTP 200, 0 bus(es), 0 with an in-route stop sequence; 39 stops, 39 with position, topology linear"
   },
   {
    "routeNo": "251-1",
@@ -3592,12 +3654,14 @@
    "end": "제주버스터미널(종점)",
    "stopCount": 38,
    "topology": "linear",
-   "live": "answered_with_buses",
+   "live": "answered_no_bus",
    "timetable": "source_conflict",
    "geometry": "STOP_COORDINATES_ONLY",
-   "tracking": "SUPPORTED",
-   "reasons": [],
-   "evidence": "probe HTTP 200, 1 bus(es), 1 with an in-route stop sequence; 38 stops, 38 with position, topology linear"
+   "tracking": "SUPPORTED_WITH_WARNING",
+   "reasons": [
+    "no bus reported when probed: stop-sequence evidence unchecked"
+   ],
+   "evidence": "probe HTTP 200, 0 bus(es), 0 with an in-route stop sequence; 38 stops, 38 with position, topology linear"
   },
   {
    "routeNo": "252",
@@ -3606,14 +3670,15 @@
    "end": "모슬포 남항 여객선 터미널(운진항)",
    "stopCount": 63,
    "topology": "linear",
-   "live": "answered_with_buses",
+   "live": "answered_no_bus",
    "timetable": "source_conflict",
    "geometry": "STOP_COORDINATES_ONLY",
    "tracking": "SUPPORTED_WITH_WARNING",
    "reasons": [
+    "no bus reported when probed: stop-sequence evidence unchecked",
     "1 virtual stop(s) (가상정류소) in the list"
    ],
-   "evidence": "probe HTTP 200, 1 bus(es), 1 with an in-route stop sequence; 63 stops, 63 with position, topology linear"
+   "evidence": "probe HTTP 200, 0 bus(es), 0 with an in-route stop sequence; 63 stops, 63 with position, topology linear"
   },
   {
    "routeNo": "252",
@@ -3622,12 +3687,14 @@
    "end": "제주버스터미널(종점)",
    "stopCount": 57,
    "topology": "linear",
-   "live": "answered_with_buses",
+   "live": "answered_no_bus",
    "timetable": "source_conflict",
    "geometry": "STOP_COORDINATES_ONLY",
-   "tracking": "SUPPORTED",
-   "reasons": [],
-   "evidence": "probe HTTP 200, 1 bus(es), 1 with an in-route stop sequence; 57 stops, 57 with position, topology linear"
+   "tracking": "SUPPORTED_WITH_WARNING",
+   "reasons": [
+    "no bus reported when probed: stop-sequence evidence unchecked"
+   ],
+   "evidence": "probe HTTP 200, 0 bus(es), 0 with an in-route stop sequence; 57 stops, 57 with position, topology linear"
   },
   {
    "routeNo": "252",
@@ -3653,12 +3720,14 @@
    "end": "제주버스터미널(종점)",
    "stopCount": 52,
    "topology": "linear",
-   "live": "answered_with_buses",
+   "live": "answered_no_bus",
    "timetable": "source_conflict",
    "geometry": "STOP_COORDINATES_ONLY",
-   "tracking": "SUPPORTED",
-   "reasons": [],
-   "evidence": "probe HTTP 200, 1 bus(es), 1 with an in-route stop sequence; 52 stops, 52 with position, topology linear"
+   "tracking": "SUPPORTED_WITH_WARNING",
+   "reasons": [
+    "no bus reported when probed: stop-sequence evidence unchecked"
+   ],
+   "evidence": "probe HTTP 200, 0 bus(es), 0 with an in-route stop sequence; 52 stops, 52 with position, topology linear"
   },
   {
    "routeNo": "253",
@@ -3734,14 +3803,15 @@
    "end": "모슬포 남항 여객선 터미널(운진항)",
    "stopCount": 73,
    "topology": "linear",
-   "live": "answered_with_buses",
+   "live": "answered_no_bus",
    "timetable": "source_conflict",
    "geometry": "STOP_COORDINATES_ONLY",
    "tracking": "SUPPORTED_WITH_WARNING",
    "reasons": [
+    "no bus reported when probed: stop-sequence evidence unchecked",
     "1 virtual stop(s) (가상정류소) in the list"
    ],
-   "evidence": "probe HTTP 200, 1 bus(es), 1 with an in-route stop sequence; 73 stops, 73 with position, topology linear"
+   "evidence": "probe HTTP 200, 0 bus(es), 0 with an in-route stop sequence; 73 stops, 73 with position, topology linear"
   },
   {
    "routeNo": "254",
@@ -3750,12 +3820,14 @@
    "end": "제주버스터미널(종점)",
    "stopCount": 68,
    "topology": "linear",
-   "live": "answered_with_buses",
+   "live": "answered_no_bus",
    "timetable": "source_conflict",
    "geometry": "STOP_COORDINATES_ONLY",
-   "tracking": "SUPPORTED",
-   "reasons": [],
-   "evidence": "probe HTTP 200, 1 bus(es), 1 with an in-route stop sequence; 68 stops, 68 with position, topology linear"
+   "tracking": "SUPPORTED_WITH_WARNING",
+   "reasons": [
+    "no bus reported when probed: stop-sequence evidence unchecked"
+   ],
+   "evidence": "probe HTTP 200, 0 bus(es), 0 with an in-route stop sequence; 68 stops, 68 with position, topology linear"
   },
   {
    "routeNo": "254",
@@ -3797,14 +3869,15 @@
    "end": "모슬포 남항 여객선 터미널(운진항)",
    "stopCount": 57,
    "topology": "linear",
-   "live": "answered_with_buses",
+   "live": "answered_no_bus",
    "timetable": "available",
    "geometry": "STOP_COORDINATES_ONLY",
    "tracking": "SUPPORTED_WITH_WARNING",
    "reasons": [
+    "no bus reported when probed: stop-sequence evidence unchecked",
     "1 virtual stop(s) (가상정류소) in the list"
    ],
-   "evidence": "probe HTTP 200, 2 bus(es), 2 with an in-route stop sequence; 57 stops, 57 with position, topology linear"
+   "evidence": "probe HTTP 200, 0 bus(es), 0 with an in-route stop sequence; 57 stops, 57 with position, topology linear"
   },
   {
    "routeNo": "255",
@@ -3813,12 +3886,14 @@
    "end": "제주버스터미널(종점)",
    "stopCount": 56,
    "topology": "linear",
-   "live": "answered_with_buses",
+   "live": "answered_no_bus",
    "timetable": "available",
    "geometry": "STOP_COORDINATES_ONLY",
-   "tracking": "SUPPORTED",
-   "reasons": [],
-   "evidence": "probe HTTP 200, 2 bus(es), 2 with an in-route stop sequence; 56 stops, 56 with position, topology linear"
+   "tracking": "SUPPORTED_WITH_WARNING",
+   "reasons": [
+    "no bus reported when probed: stop-sequence evidence unchecked"
+   ],
+   "evidence": "probe HTTP 200, 0 bus(es), 0 with an in-route stop sequence; 56 stops, 56 with position, topology linear"
   },
   {
    "routeNo": "255",
@@ -3843,14 +3918,15 @@
    "end": "해녀박물관",
    "stopCount": 79,
    "topology": "linear",
-   "live": "answered_with_buses",
+   "live": "answered_no_bus",
    "timetable": "available",
    "geometry": "STOP_COORDINATES_ONLY",
    "tracking": "SUPPORTED_WITH_WARNING",
    "reasons": [
+    "no bus reported when probed: stop-sequence evidence unchecked",
     "1 virtual stop(s) (가상정류소) in the list"
    ],
-   "evidence": "probe HTTP 200, 2 bus(es), 2 with an in-route stop sequence; 79 stops, 79 with position, topology linear"
+   "evidence": "probe HTTP 200, 0 bus(es), 0 with an in-route stop sequence; 79 stops, 79 with position, topology linear"
   },
   {
    "routeNo": "260",
@@ -3859,12 +3935,14 @@
    "end": "제주버스터미널(종점)",
    "stopCount": 78,
    "topology": "linear",
-   "live": "answered_with_buses",
+   "live": "answered_no_bus",
    "timetable": "available",
    "geometry": "STOP_COORDINATES_ONLY",
-   "tracking": "SUPPORTED",
-   "reasons": [],
-   "evidence": "probe HTTP 200, 2 bus(es), 2 with an in-route stop sequence; 78 stops, 78 with position, topology linear"
+   "tracking": "SUPPORTED_WITH_WARNING",
+   "reasons": [
+    "no bus reported when probed: stop-sequence evidence unchecked"
+   ],
+   "evidence": "probe HTTP 200, 0 bus(es), 0 with an in-route stop sequence; 78 stops, 78 with position, topology linear"
   },
   {
    "routeNo": "260",
@@ -3890,12 +3968,14 @@
    "end": "제주대학교",
    "stopCount": 51,
    "topology": "linear",
-   "live": "answered_with_buses",
+   "live": "answered_no_bus",
    "timetable": "available",
    "geometry": "STOP_COORDINATES_ONLY",
-   "tracking": "SUPPORTED",
-   "reasons": [],
-   "evidence": "probe HTTP 200, 1 bus(es), 1 with an in-route stop sequence; 51 stops, 51 with position, topology linear"
+   "tracking": "SUPPORTED_WITH_WARNING",
+   "reasons": [
+    "no bus reported when probed: stop-sequence evidence unchecked"
+   ],
+   "evidence": "probe HTTP 200, 0 bus(es), 0 with an in-route stop sequence; 51 stops, 51 with position, topology linear"
   },
   {
    "routeNo": "270",
@@ -3904,12 +3984,14 @@
    "end": "애월하나로마트",
    "stopCount": 53,
    "topology": "linear",
-   "live": "answered_with_buses",
+   "live": "answered_no_bus",
    "timetable": "available",
    "geometry": "STOP_COORDINATES_ONLY",
-   "tracking": "SUPPORTED",
-   "reasons": [],
-   "evidence": "probe HTTP 200, 2 bus(es), 2 with an in-route stop sequence; 53 stops, 53 with position, topology linear"
+   "tracking": "SUPPORTED_WITH_WARNING",
+   "reasons": [
+    "no bus reported when probed: stop-sequence evidence unchecked"
+   ],
+   "evidence": "probe HTTP 200, 0 bus(es), 0 with an in-route stop sequence; 53 stops, 53 with position, topology linear"
   },
   {
    "routeNo": "270",
@@ -4021,7 +4103,7 @@
    "reasons": [
     "1 virtual stop(s) (가상정류소) in the list"
    ],
-   "evidence": "probe HTTP 200, 7 bus(es), 7 with an in-route stop sequence; 60 stops, 60 with position, topology linear"
+   "evidence": "probe HTTP 200, 1 bus(es), 1 with an in-route stop sequence; 60 stops, 60 with position, topology linear"
   },
   {
    "routeNo": "281",
@@ -4037,7 +4119,7 @@
    "reasons": [
     "1 virtual stop(s) (가상정류소) in the list"
    ],
-   "evidence": "probe HTTP 200, 9 bus(es), 9 with an in-route stop sequence; 62 stops, 62 with position, topology linear"
+   "evidence": "probe HTTP 200, 1 bus(es), 1 with an in-route stop sequence; 62 stops, 62 with position, topology linear"
   },
   {
    "routeNo": "281",
@@ -4085,7 +4167,7 @@
    "reasons": [
     "1 virtual stop(s) (가상정류소) in the list"
    ],
-   "evidence": "probe HTTP 200, 2 bus(es), 2 with an in-route stop sequence; 77 stops, 77 with position, topology linear"
+   "evidence": "probe HTTP 200, 1 bus(es), 1 with an in-route stop sequence; 77 stops, 77 with position, topology linear"
   },
   {
    "routeNo": "282",
@@ -4099,7 +4181,7 @@
    "geometry": "STOP_COORDINATES_ONLY",
    "tracking": "SUPPORTED",
    "reasons": [],
-   "evidence": "probe HTTP 200, 2 bus(es), 2 with an in-route stop sequence; 73 stops, 73 with position, topology linear"
+   "evidence": "probe HTTP 200, 1 bus(es), 1 with an in-route stop sequence; 73 stops, 73 with position, topology linear"
   },
   {
    "routeNo": "282",
@@ -4141,14 +4223,15 @@
    "end": "서귀포시 구 버스터미널",
    "stopCount": 64,
    "topology": "linear",
-   "live": "answered_with_buses",
+   "live": "answered_no_bus",
    "timetable": "available",
    "geometry": "STOP_COORDINATES_ONLY",
    "tracking": "SUPPORTED_WITH_WARNING",
    "reasons": [
+    "no bus reported when probed: stop-sequence evidence unchecked",
     "1 virtual stop(s) (가상정류소) in the list"
    ],
-   "evidence": "probe HTTP 200, 1 bus(es), 1 with an in-route stop sequence; 64 stops, 64 with position, topology linear"
+   "evidence": "probe HTTP 200, 0 bus(es), 0 with an in-route stop sequence; 64 stops, 64 with position, topology linear"
   },
   {
    "routeNo": "282",
@@ -4157,12 +4240,14 @@
    "end": "제주버스터미널(종점)",
    "stopCount": 65,
    "topology": "linear",
-   "live": "answered_with_buses",
+   "live": "answered_no_bus",
    "timetable": "available",
    "geometry": "STOP_COORDINATES_ONLY",
-   "tracking": "SUPPORTED",
-   "reasons": [],
-   "evidence": "probe HTTP 200, 4 bus(es), 4 with an in-route stop sequence; 65 stops, 65 with position, topology linear"
+   "tracking": "SUPPORTED_WITH_WARNING",
+   "reasons": [
+    "no bus reported when probed: stop-sequence evidence unchecked"
+   ],
+   "evidence": "probe HTTP 200, 0 bus(es), 0 with an in-route stop sequence; 65 stops, 65 with position, topology linear"
   },
   {
    "routeNo": "282",
@@ -4221,14 +4306,15 @@
    "end": "서귀포시 구 버스터미널",
    "stopCount": 66,
    "topology": "linear",
-   "live": "answered_with_buses",
+   "live": "answered_no_bus",
    "timetable": "available",
    "geometry": "STOP_COORDINATES_ONLY",
    "tracking": "SUPPORTED_WITH_WARNING",
    "reasons": [
+    "no bus reported when probed: stop-sequence evidence unchecked",
     "1 virtual stop(s) (가상정류소) in the list"
    ],
-   "evidence": "probe HTTP 200, 3 bus(es), 3 with an in-route stop sequence; 66 stops, 66 with position, topology linear"
+   "evidence": "probe HTTP 200, 0 bus(es), 0 with an in-route stop sequence; 66 stops, 66 with position, topology linear"
   },
   {
    "routeNo": "282",
@@ -4253,14 +4339,15 @@
    "end": "서귀포시 구 버스터미널",
    "stopCount": 71,
    "topology": "linear",
-   "live": "answered_with_buses",
+   "live": "answered_no_bus",
    "timetable": "available",
    "geometry": "STOP_COORDINATES_ONLY",
    "tracking": "SUPPORTED_WITH_WARNING",
    "reasons": [
+    "no bus reported when probed: stop-sequence evidence unchecked",
     "1 virtual stop(s) (가상정류소) in the list"
    ],
-   "evidence": "probe HTTP 200, 1 bus(es), 1 with an in-route stop sequence; 71 stops, 71 with position, topology linear"
+   "evidence": "probe HTTP 200, 0 bus(es), 0 with an in-route stop sequence; 71 stops, 71 with position, topology linear"
   },
   {
    "routeNo": "291",
@@ -4269,14 +4356,15 @@
    "end": "한림체육관 후문",
    "stopCount": 72,
    "topology": "linear",
-   "live": "answered_with_buses",
+   "live": "answered_no_bus",
    "timetable": "available",
    "geometry": "STOP_COORDINATES_ONLY",
    "tracking": "SUPPORTED_WITH_WARNING",
    "reasons": [
+    "no bus reported when probed: stop-sequence evidence unchecked",
     "1 virtual stop(s) (가상정류소) in the list"
    ],
-   "evidence": "probe HTTP 200, 1 bus(es), 1 with an in-route stop sequence; 72 stops, 72 with position, topology linear"
+   "evidence": "probe HTTP 200, 0 bus(es), 0 with an in-route stop sequence; 72 stops, 72 with position, topology linear"
   },
   {
    "routeNo": "291",
@@ -4285,12 +4373,14 @@
    "end": "제주버스터미널(종점)",
    "stopCount": 84,
    "topology": "linear",
-   "live": "answered_with_buses",
+   "live": "answered_no_bus",
    "timetable": "available",
    "geometry": "STOP_COORDINATES_ONLY",
-   "tracking": "SUPPORTED",
-   "reasons": [],
-   "evidence": "probe HTTP 200, 3 bus(es), 3 with an in-route stop sequence; 84 stops, 84 with position, topology linear"
+   "tracking": "SUPPORTED_WITH_WARNING",
+   "reasons": [
+    "no bus reported when probed: stop-sequence evidence unchecked"
+   ],
+   "evidence": "probe HTTP 200, 0 bus(es), 0 with an in-route stop sequence; 84 stops, 84 with position, topology linear"
   },
   {
    "routeNo": "291",
@@ -4333,12 +4423,14 @@
    "end": "제주버스터미널(종점)",
    "stopCount": 67,
    "topology": "linear",
-   "live": "answered_with_buses",
+   "live": "answered_no_bus",
    "timetable": "available",
    "geometry": "STOP_COORDINATES_ONLY",
-   "tracking": "SUPPORTED",
-   "reasons": [],
-   "evidence": "probe HTTP 200, 1 bus(es), 1 with an in-route stop sequence; 67 stops, 67 with position, topology linear"
+   "tracking": "SUPPORTED_WITH_WARNING",
+   "reasons": [
+    "no bus reported when probed: stop-sequence evidence unchecked"
+   ],
+   "evidence": "probe HTTP 200, 0 bus(es), 0 with an in-route stop sequence; 67 stops, 67 with position, topology linear"
   },
   {
    "routeNo": "292",
@@ -4363,14 +4455,15 @@
    "end": "한림체육관 후문",
    "stopCount": 87,
    "topology": "linear",
-   "live": "answered_with_buses",
+   "live": "answered_no_bus",
    "timetable": "available",
    "geometry": "STOP_COORDINATES_ONLY",
    "tracking": "SUPPORTED_WITH_WARNING",
    "reasons": [
+    "no bus reported when probed: stop-sequence evidence unchecked",
     "1 virtual stop(s) (가상정류소) in the list"
    ],
-   "evidence": "probe HTTP 200, 1 bus(es), 1 with an in-route stop sequence; 87 stops, 87 with position, topology linear"
+   "evidence": "probe HTTP 200, 0 bus(es), 0 with an in-route stop sequence; 87 stops, 87 with position, topology linear"
   },
   {
    "routeNo": "293",
@@ -4379,12 +4472,14 @@
    "end": "한림체육관 후문",
    "stopCount": 81,
    "topology": "linear",
-   "live": "answered_with_buses",
+   "live": "answered_no_bus",
    "timetable": "available",
    "geometry": "STOP_COORDINATES_ONLY",
-   "tracking": "SUPPORTED",
-   "reasons": [],
-   "evidence": "probe HTTP 200, 1 bus(es), 1 with an in-route stop sequence; 81 stops, 81 with position, topology linear"
+   "tracking": "SUPPORTED_WITH_WARNING",
+   "reasons": [
+    "no bus reported when probed: stop-sequence evidence unchecked"
+   ],
+   "evidence": "probe HTTP 200, 0 bus(es), 0 with an in-route stop sequence; 81 stops, 81 with position, topology linear"
   },
   {
    "routeNo": "293",
@@ -4441,14 +4536,15 @@
    "end": "성산항(종점)",
    "stopCount": 142,
    "topology": "linear",
-   "live": "answered_with_buses",
+   "live": "answered_no_bus",
    "timetable": "available",
    "geometry": "STOP_COORDINATES_ONLY",
    "tracking": "SUPPORTED_WITH_WARNING",
    "reasons": [
+    "no bus reported when probed: stop-sequence evidence unchecked",
     "1 virtual stop(s) (가상정류소) in the list"
    ],
-   "evidence": "probe HTTP 200, 1 bus(es), 1 with an in-route stop sequence; 142 stops, 142 with position, topology linear"
+   "evidence": "probe HTTP 200, 0 bus(es), 0 with an in-route stop sequence; 142 stops, 142 with position, topology linear"
   },
   {
    "routeNo": "295",
@@ -4457,12 +4553,14 @@
    "end": "서귀포버스터미널",
    "stopCount": 144,
    "topology": "linear",
-   "live": "answered_with_buses",
+   "live": "answered_no_bus",
    "timetable": "available",
    "geometry": "STOP_COORDINATES_ONLY",
-   "tracking": "SUPPORTED",
-   "reasons": [],
-   "evidence": "probe HTTP 200, 2 bus(es), 2 with an in-route stop sequence; 144 stops, 144 with position, topology linear"
+   "tracking": "SUPPORTED_WITH_WARNING",
+   "reasons": [
+    "no bus reported when probed: stop-sequence evidence unchecked"
+   ],
+   "evidence": "probe HTTP 200, 0 bus(es), 0 with an in-route stop sequence; 144 stops, 144 with position, topology linear"
   },
   {
    "routeNo": "295",
@@ -4553,15 +4651,16 @@
    "end": "번대동",
    "stopCount": 23,
    "topology": "linear",
-   "live": "answered_with_buses",
+   "live": "answered_no_bus",
    "timetable": "available",
    "geometry": "STOP_COORDINATES_ONLY",
    "tracking": "SUPPORTED_WITH_WARNING",
    "reasons": [
+    "no bus reported when probed: stop-sequence evidence unchecked",
     "1 virtual stop(s) (가상정류소) in the list",
     "same stop list as JEB405130022 under 300: the app numbers them as separate services, and a rider on the other one's bus must choose again"
    ],
-   "evidence": "probe HTTP 200, 2 bus(es), 2 with an in-route stop sequence; 23 stops, 23 with position, topology linear"
+   "evidence": "probe HTTP 200, 0 bus(es), 0 with an in-route stop sequence; 23 stops, 23 with position, topology linear"
   },
   {
    "routeNo": "300",
@@ -4622,14 +4721,15 @@
    "end": "신사동",
    "stopCount": 23,
    "topology": "linear",
-   "live": "answered_with_buses",
+   "live": "answered_no_bus",
    "timetable": "available",
    "geometry": "STOP_COORDINATES_ONLY",
    "tracking": "SUPPORTED_WITH_WARNING",
    "reasons": [
+    "no bus reported when probed: stop-sequence evidence unchecked",
     "same stop list as JEB405130001 under 300: the app numbers them as separate services, and a rider on the other one's bus must choose again"
    ],
-   "evidence": "probe HTTP 200, 2 bus(es), 2 with an in-route stop sequence; 23 stops, 23 with position, topology linear"
+   "evidence": "probe HTTP 200, 0 bus(es), 0 with an in-route stop sequence; 23 stops, 23 with position, topology linear"
   },
   {
    "routeNo": "300",
@@ -4725,15 +4825,16 @@
    "end": "번대동",
    "stopCount": 21,
    "topology": "linear",
-   "live": "answered_with_buses",
+   "live": "answered_no_bus",
    "timetable": "available",
    "geometry": "STOP_COORDINATES_ONLY",
    "tracking": "SUPPORTED_WITH_WARNING",
    "reasons": [
+    "no bus reported when probed: stop-sequence evidence unchecked",
     "1 virtual stop(s) (가상정류소) in the list",
     "same stop list as JEB405130122 under 301: the app numbers them as separate services, and a rider on the other one's bus must choose again"
    ],
-   "evidence": "probe HTTP 200, 2 bus(es), 2 with an in-route stop sequence; 21 stops, 21 with position, topology linear"
+   "evidence": "probe HTTP 200, 0 bus(es), 0 with an in-route stop sequence; 21 stops, 21 with position, topology linear"
   },
   {
    "routeNo": "301",
@@ -4776,14 +4877,15 @@
    "end": "신사동",
    "stopCount": 21,
    "topology": "linear",
-   "live": "answered_with_buses",
+   "live": "answered_no_bus",
    "timetable": "available",
    "geometry": "STOP_COORDINATES_ONLY",
    "tracking": "SUPPORTED_WITH_WARNING",
    "reasons": [
+    "no bus reported when probed: stop-sequence evidence unchecked",
     "same stop list as JEB405130101 under 301: the app numbers them as separate services, and a rider on the other one's bus must choose again"
    ],
-   "evidence": "probe HTTP 200, 2 bus(es), 2 with an in-route stop sequence; 21 stops, 21 with position, topology linear"
+   "evidence": "probe HTTP 200, 0 bus(es), 0 with an in-route stop sequence; 21 stops, 21 with position, topology linear"
   },
   {
    "routeNo": "301",
@@ -4844,12 +4946,14 @@
    "end": "제주대학교",
    "stopCount": 11,
    "topology": "linear",
-   "live": "answered_with_buses",
+   "live": "answered_no_bus",
    "timetable": "source_conflict",
    "geometry": "STOP_COORDINATES_ONLY",
-   "tracking": "SUPPORTED",
-   "reasons": [],
-   "evidence": "probe HTTP 200, 1 bus(es), 1 with an in-route stop sequence; 11 stops, 11 with position, topology linear"
+   "tracking": "SUPPORTED_WITH_WARNING",
+   "reasons": [
+    "no bus reported when probed: stop-sequence evidence unchecked"
+   ],
+   "evidence": "probe HTTP 200, 0 bus(es), 0 with an in-route stop sequence; 11 stops, 11 with position, topology linear"
   },
   {
    "routeNo": "302",
@@ -4858,12 +4962,14 @@
    "end": "제주국제대학교",
    "stopCount": 13,
    "topology": "linear",
-   "live": "answered_with_buses",
+   "live": "answered_no_bus",
    "timetable": "source_conflict",
    "geometry": "STOP_COORDINATES_ONLY",
-   "tracking": "SUPPORTED",
-   "reasons": [],
-   "evidence": "probe HTTP 200, 1 bus(es), 1 with an in-route stop sequence; 13 stops, 13 with position, topology linear"
+   "tracking": "SUPPORTED_WITH_WARNING",
+   "reasons": [
+    "no bus reported when probed: stop-sequence evidence unchecked"
+   ],
+   "evidence": "probe HTTP 200, 0 bus(es), 0 with an in-route stop sequence; 13 stops, 13 with position, topology linear"
   },
   {
    "routeNo": "302",
@@ -4888,12 +4994,14 @@
    "end": "제주국제공항3(용담,시청)",
    "stopCount": 11,
    "topology": "linear",
-   "live": "answered_with_buses",
+   "live": "answered_no_bus",
    "timetable": "source_conflict",
    "geometry": "STOP_COORDINATES_ONLY",
-   "tracking": "SUPPORTED",
-   "reasons": [],
-   "evidence": "probe HTTP 200, 2 bus(es), 2 with an in-route stop sequence; 11 stops, 11 with position, topology linear"
+   "tracking": "SUPPORTED_WITH_WARNING",
+   "reasons": [
+    "no bus reported when probed: stop-sequence evidence unchecked"
+   ],
+   "evidence": "probe HTTP 200, 0 bus(es), 0 with an in-route stop sequence; 11 stops, 11 with position, topology linear"
   },
   {
    "routeNo": "302",
@@ -4966,12 +5074,14 @@
    "end": "신사동",
    "stopCount": 20,
    "topology": "linear",
-   "live": "answered_with_buses",
+   "live": "answered_no_bus",
    "timetable": "available",
    "geometry": "STOP_COORDINATES_ONLY",
-   "tracking": "SUPPORTED",
-   "reasons": [],
-   "evidence": "probe HTTP 200, 2 bus(es), 2 with an in-route stop sequence; 20 stops, 20 with position, topology linear"
+   "tracking": "SUPPORTED_WITH_WARNING",
+   "reasons": [
+    "no bus reported when probed: stop-sequence evidence unchecked"
+   ],
+   "evidence": "probe HTTP 200, 0 bus(es), 0 with an in-route stop sequence; 20 stops, 20 with position, topology linear"
   },
   {
    "routeNo": "303",
@@ -4980,14 +5090,15 @@
    "end": "한라수목원",
    "stopCount": 20,
    "topology": "linear",
-   "live": "answered_with_buses",
+   "live": "answered_no_bus",
    "timetable": "available",
    "geometry": "STOP_COORDINATES_ONLY",
    "tracking": "SUPPORTED_WITH_WARNING",
    "reasons": [
+    "no bus reported when probed: stop-sequence evidence unchecked",
     "1 virtual stop(s) (가상정류소) in the list"
    ],
-   "evidence": "probe HTTP 200, 2 bus(es), 2 with an in-route stop sequence; 20 stops, 20 with position, topology linear"
+   "evidence": "probe HTTP 200, 0 bus(es), 0 with an in-route stop sequence; 20 stops, 20 with position, topology linear"
   },
   {
    "routeNo": "303",
@@ -5028,12 +5139,14 @@
    "end": "신사동",
    "stopCount": 62,
    "topology": "linear",
-   "live": "answered_with_buses",
+   "live": "answered_no_bus",
    "timetable": "available",
    "geometry": "STOP_COORDINATES_ONLY",
-   "tracking": "SUPPORTED",
-   "reasons": [],
-   "evidence": "probe HTTP 200, 2 bus(es), 2 with an in-route stop sequence; 62 stops, 62 with position, topology linear"
+   "tracking": "SUPPORTED_WITH_WARNING",
+   "reasons": [
+    "no bus reported when probed: stop-sequence evidence unchecked"
+   ],
+   "evidence": "probe HTTP 200, 0 bus(es), 0 with an in-route stop sequence; 62 stops, 62 with position, topology linear"
   },
   {
    "routeNo": "311",
@@ -5042,14 +5155,15 @@
    "end": "한라수목원",
    "stopCount": 62,
    "topology": "linear",
-   "live": "answered_with_buses",
+   "live": "answered_no_bus",
    "timetable": "available",
    "geometry": "STOP_COORDINATES_ONLY",
    "tracking": "SUPPORTED_WITH_WARNING",
    "reasons": [
+    "no bus reported when probed: stop-sequence evidence unchecked",
     "1 virtual stop(s) (가상정류소) in the list"
    ],
-   "evidence": "probe HTTP 200, 2 bus(es), 2 with an in-route stop sequence; 62 stops, 62 with position, topology linear"
+   "evidence": "probe HTTP 200, 0 bus(es), 0 with an in-route stop sequence; 62 stops, 62 with position, topology linear"
   },
   {
    "routeNo": "311",
@@ -5140,14 +5254,15 @@
    "end": "한라수목원",
    "stopCount": 63,
    "topology": "linear",
-   "live": "answered_with_buses",
+   "live": "answered_no_bus",
    "timetable": "available",
    "geometry": "STOP_COORDINATES_ONLY",
    "tracking": "SUPPORTED_WITH_WARNING",
    "reasons": [
+    "no bus reported when probed: stop-sequence evidence unchecked",
     "1 virtual stop(s) (가상정류소) in the list"
    ],
-   "evidence": "probe HTTP 200, 1 bus(es), 1 with an in-route stop sequence; 63 stops, 63 with position, topology linear"
+   "evidence": "probe HTTP 200, 0 bus(es), 0 with an in-route stop sequence; 63 stops, 63 with position, topology linear"
   },
   {
    "routeNo": "311",
@@ -5189,12 +5304,14 @@
    "end": "신사동",
    "stopCount": 74,
    "topology": "linear",
-   "live": "answered_with_buses",
+   "live": "answered_no_bus",
    "timetable": "available",
    "geometry": "STOP_COORDINATES_ONLY",
-   "tracking": "SUPPORTED",
-   "reasons": [],
-   "evidence": "probe HTTP 200, 2 bus(es), 2 with an in-route stop sequence; 74 stops, 74 with position, topology linear"
+   "tracking": "SUPPORTED_WITH_WARNING",
+   "reasons": [
+    "no bus reported when probed: stop-sequence evidence unchecked"
+   ],
+   "evidence": "probe HTTP 200, 0 bus(es), 0 with an in-route stop sequence; 74 stops, 74 with position, topology linear"
   },
   {
    "routeNo": "312",
@@ -5203,14 +5320,15 @@
    "end": "한라수목원",
    "stopCount": 75,
    "topology": "linear",
-   "live": "answered_with_buses",
+   "live": "answered_no_bus",
    "timetable": "available",
    "geometry": "STOP_COORDINATES_ONLY",
    "tracking": "SUPPORTED_WITH_WARNING",
    "reasons": [
+    "no bus reported when probed: stop-sequence evidence unchecked",
     "1 virtual stop(s) (가상정류소) in the list"
    ],
-   "evidence": "probe HTTP 200, 2 bus(es), 2 with an in-route stop sequence; 75 stops, 75 with position, topology linear"
+   "evidence": "probe HTTP 200, 0 bus(es), 0 with an in-route stop sequence; 75 stops, 75 with position, topology linear"
   },
   {
    "routeNo": "312",
@@ -5285,12 +5403,14 @@
    "end": "국제여객선터미널(종점)",
    "stopCount": 66,
    "topology": "linear",
-   "live": "answered_with_buses",
+   "live": "answered_no_bus",
    "timetable": "available",
    "geometry": "STOP_COORDINATES_ONLY",
-   "tracking": "SUPPORTED",
-   "reasons": [],
-   "evidence": "probe HTTP 200, 3 bus(es), 3 with an in-route stop sequence; 66 stops, 66 with position, topology linear"
+   "tracking": "SUPPORTED_WITH_WARNING",
+   "reasons": [
+    "no bus reported when probed: stop-sequence evidence unchecked"
+   ],
+   "evidence": "probe HTTP 200, 0 bus(es), 0 with an in-route stop sequence; 66 stops, 66 with position, topology linear"
   },
   {
    "routeNo": "315",
@@ -5299,12 +5419,14 @@
    "end": "수산회차지",
    "stopCount": 70,
    "topology": "linear",
-   "live": "answered_with_buses",
+   "live": "answered_no_bus",
    "timetable": "available",
    "geometry": "STOP_COORDINATES_ONLY",
-   "tracking": "SUPPORTED",
-   "reasons": [],
-   "evidence": "probe HTTP 200, 3 bus(es), 3 with an in-route stop sequence; 70 stops, 70 with position, topology linear"
+   "tracking": "SUPPORTED_WITH_WARNING",
+   "reasons": [
+    "no bus reported when probed: stop-sequence evidence unchecked"
+   ],
+   "evidence": "probe HTTP 200, 0 bus(es), 0 with an in-route stop sequence; 70 stops, 70 with position, topology linear"
   },
   {
    "routeNo": "315",
@@ -5377,12 +5499,14 @@
    "end": "삼양종점",
    "stopCount": 73,
    "topology": "linear",
-   "live": "answered_with_buses",
+   "live": "answered_no_bus",
    "timetable": "available",
    "geometry": "STOP_COORDINATES_ONLY",
-   "tracking": "SUPPORTED",
-   "reasons": [],
-   "evidence": "probe HTTP 200, 2 bus(es), 2 with an in-route stop sequence; 73 stops, 73 with position, topology linear"
+   "tracking": "SUPPORTED_WITH_WARNING",
+   "reasons": [
+    "no bus reported when probed: stop-sequence evidence unchecked"
+   ],
+   "evidence": "probe HTTP 200, 0 bus(es), 0 with an in-route stop sequence; 73 stops, 73 with position, topology linear"
   },
   {
    "routeNo": "316",
@@ -5391,12 +5515,14 @@
    "end": "번대동",
    "stopCount": 72,
    "topology": "linear",
-   "live": "answered_with_buses",
+   "live": "answered_no_bus",
    "timetable": "available",
    "geometry": "STOP_COORDINATES_ONLY",
-   "tracking": "SUPPORTED",
-   "reasons": [],
-   "evidence": "probe HTTP 200, 2 bus(es), 2 with an in-route stop sequence; 72 stops, 72 with position, topology linear"
+   "tracking": "SUPPORTED_WITH_WARNING",
+   "reasons": [
+    "no bus reported when probed: stop-sequence evidence unchecked"
+   ],
+   "evidence": "probe HTTP 200, 0 bus(es), 0 with an in-route stop sequence; 72 stops, 72 with position, topology linear"
   },
   {
    "routeNo": "316",
@@ -5437,12 +5563,14 @@
    "end": "화북휴먼시아정문",
    "stopCount": 67,
    "topology": "linear",
-   "live": "answered_with_buses",
+   "live": "answered_no_bus",
    "timetable": "available",
    "geometry": "STOP_COORDINATES_ONLY",
-   "tracking": "SUPPORTED",
-   "reasons": [],
-   "evidence": "probe HTTP 200, 3 bus(es), 3 with an in-route stop sequence; 67 stops, 67 with position, topology linear"
+   "tracking": "SUPPORTED_WITH_WARNING",
+   "reasons": [
+    "no bus reported when probed: stop-sequence evidence unchecked"
+   ],
+   "evidence": "probe HTTP 200, 0 bus(es), 0 with an in-route stop sequence; 67 stops, 67 with position, topology linear"
   },
   {
    "routeNo": "320",
@@ -5451,12 +5579,14 @@
    "end": "수산회차지",
    "stopCount": 66,
    "topology": "linear",
-   "live": "answered_with_buses",
+   "live": "answered_no_bus",
    "timetable": "available",
    "geometry": "STOP_COORDINATES_ONLY",
-   "tracking": "SUPPORTED",
-   "reasons": [],
-   "evidence": "probe HTTP 200, 3 bus(es), 3 with an in-route stop sequence; 66 stops, 66 with position, topology linear"
+   "tracking": "SUPPORTED_WITH_WARNING",
+   "reasons": [
+    "no bus reported when probed: stop-sequence evidence unchecked"
+   ],
+   "evidence": "probe HTTP 200, 0 bus(es), 0 with an in-route stop sequence; 66 stops, 66 with position, topology linear"
   },
   {
    "routeNo": "320",
@@ -5577,12 +5707,14 @@
    "end": "신사동",
    "stopCount": 74,
    "topology": "linear",
-   "live": "answered_with_buses",
+   "live": "answered_no_bus",
    "timetable": "available",
    "geometry": "STOP_COORDINATES_ONLY",
-   "tracking": "SUPPORTED",
-   "reasons": [],
-   "evidence": "probe HTTP 200, 2 bus(es), 2 with an in-route stop sequence; 74 stops, 74 with position, topology linear"
+   "tracking": "SUPPORTED_WITH_WARNING",
+   "reasons": [
+    "no bus reported when probed: stop-sequence evidence unchecked"
+   ],
+   "evidence": "probe HTTP 200, 0 bus(es), 0 with an in-route stop sequence; 74 stops, 74 with position, topology linear"
   },
   {
    "routeNo": "325",
@@ -5591,14 +5723,15 @@
    "end": "한라수목원",
    "stopCount": 75,
    "topology": "linear",
-   "live": "answered_with_buses",
+   "live": "answered_no_bus",
    "timetable": "available",
    "geometry": "STOP_COORDINATES_ONLY",
    "tracking": "SUPPORTED_WITH_WARNING",
    "reasons": [
+    "no bus reported when probed: stop-sequence evidence unchecked",
     "1 virtual stop(s) (가상정류소) in the list"
    ],
-   "evidence": "probe HTTP 200, 3 bus(es), 3 with an in-route stop sequence; 75 stops, 75 with position, topology linear"
+   "evidence": "probe HTTP 200, 0 bus(es), 0 with an in-route stop sequence; 75 stops, 75 with position, topology linear"
   },
   {
    "routeNo": "325",
@@ -5721,12 +5854,14 @@
    "end": "한라수목원",
    "stopCount": 46,
    "topology": "linear",
-   "live": "answered_with_buses",
+   "live": "answered_no_bus",
    "timetable": "available",
    "geometry": "STOP_COORDINATES_ONLY",
-   "tracking": "SUPPORTED",
-   "reasons": [],
-   "evidence": "probe HTTP 200, 2 bus(es), 2 with an in-route stop sequence; 46 stops, 46 with position, topology linear"
+   "tracking": "SUPPORTED_WITH_WARNING",
+   "reasons": [
+    "no bus reported when probed: stop-sequence evidence unchecked"
+   ],
+   "evidence": "probe HTTP 200, 0 bus(es), 0 with an in-route stop sequence; 46 stops, 46 with position, topology linear"
   },
   {
    "routeNo": "331",
@@ -5735,12 +5870,14 @@
    "end": "삼양3동포구",
    "stopCount": 48,
    "topology": "linear",
-   "live": "answered_with_buses",
+   "live": "answered_no_bus",
    "timetable": "available",
    "geometry": "STOP_COORDINATES_ONLY",
-   "tracking": "SUPPORTED",
-   "reasons": [],
-   "evidence": "probe HTTP 200, 1 bus(es), 1 with an in-route stop sequence; 48 stops, 48 with position, topology linear"
+   "tracking": "SUPPORTED_WITH_WARNING",
+   "reasons": [
+    "no bus reported when probed: stop-sequence evidence unchecked"
+   ],
+   "evidence": "probe HTTP 200, 0 bus(es), 0 with an in-route stop sequence; 48 stops, 48 with position, topology linear"
   },
   {
    "routeNo": "331",
@@ -5797,12 +5934,14 @@
    "end": "삼양종점",
    "stopCount": 44,
    "topology": "linear",
-   "live": "answered_with_buses",
+   "live": "answered_no_bus",
    "timetable": "available",
    "geometry": "STOP_COORDINATES_ONLY",
-   "tracking": "SUPPORTED",
-   "reasons": [],
-   "evidence": "probe HTTP 200, 2 bus(es), 2 with an in-route stop sequence; 44 stops, 44 with position, topology linear"
+   "tracking": "SUPPORTED_WITH_WARNING",
+   "reasons": [
+    "no bus reported when probed: stop-sequence evidence unchecked"
+   ],
+   "evidence": "probe HTTP 200, 0 bus(es), 0 with an in-route stop sequence; 44 stops, 44 with position, topology linear"
   },
   {
    "routeNo": "332",
@@ -5811,12 +5950,14 @@
    "end": "한라수목원",
    "stopCount": 46,
    "topology": "linear",
-   "live": "answered_with_buses",
+   "live": "answered_no_bus",
    "timetable": "available",
    "geometry": "STOP_COORDINATES_ONLY",
-   "tracking": "SUPPORTED",
-   "reasons": [],
-   "evidence": "probe HTTP 200, 1 bus(es), 1 with an in-route stop sequence; 46 stops, 46 with position, topology linear"
+   "tracking": "SUPPORTED_WITH_WARNING",
+   "reasons": [
+    "no bus reported when probed: stop-sequence evidence unchecked"
+   ],
+   "evidence": "probe HTTP 200, 0 bus(es), 0 with an in-route stop sequence; 46 stops, 46 with position, topology linear"
   },
   {
    "routeNo": "332",
@@ -5905,12 +6046,14 @@
    "end": "초낭가름",
    "stopCount": 55,
    "topology": "linear",
-   "live": "answered_with_buses",
+   "live": "answered_no_bus",
    "timetable": "source_conflict",
    "geometry": "STOP_COORDINATES_ONLY",
-   "tracking": "SUPPORTED",
-   "reasons": [],
-   "evidence": "probe HTTP 200, 2 bus(es), 2 with an in-route stop sequence; 55 stops, 55 with position, topology linear"
+   "tracking": "SUPPORTED_WITH_WARNING",
+   "reasons": [
+    "no bus reported when probed: stop-sequence evidence unchecked"
+   ],
+   "evidence": "probe HTTP 200, 0 bus(es), 0 with an in-route stop sequence; 55 stops, 55 with position, topology linear"
   },
   {
    "routeNo": "335",
@@ -6031,12 +6174,14 @@
    "end": "초낭가름",
    "stopCount": 54,
    "topology": "linear",
-   "live": "answered_with_buses",
+   "live": "answered_no_bus",
    "timetable": "source_conflict",
    "geometry": "STOP_COORDINATES_ONLY",
-   "tracking": "SUPPORTED",
-   "reasons": [],
-   "evidence": "probe HTTP 200, 2 bus(es), 2 with an in-route stop sequence; 54 stops, 54 with position, topology linear"
+   "tracking": "SUPPORTED_WITH_WARNING",
+   "reasons": [
+    "no bus reported when probed: stop-sequence evidence unchecked"
+   ],
+   "evidence": "probe HTTP 200, 0 bus(es), 0 with an in-route stop sequence; 54 stops, 54 with position, topology linear"
   },
   {
    "routeNo": "336",
@@ -6045,12 +6190,14 @@
    "end": "제주관광대학(종점)/제주영송학교",
    "stopCount": 56,
    "topology": "linear",
-   "live": "answered_with_buses",
+   "live": "answered_no_bus",
    "timetable": "source_conflict",
    "geometry": "STOP_COORDINATES_ONLY",
-   "tracking": "SUPPORTED",
-   "reasons": [],
-   "evidence": "probe HTTP 200, 1 bus(es), 1 with an in-route stop sequence; 56 stops, 56 with position, topology linear"
+   "tracking": "SUPPORTED_WITH_WARNING",
+   "reasons": [
+    "no bus reported when probed: stop-sequence evidence unchecked"
+   ],
+   "evidence": "probe HTTP 200, 0 bus(es), 0 with an in-route stop sequence; 56 stops, 56 with position, topology linear"
   },
   {
    "routeNo": "336",
@@ -6075,12 +6222,14 @@
    "end": "제주관광대학(종점)/제주영송학교",
    "stopCount": 61,
    "topology": "linear",
-   "live": "answered_with_buses",
+   "live": "answered_no_bus",
    "timetable": "source_conflict",
    "geometry": "STOP_COORDINATES_ONLY",
-   "tracking": "SUPPORTED",
-   "reasons": [],
-   "evidence": "probe HTTP 200, 1 bus(es), 1 with an in-route stop sequence; 61 stops, 61 with position, topology linear"
+   "tracking": "SUPPORTED_WITH_WARNING",
+   "reasons": [
+    "no bus reported when probed: stop-sequence evidence unchecked"
+   ],
+   "evidence": "probe HTTP 200, 0 bus(es), 0 with an in-route stop sequence; 61 stops, 61 with position, topology linear"
   },
   {
    "routeNo": "336",
@@ -6201,12 +6350,14 @@
    "end": "신사동",
    "stopCount": 55,
    "topology": "linear",
-   "live": "answered_with_buses",
+   "live": "answered_no_bus",
    "timetable": "available",
    "geometry": "STOP_COORDINATES_ONLY",
-   "tracking": "SUPPORTED",
-   "reasons": [],
-   "evidence": "probe HTTP 200, 1 bus(es), 1 with an in-route stop sequence; 55 stops, 55 with position, topology linear"
+   "tracking": "SUPPORTED_WITH_WARNING",
+   "reasons": [
+    "no bus reported when probed: stop-sequence evidence unchecked"
+   ],
+   "evidence": "probe HTTP 200, 0 bus(es), 0 with an in-route stop sequence; 55 stops, 55 with position, topology linear"
   },
   {
    "routeNo": "341",
@@ -6215,14 +6366,15 @@
    "end": "제주대학교",
    "stopCount": 55,
    "topology": "linear",
-   "live": "answered_with_buses",
+   "live": "answered_no_bus",
    "timetable": "available",
    "geometry": "STOP_COORDINATES_ONLY",
    "tracking": "SUPPORTED_WITH_WARNING",
    "reasons": [
+    "no bus reported when probed: stop-sequence evidence unchecked",
     "1 virtual stop(s) (가상정류소) in the list"
    ],
-   "evidence": "probe HTTP 200, 2 bus(es), 2 with an in-route stop sequence; 55 stops, 55 with position, topology linear"
+   "evidence": "probe HTTP 200, 0 bus(es), 0 with an in-route stop sequence; 55 stops, 55 with position, topology linear"
   },
   {
    "routeNo": "341",
@@ -6329,12 +6481,14 @@
    "end": "신사동",
    "stopCount": 60,
    "topology": "linear",
-   "live": "answered_with_buses",
+   "live": "answered_no_bus",
    "timetable": "available",
    "geometry": "STOP_COORDINATES_ONLY",
-   "tracking": "SUPPORTED",
-   "reasons": [],
-   "evidence": "probe HTTP 200, 2 bus(es), 2 with an in-route stop sequence; 60 stops, 60 with position, topology linear"
+   "tracking": "SUPPORTED_WITH_WARNING",
+   "reasons": [
+    "no bus reported when probed: stop-sequence evidence unchecked"
+   ],
+   "evidence": "probe HTTP 200, 0 bus(es), 0 with an in-route stop sequence; 60 stops, 60 with position, topology linear"
   },
   {
    "routeNo": "342",
@@ -6343,14 +6497,15 @@
    "end": "제주대학교",
    "stopCount": 60,
    "topology": "linear",
-   "live": "answered_with_buses",
+   "live": "answered_no_bus",
    "timetable": "available",
    "geometry": "STOP_COORDINATES_ONLY",
    "tracking": "SUPPORTED_WITH_WARNING",
    "reasons": [
+    "no bus reported when probed: stop-sequence evidence unchecked",
     "1 virtual stop(s) (가상정류소) in the list"
    ],
-   "evidence": "probe HTTP 200, 2 bus(es), 2 with an in-route stop sequence; 60 stops, 60 with position, topology linear"
+   "evidence": "probe HTTP 200, 0 bus(es), 0 with an in-route stop sequence; 60 stops, 60 with position, topology linear"
   },
   {
    "routeNo": "342",
@@ -6392,12 +6547,14 @@
    "end": "제주대학교",
    "stopCount": 51,
    "topology": "linear",
-   "live": "answered_with_buses",
+   "live": "answered_no_bus",
    "timetable": "available",
    "geometry": "STOP_COORDINATES_ONLY",
-   "tracking": "SUPPORTED",
-   "reasons": [],
-   "evidence": "probe HTTP 200, 2 bus(es), 2 with an in-route stop sequence; 51 stops, 51 with position, topology linear"
+   "tracking": "SUPPORTED_WITH_WARNING",
+   "reasons": [
+    "no bus reported when probed: stop-sequence evidence unchecked"
+   ],
+   "evidence": "probe HTTP 200, 0 bus(es), 0 with an in-route stop sequence; 51 stops, 51 with position, topology linear"
   },
   {
    "routeNo": "346",
@@ -6439,12 +6596,14 @@
    "end": "영주고등학교",
    "stopCount": 82,
    "topology": "linear",
-   "live": "answered_with_buses",
+   "live": "answered_no_bus",
    "timetable": "available",
    "geometry": "STOP_COORDINATES_ONLY",
-   "tracking": "SUPPORTED",
-   "reasons": [],
-   "evidence": "probe HTTP 200, 1 bus(es), 1 with an in-route stop sequence; 82 stops, 82 with position, topology linear"
+   "tracking": "SUPPORTED_WITH_WARNING",
+   "reasons": [
+    "no bus reported when probed: stop-sequence evidence unchecked"
+   ],
+   "evidence": "probe HTTP 200, 0 bus(es), 0 with an in-route stop sequence; 82 stops, 82 with position, topology linear"
   },
   {
    "routeNo": "346",
@@ -6698,12 +6857,14 @@
    "end": "제주대학교",
    "stopCount": 75,
    "topology": "linear",
-   "live": "answered_with_buses",
+   "live": "answered_no_bus",
    "timetable": "available",
    "geometry": "STOP_COORDINATES_ONLY",
-   "tracking": "SUPPORTED",
-   "reasons": [],
-   "evidence": "probe HTTP 200, 1 bus(es), 1 with an in-route stop sequence; 75 stops, 75 with position, topology linear"
+   "tracking": "SUPPORTED_WITH_WARNING",
+   "reasons": [
+    "no bus reported when probed: stop-sequence evidence unchecked"
+   ],
+   "evidence": "probe HTTP 200, 0 bus(es), 0 with an in-route stop sequence; 75 stops, 75 with position, topology linear"
   },
   {
    "routeNo": "346",
@@ -6860,12 +7021,14 @@
    "end": "시각장애인복지관",
    "stopCount": 63,
    "topology": "linear",
-   "live": "answered_with_buses",
+   "live": "answered_no_bus",
    "timetable": "available",
    "geometry": "STOP_COORDINATES_ONLY",
-   "tracking": "SUPPORTED",
-   "reasons": [],
-   "evidence": "probe HTTP 200, 2 bus(es), 2 with an in-route stop sequence; 63 stops, 63 with position, topology linear"
+   "tracking": "SUPPORTED_WITH_WARNING",
+   "reasons": [
+    "no bus reported when probed: stop-sequence evidence unchecked"
+   ],
+   "evidence": "probe HTTP 200, 0 bus(es), 0 with an in-route stop sequence; 63 stops, 63 with position, topology linear"
   },
   {
    "routeNo": "347",
@@ -6956,12 +7119,14 @@
    "end": "초낭가름",
    "stopCount": 49,
    "topology": "linear",
-   "live": "answered_with_buses",
+   "live": "answered_no_bus",
    "timetable": "available",
    "geometry": "STOP_COORDINATES_ONLY",
-   "tracking": "SUPPORTED",
-   "reasons": [],
-   "evidence": "probe HTTP 200, 2 bus(es), 2 with an in-route stop sequence; 49 stops, 49 with position, topology linear"
+   "tracking": "SUPPORTED_WITH_WARNING",
+   "reasons": [
+    "no bus reported when probed: stop-sequence evidence unchecked"
+   ],
+   "evidence": "probe HTTP 200, 0 bus(es), 0 with an in-route stop sequence; 49 stops, 49 with position, topology linear"
   },
   {
    "routeNo": "351",
@@ -6970,12 +7135,14 @@
    "end": "제주대학교",
    "stopCount": 50,
    "topology": "linear",
-   "live": "answered_with_buses",
+   "live": "answered_no_bus",
    "timetable": "available",
    "geometry": "STOP_COORDINATES_ONLY",
-   "tracking": "SUPPORTED",
-   "reasons": [],
-   "evidence": "probe HTTP 200, 2 bus(es), 2 with an in-route stop sequence; 50 stops, 50 with position, topology linear"
+   "tracking": "SUPPORTED_WITH_WARNING",
+   "reasons": [
+    "no bus reported when probed: stop-sequence evidence unchecked"
+   ],
+   "evidence": "probe HTTP 200, 0 bus(es), 0 with an in-route stop sequence; 50 stops, 50 with position, topology linear"
   },
   {
    "routeNo": "351",
@@ -7000,12 +7167,14 @@
    "end": "제주대학교",
    "stopCount": 55,
    "topology": "linear",
-   "live": "answered_with_buses",
+   "live": "answered_no_bus",
    "timetable": "available",
    "geometry": "STOP_COORDINATES_ONLY",
-   "tracking": "SUPPORTED",
-   "reasons": [],
-   "evidence": "probe HTTP 200, 1 bus(es), 1 with an in-route stop sequence; 55 stops, 55 with position, topology linear"
+   "tracking": "SUPPORTED_WITH_WARNING",
+   "reasons": [
+    "no bus reported when probed: stop-sequence evidence unchecked"
+   ],
+   "evidence": "probe HTTP 200, 0 bus(es), 0 with an in-route stop sequence; 55 stops, 55 with position, topology linear"
   },
   {
    "routeNo": "351",
@@ -7062,14 +7231,15 @@
    "end": "제주대학교",
    "stopCount": 64,
    "topology": "linear",
-   "live": "answered_with_buses",
+   "live": "answered_no_bus",
    "timetable": "available",
    "geometry": "STOP_COORDINATES_ONLY",
    "tracking": "SUPPORTED_WITH_WARNING",
    "reasons": [
+    "no bus reported when probed: stop-sequence evidence unchecked",
     "same stop list as JEB405135523 under 355: the app numbers them as separate services, and a rider on the other one's bus must choose again"
    ],
-   "evidence": "probe HTTP 200, 3 bus(es), 3 with an in-route stop sequence; 64 stops, 64 with position, topology linear"
+   "evidence": "probe HTTP 200, 0 bus(es), 0 with an in-route stop sequence; 64 stops, 64 with position, topology linear"
   },
   {
    "routeNo": "355",
@@ -7078,12 +7248,14 @@
    "end": "수산회차지",
    "stopCount": 65,
    "topology": "linear",
-   "live": "answered_with_buses",
+   "live": "answered_no_bus",
    "timetable": "available",
    "geometry": "STOP_COORDINATES_ONLY",
-   "tracking": "SUPPORTED",
-   "reasons": [],
-   "evidence": "probe HTTP 200, 2 bus(es), 2 with an in-route stop sequence; 65 stops, 65 with position, topology linear"
+   "tracking": "SUPPORTED_WITH_WARNING",
+   "reasons": [
+    "no bus reported when probed: stop-sequence evidence unchecked"
+   ],
+   "evidence": "probe HTTP 200, 0 bus(es), 0 with an in-route stop sequence; 65 stops, 65 with position, topology linear"
   },
   {
    "routeNo": "355",
@@ -7173,12 +7345,14 @@
    "end": "제주대학교",
    "stopCount": 61,
    "topology": "linear",
-   "live": "answered_with_buses",
+   "live": "answered_no_bus",
    "timetable": "available",
    "geometry": "STOP_COORDINATES_ONLY",
-   "tracking": "SUPPORTED",
-   "reasons": [],
-   "evidence": "probe HTTP 200, 2 bus(es), 2 with an in-route stop sequence; 61 stops, 61 with position, topology linear"
+   "tracking": "SUPPORTED_WITH_WARNING",
+   "reasons": [
+    "no bus reported when probed: stop-sequence evidence unchecked"
+   ],
+   "evidence": "probe HTTP 200, 0 bus(es), 0 with an in-route stop sequence; 61 stops, 61 with position, topology linear"
   },
   {
    "routeNo": "356",
@@ -7187,12 +7361,14 @@
    "end": "수산회차지",
    "stopCount": 65,
    "topology": "linear",
-   "live": "answered_with_buses",
+   "live": "answered_no_bus",
    "timetable": "available",
    "geometry": "STOP_COORDINATES_ONLY",
-   "tracking": "SUPPORTED",
-   "reasons": [],
-   "evidence": "probe HTTP 200, 2 bus(es), 2 with an in-route stop sequence; 65 stops, 65 with position, topology linear"
+   "tracking": "SUPPORTED_WITH_WARNING",
+   "reasons": [
+    "no bus reported when probed: stop-sequence evidence unchecked"
+   ],
+   "evidence": "probe HTTP 200, 0 bus(es), 0 with an in-route stop sequence; 65 stops, 65 with position, topology linear"
   },
   {
    "routeNo": "356",
@@ -7345,12 +7521,14 @@
    "end": "제주대학교",
    "stopCount": 40,
    "topology": "linear",
-   "live": "answered_with_buses",
+   "live": "answered_no_bus",
    "timetable": "available",
    "geometry": "STOP_COORDINATES_ONLY",
-   "tracking": "SUPPORTED",
-   "reasons": [],
-   "evidence": "probe HTTP 200, 4 bus(es), 4 with an in-route stop sequence; 40 stops, 40 with position, topology linear"
+   "tracking": "SUPPORTED_WITH_WARNING",
+   "reasons": [
+    "no bus reported when probed: stop-sequence evidence unchecked"
+   ],
+   "evidence": "probe HTTP 200, 0 bus(es), 0 with an in-route stop sequence; 40 stops, 40 with position, topology linear"
   },
   {
    "routeNo": "360",
@@ -7359,12 +7537,14 @@
    "end": "부영아파트",
    "stopCount": 37,
    "topology": "linear",
-   "live": "answered_with_buses",
+   "live": "answered_no_bus",
    "timetable": "available",
    "geometry": "STOP_COORDINATES_ONLY",
-   "tracking": "SUPPORTED",
-   "reasons": [],
-   "evidence": "probe HTTP 200, 3 bus(es), 3 with an in-route stop sequence; 37 stops, 37 with position, topology linear"
+   "tracking": "SUPPORTED_WITH_WARNING",
+   "reasons": [
+    "no bus reported when probed: stop-sequence evidence unchecked"
+   ],
+   "evidence": "probe HTTP 200, 0 bus(es), 0 with an in-route stop sequence; 37 stops, 37 with position, topology linear"
   },
   {
    "routeNo": "360",
@@ -7551,12 +7731,14 @@
    "end": "제주한라대학교(종점)",
    "stopCount": 43,
    "topology": "linear",
-   "live": "answered_with_buses",
+   "live": "answered_no_bus",
    "timetable": "available",
    "geometry": "STOP_COORDINATES_ONLY",
-   "tracking": "SUPPORTED",
-   "reasons": [],
-   "evidence": "probe HTTP 200, 4 bus(es), 4 with an in-route stop sequence; 43 stops, 43 with position, topology linear"
+   "tracking": "SUPPORTED_WITH_WARNING",
+   "reasons": [
+    "no bus reported when probed: stop-sequence evidence unchecked"
+   ],
+   "evidence": "probe HTTP 200, 0 bus(es), 0 with an in-route stop sequence; 43 stops, 43 with position, topology linear"
   },
   {
    "routeNo": "365",
@@ -7565,12 +7747,14 @@
    "end": "제주대학교",
    "stopCount": 41,
    "topology": "linear",
-   "live": "answered_with_buses",
+   "live": "answered_no_bus",
    "timetable": "available",
    "geometry": "STOP_COORDINATES_ONLY",
-   "tracking": "SUPPORTED",
-   "reasons": [],
-   "evidence": "probe HTTP 200, 4 bus(es), 4 with an in-route stop sequence; 41 stops, 41 with position, topology linear"
+   "tracking": "SUPPORTED_WITH_WARNING",
+   "reasons": [
+    "no bus reported when probed: stop-sequence evidence unchecked"
+   ],
+   "evidence": "probe HTTP 200, 0 bus(es), 0 with an in-route stop sequence; 41 stops, 41 with position, topology linear"
   },
   {
    "routeNo": "365",
@@ -7691,12 +7875,14 @@
    "end": "제주대학교병원 정문",
    "stopCount": 62,
    "topology": "linear",
-   "live": "answered_with_buses",
+   "live": "answered_no_bus",
    "timetable": "available",
    "geometry": "STOP_COORDINATES_ONLY",
-   "tracking": "SUPPORTED",
-   "reasons": [],
-   "evidence": "probe HTTP 200, 2 bus(es), 2 with an in-route stop sequence; 62 stops, 62 with position, topology linear"
+   "tracking": "SUPPORTED_WITH_WARNING",
+   "reasons": [
+    "no bus reported when probed: stop-sequence evidence unchecked"
+   ],
+   "evidence": "probe HTTP 200, 0 bus(es), 0 with an in-route stop sequence; 62 stops, 62 with position, topology linear"
   },
   {
    "routeNo": "370",
@@ -7754,12 +7940,14 @@
    "end": "신사동",
    "stopCount": 54,
    "topology": "linear",
-   "live": "answered_with_buses",
+   "live": "answered_no_bus",
    "timetable": "available",
    "geometry": "STOP_COORDINATES_ONLY",
-   "tracking": "SUPPORTED",
-   "reasons": [],
-   "evidence": "probe HTTP 200, 2 bus(es), 2 with an in-route stop sequence; 54 stops, 54 with position, topology linear"
+   "tracking": "SUPPORTED_WITH_WARNING",
+   "reasons": [
+    "no bus reported when probed: stop-sequence evidence unchecked"
+   ],
+   "evidence": "probe HTTP 200, 0 bus(es), 0 with an in-route stop sequence; 54 stops, 54 with position, topology linear"
   },
   {
    "routeNo": "411",
@@ -7768,12 +7956,14 @@
    "end": "국제여객선터미널(종점)",
    "stopCount": 79,
    "topology": "linear",
-   "live": "answered_with_buses",
+   "live": "answered_no_bus",
    "timetable": "available",
    "geometry": "STOP_COORDINATES_ONLY",
-   "tracking": "SUPPORTED",
-   "reasons": [],
-   "evidence": "probe HTTP 200, 3 bus(es), 3 with an in-route stop sequence; 79 stops, 79 with position, topology linear"
+   "tracking": "SUPPORTED_WITH_WARNING",
+   "reasons": [
+    "no bus reported when probed: stop-sequence evidence unchecked"
+   ],
+   "evidence": "probe HTTP 200, 0 bus(es), 0 with an in-route stop sequence; 79 stops, 79 with position, topology linear"
   },
   {
    "routeNo": "411",
@@ -7814,12 +8004,14 @@
    "end": "국제여객선터미널(종점)",
    "stopCount": 80,
    "topology": "linear",
-   "live": "answered_with_buses",
+   "live": "answered_no_bus",
    "timetable": "available",
    "geometry": "STOP_COORDINATES_ONLY",
-   "tracking": "SUPPORTED",
-   "reasons": [],
-   "evidence": "probe HTTP 200, 3 bus(es), 3 with an in-route stop sequence; 80 stops, 80 with position, topology linear"
+   "tracking": "SUPPORTED_WITH_WARNING",
+   "reasons": [
+    "no bus reported when probed: stop-sequence evidence unchecked"
+   ],
+   "evidence": "probe HTTP 200, 0 bus(es), 0 with an in-route stop sequence; 80 stops, 80 with position, topology linear"
   },
   {
    "routeNo": "412",
@@ -7876,12 +8068,14 @@
    "end": "국제여객선터미널(종점)",
    "stopCount": 48,
    "topology": "linear",
-   "live": "answered_with_buses",
+   "live": "answered_no_bus",
    "timetable": "available",
    "geometry": "STOP_COORDINATES_ONLY",
-   "tracking": "SUPPORTED",
-   "reasons": [],
-   "evidence": "probe HTTP 200, 3 bus(es), 3 with an in-route stop sequence; 48 stops, 48 with position, topology linear"
+   "tracking": "SUPPORTED_WITH_WARNING",
+   "reasons": [
+    "no bus reported when probed: stop-sequence evidence unchecked"
+   ],
+   "evidence": "probe HTTP 200, 0 bus(es), 0 with an in-route stop sequence; 48 stops, 48 with position, topology linear"
   },
   {
    "routeNo": "415",
@@ -7890,12 +8084,14 @@
    "end": "한라수목원",
    "stopCount": 49,
    "topology": "linear",
-   "live": "answered_with_buses",
+   "live": "answered_no_bus",
    "timetable": "available",
    "geometry": "STOP_COORDINATES_ONLY",
-   "tracking": "SUPPORTED",
-   "reasons": [],
-   "evidence": "probe HTTP 200, 3 bus(es), 3 with an in-route stop sequence; 49 stops, 49 with position, topology linear"
+   "tracking": "SUPPORTED_WITH_WARNING",
+   "reasons": [
+    "no bus reported when probed: stop-sequence evidence unchecked"
+   ],
+   "evidence": "probe HTTP 200, 0 bus(es), 0 with an in-route stop sequence; 49 stops, 49 with position, topology linear"
   },
   {
    "routeNo": "415",
@@ -7920,12 +8116,14 @@
    "end": "제주대학교",
    "stopCount": 71,
    "topology": "linear",
-   "live": "answered_with_buses",
+   "live": "answered_no_bus",
    "timetable": "available",
    "geometry": "STOP_COORDINATES_ONLY",
-   "tracking": "SUPPORTED",
-   "reasons": [],
-   "evidence": "probe HTTP 200, 1 bus(es), 1 with an in-route stop sequence; 71 stops, 71 with position, topology linear"
+   "tracking": "SUPPORTED_WITH_WARNING",
+   "reasons": [
+    "no bus reported when probed: stop-sequence evidence unchecked"
+   ],
+   "evidence": "probe HTTP 200, 0 bus(es), 0 with an in-route stop sequence; 71 stops, 71 with position, topology linear"
   },
   {
    "routeNo": "421",
@@ -7951,12 +8149,14 @@
    "end": "제주대학교",
    "stopCount": 65,
    "topology": "linear",
-   "live": "answered_with_buses",
+   "live": "answered_no_bus",
    "timetable": "available",
    "geometry": "STOP_COORDINATES_ONLY",
-   "tracking": "SUPPORTED",
-   "reasons": [],
-   "evidence": "probe HTTP 200, 2 bus(es), 2 with an in-route stop sequence; 65 stops, 65 with position, topology linear"
+   "tracking": "SUPPORTED_WITH_WARNING",
+   "reasons": [
+    "no bus reported when probed: stop-sequence evidence unchecked"
+   ],
+   "evidence": "probe HTTP 200, 0 bus(es), 0 with an in-route stop sequence; 65 stops, 65 with position, topology linear"
   },
   {
    "routeNo": "422",
@@ -8013,12 +8213,14 @@
    "end": "국제여객선터미널(종점)",
    "stopCount": 28,
    "topology": "linear",
-   "live": "answered_with_buses",
+   "live": "answered_no_bus",
    "timetable": "available",
    "geometry": "STOP_COORDINATES_ONLY",
-   "tracking": "SUPPORTED",
-   "reasons": [],
-   "evidence": "probe HTTP 200, 1 bus(es), 1 with an in-route stop sequence; 28 stops, 28 with position, topology linear"
+   "tracking": "SUPPORTED_WITH_WARNING",
+   "reasons": [
+    "no bus reported when probed: stop-sequence evidence unchecked"
+   ],
+   "evidence": "probe HTTP 200, 0 bus(es), 0 with an in-route stop sequence; 28 stops, 28 with position, topology linear"
   },
   {
    "routeNo": "425",
@@ -8027,12 +8229,14 @@
    "end": "국제대학교 환승주차장",
    "stopCount": 28,
    "topology": "linear",
-   "live": "answered_with_buses",
+   "live": "answered_no_bus",
    "timetable": "available",
    "geometry": "STOP_COORDINATES_ONLY",
-   "tracking": "SUPPORTED",
-   "reasons": [],
-   "evidence": "probe HTTP 200, 1 bus(es), 1 with an in-route stop sequence; 28 stops, 28 with position, topology linear"
+   "tracking": "SUPPORTED_WITH_WARNING",
+   "reasons": [
+    "no bus reported when probed: stop-sequence evidence unchecked"
+   ],
+   "evidence": "probe HTTP 200, 0 bus(es), 0 with an in-route stop sequence; 28 stops, 28 with position, topology linear"
   },
   {
    "routeNo": "426",
@@ -8041,12 +8245,14 @@
    "end": "국제여객선터미널(종점)",
    "stopCount": 35,
    "topology": "linear",
-   "live": "answered_with_buses",
+   "live": "answered_no_bus",
    "timetable": "available",
    "geometry": "STOP_COORDINATES_ONLY",
-   "tracking": "SUPPORTED",
-   "reasons": [],
-   "evidence": "probe HTTP 200, 2 bus(es), 2 with an in-route stop sequence; 35 stops, 35 with position, topology linear"
+   "tracking": "SUPPORTED_WITH_WARNING",
+   "reasons": [
+    "no bus reported when probed: stop-sequence evidence unchecked"
+   ],
+   "evidence": "probe HTTP 200, 0 bus(es), 0 with an in-route stop sequence; 35 stops, 35 with position, topology linear"
   },
   {
    "routeNo": "426",
@@ -8055,12 +8261,14 @@
    "end": "국제대학교 환승주차장",
    "stopCount": 38,
    "topology": "linear",
-   "live": "answered_with_buses",
+   "live": "answered_no_bus",
    "timetable": "available",
    "geometry": "STOP_COORDINATES_ONLY",
-   "tracking": "SUPPORTED",
-   "reasons": [],
-   "evidence": "probe HTTP 200, 1 bus(es), 1 with an in-route stop sequence; 38 stops, 38 with position, topology linear"
+   "tracking": "SUPPORTED_WITH_WARNING",
+   "reasons": [
+    "no bus reported when probed: stop-sequence evidence unchecked"
+   ],
+   "evidence": "probe HTTP 200, 0 bus(es), 0 with an in-route stop sequence; 38 stops, 38 with position, topology linear"
   },
   {
    "routeNo": "431",
@@ -8069,14 +8277,14 @@
    "end": "제주버스터미널(노형로 방향)",
    "stopCount": 43,
    "topology": "loop",
-   "live": "answered_with_buses",
+   "live": "answered_no_bus",
    "timetable": "available",
    "geometry": "STOP_COORDINATES_ONLY",
-   "tracking": "UNSUPPORTED",
+   "tracking": "SUPPORTED_WITH_WARNING",
    "reasons": [
-    "1 of 2 reporting buses had no stop sequence inside the route"
+    "no bus reported when probed: stop-sequence evidence unchecked"
    ],
-   "evidence": "probe HTTP 200, 2 bus(es), 1 with an in-route stop sequence; 43 stops, 43 with position, topology loop"
+   "evidence": "probe HTTP 200, 0 bus(es), 0 with an in-route stop sequence; 43 stops, 43 with position, topology loop"
   },
   {
    "routeNo": "432",
@@ -8085,12 +8293,14 @@
    "end": "제주버스터미널(종점)",
    "stopCount": 41,
    "topology": "linear",
-   "live": "answered_with_buses",
+   "live": "answered_no_bus",
    "timetable": "available",
    "geometry": "STOP_COORDINATES_ONLY",
-   "tracking": "SUPPORTED",
-   "reasons": [],
-   "evidence": "probe HTTP 200, 2 bus(es), 2 with an in-route stop sequence; 41 stops, 41 with position, topology linear"
+   "tracking": "SUPPORTED_WITH_WARNING",
+   "reasons": [
+    "no bus reported when probed: stop-sequence evidence unchecked"
+   ],
+   "evidence": "probe HTTP 200, 0 bus(es), 0 with an in-route stop sequence; 41 stops, 41 with position, topology linear"
   },
   {
    "routeNo": "432",
@@ -8115,14 +8325,15 @@
    "end": "한라도서관(종점)",
    "stopCount": 66,
    "topology": "repeating",
-   "live": "answered_with_buses",
+   "live": "answered_no_bus",
    "timetable": "available",
    "geometry": "STOP_COORDINATES_ONLY",
    "tracking": "SUPPORTED_WITH_WARNING",
    "reasons": [
+    "no bus reported when probed: stop-sequence evidence unchecked",
     "the stop list revisits stops: boarding and destination must be chosen by order"
    ],
-   "evidence": "probe HTTP 200, 1 bus(es), 1 with an in-route stop sequence; 66 stops, 66 with position, topology repeating"
+   "evidence": "probe HTTP 200, 0 bus(es), 0 with an in-route stop sequence; 66 stops, 66 with position, topology repeating"
   },
   {
    "routeNo": "434",
@@ -8181,14 +8392,15 @@
    "end": "한라도서관(종점)",
    "stopCount": 67,
    "topology": "repeating",
-   "live": "answered_with_buses",
+   "live": "answered_no_bus",
    "timetable": "available",
    "geometry": "STOP_COORDINATES_ONLY",
    "tracking": "SUPPORTED_WITH_WARNING",
    "reasons": [
+    "no bus reported when probed: stop-sequence evidence unchecked",
     "the stop list revisits stops: boarding and destination must be chosen by order"
    ],
-   "evidence": "probe HTTP 200, 1 bus(es), 1 with an in-route stop sequence; 67 stops, 67 with position, topology repeating"
+   "evidence": "probe HTTP 200, 0 bus(es), 0 with an in-route stop sequence; 67 stops, 67 with position, topology repeating"
   },
   {
    "routeNo": "435",
@@ -8247,12 +8459,14 @@
    "end": "한라도서관(종점)",
    "stopCount": 54,
    "topology": "linear",
-   "live": "answered_with_buses",
+   "live": "answered_no_bus",
    "timetable": "available",
    "geometry": "STOP_COORDINATES_ONLY",
-   "tracking": "SUPPORTED",
-   "reasons": [],
-   "evidence": "probe HTTP 200, 1 bus(es), 1 with an in-route stop sequence; 54 stops, 54 with position, topology linear"
+   "tracking": "SUPPORTED_WITH_WARNING",
+   "reasons": [
+    "no bus reported when probed: stop-sequence evidence unchecked"
+   ],
+   "evidence": "probe HTTP 200, 0 bus(es), 0 with an in-route stop sequence; 54 stops, 54 with position, topology linear"
   },
   {
    "routeNo": "437",
@@ -8261,12 +8475,14 @@
    "end": "한라도서관(종점)",
    "stopCount": 55,
    "topology": "linear",
-   "live": "answered_with_buses",
+   "live": "answered_no_bus",
    "timetable": "available",
    "geometry": "STOP_COORDINATES_ONLY",
-   "tracking": "SUPPORTED",
-   "reasons": [],
-   "evidence": "probe HTTP 200, 2 bus(es), 2 with an in-route stop sequence; 55 stops, 55 with position, topology linear"
+   "tracking": "SUPPORTED_WITH_WARNING",
+   "reasons": [
+    "no bus reported when probed: stop-sequence evidence unchecked"
+   ],
+   "evidence": "probe HTTP 200, 0 bus(es), 0 with an in-route stop sequence; 55 stops, 55 with position, topology linear"
   },
   {
    "routeNo": "440",
@@ -8307,12 +8523,14 @@
    "end": "시각장애인복지관",
    "stopCount": 57,
    "topology": "linear",
-   "live": "answered_with_buses",
+   "live": "answered_no_bus",
    "timetable": "available",
    "geometry": "STOP_COORDINATES_ONLY",
-   "tracking": "SUPPORTED",
-   "reasons": [],
-   "evidence": "probe HTTP 200, 1 bus(es), 1 with an in-route stop sequence; 57 stops, 57 with position, topology linear"
+   "tracking": "SUPPORTED_WITH_WARNING",
+   "reasons": [
+    "no bus reported when probed: stop-sequence evidence unchecked"
+   ],
+   "evidence": "probe HTTP 200, 0 bus(es), 0 with an in-route stop sequence; 57 stops, 57 with position, topology linear"
   },
   {
    "routeNo": "440",
@@ -8321,12 +8539,14 @@
    "end": "한라수목원",
    "stopCount": 59,
    "topology": "linear",
-   "live": "answered_with_buses",
+   "live": "answered_no_bus",
    "timetable": "available",
    "geometry": "STOP_COORDINATES_ONLY",
-   "tracking": "SUPPORTED",
-   "reasons": [],
-   "evidence": "probe HTTP 200, 1 bus(es), 1 with an in-route stop sequence; 59 stops, 59 with position, topology linear"
+   "tracking": "SUPPORTED_WITH_WARNING",
+   "reasons": [
+    "no bus reported when probed: stop-sequence evidence unchecked"
+   ],
+   "evidence": "probe HTTP 200, 0 bus(es), 0 with an in-route stop sequence; 59 stops, 59 with position, topology linear"
   },
   {
    "routeNo": "441",
@@ -8433,14 +8653,15 @@
    "end": "별빛누리공원/난타공연장",
    "stopCount": 62,
    "topology": "repeating",
-   "live": "answered_with_buses",
+   "live": "answered_no_bus",
    "timetable": "available",
    "geometry": "STOP_COORDINATES_ONLY",
    "tracking": "SUPPORTED_WITH_WARNING",
    "reasons": [
+    "no bus reported when probed: stop-sequence evidence unchecked",
     "the stop list revisits stops: boarding and destination must be chosen by order"
    ],
-   "evidence": "probe HTTP 200, 2 bus(es), 2 with an in-route stop sequence; 62 stops, 62 with position, topology repeating"
+   "evidence": "probe HTTP 200, 0 bus(es), 0 with an in-route stop sequence; 62 stops, 62 with position, topology repeating"
   },
   {
    "routeNo": "442",
@@ -8531,14 +8752,15 @@
    "end": "별빛누리공원/난타공연장",
    "stopCount": 63,
    "topology": "repeating",
-   "live": "answered_with_buses",
+   "live": "answered_no_bus",
    "timetable": "available",
    "geometry": "STOP_COORDINATES_ONLY",
    "tracking": "SUPPORTED_WITH_WARNING",
    "reasons": [
+    "no bus reported when probed: stop-sequence evidence unchecked",
     "the stop list revisits stops: boarding and destination must be chosen by order"
    ],
-   "evidence": "probe HTTP 200, 1 bus(es), 1 with an in-route stop sequence; 63 stops, 63 with position, topology repeating"
+   "evidence": "probe HTTP 200, 0 bus(es), 0 with an in-route stop sequence; 63 stops, 63 with position, topology repeating"
   },
   {
    "routeNo": "444",
@@ -8547,12 +8769,14 @@
    "end": "도평마을입구",
    "stopCount": 70,
    "topology": "linear",
-   "live": "answered_with_buses",
+   "live": "answered_no_bus",
    "timetable": "available",
    "geometry": "STOP_COORDINATES_ONLY",
-   "tracking": "SUPPORTED",
-   "reasons": [],
-   "evidence": "probe HTTP 200, 1 bus(es), 1 with an in-route stop sequence; 70 stops, 70 with position, topology linear"
+   "tracking": "SUPPORTED_WITH_WARNING",
+   "reasons": [
+    "no bus reported when probed: stop-sequence evidence unchecked"
+   ],
+   "evidence": "probe HTTP 200, 0 bus(es), 0 with an in-route stop sequence; 70 stops, 70 with position, topology linear"
   },
   {
    "routeNo": "444",
@@ -8561,12 +8785,14 @@
    "end": "도평마을입구",
    "stopCount": 71,
    "topology": "linear",
-   "live": "answered_with_buses",
+   "live": "answered_no_bus",
    "timetable": "available",
    "geometry": "STOP_COORDINATES_ONLY",
-   "tracking": "SUPPORTED",
-   "reasons": [],
-   "evidence": "probe HTTP 200, 1 bus(es), 1 with an in-route stop sequence; 71 stops, 71 with position, topology linear"
+   "tracking": "SUPPORTED_WITH_WARNING",
+   "reasons": [
+    "no bus reported when probed: stop-sequence evidence unchecked"
+   ],
+   "evidence": "probe HTTP 200, 0 bus(es), 0 with an in-route stop sequence; 71 stops, 71 with position, topology linear"
   },
   {
    "routeNo": "444",
@@ -8591,12 +8817,14 @@
    "end": "도평마을입구",
    "stopCount": 71,
    "topology": "linear",
-   "live": "answered_with_buses",
+   "live": "answered_no_bus",
    "timetable": "available",
    "geometry": "STOP_COORDINATES_ONLY",
-   "tracking": "SUPPORTED",
-   "reasons": [],
-   "evidence": "probe HTTP 200, 2 bus(es), 2 with an in-route stop sequence; 71 stops, 71 with position, topology linear"
+   "tracking": "SUPPORTED_WITH_WARNING",
+   "reasons": [
+    "no bus reported when probed: stop-sequence evidence unchecked"
+   ],
+   "evidence": "probe HTTP 200, 0 bus(es), 0 with an in-route stop sequence; 71 stops, 71 with position, topology linear"
   },
   {
    "routeNo": "445",
@@ -8637,12 +8865,14 @@
    "end": "제주대학교",
    "stopCount": 62,
    "topology": "linear",
-   "live": "answered_with_buses",
+   "live": "answered_no_bus",
    "timetable": "available",
    "geometry": "STOP_COORDINATES_ONLY",
-   "tracking": "SUPPORTED",
-   "reasons": [],
-   "evidence": "probe HTTP 200, 1 bus(es), 1 with an in-route stop sequence; 62 stops, 62 with position, topology linear"
+   "tracking": "SUPPORTED_WITH_WARNING",
+   "reasons": [
+    "no bus reported when probed: stop-sequence evidence unchecked"
+   ],
+   "evidence": "probe HTTP 200, 0 bus(es), 0 with an in-route stop sequence; 62 stops, 62 with position, topology linear"
   },
   {
    "routeNo": "446",
@@ -8683,12 +8913,14 @@
    "end": "도평마을입구",
    "stopCount": 63,
    "topology": "linear",
-   "live": "answered_with_buses",
+   "live": "answered_no_bus",
    "timetable": "available",
    "geometry": "STOP_COORDINATES_ONLY",
-   "tracking": "SUPPORTED",
-   "reasons": [],
-   "evidence": "probe HTTP 200, 1 bus(es), 1 with an in-route stop sequence; 63 stops, 63 with position, topology linear"
+   "tracking": "SUPPORTED_WITH_WARNING",
+   "reasons": [
+    "no bus reported when probed: stop-sequence evidence unchecked"
+   ],
+   "evidence": "probe HTTP 200, 0 bus(es), 0 with an in-route stop sequence; 63 stops, 63 with position, topology linear"
   },
   {
    "routeNo": "446",
@@ -8745,12 +8977,14 @@
    "end": "제주대학교",
    "stopCount": 54,
    "topology": "linear",
-   "live": "answered_with_buses",
+   "live": "answered_no_bus",
    "timetable": "available",
    "geometry": "STOP_COORDINATES_ONLY",
-   "tracking": "SUPPORTED",
-   "reasons": [],
-   "evidence": "probe HTTP 200, 1 bus(es), 1 with an in-route stop sequence; 54 stops, 54 with position, topology linear"
+   "tracking": "SUPPORTED_WITH_WARNING",
+   "reasons": [
+    "no bus reported when probed: stop-sequence evidence unchecked"
+   ],
+   "evidence": "probe HTTP 200, 0 bus(es), 0 with an in-route stop sequence; 54 stops, 54 with position, topology linear"
   },
   {
    "routeNo": "447",
@@ -8759,12 +8993,14 @@
    "end": "도평마을입구",
    "stopCount": 53,
    "topology": "linear",
-   "live": "answered_with_buses",
+   "live": "answered_no_bus",
    "timetable": "available",
    "geometry": "STOP_COORDINATES_ONLY",
-   "tracking": "SUPPORTED",
-   "reasons": [],
-   "evidence": "probe HTTP 200, 1 bus(es), 1 with an in-route stop sequence; 53 stops, 53 with position, topology linear"
+   "tracking": "SUPPORTED_WITH_WARNING",
+   "reasons": [
+    "no bus reported when probed: stop-sequence evidence unchecked"
+   ],
+   "evidence": "probe HTTP 200, 0 bus(es), 0 with an in-route stop sequence; 53 stops, 53 with position, topology linear"
   },
   {
    "routeNo": "447",
@@ -8789,12 +9025,14 @@
    "end": "도리초등학교(종점)",
    "stopCount": 42,
    "topology": "linear",
-   "live": "answered_with_buses",
+   "live": "answered_no_bus",
    "timetable": "available",
    "geometry": "STOP_COORDINATES_ONLY",
-   "tracking": "SUPPORTED",
-   "reasons": [],
-   "evidence": "probe HTTP 200, 1 bus(es), 1 with an in-route stop sequence; 42 stops, 42 with position, topology linear"
+   "tracking": "SUPPORTED_WITH_WARNING",
+   "reasons": [
+    "no bus reported when probed: stop-sequence evidence unchecked"
+   ],
+   "evidence": "probe HTTP 200, 0 bus(es), 0 with an in-route stop sequence; 42 stops, 42 with position, topology linear"
   },
   {
    "routeNo": "451-1",
@@ -8819,12 +9057,14 @@
    "end": "도리초등학교(종점)",
    "stopCount": 41,
    "topology": "linear",
-   "live": "answered_with_buses",
+   "live": "answered_no_bus",
    "timetable": "available",
    "geometry": "STOP_COORDINATES_ONLY",
-   "tracking": "SUPPORTED",
-   "reasons": [],
-   "evidence": "probe HTTP 200, 1 bus(es), 1 with an in-route stop sequence; 41 stops, 41 with position, topology linear"
+   "tracking": "SUPPORTED_WITH_WARNING",
+   "reasons": [
+    "no bus reported when probed: stop-sequence evidence unchecked"
+   ],
+   "evidence": "probe HTTP 200, 0 bus(es), 0 with an in-route stop sequence; 41 stops, 41 with position, topology linear"
   },
   {
    "routeNo": "452-1",
@@ -8833,12 +9073,14 @@
    "end": "도리초등학교(종점)",
    "stopCount": 40,
    "topology": "linear",
-   "live": "answered_with_buses",
+   "live": "answered_no_bus",
    "timetable": "available",
    "geometry": "STOP_COORDINATES_ONLY",
-   "tracking": "SUPPORTED",
-   "reasons": [],
-   "evidence": "probe HTTP 200, 1 bus(es), 1 with an in-route stop sequence; 40 stops, 40 with position, topology linear"
+   "tracking": "SUPPORTED_WITH_WARNING",
+   "reasons": [
+    "no bus reported when probed: stop-sequence evidence unchecked"
+   ],
+   "evidence": "probe HTTP 200, 0 bus(es), 0 with an in-route stop sequence; 40 stops, 40 with position, topology linear"
   },
   {
    "routeNo": "453",
@@ -8847,12 +9089,14 @@
    "end": "도두동",
    "stopCount": 32,
    "topology": "linear",
-   "live": "answered_with_buses",
+   "live": "answered_no_bus",
    "timetable": "available",
    "geometry": "STOP_COORDINATES_ONLY",
-   "tracking": "SUPPORTED",
-   "reasons": [],
-   "evidence": "probe HTTP 200, 1 bus(es), 1 with an in-route stop sequence; 32 stops, 32 with position, topology linear"
+   "tracking": "SUPPORTED_WITH_WARNING",
+   "reasons": [
+    "no bus reported when probed: stop-sequence evidence unchecked"
+   ],
+   "evidence": "probe HTTP 200, 0 bus(es), 0 with an in-route stop sequence; 32 stops, 32 with position, topology linear"
   },
   {
    "routeNo": "453",
@@ -8877,12 +9121,14 @@
    "end": "도두동",
    "stopCount": 34,
    "topology": "loop",
-   "live": "answered_with_buses",
+   "live": "answered_no_bus",
    "timetable": "available",
    "geometry": "STOP_COORDINATES_ONLY",
-   "tracking": "SUPPORTED",
-   "reasons": [],
-   "evidence": "probe HTTP 200, 1 bus(es), 1 with an in-route stop sequence; 34 stops, 34 with position, topology loop"
+   "tracking": "SUPPORTED_WITH_WARNING",
+   "reasons": [
+    "no bus reported when probed: stop-sequence evidence unchecked"
+   ],
+   "evidence": "probe HTTP 200, 0 bus(es), 0 with an in-route stop sequence; 34 stops, 34 with position, topology loop"
   },
   {
    "routeNo": "454",
@@ -8907,12 +9153,14 @@
    "end": "장전알동네",
    "stopCount": 88,
    "topology": "linear",
-   "live": "answered_with_buses",
+   "live": "answered_no_bus",
    "timetable": "available",
    "geometry": "STOP_COORDINATES_ONLY",
-   "tracking": "SUPPORTED",
-   "reasons": [],
-   "evidence": "probe HTTP 200, 2 bus(es), 2 with an in-route stop sequence; 88 stops, 88 with position, topology linear"
+   "tracking": "SUPPORTED_WITH_WARNING",
+   "reasons": [
+    "no bus reported when probed: stop-sequence evidence unchecked"
+   ],
+   "evidence": "probe HTTP 200, 0 bus(es), 0 with an in-route stop sequence; 88 stops, 88 with position, topology linear"
   },
   {
    "routeNo": "455",
@@ -8921,12 +9169,14 @@
    "end": "제주대학교",
    "stopCount": 87,
    "topology": "linear",
-   "live": "answered_with_buses",
+   "live": "answered_no_bus",
    "timetable": "available",
    "geometry": "STOP_COORDINATES_ONLY",
-   "tracking": "SUPPORTED",
-   "reasons": [],
-   "evidence": "probe HTTP 200, 2 bus(es), 2 with an in-route stop sequence; 87 stops, 87 with position, topology linear"
+   "tracking": "SUPPORTED_WITH_WARNING",
+   "reasons": [
+    "no bus reported when probed: stop-sequence evidence unchecked"
+   ],
+   "evidence": "probe HTTP 200, 0 bus(es), 0 with an in-route stop sequence; 87 stops, 87 with position, topology linear"
   },
   {
    "routeNo": "455",
@@ -8999,12 +9249,14 @@
    "end": "제주버스터미널(종점)",
    "stopCount": 52,
    "topology": "linear",
-   "live": "answered_with_buses",
+   "live": "answered_no_bus",
    "timetable": "available",
    "geometry": "STOP_COORDINATES_ONLY",
-   "tracking": "SUPPORTED",
-   "reasons": [],
-   "evidence": "probe HTTP 200, 1 bus(es), 1 with an in-route stop sequence; 52 stops, 52 with position, topology linear"
+   "tracking": "SUPPORTED_WITH_WARNING",
+   "reasons": [
+    "no bus reported when probed: stop-sequence evidence unchecked"
+   ],
+   "evidence": "probe HTTP 200, 0 bus(es), 0 with an in-route stop sequence; 52 stops, 52 with position, topology linear"
   },
   {
    "routeNo": "461",
@@ -9061,12 +9313,14 @@
    "end": "제주버스터미널(종점)",
    "stopCount": 56,
    "topology": "linear",
-   "live": "answered_with_buses",
+   "live": "answered_no_bus",
    "timetable": "available",
    "geometry": "STOP_COORDINATES_ONLY",
-   "tracking": "SUPPORTED",
-   "reasons": [],
-   "evidence": "probe HTTP 200, 1 bus(es), 1 with an in-route stop sequence; 56 stops, 56 with position, topology linear"
+   "tracking": "SUPPORTED_WITH_WARNING",
+   "reasons": [
+    "no bus reported when probed: stop-sequence evidence unchecked"
+   ],
+   "evidence": "probe HTTP 200, 0 bus(es), 0 with an in-route stop sequence; 56 stops, 56 with position, topology linear"
   },
   {
    "routeNo": "462",
@@ -9107,12 +9361,14 @@
    "end": "신비마을(종점)",
    "stopCount": 75,
    "topology": "linear",
-   "live": "answered_with_buses",
+   "live": "answered_no_bus",
    "timetable": "available",
    "geometry": "STOP_COORDINATES_ONLY",
-   "tracking": "SUPPORTED",
-   "reasons": [],
-   "evidence": "probe HTTP 200, 3 bus(es), 3 with an in-route stop sequence; 75 stops, 75 with position, topology linear"
+   "tracking": "SUPPORTED_WITH_WARNING",
+   "reasons": [
+    "no bus reported when probed: stop-sequence evidence unchecked"
+   ],
+   "evidence": "probe HTTP 200, 0 bus(es), 0 with an in-route stop sequence; 75 stops, 75 with position, topology linear"
   },
   {
    "routeNo": "465",
@@ -9153,12 +9409,14 @@
    "end": "신비마을(종점)",
    "stopCount": 77,
    "topology": "linear",
-   "live": "answered_with_buses",
+   "live": "answered_no_bus",
    "timetable": "available",
    "geometry": "STOP_COORDINATES_ONLY",
-   "tracking": "SUPPORTED",
-   "reasons": [],
-   "evidence": "probe HTTP 200, 3 bus(es), 3 with an in-route stop sequence; 77 stops, 77 with position, topology linear"
+   "tracking": "SUPPORTED_WITH_WARNING",
+   "reasons": [
+    "no bus reported when probed: stop-sequence evidence unchecked"
+   ],
+   "evidence": "probe HTTP 200, 0 bus(es), 0 with an in-route stop sequence; 77 stops, 77 with position, topology linear"
   },
   {
    "routeNo": "466",
@@ -9199,12 +9457,14 @@
    "end": "국제대학교 환승주차장",
    "stopCount": 46,
    "topology": "linear",
-   "live": "answered_with_buses",
+   "live": "answered_no_bus",
    "timetable": "available",
    "geometry": "STOP_COORDINATES_ONLY",
-   "tracking": "SUPPORTED",
-   "reasons": [],
-   "evidence": "probe HTTP 200, 1 bus(es), 1 with an in-route stop sequence; 46 stops, 46 with position, topology linear"
+   "tracking": "SUPPORTED_WITH_WARNING",
+   "reasons": [
+    "no bus reported when probed: stop-sequence evidence unchecked"
+   ],
+   "evidence": "probe HTTP 200, 0 bus(es), 0 with an in-route stop sequence; 46 stops, 46 with position, topology linear"
   },
   {
    "routeNo": "471",
@@ -9213,12 +9473,14 @@
    "end": "제주한라대학교",
    "stopCount": 45,
    "topology": "linear",
-   "live": "answered_with_buses",
+   "live": "answered_no_bus",
    "timetable": "available",
    "geometry": "STOP_COORDINATES_ONLY",
-   "tracking": "SUPPORTED",
-   "reasons": [],
-   "evidence": "probe HTTP 200, 1 bus(es), 1 with an in-route stop sequence; 45 stops, 45 with position, topology linear"
+   "tracking": "SUPPORTED_WITH_WARNING",
+   "reasons": [
+    "no bus reported when probed: stop-sequence evidence unchecked"
+   ],
+   "evidence": "probe HTTP 200, 0 bus(es), 0 with an in-route stop sequence; 45 stops, 45 with position, topology linear"
   },
   {
    "routeNo": "472",
@@ -9227,12 +9489,14 @@
    "end": "국제대학교 환승주차장",
    "stopCount": 42,
    "topology": "linear",
-   "live": "answered_with_buses",
+   "live": "answered_no_bus",
    "timetable": "available",
    "geometry": "STOP_COORDINATES_ONLY",
-   "tracking": "SUPPORTED",
-   "reasons": [],
-   "evidence": "probe HTTP 200, 1 bus(es), 1 with an in-route stop sequence; 42 stops, 42 with position, topology linear"
+   "tracking": "SUPPORTED_WITH_WARNING",
+   "reasons": [
+    "no bus reported when probed: stop-sequence evidence unchecked"
+   ],
+   "evidence": "probe HTTP 200, 0 bus(es), 0 with an in-route stop sequence; 42 stops, 42 with position, topology linear"
   },
   {
    "routeNo": "472",
@@ -9241,12 +9505,14 @@
    "end": "제주한라대학교",
    "stopCount": 40,
    "topology": "linear",
-   "live": "answered_with_buses",
+   "live": "answered_no_bus",
    "timetable": "available",
    "geometry": "STOP_COORDINATES_ONLY",
-   "tracking": "SUPPORTED",
-   "reasons": [],
-   "evidence": "probe HTTP 200, 1 bus(es), 1 with an in-route stop sequence; 40 stops, 40 with position, topology linear"
+   "tracking": "SUPPORTED_WITH_WARNING",
+   "reasons": [
+    "no bus reported when probed: stop-sequence evidence unchecked"
+   ],
+   "evidence": "probe HTTP 200, 0 bus(es), 0 with an in-route stop sequence; 40 stops, 40 with position, topology linear"
   },
   {
    "routeNo": "473",
@@ -9271,12 +9537,14 @@
    "end": "제주한라대학교",
    "stopCount": 37,
    "topology": "linear",
-   "live": "answered_with_buses",
+   "live": "answered_no_bus",
    "timetable": "available",
    "geometry": "STOP_COORDINATES_ONLY",
-   "tracking": "SUPPORTED",
-   "reasons": [],
-   "evidence": "probe HTTP 200, 1 bus(es), 1 with an in-route stop sequence; 37 stops, 37 with position, topology linear"
+   "tracking": "SUPPORTED_WITH_WARNING",
+   "reasons": [
+    "no bus reported when probed: stop-sequence evidence unchecked"
+   ],
+   "evidence": "probe HTTP 200, 0 bus(es), 0 with an in-route stop sequence; 37 stops, 37 with position, topology linear"
   },
   {
    "routeNo": "475",
@@ -9285,12 +9553,14 @@
    "end": "제주대학교",
    "stopCount": 21,
    "topology": "linear",
-   "live": "answered_with_buses",
+   "live": "answered_no_bus",
    "timetable": "available",
    "geometry": "STOP_COORDINATES_ONLY",
-   "tracking": "SUPPORTED",
-   "reasons": [],
-   "evidence": "probe HTTP 200, 1 bus(es), 1 with an in-route stop sequence; 21 stops, 21 with position, topology linear"
+   "tracking": "SUPPORTED_WITH_WARNING",
+   "reasons": [
+    "no bus reported when probed: stop-sequence evidence unchecked"
+   ],
+   "evidence": "probe HTTP 200, 0 bus(es), 0 with an in-route stop sequence; 21 stops, 21 with position, topology linear"
   },
   {
    "routeNo": "475",
@@ -9331,12 +9601,14 @@
    "end": "제주대학교",
    "stopCount": 71,
    "topology": "linear",
-   "live": "answered_with_buses",
+   "live": "answered_no_bus",
    "timetable": "available",
    "geometry": "STOP_COORDINATES_ONLY",
-   "tracking": "SUPPORTED",
-   "reasons": [],
-   "evidence": "probe HTTP 200, 1 bus(es), 1 with an in-route stop sequence; 71 stops, 71 with position, topology linear"
+   "tracking": "SUPPORTED_WITH_WARNING",
+   "reasons": [
+    "no bus reported when probed: stop-sequence evidence unchecked"
+   ],
+   "evidence": "probe HTTP 200, 0 bus(es), 0 with an in-route stop sequence; 71 stops, 71 with position, topology linear"
   },
   {
    "routeNo": "477",
@@ -9361,12 +9633,14 @@
    "end": "제주대학교",
    "stopCount": 12,
    "topology": "linear",
-   "live": "answered_with_buses",
+   "live": "answered_no_bus",
    "timetable": "available",
    "geometry": "STOP_COORDINATES_ONLY",
-   "tracking": "SUPPORTED",
-   "reasons": [],
-   "evidence": "probe HTTP 200, 1 bus(es), 1 with an in-route stop sequence; 12 stops, 12 with position, topology linear"
+   "tracking": "SUPPORTED_WITH_WARNING",
+   "reasons": [
+    "no bus reported when probed: stop-sequence evidence unchecked"
+   ],
+   "evidence": "probe HTTP 200, 0 bus(es), 0 with an in-route stop sequence; 12 stops, 12 with position, topology linear"
   },
   {
    "routeNo": "491",
@@ -9407,12 +9681,14 @@
    "end": "모슬포 남항 여객선 터미널(운진항)",
    "stopCount": 22,
    "topology": "linear",
-   "live": "answered_with_buses",
+   "live": "answered_no_bus",
    "timetable": "available",
    "geometry": "STOP_COORDINATES_ONLY",
-   "tracking": "SUPPORTED",
-   "reasons": [],
-   "evidence": "probe HTTP 200, 2 bus(es), 2 with an in-route stop sequence; 22 stops, 22 with position, topology linear"
+   "tracking": "SUPPORTED_WITH_WARNING",
+   "reasons": [
+    "no bus reported when probed: stop-sequence evidence unchecked"
+   ],
+   "evidence": "probe HTTP 200, 0 bus(es), 0 with an in-route stop sequence; 22 stops, 22 with position, topology linear"
   },
   {
    "routeNo": "500",
@@ -9421,12 +9697,14 @@
    "end": "남원환승정류장(남원읍사무소)",
    "stopCount": 22,
    "topology": "linear",
-   "live": "answered_with_buses",
+   "live": "answered_no_bus",
    "timetable": "available",
    "geometry": "STOP_COORDINATES_ONLY",
-   "tracking": "SUPPORTED",
-   "reasons": [],
-   "evidence": "probe HTTP 200, 2 bus(es), 2 with an in-route stop sequence; 22 stops, 22 with position, topology linear"
+   "tracking": "SUPPORTED_WITH_WARNING",
+   "reasons": [
+    "no bus reported when probed: stop-sequence evidence unchecked"
+   ],
+   "evidence": "probe HTTP 200, 0 bus(es), 0 with an in-route stop sequence; 22 stops, 22 with position, topology linear"
   },
   {
    "routeNo": "500",
@@ -9515,12 +9793,14 @@
    "end": "성산항(종점)",
    "stopCount": 17,
    "topology": "linear",
-   "live": "answered_with_buses",
+   "live": "answered_no_bus",
    "timetable": "available",
    "geometry": "STOP_COORDINATES_ONLY",
-   "tracking": "SUPPORTED",
-   "reasons": [],
-   "evidence": "probe HTTP 200, 2 bus(es), 2 with an in-route stop sequence; 17 stops, 17 with position, topology linear"
+   "tracking": "SUPPORTED_WITH_WARNING",
+   "reasons": [
+    "no bus reported when probed: stop-sequence evidence unchecked"
+   ],
+   "evidence": "probe HTTP 200, 0 bus(es), 0 with an in-route stop sequence; 17 stops, 17 with position, topology linear"
   },
   {
    "routeNo": "501",
@@ -9529,12 +9809,14 @@
    "end": "서귀포버스터미널",
    "stopCount": 17,
    "topology": "linear",
-   "live": "answered_with_buses",
+   "live": "answered_no_bus",
    "timetable": "available",
    "geometry": "STOP_COORDINATES_ONLY",
-   "tracking": "SUPPORTED",
-   "reasons": [],
-   "evidence": "probe HTTP 200, 1 bus(es), 1 with an in-route stop sequence; 17 stops, 17 with position, topology linear"
+   "tracking": "SUPPORTED_WITH_WARNING",
+   "reasons": [
+    "no bus reported when probed: stop-sequence evidence unchecked"
+   ],
+   "evidence": "probe HTTP 200, 0 bus(es), 0 with an in-route stop sequence; 17 stops, 17 with position, topology linear"
   },
   {
    "routeNo": "501",
@@ -9543,12 +9825,14 @@
    "end": "서귀포환승정류장(서귀포등기소)",
    "stopCount": 15,
    "topology": "linear",
-   "live": "answered_with_buses",
+   "live": "answered_no_bus",
    "timetable": "available",
    "geometry": "STOP_COORDINATES_ONLY",
-   "tracking": "SUPPORTED",
-   "reasons": [],
-   "evidence": "probe HTTP 200, 1 bus(es), 1 with an in-route stop sequence; 15 stops, 15 with position, topology linear"
+   "tracking": "SUPPORTED_WITH_WARNING",
+   "reasons": [
+    "no bus reported when probed: stop-sequence evidence unchecked"
+   ],
+   "evidence": "probe HTTP 200, 0 bus(es), 0 with an in-route stop sequence; 15 stops, 15 with position, topology linear"
   },
   {
    "routeNo": "510",
@@ -9557,12 +9841,14 @@
    "end": "남원환승정류장(남원읍사무소)",
    "stopCount": 82,
    "topology": "linear",
-   "live": "answered_with_buses",
+   "live": "answered_no_bus",
    "timetable": "available",
    "geometry": "STOP_COORDINATES_ONLY",
-   "tracking": "SUPPORTED",
-   "reasons": [],
-   "evidence": "probe HTTP 200, 4 bus(es), 4 with an in-route stop sequence; 82 stops, 82 with position, topology linear"
+   "tracking": "SUPPORTED_WITH_WARNING",
+   "reasons": [
+    "no bus reported when probed: stop-sequence evidence unchecked"
+   ],
+   "evidence": "probe HTTP 200, 0 bus(es), 0 with an in-route stop sequence; 82 stops, 82 with position, topology linear"
   },
   {
    "routeNo": "510",
@@ -9571,12 +9857,14 @@
    "end": "제주국제컨벤션센터  중문대포해안주상절리대",
    "stopCount": 81,
    "topology": "linear",
-   "live": "answered_with_buses",
+   "live": "answered_no_bus",
    "timetable": "available",
    "geometry": "STOP_COORDINATES_ONLY",
-   "tracking": "SUPPORTED",
-   "reasons": [],
-   "evidence": "probe HTTP 200, 5 bus(es), 5 with an in-route stop sequence; 81 stops, 81 with position, topology linear"
+   "tracking": "SUPPORTED_WITH_WARNING",
+   "reasons": [
+    "no bus reported when probed: stop-sequence evidence unchecked"
+   ],
+   "evidence": "probe HTTP 200, 0 bus(es), 0 with an in-route stop sequence; 81 stops, 81 with position, topology linear"
   },
   {
    "routeNo": "510",
@@ -9825,12 +10113,14 @@
    "end": "쇠소깍 입구",
    "stopCount": 72,
    "topology": "linear",
-   "live": "answered_with_buses",
+   "live": "answered_no_bus",
    "timetable": "available",
    "geometry": "STOP_COORDINATES_ONLY",
-   "tracking": "SUPPORTED",
-   "reasons": [],
-   "evidence": "probe HTTP 200, 2 bus(es), 2 with an in-route stop sequence; 72 stops, 72 with position, topology linear"
+   "tracking": "SUPPORTED_WITH_WARNING",
+   "reasons": [
+    "no bus reported when probed: stop-sequence evidence unchecked"
+   ],
+   "evidence": "probe HTTP 200, 0 bus(es), 0 with an in-route stop sequence; 72 stops, 72 with position, topology linear"
   },
   {
    "routeNo": "520",
@@ -9839,12 +10129,14 @@
    "end": "제주국제컨벤션센터  중문대포해안주상절리대",
    "stopCount": 68,
    "topology": "linear",
-   "live": "answered_with_buses",
+   "live": "answered_no_bus",
    "timetable": "available",
    "geometry": "STOP_COORDINATES_ONLY",
-   "tracking": "SUPPORTED",
-   "reasons": [],
-   "evidence": "probe HTTP 200, 2 bus(es), 2 with an in-route stop sequence; 68 stops, 68 with position, topology linear"
+   "tracking": "SUPPORTED_WITH_WARNING",
+   "reasons": [
+    "no bus reported when probed: stop-sequence evidence unchecked"
+   ],
+   "evidence": "probe HTTP 200, 0 bus(es), 0 with an in-route stop sequence; 68 stops, 68 with position, topology linear"
   },
   {
    "routeNo": "520",
@@ -9949,12 +10241,14 @@
    "end": "하례환승정류장(하례리입구)",
    "stopCount": 69,
    "topology": "linear",
-   "live": "answered_with_buses",
+   "live": "answered_no_bus",
    "timetable": "available",
    "geometry": "STOP_COORDINATES_ONLY",
-   "tracking": "SUPPORTED",
-   "reasons": [],
-   "evidence": "probe HTTP 200, 1 bus(es), 1 with an in-route stop sequence; 69 stops, 69 with position, topology linear"
+   "tracking": "SUPPORTED_WITH_WARNING",
+   "reasons": [
+    "no bus reported when probed: stop-sequence evidence unchecked"
+   ],
+   "evidence": "probe HTTP 200, 0 bus(es), 0 with an in-route stop sequence; 69 stops, 69 with position, topology linear"
   },
   {
    "routeNo": "531",
@@ -9963,12 +10257,14 @@
    "end": "대평리",
    "stopCount": 64,
    "topology": "linear",
-   "live": "answered_with_buses",
+   "live": "answered_no_bus",
    "timetable": "available",
    "geometry": "STOP_COORDINATES_ONLY",
-   "tracking": "SUPPORTED",
-   "reasons": [],
-   "evidence": "probe HTTP 200, 3 bus(es), 3 with an in-route stop sequence; 64 stops, 64 with position, topology linear"
+   "tracking": "SUPPORTED_WITH_WARNING",
+   "reasons": [
+    "no bus reported when probed: stop-sequence evidence unchecked"
+   ],
+   "evidence": "probe HTTP 200, 0 bus(es), 0 with an in-route stop sequence; 64 stops, 64 with position, topology linear"
   },
   {
    "routeNo": "531",
@@ -10137,12 +10433,14 @@
    "end": "하례환승정류장(하례리입구)",
    "stopCount": 82,
    "topology": "linear",
-   "live": "answered_with_buses",
+   "live": "answered_no_bus",
    "timetable": "available",
    "geometry": "STOP_COORDINATES_ONLY",
-   "tracking": "SUPPORTED",
-   "reasons": [],
-   "evidence": "probe HTTP 200, 1 bus(es), 1 with an in-route stop sequence; 82 stops, 82 with position, topology linear"
+   "tracking": "SUPPORTED_WITH_WARNING",
+   "reasons": [
+    "no bus reported when probed: stop-sequence evidence unchecked"
+   ],
+   "evidence": "probe HTTP 200, 0 bus(es), 0 with an in-route stop sequence; 82 stops, 82 with position, topology linear"
   },
   {
    "routeNo": "532",
@@ -10151,12 +10449,14 @@
    "end": "화순리",
    "stopCount": 78,
    "topology": "linear",
-   "live": "answered_with_buses",
+   "live": "answered_no_bus",
    "timetable": "available",
    "geometry": "STOP_COORDINATES_ONLY",
-   "tracking": "SUPPORTED",
-   "reasons": [],
-   "evidence": "probe HTTP 200, 1 bus(es), 1 with an in-route stop sequence; 78 stops, 78 with position, topology linear"
+   "tracking": "SUPPORTED_WITH_WARNING",
+   "reasons": [
+    "no bus reported when probed: stop-sequence evidence unchecked"
+   ],
+   "evidence": "probe HTTP 200, 0 bus(es), 0 with an in-route stop sequence; 78 stops, 78 with position, topology linear"
   },
   {
    "routeNo": "532",
@@ -10266,7 +10566,7 @@
    "geometry": "STOP_COORDINATES_ONLY",
    "tracking": "SUPPORTED",
    "reasons": [],
-   "evidence": "probe HTTP 200, 2 bus(es), 2 with an in-route stop sequence; 31 stops, 31 with position, topology linear"
+   "evidence": "probe HTTP 200, 1 bus(es), 1 with an in-route stop sequence; 31 stops, 31 with position, topology linear"
   },
   {
    "routeNo": "600",
@@ -10275,12 +10575,14 @@
    "end": "제주국제공항(하차전용)",
    "stopCount": 31,
    "topology": "linear",
-   "live": "answered_with_buses",
+   "live": "answered_no_bus",
    "timetable": "available",
    "geometry": "STOP_COORDINATES_ONLY",
-   "tracking": "SUPPORTED",
-   "reasons": [],
-   "evidence": "probe HTTP 200, 3 bus(es), 3 with an in-route stop sequence; 31 stops, 31 with position, topology linear"
+   "tracking": "SUPPORTED_WITH_WARNING",
+   "reasons": [
+    "no bus reported when probed: stop-sequence evidence unchecked"
+   ],
+   "evidence": "probe HTTP 200, 0 bus(es), 0 with an in-route stop sequence; 31 stops, 31 with position, topology linear"
   },
   {
    "routeNo": "600",
@@ -10321,12 +10623,14 @@
    "end": "제주국제컨벤션센터  중문대포해안주상절리대",
    "stopCount": 20,
    "topology": "linear",
-   "live": "answered_with_buses",
+   "live": "answered_no_bus",
    "timetable": "available",
    "geometry": "STOP_COORDINATES_ONLY",
-   "tracking": "SUPPORTED",
-   "reasons": [],
-   "evidence": "probe HTTP 200, 1 bus(es), 1 with an in-route stop sequence; 20 stops, 20 with position, topology linear"
+   "tracking": "SUPPORTED_WITH_WARNING",
+   "reasons": [
+    "no bus reported when probed: stop-sequence evidence unchecked"
+   ],
+   "evidence": "probe HTTP 200, 0 bus(es), 0 with an in-route stop sequence; 20 stops, 20 with position, topology linear"
   },
   {
    "routeNo": "601",
@@ -10335,12 +10639,14 @@
    "end": "제주국제공항(하차전용)",
    "stopCount": 20,
    "topology": "linear",
-   "live": "answered_with_buses",
+   "live": "answered_no_bus",
    "timetable": "available",
    "geometry": "STOP_COORDINATES_ONLY",
-   "tracking": "SUPPORTED",
-   "reasons": [],
-   "evidence": "probe HTTP 200, 1 bus(es), 1 with an in-route stop sequence; 20 stops, 20 with position, topology linear"
+   "tracking": "SUPPORTED_WITH_WARNING",
+   "reasons": [
+    "no bus reported when probed: stop-sequence evidence unchecked"
+   ],
+   "evidence": "probe HTTP 200, 0 bus(es), 0 with an in-route stop sequence; 20 stops, 20 with position, topology linear"
   },
   {
    "routeNo": "601",
@@ -10413,12 +10719,14 @@
    "end": "충혼묘지광장(종점)",
    "stopCount": 51,
    "topology": "linear",
-   "live": "answered_with_buses",
+   "live": "answered_no_bus",
    "timetable": "available",
    "geometry": "STOP_COORDINATES_ONLY",
-   "tracking": "SUPPORTED",
-   "reasons": [],
-   "evidence": "probe HTTP 200, 1 bus(es), 1 with an in-route stop sequence; 51 stops, 51 with position, topology linear"
+   "tracking": "SUPPORTED_WITH_WARNING",
+   "reasons": [
+    "no bus reported when probed: stop-sequence evidence unchecked"
+   ],
+   "evidence": "probe HTTP 200, 0 bus(es), 0 with an in-route stop sequence; 51 stops, 51 with position, topology linear"
   },
   {
    "routeNo": "612",
@@ -10507,12 +10815,14 @@
    "end": "모레기도",
    "stopCount": 40,
    "topology": "linear",
-   "live": "answered_with_buses",
+   "live": "answered_no_bus",
    "timetable": "available",
    "geometry": "STOP_COORDINATES_ONLY",
-   "tracking": "SUPPORTED",
-   "reasons": [],
-   "evidence": "probe HTTP 200, 1 bus(es), 1 with an in-route stop sequence; 40 stops, 40 with position, topology linear"
+   "tracking": "SUPPORTED_WITH_WARNING",
+   "reasons": [
+    "no bus reported when probed: stop-sequence evidence unchecked"
+   ],
+   "evidence": "probe HTTP 200, 0 bus(es), 0 with an in-route stop sequence; 40 stops, 40 with position, topology linear"
   },
   {
    "routeNo": "621",
@@ -10521,12 +10831,14 @@
    "end": "모레기도",
    "stopCount": 87,
    "topology": "linear",
-   "live": "answered_with_buses",
+   "live": "answered_no_bus",
    "timetable": "source_conflict",
    "geometry": "STOP_COORDINATES_ONLY",
-   "tracking": "SUPPORTED",
-   "reasons": [],
-   "evidence": "probe HTTP 200, 2 bus(es), 2 with an in-route stop sequence; 87 stops, 87 with position, topology linear"
+   "tracking": "SUPPORTED_WITH_WARNING",
+   "reasons": [
+    "no bus reported when probed: stop-sequence evidence unchecked"
+   ],
+   "evidence": "probe HTTP 200, 0 bus(es), 0 with an in-route stop sequence; 87 stops, 87 with position, topology linear"
   },
   {
    "routeNo": "621",
@@ -10551,12 +10863,14 @@
    "end": "외돌개",
    "stopCount": 57,
    "topology": "linear",
-   "live": "answered_with_buses",
+   "live": "answered_no_bus",
    "timetable": "available",
    "geometry": "STOP_COORDINATES_ONLY",
-   "tracking": "SUPPORTED",
-   "reasons": [],
-   "evidence": "probe HTTP 200, 1 bus(es), 1 with an in-route stop sequence; 57 stops, 57 with position, topology linear"
+   "tracking": "SUPPORTED_WITH_WARNING",
+   "reasons": [
+    "no bus reported when probed: stop-sequence evidence unchecked"
+   ],
+   "evidence": "probe HTTP 200, 0 bus(es), 0 with an in-route stop sequence; 57 stops, 57 with position, topology linear"
   },
   {
    "routeNo": "622",
@@ -10629,12 +10943,14 @@
    "end": "모레기도",
    "stopCount": 74,
    "topology": "linear",
-   "live": "answered_with_buses",
+   "live": "answered_no_bus",
    "timetable": "available",
    "geometry": "STOP_COORDINATES_ONLY",
-   "tracking": "SUPPORTED",
-   "reasons": [],
-   "evidence": "probe HTTP 200, 1 bus(es), 1 with an in-route stop sequence; 74 stops, 74 with position, topology linear"
+   "tracking": "SUPPORTED_WITH_WARNING",
+   "reasons": [
+    "no bus reported when probed: stop-sequence evidence unchecked"
+   ],
+   "evidence": "probe HTTP 200, 0 bus(es), 0 with an in-route stop sequence; 74 stops, 74 with position, topology linear"
   },
   {
    "routeNo": "623",
@@ -10755,12 +11071,14 @@
    "end": "헬스케어타운리조트",
    "stopCount": 27,
    "topology": "linear",
-   "live": "answered_with_buses",
+   "live": "answered_no_bus",
    "timetable": "available",
    "geometry": "STOP_COORDINATES_ONLY",
-   "tracking": "SUPPORTED",
-   "reasons": [],
-   "evidence": "probe HTTP 200, 1 bus(es), 1 with an in-route stop sequence; 27 stops, 27 with position, topology linear"
+   "tracking": "SUPPORTED_WITH_WARNING",
+   "reasons": [
+    "no bus reported when probed: stop-sequence evidence unchecked"
+   ],
+   "evidence": "probe HTTP 200, 0 bus(es), 0 with an in-route stop sequence; 27 stops, 27 with position, topology linear"
   },
   {
    "routeNo": "625",
@@ -10769,12 +11087,14 @@
    "end": "서귀포운수차고지",
    "stopCount": 26,
    "topology": "linear",
-   "live": "answered_with_buses",
+   "live": "answered_no_bus",
    "timetable": "available",
    "geometry": "STOP_COORDINATES_ONLY",
-   "tracking": "SUPPORTED",
-   "reasons": [],
-   "evidence": "probe HTTP 200, 1 bus(es), 1 with an in-route stop sequence; 26 stops, 26 with position, topology linear"
+   "tracking": "SUPPORTED_WITH_WARNING",
+   "reasons": [
+    "no bus reported when probed: stop-sequence evidence unchecked"
+   ],
+   "evidence": "probe HTTP 200, 0 bus(es), 0 with an in-route stop sequence; 26 stops, 26 with position, topology linear"
   },
   {
    "routeNo": "625",
@@ -10896,12 +11216,14 @@
    "end": "서귀포운수차고지",
    "stopCount": 31,
    "topology": "linear",
-   "live": "answered_with_buses",
+   "live": "answered_no_bus",
    "timetable": "available",
    "geometry": "STOP_COORDINATES_ONLY",
-   "tracking": "SUPPORTED",
-   "reasons": [],
-   "evidence": "probe HTTP 200, 1 bus(es), 1 with an in-route stop sequence; 31 stops, 31 with position, topology linear"
+   "tracking": "SUPPORTED_WITH_WARNING",
+   "reasons": [
+    "no bus reported when probed: stop-sequence evidence unchecked"
+   ],
+   "evidence": "probe HTTP 200, 0 bus(es), 0 with an in-route stop sequence; 31 stops, 31 with position, topology linear"
   },
   {
    "routeNo": "630",
@@ -10910,12 +11232,14 @@
    "end": "보목포구",
    "stopCount": 29,
    "topology": "linear",
-   "live": "answered_with_buses",
+   "live": "answered_no_bus",
    "timetable": "available",
    "geometry": "STOP_COORDINATES_ONLY",
-   "tracking": "SUPPORTED",
-   "reasons": [],
-   "evidence": "probe HTTP 200, 1 bus(es), 1 with an in-route stop sequence; 29 stops, 29 with position, topology linear"
+   "tracking": "SUPPORTED_WITH_WARNING",
+   "reasons": [
+    "no bus reported when probed: stop-sequence evidence unchecked"
+   ],
+   "evidence": "probe HTTP 200, 0 bus(es), 0 with an in-route stop sequence; 29 stops, 29 with position, topology linear"
   },
   {
    "routeNo": "630",
@@ -10956,12 +11280,14 @@
    "end": "삼성여자고등학교",
    "stopCount": 56,
    "topology": "linear",
-   "live": "answered_with_buses",
+   "live": "answered_no_bus",
    "timetable": "available",
    "geometry": "STOP_COORDINATES_ONLY",
-   "tracking": "SUPPORTED",
-   "reasons": [],
-   "evidence": "probe HTTP 200, 1 bus(es), 1 with an in-route stop sequence; 56 stops, 56 with position, topology linear"
+   "tracking": "SUPPORTED_WITH_WARNING",
+   "reasons": [
+    "no bus reported when probed: stop-sequence evidence unchecked"
+   ],
+   "evidence": "probe HTTP 200, 0 bus(es), 0 with an in-route stop sequence; 56 stops, 56 with position, topology linear"
   },
   {
    "routeNo": "633",
@@ -11002,12 +11328,14 @@
    "end": "대평리",
    "stopCount": 53,
    "topology": "linear",
-   "live": "answered_with_buses",
+   "live": "answered_no_bus",
    "timetable": "available",
    "geometry": "STOP_COORDINATES_ONLY",
-   "tracking": "SUPPORTED",
-   "reasons": [],
-   "evidence": "probe HTTP 200, 1 bus(es), 1 with an in-route stop sequence; 53 stops, 53 with position, topology linear"
+   "tracking": "SUPPORTED_WITH_WARNING",
+   "reasons": [
+    "no bus reported when probed: stop-sequence evidence unchecked"
+   ],
+   "evidence": "probe HTTP 200, 0 bus(es), 0 with an in-route stop sequence; 53 stops, 53 with position, topology linear"
   },
   {
    "routeNo": "633",
@@ -11064,12 +11392,14 @@
    "end": "남주중고등학교",
    "stopCount": 27,
    "topology": "linear",
-   "live": "answered_with_buses",
+   "live": "answered_no_bus",
    "timetable": "available",
    "geometry": "STOP_COORDINATES_ONLY",
-   "tracking": "SUPPORTED",
-   "reasons": [],
-   "evidence": "probe HTTP 200, 1 bus(es), 1 with an in-route stop sequence; 27 stops, 27 with position, topology linear"
+   "tracking": "SUPPORTED_WITH_WARNING",
+   "reasons": [
+    "no bus reported when probed: stop-sequence evidence unchecked"
+   ],
+   "evidence": "probe HTTP 200, 0 bus(es), 0 with an in-route stop sequence; 27 stops, 27 with position, topology linear"
   },
   {
    "routeNo": "635",
@@ -11078,12 +11408,14 @@
    "end": "서귀포운수차고지",
    "stopCount": 28,
    "topology": "linear",
-   "live": "answered_with_buses",
+   "live": "answered_no_bus",
    "timetable": "available",
    "geometry": "STOP_COORDINATES_ONLY",
-   "tracking": "SUPPORTED",
-   "reasons": [],
-   "evidence": "probe HTTP 200, 1 bus(es), 1 with an in-route stop sequence; 28 stops, 28 with position, topology linear"
+   "tracking": "SUPPORTED_WITH_WARNING",
+   "reasons": [
+    "no bus reported when probed: stop-sequence evidence unchecked"
+   ],
+   "evidence": "probe HTTP 200, 0 bus(es), 0 with an in-route stop sequence; 28 stops, 28 with position, topology linear"
   },
   {
    "routeNo": "635",
@@ -11124,12 +11456,14 @@
    "end": "천지연폭포(종점)",
    "stopCount": 59,
    "topology": "linear",
-   "live": "answered_with_buses",
+   "live": "answered_no_bus",
    "timetable": "source_conflict",
    "geometry": "STOP_COORDINATES_ONLY",
-   "tracking": "SUPPORTED",
-   "reasons": [],
-   "evidence": "probe HTTP 200, 1 bus(es), 1 with an in-route stop sequence; 59 stops, 59 with position, topology linear"
+   "tracking": "SUPPORTED_WITH_WARNING",
+   "reasons": [
+    "no bus reported when probed: stop-sequence evidence unchecked"
+   ],
+   "evidence": "probe HTTP 200, 0 bus(es), 0 with an in-route stop sequence; 59 stops, 59 with position, topology linear"
   },
   {
    "routeNo": "641",
@@ -11170,12 +11504,14 @@
    "end": "천지연폭포(종점)",
    "stopCount": 54,
    "topology": "linear",
-   "live": "answered_with_buses",
+   "live": "answered_no_bus",
    "timetable": "source_conflict",
    "geometry": "STOP_COORDINATES_ONLY",
-   "tracking": "SUPPORTED",
-   "reasons": [],
-   "evidence": "probe HTTP 200, 1 bus(es), 1 with an in-route stop sequence; 54 stops, 54 with position, topology linear"
+   "tracking": "SUPPORTED_WITH_WARNING",
+   "reasons": [
+    "no bus reported when probed: stop-sequence evidence unchecked"
+   ],
+   "evidence": "probe HTTP 200, 0 bus(es), 0 with an in-route stop sequence; 54 stops, 54 with position, topology linear"
   },
   {
    "routeNo": "643",
@@ -11184,14 +11520,15 @@
    "end": "강창학종합경기장",
    "stopCount": 72,
    "topology": "repeating",
-   "live": "answered_with_buses",
+   "live": "answered_no_bus",
    "timetable": "available",
    "geometry": "STOP_COORDINATES_ONLY",
    "tracking": "SUPPORTED_WITH_WARNING",
    "reasons": [
+    "no bus reported when probed: stop-sequence evidence unchecked",
     "the stop list revisits stops: boarding and destination must be chosen by order"
    ],
-   "evidence": "probe HTTP 200, 1 bus(es), 1 with an in-route stop sequence; 72 stops, 72 with position, topology repeating"
+   "evidence": "probe HTTP 200, 0 bus(es), 0 with an in-route stop sequence; 72 stops, 72 with position, topology repeating"
   },
   {
    "routeNo": "643",
@@ -11249,14 +11586,15 @@
    "end": "강창학종합경기장",
    "stopCount": 74,
    "topology": "repeating",
-   "live": "answered_with_buses",
+   "live": "answered_no_bus",
    "timetable": "source_conflict",
    "geometry": "STOP_COORDINATES_ONLY",
    "tracking": "SUPPORTED_WITH_WARNING",
    "reasons": [
+    "no bus reported when probed: stop-sequence evidence unchecked",
     "the stop list revisits stops: boarding and destination must be chosen by order"
    ],
-   "evidence": "probe HTTP 200, 1 bus(es), 1 with an in-route stop sequence; 74 stops, 74 with position, topology repeating"
+   "evidence": "probe HTTP 200, 0 bus(es), 0 with an in-route stop sequence; 74 stops, 74 with position, topology repeating"
   },
   {
    "routeNo": "644",
@@ -11314,14 +11652,15 @@
    "end": "약천사(종점)",
    "stopCount": 97,
    "topology": "repeating",
-   "live": "answered_with_buses",
+   "live": "answered_no_bus",
    "timetable": "source_conflict",
    "geometry": "STOP_COORDINATES_ONLY",
    "tracking": "SUPPORTED_WITH_WARNING",
    "reasons": [
+    "no bus reported when probed: stop-sequence evidence unchecked",
     "the stop list revisits stops: boarding and destination must be chosen by order"
    ],
-   "evidence": "probe HTTP 200, 2 bus(es), 2 with an in-route stop sequence; 97 stops, 97 with position, topology repeating"
+   "evidence": "probe HTTP 200, 0 bus(es), 0 with an in-route stop sequence; 97 stops, 97 with position, topology repeating"
   },
   {
    "routeNo": "645",
@@ -11330,14 +11669,15 @@
    "end": "약천사(종점)",
    "stopCount": 97,
    "topology": "repeating",
-   "live": "answered_with_buses",
+   "live": "answered_no_bus",
    "timetable": "source_conflict",
    "geometry": "STOP_COORDINATES_ONLY",
    "tracking": "SUPPORTED_WITH_WARNING",
    "reasons": [
+    "no bus reported when probed: stop-sequence evidence unchecked",
     "the stop list revisits stops: boarding and destination must be chosen by order"
    ],
-   "evidence": "probe HTTP 200, 2 bus(es), 2 with an in-route stop sequence; 97 stops, 97 with position, topology repeating"
+   "evidence": "probe HTTP 200, 0 bus(es), 0 with an in-route stop sequence; 97 stops, 97 with position, topology repeating"
   },
   {
    "routeNo": "645",
@@ -11411,12 +11751,14 @@
    "end": "회수마을회관",
    "stopCount": 53,
    "topology": "linear",
-   "live": "answered_with_buses",
+   "live": "answered_no_bus",
    "timetable": "available",
    "geometry": "STOP_COORDINATES_ONLY",
-   "tracking": "SUPPORTED",
-   "reasons": [],
-   "evidence": "probe HTTP 200, 1 bus(es), 1 with an in-route stop sequence; 53 stops, 53 with position, topology linear"
+   "tracking": "SUPPORTED_WITH_WARNING",
+   "reasons": [
+    "no bus reported when probed: stop-sequence evidence unchecked"
+   ],
+   "evidence": "probe HTTP 200, 0 bus(es), 0 with an in-route stop sequence; 53 stops, 53 with position, topology linear"
   },
   {
    "routeNo": "652",
@@ -11425,12 +11767,14 @@
    "end": "서복전시관",
    "stopCount": 54,
    "topology": "linear",
-   "live": "answered_with_buses",
+   "live": "answered_no_bus",
    "timetable": "available",
    "geometry": "STOP_COORDINATES_ONLY",
-   "tracking": "SUPPORTED",
-   "reasons": [],
-   "evidence": "probe HTTP 200, 1 bus(es), 1 with an in-route stop sequence; 54 stops, 54 with position, topology linear"
+   "tracking": "SUPPORTED_WITH_WARNING",
+   "reasons": [
+    "no bus reported when probed: stop-sequence evidence unchecked"
+   ],
+   "evidence": "probe HTTP 200, 0 bus(es), 0 with an in-route stop sequence; 54 stops, 54 with position, topology linear"
   },
   {
    "routeNo": "652",
@@ -11439,12 +11783,14 @@
    "end": "회수마을회관",
    "stopCount": 53,
    "topology": "linear",
-   "live": "answered_with_buses",
+   "live": "answered_no_bus",
    "timetable": "available",
    "geometry": "STOP_COORDINATES_ONLY",
-   "tracking": "SUPPORTED",
-   "reasons": [],
-   "evidence": "probe HTTP 200, 1 bus(es), 1 with an in-route stop sequence; 53 stops, 53 with position, topology linear"
+   "tracking": "SUPPORTED_WITH_WARNING",
+   "reasons": [
+    "no bus reported when probed: stop-sequence evidence unchecked"
+   ],
+   "evidence": "probe HTTP 200, 0 bus(es), 0 with an in-route stop sequence; 53 stops, 53 with position, topology linear"
   },
   {
    "routeNo": "655",
@@ -11453,12 +11799,14 @@
    "end": "제주공천포 전지훈련센터",
    "stopCount": 69,
    "topology": "linear",
-   "live": "answered_with_buses",
+   "live": "answered_no_bus",
    "timetable": "available",
    "geometry": "STOP_COORDINATES_ONLY",
-   "tracking": "SUPPORTED",
-   "reasons": [],
-   "evidence": "probe HTTP 200, 1 bus(es), 1 with an in-route stop sequence; 69 stops, 69 with position, topology linear"
+   "tracking": "SUPPORTED_WITH_WARNING",
+   "reasons": [
+    "no bus reported when probed: stop-sequence evidence unchecked"
+   ],
+   "evidence": "probe HTTP 200, 0 bus(es), 0 with an in-route stop sequence; 69 stops, 69 with position, topology linear"
   },
   {
    "routeNo": "655",
@@ -11467,12 +11815,14 @@
    "end": "천제연폭포",
    "stopCount": 71,
    "topology": "linear",
-   "live": "answered_with_buses",
+   "live": "answered_no_bus",
    "timetable": "available",
    "geometry": "STOP_COORDINATES_ONLY",
-   "tracking": "SUPPORTED",
-   "reasons": [],
-   "evidence": "probe HTTP 200, 1 bus(es), 1 with an in-route stop sequence; 71 stops, 71 with position, topology linear"
+   "tracking": "SUPPORTED_WITH_WARNING",
+   "reasons": [
+    "no bus reported when probed: stop-sequence evidence unchecked"
+   ],
+   "evidence": "probe HTTP 200, 0 bus(es), 0 with an in-route stop sequence; 71 stops, 71 with position, topology linear"
   },
   {
    "routeNo": "655",
@@ -11481,12 +11831,14 @@
    "end": "제주공천포 전지훈련센터",
    "stopCount": 73,
    "topology": "linear",
-   "live": "answered_with_buses",
+   "live": "answered_no_bus",
    "timetable": "available",
    "geometry": "STOP_COORDINATES_ONLY",
-   "tracking": "SUPPORTED",
-   "reasons": [],
-   "evidence": "probe HTTP 200, 1 bus(es), 1 with an in-route stop sequence; 73 stops, 73 with position, topology linear"
+   "tracking": "SUPPORTED_WITH_WARNING",
+   "reasons": [
+    "no bus reported when probed: stop-sequence evidence unchecked"
+   ],
+   "evidence": "probe HTTP 200, 0 bus(es), 0 with an in-route stop sequence; 73 stops, 73 with position, topology linear"
   },
   {
    "routeNo": "655",
@@ -11511,12 +11863,14 @@
    "end": "강정크루즈 여객터미널",
    "stopCount": 47,
    "topology": "loop",
-   "live": "answered_with_buses",
+   "live": "answered_no_bus",
    "timetable": "available",
    "geometry": "STOP_COORDINATES_ONLY",
-   "tracking": "SUPPORTED",
-   "reasons": [],
-   "evidence": "probe HTTP 200, 1 bus(es), 1 with an in-route stop sequence; 47 stops, 47 with position, topology loop"
+   "tracking": "SUPPORTED_WITH_WARNING",
+   "reasons": [
+    "no bus reported when probed: stop-sequence evidence unchecked"
+   ],
+   "evidence": "probe HTTP 200, 0 bus(es), 0 with an in-route stop sequence; 47 stops, 47 with position, topology loop"
   },
   {
    "routeNo": "680",
@@ -11589,12 +11943,14 @@
    "end": "대포포구",
    "stopCount": 69,
    "topology": "linear",
-   "live": "answered_with_buses",
+   "live": "answered_no_bus",
    "timetable": "available",
    "geometry": "STOP_COORDINATES_ONLY",
-   "tracking": "SUPPORTED",
-   "reasons": [],
-   "evidence": "probe HTTP 200, 1 bus(es), 1 with an in-route stop sequence; 69 stops, 69 with position, topology linear"
+   "tracking": "SUPPORTED_WITH_WARNING",
+   "reasons": [
+    "no bus reported when probed: stop-sequence evidence unchecked"
+   ],
+   "evidence": "probe HTTP 200, 0 bus(es), 0 with an in-route stop sequence; 69 stops, 69 with position, topology linear"
   },
   {
    "routeNo": "690",
@@ -11764,14 +12120,15 @@
    "end": "조천체육관(종점)",
    "stopCount": 71,
    "topology": "linear",
-   "live": "answered_with_buses",
+   "live": "answered_no_bus",
    "timetable": "available",
    "geometry": "STOP_COORDINATES_ONLY",
    "tracking": "SUPPORTED_WITH_WARNING",
    "reasons": [
+    "no bus reported when probed: stop-sequence evidence unchecked",
     "1 virtual stop(s) (가상정류소) in the list"
    ],
-   "evidence": "probe HTTP 200, 1 bus(es), 1 with an in-route stop sequence; 71 stops, 71 with position, topology linear"
+   "evidence": "probe HTTP 200, 0 bus(es), 0 with an in-route stop sequence; 71 stops, 71 with position, topology linear"
   },
   {
    "routeNo": "701-2",
@@ -11813,12 +12170,14 @@
    "end": "조천체육관(종점)",
    "stopCount": 51,
    "topology": "linear",
-   "live": "answered_with_buses",
+   "live": "answered_no_bus",
    "timetable": "available",
    "geometry": "STOP_COORDINATES_ONLY",
-   "tracking": "SUPPORTED",
-   "reasons": [],
-   "evidence": "probe HTTP 200, 1 bus(es), 1 with an in-route stop sequence; 51 stops, 51 with position, topology linear"
+   "tracking": "SUPPORTED_WITH_WARNING",
+   "reasons": [
+    "no bus reported when probed: stop-sequence evidence unchecked"
+   ],
+   "evidence": "probe HTTP 200, 0 bus(es), 0 with an in-route stop sequence; 51 stops, 51 with position, topology linear"
   },
   {
    "routeNo": "702-1",
@@ -11877,14 +12236,15 @@
    "end": "조천체육관(종점)",
    "stopCount": 67,
    "topology": "linear",
-   "live": "answered_with_buses",
+   "live": "answered_no_bus",
    "timetable": "available",
    "geometry": "STOP_COORDINATES_ONLY",
    "tracking": "SUPPORTED_WITH_WARNING",
    "reasons": [
+    "no bus reported when probed: stop-sequence evidence unchecked",
     "1 virtual stop(s) (가상정류소) in the list"
    ],
-   "evidence": "probe HTTP 200, 1 bus(es), 1 with an in-route stop sequence; 67 stops, 67 with position, topology linear"
+   "evidence": "probe HTTP 200, 0 bus(es), 0 with an in-route stop sequence; 67 stops, 67 with position, topology linear"
   },
   {
    "routeNo": "703-1",
@@ -12122,12 +12482,14 @@
    "end": "신사동",
    "stopCount": 69,
    "topology": "linear",
-   "live": "answered_with_buses",
+   "live": "answered_no_bus",
    "timetable": "available",
    "geometry": "STOP_COORDINATES_ONLY",
-   "tracking": "SUPPORTED",
-   "reasons": [],
-   "evidence": "probe HTTP 200, 1 bus(es), 1 with an in-route stop sequence; 69 stops, 69 with position, topology linear"
+   "tracking": "SUPPORTED_WITH_WARNING",
+   "reasons": [
+    "no bus reported when probed: stop-sequence evidence unchecked"
+   ],
+   "evidence": "probe HTTP 200, 0 bus(es), 0 with an in-route stop sequence; 69 stops, 69 with position, topology linear"
   },
   {
    "routeNo": "705",
@@ -12136,14 +12498,15 @@
    "end": "월평 회차지(종점)",
    "stopCount": 71,
    "topology": "linear",
-   "live": "answered_with_buses",
+   "live": "answered_no_bus",
    "timetable": "available",
    "geometry": "STOP_COORDINATES_ONLY",
    "tracking": "SUPPORTED_WITH_WARNING",
    "reasons": [
+    "no bus reported when probed: stop-sequence evidence unchecked",
     "1 virtual stop(s) (가상정류소) in the list"
    ],
-   "evidence": "probe HTTP 200, 1 bus(es), 1 with an in-route stop sequence; 71 stops, 71 with position, topology linear"
+   "evidence": "probe HTTP 200, 0 bus(es), 0 with an in-route stop sequence; 71 stops, 71 with position, topology linear"
   },
   {
    "routeNo": "711-1",
@@ -12891,14 +13254,15 @@
    "end": "공업단지 입구",
    "stopCount": 122,
    "topology": "repeating",
-   "live": "answered_with_buses",
+   "live": "answered_no_bus",
    "timetable": "available",
    "geometry": "STOP_COORDINATES_ONLY",
    "tracking": "SUPPORTED_WITH_WARNING",
    "reasons": [
+    "no bus reported when probed: stop-sequence evidence unchecked",
     "the stop list revisits stops: boarding and destination must be chosen by order"
    ],
-   "evidence": "probe HTTP 200, 1 bus(es), 1 with an in-route stop sequence; 122 stops, 122 with position, topology repeating"
+   "evidence": "probe HTTP 200, 0 bus(es), 0 with an in-route stop sequence; 122 stops, 122 with position, topology repeating"
   },
   {
    "routeNo": "742-1",
@@ -13340,12 +13704,14 @@
    "end": "대평리",
    "stopCount": 56,
    "topology": "loop",
-   "live": "answered_with_buses",
+   "live": "answered_no_bus",
    "timetable": "available",
    "geometry": "STOP_COORDINATES_ONLY",
-   "tracking": "SUPPORTED",
-   "reasons": [],
-   "evidence": "probe HTTP 200, 1 bus(es), 1 with an in-route stop sequence; 56 stops, 56 with position, topology loop"
+   "tracking": "SUPPORTED_WITH_WARNING",
+   "reasons": [
+    "no bus reported when probed: stop-sequence evidence unchecked"
+   ],
+   "evidence": "probe HTTP 200, 0 bus(es), 0 with an in-route stop sequence; 56 stops, 56 with position, topology loop"
   },
   {
    "routeNo": "761-1",
@@ -13482,12 +13848,14 @@
    "end": "고산환승정류장(고산1리)",
    "stopCount": 61,
    "topology": "linear",
-   "live": "answered_with_buses",
+   "live": "answered_no_bus",
    "timetable": "available",
    "geometry": "STOP_COORDINATES_ONLY",
-   "tracking": "SUPPORTED",
-   "reasons": [],
-   "evidence": "probe HTTP 200, 1 bus(es), 1 with an in-route stop sequence; 61 stops, 61 with position, topology linear"
+   "tracking": "SUPPORTED_WITH_WARNING",
+   "reasons": [
+    "no bus reported when probed: stop-sequence evidence unchecked"
+   ],
+   "evidence": "probe HTTP 200, 0 bus(es), 0 with an in-route stop sequence; 61 stops, 61 with position, topology linear"
   },
   {
    "routeNo": "771-2",
@@ -13830,12 +14198,14 @@
    "end": "동광육거리",
    "stopCount": 55,
    "topology": "linear",
-   "live": "answered_with_buses",
+   "live": "answered_no_bus",
    "timetable": "available",
    "geometry": "STOP_COORDINATES_ONLY",
-   "tracking": "SUPPORTED",
-   "reasons": [],
-   "evidence": "probe HTTP 200, 1 bus(es), 1 with an in-route stop sequence; 55 stops, 55 with position, topology linear"
+   "tracking": "SUPPORTED_WITH_WARNING",
+   "reasons": [
+    "no bus reported when probed: stop-sequence evidence unchecked"
+   ],
+   "evidence": "probe HTTP 200, 0 bus(es), 0 with an in-route stop sequence; 55 stops, 55 with position, topology linear"
   },
   {
    "routeNo": "784-1",
@@ -13892,12 +14262,14 @@
    "end": "한림체육관 후문",
    "stopCount": 55,
    "topology": "linear",
-   "live": "answered_with_buses",
+   "live": "answered_no_bus",
    "timetable": "available",
    "geometry": "STOP_COORDINATES_ONLY",
-   "tracking": "SUPPORTED",
-   "reasons": [],
-   "evidence": "probe HTTP 200, 1 bus(es), 1 with an in-route stop sequence; 55 stops, 55 with position, topology linear"
+   "tracking": "SUPPORTED_WITH_WARNING",
+   "reasons": [
+    "no bus reported when probed: stop-sequence evidence unchecked"
+   ],
+   "evidence": "probe HTTP 200, 0 bus(es), 0 with an in-route stop sequence; 55 stops, 55 with position, topology linear"
   },
   {
    "routeNo": "784-2",
@@ -14002,12 +14374,14 @@
    "end": "한림체육관 후문",
    "stopCount": 57,
    "topology": "linear",
-   "live": "answered_with_buses",
+   "live": "answered_no_bus",
    "timetable": "available",
    "geometry": "STOP_COORDINATES_ONLY",
-   "tracking": "SUPPORTED",
-   "reasons": [],
-   "evidence": "probe HTTP 200, 1 bus(es), 1 with an in-route stop sequence; 57 stops, 57 with position, topology linear"
+   "tracking": "SUPPORTED_WITH_WARNING",
+   "reasons": [
+    "no bus reported when probed: stop-sequence evidence unchecked"
+   ],
+   "evidence": "probe HTTP 200, 0 bus(es), 0 with an in-route stop sequence; 57 stops, 57 with position, topology linear"
   },
   {
    "routeNo": "785",
@@ -14453,14 +14827,15 @@
    "end": "하귀하나로마트",
    "stopCount": 57,
    "topology": "repeating",
-   "live": "answered_with_buses",
+   "live": "answered_no_bus",
    "timetable": "available",
    "geometry": "STOP_COORDINATES_ONLY",
    "tracking": "SUPPORTED_WITH_WARNING",
    "reasons": [
+    "no bus reported when probed: stop-sequence evidence unchecked",
     "the stop list revisits stops: boarding and destination must be chosen by order"
    ],
-   "evidence": "probe HTTP 200, 1 bus(es), 1 with an in-route stop sequence; 57 stops, 57 with position, topology repeating"
+   "evidence": "probe HTTP 200, 0 bus(es), 0 with an in-route stop sequence; 57 stops, 57 with position, topology repeating"
   },
   {
    "routeNo": "795",
@@ -14501,14 +14876,15 @@
    "end": "서귀포버스터미널",
    "stopCount": 18,
    "topology": "linear",
-   "live": "answered_with_buses",
+   "live": "answered_no_bus",
    "timetable": "available",
    "geometry": "STOP_COORDINATES_ONLY",
    "tracking": "SUPPORTED_WITH_WARNING",
    "reasons": [
+    "no bus reported when probed: stop-sequence evidence unchecked",
     "1 virtual stop(s) (가상정류소) in the list"
    ],
-   "evidence": "probe HTTP 200, 2 bus(es), 2 with an in-route stop sequence; 18 stops, 18 with position, topology linear"
+   "evidence": "probe HTTP 200, 0 bus(es), 0 with an in-route stop sequence; 18 stops, 18 with position, topology linear"
   },
   {
    "routeNo": "800",
@@ -14517,14 +14893,15 @@
    "end": "제주버스터미널(종점)",
    "stopCount": 17,
    "topology": "linear",
-   "live": "answered_with_buses",
+   "live": "answered_no_bus",
    "timetable": "available",
    "geometry": "STOP_COORDINATES_ONLY",
    "tracking": "SUPPORTED_WITH_WARNING",
    "reasons": [
+    "no bus reported when probed: stop-sequence evidence unchecked",
     "1 virtual stop(s) (가상정류소) in the list"
    ],
-   "evidence": "probe HTTP 200, 2 bus(es), 2 with an in-route stop sequence; 17 stops, 17 with position, topology linear"
+   "evidence": "probe HTTP 200, 0 bus(es), 0 with an in-route stop sequence; 17 stops, 17 with position, topology linear"
   },
   {
    "routeNo": "800",
@@ -14584,14 +14961,12 @@
    "end": "서귀포환승정류장(서귀포등기소)",
    "stopCount": 16,
    "topology": "linear",
-   "live": "answered_no_bus",
+   "live": "answered_with_buses",
    "timetable": "available",
    "geometry": "STOP_COORDINATES_ONLY",
-   "tracking": "SUPPORTED_WITH_WARNING",
-   "reasons": [
-    "no bus reported when probed: stop-sequence evidence unchecked"
-   ],
-   "evidence": "probe HTTP 200, 0 bus(es), 0 with an in-route stop sequence; 16 stops, 16 with position, topology linear"
+   "tracking": "SUPPORTED",
+   "reasons": [],
+   "evidence": "probe HTTP 200, 1 bus(es), 1 with an in-route stop sequence; 16 stops, 16 with position, topology linear"
   },
   {
    "routeNo": "800-1",
@@ -14616,14 +14991,15 @@
    "end": "서귀포환승정류장(서귀포등기소)",
    "stopCount": 17,
    "topology": "linear",
-   "live": "answered_with_buses",
+   "live": "answered_no_bus",
    "timetable": "available",
    "geometry": "STOP_COORDINATES_ONLY",
    "tracking": "SUPPORTED_WITH_WARNING",
    "reasons": [
+    "no bus reported when probed: stop-sequence evidence unchecked",
     "1 virtual stop(s) (가상정류소) in the list"
    ],
-   "evidence": "probe HTTP 200, 2 bus(es), 2 with an in-route stop sequence; 17 stops, 17 with position, topology linear"
+   "evidence": "probe HTTP 200, 0 bus(es), 0 with an in-route stop sequence; 17 stops, 17 with position, topology linear"
   },
   {
    "routeNo": "801",
@@ -14632,12 +15008,14 @@
    "end": "제주버스터미널(종점)",
    "stopCount": 16,
    "topology": "linear",
-   "live": "answered_with_buses",
+   "live": "answered_no_bus",
    "timetable": "available",
    "geometry": "STOP_COORDINATES_ONLY",
-   "tracking": "SUPPORTED",
-   "reasons": [],
-   "evidence": "probe HTTP 200, 1 bus(es), 1 with an in-route stop sequence; 16 stops, 16 with position, topology linear"
+   "tracking": "SUPPORTED_WITH_WARNING",
+   "reasons": [
+    "no bus reported when probed: stop-sequence evidence unchecked"
+   ],
+   "evidence": "probe HTTP 200, 0 bus(es), 0 with an in-route stop sequence; 16 stops, 16 with position, topology linear"
   },
   {
    "routeNo": "801",
@@ -14695,12 +15073,14 @@
    "end": "대천환승정류장(세화방향)",
    "stopCount": 25,
    "topology": "loop",
-   "live": "answered_with_buses",
+   "live": "answered_no_bus",
    "timetable": "available",
    "geometry": "STOP_COORDINATES_ONLY",
-   "tracking": "SUPPORTED",
-   "reasons": [],
-   "evidence": "probe HTTP 200, 1 bus(es), 1 with an in-route stop sequence; 25 stops, 25 with position, topology loop"
+   "tracking": "SUPPORTED_WITH_WARNING",
+   "reasons": [
+    "no bus reported when probed: stop-sequence evidence unchecked"
+   ],
+   "evidence": "probe HTTP 200, 0 bus(es), 0 with an in-route stop sequence; 25 stops, 25 with position, topology loop"
   },
   {
    "routeNo": "810-1",
@@ -14742,14 +15122,15 @@
    "end": "제주국제공항(하차전용)",
    "stopCount": 31,
    "topology": "repeating",
-   "live": "answered_with_buses",
+   "live": "answered_no_bus",
    "timetable": "available",
    "geometry": "STOP_COORDINATES_ONLY",
    "tracking": "SUPPORTED_WITH_WARNING",
    "reasons": [
+    "no bus reported when probed: stop-sequence evidence unchecked",
     "the stop list revisits stops: boarding and destination must be chosen by order"
    ],
-   "evidence": "probe HTTP 200, 1 bus(es), 1 with an in-route stop sequence; 31 stops, 31 with position, topology repeating"
+   "evidence": "probe HTTP 200, 0 bus(es), 0 with an in-route stop sequence; 31 stops, 31 with position, topology repeating"
   },
   {
    "routeNo": "820-1",
@@ -14774,14 +15155,15 @@
    "end": "제주국제공항(하차전용)",
    "stopCount": 37,
    "topology": "repeating",
-   "live": "answered_with_buses",
+   "live": "answered_no_bus",
    "timetable": "available",
    "geometry": "STOP_COORDINATES_ONLY",
    "tracking": "SUPPORTED_WITH_WARNING",
    "reasons": [
+    "no bus reported when probed: stop-sequence evidence unchecked",
     "the stop list revisits stops: boarding and destination must be chosen by order"
    ],
-   "evidence": "probe HTTP 200, 1 bus(es), 1 with an in-route stop sequence; 37 stops, 37 with position, topology repeating"
+   "evidence": "probe HTTP 200, 0 bus(es), 0 with an in-route stop sequence; 37 stops, 37 with position, topology repeating"
   },
   {
    "routeNo": "820-2",
@@ -14790,12 +15172,14 @@
    "end": "동광환승정류장(종점)",
    "stopCount": 31,
    "topology": "linear",
-   "live": "answered_with_buses",
+   "live": "answered_no_bus",
    "timetable": "available",
    "geometry": "STOP_COORDINATES_ONLY",
-   "tracking": "SUPPORTED",
-   "reasons": [],
-   "evidence": "probe HTTP 200, 1 bus(es), 1 with an in-route stop sequence; 31 stops, 31 with position, topology linear"
+   "tracking": "SUPPORTED_WITH_WARNING",
+   "reasons": [
+    "no bus reported when probed: stop-sequence evidence unchecked"
+   ],
+   "evidence": "probe HTTP 200, 0 bus(es), 0 with an in-route stop sequence; 31 stops, 31 with position, topology linear"
   },
   {
    "routeNo": "820-2",
@@ -14836,12 +15220,14 @@
    "end": "제주도청 신제주로터리",
    "stopCount": 30,
    "topology": "linear",
-   "live": "answered_with_buses",
+   "live": "answered_no_bus",
    "timetable": "available",
    "geometry": "STOP_COORDINATES_ONLY",
-   "tracking": "SUPPORTED",
-   "reasons": [],
-   "evidence": "probe HTTP 200, 1 bus(es), 1 with an in-route stop sequence; 30 stops, 30 with position, topology linear"
+   "tracking": "SUPPORTED_WITH_WARNING",
+   "reasons": [
+    "no bus reported when probed: stop-sequence evidence unchecked"
+   ],
+   "evidence": "probe HTTP 200, 0 bus(es), 0 with an in-route stop sequence; 30 stops, 30 with position, topology linear"
   },
   {
    "routeNo": "880",
@@ -14850,12 +15236,14 @@
    "end": "향토오일시장",
    "stopCount": 46,
    "topology": "loop",
-   "live": "answered_with_buses",
+   "live": "answered_no_bus",
    "timetable": "available",
    "geometry": "STOP_COORDINATES_ONLY",
-   "tracking": "SUPPORTED",
-   "reasons": [],
-   "evidence": "probe HTTP 200, 2 bus(es), 2 with an in-route stop sequence; 46 stops, 46 with position, topology loop"
+   "tracking": "SUPPORTED_WITH_WARNING",
+   "reasons": [
+    "no bus reported when probed: stop-sequence evidence unchecked"
+   ],
+   "evidence": "probe HTTP 200, 0 bus(es), 0 with an in-route stop sequence; 46 stops, 46 with position, topology loop"
   },
   {
    "routeNo": "888-8",
@@ -15135,12 +15523,14 @@
    "end": "추자항 여객선터미널",
    "stopCount": 31,
    "topology": "linear",
-   "live": "answered_with_buses",
+   "live": "answered_no_bus",
    "timetable": "available",
    "geometry": "STOP_COORDINATES_ONLY",
-   "tracking": "SUPPORTED",
-   "reasons": [],
-   "evidence": "probe HTTP 200, 1 bus(es), 1 with an in-route stop sequence; 31 stops, 31 with position, topology linear"
+   "tracking": "SUPPORTED_WITH_WARNING",
+   "reasons": [
+    "no bus reported when probed: stop-sequence evidence unchecked"
+   ],
+   "evidence": "probe HTTP 200, 0 bus(es), 0 with an in-route stop sequence; 31 stops, 31 with position, topology linear"
   },
   {
    "routeNo": "999",
@@ -15229,14 +15619,12 @@
    "end": "제주국제공항(하차전용)",
    "stopCount": 34,
    "topology": "linear",
-   "live": "answered_no_bus",
+   "live": "answered_with_buses",
    "timetable": "source_conflict",
    "geometry": "STOP_COORDINATES_ONLY",
-   "tracking": "SUPPORTED_WITH_WARNING",
-   "reasons": [
-    "no bus reported when probed: stop-sequence evidence unchecked"
-   ],
-   "evidence": "probe HTTP 200, 0 bus(es), 0 with an in-route stop sequence; 34 stops, 34 with position, topology linear"
+   "tracking": "SUPPORTED",
+   "reasons": [],
+   "evidence": "probe HTTP 200, 2 bus(es), 2 with an in-route stop sequence; 34 stops, 34 with position, topology linear"
   },
   {
    "routeNo": "3001",
@@ -15245,14 +15633,12 @@
    "end": "제주국제공항(하차전용)",
    "stopCount": 38,
    "topology": "linear",
-   "live": "answered_no_bus",
+   "live": "answered_with_buses",
    "timetable": "source_conflict",
    "geometry": "STOP_COORDINATES_ONLY",
-   "tracking": "SUPPORTED_WITH_WARNING",
-   "reasons": [
-    "no bus reported when probed: stop-sequence evidence unchecked"
-   ],
-   "evidence": "probe HTTP 200, 0 bus(es), 0 with an in-route stop sequence; 38 stops, 38 with position, topology linear"
+   "tracking": "SUPPORTED",
+   "reasons": [],
+   "evidence": "probe HTTP 200, 2 bus(es), 2 with an in-route stop sequence; 38 stops, 38 with position, topology linear"
   },
   {
    "routeNo": "3001",
@@ -15581,14 +15967,12 @@
    "end": "우당도서관/국립제주박물관",
    "stopCount": 37,
    "topology": "loop",
-   "live": "answered_no_bus",
+   "live": "answered_with_buses",
    "timetable": "available",
    "geometry": "STOP_COORDINATES_ONLY",
-   "tracking": "SUPPORTED_WITH_WARNING",
-   "reasons": [
-    "no bus reported when probed: stop-sequence evidence unchecked"
-   ],
-   "evidence": "probe HTTP 200, 0 bus(es), 0 with an in-route stop sequence; 37 stops, 37 with position, topology loop"
+   "tracking": "SUPPORTED",
+   "reasons": [],
+   "evidence": "probe HTTP 200, 1 bus(es), 1 with an in-route stop sequence; 37 stops, 37 with position, topology loop"
   },
   {
    "routeNo": "3008",
@@ -15597,14 +15981,12 @@
    "end": "제주한라대학교",
    "stopCount": 57,
    "topology": "linear",
-   "live": "answered_no_bus",
+   "live": "answered_with_buses",
    "timetable": "available",
    "geometry": "STOP_COORDINATES_ONLY",
-   "tracking": "SUPPORTED_WITH_WARNING",
-   "reasons": [
-    "no bus reported when probed: stop-sequence evidence unchecked"
-   ],
-   "evidence": "probe HTTP 200, 0 bus(es), 0 with an in-route stop sequence; 57 stops, 57 with position, topology linear"
+   "tracking": "SUPPORTED",
+   "reasons": [],
+   "evidence": "probe HTTP 200, 1 bus(es), 1 with an in-route stop sequence; 57 stops, 57 with position, topology linear"
   },
   {
    "routeNo": "3008",
