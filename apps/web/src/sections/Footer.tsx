@@ -29,6 +29,9 @@ export function Footer() {
               <a href="#waitlist">TestFlight 사전예약</a>
             </li>
             <li>
+              <a href="#support">개발 후원하기</a>
+            </li>
+            <li>
               <a href="#status">개발 현황</a>
             </li>
             <li>
