@@ -163,7 +163,8 @@ type Route =
   | "session_confirm"
   | "session_live_activity"
   | "operator_snapshot"
-  | "operator_analyze";
+  | "operator_analyze"
+  | "operator_live_activity_tick";
 
 type Resolved = { route: Route; methods: string[]; sessionId?: string };
 
@@ -260,6 +261,8 @@ function resolvePath(path: string): Resolved | undefined {
   // anything public; see `docs/RIDE_CAPTURE_CONTROLLER.md`.
   if (path === "/operator/snapshot") return { route: "operator_snapshot", methods: ["GET"] };
   if (path === "/operator/analyze") return { route: "operator_analyze", methods: ["POST"] };
+  // The Live Activity scheduler (`LIVE_ACTIVITY_PUSH.md` milestone 5), called by the Railway collector.
+  if (path === "/operator/live-activity/tick") return { route: "operator_live_activity_tick", methods: ["POST"] };
 
   // Rewrite targets: the session identifier arrives as a query parameter.
   if (path === "/v1/session") return { route: "session_read", methods: ["GET", "DELETE"] };
@@ -538,6 +541,12 @@ async function dispatch(
 
   const sessions = requireSessions(dependencies);
 
+  if (resolved.route === "operator_live_activity_tick") {
+    const pusher = dependencies.liveActivityPusher;
+    if (!pusher) throw apiError("LIVE_ACTIVITY_PUSH_UNAVAILABLE", "Live Activity updates by push are not enabled on this deployment");
+    return { response: json(await liveActivityTick(sessions, pusher), 200, { "cache-control": "no-store" }) };
+  }
+
   if (resolved.route === "session_create") {
     const session = await sessions.create(await readJsonBody(request));
     logEvent("journey_session_created", {
@@ -593,6 +602,49 @@ async function dispatch(
     selectedVehicleId: session.selectedVehicleId,
   });
   return { response: json(session, 200, { "cache-control": "no-store" }) };
+}
+
+/* ------------------------------------------------- live activity scheduler */
+
+/** Sessions one tick looks at; a Redis `SRANDMEMBER` sample, so a larger index is covered over several ticks. */
+export const LIVE_ACTIVITY_TICK_BATCH = 20;
+/** Past this a tick stops starting sessions and answers; the rest wait for the next tick. Below a serverless function's 10 s floor. */
+export const LIVE_ACTIVITY_TICK_BUDGET_MS = 8_000;
+
+/**
+ * One scheduler tick: refresh each indexed ride the app has not read lately and
+ * push its Live Activity, as a read by the app would. One session's failure
+ * (provider, store, expiry race) is counted and the tick moves on. The answer
+ * and the log carry counts only: no session id, no vehicle, no token.
+ */
+async function liveActivityTick(
+  sessions: JourneySessionCoordinator,
+  pusher: Pick<LiveActivityPusher, "afterRead">,
+): Promise<{ sampled: number; refreshed: number; recent: number; removed: number; failed: number; deferred: number }> {
+  const started = Date.now();
+  const ids = await sessions.liveActivityTickCandidates(LIVE_ACTIVITY_TICK_BATCH);
+  const counts = { sampled: ids.length, refreshed: 0, recent: 0, removed: 0, failed: 0, deferred: 0 };
+  for (const id of ids) {
+    if (Date.now() - started > LIVE_ACTIVITY_TICK_BUDGET_MS) {
+      counts.deferred += 1;
+      continue;
+    }
+    try {
+      const outcome = await sessions.tickLiveActivity(id);
+      if (outcome.kind === "refreshed") {
+        await pusher.afterRead(outcome.view);
+        counts.refreshed += 1;
+      } else if (outcome.kind === "recent") {
+        counts.recent += 1;
+      } else {
+        counts.removed += 1;
+      }
+    } catch {
+      counts.failed += 1;
+    }
+  }
+  logEvent("live_activity_tick", { ...counts, durationMs: Date.now() - started });
+  return counts;
 }
 
 /* ------------------------------------------------------------------- health */
@@ -782,7 +834,7 @@ function parseMatchRequest(value: unknown): MatchRequest {
 /* ------------------------------------------------------------------- limits */
 
 function isOperatorRoute(route: Route): boolean {
-  return route === "operator_snapshot" || route === "operator_analyze";
+  return route === "operator_snapshot" || route === "operator_analyze" || route === "operator_live_activity_tick";
 }
 
 function enforceRateLimit(dependencies: TransitApiDependencies, address: string, route: Route): void {

@@ -208,6 +208,20 @@ export interface JourneySessionView {
   expiresAt: string;
 }
 
+/**
+ * A scheduler tick leaves alone a session read this recently: the app, or the
+ * previous tick, is already keeping it current (`LIVE_ACTIVITY_PUSH.md`
+ * milestone 5). Below the collector's 20 s cadence, so a suspended app's ride is
+ * read on every tick.
+ */
+export const LIVE_ACTIVITY_TICK_MIN_AGE_MS = 15_000;
+
+/** What one scheduler tick did with one indexed session. */
+export type LiveActivityTickOutcome =
+  | { kind: "refreshed"; view: JourneySessionView }
+  | { kind: "recent" }
+  | { kind: "removed"; reason: "gone" | "expired" | "no_token" };
+
 /** What `liveActivityTarget` returns. The token is a capability: never log it, never return it. */
 export interface LiveActivityTarget {
   token: string;
@@ -479,6 +493,7 @@ export class JourneySessionCoordinator {
     const stored = await this.store.load(id);
     if (!stored) throw new SessionNotFoundError();
     await this.store.delete(id);
+    await this.store.pushIndex?.remove(id);
     const { session } = stored;
     return {
       id: session.id,
@@ -500,7 +515,37 @@ export class JourneySessionCoordinator {
       const delivery = row.liveActivityPush?.delivery;
       row.liveActivityPush = { token, fingerprint: tokenFingerprint(token), registeredAtMs, ...(delivery ? { delivery } : {}) };
     });
+    // After the token is stored: an index entry without a token is harmless (the
+    // tick removes it); a token without an entry would never be pushed to while
+    // the app is suspended, and a failure here fails the registration instead.
+    await this.store.pushIndex?.add(id);
     return registrationView(record);
+  }
+
+  /** Up to `limit` sessions that hold a push token, for one scheduler tick. */
+  async liveActivityTickCandidates(limit: number): Promise<string[]> {
+    return (await this.store.pushIndex?.sample(limit)) ?? [];
+  }
+
+  /**
+   * One scheduler tick for one indexed session: refresh it unless it was read
+   * within `LIVE_ACTIVITY_TICK_MIN_AGE_MS`, or drop it from the index when it
+   * no longer needs pushes. An expired row is left for the app to read as
+   * `410`; only its index entry goes. Pushing is the caller's (`LiveActivityPusher`).
+   */
+  async tickLiveActivity(id: string): Promise<LiveActivityTickOutcome> {
+    const stored = await this.store.load(id);
+    const removed = async (reason: "gone" | "expired" | "no_token"): Promise<LiveActivityTickOutcome> => {
+      await this.store.pushIndex?.remove(id);
+      return { kind: "removed", reason };
+    };
+    if (!stored) return removed("gone");
+    const nowMs = this.now().getTime();
+    if (stored.session.expiresAtMs <= nowMs) return removed("expired");
+    const record = toRecord(stored.session);
+    if (!record.liveActivityPush) return removed("no_token");
+    if (nowMs - record.updatedAtMs < LIVE_ACTIVITY_TICK_MIN_AGE_MS) return { kind: "recent" };
+    return { kind: "refreshed", view: await this.refresh(id) };
   }
 
   /**
@@ -545,9 +590,10 @@ export class JourneySessionCoordinator {
 
   /** APNs rejected this token: forget it, unless it has already been replaced. */
   async dropLiveActivityToken(id: string, fingerprint: string): Promise<void> {
-    await this.writePushToken(id, (row) => {
+    const record = await this.writePushToken(id, (row) => {
       if (row.liveActivityPush?.fingerprint === fingerprint) delete row.liveActivityPush;
     });
+    if (!record.liveActivityPush) await this.store.pushIndex?.remove(id);
   }
 
   /** The activity ended or the rider turned updates off. Clearing an absent token is not an error. */
@@ -555,6 +601,7 @@ export class JourneySessionCoordinator {
     await this.writePushToken(id, (row) => {
       delete row.liveActivityPush;
     });
+    await this.store.pushIndex?.remove(id);
   }
 
   /**

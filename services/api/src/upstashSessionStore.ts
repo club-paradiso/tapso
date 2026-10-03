@@ -20,6 +20,7 @@ import { upstashCommand } from "./upstashRest.ts";
 import {
   SessionStoreError,
   type JourneySessionStore,
+  type LiveActivityPushIndex,
   type SaveOutcome,
   type StoredJourneySession,
   type VersionedJourneySession,
@@ -35,6 +36,13 @@ import {
  * except letting the coordinator give the accurate answer.
  */
 export const DEFAULT_EXPIRY_GRACE_MS = 5 * 60 * 1_000;
+
+/**
+ * The push index's key, under the store's own prefix
+ * (`LIVE_ACTIVITY_PUSH.md` milestone 5), so it never reads or writes outside
+ * the deployment's namespace. No session id may take this name.
+ */
+export const PUSH_INDEX_KEY_SUFFIX = "push-index";
 
 /**
  * Compare-and-set in one round trip.
@@ -93,10 +101,41 @@ export class UpstashJourneySessionStore implements JourneySessionStore {
 
   /** The Redis key a session id maps to. Every command goes through this. */
   keyFor(id: string): string {
+    if (id === PUSH_INDEX_KEY_SUFFIX) throw new SessionStoreError("a session id cannot be the push index's name");
     return `${this.keyPrefix}${id}`;
   }
 
+  /** A Redis set of session ids; `SRANDMEMBER` bounds each tick's work however many rides are live. */
+  readonly pushIndex: LiveActivityPushIndex = {
+    add: async (id) => {
+      await this.command(["SADD", this.indexKey(), this.checkedId(id)]);
+    },
+    remove: async (id) => {
+      await this.command(["SREM", this.indexKey(), this.checkedId(id)]);
+    },
+    sample: async (limit) => {
+      if (limit <= 0) return [];
+      const reply = await this.command(["SRANDMEMBER", this.indexKey(), String(Math.floor(limit))]);
+      if (reply === null || reply === undefined) return [];
+      if (!Array.isArray(reply) || !reply.every((member) => typeof member === "string")) {
+        throw new SessionStoreError("the session store returned an unrecognised push index reply");
+      }
+      return reply as string[];
+    },
+  };
+
+  private indexKey(): string {
+    return `${this.keyPrefix}${PUSH_INDEX_KEY_SUFFIX}`;
+  }
+
+  private checkedId(id: string): string {
+    this.keyFor(id);
+    return id;
+  }
+
   async load(id: string): Promise<VersionedJourneySession | undefined> {
+    // The index's name is never a session: a rider asking for it gets 404, not the store's error.
+    if (id === PUSH_INDEX_KEY_SUFFIX) return undefined;
     const result = await this.command(["GET", this.keyFor(id)]);
     if (result === null || result === undefined) return undefined;
     return decode(expectString(result, "GET"));

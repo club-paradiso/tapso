@@ -8,9 +8,9 @@
  * (`ApnsOutcome`) and the next read tries again with newer content. Logs carry
  * the token's fingerprint, never the token.
  *
- * What reads the session while the app is suspended is milestone 5 (the
- * scheduler). Until it exists a push follows only the app's own reads, which is
- * still what keeps a backgrounded activity's stale date moving between them.
+ * While the app is suspended, the scheduler's tick reads the session instead
+ * (milestone 5, `POST /operator/live-activity/tick`) and calls `afterRead` the
+ * same way.
  */
 
 import type { ApnsOutcome, LiveActivityPush } from "./apns.ts";

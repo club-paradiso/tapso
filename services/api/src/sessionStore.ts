@@ -110,7 +110,23 @@ export type SaveOutcome =
   | { outcome: "saved"; version: number }
   | { outcome: "conflict"; stored?: VersionedJourneySession };
 
+/**
+ * The ids of sessions that hold a Live Activity push token
+ * (`docs/exec-plans/LIVE_ACTIVITY_PUSH.md`, milestone 5). Only the scheduler's
+ * tick reads it, to find rides whose app may be suspended. It holds ids, never
+ * tokens. An entry can outlive its session (a crash between two writes); the
+ * tick removes any entry whose row is gone, expired or holds no token.
+ */
+export interface LiveActivityPushIndex {
+  add(id: string): Promise<void>;
+  remove(id: string): Promise<void>;
+  /** Up to `limit` ids, in no particular order. */
+  sample(limit: number): Promise<string[]>;
+}
+
 export interface JourneySessionStore {
+  /** Absent on a store that cannot index; the coordinator then indexes nothing. */
+  readonly pushIndex?: LiveActivityPushIndex;
   /**
    * Undefined only when no row exists. An expired row is returned as-is; the
    * coordinator owns the expiry decision so `410` stays distinguishable
@@ -141,6 +157,16 @@ export interface JourneySessionStore {
  */
 export class MemoryJourneySessionStore implements JourneySessionStore {
   private readonly rows = new Map<string, { session: string; version: number }>();
+  private readonly indexed = new Set<string>();
+  readonly pushIndex: LiveActivityPushIndex = {
+    add: async (id) => {
+      this.indexed.add(id);
+    },
+    remove: async (id) => {
+      this.indexed.delete(id);
+    },
+    sample: async (limit) => [...this.indexed].slice(0, Math.max(0, limit)),
+  };
   private readonly now: () => Date;
 
   constructor(options: { now?: () => Date } = {}) {

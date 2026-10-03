@@ -9,6 +9,7 @@ export type TapsoEvent =
   | "journey_session_created"
   | "journey_session_ended"
   | "live_activity_token_registered"
+  | "live_activity_tick"
   | "vehicle_lost"
   | "transit_data_stale"
   | "destination_approaching"
