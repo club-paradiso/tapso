@@ -108,7 +108,7 @@ final class SnapshotEvidenceTests: XCTestCase {
             ("41-stop-picker-fixed-destination", stopPickerWithFixedDestination()),
             ("42-timetable-today", AnyView(TimetableCard(routeNumber: "202", load: .loaded(timetable(Self.timetableToday)), onLoad: {}, onShowAll: { _ in }).padding())),
             ("43-timetable-unavailable", AnyView(TimetableCard(routeNumber: "999", load: .loaded(timetable(Self.timetableNone)), onLoad: {}, onShowAll: { _ in }).padding())),
-            ("44-timetable-sheet", AnyView(TimetableSheet(view: timetable(Self.timetableToday))))
+            ("44-timetable-sheet", AnyView(TimetableSheetContent(view: timetable(Self.timetableToday))))
         ]
         for (name, view) in screens {
             for scheme in [ColorScheme.light, .dark] {

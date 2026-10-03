@@ -119,28 +119,12 @@ struct TimetableCard: View {
 /// timepoints the table says nothing, and neither does TAPSO.
 struct TimetableSheet: View {
     let view: TransitAPITimetable
-    @State private var selection: [String: Int] = [:]
     @Environment(\.dismiss) private var dismiss
-
-    private var services: [TransitAPITimetable.Service] {
-        view.services.filter { $0.status == "ok" && !$0.trips.isEmpty }
-    }
 
     var body: some View {
         NavigationStack {
             ScrollView {
-                VStack(alignment: .leading, spacing: TapsoSpace.lg) {
-                    Text(String(format: RideText.string("route.timetable.sheet.source"), view.asOf))
-                        .font(.footnote)
-                        .foregroundStyle(TapsoColor.textSecondary)
-                        .fixedSize(horizontal: false, vertical: true)
-                    ForEach(Array(services.enumerated()), id: \.offset) { position, service in
-                        serviceSection(service, key: "\(position)")
-                    }
-                }
-                .padding(.horizontal, TapsoSpace.gutter)
-                .padding(.vertical, TapsoSpace.lg)
-                .frame(maxWidth: .infinity, alignment: .leading)
+                TimetableSheetContent(view: view)
             }
             .background(TapsoColor.backgroundPrimary)
             .navigationTitle(Text(String(format: RideText.string("route.timetable.sheet.title"), view.routeNo)))
@@ -151,6 +135,31 @@ struct TimetableSheet: View {
                 }
             }
         }
+    }
+}
+
+/// The sheet's body, apart from its navigation chrome, so it renders in snapshot evidence.
+struct TimetableSheetContent: View {
+    let view: TransitAPITimetable
+    @State private var selection: [String: Int] = [:]
+
+    private var services: [TransitAPITimetable.Service] {
+        view.services.filter { $0.status == "ok" && !$0.trips.isEmpty }
+    }
+
+    var body: some View {
+        VStack(alignment: .leading, spacing: TapsoSpace.lg) {
+            Text(String(format: RideText.string("route.timetable.sheet.source"), view.asOf))
+                .font(.footnote)
+                .foregroundStyle(TapsoColor.textSecondary)
+                .fixedSize(horizontal: false, vertical: true)
+            ForEach(Array(services.enumerated()), id: \.offset) { position, service in
+                serviceSection(service, key: "\(position)")
+            }
+        }
+        .padding(.horizontal, TapsoSpace.gutter)
+        .padding(.vertical, TapsoSpace.lg)
+        .frame(maxWidth: .infinity, alignment: .leading)
     }
 
     private func serviceSection(_ service: TransitAPITimetable.Service, key: String) -> some View {
