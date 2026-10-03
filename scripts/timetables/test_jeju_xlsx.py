@@ -161,6 +161,18 @@ class Refusals(unittest.TestCase):
         moved = synthetic_sheet(title="442번", summary="첫차 05:50", rows=[["05:56", "06:00", ""]])
         self.assertRefused("05:50 disagrees with the trips (05:56)", moved)
 
+    def test_a_column_past_a_blank_header_is_refused_not_dropped(self) -> None:
+        sheet = synthetic_sheet(summary="")
+        del sheet["E7"]  # no 비고: the header ends at a blank
+        sheet["F7"] = "합성C"
+        sheet["F8"] = "06:20"
+        self.assertRefused("right of the table's last column (D)", sheet)
+
+    def test_a_value_past_the_note_column_is_refused(self) -> None:
+        sheet = synthetic_sheet(summary="")
+        sheet["F9"] = "07:30"
+        self.assertRefused("cell F9", sheet)
+
     def test_a_missing_trip_number(self) -> None:
         sheet = synthetic_sheet()
         sheet["B9"] = "3"

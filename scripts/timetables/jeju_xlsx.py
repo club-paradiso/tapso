@@ -182,6 +182,11 @@ def parse_sheet(name: str, cells: dict[tuple[int, int], str]) -> tuple[str, dict
     if len(timepoints) < 2:
         raise TimetableParseError(f"sheet {name!r}: fewer than two timepoints in row {header}")
     last_column = (note_column or column - 1)
+    # Nothing may sit right of the table: a blank spacer header would otherwise
+    # end the scan early and drop every column after it without a word.
+    stray = sorted((c, r) for (c, r), text in cells.items() if r >= header and c > last_column and text.strip())
+    if stray:
+        raise TimetableParseError(f"{where(*stray[0])}: a value right of the table's last column ({column_letter(last_column)})")
 
     trips = []
     row = header + 1
