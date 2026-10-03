@@ -280,6 +280,10 @@ final class TapsoAppModel {
     private(set) var screenshotImport: ScreenshotImportState = .idle
     /// A stop the screenshot showed as the place to get off, while the rider chooses where to board.
     private(set) var screenshotDestination: RouteStop?
+    /// Whether the original of the picked screenshot can be deleted from Photos, and how that went.
+    private(set) var originalDeletion: OriginalDeletionState = .unavailable
+    /// The picked photo's Photos identifier. Only the rider's own "delete" uses it.
+    @ObservationIgnored private var screenshotAssetID: String?
     /// The route that stop belongs to: the suggestion is offered on no other route.
     private(set) var screenshotDestinationRoute: RouteID?
     /// After a live ride: today's last buses of the route number, for the way back.
@@ -295,6 +299,7 @@ final class TapsoAppModel {
     @ObservationIgnored private let api: TapsoAPIClient
     @ObservationIgnored private let routeCatalog: LiveRouteImportCatalog
     @ObservationIgnored private let screenshotImporter: ScreenshotRouteImporter
+    @ObservationIgnored private let originalEraser: any ScreenshotOriginalEraser
     @ObservationIgnored private var screenshotTask: Task<Void, Never>?
     @ObservationIgnored private var searchTask: Task<Void, Never>?
     @ObservationIgnored private var playbackTask: Task<Void, Never>?
@@ -316,7 +321,8 @@ final class TapsoAppModel {
         returnReminders: ReturnReminderClient? = ReturnReminderClient(),
         api: TapsoAPIClient = TapsoAPIClient(),
         routeCatalog: LiveRouteImportCatalog? = nil,
-        screenshotImporter: ScreenshotRouteImporter? = nil
+        screenshotImporter: ScreenshotRouteImporter? = nil,
+        originalEraser: any ScreenshotOriginalEraser = PhotoLibraryScreenshotEraser()
     ) {
         self.store = store
         self.liveActivity = liveActivity
@@ -324,6 +330,7 @@ final class TapsoAppModel {
         self.api = api
         let catalog = routeCatalog ?? LiveRouteImportCatalog(api: api)
         self.routeCatalog = catalog
+        self.originalEraser = originalEraser
         self.screenshotImporter = screenshotImporter ?? ScreenshotRouteImporter(
             interpreter: LocalVisionRouteInterpreter(recognizer: VisionScreenshotTextRecognizer()),
             source: catalog
@@ -448,8 +455,35 @@ final class TapsoAppModel {
 
     /// Reads a screenshot the rider picked: text on the device, then TAPSO's own routes for the bus
     /// numbers read. The picture is never stored or sent, and nothing starts until the rider confirms.
-    func importScreenshot(_ imageData: Data) {
+    /// - Parameter assetID: the photo's Photos identifier, when the picker gave one. It lets the rider
+    ///   delete the original afterwards; it is never used otherwise.
+    func importScreenshot(_ imageData: Data, assetID: String? = nil) {
         beginScreenshotImport { importer in await importer.importRoute(from: imageData) }
+        screenshotAssetID = assetID
+        originalDeletion = assetID == nil ? .unavailable : .available
+    }
+
+    /// The rider asked to delete the original screenshot from Photos. Photo access is requested now, the
+    /// first time, and iOS confirms the deletion itself.
+    func deleteOriginalScreenshot() async {
+        guard let assetID = screenshotAssetID else { return }
+        switch originalDeletion {
+        case .available, .failed: break
+        case .unavailable, .deleting, .deleted: return
+        }
+        originalDeletion = .deleting
+        let outcome = await originalEraser.erase(assetIdentifier: assetID)
+        switch outcome {
+        case .deleted:
+            screenshotAssetID = nil
+            originalDeletion = .deleted
+        case .cancelled:
+            originalDeletion = .available
+        case .denied:
+            originalDeletion = .failed(.denied)
+        case .notFound, .failed:
+            originalDeletion = .failed(.other)
+        }
     }
 
     /// A screenshot shared to TAPSO from the Photos share sheet: the extension read it on the device and
@@ -468,6 +502,8 @@ final class TapsoAppModel {
         sharedPlaceUnreadable = false
         screenshotDestination = nil
         screenshotDestinationRoute = nil
+        screenshotAssetID = nil
+        originalDeletion = .unavailable
         screenshotImport = .reading
         let importer = screenshotImporter
         screenshotTask = Task { [weak self] in
@@ -487,6 +523,8 @@ final class TapsoAppModel {
     func cancelScreenshotImport() {
         screenshotTask?.cancel()
         screenshotTask = nil
+        screenshotAssetID = nil
+        originalDeletion = .unavailable
         screenshotImport = .idle
     }
 
@@ -1504,4 +1542,21 @@ enum ScreenshotImportState: Equatable {
     /// Several candidates, or one that is not certain enough to confirm outright.
     case choose([RouteImportProposal])
     case failed(RouteImportFailure)
+}
+
+/// Deleting the original screenshot from Photos, which only the rider can ask for.
+enum OriginalDeletionState: Equatable {
+    /// No original to delete: not picked from Photos (a shared screenshot has no identifier), or already deleted.
+    case unavailable
+    case available
+    case deleting
+    case deleted
+    case failed(OriginalDeletionFailure)
+}
+
+enum OriginalDeletionFailure: Equatable {
+    /// Photo access was refused.
+    case denied
+    /// Photos did not show the photo to TAPSO, or the change failed.
+    case other
 }

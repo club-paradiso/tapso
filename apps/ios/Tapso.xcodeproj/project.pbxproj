@@ -68,6 +68,7 @@
 		9D5E3B6CEF9138AE20C99988 /* VisionScreenshotTextRecognizer.swift in Sources */ = {isa = PBXBuildFile; fileRef = C91A93C001D9AF658DA966C6 /* VisionScreenshotTextRecognizer.swift */; };
 		22E0764272F0461035C8207B /* ScreenshotImportFlowTests.swift in Sources */ = {isa = PBXBuildFile; fileRef = 6DB796C0ED563974A2B95EA4 /* ScreenshotImportFlowTests.swift */; };
 		363E0A0519C802CACA510480 /* VisionScreenshotTextRecognizer.swift in Sources */ = {isa = PBXBuildFile; fileRef = C91A93C001D9AF658DA966C6 /* VisionScreenshotTextRecognizer.swift */; };
+		5511485E8DD9FA463D1FB2A9 /* PhotoLibraryScreenshotEraser.swift in Sources */ = {isa = PBXBuildFile; fileRef = 85623FA1F6C3B0EE2F9DC99A /* PhotoLibraryScreenshotEraser.swift */; };
 /* End PBXBuildFile section */
 
 /* Begin PBXContainerItemProxy section */
@@ -161,6 +162,7 @@
 		B44662751CB9EDA0A65897FC /* ScreenshotImportViews.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = ScreenshotImportViews.swift; sourceTree = "<group>"; };
 		C91A93C001D9AF658DA966C6 /* VisionScreenshotTextRecognizer.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = VisionScreenshotTextRecognizer.swift; sourceTree = "<group>"; };
 		6DB796C0ED563974A2B95EA4 /* ScreenshotImportFlowTests.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = ScreenshotImportFlowTests.swift; sourceTree = "<group>"; };
+		85623FA1F6C3B0EE2F9DC99A /* PhotoLibraryScreenshotEraser.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = PhotoLibraryScreenshotEraser.swift; sourceTree = "<group>"; };
 /* End PBXFileReference section */
 
 /* Begin PBXFrameworksBuildPhase section */
@@ -272,6 +274,7 @@
 				6BF30D970AD35EAC3FE1308C /* LiveActivityClient.swift */,
 				01DE7451FA463336C39A13CA /* LiveRideSetupViews.swift */,
 				8B023AAD9EC6D00AFF13C829 /* LiveRouteImportCatalog.swift */,
+				85623FA1F6C3B0EE2F9DC99A /* PhotoLibraryScreenshotEraser.swift */,
 				1BA1E189F8D5241F18ABD214 /* RideEndView.swift */,
 				857A4229A2F4867FB62DD336 /* RideFeedback.swift */,
 				B71E19ABC4E943435650D65F /* RideView.swift */,
@@ -504,6 +507,7 @@
 				216C1DAF60AA1BF258CBA512 /* LiveActivitySurfaces.swift in Sources */,
 				16CBA37E2A09BAAB0168A223 /* LiveRideSetupViews.swift in Sources */,
 				15C8BE959913FD7DC74C90BC /* LiveRouteImportCatalog.swift in Sources */,
+				5511485E8DD9FA463D1FB2A9 /* PhotoLibraryScreenshotEraser.swift in Sources */,
 				9E47BA264E7738D256848D31 /* ReturnActivitySurfaces.swift in Sources */,
 				E90C569F723A43A0F30ED146 /* RideEndView.swift in Sources */,
 				3D1562DEB72025EBE17ABDCD /* RideFeedback.swift in Sources */,

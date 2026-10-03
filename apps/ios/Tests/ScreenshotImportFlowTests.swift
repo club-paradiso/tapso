@@ -166,6 +166,75 @@ final class ScreenshotImportFlowTests: XCTestCase {
         XCTAssertEqual(model.screenshotImport, .idle)
     }
 
+    // MARK: Deleting the original from Photos
+
+    func testTheRiderCanDeleteTheOriginalAndTapsoAsksPhotosOnlyThen() async throws {
+        let eraser = FakeEraser(outcome: .deleted)
+        let model = makeModel(screen: kakaoLight, eraser: eraser)
+        XCTAssertEqual(model.originalDeletion, .unavailable)
+        model.importScreenshot(Data(), assetID: "SYN-ASSET-1")
+        XCTAssertEqual(model.originalDeletion, .available)
+        try await waitUntil { model.screenshotImport != .reading }
+        let before = await eraser.requested
+        XCTAssertEqual(before, [], "nothing is deleted, and photo access is not asked, until the rider taps")
+
+        await model.deleteOriginalScreenshot()
+        XCTAssertEqual(model.originalDeletion, .deleted)
+        let requested = await eraser.requested
+        XCTAssertEqual(requested, ["SYN-ASSET-1"])
+
+        await model.deleteOriginalScreenshot()
+        let again = await eraser.requested
+        XCTAssertEqual(again, ["SYN-ASSET-1"], "deleted once, not twice")
+    }
+
+    func testDecliningIosConfirmationOrPhotoAccessIsRecoverable() async throws {
+        let eraser = FakeEraser(outcome: .cancelled)
+        let model = makeModel(screen: kakaoLight, eraser: eraser)
+        model.importScreenshot(Data(), assetID: "SYN-ASSET-2")
+        try await waitUntil { model.screenshotImport != .reading }
+
+        await model.deleteOriginalScreenshot()
+        XCTAssertEqual(model.originalDeletion, .available, "iOS's own confirmation declined: nothing changed, can ask again")
+
+        await eraser.set(.denied)
+        await model.deleteOriginalScreenshot()
+        XCTAssertEqual(model.originalDeletion, .failed(.denied))
+        XCTAssertTrue(model.screenshotImport.isResult, "the route result is unaffected")
+
+        await eraser.set(.deleted)
+        await model.deleteOriginalScreenshot()
+        XCTAssertEqual(model.originalDeletion, .deleted, "a failure can be retried")
+    }
+
+    func testPhotosNotShowingThePhotoReportsAFailureNotASuccess() async throws {
+        let model = makeModel(screen: kakaoLight, eraser: FakeEraser(outcome: .notFound))
+        model.importScreenshot(Data(), assetID: "SYN-ASSET-3")
+        try await waitUntil { model.screenshotImport != .reading }
+        await model.deleteOriginalScreenshot()
+        XCTAssertEqual(model.originalDeletion, .failed(.other))
+    }
+
+    func testAPhotoWithoutAnIdentifierOrAFreshPhotoOffersNoDeletion() async throws {
+        let eraser = FakeEraser(outcome: .deleted)
+        let model = makeModel(screen: kakaoLight, eraser: eraser)
+        model.importScreenshot(Data())
+        XCTAssertEqual(model.originalDeletion, .unavailable, "a shared screenshot has no identifier")
+        await model.deleteOriginalScreenshot()
+        let none = await eraser.requested
+        XCTAssertEqual(none, [])
+
+        model.importScreenshot(Data(), assetID: "SYN-ASSET-4")
+        model.importScreenshot(Data(), assetID: nil)
+        XCTAssertEqual(model.originalDeletion, .unavailable, "a new photo never inherits the last one's identifier")
+        model.importScreenshot(Data(), assetID: "SYN-ASSET-5")
+        model.cancelScreenshotImport()
+        XCTAssertEqual(model.originalDeletion, .unavailable)
+        await model.deleteOriginalScreenshot()
+        let afterCancel = await eraser.requested
+        XCTAssertEqual(afterCancel, [])
+    }
+
     // MARK: Shared from Photos (share extension)
 
     func testAScreenshotSharedFromPhotosIsCheckedAndStillWaitsForConfirmation() async throws {
@@ -247,7 +316,7 @@ final class ScreenshotImportFlowTests: XCTestCase {
 
     // MARK: Helpers
 
-    private func makeModel(screen: [String], confidence: Double = 0.95) -> TapsoAppModel {
+    private func makeModel(screen: [String], confidence: Double = 0.95, eraser: any ScreenshotOriginalEraser = FakeEraser(outcome: .deleted)) -> TapsoAppModel {
         stubTransitAPI()
         let client = TapsoAPIClient.stubbed()
         let catalog = LiveRouteImportCatalog(api: client)
@@ -260,7 +329,8 @@ final class ScreenshotImportFlowTests: XCTestCase {
             liveActivity: nil,
             api: client,
             routeCatalog: catalog,
-            screenshotImporter: importer
+            screenshotImporter: importer,
+            originalEraser: eraser
         )
         model.speed = .manual
         return model
@@ -321,6 +391,34 @@ final class ScreenshotImportFlowTests: XCTestCase {
             try await Task.sleep(for: .milliseconds(50))
         }
         XCTFail("condition not met within 5 s", file: file, line: line)
+    }
+}
+
+/// Stands in for Photos: records what it was asked to delete and answers as told.
+private actor FakeEraser: ScreenshotOriginalEraser {
+    private var outcome: OriginalEraseOutcome
+    private(set) var requested: [String] = []
+
+    init(outcome: OriginalEraseOutcome) {
+        self.outcome = outcome
+    }
+
+    func set(_ outcome: OriginalEraseOutcome) {
+        self.outcome = outcome
+    }
+
+    func erase(assetIdentifier: String) async -> OriginalEraseOutcome {
+        requested.append(assetIdentifier)
+        return outcome
+    }
+}
+
+private extension ScreenshotImportState {
+    var isResult: Bool {
+        switch self {
+        case .confirm, .choose, .failed: true
+        case .idle, .reading: false
+        }
     }
 }
 

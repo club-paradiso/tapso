@@ -101,6 +101,21 @@ from the screenshot.
 | TAPSO has no analytics SDK or event pipeline, so none was added. Any future event must carry counts and outcomes only, never pixels or OCR text. | repository audit |
 | A remote interpreter is *not* implemented. Sending a screenshot off the device needs an explicit privacy review first. | design |
 
+## Deleting the original (rider's choice)
+
+TAPSO stores no screenshot, so there is nothing of its own to delete. Under a result, the screen says
+"사진은 저장하지 않았어요. 원본은 사진 앱에 그대로 있어요." and, for a photo picked in TAPSO, offers
+"사진 앱에서 이 스크린샷 삭제". Only then does TAPSO ask for photo-library access (`PHPhotoLibrary`
+`.readWrite`; `NSPhotoLibraryUsageDescription`), never at launch and never for picking a photo, and iOS asks
+the rider to confirm the deletion; the photo goes to "Recently Deleted". Cancelling either step changes nothing.
+
+- The picker is created with `photoLibrary: .shared()` so it reports the photo's identifier; the identifier is kept
+  in memory for this one action and dropped with the result.
+- A screenshot shared from Photos to the extension has no identifier: no delete button there.
+- Under a "selected photos" grant Photos may not show TAPSO the photo: the screen says it could not delete and to
+  delete it in Photos, never that it succeeded. Behaviour under "Limited" access is `UNVERIFIED` on a device.
+- Once granted, the access is a standing full-library read/write grant. That is the cost; it is why the ask is deferred.
+
 ## Extension point
 
 `RouteScreenshotInterpreter` turns an image into a `ScreenshotReading` (bus-number and
@@ -136,7 +151,7 @@ What the inbox holds is text read from the picture (bus numbers and stop-like li
 | `swift test --package-path packages/transit-core` (`ScreenshotImportTests`, `RouteImportResolverTests`) | passed in CI, PR #102 |
 | `ScreenshotImportFlowTests` (app model with a stubbed transit API; Vision on rendered light and dark screens) | passed in CI, PR #102 (the Vision test skips without `ko-KR`) |
 | Real KakaoMap / NAVER Map / Apple Maps screenshots | `UNVERIFIED`: none committed or run. Fixtures are SYNTHETIC OCR transcripts shaped like each app's route view |
-| iPhone | `UNVERIFIED`: `DEVICE_TEST_PLAN.md` cases 17–21 |
+| iPhone | `UNVERIFIED`: `DEVICE_TEST_PLAN.md` cases 17–22 |
 
 Every fixture is labelled SYNTHETIC. Stop names in them come from the feature brief for
 readability; their order, sequences, ids and coordinates are invented, so they prove

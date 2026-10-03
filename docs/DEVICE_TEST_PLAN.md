@@ -62,6 +62,8 @@
 
 21. In Photos, open a route screenshot › Share › TAPSO: the sheet shows the bus number and "정류장 후보 N곳", then "탑서에 남기기". Open TAPSO within 30 minutes: the import screen shows "이 경로 맞나요?" for that route; reopening does not show it again. Share a photo that is not a map: "경로를 읽지 못했어요" and nothing is kept. Share a large screenshot several times in a row: the extension does not get killed for memory.
 
+22. Pick a screenshot in TAPSO: under the result, "사진은 저장하지 않았어요…" and "사진 앱에서 이 스크린샷 삭제" show, and no photo-access prompt has appeared yet. Tap delete: the access prompt appears the first time, then iOS's own confirmation; confirm: the original is in Recently Deleted and TAPSO says so. Repeat declining the access prompt, declining iOS's confirmation (nothing changes, can ask again), and choosing "Select Photos" access with the picked photo (does TAPSO see it? record what happens). A screenshot shared from Photos shows no delete button.
+
 ## Rescue and way-back cases (`product/JEJU_SAFETY_LAYER_V3.md`, `LIVE_ACTIVITY_SPEC.md`)
 
 15. Live: stay on past the destination. When TAPSO says "목적지를 지났어요", note the stop it names and where the bus actually stops next; compare the straight-line metres with the walk NAVER Map gives; check that no ride back is offered and the map buttons open a walking route to the stop (or the shared place).
