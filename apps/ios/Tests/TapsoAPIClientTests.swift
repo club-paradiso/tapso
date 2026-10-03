@@ -370,6 +370,55 @@ final class TapsoAPIClientTests: XCTestCase {
         XCTAssertTrue(StubURLProtocol.recorded.isEmpty)
     }
 
+    // MARK: Catalog and timetables
+
+    func testTheCatalogIsAskedForConditionallyAndANotModifiedAnswerKeepsTheCopy() async throws {
+        StubURLProtocol.respond { request in
+            request.value(forHTTPHeaderField: "If-None-Match") == "\"0123456789abcdef\"" ? (304, Data()) : (200, Payload.catalog)
+        }
+        let client = makeClient()
+        guard case let .updated(data, _) = try await client.catalog(ifNoneMatch: nil) else { return XCTFail("expected the catalog") }
+        XCTAssertEqual(try JejuTransitCatalog.decode(data).routes.map(\.routeId), ["SYN-202-W"])
+        XCTAssertEqual(StubURLProtocol.recorded.first?.url?.path, "/v1/catalog")
+        guard case .notModified = try await client.catalog(ifNoneMatch: "\"0123456789abcdef\"") else { return XCTFail("expected 304") }
+    }
+
+    func testATimetableIsReadForARouteNumber() async throws {
+        StubURLProtocol.respond { _ in (200, Payload.timetable) }
+        let view = try await makeClient().timetable(routeNumber: "202")
+        XCTAssertEqual(view.status, "not_published")
+        XCTAssertEqual(TimetableSummary.make(view).kind, .unavailable)
+        let request = try XCTUnwrap(StubURLProtocol.recorded.first)
+        XCTAssertEqual(request.url?.path, "/v1/timetables")
+        XCTAssertEqual(URLComponents(url: try XCTUnwrap(request.url), resolvingAgainstBaseURL: false)?.queryItems?.first { $0.name == "routeNo" }?.value, "202")
+    }
+
+    func testDestinationSearchRunsOnTheCatalogAndFixesTheStopOnTheServersList() async throws {
+        StubURLProtocol.respond { request in
+            switch request.url?.path {
+            case "/v1/catalog": (200, Payload.catalog)
+            case "/v1/stops": (200, Payload.stops)
+            default: (404, Data(#"{"error":"NOT_FOUND","message":"x"}"#.utf8))
+            }
+        }
+        let model = makeModel()
+        await model.refreshCatalog()
+        let index = try XCTUnwrap(model.catalogIndex)
+        let place = try XCTUnwrap(index.search("합성 정류장 10").first)
+        XCTAssertEqual(place.name, "합성 정류장 10")
+        XCTAssertFalse(index.places.contains { $0.name == "합성 정류장 1" }, "a variant's first stop is nowhere to get off")
+        model.openSearch()
+        model.chooseCatalogPlace(place)
+        try await waitUntil {
+            if case .loaded = model.liveStops { return true }
+            return false
+        }
+        guard case let .loaded(stops) = model.liveStops else { return XCTFail("the stop list did not load") }
+        XCTAssertEqual(model.path, [.search, .liveStops(routeID: "SYN-202-W")])
+        XCTAssertEqual(model.fixedDestination(on: stops)?.sequence, 10)
+        XCTAssertFalse(model.catalogDestinationMoved(on: stops))
+    }
+
     // MARK: Helpers
 
     private func makeClient() -> TapsoAPIClient {
@@ -382,7 +431,8 @@ final class TapsoAPIClientTests: XCTestCase {
         TapsoAppModel(
             store: JourneyStore(defaults: UserDefaults(suiteName: "tapso.tests.\(UUID().uuidString)")!),
             liveActivity: nil,
-            api: makeClient()
+            api: makeClient(),
+            catalogFile: TransitCatalogFile(directory: FileManager.default.temporaryDirectory.appendingPathComponent("tapso-tests-\(UUID().uuidString)"))
         )
     }
 
@@ -410,6 +460,18 @@ private enum Payload {
         }
         return Data(#"{"items":[\#(items.joined(separator: ","))],"meta":{"topology":{"kind":"linear"}}}"#.utf8)
     }()
+
+    static let catalog: Data = {
+        let stops = (1...12).map { index in
+            #"{"id":"SYN-STOP-\#(index)","name":"합성 정류장 \#(index)","lat":\#(33.45 + Double(index) * 0.002),"lng":\#(126.3 + Double(index) * 0.002)}"#
+        }
+        let route = #"{"routeId":"SYN-202-W","routeNo":"202","start":"합성 정류장 1","end":"합성 정류장 12","topology":"linear","stops":[0,1,2,3,4,5,6,7,8,9,10,11]}"#
+        return Data(#"{"schemaVersion":"tapso-jeju-catalog-v1","label":"OFFICIAL_DERIVED","catalogVersion":"0123456789abcdef","generatedAt":"2026-10-03T00:00:00.000Z","stops":[\#(stops.joined(separator: ","))],"routes":[\#(route)],"unavailable":[]}"#.utf8)
+    }()
+
+    static let timetable = Data(#"""
+    {"item":{"routeNo":"202","status":"not_published","label":"OFFICIAL_DATED","asOf":"2026-10-03","freshness":"fresh","date":"2026-10-07","serviceDay":{"date":"2026-10-07","weekday":"wed","publicHoliday":null,"calendarCovered":true},"today":[],"services":[]},"meta":{"label":"OFFICIAL_DATED"}}
+    """#.utf8)
 
     static func routeInfo(routeID: String, last: String) -> Data {
         Data(#"""

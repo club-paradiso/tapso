@@ -80,6 +80,8 @@ test("the network client talks only to TAPSO's own API, through documented endpo
     "/v1/routes",
     "/v1/stops",
     "/v1/route-info",
+    "/v1/catalog",
+    "/v1/timetables",
     "/v1/sessions",
     "/v1/sessions/:id",
     "/v1/sessions/:id/confirm",

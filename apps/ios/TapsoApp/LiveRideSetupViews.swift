@@ -234,6 +234,7 @@ struct LiveRouteRow: View {
 struct LiveStopPickerView: View {
     @Bindable var model: TapsoAppModel
     let routeID: String
+    @State private var timetableSheet: TransitAPITimetable?
 
     var body: some View {
         ScrollView {
@@ -255,11 +256,24 @@ struct LiveStopPickerView: View {
                         model.chooseLiveStops(boarding: boarding, destination: destination, on: stops)
                     },
                     place: model.handoffPlace,
-                    suggestedDestination: model.screenshotDestinationRoute == stops.route.id ? model.screenshotDestination : nil
+                    suggestedDestination: model.screenshotDestinationRoute == stops.route.id ? model.screenshotDestination : nil,
+                    fixedDestination: model.fixedDestination(on: stops),
+                    destinationMoved: model.catalogDestinationMoved(on: stops),
+                    timetable: AnyView(TimetableCard(
+                        routeNumber: stops.route.number,
+                        load: model.timetables[stops.route.number],
+                        onLoad: { Task { await model.loadTimetable(routeNumber: stops.route.number) } },
+                        onShowAll: { timetableSheet = $0 }
+                    ))
                 )
             }
         }
         .background(TapsoColor.backgroundPrimary)
+        .sheet(isPresented: Binding(get: { timetableSheet != nil }, set: { if !$0 { timetableSheet = nil } })) {
+            if let view = timetableSheet {
+                TimetableSheet(view: view)
+            }
+        }
         .navigationTitle(Text("live.stops.title"))
         .navigationBarTitleDisplayMode(.inline)
     }
@@ -272,6 +286,12 @@ struct LiveStopPickerContent: View {
     var place: SharedPlace? = nil
     /// A stop a screenshot showed as the place to get off: offered once the rider has chosen where to board.
     var suggestedDestination: RouteStop? = nil
+    /// The destination chosen in search, confirmed on this list: only the stops before it are offered.
+    var fixedDestination: RouteStop? = nil
+    /// The catalog's destination is no longer where it was on this route: the rider chooses again.
+    var destinationMoved = false
+    /// The route's official timetable card (`TimetableCard`), when shown.
+    var timetable: AnyView? = nil
 
     @State private var boarding: RouteStop?
     @State private var query = ""
@@ -281,6 +301,8 @@ struct LiveStopPickerContent: View {
         let eligible: [RouteStop]
         if let boarding {
             eligible = all.filter { $0.sequence > boarding.sequence }
+        } else if let fixedDestination {
+            eligible = all.filter { $0.sequence < fixedDestination.sequence }
         } else {
             eligible = Array(all.dropLast())
         }
@@ -297,6 +319,19 @@ struct LiveStopPickerContent: View {
                     .font(.subheadline)
                     .foregroundStyle(TapsoColor.textSecondary)
                 LiveBadge()
+            }
+
+            if let timetable {
+                timetable
+            }
+
+            if destinationMoved {
+                NoticeCard(
+                    systemImage: "arrow.triangle.branch",
+                    title: "live.stops.catalogMoved.title",
+                    message: "live.stops.catalogMoved.body",
+                    tint: TapsoColor.journeyChecking
+                )
             }
 
             if stops.topology != "linear" {
@@ -324,10 +359,13 @@ struct LiveStopPickerContent: View {
                     suggestions(for: place, after: boarding)
                 }
             } else {
+                if let fixedDestination {
+                    FixedDestinationLine(name: fixedDestination.stop.name)
+                }
                 if let place {
                     HandoffPlaceLine(place: place)
                 }
-                if let suggestedDestination {
+                if let suggestedDestination, fixedDestination == nil {
                     ScreenshotDestinationLine(name: suggestedDestination.stop.name)
                 }
                 QuestionTitle("live.stops.boarding")
@@ -425,6 +463,10 @@ struct LiveStopPickerContent: View {
     }
 
     private func detail(for routeStop: RouteStop) -> String {
+        if boarding == nil, let fixedDestination {
+            let count = fixedDestination.sequence - routeStop.sequence
+            return String(format: RideText.string(RideText.countKey("live.stops.toDestination", count)), count)
+        }
         guard let boarding else {
             return String(format: RideText.string("live.stops.order"), routeStop.sequence)
         }
@@ -435,6 +477,8 @@ struct LiveStopPickerContent: View {
     private func choose(_ routeStop: RouteStop) {
         if let boarding {
             onChoose(boarding, routeStop)
+        } else if let fixedDestination {
+            onChoose(routeStop, fixedDestination)
         } else {
             boarding = routeStop
             query = ""

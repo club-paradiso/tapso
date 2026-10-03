@@ -12,10 +12,7 @@ struct HomeView: View {
             HomeContent(
                 library: model.library,
                 onSearch: { model.openSearch() },
-                onDestination: { name in
-                    model.path = [.search]
-                    model.chooseDestination(named: name)
-                },
+                onDestination: { model.chooseRecentDestination(named: $0) },
                 onRideAgain: { model.rideAgain($0) },
                 onToggleFavorite: { model.toggleFavorite($0) },
                 onMapImport: { model.openMapImport() },
@@ -43,6 +40,8 @@ struct HomeContent: View {
     var onDemoSettings: () -> Void = {}
     /// A place shared from a map app that is waiting for a ride.
     var pendingPlaceName: String? = nil
+    /// The sample ride and its "체험판" chip exist only in a demo build (`TapsoBuild`).
+    var showsDemo = TapsoBuild.showsDemo
 
     var body: some View {
         VStack(alignment: .leading, spacing: TapsoSpace.xl) {
@@ -88,7 +87,7 @@ struct HomeContent: View {
 
             LiveRideEntryCard(action: onLive)
 
-            if library.recents.isEmpty {
+            if showsDemo, library.recents.isEmpty {
                 firstRideCard
             }
 
@@ -107,11 +106,11 @@ struct HomeContent: View {
             HStack(alignment: .center) {
                 brand
                 Spacer()
-                demoChip
+                if showsDemo { demoChip }
             }
             VStack(alignment: .leading, spacing: TapsoSpace.xs) {
                 brand
-                demoChip
+                if showsDemo { demoChip }
             }
         }
     }

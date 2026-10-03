@@ -33,6 +33,7 @@ struct TapsoRootView: View {
         .tint(TapsoColor.mintDeep)
         .animation(TapsoMotion.animation(TapsoMotion.standard, reduceMotion: reduceMotion), value: model.hasActiveRide)
         .task { await model.resumeIfNeeded() }
+        .task { await model.refreshCatalog() }
         .onChange(of: scenePhase, initial: true) { _, phase in
             Task { await model.rideSceneChanged(isActive: phase == .active) }
             guard phase == .active else { return }
@@ -60,6 +61,8 @@ struct TapsoRootView: View {
             LiveRouteSearchView(model: model)
         case let .liveStops(routeID):
             LiveStopPickerView(model: model, routeID: routeID)
+        case let .catalogRoutes(placeName):
+            CatalogRouteSelectView(model: model, placeName: placeName)
         }
     }
 }

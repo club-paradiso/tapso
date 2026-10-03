@@ -46,6 +46,31 @@ struct TapsoAPIClient: Sendable {
         return try await send(request, as: TransitAPIRouteInfo.self).item
     }
 
+    // MARK: Catalog and timetables (reviewed files the server serves as-is)
+
+    enum CatalogFetch: Sendable {
+        /// The copy the app holds is current.
+        case notModified
+        /// A newer catalog: its bytes, and the tag to send next time.
+        case updated(Data, etag: String?)
+    }
+
+    /// The canonical Jeju catalog, unless the copy the app holds (`etag`) is still current.
+    func catalog(ifNoneMatch etag: String?) async throws -> CatalogFetch {
+        var request = makeRequest(path: "/v1/catalog")
+        if let etag { request.setValue(etag, forHTTPHeaderField: "If-None-Match") }
+        let (data, response) = try await perform(request)
+        if let http = response as? HTTPURLResponse, http.statusCode == 304 { return .notModified }
+        try check(data, response)
+        return .updated(data, etag: (response as? HTTPURLResponse)?.value(forHTTPHeaderField: "ETag"))
+    }
+
+    /// A route number's official timetables, read by the server for today in Korea.
+    func timetable(routeNumber: String) async throws -> TransitAPITimetable {
+        let request = makeRequest(path: "/v1/timetables", query: [("routeNo", routeNumber)])
+        return try await send(request, as: TransitAPITimetableResponse.self).item
+    }
+
     // MARK: Journey sessions
 
     /// Starts a session for a rider waiting at the boarding stop.
