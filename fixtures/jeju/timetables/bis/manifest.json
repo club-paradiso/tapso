@@ -25,8 +25,8 @@
     "16"
   ],
   "counts": {
-    "parsed": 68,
-    "parse_refused": 166,
+    "parsed": 69,
+    "parse_refused": 165,
     "no_timetable": 1
   },
   "timetables": [
@@ -2094,8 +2094,9 @@
       "file": "raw/405177.xlsx",
       "bytes": 6278,
       "sha256": "51722065b2f1d038d98d19893add3866a36537f16e5f7e5d7d45bc35000e74c0",
-      "outcome": "parse_refused",
-      "reason": "sheet '442 순환(별빛누리-연북로-용담-시청-별빛누리)': summary 첫차 05:50 disagrees with the trips (05:55)"
+      "outcome": "parsed",
+      "routeNumber": "442",
+      "services": 1
     },
     {
       "id": "405178",

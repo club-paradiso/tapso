@@ -4,13 +4,11 @@ name: Jeju timetable import
 # (scripts/timetables/fetch_jeju_bis.py), because the agent environment cannot
 # reach the site. The result is committed to the branch that ran it, never to
 # main: it lands on main only through a reviewed pull request. No secret.
+# Run by hand (Actions → Jeju timetable import → Run workflow, on a topic
+# branch). A parser change does not need a new download:
+# `fetch_jeju_bis.py fixtures/jeju/timetables/bis --reparse`.
 on:
   workflow_dispatch:
-  push:
-    branches: ["claude/jeju-timetable-crawl"]
-    paths:
-      - .github/workflows/jeju-timetables.yml
-      - scripts/timetables/fetch_jeju_bis.py
 
 permissions:
   contents: write

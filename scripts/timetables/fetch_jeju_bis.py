@@ -2,6 +2,11 @@
 """Download every route timetable file bus.jeju.go.kr offers, and parse each.
 
     python3 scripts/timetables/fetch_jeju_bis.py OUT_DIR [--intermediate PEM]
+    python3 scripts/timetables/fetch_jeju_bis.py OUT_DIR --reparse
+
+`--reparse` sends no request: it parses the raw files already in OUT_DIR again
+with the current parser and rewrites the datasets and the manifest's outcomes,
+keeping each file's download date.
 
 The requests are the timetable page's own, read from the page by
 `scripts/data-sources/jeju-timetable-endpoints.ts` (data-source probe run
@@ -97,11 +102,48 @@ def json_body(status: int, body: bytes, what: str) -> object:
         raise RuntimeError(f"{what}: not JSON ({body[:120]!r})") from error
 
 
+def parse_into(out: Path, record: dict, retrieved_on: str) -> None:
+    """Parse one downloaded file; set the record's outcome. Writes or removes OUT/<id>.json."""
+    path = out / record["file"]
+    target = out / f"{record['id']}.json"
+    for key in ("routeNumber", "services", "reason"):
+        record.pop(key, None)
+    try:
+        dataset = jeju_xlsx.parse_file(path, retrieved_on, file_name=path.name)
+        target.write_text(json.dumps(dataset, ensure_ascii=False, indent=2) + "\n", encoding="utf-8")
+        record.update(outcome="parsed", routeNumber=dataset["routeNumber"], services=len(dataset["services"]))
+    except jeju_xlsx.TimetableParseError as error:
+        target.unlink(missing_ok=True)
+        record.update(outcome="parse_refused", reason=str(error))
+
+
+def tally(manifest: list[dict]) -> dict[str, int]:
+    counts: dict[str, int] = {}
+    for record in manifest:
+        counts[record["outcome"]] = counts.get(record["outcome"], 0) + 1
+    return counts
+
+
+def reparse(out: Path) -> int:
+    summary = json.loads((out / "manifest.json").read_text(encoding="utf-8"))
+    for record in summary["timetables"]:
+        if record.get("file"):
+            parse_into(out, record, summary["retrievedOn"])
+    summary["parser"] = {"name": jeju_xlsx.PARSER_NAME, "version": jeju_xlsx.PARSER_VERSION}
+    summary["counts"] = tally(summary["timetables"])
+    (out / "manifest.json").write_text(json.dumps(summary, ensure_ascii=False, indent=2) + "\n", encoding="utf-8")
+    print(json.dumps(summary["counts"]))
+    return 0
+
+
 def main() -> int:
     parser = argparse.ArgumentParser(description=__doc__.split("\n\n")[0])
     parser.add_argument("out", type=Path)
     parser.add_argument("--intermediate")
+    parser.add_argument("--reparse", action="store_true", help="parse the files already downloaded; no network")
     args = parser.parse_args()
+    if args.reparse:
+        return reparse(args.out)
     client = Client(args.intermediate)
     started = dt.datetime.now(KST)
     retrieved_on = started.date().isoformat()
@@ -150,19 +192,11 @@ def main() -> int:
         path = raw / f"{identifier}.xlsx"
         path.write_bytes(body)
         record.update(file=f"raw/{path.name}", bytes=len(body), sha256=hashlib.sha256(body).hexdigest())
-        try:
-            dataset = jeju_xlsx.parse_file(path, retrieved_on, file_name=path.name)
-            dataset["source"]["page"] = jeju_xlsx.SOURCE_PAGE
-            (args.out / f"{identifier}.json").write_text(json.dumps(dataset, ensure_ascii=False, indent=2) + "\n", encoding="utf-8")
-            record.update(outcome="parsed", routeNumber=dataset["routeNumber"], services=len(dataset["services"]))
-        except jeju_xlsx.TimetableParseError as error:
-            record.update(outcome="parse_refused", reason=str(error))
+        parse_into(args.out, record, retrieved_on)
         manifest.append(record)
         print(f"{identifier} {entry['name']}: {record['outcome']}")
 
-    counts: dict[str, int] = {}
-    for record in manifest:
-        counts[record["outcome"]] = counts.get(record["outcome"], 0) + 1
+    counts = tally(manifest)
     summary = {
         "label": "OFFICIAL_DATED",
         "source": PAGE,
