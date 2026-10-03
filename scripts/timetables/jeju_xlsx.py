@@ -62,13 +62,16 @@ STARTS_HERE = re.compile(r"^([01]?\d|2[0-3]):([0-5]\d)\s*\n\s*\(\s*출발\s*\)$"
 STARTS_AT = re.compile(r"^([01]?\d|2[0-3]):([0-5]\d)\s*\n\s*\(?\s*([^()\n]+?)\s*출발\s*\)?$")
 TITLE = re.compile(r"^(\S+?)번(?:\s*\((.+)\))?$")
 
-# Files whose own summary line disagrees with their trips, by SHA-256, and the
-# summary words accepted as wrong. The trips are kept; the disagreement is
-# recorded in the dataset. A file not listed here still stops on any mismatch.
+# Sheets whose own summary line disagrees with their trips, accepted one exact
+# disagreement at a time: (route, sheet name, the message the parser would stop
+# with). The trips are kept and the disagreement is recorded in the dataset.
+# Keyed by content, not by file checksum: the site writes a fresh workbook on
+# every download, so the same timetable never has the same bytes twice. Any
+# other disagreement, or this one with different times, still stops the parse.
 KNOWN_SUMMARY_CONFLICTS = {
-    # Route 442, downloaded 2026-10-03: the summary says "첫차(제주여고 출발) 05:50",
+    # Route 442, read 2026-10-03: the summary says "첫차(제주여고 출발) 05:50",
     # trip 1 reads "5:55 (출발)" under 제주여자중고등학교.
-    "59038f87cfc36cd684c94fe8540bed1885057f80cbe29e262623ab140067a0c2": {"첫차"},
+    ("442", "442 순환(별빛누리-연북로-용담-시청-별빛누리)", "summary 첫차 05:50 disagrees with the trips (05:55)"),
 }
 EFFECTIVE = re.compile(r"시행일\s*:\s*(\d{4})\.\s*(\d{1,2})\.\s*(\d{1,2})\.?")
 SUMMARY_FIRST = re.compile(r"첫차[^0-9]*?(\d{1,2}:\d{2})")
@@ -133,7 +136,7 @@ def read_workbook(path: Path) -> list[tuple[str, dict[tuple[int, int], str]]]:
         return sheets
 
 
-def parse_sheet(name: str, cells: dict[tuple[int, int], str], accepted_conflicts: set[str] = frozenset()) -> tuple[str, dict]:
+def parse_sheet(name: str, cells: dict[tuple[int, int], str]) -> tuple[str, dict]:
     def at(column: int, row: int) -> str:
         return cells.get((column, row), "")
 
@@ -245,7 +248,7 @@ def parse_sheet(name: str, cells: dict[tuple[int, int], str], accepted_conflicts
         found = pattern.search(summary)
         if found and hhmm(*found.group(1).split(":")) != expected:
             message = f"summary {word} {found.group(1)} disagrees with the trips ({expected})"
-            if word not in accepted_conflicts:
+            if (route, name, message) not in KNOWN_SUMMARY_CONFLICTS:
                 raise TimetableParseError(f"sheet {name!r}: {message}")
             conflicts.append(message)
 
@@ -267,12 +270,11 @@ def parse_file(path: Path, retrieved_on: str, file_name: str | None = None) -> d
     if not re.match(r"^\d{4}-\d{2}-\d{2}$", retrieved_on):
         raise TimetableParseError("--retrieved-on must be YYYY-MM-DD")
     sheets = read_workbook(path)
-    accepted = KNOWN_SUMMARY_CONFLICTS.get(hashlib.sha256(path.read_bytes()).hexdigest(), set())
     if not sheets:
         raise TimetableParseError("the workbook has no sheet")
     routes, services = set(), []
     for name, cells in sheets:
-        route, service = parse_sheet(name, cells, accepted)
+        route, service = parse_sheet(name, cells)
         routes.add(route)
         services.append(service)
     if len(routes) != 1:

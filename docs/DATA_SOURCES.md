@@ -70,7 +70,7 @@ Decision:
   - A circular route: 제주대학교, 제주 별빛누리공원 and 제주여자 중고등학교 head two columns each. `lastTimeAt` treats a repeated name as ambiguous and takes a column index instead.
   - Blank cells mean "not served" (365 writes `X`). "5:55 (출발)" means the trip starts at that column's timepoint.
   - Header names wrapped over lines keep one space at the wrap ("제주여자 중고등학교").
-  - **The file contradicts itself.** Its summary says "첫차(제주여고 출발) 05:50", but trip 1 reads "5:55 (출발)" under 제주여자중고등학교. The parser accepts this one conflict for this file only (listed by SHA-256 in `KNOWN_SUMMARY_CONFLICTS`). It keeps the trips and records the conflict in `summaryConflicts`. Any other file still stops on a mismatch. Which time is right is `UNKNOWN`. The 막차 (21:40) agrees.
+  - **The file contradicts itself.** Its summary says "첫차(제주여고 출발) 05:50", but trip 1 reads "5:55 (출발)" under 제주여자중고등학교. The parser accepts this one conflict and no other (`KNOWN_SUMMARY_CONFLICTS`, keyed by route, sheet and the exact times, not by checksum: the site writes a fresh workbook on every download). It keeps the trips and records the conflict in `summaryConflicts`. Any other file still stops on a mismatch. Which time is right is `UNKNOWN`. The 막차 (21:40) agrees.
   - 시행일 2024-04-25. An independent openpyxl read matched all 124 times.
 
 ## Runtime provider
