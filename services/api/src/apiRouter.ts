@@ -608,8 +608,15 @@ async function dispatch(
 
 /** Sessions one tick looks at; a Redis `SRANDMEMBER` sample, so a larger index is covered over several ticks. */
 export const LIVE_ACTIVITY_TICK_BATCH = 20;
-/** Past this a tick stops starting sessions and answers; the rest wait for the next tick. Below a serverless function's 10 s floor. */
+/**
+ * A tick answers within this, below a serverless function's 10 s floor. Work in
+ * flight at the deadline is abandoned, not awaited: a refresh that lands later
+ * is an ordinary compare-and-set write, and an unfinished push is retried by
+ * the next tick from the last recorded delivery.
+ */
 export const LIVE_ACTIVITY_TICK_BUDGET_MS = 8_000;
+
+const TICK_DEADLINE = Symbol("tick deadline");
 
 /**
  * One scheduler tick: refresh each indexed ride the app has not read lately and
@@ -620,32 +627,51 @@ export const LIVE_ACTIVITY_TICK_BUDGET_MS = 8_000;
 async function liveActivityTick(
   sessions: JourneySessionCoordinator,
   pusher: Pick<LiveActivityPusher, "afterRead">,
+  budgetMs = LIVE_ACTIVITY_TICK_BUDGET_MS,
 ): Promise<{ sampled: number; refreshed: number; recent: number; removed: number; failed: number; deferred: number }> {
   const started = Date.now();
-  const ids = await sessions.liveActivityTickCandidates(LIVE_ACTIVITY_TICK_BATCH);
-  const counts = { sampled: ids.length, refreshed: 0, recent: 0, removed: 0, failed: 0, deferred: 0 };
-  for (const id of ids) {
-    if (Date.now() - started > LIVE_ACTIVITY_TICK_BUDGET_MS) {
-      counts.deferred += 1;
-      continue;
-    }
-    try {
-      const outcome = await sessions.tickLiveActivity(id);
-      if (outcome.kind === "refreshed") {
-        await pusher.afterRead(outcome.view);
-        counts.refreshed += 1;
-      } else if (outcome.kind === "recent") {
-        counts.recent += 1;
-      } else {
-        counts.removed += 1;
+  let timer: ReturnType<typeof setTimeout> | undefined;
+  const deadline = new Promise<typeof TICK_DEADLINE>((resolve) => {
+    timer = setTimeout(() => resolve(TICK_DEADLINE), budgetMs);
+  });
+  const counts = { sampled: 0, refreshed: 0, recent: 0, removed: 0, failed: 0, deferred: 0 };
+  try {
+    const ids = await Promise.race([sessions.liveActivityTickCandidates(LIVE_ACTIVITY_TICK_BATCH), deadline]);
+    if (ids === TICK_DEADLINE) return counts;
+    counts.sampled = ids.length;
+    for (const [index, id] of ids.entries()) {
+      const work = (async () => {
+        const outcome = await sessions.tickLiveActivity(id);
+        if (outcome.kind === "refreshed") await pusher.afterRead(outcome.view);
+        return outcome.kind;
+      })();
+      // The abandoned unit's own failure must not surface as an unhandled rejection.
+      work.catch(() => {});
+      let result: Awaited<typeof work> | typeof TICK_DEADLINE;
+      try {
+        result = await Promise.race([work, deadline]);
+      } catch {
+        counts.failed += 1;
+        continue;
       }
-    } catch {
-      counts.failed += 1;
+      if (result === TICK_DEADLINE) {
+        // The unit in flight and every one not started wait for the next tick.
+        counts.deferred += ids.length - index;
+        break;
+      }
+      if (result === "refreshed") counts.refreshed += 1;
+      else if (result === "recent") counts.recent += 1;
+      else counts.removed += 1;
     }
+    return counts;
+  } finally {
+    clearTimeout(timer);
+    logEvent("live_activity_tick", { ...counts, durationMs: Date.now() - started });
   }
-  logEvent("live_activity_tick", { ...counts, durationMs: Date.now() - started });
-  return counts;
 }
+
+/** Test hook: the tick with an injected budget. */
+export const liveActivityTickForTest = liveActivityTick;
 
 /* ------------------------------------------------------------------- health */
 

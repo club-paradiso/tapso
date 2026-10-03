@@ -61,7 +61,22 @@ if not current then return {0, ''} end
 local version = tonumber(string.match(current, '^(%d+):'))
 if version ~= tonumber(ARGV[1]) then return {-1, current} end
 redis.call('SET', KEYS[1], ARGV[2], 'PX', tonumber(ARGV[3]))
+if ARGV[4] == '1' then redis.call('SADD', KEYS[2], ARGV[5]) else redis.call('SREM', KEYS[2], ARGV[5]) end
 return {1, ''}
+`.trim();
+
+/**
+ * Drop a push index entry unless its row was written since it was read: gone,
+ * or still at the version the caller saw. `KEYS[1]` the row, `KEYS[2]` the index.
+ */
+const UNINDEX_SCRIPT = `
+local current = redis.call('GET', KEYS[1])
+if current then
+  local version = tonumber(string.match(current, '^(%d+):'))
+  if version ~= tonumber(ARGV[1]) then return 0 end
+end
+redis.call('SREM', KEYS[2], ARGV[2])
+return 1
 `.trim();
 
 export interface UpstashSessionStoreOptions {
@@ -107,11 +122,8 @@ export class UpstashJourneySessionStore implements JourneySessionStore {
 
   /** A Redis set of session ids; `SRANDMEMBER` bounds each tick's work however many rides are live. */
   readonly pushIndex: LiveActivityPushIndex = {
-    add: async (id) => {
-      await this.command(["SADD", this.indexKey(), this.checkedId(id)]);
-    },
-    remove: async (id) => {
-      await this.command(["SREM", this.indexKey(), this.checkedId(id)]);
+    removeIfUnchanged: async (id, version) => {
+      await this.command(["EVAL", UNINDEX_SCRIPT, "2", this.keyFor(id), this.indexKey(), String(version ?? -1), id]);
     },
     sample: async (limit) => {
       if (limit <= 0) return [];
@@ -128,10 +140,6 @@ export class UpstashJourneySessionStore implements JourneySessionStore {
     return `${this.keyPrefix}${PUSH_INDEX_KEY_SUFFIX}`;
   }
 
-  private checkedId(id: string): string {
-    this.keyFor(id);
-    return id;
-  }
 
   async load(id: string): Promise<VersionedJourneySession | undefined> {
     // The index's name is never a session: a rider asking for it gets 404, not the store's error.
@@ -164,11 +172,15 @@ export class UpstashJourneySessionStore implements JourneySessionStore {
     const reply = await this.command([
       "EVAL",
       CAS_SCRIPT,
-      "1",
+      "2",
       this.keyFor(session.id),
+      this.indexKey(),
       String(expectedVersion),
       encode(session, version),
       String(this.ttlMs(session)),
+      // The push index follows the row in the same step: a stored token always has its entry.
+      session.liveActivityPush ? "1" : "0",
+      session.id,
     ]);
 
     if (!Array.isArray(reply) || reply.length < 2) {
@@ -184,6 +196,8 @@ export class UpstashJourneySessionStore implements JourneySessionStore {
 
   async delete(id: string): Promise<void> {
     await this.command(["DEL", this.keyFor(id)]);
+    // After the row: an entry left by a failure here is pruned by the next tick.
+    await this.command(["SREM", this.indexKey(), id]);
   }
 
   /**

@@ -8,7 +8,7 @@
 import assert from "node:assert/strict";
 import test from "node:test";
 
-import { createTransitApiHandler } from "../src/apiRouter.ts";
+import { createTransitApiHandler, liveActivityTickForTest } from "../src/apiRouter.ts";
 import { readTransitApiConfig } from "../src/apiConfig.ts";
 import type { RouteRequest, StopOnRoute, VehicleObservation } from "../src/domain.ts";
 import { JourneySessionCoordinator, LIVE_ACTIVITY_TICK_MIN_AGE_MS, type JourneySessionView } from "../src/journeySession.ts";
@@ -71,6 +71,40 @@ test("a session enters the push index when a token is registered and leaves it w
   assert.deepEqual(await store.pushIndex.sample(10), []);
 });
 
+test("a token registered after the tick read the row keeps its entry", async () => {
+  const { store, sessions, create } = world();
+  const ride = await create();
+  const before = await store.load(ride.id);
+  store.indexForTest(ride.id);
+  // The tick read the row without a token; the app registers before the tick prunes.
+  await sessions.registerLiveActivityToken(ride.id, { pushToken: PUSH_TOKEN });
+  await store.pushIndex.removeIfUnchanged(ride.id, before!.version);
+  assert.deepEqual(await store.pushIndex.sample(10), [ride.id], "the newer row wins");
+  await store.pushIndex.removeIfUnchanged(ride.id, (await store.load(ride.id))!.version);
+  assert.deepEqual(await store.pushIndex.sample(10), [], "an unchanged row loses it");
+});
+
+test("a tick returns by its deadline even when a session never answers, deferring the rest", async () => {
+  const views: string[] = [];
+  const hung = {
+    liveActivityTickCandidates: async () => ["syn-a", "syn-b", "syn-c"],
+    tickLiveActivity: (id: string) => id === "syn-a"
+      ? Promise.resolve({ kind: "recent" as const })
+      : new Promise<never>(() => {}),
+  } as unknown as JourneySessionCoordinator;
+  const started = Date.now();
+  const original = console.info;
+  console.info = () => {};
+  let counts;
+  try {
+    counts = await liveActivityTickForTest(hung, { afterRead: async (view: JourneySessionView) => void views.push(view.id) }, 50);
+  } finally {
+    console.info = original;
+  }
+  assert.ok(Date.now() - started < 1_000);
+  assert.deepEqual(counts, { sampled: 3, refreshed: 0, recent: 1, removed: 0, failed: 0, deferred: 2 });
+});
+
 test("a tick refreshes a ride the app has not read lately, leaves a recent one, and prunes what needs no push", async () => {
   const { provider, store, sessions, create, advance } = world();
   const ride = await create();
@@ -84,10 +118,10 @@ test("a tick refreshes a ride the app has not read lately, leaves a recent one, 
   assert.equal(provider.reads, reads + 1);
 
   // An entry whose token went away by another path, a row that is gone, a ride past its expiry.
-  await store.pushIndex.add("syn-tick-missing");
+  store.indexForTest("syn-tick-missing");
   assert.deepEqual(await sessions.tickLiveActivity("syn-tick-missing"), { kind: "removed", reason: "gone" });
   const untracked = await create();
-  await store.pushIndex.add(untracked.id);
+  store.indexForTest(untracked.id);
   assert.deepEqual(await sessions.tickLiveActivity(untracked.id), { kind: "removed", reason: "no_token" });
   advance(24 * 60 * 60_000);
   assert.deepEqual(await sessions.tickLiveActivity(ride.id), { kind: "removed", reason: "expired" });
@@ -162,31 +196,38 @@ test("the tick is operator-only, and answers 503 where push is not configured", 
   assert.equal((await noOperator.json()).error, "OPERATOR_DISABLED");
 });
 
-test("the durable push index is a set inside the store's own namespace", async () => {
+test("the durable push index follows the row in the compare-and-set and stays in the store's namespace", async () => {
   const commands: string[][] = [];
-  const members = new Set<string>();
   const fetchImpl = (async (_url: string | URL | Request, init: RequestInit = {}) => {
     const command = JSON.parse(String(init.body)) as string[];
     commands.push(command);
-    const [name, key, ...args] = command;
-    assert.equal(key, `tapso:prod:journey-session:${PUSH_INDEX_KEY_SUFFIX}`);
-    let result: unknown = null;
-    if (name === "SADD") result = members.add(args[0]!) ? 1 : 0;
-    else if (name === "SREM") result = members.delete(args[0]!) ? 1 : 0;
-    else if (name === "SRANDMEMBER") result = [...members].slice(0, Number(args[0]));
+    const result = command[0] === "EVAL" ? (command[1]!.includes("SADD") ? [1, ""] : 1) : command[0] === "SRANDMEMBER" ? ["syn-b"] : 1;
     return new Response(JSON.stringify({ result }), { status: 200 });
   }) as unknown as typeof fetch;
-  const store = new UpstashJourneySessionStore({ restUrl: "https://synthetic.upstash.io", restToken: "synthetic", keyPrefix: "tapso:prod:journey-session:", fetchImpl });
-  await store.pushIndex.add("syn-a");
-  await store.pushIndex.add("syn-b");
-  await store.pushIndex.remove("syn-a");
+  const prefix = "tapso:prod:journey-session:";
+  const store = new UpstashJourneySessionStore({ restUrl: "https://synthetic.upstash.io", restToken: "synthetic", keyPrefix: prefix, fetchImpl });
+  const row = { schemaVersion: 1, id: "syn-b", expiresAtMs: Date.now() + 60_000 } as never;
+  await store.save({ ...(row as object), liveActivityPush: { token: PUSH_TOKEN } } as never, 3);
+  await store.save(row, 4);
+  await store.pushIndex.removeIfUnchanged("syn-b", 5);
   assert.deepEqual(await store.pushIndex.sample(20), ["syn-b"]);
   assert.deepEqual(await store.pushIndex.sample(0), []);
-  assert.deepEqual(commands.map((command) => command[0]), ["SADD", "SADD", "SREM", "SRANDMEMBER"]);
+  await store.delete("syn-b");
+
+  const [withToken, withoutToken, unindex, sample, del, srem] = commands;
+  assert.deepEqual(withToken!.slice(2, 5), ["2", `${prefix}syn-b`, `${prefix}${PUSH_INDEX_KEY_SUFFIX}`]);
+  assert.deepEqual(withToken!.slice(8), ["1", "syn-b"], "a stored token is indexed in the same script");
+  assert.deepEqual(withoutToken!.slice(8), ["0", "syn-b"]);
+  assert.deepEqual(unindex!.slice(2), ["2", `${prefix}syn-b`, `${prefix}${PUSH_INDEX_KEY_SUFFIX}`, "5", "syn-b"]);
+  assert.deepEqual(sample, ["SRANDMEMBER", `${prefix}${PUSH_INDEX_KEY_SUFFIX}`, "20"]);
+  assert.deepEqual(del, ["DEL", `${prefix}syn-b`]);
+  assert.deepEqual(srem, ["SREM", `${prefix}${PUSH_INDEX_KEY_SUFFIX}`, "syn-b"]);
+  assert.equal(commands.length, 6);
+  assert.ok(commands.every((command) => !JSON.stringify(command.slice(2)).includes(PUSH_TOKEN) || command[0] === "EVAL"), "the token is only ever inside the row");
+
   assert.throws(() => store.keyFor(PUSH_INDEX_KEY_SUFFIX), /push index/);
   assert.equal(await store.load(PUSH_INDEX_KEY_SUFFIX), undefined, "reading the index's name finds no session");
-  assert.equal(commands.length, 4, "and sends nothing");
-  await assert.rejects(store.pushIndex.add(PUSH_INDEX_KEY_SUFFIX), /push index/);
+  assert.equal(commands.length, 6, "and sends nothing");
 });
 
 test("the ticker is off unless both variables are set, and only ever sends its token over https to the tick route", () => {

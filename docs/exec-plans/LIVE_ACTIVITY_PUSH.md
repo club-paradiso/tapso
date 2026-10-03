@@ -51,14 +51,14 @@ Started 2026-10-01. Living document; update it as milestones land.
    - Tests: `liveActivityContent.test.ts`, `liveActivityPusher.test.ts`.
 5. **Scheduler** — `DONE` in code (2026-10-03). The owner chose the Railway collector. Nothing is pushed until APNs is configured (`BLOCKED_BY_APPLE_ACCOUNT`).
    - **Push index.** A Redis set of session ids under the deployment's own session namespace (`TRANSIT_SESSION_KEY_PREFIX` + `push-index`; no session id may take that name). It holds ids only, never tokens.
-     - An id is added after its token is stored.
-     - It is removed when the token is cleared, when Apple rejects the token, or when the ride ends.
-     - A stale entry is harmless: the tick prunes it.
+     - The store keeps it in step with the rows, in the same compare-and-set script as each save: a saved row with a token is in the index, one without is not. A stored token therefore always has its entry, and every later save of the ride repeats the membership.
+     - Ending the ride removes the entry after the row.
+     - An entry can outlive its row (a TTL expiry, or a failure between the delete and the removal). The tick prunes it only if the row is gone or unchanged since the tick read it, so a token registered meanwhile keeps its entry.
    - **Tick.** `POST /operator/live-activity/tick` (operator bearer token, operator rate limit):
      - It samples up to 20 indexed sessions (`SRANDMEMBER`).
      - It refreshes each session not read in the last 15 s and runs `LiveActivityPusher.afterRead`, the same path an app read takes.
      - It prunes entries whose row is gone, expired or tokenless. An expired row stays, so the app still reads `410`.
-     - It stops starting sessions after 8 s.
+     - It answers within 8 s. Work still in flight at the deadline is abandoned: a late refresh is an ordinary compare-and-set write, and an unfinished push is retried by the next tick.
      - It answers and logs counts only.
      - It answers `503 LIVE_ACTIVITY_PUSH_UNAVAILABLE` where APNs is not configured.
    - **Clock.** `services/api/src/liveActivityTicker.ts` runs in the collector (`backgroundServer.ts`) and calls the tick every 20 s.

@@ -493,7 +493,6 @@ export class JourneySessionCoordinator {
     const stored = await this.store.load(id);
     if (!stored) throw new SessionNotFoundError();
     await this.store.delete(id);
-    await this.store.pushIndex?.remove(id);
     const { session } = stored;
     return {
       id: session.id,
@@ -515,10 +514,7 @@ export class JourneySessionCoordinator {
       const delivery = row.liveActivityPush?.delivery;
       row.liveActivityPush = { token, fingerprint: tokenFingerprint(token), registeredAtMs, ...(delivery ? { delivery } : {}) };
     });
-    // After the token is stored: an index entry without a token is harmless (the
-    // tick removes it); a token without an entry would never be pushed to while
-    // the app is suspended, and a failure here fails the registration instead.
-    await this.store.pushIndex?.add(id);
+    // The store adds the session to the push index in the same write.
     return registrationView(record);
   }
 
@@ -535,8 +531,9 @@ export class JourneySessionCoordinator {
    */
   async tickLiveActivity(id: string): Promise<LiveActivityTickOutcome> {
     const stored = await this.store.load(id);
+    // Conditional on the version read here: a token registered since keeps its entry.
     const removed = async (reason: "gone" | "expired" | "no_token"): Promise<LiveActivityTickOutcome> => {
-      await this.store.pushIndex?.remove(id);
+      await this.store.pushIndex?.removeIfUnchanged(id, stored?.version);
       return { kind: "removed", reason };
     };
     if (!stored) return removed("gone");
@@ -590,10 +587,9 @@ export class JourneySessionCoordinator {
 
   /** APNs rejected this token: forget it, unless it has already been replaced. */
   async dropLiveActivityToken(id: string, fingerprint: string): Promise<void> {
-    const record = await this.writePushToken(id, (row) => {
+    await this.writePushToken(id, (row) => {
       if (row.liveActivityPush?.fingerprint === fingerprint) delete row.liveActivityPush;
     });
-    if (!record.liveActivityPush) await this.store.pushIndex?.remove(id);
   }
 
   /** The activity ended or the rider turned updates off. Clearing an absent token is not an error. */
@@ -601,7 +597,6 @@ export class JourneySessionCoordinator {
     await this.writePushToken(id, (row) => {
       delete row.liveActivityPush;
     });
-    await this.store.pushIndex?.remove(id);
   }
 
   /**
