@@ -109,13 +109,25 @@ A future `RemoteMultimodalRouteInterpreter` would return the same type and go th
 same `RouteImportResolver`: no interpreter's output becomes a route without TAPSO's data
 agreeing (`testARemoteStyleInterpreterIsValidatedLikeAnyOther`).
 
-## Share extension (not in V1)
+## Share extension (Photos → Share → TAPSO)
 
-The share extension accepts text and one web URL only. Accepting images means a new
-activation rule, a second payload in `HandoffInbox` (a `ScreenshotReading`, never the
-image, so the "no stored screenshots" rule holds), Vision inside the extension's memory
-limit, and a UI that cannot be exercised without Xcode and a device. It is the next task:
-`ScreenshotReading` is already `Codable` for it.
+The share extension accepts one image (`NSExtensionActivationSupportsImageWithMaxCount`). It reads
+the image on the device with the same Vision recogniser (downscaled to 2,000 px, an extension has far
+less memory than the app) and `LocalVisionRouteInterpreter`, and shows what it read: the bus numbers
+and how many lines may name a stop. If there is no bus number or no stop-like line it says so and saves
+nothing (`ScreenshotReading.isUsable`).
+
+"탑서에 남기기" stores the `ScreenshotReading`, never the image, in the App Group inbox
+(`HandoffInbox.put(_:at:)`): one thing at a time (a reading replaces a waiting place and the other way
+round), read once, 30 minutes. A share extension cannot open its app, so the app takes it the next time
+it becomes active (`collectHandoff` → `receiveScreenshotReading`), opens the import screen and checks
+the reading against TAPSO's routes exactly like a picked screenshot: `ScreenshotRouteImporter.importRoute(from:)`,
+at most four bus numbers looked up however large the reading is. The rider still confirms.
+The extension never touches the network. Without the App Group (an unsigned build) it says to pick the
+screenshot in TAPSO instead.
+
+What the inbox holds is text read from the picture (bus numbers and stop-like lines), in the App Group's
+`UserDefaults` for at most 30 minutes or until the app takes it.
 
 ## Verification
 
@@ -124,7 +136,7 @@ limit, and a UI that cannot be exercised without Xcode and a device. It is the n
 | `swift test --package-path packages/transit-core` (`ScreenshotImportTests`, `RouteImportResolverTests`) | passed in CI, PR #102 |
 | `ScreenshotImportFlowTests` (app model with a stubbed transit API; Vision on rendered light and dark screens) | passed in CI, PR #102 (the Vision test skips without `ko-KR`) |
 | Real KakaoMap / NAVER Map / Apple Maps screenshots | `UNVERIFIED`: none committed or run. Fixtures are SYNTHETIC OCR transcripts shaped like each app's route view |
-| iPhone | `UNVERIFIED`: `DEVICE_TEST_PLAN.md` cases 17–20 |
+| iPhone | `UNVERIFIED`: `DEVICE_TEST_PLAN.md` cases 17–21 |
 
 Every fixture is labelled SYNTHETIC. Stop names in them come from the feature brief for
 readability; their order, sequences, ids and coordinates are invented, so they prove

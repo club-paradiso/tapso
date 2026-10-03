@@ -166,6 +166,43 @@ final class ScreenshotImportFlowTests: XCTestCase {
         XCTAssertEqual(model.screenshotImport, .idle)
     }
 
+    // MARK: Shared from Photos (share extension)
+
+    func testAScreenshotSharedFromPhotosIsCheckedAndStillWaitsForConfirmation() async throws {
+        let model = makeModel(screen: [])
+        let inbox = HandoffInbox(defaults: try XCTUnwrap(UserDefaults(suiteName: "tapso.tests.handoff.\(UUID().uuidString)")))
+        let blocks = kakaoLight.map { RecognizedTextBlock(text: $0, confidence: 0.95) }
+        let reading = TransitEntityExtractor.reading(from: ScreenshotTextNormalizer.lines(from: RecognizedScreenshotText(blocks: blocks)))
+        XCTAssertTrue(reading.isUsable)
+        let now = Date(timeIntervalSince1970: 1_800_000_000)
+        inbox.put(reading, at: now)
+
+        model.collectHandoff(from: inbox, now: now.addingTimeInterval(30))
+        XCTAssertEqual(model.path, [.mapImport], "the import screen opens with the result")
+        XCTAssertEqual(model.screenshotImport, .reading)
+        try await waitUntil { model.screenshotImport != .reading }
+        guard case let .confirm(proposal) = model.screenshotImport else { return XCTFail("expected a confirmation, got \(model.screenshotImport)") }
+        XCTAssertEqual(proposal.route.id.rawValue, "SYN-440-A")
+        XCTAssertNil(model.draft, "nothing starts before the rider confirms")
+        XCTAssertFalse(StubURLProtocol.recorded.contains { $0.url?.path == "/v1/sessions" })
+
+        model.cancelScreenshotImport()
+        model.collectHandoff(from: inbox, now: now.addingTimeInterval(60))
+        XCTAssertEqual(model.screenshotImport, .idle, "the inbox hands a reading over once")
+    }
+
+    func testAnExpiredSharedReadingIsIgnored() throws {
+        let model = makeModel(screen: [])
+        let inbox = HandoffInbox(defaults: try XCTUnwrap(UserDefaults(suiteName: "tapso.tests.handoff.\(UUID().uuidString)")))
+        let blocks = kakaoLight.map { RecognizedTextBlock(text: $0, confidence: 0.95) }
+        let reading = TransitEntityExtractor.reading(from: ScreenshotTextNormalizer.lines(from: RecognizedScreenshotText(blocks: blocks)))
+        let saved = Date(timeIntervalSince1970: 1_800_000_000)
+        inbox.put(reading, at: saved)
+        model.collectHandoff(from: inbox, now: saved.addingTimeInterval(HandoffInbox.lifetime + 1))
+        XCTAssertEqual(model.screenshotImport, .idle)
+        XCTAssertEqual(model.path, [])
+    }
+
     // MARK: Link import still works
 
     func testPastingALinkStillWorksAndSupersedesAScreenshotInProgress() async throws {

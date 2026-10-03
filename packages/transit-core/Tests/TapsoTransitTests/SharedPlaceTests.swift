@@ -136,4 +136,31 @@ final class SharedPlaceTests: XCTestCase {
 
         XCTAssertTrue((defaults.persistentDomain(forName: suite) ?? [:]).isEmpty, "nothing lingers after it is taken")
     }
+
+    func testAScreenshotReadingTravelsTheSameWayAndReplacesAWaitingPlace() throws {
+        let suite = "tapso.tests.handoff.\(UUID().uuidString)"
+        let defaults = try XCTUnwrap(UserDefaults(suiteName: suite))
+        let inbox = HandoffInbox(defaults: defaults)
+        let reading = ScreenshotImportFixtures.reading(ScreenshotImportFixtures.kakaoLight)
+        let place = SharedPlace(source: .kakaoMap, name: "합성 카페")
+        let saved = Date(timeIntervalSince1970: 1_800_000_000)
+
+        inbox.put(reading, at: saved)
+        XCTAssertEqual(inbox.takeReading(now: saved.addingTimeInterval(60)), reading)
+        XCTAssertNil(inbox.takeReading(now: saved.addingTimeInterval(61)), "read once")
+
+        inbox.put(reading, at: saved)
+        XCTAssertNil(inbox.takeReading(now: saved.addingTimeInterval(HandoffInbox.lifetime + 1)), "expired")
+        inbox.put(reading, at: saved)
+        XCTAssertNil(inbox.takeReading(now: saved.addingTimeInterval(-3_600)), "dated in the future")
+
+        inbox.put(reading, at: saved)
+        inbox.put(place, at: saved)
+        XCTAssertNil(inbox.takeReading(now: saved), "a place replaces a waiting reading")
+        inbox.put(place, at: saved)
+        inbox.put(reading, at: saved)
+        XCTAssertNil(inbox.take(now: saved), "a reading replaces a waiting place")
+        _ = inbox.takeReading(now: saved)
+        XCTAssertTrue((defaults.persistentDomain(forName: suite) ?? [:]).isEmpty, "nothing lingers after it is taken")
+    }
 }

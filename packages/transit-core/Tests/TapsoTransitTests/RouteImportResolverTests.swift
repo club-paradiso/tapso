@@ -255,6 +255,42 @@ final class RouteImportResolverTests: XCTestCase {
         XCTAssertEqual(emptyResult, .notFound(.noTextFound))
     }
 
+    func testAReadingMadeByTheShareExtensionIsCheckedLikeOneMadeHere() async throws {
+        let reading = F.reading(F.kakaoLight)
+        XCTAssertTrue(reading.isUsable)
+        let importer = ScreenshotRouteImporter(
+            interpreter: LocalVisionRouteInterpreter(recognizer: FakeRecognizer(failing: .unreadableImage)),
+            source: FakeRouteSource(routes: F.allRoutes)
+        )
+        let result = await importer.importRoute(from: reading)
+        XCTAssertEqual(try confirmed(result).route.id.rawValue, "SYN-440-A")
+    }
+
+    func testAReadingWithoutABusNumberOrStopsIsNotUsable() {
+        XCTAssertFalse(F.reading(F.notAMap).isUsable)
+        XCTAssertFalse(F.reading(["440번"]).isUsable)
+        XCTAssertFalse(F.reading(["대학동", "사대부고"]).isUsable)
+        XCTAssertFalse(ScreenshotReading.empty.isUsable)
+    }
+
+    func testAnOversizedReadingNeverFansOutIntoManyLookups() async {
+        let source = RecordingRouteSource(routes: F.allRoutes)
+        let importer = ScreenshotRouteImporter(
+            interpreter: LocalVisionRouteInterpreter(recognizer: FakeRecognizer(F.text([]))),
+            source: source
+        )
+        let numbers = (100..<160).map { BusNumberCandidate(number: "\($0)", wasCorrected: false, hasBusContext: true, confidence: 1) }
+        let reading = ScreenshotReading(
+            busNumbers: numbers,
+            stopLines: [StopNameCandidate(text: "대학동", confidence: 1)],
+            ocrConfidence: 1,
+            lineCount: 2
+        )
+        _ = await importer.importRoute(from: reading)
+        let requested = await source.requested
+        XCTAssertEqual(requested.count, TransitEntityExtractor.maxBusNumbers)
+    }
+
     func testARemoteStyleInterpreterIsValidatedLikeAnyOther() async {
         // An interpreter that claims a stop the route does not have gets nothing through.
         struct Overconfident: RouteScreenshotInterpreter {
