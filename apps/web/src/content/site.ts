@@ -15,6 +15,7 @@ export const NAV_ITEMS = [
   { href: "#how", label: "타는 법" },
   { href: "#trust", label: "흔들릴 때" },
   { href: "#status", label: "개발 현황" },
+  { href: "#support", label: "후원하기" },
   { href: "#faq", label: "FAQ" },
 ] as const;
 
