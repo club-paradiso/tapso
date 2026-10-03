@@ -166,6 +166,13 @@ final class TapsoAPIClientTests: XCTestCase {
         let confirmJSON = try XCTUnwrap(JSONSerialization.jsonObject(with: confirm) as? [String: Any])
         XCTAssertEqual(confirmJSON["vehicleId"] as? String, "SYN70가0412")
 
+        let beforeRefresh = StubURLProtocol.recorded.filter { $0.url?.path == "/v1/sessions/syn-session" && $0.httpMethod == "GET" }.count
+        await model.recheckRidePosition()
+        await model.recheckRidePosition()
+        let afterRefresh = StubURLProtocol.recorded.filter { $0.url?.path == "/v1/sessions/syn-session" && $0.httpMethod == "GET" }.count
+        XCTAssertEqual(afterRefresh - beforeRefresh, 1, "manual refresh reconciles once and has a cooldown")
+        XCTAssertFalse(model.isRecheckingPosition)
+        XCTAssertEqual(model.contentState()?.remainingStops, model.remainingStops)
         await model.cancelRide()
         XCTAssertFalse(model.hasActiveRide)
         try await waitUntil { StubURLProtocol.recorded.contains { $0.httpMethod == "DELETE" } }

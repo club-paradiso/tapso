@@ -139,6 +139,7 @@ public struct JourneySessionSnapshot: Codable, Hashable, Sendable {
     public let vehicleChoice: VehicleChoice?
     public let explanation: String?
     public let matchingMode: String?
+    public let trackingIntegrity: String?
     public let providerRead: ProviderRead?
     public let updatedAt: String?
     public let expiresAt: String?
@@ -151,6 +152,8 @@ public struct JourneySessionSnapshot: Codable, Hashable, Sendable {
         public let phase: String
         /// `provider_stop_sequence`, `near_stop_estimate` or `retained_last_known`.
         public let source: String
+        public let evidenceAt: String?
+        public let evidenceAtIs: String?
     }
 
     public struct Candidate: Codable, Hashable, Sendable {

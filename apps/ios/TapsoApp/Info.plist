@@ -35,6 +35,8 @@
 	<false/>
 	<key>LSRequiresIPhoneOS</key>
 	<true/>
+	<key>NSLocationWhenInUseUsageDescription</key>
+	<string>승차 중 버스 위치를 보완하고 내릴 정류장을 확인하는 데 사용합니다.</string>
 	<key>NSPhotoLibraryUsageDescription</key>
 	<string>스크린샷 원본을 사진 앱에서 지울 때만 써요. / Used only to delete a screenshot's original from Photos when you ask.</string>
 	<key>NSSupportsLiveActivities</key>

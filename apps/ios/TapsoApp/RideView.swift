@@ -7,6 +7,7 @@ import TapsoTransit
 struct RideView: View {
     @Bindable var model: TapsoAppModel
     @State private var confirmingEnd = false
+    @State private var showingDiagnostics = false
     @Environment(\.accessibilityReduceMotion) private var reduceMotion
 
     var body: some View {
@@ -42,6 +43,7 @@ struct RideView: View {
                     .animation(TapsoMotion.animation(TapsoMotion.emphasis, reduceMotion: reduceMotion), value: guidance.moment)
                 }
             }
+            .refreshable { await model.recheckRidePosition() }
             .background(TapsoColor.backgroundPrimary)
             .navigationBarTitleDisplayMode(.inline)
             .toolbar {
@@ -56,6 +58,17 @@ struct RideView: View {
                 }
                 ToolbarItem(placement: .topBarTrailing) {
                     Menu {
+                        if model.isLiveRide {
+                            Button("ride.refresh", systemImage: "arrow.clockwise") {
+                                Task { await model.recheckRidePosition() }
+                            }
+                            .disabled(model.isRecheckingPosition)
+                        }
+                        #if DEBUG
+                        if model.hybridTrackingEnabled {
+                            Button("Tracking diagnostics", systemImage: "waveform.path") { showingDiagnostics = true }
+                        }
+                        #endif
                         if !model.isLiveRide {
                             Button("ride.menu.demo", systemImage: "testtube.2") { model.isDemoPanelPresented = true }
                         }
@@ -75,6 +88,26 @@ struct RideView: View {
                         .padding(.bottom, TapsoSpace.xs)
                         .background(TapsoColor.backgroundPrimary)
                 }
+            }
+            .overlay(alignment: .top) {
+                if model.isRecheckingPosition {
+                    ProgressView("ride.refreshing")
+                        .padding(TapsoSpace.sm)
+                        .background(TapsoColor.backgroundSecondary, in: Capsule())
+                }
+            }
+            .sheet(isPresented: $showingDiagnostics) {
+                #if DEBUG
+                NavigationStack {
+                    ScrollView {
+                        Text(verbatim: model.hybridDiagnosticLines.joined(separator: "\n"))
+                            .font(.system(.caption, design: .monospaced))
+                            .textSelection(.enabled)
+                            .padding()
+                    }
+                    .navigationTitle("Tracking diagnostics")
+                }
+                #endif
             }
             .confirmationDialog(Text("ride.end.confirm"), isPresented: $confirmingEnd, titleVisibility: .visible) {
                 Button("ride.end.action", role: .destructive) { Task { await model.cancelRide() } }
@@ -183,14 +216,13 @@ struct RideContent: View {
 
             RideHeroCard(snapshot: snapshot, onFinish: onFinish, onMapSearch: onMapSearch)
 
-            AdaptiveStack(spacing: TapsoSpace.lg) {
-                TrustBadge(kind: .vehicle(guidance.vehicle, plate: snapshot.plate))
-                TrustBadge(kind: .data(guidance.data))
-                Spacer(minLength: 0)
+            if let plate = snapshot.plate {
+                Text(verbatim: plate)
+                    .font(.caption)
+                    .foregroundStyle(TapsoColor.textSecondary)
             }
-            .accessibilityElement(children: .combine)
 
-            if ![.arrived, .passedDestination, .ended].contains(guidance.moment) {
+            if ![.arrived, .passedDestination, .ended].contains(guidance.moment), guidance.count != .hidden {
                 StopLadder(
                     current: snapshot.currentStopName,
                     upcoming: snapshot.upcomingStops,
@@ -260,9 +292,11 @@ struct RideHeroCard: View {
     /// "How is my ride going?" A big count, calm colour.
     private var riding: some View {
         VStack(alignment: .leading, spacing: TapsoSpace.sm) {
-            Label(LocalizedStringKey(guidance.copy.eyebrow), systemImage: guidance.symbolName)
-                .font(.subheadline.weight(.bold))
-                .foregroundStyle(guidance.count == .live ? TapsoColor.mintDeep : TapsoColor.textSecondary)
+            if guidance.copy.eyebrow == "ride.predicted.eyebrow" {
+                Text("ride.predicted.eyebrow")
+                    .font(.caption)
+                    .foregroundStyle(TapsoColor.textSecondary)
+            }
             if guidance.count == .hidden {
                 // Signals disagree: no number to act on until they agree again.
                 Text(String(format: RideText.string("ride.toDestination"), snapshot.destinationName))
@@ -281,21 +315,13 @@ struct RideHeroCard: View {
                     }
                 }
             }
-            if guidance.moment == .riding {
-                VStack(alignment: .leading, spacing: 2) {
-                    Text(LocalizedStringKey(guidance.copy.headline))
-                        .font(.headline)
-                        .foregroundStyle(TapsoColor.textPrimary)
-                    Text(LocalizedStringKey(guidance.copy.detail))
-                        .font(.subheadline)
-                        .foregroundStyle(TapsoColor.textSecondary)
-                }
+            if guidance.count != .hidden {
+                JourneyRail(
+                    progress: JourneyRail.progress(remaining: snapshot.remainingStops, total: snapshot.totalStops),
+                    role: guidance.colorRole
+                )
+                .padding(.top, TapsoSpace.xs)
             }
-            JourneyRail(
-                progress: JourneyRail.progress(remaining: snapshot.remainingStops, total: snapshot.totalStops),
-                role: guidance.colorRole
-            )
-            .padding(.top, TapsoSpace.xs)
         }
         .padding(TapsoSpace.lg)
         .frame(maxWidth: .infinity, alignment: .leading)
