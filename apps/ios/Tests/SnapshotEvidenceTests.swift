@@ -82,6 +82,12 @@ final class SnapshotEvidenceTests: XCTestCase {
                 returnService: .loaded(returnRows)
             ))),
             ("30-ride-passed-walk-back", ride(.arrived, 0, passed: true, rescue: walkBackAdvice, kakaoAvailable: true)),
+            ("32-map-import-screenshot", screenshotImport(.idle)),
+            ("33-screenshot-reading", screenshotImport(.reading)),
+            ("34-screenshot-confirm", screenshotImport(.confirm(screenshotProposal(boarding: 2)))),
+            ("35-screenshot-confirm-destination-only", screenshotImport(.confirm(screenshotProposal(boarding: nil)))),
+            ("36-screenshot-choose", screenshotImport(.choose([screenshotProposal(boarding: 2), screenshotProposal(boarding: nil)]))),
+            ("37-screenshot-failed", screenshotImport(.failed(.noStopMatch))),
             ("31-end-return-countdown", AnyView(RideEndContent(
                 outcome: RideOutcome(moment: .arrived, routeNumber: "202", destination: DemoCatalog.outbound.stops[8].stop),
                 naverAvailable: true,
@@ -168,6 +174,30 @@ final class SnapshotEvidenceTests: XCTestCase {
         // The plate of the bus the sample check proposes, so check, ride and surfaces agree.
         vehiclePlate: DemoCatalog.proposals(for: .smooth, route: DemoCatalog.outbound)[0].maskedPlate
     )
+
+    /// SYNTHETIC: a demo route's stops standing in for a verified screenshot result.
+    private func screenshotProposal(boarding: Int?) -> RouteImportProposal {
+        let route = DemoCatalog.outbound
+        return RouteImportProposal(
+            route: route,
+            boarding: boarding.map { route.stops[$0] },
+            destination: route.stops[8],
+            evidence: boarding == nil ? .destinationOnly : .orderedStops(count: 3),
+            score: 90,
+            numberWasCorrected: false,
+            weakestStopSimilarity: 1
+        )
+    }
+
+    private func screenshotImport(_ state: ScreenshotImportState) -> AnyView {
+        AnyView(MapImportContent(
+            place: nil,
+            screenshot: AnyView(ScreenshotImportContent(state: state, picker: AnyView(pastePlaceholder), anotherPicker: AnyView(pastePlaceholder))),
+            paste: AnyView(pastePlaceholder),
+            onChooseDemo: { _ in },
+            onSearch: {}
+        ))
+    }
 
     private var pastePlaceholder: some View {
         Label("Paste", systemImage: "doc.on.clipboard")

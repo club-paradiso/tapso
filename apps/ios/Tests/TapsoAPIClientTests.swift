@@ -425,6 +425,16 @@ private enum Payload {
     }
 }
 
+extension TapsoAPIClient {
+    /// A client whose every request `StubURLProtocol` answers in-process. The only place besides
+    /// `TapsoAPIClient` that may name the networking types (`crossLanguageAuthority.test.ts`).
+    static func stubbed() -> TapsoAPIClient {
+        let configuration = URLSessionConfiguration.ephemeral
+        configuration.protocolClasses = [StubURLProtocol.self]
+        return TapsoAPIClient(session: URLSession(configuration: configuration))
+    }
+}
+
 /// Answers every request in-process; nothing reaches the network.
 final class StubURLProtocol: URLProtocol {
     nonisolated(unsafe) private static var handler: (@Sendable (URLRequest) -> (Int, Data))?

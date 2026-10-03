@@ -63,6 +63,10 @@
 		A4BC18B0C6700F5DEE8A832F /* TapsoReturnAttributes.swift in Sources */ = {isa = PBXBuildFile; fileRef = DB410939543F5C21ABBF6A70 /* TapsoReturnAttributes.swift */; };
 		650AC169EC77845B280C25D9 /* TapsoReturnAttributes.swift in Sources */ = {isa = PBXBuildFile; fileRef = DB410939543F5C21ABBF6A70 /* TapsoReturnAttributes.swift */; };
 		5839FD3A610C398D8FFF2F14 /* TapsoReturnActivityWidget.swift in Sources */ = {isa = PBXBuildFile; fileRef = 2B52DB562472A43D4D48F471 /* TapsoReturnActivityWidget.swift */; };
+		15C8BE959913FD7DC74C90BC /* LiveRouteImportCatalog.swift in Sources */ = {isa = PBXBuildFile; fileRef = 8B023AAD9EC6D00AFF13C829 /* LiveRouteImportCatalog.swift */; };
+		DBA3F1C6B60D01B4A4505125 /* ScreenshotImportViews.swift in Sources */ = {isa = PBXBuildFile; fileRef = B44662751CB9EDA0A65897FC /* ScreenshotImportViews.swift */; };
+		9D5E3B6CEF9138AE20C99988 /* VisionScreenshotTextRecognizer.swift in Sources */ = {isa = PBXBuildFile; fileRef = C91A93C001D9AF658DA966C6 /* VisionScreenshotTextRecognizer.swift */; };
+		22E0764272F0461035C8207B /* ScreenshotImportFlowTests.swift in Sources */ = {isa = PBXBuildFile; fileRef = 6DB796C0ED563974A2B95EA4 /* ScreenshotImportFlowTests.swift */; };
 /* End PBXBuildFile section */
 
 /* Begin PBXContainerItemProxy section */
@@ -152,6 +156,10 @@
 		D102FEDCF3DA956AE2EC37A9 /* ReturnActivitySurfaces.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = ReturnActivitySurfaces.swift; sourceTree = "<group>"; };
 		DB410939543F5C21ABBF6A70 /* TapsoReturnAttributes.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = TapsoReturnAttributes.swift; sourceTree = "<group>"; };
 		2B52DB562472A43D4D48F471 /* TapsoReturnActivityWidget.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = TapsoReturnActivityWidget.swift; sourceTree = "<group>"; };
+		8B023AAD9EC6D00AFF13C829 /* LiveRouteImportCatalog.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = LiveRouteImportCatalog.swift; sourceTree = "<group>"; };
+		B44662751CB9EDA0A65897FC /* ScreenshotImportViews.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = ScreenshotImportViews.swift; sourceTree = "<group>"; };
+		C91A93C001D9AF658DA966C6 /* VisionScreenshotTextRecognizer.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = VisionScreenshotTextRecognizer.swift; sourceTree = "<group>"; };
+		6DB796C0ED563974A2B95EA4 /* ScreenshotImportFlowTests.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = ScreenshotImportFlowTests.swift; sourceTree = "<group>"; };
 /* End PBXFileReference section */
 
 /* Begin PBXFrameworksBuildPhase section */
@@ -195,6 +203,7 @@
 			children = (
 				0254DEF030E85E3CF7322DF3 /* MapHandoffFlowTests.swift */,
 				4F3242CAC95098615B71E4AF /* RidePresentationTests.swift */,
+				6DB796C0ED563974A2B95EA4 /* ScreenshotImportFlowTests.swift */,
 				C3C7708182ABA376B17A2322 /* SnapshotEvidenceTests.swift */,
 				E7108E508389781AD30FB5E4 /* TapsoActivityAttributesTests.swift */,
 				882BE9396F38A304F46668C5 /* TapsoAPIClientTests.swift */,
@@ -261,9 +270,11 @@
 				A8E46B25EF26064102482B49 /* JourneyStore.swift */,
 				6BF30D970AD35EAC3FE1308C /* LiveActivityClient.swift */,
 				01DE7451FA463336C39A13CA /* LiveRideSetupViews.swift */,
+				8B023AAD9EC6D00AFF13C829 /* LiveRouteImportCatalog.swift */,
 				1BA1E189F8D5241F18ABD214 /* RideEndView.swift */,
 				857A4229A2F4867FB62DD336 /* RideFeedback.swift */,
 				B71E19ABC4E943435650D65F /* RideView.swift */,
+				B44662751CB9EDA0A65897FC /* ScreenshotImportViews.swift */,
 				004C91C027949523F56247EA /* SetupViews.swift */,
 				6BBD1C360D871CE9BD6C1F6E /* Tapso.entitlements */,
 				DA0A54842582C43E01555CBD /* TapsoAPIClient.swift */,
@@ -272,6 +283,7 @@
 				836F8A50043BC87B45E4FA71 /* TapsoRootView.swift */,
 				DD95453C64419FF06C2AB668 /* TapsoShortcuts.swift */,
 				522F063151D3ED5FDD3494B6 /* VehicleCheckView.swift */,
+				C91A93C001D9AF658DA966C6 /* VisionScreenshotTextRecognizer.swift */,
 			);
 			path = TapsoApp;
 			sourceTree = "<group>";
@@ -490,11 +502,13 @@
 				353C5AEA2F4ED35FBF1207BC /* LiveActivityClient.swift in Sources */,
 				216C1DAF60AA1BF258CBA512 /* LiveActivitySurfaces.swift in Sources */,
 				16CBA37E2A09BAAB0168A223 /* LiveRideSetupViews.swift in Sources */,
+				15C8BE959913FD7DC74C90BC /* LiveRouteImportCatalog.swift in Sources */,
 				9E47BA264E7738D256848D31 /* ReturnActivitySurfaces.swift in Sources */,
 				E90C569F723A43A0F30ED146 /* RideEndView.swift in Sources */,
 				3D1562DEB72025EBE17ABDCD /* RideFeedback.swift in Sources */,
 				BB8FAE7699DAE3EAEA47D888 /* RideSurfaceComponents.swift in Sources */,
 				FC181FC49F83051C0EF18002 /* RideView.swift in Sources */,
+				DBA3F1C6B60D01B4A4505125 /* ScreenshotImportViews.swift in Sources */,
 				8CA644A203D52AA38D49E70F /* SetupViews.swift in Sources */,
 				E3F7A3852EAB2CEF59630AC9 /* TapsoActivityAttributes.swift in Sources */,
 				2664941987948A2833A62902 /* TapsoAPIClient.swift in Sources */,
@@ -506,6 +520,7 @@
 				71438FFF1BC61D496B21CFEA /* TapsoShortcuts.swift in Sources */,
 				D25B95DB60BFA38F53A4CD94 /* TapsoTokens.swift in Sources */,
 				31AF9B664D0631DD307DDE91 /* VehicleCheckView.swift in Sources */,
+				9D5E3B6CEF9138AE20C99988 /* VisionScreenshotTextRecognizer.swift in Sources */,
 			);
 			runOnlyForDeploymentPostprocessing = 0;
 		};
@@ -532,6 +547,7 @@
 			files = (
 				6C7EC458E60617F296856254 /* MapHandoffFlowTests.swift in Sources */,
 				F0FCB5D5AF2DDFA92C6AD18C /* RidePresentationTests.swift in Sources */,
+				22E0764272F0461035C8207B /* ScreenshotImportFlowTests.swift in Sources */,
 				3BFE146D78987331ED4016E5 /* SnapshotEvidenceTests.swift in Sources */,
 				B2EE311E1A81511BB21CF237 /* TapsoActivityAttributesTests.swift in Sources */,
 				CC9DD2029F37F718EB7CEBA5 /* TapsoAPIClientTests.swift in Sources */,

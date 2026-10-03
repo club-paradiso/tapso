@@ -17,7 +17,7 @@ export const IOS_COPY = {
   "home.rideAgain": "다시 타기",
   "favorite.from": "%@에서 타요",
   "home.mapImport.title": "지도 앱에서 가져오기",
-  "home.mapImport.body": "카카오맵·네이버 지도·Apple 지도에서 공유한 장소로 시작",
+  "home.mapImport.body": "스크린샷이나 공유한 장소로 시작",
   "search.results": "정류장",
   "route.question": "어떤 버스를 탈까요?",
   "route.headsign": "%@ 방면",

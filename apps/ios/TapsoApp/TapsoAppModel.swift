@@ -276,6 +276,12 @@ final class TapsoAppModel {
     /// The last paste held nothing TAPSO could read as a place.
     private(set) var sharedPlaceUnreadable = false
     private(set) var appleMapsFailed = false
+    /// Screenshot route import (`docs/product/SCREENSHOT_IMPORT_V1.md`): what the last picked screenshot came to.
+    private(set) var screenshotImport: ScreenshotImportState = .idle
+    /// A stop the screenshot showed as the place to get off, while the rider chooses where to board.
+    private(set) var screenshotDestination: RouteStop?
+    /// The route that stop belongs to: the suggestion is offered on no other route.
+    private(set) var screenshotDestinationRoute: RouteID?
     /// After a live ride: today's last buses of the route number, for the way back.
     private(set) var returnService: ReturnService = .idle
     /// The way back pinned to the Lock Screen as a countdown, if one is running.
@@ -287,6 +293,9 @@ final class TapsoAppModel {
     @ObservationIgnored private let liveActivity: LiveActivityClient?
     @ObservationIgnored private let returnReminders: ReturnReminderClient?
     @ObservationIgnored private let api: TapsoAPIClient
+    @ObservationIgnored private let routeCatalog: LiveRouteImportCatalog
+    @ObservationIgnored private let screenshotImporter: ScreenshotRouteImporter
+    @ObservationIgnored private var screenshotTask: Task<Void, Never>?
     @ObservationIgnored private var searchTask: Task<Void, Never>?
     @ObservationIgnored private var playbackTask: Task<Void, Never>?
     /// Registers the live ride's Live Activity push tokens with the server.
@@ -305,12 +314,20 @@ final class TapsoAppModel {
         store: JourneyStore = JourneyStore(),
         liveActivity: LiveActivityClient? = LiveActivityClient(),
         returnReminders: ReturnReminderClient? = ReturnReminderClient(),
-        api: TapsoAPIClient = TapsoAPIClient()
+        api: TapsoAPIClient = TapsoAPIClient(),
+        routeCatalog: LiveRouteImportCatalog? = nil,
+        screenshotImporter: ScreenshotRouteImporter? = nil
     ) {
         self.store = store
         self.liveActivity = liveActivity
         self.returnReminders = returnReminders
         self.api = api
+        let catalog = routeCatalog ?? LiveRouteImportCatalog(api: api)
+        self.routeCatalog = catalog
+        self.screenshotImporter = screenshotImporter ?? ScreenshotRouteImporter(
+            interpreter: LocalVisionRouteInterpreter(recognizer: VisionScreenshotTextRecognizer()),
+            source: catalog
+        )
         library = store.loadLibrary()
         if var saved = store.loadActiveRide(), Date().timeIntervalSince(saved.lastUpdateAt) < 8 * 3_600 {
             // Re-age restored data against the wall clock: a ride saved at the next stop and
@@ -397,6 +414,7 @@ final class TapsoAppModel {
 
     /// Reads pasted map-app text on the device. Nothing is fetched or sent.
     func importSharedText(_ text: String) {
+        cancelScreenshotImport()
         let place = SharedPlaceParser.parse(text: text)
         sharedPlace = place
         sharedPlaceUnreadable = place == nil
@@ -411,6 +429,7 @@ final class TapsoAppModel {
     /// A shared place opens the map-import screen from Home. During a ride, or in
     /// another setup, it waits on Home's map card instead of interrupting.
     func receiveSharedPlace(_ place: SharedPlace) {
+        cancelScreenshotImport()
         sharedPlace = place
         sharedPlaceUnreadable = false
         guard activeRide == nil, outcome == nil, path.isEmpty || path.first == .mapImport else { return }
@@ -422,8 +441,82 @@ final class TapsoAppModel {
         sharedPlaceUnreadable = false
     }
 
+    // MARK: Screenshot route import (`docs/product/SCREENSHOT_IMPORT_V1.md`)
+
+    /// Reads a screenshot the rider picked: text on the device, then TAPSO's own routes for the bus
+    /// numbers read. The picture is never stored or sent, and nothing starts until the rider confirms.
+    func importScreenshot(_ imageData: Data) {
+        screenshotTask?.cancel()
+        sharedPlace = nil
+        sharedPlaceUnreadable = false
+        screenshotDestination = nil
+        screenshotDestinationRoute = nil
+        screenshotImport = .reading
+        let importer = screenshotImporter
+        screenshotTask = Task { [weak self] in
+            let result = await importer.importRoute(from: imageData)
+            guard !Task.isCancelled else { return }
+            self?.finishScreenshotImport(result)
+        }
+    }
+
+    /// The photo could not be loaded from the picker.
+    func screenshotCouldNotLoad() {
+        screenshotTask?.cancel()
+        screenshotImport = .failed(.unreadableImage)
+    }
+
+    /// Stops reading and returns to the start of the screen. Picking nothing leaves it there too.
+    func cancelScreenshotImport() {
+        screenshotTask?.cancel()
+        screenshotTask = nil
+        screenshotImport = .idle
+    }
+
+    private func finishScreenshotImport(_ result: RouteImportResult) {
+        screenshotTask = nil
+        switch result {
+        case let .confirmed(proposal):
+            screenshotImport = .confirm(proposal)
+        case let .choose(proposals):
+            screenshotImport = .choose(proposals)
+        case .notFound(.interrupted):
+            screenshotImport = .idle
+        case let .notFound(failure):
+            screenshotImport = .failed(failure)
+        }
+    }
+
+    /// The rider confirmed a route TAPSO verified. With both stops the vehicle check starts, exactly as
+    /// after choosing them by hand; with only a destination the rider picks where to board first.
+    func startScreenshotRoute(_ proposal: RouteImportProposal) async {
+        guard let stops = await routeCatalog.liveStops(for: proposal.route.id.rawValue) else {
+            screenshotImport = .failed(.routeDataUnavailable)
+            return
+        }
+        screenshotImport = .idle
+        if let boarding = proposal.boarding {
+            chooseLiveStops(boarding: boarding, destination: proposal.destination, on: stops)
+        } else {
+            screenshotDestination = proposal.destination
+            screenshotDestinationRoute = proposal.route.id
+            liveStops = .loaded(stops)
+            path.append(.liveStops(routeID: stops.apiRoute.routeId))
+        }
+    }
+
+    /// "Not this route": the bus number's own variants, to choose from by hand.
+    func chooseAnotherRoute(like proposal: RouteImportProposal) {
+        let number = proposal.route.number
+        screenshotImport = .idle
+        openLiveSearch()
+        Task { await searchLiveRoutes(number: number) }
+    }
+
     /// Live: the rider names the bus that goes there; the stop list then suggests where to get off.
     func continueWithLiveRoute() {
+        screenshotDestination = nil
+        screenshotDestinationRoute = nil
         searchTask?.cancel()
         liveRouteSearch = .idle
         liveFailure = nil
@@ -902,6 +995,8 @@ final class TapsoAppModel {
     /// Live setup starts from the route number: TAPSO's API has no stop search yet,
     /// and inventing one from a stale list would send riders to the wrong stop.
     func openLiveSearch() {
+        screenshotDestination = nil
+        screenshotDestinationRoute = nil
         searchTask?.cancel()
         liveRouteSearch = .idle
         liveFailure = nil
@@ -970,6 +1065,8 @@ final class TapsoAppModel {
 
     /// Leaving the vehicle check by any route (back, cancel, a new search) stops its polling.
     func pathDidChange(_ newPath: [SetupStep]) {
+        if !newPath.contains(.mapImport), screenshotImport != .idle { cancelScreenshotImport() }
+        if newPath.isEmpty { screenshotDestination = nil; screenshotDestinationRoute = nil }
         guard !newPath.contains(.vehicleCheck), activeRide == nil else { return }
         searchTask?.cancel()
         endLiveSetupSession()
@@ -1378,4 +1475,16 @@ struct LiveRouteStops: Equatable {
     let coordinatesAreSurveyed: Bool
     /// `linear`, `loop` or `repeating` (`classifyTopology` on the server).
     let topology: String
+}
+
+/// Screenshot import: what the screen shows. A result is never a started ride.
+enum ScreenshotImportState: Equatable {
+    case idle
+    /// Reading the picture and looking up the routes of the bus numbers in it.
+    case reading
+    /// One route and direction strongly supported: the rider confirms.
+    case confirm(RouteImportProposal)
+    /// Several candidates, or one that is not certain enough to confirm outright.
+    case choose([RouteImportProposal])
+    case failed(RouteImportFailure)
 }

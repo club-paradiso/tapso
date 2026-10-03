@@ -53,6 +53,13 @@
 13. On a build without the App Group provisioned, the extension offers "복사하기"; pasting in TAPSO gives the same place.
 14. Live: after naming the bus, the stops nearest the place are suggested after boarding; the end screen opens NAVER Map and KakaoMap walking routes to the place and shows it in Apple Maps.
 
+## Screenshot import cases (`product/SCREENSHOT_IMPORT_V1.md`)
+
+17. In KakaoMap, NAVER Map and Apple Maps, open a Jeju bus route (light and dark mode), take a screenshot, open TAPSO › 지도 앱에서 가져오기 › 스크린샷 선택. No photo-library permission prompt appears. "경로 확인 중…" shows briefly, then "이 경로 맞나요?" with the bus number, direction, stops and stop count that TAPSO's own data has. Compare each with the map app.
+18. Tap "이 경로로 시작": the vehicle check opens for that route and stops. Nothing starts before the tap. Repeat with the screenshot cropped to the destination only: TAPSO asks which stop to board at and offers the screenshot's stop as the destination.
+19. Pick a screenshot that is not a route (a chat, a photo), one with a bus TAPSO does not serve, and a blurry one: each says plainly what is wrong and offers another photo or "직접 찾기". Cancel the picker: the screen is unchanged. Airplane mode: "경로 정보를 불러오지 못했어요".
+20. VoiceOver reads the confirmation as one sentence (bus, from, to, stop count); Dynamic Type at the largest sizes does not clip the stop names; pasting a link and "직접 찾기" still work.
+
 ## Rescue and way-back cases (`product/JEJU_SAFETY_LAYER_V3.md`, `LIVE_ACTIVITY_SPEC.md`)
 
 15. Live: stay on past the destination. When TAPSO says "목적지를 지났어요", note the stop it names and where the bus actually stops next; compare the straight-line metres with the walk NAVER Map gives; check that no ride back is offered and the map buttons open a walking route to the stop (or the shared place).
