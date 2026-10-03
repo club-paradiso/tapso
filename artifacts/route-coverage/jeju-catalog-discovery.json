@@ -1,0 +1,1623 @@
+{
+  "generatedAt": "2026-10-03T08:56:42.191Z",
+  "base": "https://tapso-api.vercel.app",
+  "catalogVersion": "794f3bcb831d783e",
+  "discovery": [
+    {
+      "method": "all_routes",
+      "query": "",
+      "routeIds": 0,
+      "status": 504
+    },
+    {
+      "method": "number_search",
+      "query": "1",
+      "routeIds": 441,
+      "status": 200
+    },
+    {
+      "method": "number_search",
+      "query": "2",
+      "routeIds": 454,
+      "status": 200
+    },
+    {
+      "method": "number_search",
+      "query": "3",
+      "routeIds": 418,
+      "status": 200
+    },
+    {
+      "method": "number_search",
+      "query": "4",
+      "routeIds": 253,
+      "status": 200
+    },
+    {
+      "method": "number_search",
+      "query": "5",
+      "routeIds": 256,
+      "status": 200
+    },
+    {
+      "method": "number_search",
+      "query": "6",
+      "routeIds": 202,
+      "status": 200
+    },
+    {
+      "method": "number_search",
+      "query": "7",
+      "routeIds": 209,
+      "status": 200
+    },
+    {
+      "method": "number_search",
+      "query": "8",
+      "routeIds": 98,
+      "status": 200
+    },
+    {
+      "method": "number_search",
+      "query": "9",
+      "routeIds": 78,
+      "status": 200
+    },
+    {
+      "method": "timetable_census_number",
+      "query": "101",
+      "routeIds": 7,
+      "status": 200
+    },
+    {
+      "method": "timetable_census_number",
+      "query": "102",
+      "routeIds": 13,
+      "status": 200
+    },
+    {
+      "method": "timetable_census_number",
+      "query": "102-1",
+      "routeIds": 2,
+      "status": 200
+    },
+    {
+      "method": "timetable_census_number",
+      "query": "1100",
+      "routeIds": 0,
+      "status": 200
+    },
+    {
+      "method": "timetable_census_number",
+      "query": "1100-1",
+      "routeIds": 0,
+      "status": 200
+    },
+    {
+      "method": "timetable_census_number",
+      "query": "111",
+      "routeIds": 12,
+      "status": 200
+    },
+    {
+      "method": "timetable_census_number",
+      "query": "111-1",
+      "routeIds": 2,
+      "status": 200
+    },
+    {
+      "method": "timetable_census_number",
+      "query": "1111",
+      "routeIds": 2,
+      "status": 200
+    },
+    {
+      "method": "timetable_census_number",
+      "query": "1112",
+      "routeIds": 1,
+      "status": 200
+    },
+    {
+      "method": "timetable_census_number",
+      "query": "1113",
+      "routeIds": 1,
+      "status": 200
+    },
+    {
+      "method": "timetable_census_number",
+      "query": "121",
+      "routeIds": 7,
+      "status": 200
+    },
+    {
+      "method": "timetable_census_number",
+      "query": "122",
+      "routeIds": 2,
+      "status": 200
+    },
+    {
+      "method": "timetable_census_number",
+      "query": "131",
+      "routeIds": 5,
+      "status": 200
+    },
+    {
+      "method": "timetable_census_number",
+      "query": "132",
+      "routeIds": 6,
+      "status": 200
+    },
+    {
+      "method": "timetable_census_number",
+      "query": "151",
+      "routeIds": 12,
+      "status": 200
+    },
+    {
+      "method": "timetable_census_number",
+      "query": "151-1",
+      "routeIds": 4,
+      "status": 200
+    },
+    {
+      "method": "timetable_census_number",
+      "query": "181",
+      "routeIds": 5,
+      "status": 200
+    },
+    {
+      "method": "timetable_census_number",
+      "query": "182",
+      "routeIds": 7,
+      "status": 200
+    },
+    {
+      "method": "timetable_census_number",
+      "query": "182-1",
+      "routeIds": 1,
+      "status": 200
+    },
+    {
+      "method": "timetable_census_number",
+      "query": "1950",
+      "routeIds": 0,
+      "status": 200
+    },
+    {
+      "method": "timetable_census_number",
+      "query": "201",
+      "routeIds": 20,
+      "status": 200
+    },
+    {
+      "method": "timetable_census_number",
+      "query": "202",
+      "routeIds": 31,
+      "status": 200
+    },
+    {
+      "method": "timetable_census_number",
+      "query": "202-1",
+      "routeIds": 2,
+      "status": 200
+    },
+    {
+      "method": "timetable_census_number",
+      "query": "202-2",
+      "routeIds": 2,
+      "status": 200
+    },
+    {
+      "method": "timetable_census_number",
+      "query": "202-4",
+      "routeIds": 2,
+      "status": 200
+    },
+    {
+      "method": "timetable_census_number",
+      "query": "211",
+      "routeIds": 6,
+      "status": 200
+    },
+    {
+      "method": "timetable_census_number",
+      "query": "212",
+      "routeIds": 12,
+      "status": 200
+    },
+    {
+      "method": "timetable_census_number",
+      "query": "221",
+      "routeIds": 5,
+      "status": 200
+    },
+    {
+      "method": "timetable_census_number",
+      "query": "222",
+      "routeIds": 5,
+      "status": 200
+    },
+    {
+      "method": "timetable_census_number",
+      "query": "222-1",
+      "routeIds": 1,
+      "status": 200
+    },
+    {
+      "method": "timetable_census_number",
+      "query": "231",
+      "routeIds": 14,
+      "status": 200
+    },
+    {
+      "method": "timetable_census_number",
+      "query": "232",
+      "routeIds": 21,
+      "status": 200
+    },
+    {
+      "method": "timetable_census_number",
+      "query": "240",
+      "routeIds": 8,
+      "status": 200
+    },
+    {
+      "method": "timetable_census_number",
+      "query": "251",
+      "routeIds": 6,
+      "status": 200
+    },
+    {
+      "method": "timetable_census_number",
+      "query": "251-1",
+      "routeIds": 2,
+      "status": 200
+    },
+    {
+      "method": "timetable_census_number",
+      "query": "252",
+      "routeIds": 4,
+      "status": 200
+    },
+    {
+      "method": "timetable_census_number",
+      "query": "253",
+      "routeIds": 4,
+      "status": 200
+    },
+    {
+      "method": "timetable_census_number",
+      "query": "254",
+      "routeIds": 4,
+      "status": 200
+    },
+    {
+      "method": "timetable_census_number",
+      "query": "255",
+      "routeIds": 3,
+      "status": 200
+    },
+    {
+      "method": "timetable_census_number",
+      "query": "260",
+      "routeIds": 3,
+      "status": 200
+    },
+    {
+      "method": "timetable_census_number",
+      "query": "270",
+      "routeIds": 8,
+      "status": 200
+    },
+    {
+      "method": "timetable_census_number",
+      "query": "281",
+      "routeIds": 4,
+      "status": 200
+    },
+    {
+      "method": "timetable_census_number",
+      "query": "282",
+      "routeIds": 12,
+      "status": 200
+    },
+    {
+      "method": "timetable_census_number",
+      "query": "291",
+      "routeIds": 3,
+      "status": 200
+    },
+    {
+      "method": "timetable_census_number",
+      "query": "292",
+      "routeIds": 4,
+      "status": 200
+    },
+    {
+      "method": "timetable_census_number",
+      "query": "293",
+      "routeIds": 4,
+      "status": 200
+    },
+    {
+      "method": "timetable_census_number",
+      "query": "295",
+      "routeIds": 6,
+      "status": 200
+    },
+    {
+      "method": "timetable_census_number",
+      "query": "295-1",
+      "routeIds": 1,
+      "status": 200
+    },
+    {
+      "method": "timetable_census_number",
+      "query": "300",
+      "routeIds": 36,
+      "status": 200
+    },
+    {
+      "method": "timetable_census_number",
+      "query": "3001",
+      "routeIds": 6,
+      "status": 200
+    },
+    {
+      "method": "timetable_census_number",
+      "query": "3002",
+      "routeIds": 4,
+      "status": 200
+    },
+    {
+      "method": "timetable_census_number",
+      "query": "3003",
+      "routeIds": 4,
+      "status": 200
+    },
+    {
+      "method": "timetable_census_number",
+      "query": "3004",
+      "routeIds": 4,
+      "status": 200
+    },
+    {
+      "method": "timetable_census_number",
+      "query": "3005",
+      "routeIds": 2,
+      "status": 200
+    },
+    {
+      "method": "timetable_census_number",
+      "query": "3006",
+      "routeIds": 2,
+      "status": 200
+    },
+    {
+      "method": "timetable_census_number",
+      "query": "3007",
+      "routeIds": 1,
+      "status": 200
+    },
+    {
+      "method": "timetable_census_number",
+      "query": "3008",
+      "routeIds": 3,
+      "status": 200
+    },
+    {
+      "method": "timetable_census_number",
+      "query": "301",
+      "routeIds": 8,
+      "status": 200
+    },
+    {
+      "method": "timetable_census_number",
+      "query": "302",
+      "routeIds": 8,
+      "status": 200
+    },
+    {
+      "method": "timetable_census_number",
+      "query": "303",
+      "routeIds": 4,
+      "status": 200
+    },
+    {
+      "method": "timetable_census_number",
+      "query": "311",
+      "routeIds": 10,
+      "status": 200
+    },
+    {
+      "method": "timetable_census_number",
+      "query": "311-1",
+      "routeIds": 1,
+      "status": 200
+    },
+    {
+      "method": "timetable_census_number",
+      "query": "312",
+      "routeIds": 6,
+      "status": 200
+    },
+    {
+      "method": "timetable_census_number",
+      "query": "312-1",
+      "routeIds": 1,
+      "status": 200
+    },
+    {
+      "method": "timetable_census_number",
+      "query": "315",
+      "routeIds": 6,
+      "status": 200
+    },
+    {
+      "method": "timetable_census_number",
+      "query": "316",
+      "routeIds": 4,
+      "status": 200
+    },
+    {
+      "method": "timetable_census_number",
+      "query": "320",
+      "routeIds": 9,
+      "status": 200
+    },
+    {
+      "method": "timetable_census_number",
+      "query": "320-1",
+      "routeIds": 3,
+      "status": 200
+    },
+    {
+      "method": "timetable_census_number",
+      "query": "320-2",
+      "routeIds": 1,
+      "status": 200
+    },
+    {
+      "method": "timetable_census_number",
+      "query": "325",
+      "routeIds": 7,
+      "status": 200
+    },
+    {
+      "method": "timetable_census_number",
+      "query": "326-1",
+      "routeIds": 1,
+      "status": 200
+    },
+    {
+      "method": "timetable_census_number",
+      "query": "331",
+      "routeIds": 6,
+      "status": 200
+    },
+    {
+      "method": "timetable_census_number",
+      "query": "332",
+      "routeIds": 7,
+      "status": 200
+    },
+    {
+      "method": "timetable_census_number",
+      "query": "335",
+      "routeIds": 8,
+      "status": 200
+    },
+    {
+      "method": "timetable_census_number",
+      "query": "336",
+      "routeIds": 9,
+      "status": 200
+    },
+    {
+      "method": "timetable_census_number",
+      "query": "337",
+      "routeIds": 2,
+      "status": 200
+    },
+    {
+      "method": "timetable_census_number",
+      "query": "341",
+      "routeIds": 8,
+      "status": 200
+    },
+    {
+      "method": "timetable_census_number",
+      "query": "342",
+      "routeIds": 4,
+      "status": 200
+    },
+    {
+      "method": "timetable_census_number",
+      "query": "345",
+      "routeIds": 1,
+      "status": 200
+    },
+    {
+      "method": "timetable_census_number",
+      "query": "346",
+      "routeIds": 28,
+      "status": 200
+    },
+    {
+      "method": "timetable_census_number",
+      "query": "347",
+      "routeIds": 2,
+      "status": 200
+    },
+    {
+      "method": "timetable_census_number",
+      "query": "348-1",
+      "routeIds": 2,
+      "status": 200
+    },
+    {
+      "method": "timetable_census_number",
+      "query": "349-1",
+      "routeIds": 2,
+      "status": 200
+    },
+    {
+      "method": "timetable_census_number",
+      "query": "351",
+      "routeIds": 7,
+      "status": 200
+    },
+    {
+      "method": "timetable_census_number",
+      "query": "355",
+      "routeIds": 7,
+      "status": 200
+    },
+    {
+      "method": "timetable_census_number",
+      "query": "356",
+      "routeIds": 6,
+      "status": 200
+    },
+    {
+      "method": "timetable_census_number",
+      "query": "356-1",
+      "routeIds": 1,
+      "status": 200
+    },
+    {
+      "method": "timetable_census_number",
+      "query": "357-1",
+      "routeIds": 2,
+      "status": 200
+    },
+    {
+      "method": "timetable_census_number",
+      "query": "358-1",
+      "routeIds": 2,
+      "status": 200
+    },
+    {
+      "method": "timetable_census_number",
+      "query": "360",
+      "routeIds": 13,
+      "status": 200
+    },
+    {
+      "method": "timetable_census_number",
+      "query": "365",
+      "routeIds": 6,
+      "status": 200
+    },
+    {
+      "method": "timetable_census_number",
+      "query": "366",
+      "routeIds": 1,
+      "status": 200
+    },
+    {
+      "method": "timetable_census_number",
+      "query": "367",
+      "routeIds": 1,
+      "status": 200
+    },
+    {
+      "method": "timetable_census_number",
+      "query": "368",
+      "routeIds": 1,
+      "status": 200
+    },
+    {
+      "method": "timetable_census_number",
+      "query": "369",
+      "routeIds": 0,
+      "status": 200
+    },
+    {
+      "method": "timetable_census_number",
+      "query": "370",
+      "routeIds": 3,
+      "status": 200
+    },
+    {
+      "method": "timetable_census_number",
+      "query": "380",
+      "routeIds": 2,
+      "status": 200
+    },
+    {
+      "method": "timetable_census_number",
+      "query": "411",
+      "routeIds": 3,
+      "status": 200
+    },
+    {
+      "method": "timetable_census_number",
+      "query": "412",
+      "routeIds": 4,
+      "status": 200
+    },
+    {
+      "method": "timetable_census_number",
+      "query": "415",
+      "routeIds": 3,
+      "status": 200
+    },
+    {
+      "method": "timetable_census_number",
+      "query": "421",
+      "routeIds": 2,
+      "status": 200
+    },
+    {
+      "method": "timetable_census_number",
+      "query": "422",
+      "routeIds": 2,
+      "status": 200
+    },
+    {
+      "method": "timetable_census_number",
+      "query": "423",
+      "routeIds": 1,
+      "status": 200
+    },
+    {
+      "method": "timetable_census_number",
+      "query": "424",
+      "routeIds": 1,
+      "status": 200
+    },
+    {
+      "method": "timetable_census_number",
+      "query": "425",
+      "routeIds": 2,
+      "status": 200
+    },
+    {
+      "method": "timetable_census_number",
+      "query": "426",
+      "routeIds": 2,
+      "status": 200
+    },
+    {
+      "method": "timetable_census_number",
+      "query": "43-1",
+      "routeIds": 10,
+      "status": 200
+    },
+    {
+      "method": "timetable_census_number",
+      "query": "43-2",
+      "routeIds": 9,
+      "status": 200
+    },
+    {
+      "method": "timetable_census_number",
+      "query": "43-3",
+      "routeIds": 2,
+      "status": 200
+    },
+    {
+      "method": "timetable_census_number",
+      "query": "431",
+      "routeIds": 1,
+      "status": 200
+    },
+    {
+      "method": "timetable_census_number",
+      "query": "432",
+      "routeIds": 2,
+      "status": 200
+    },
+    {
+      "method": "timetable_census_number",
+      "query": "434",
+      "routeIds": 4,
+      "status": 200
+    },
+    {
+      "method": "timetable_census_number",
+      "query": "434-1",
+      "routeIds": 1,
+      "status": 200
+    },
+    {
+      "method": "timetable_census_number",
+      "query": "435",
+      "routeIds": 4,
+      "status": 200
+    },
+    {
+      "method": "timetable_census_number",
+      "query": "435-1",
+      "routeIds": 1,
+      "status": 200
+    },
+    {
+      "method": "timetable_census_number",
+      "query": "436",
+      "routeIds": 1,
+      "status": 200
+    },
+    {
+      "method": "timetable_census_number",
+      "query": "437",
+      "routeIds": 1,
+      "status": 200
+    },
+    {
+      "method": "timetable_census_number",
+      "query": "440",
+      "routeIds": 4,
+      "status": 200
+    },
+    {
+      "method": "timetable_census_number",
+      "query": "441",
+      "routeIds": 7,
+      "status": 200
+    },
+    {
+      "method": "timetable_census_number",
+      "query": "442",
+      "routeIds": 6,
+      "status": 200
+    },
+    {
+      "method": "timetable_census_number",
+      "query": "444",
+      "routeIds": 3,
+      "status": 200
+    },
+    {
+      "method": "timetable_census_number",
+      "query": "445",
+      "routeIds": 3,
+      "status": 200
+    },
+    {
+      "method": "timetable_census_number",
+      "query": "446",
+      "routeIds": 7,
+      "status": 200
+    },
+    {
+      "method": "timetable_census_number",
+      "query": "447",
+      "routeIds": 3,
+      "status": 200
+    },
+    {
+      "method": "timetable_census_number",
+      "query": "451",
+      "routeIds": 2,
+      "status": 200
+    },
+    {
+      "method": "timetable_census_number",
+      "query": "451-1",
+      "routeIds": 1,
+      "status": 200
+    },
+    {
+      "method": "timetable_census_number",
+      "query": "452",
+      "routeIds": 2,
+      "status": 200
+    },
+    {
+      "method": "timetable_census_number",
+      "query": "452-1",
+      "routeIds": 1,
+      "status": 200
+    },
+    {
+      "method": "timetable_census_number",
+      "query": "453",
+      "routeIds": 2,
+      "status": 200
+    },
+    {
+      "method": "timetable_census_number",
+      "query": "454",
+      "routeIds": 2,
+      "status": 200
+    },
+    {
+      "method": "timetable_census_number",
+      "query": "455",
+      "routeIds": 6,
+      "status": 200
+    },
+    {
+      "method": "timetable_census_number",
+      "query": "461",
+      "routeIds": 4,
+      "status": 200
+    },
+    {
+      "method": "timetable_census_number",
+      "query": "462",
+      "routeIds": 3,
+      "status": 200
+    },
+    {
+      "method": "timetable_census_number",
+      "query": "465",
+      "routeIds": 3,
+      "status": 200
+    },
+    {
+      "method": "timetable_census_number",
+      "query": "466",
+      "routeIds": 3,
+      "status": 200
+    },
+    {
+      "method": "timetable_census_number",
+      "query": "471",
+      "routeIds": 2,
+      "status": 200
+    },
+    {
+      "method": "timetable_census_number",
+      "query": "472",
+      "routeIds": 2,
+      "status": 200
+    },
+    {
+      "method": "timetable_census_number",
+      "query": "473",
+      "routeIds": 2,
+      "status": 200
+    },
+    {
+      "method": "timetable_census_number",
+      "query": "475",
+      "routeIds": 3,
+      "status": 200
+    },
+    {
+      "method": "timetable_census_number",
+      "query": "477",
+      "routeIds": 2,
+      "status": 200
+    },
+    {
+      "method": "timetable_census_number",
+      "query": "490",
+      "routeIds": 1,
+      "status": 200
+    },
+    {
+      "method": "timetable_census_number",
+      "query": "491",
+      "routeIds": 2,
+      "status": 200
+    },
+    {
+      "method": "timetable_census_number",
+      "query": "500",
+      "routeIds": 13,
+      "status": 200
+    },
+    {
+      "method": "timetable_census_number",
+      "query": "500-2",
+      "routeIds": 1,
+      "status": 200
+    },
+    {
+      "method": "timetable_census_number",
+      "query": "5001",
+      "routeIds": 1,
+      "status": 200
+    },
+    {
+      "method": "timetable_census_number",
+      "query": "5002",
+      "routeIds": 1,
+      "status": 200
+    },
+    {
+      "method": "timetable_census_number",
+      "query": "5003",
+      "routeIds": 1,
+      "status": 200
+    },
+    {
+      "method": "timetable_census_number",
+      "query": "5004",
+      "routeIds": 1,
+      "status": 200
+    },
+    {
+      "method": "timetable_census_number",
+      "query": "5005",
+      "routeIds": 1,
+      "status": 200
+    },
+    {
+      "method": "timetable_census_number",
+      "query": "5006",
+      "routeIds": 1,
+      "status": 200
+    },
+    {
+      "method": "timetable_census_number",
+      "query": "501",
+      "routeIds": 3,
+      "status": 200
+    },
+    {
+      "method": "timetable_census_number",
+      "query": "510",
+      "routeIds": 17,
+      "status": 200
+    },
+    {
+      "method": "timetable_census_number",
+      "query": "520",
+      "routeIds": 8,
+      "status": 200
+    },
+    {
+      "method": "timetable_census_number",
+      "query": "531",
+      "routeIds": 12,
+      "status": 200
+    },
+    {
+      "method": "timetable_census_number",
+      "query": "532",
+      "routeIds": 8,
+      "status": 200
+    },
+    {
+      "method": "timetable_census_number",
+      "query": "590",
+      "routeIds": 0,
+      "status": 200
+    },
+    {
+      "method": "timetable_census_number",
+      "query": "600",
+      "routeIds": 4,
+      "status": 200
+    },
+    {
+      "method": "timetable_census_number",
+      "query": "601",
+      "routeIds": 3,
+      "status": 200
+    },
+    {
+      "method": "timetable_census_number",
+      "query": "611",
+      "routeIds": 4,
+      "status": 200
+    },
+    {
+      "method": "timetable_census_number",
+      "query": "612",
+      "routeIds": 2,
+      "status": 200
+    },
+    {
+      "method": "timetable_census_number",
+      "query": "615",
+      "routeIds": 4,
+      "status": 200
+    },
+    {
+      "method": "timetable_census_number",
+      "query": "621",
+      "routeIds": 2,
+      "status": 200
+    },
+    {
+      "method": "timetable_census_number",
+      "query": "622",
+      "routeIds": 4,
+      "status": 200
+    },
+    {
+      "method": "timetable_census_number",
+      "query": "623",
+      "routeIds": 3,
+      "status": 200
+    },
+    {
+      "method": "timetable_census_number",
+      "query": "624",
+      "routeIds": 4,
+      "status": 200
+    },
+    {
+      "method": "timetable_census_number",
+      "query": "625",
+      "routeIds": 8,
+      "status": 200
+    },
+    {
+      "method": "timetable_census_number",
+      "query": "627",
+      "routeIds": 3,
+      "status": 200
+    },
+    {
+      "method": "timetable_census_number",
+      "query": "630",
+      "routeIds": 4,
+      "status": 200
+    },
+    {
+      "method": "timetable_census_number",
+      "query": "633",
+      "routeIds": 7,
+      "status": 200
+    },
+    {
+      "method": "timetable_census_number",
+      "query": "635",
+      "routeIds": 4,
+      "status": 200
+    },
+    {
+      "method": "timetable_census_number",
+      "query": "641",
+      "routeIds": 2,
+      "status": 200
+    },
+    {
+      "method": "timetable_census_number",
+      "query": "642",
+      "routeIds": 2,
+      "status": 200
+    },
+    {
+      "method": "timetable_census_number",
+      "query": "643",
+      "routeIds": 3,
+      "status": 200
+    },
+    {
+      "method": "timetable_census_number",
+      "query": "644",
+      "routeIds": 3,
+      "status": 200
+    },
+    {
+      "method": "timetable_census_number",
+      "query": "645",
+      "routeIds": 7,
+      "status": 200
+    },
+    {
+      "method": "timetable_census_number",
+      "query": "651",
+      "routeIds": 2,
+      "status": 200
+    },
+    {
+      "method": "timetable_census_number",
+      "query": "652",
+      "routeIds": 2,
+      "status": 200
+    },
+    {
+      "method": "timetable_census_number",
+      "query": "655",
+      "routeIds": 4,
+      "status": 200
+    },
+    {
+      "method": "timetable_census_number",
+      "query": "680",
+      "routeIds": 5,
+      "status": 200
+    },
+    {
+      "method": "timetable_census_number",
+      "query": "690",
+      "routeIds": 6,
+      "status": 200
+    },
+    {
+      "method": "timetable_census_number",
+      "query": "691",
+      "routeIds": 3,
+      "status": 200
+    },
+    {
+      "method": "timetable_census_number",
+      "query": "692",
+      "routeIds": 1,
+      "status": 200
+    },
+    {
+      "method": "timetable_census_number",
+      "query": "701-1",
+      "routeIds": 1,
+      "status": 200
+    },
+    {
+      "method": "timetable_census_number",
+      "query": "701-2",
+      "routeIds": 2,
+      "status": 200
+    },
+    {
+      "method": "timetable_census_number",
+      "query": "702-1",
+      "routeIds": 3,
+      "status": 200
+    },
+    {
+      "method": "timetable_census_number",
+      "query": "702-2",
+      "routeIds": 3,
+      "status": 200
+    },
+    {
+      "method": "timetable_census_number",
+      "query": "703-1",
+      "routeIds": 1,
+      "status": 200
+    },
+    {
+      "method": "timetable_census_number",
+      "query": "703-2",
+      "routeIds": 1,
+      "status": 200
+    },
+    {
+      "method": "timetable_census_number",
+      "query": "704-1",
+      "routeIds": 2,
+      "status": 200
+    },
+    {
+      "method": "timetable_census_number",
+      "query": "704-2",
+      "routeIds": 3,
+      "status": 200
+    },
+    {
+      "method": "timetable_census_number",
+      "query": "704-3",
+      "routeIds": 5,
+      "status": 200
+    },
+    {
+      "method": "timetable_census_number",
+      "query": "704-4",
+      "routeIds": 2,
+      "status": 200
+    },
+    {
+      "method": "timetable_census_number",
+      "query": "705",
+      "routeIds": 2,
+      "status": 200
+    },
+    {
+      "method": "timetable_census_number",
+      "query": "711-1",
+      "routeIds": 8,
+      "status": 200
+    },
+    {
+      "method": "timetable_census_number",
+      "query": "711-2",
+      "routeIds": 7,
+      "status": 200
+    },
+    {
+      "method": "timetable_census_number",
+      "query": "721-2",
+      "routeIds": 4,
+      "status": 200
+    },
+    {
+      "method": "timetable_census_number",
+      "query": "721-3",
+      "routeIds": 2,
+      "status": 200
+    },
+    {
+      "method": "timetable_census_number",
+      "query": "722-1",
+      "routeIds": 3,
+      "status": 200
+    },
+    {
+      "method": "timetable_census_number",
+      "query": "722-2",
+      "routeIds": 4,
+      "status": 200
+    },
+    {
+      "method": "timetable_census_number",
+      "query": "731-1",
+      "routeIds": 2,
+      "status": 200
+    },
+    {
+      "method": "timetable_census_number",
+      "query": "731-2",
+      "routeIds": 2,
+      "status": 200
+    },
+    {
+      "method": "timetable_census_number",
+      "query": "732-1",
+      "routeIds": 2,
+      "status": 200
+    },
+    {
+      "method": "timetable_census_number",
+      "query": "732-2",
+      "routeIds": 3,
+      "status": 200
+    },
+    {
+      "method": "timetable_census_number",
+      "query": "732-3",
+      "routeIds": 4,
+      "status": 200
+    },
+    {
+      "method": "timetable_census_number",
+      "query": "741-1",
+      "routeIds": 2,
+      "status": 200
+    },
+    {
+      "method": "timetable_census_number",
+      "query": "741-2",
+      "routeIds": 3,
+      "status": 200
+    },
+    {
+      "method": "timetable_census_number",
+      "query": "742-1",
+      "routeIds": 4,
+      "status": 200
+    },
+    {
+      "method": "timetable_census_number",
+      "query": "742-2",
+      "routeIds": 2,
+      "status": 200
+    },
+    {
+      "method": "timetable_census_number",
+      "query": "743",
+      "routeIds": 2,
+      "status": 200
+    },
+    {
+      "method": "timetable_census_number",
+      "query": "744",
+      "routeIds": 2,
+      "status": 200
+    },
+    {
+      "method": "timetable_census_number",
+      "query": "751-1",
+      "routeIds": 3,
+      "status": 200
+    },
+    {
+      "method": "timetable_census_number",
+      "query": "751-2",
+      "routeIds": 5,
+      "status": 200
+    },
+    {
+      "method": "timetable_census_number",
+      "query": "752-1",
+      "routeIds": 5,
+      "status": 200
+    },
+    {
+      "method": "timetable_census_number",
+      "query": "752-2",
+      "routeIds": 5,
+      "status": 200
+    },
+    {
+      "method": "timetable_census_number",
+      "query": "753",
+      "routeIds": 1,
+      "status": 200
+    },
+    {
+      "method": "timetable_census_number",
+      "query": "761-1",
+      "routeIds": 3,
+      "status": 200
+    },
+    {
+      "method": "timetable_census_number",
+      "query": "761-2",
+      "routeIds": 2,
+      "status": 200
+    },
+    {
+      "method": "timetable_census_number",
+      "query": "761-3",
+      "routeIds": 2,
+      "status": 200
+    },
+    {
+      "method": "timetable_census_number",
+      "query": "771-1",
+      "routeIds": 2,
+      "status": 200
+    },
+    {
+      "method": "timetable_census_number",
+      "query": "771-2",
+      "routeIds": 2,
+      "status": 200
+    },
+    {
+      "method": "timetable_census_number",
+      "query": "772-1",
+      "routeIds": 1,
+      "status": 200
+    },
+    {
+      "method": "timetable_census_number",
+      "query": "772-2",
+      "routeIds": 1,
+      "status": 200
+    },
+    {
+      "method": "timetable_census_number",
+      "query": "781-1",
+      "routeIds": 1,
+      "status": 200
+    },
+    {
+      "method": "timetable_census_number",
+      "query": "781-2",
+      "routeIds": 1,
+      "status": 200
+    },
+    {
+      "method": "timetable_census_number",
+      "query": "782-1",
+      "routeIds": 1,
+      "status": 200
+    },
+    {
+      "method": "timetable_census_number",
+      "query": "782-2",
+      "routeIds": 1,
+      "status": 200
+    },
+    {
+      "method": "timetable_census_number",
+      "query": "783-1",
+      "routeIds": 8,
+      "status": 200
+    },
+    {
+      "method": "timetable_census_number",
+      "query": "783-2",
+      "routeIds": 4,
+      "status": 200
+    },
+    {
+      "method": "timetable_census_number",
+      "query": "784-1",
+      "routeIds": 4,
+      "status": 200
+    },
+    {
+      "method": "timetable_census_number",
+      "query": "784-2",
+      "routeIds": 2,
+      "status": 200
+    },
+    {
+      "method": "timetable_census_number",
+      "query": "785",
+      "routeIds": 8,
+      "status": 200
+    },
+    {
+      "method": "timetable_census_number",
+      "query": "791",
+      "routeIds": 2,
+      "status": 200
+    },
+    {
+      "method": "timetable_census_number",
+      "query": "792-1",
+      "routeIds": 1,
+      "status": 200
+    },
+    {
+      "method": "timetable_census_number",
+      "query": "792-2",
+      "routeIds": 1,
+      "status": 200
+    },
+    {
+      "method": "timetable_census_number",
+      "query": "793-1",
+      "routeIds": 8,
+      "status": 200
+    },
+    {
+      "method": "timetable_census_number",
+      "query": "793-2",
+      "routeIds": 2,
+      "status": 200
+    },
+    {
+      "method": "timetable_census_number",
+      "query": "794-1",
+      "routeIds": 3,
+      "status": 200
+    },
+    {
+      "method": "timetable_census_number",
+      "query": "794-2",
+      "routeIds": 2,
+      "status": 200
+    },
+    {
+      "method": "timetable_census_number",
+      "query": "795",
+      "routeIds": 9,
+      "status": 200
+    },
+    {
+      "method": "timetable_census_number",
+      "query": "800",
+      "routeIds": 7,
+      "status": 200
+    },
+    {
+      "method": "timetable_census_number",
+      "query": "800-1",
+      "routeIds": 2,
+      "status": 200
+    },
+    {
+      "method": "timetable_census_number",
+      "query": "801",
+      "routeIds": 5,
+      "status": 200
+    },
+    {
+      "method": "timetable_census_number",
+      "query": "810-1",
+      "routeIds": 2,
+      "status": 200
+    },
+    {
+      "method": "timetable_census_number",
+      "query": "810-2",
+      "routeIds": 2,
+      "status": 200
+    },
+    {
+      "method": "timetable_census_number",
+      "query": "820-1",
+      "routeIds": 2,
+      "status": 200
+    },
+    {
+      "method": "timetable_census_number",
+      "query": "820-2",
+      "routeIds": 2,
+      "status": 200
+    },
+    {
+      "method": "timetable_census_number",
+      "query": "820-3",
+      "routeIds": 2,
+      "status": 200
+    },
+    {
+      "method": "timetable_census_number",
+      "query": "880",
+      "routeIds": 1,
+      "status": 200
+    },
+    {
+      "method": "timetable_census_number",
+      "query": "888",
+      "routeIds": 1,
+      "status": 200
+    },
+    {
+      "method": "timetable_census_number",
+      "query": "900",
+      "routeIds": 12,
+      "status": 200
+    },
+    {
+      "method": "timetable_census_number",
+      "query": "901",
+      "routeIds": 2,
+      "status": 200
+    },
+    {
+      "method": "timetable_census_number",
+      "query": "902",
+      "routeIds": 1,
+      "status": 200
+    },
+    {
+      "method": "timetable_census_number",
+      "query": "910",
+      "routeIds": 2,
+      "status": 200
+    },
+    {
+      "method": "timetable_census_number",
+      "query": "921",
+      "routeIds": 0,
+      "status": 200
+    },
+    {
+      "method": "timetable_census_number",
+      "query": "922",
+      "routeIds": 0,
+      "status": 200
+    },
+    {
+      "method": "timetable_census_number",
+      "query": "924",
+      "routeIds": 0,
+      "status": 200
+    }
+  ],
+  "routeIds": 992,
+  "routes": 989,
+  "stops": 4338,
+  "unavailable": [
+    {
+      "routeId": "JEB405077707",
+      "routeNo": "777",
+      "reason": "provider_stop_list_has_1_stops"
+    },
+    {
+      "routeId": "JEB405088808",
+      "routeNo": "888-8",
+      "reason": "provider_stop_list_has_1_stops"
+    },
+    {
+      "routeId": "JEB406099909",
+      "routeNo": "999",
+      "reason": "provider_stop_list_has_1_stops"
+    }
+  ]
+}
