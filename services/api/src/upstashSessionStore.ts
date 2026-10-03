@@ -20,6 +20,7 @@ import { upstashCommand } from "./upstashRest.ts";
 import {
   SessionStoreError,
   type JourneySessionStore,
+  type LiveActivityPushIndex,
   type SaveOutcome,
   type StoredJourneySession,
   type VersionedJourneySession,
@@ -35,6 +36,13 @@ import {
  * except letting the coordinator give the accurate answer.
  */
 export const DEFAULT_EXPIRY_GRACE_MS = 5 * 60 * 1_000;
+
+/**
+ * The push index's key, under the store's own prefix
+ * (`LIVE_ACTIVITY_PUSH.md` milestone 5), so it never reads or writes outside
+ * the deployment's namespace. No session id may take this name.
+ */
+export const PUSH_INDEX_KEY_SUFFIX = "push-index";
 
 /**
  * Compare-and-set in one round trip.
@@ -53,7 +61,22 @@ if not current then return {0, ''} end
 local version = tonumber(string.match(current, '^(%d+):'))
 if version ~= tonumber(ARGV[1]) then return {-1, current} end
 redis.call('SET', KEYS[1], ARGV[2], 'PX', tonumber(ARGV[3]))
+if ARGV[4] == '1' then redis.call('SADD', KEYS[2], ARGV[5]) else redis.call('SREM', KEYS[2], ARGV[5]) end
 return {1, ''}
+`.trim();
+
+/**
+ * Drop a push index entry unless its row was written since it was read: gone,
+ * or still at the version the caller saw. `KEYS[1]` the row, `KEYS[2]` the index.
+ */
+const UNINDEX_SCRIPT = `
+local current = redis.call('GET', KEYS[1])
+if current then
+  local version = tonumber(string.match(current, '^(%d+):'))
+  if version ~= tonumber(ARGV[1]) then return 0 end
+end
+redis.call('SREM', KEYS[2], ARGV[2])
+return 1
 `.trim();
 
 export interface UpstashSessionStoreOptions {
@@ -93,10 +116,34 @@ export class UpstashJourneySessionStore implements JourneySessionStore {
 
   /** The Redis key a session id maps to. Every command goes through this. */
   keyFor(id: string): string {
+    if (id === PUSH_INDEX_KEY_SUFFIX) throw new SessionStoreError("a session id cannot be the push index's name");
     return `${this.keyPrefix}${id}`;
   }
 
+  /** A Redis set of session ids; `SRANDMEMBER` bounds each tick's work however many rides are live. */
+  readonly pushIndex: LiveActivityPushIndex = {
+    removeIfUnchanged: async (id, version) => {
+      await this.command(["EVAL", UNINDEX_SCRIPT, "2", this.keyFor(id), this.indexKey(), String(version ?? -1), id]);
+    },
+    sample: async (limit) => {
+      if (limit <= 0) return [];
+      const reply = await this.command(["SRANDMEMBER", this.indexKey(), String(Math.floor(limit))]);
+      if (reply === null || reply === undefined) return [];
+      if (!Array.isArray(reply) || !reply.every((member) => typeof member === "string")) {
+        throw new SessionStoreError("the session store returned an unrecognised push index reply");
+      }
+      return reply as string[];
+    },
+  };
+
+  private indexKey(): string {
+    return `${this.keyPrefix}${PUSH_INDEX_KEY_SUFFIX}`;
+  }
+
+
   async load(id: string): Promise<VersionedJourneySession | undefined> {
+    // The index's name is never a session: a rider asking for it gets 404, not the store's error.
+    if (id === PUSH_INDEX_KEY_SUFFIX) return undefined;
     const result = await this.command(["GET", this.keyFor(id)]);
     if (result === null || result === undefined) return undefined;
     return decode(expectString(result, "GET"));
@@ -125,11 +172,15 @@ export class UpstashJourneySessionStore implements JourneySessionStore {
     const reply = await this.command([
       "EVAL",
       CAS_SCRIPT,
-      "1",
+      "2",
       this.keyFor(session.id),
+      this.indexKey(),
       String(expectedVersion),
       encode(session, version),
       String(this.ttlMs(session)),
+      // The push index follows the row in the same step: a stored token always has its entry.
+      session.liveActivityPush ? "1" : "0",
+      session.id,
     ]);
 
     if (!Array.isArray(reply) || reply.length < 2) {
@@ -145,6 +196,8 @@ export class UpstashJourneySessionStore implements JourneySessionStore {
 
   async delete(id: string): Promise<void> {
     await this.command(["DEL", this.keyFor(id)]);
+    // After the row: an entry left by a failure here is pruned by the next tick.
+    await this.command(["SREM", this.indexKey(), id]);
   }
 
   /**

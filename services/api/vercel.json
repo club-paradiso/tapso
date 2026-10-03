@@ -65,6 +65,10 @@
       "destination": "/api/operator/analyze"
     },
     {
+      "source": "/operator/live-activity/tick",
+      "destination": "/api/operator/live-activity-tick"
+    },
+    {
       "source": "/operator/:path*",
       "destination": "/api/not-found"
     },

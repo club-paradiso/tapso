@@ -208,6 +208,20 @@ export interface JourneySessionView {
   expiresAt: string;
 }
 
+/**
+ * A scheduler tick leaves alone a session read this recently: the app, or the
+ * previous tick, is already keeping it current (`LIVE_ACTIVITY_PUSH.md`
+ * milestone 5). Below the collector's 20 s cadence, so a suspended app's ride is
+ * read on every tick.
+ */
+export const LIVE_ACTIVITY_TICK_MIN_AGE_MS = 15_000;
+
+/** What one scheduler tick did with one indexed session. */
+export type LiveActivityTickOutcome =
+  | { kind: "refreshed"; view: JourneySessionView }
+  | { kind: "recent" }
+  | { kind: "removed"; reason: "gone" | "expired" | "no_token" };
+
 /** What `liveActivityTarget` returns. The token is a capability: never log it, never return it. */
 export interface LiveActivityTarget {
   token: string;
@@ -500,7 +514,35 @@ export class JourneySessionCoordinator {
       const delivery = row.liveActivityPush?.delivery;
       row.liveActivityPush = { token, fingerprint: tokenFingerprint(token), registeredAtMs, ...(delivery ? { delivery } : {}) };
     });
+    // The store adds the session to the push index in the same write.
     return registrationView(record);
+  }
+
+  /** Up to `limit` sessions that hold a push token, for one scheduler tick. */
+  async liveActivityTickCandidates(limit: number): Promise<string[]> {
+    return (await this.store.pushIndex?.sample(limit)) ?? [];
+  }
+
+  /**
+   * One scheduler tick for one indexed session: refresh it unless it was read
+   * within `LIVE_ACTIVITY_TICK_MIN_AGE_MS`, or drop it from the index when it
+   * no longer needs pushes. An expired row is left for the app to read as
+   * `410`; only its index entry goes. Pushing is the caller's (`LiveActivityPusher`).
+   */
+  async tickLiveActivity(id: string): Promise<LiveActivityTickOutcome> {
+    const stored = await this.store.load(id);
+    // Conditional on the version read here: a token registered since keeps its entry.
+    const removed = async (reason: "gone" | "expired" | "no_token"): Promise<LiveActivityTickOutcome> => {
+      await this.store.pushIndex?.removeIfUnchanged(id, stored?.version);
+      return { kind: "removed", reason };
+    };
+    if (!stored) return removed("gone");
+    const nowMs = this.now().getTime();
+    if (stored.session.expiresAtMs <= nowMs) return removed("expired");
+    const record = toRecord(stored.session);
+    if (!record.liveActivityPush) return removed("no_token");
+    if (nowMs - record.updatedAtMs < LIVE_ACTIVITY_TICK_MIN_AGE_MS) return { kind: "recent" };
+    return { kind: "refreshed", view: await this.refresh(id) };
   }
 
   /**
