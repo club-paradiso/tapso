@@ -35,7 +35,7 @@ struct TapsoLiveActivityWidget: Widget {
             } compactTrailing: {
                 IslandCompactTrailing(state: context.state, isStale: context.isStale)
             } minimal: {
-                IslandMinimal(state: context.state, isStale: context.isStale)
+                IslandMinimal(attributes: context.attributes, state: context.state, isStale: context.isStale)
             }
             .keylineTint(TapsoColor.journey(guidanceAccountingForStaleness(context.state, isStale: context.isStale).colorRole))
             .widgetURL(URL(string: "tapso://ride"))

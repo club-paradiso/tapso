@@ -210,6 +210,9 @@ struct IslandCompactTrailing: View {
 
     var body: some View {
         let color = TapsoColor.journey(guidance.colorRole)
+        // Next stop and arrival are decisions: their pills are filled, not tinted (V3).
+        let decision = guidance.moment == .nextStop || guidance.moment == .arrived || guidance.moment == .passedDestination
+        let onPill = decision ? TapsoColor.onJourney(guidance.colorRole) : color
         Group {
             if let compact = guidance.copy.compact {
                 HStack(spacing: 3) {
@@ -226,45 +229,108 @@ struct IslandCompactTrailing: View {
                 .font(.caption2.weight(.bold))
                 .padding(.horizontal, 6)
                 .padding(.vertical, 3)
-                .background(color.opacity(0.18), in: Capsule())
+                .background(color.opacity(decision ? 1 : 0.18), in: Capsule())
+                .foregroundStyle(onPill)
             } else {
                 HStack(alignment: .firstTextBaseline, spacing: 2) {
-                    Text(state.remainingStops, format: .number)
+                    Text(verbatim: (guidance.trust == .estimated ? "~" : "") + String(state.remainingStops))
                         .font(.system(.subheadline, design: .rounded, weight: .black))
                         .monospacedDigit()
                         .contentTransition(.numericText())
                     Text(LocalizedStringKey(RideText.countKey("count.unit", state.remainingStops)))
                         .font(.caption2.weight(.bold))
                 }
+                .foregroundStyle(color)
             }
         }
-        .foregroundStyle(color)
         .accessibilityElement(children: .ignore)
         .accessibilityLabel(Text(compactAccessibilityLabel(state, guidance)))
     }
 }
 
+/// How the minimal island draws one moment (Dynamic Island Coexistence V3,
+/// Figma `05B` › `10 Approved`). Minimal is the primary surface whenever music
+/// or another activity owns the compact pair, so it must say two things at a
+/// glance: this is a bus ride, and how many stops remain. Two, one and
+/// arrival are three different objects, not one colour.
+struct IslandMinimalStyle: Equatable {
+    enum Shape: Equatable {
+        /// Content on the island's own black: the riding family.
+        case plain
+        /// A coloured ring around the content: prepare.
+        case ring
+        /// A filled disc behind the content: next stop and arrival.
+        case filled
+    }
+
+    let symbol: String
+    let shape: Shape
+    let color: Color
+    /// The glyph and numeral colour on the shape.
+    let foreground: Color
+    /// `nil` hides the numeral (arrival, lost, offline, checking).
+    let count: String?
+    /// Dimmed numeral: a last-known count while rechecking.
+    let dimmed: Bool
+
+    static func style(for guidance: RideGuidance, remainingStops: Int) -> IslandMinimalStyle {
+        let color = TapsoColor.journey(guidance.colorRole)
+        switch guidance.moment {
+        case .riding:
+            let estimated = guidance.trust == .estimated
+            return IslandMinimalStyle(symbol: "bus.fill", shape: .plain, color: color, foreground: color, count: (estimated ? "~" : "") + String(remainingStops), dimmed: false)
+        case .prepare:
+            return IslandMinimalStyle(symbol: "figure.stand", shape: .ring, color: color, foreground: color, count: String(remainingStops), dimmed: false)
+        case .nextStop:
+            return IslandMinimalStyle(symbol: "bell.fill", shape: .filled, color: color, foreground: TapsoColor.textOnUrgent, count: String(remainingStops), dimmed: false)
+        case .arrived:
+            return IslandMinimalStyle(symbol: "figure.walk", shape: .filled, color: color, foreground: TapsoColor.textOnAccent, count: nil, dimmed: false)
+        case .passedDestination:
+            return IslandMinimalStyle(symbol: "arrow.uturn.backward", shape: .filled, color: color, foreground: TapsoColor.textOnUrgent, count: nil, dimmed: false)
+        case .delayed:
+            // Rechecking with a last-known count: the count stays, dimmed, beside the recheck glyph.
+            return IslandMinimalStyle(symbol: "arrow.clockwise", shape: .plain, color: color, foreground: color, count: remainingStops >= 0 ? String(remainingStops) : nil, dimmed: true)
+        case .checking, .vehicleLost, .offline, .ended:
+            return IslandMinimalStyle(symbol: guidance.symbolName, shape: .plain, color: color, foreground: color, count: nil, dimmed: false)
+        }
+    }
+}
+
 struct IslandMinimal: View {
+    let attributes: TapsoActivityAttributes
     let state: TapsoActivityAttributes.ContentState
     /// ActivityKit's `context.isStale`: past the stale date, the island shows aged data like the Lock Screen.
     var isStale = false
 
     private var guidance: RideGuidance { guidanceAccountingForStaleness(state, isStale: isStale) }
+    private var style: IslandMinimalStyle { IslandMinimalStyle.style(for: guidance, remainingStops: state.remainingStops) }
 
     var body: some View {
-        Group {
-            if guidance.count == .live {
-                Text(state.remainingStops, format: .number)
-                    .font(.system(.subheadline, design: .rounded, weight: .black))
+        let style = style
+        HStack(spacing: 1.5) {
+            Image(systemName: style.symbol)
+                .font(.system(size: style.count == nil ? 14 : 9, weight: .black))
+            if let count = style.count {
+                Text(verbatim: count)
+                    .font(.system(size: 14, weight: .black, design: .rounded))
                     .monospacedDigit()
-            } else {
-                Image(systemName: guidance.symbolName)
-                    .font(.caption.weight(.black))
+                    .opacity(style.dimmed ? RemainingOrSymbol.lastKnownOpacity : 1)
+                    .contentTransition(.numericText())
             }
         }
-        .foregroundStyle(TapsoColor.journey(guidance.colorRole))
+        .foregroundStyle(style.foreground)
+        .frame(maxWidth: .infinity, maxHeight: .infinity)
+        .background {
+            switch style.shape {
+            case .plain: Color.clear
+            case .ring: Circle().strokeBorder(style.color, lineWidth: 2)
+            case .filled: Circle().fill(style.color)
+            }
+        }
+        .clipShape(Circle())
         .accessibilityElement(children: .ignore)
-        .accessibilityLabel(Text(compactAccessibilityLabel(state, guidance)))
+        .accessibilityLabel(Text(minimalAccessibilityLabel(attributes, state, guidance)))
+        .accessibilityHint(Text("a11y.island.hint"))
     }
 }
 
@@ -348,6 +414,9 @@ struct IslandExpandedBottom: View {
                     trackColor: .white.opacity(0.16),
                     height: 8
                 )
+                if guidance.trust == .estimated {
+                    TrustQualifier(guidance: guidance)
+                }
             } else {
                 Text(verbatim: RideText.detail(guidance, exitStopName: state.nextStopName))
                     .font(.caption)
@@ -369,6 +438,37 @@ struct IslandExpandedBottom: View {
             remainingStops: state.remainingStops,
             exitStopName: state.nextStopName
         )))
+    }
+}
+
+/// The one small qualifier a non-live count carries (V3 `TrustQualifier`). Only
+/// `estimated` adds a line: rechecking and unavailable already say their one
+/// message in the headline and detail, and a second line would say it twice.
+struct TrustQualifier: View {
+    let guidance: RideGuidance
+
+    var body: some View {
+        HStack(spacing: 4) {
+            Image(systemName: "dot.radiowaves.left.and.right")
+                .font(.system(size: 9, weight: .bold))
+            Text("trust.qualifier.estimated")
+                .font(.caption2.weight(.medium))
+                .lineLimit(1)
+        }
+        .foregroundStyle(TapsoColor.journey(guidance.colorRole).opacity(0.9))
+        .accessibilityHidden(true)
+    }
+}
+
+/// VoiceOver for the minimal island: the bus and the count, never the glyphs.
+/// "3001번 버스, 목적지까지 8정거장" from real data; a decision moment reads its headline.
+func minimalAccessibilityLabel(_ attributes: TapsoActivityAttributes, _ state: TapsoActivityAttributes.ContentState, _ guidance: RideGuidance) -> String {
+    switch guidance.count {
+    case .live where guidance.moment == .riding:
+        let key = RideText.countKey(guidance.trust == .estimated ? "a11y.minimal.estimated" : "a11y.minimal.count", state.remainingStops)
+        return String(format: RideText.string(key), attributes.routeNumber, state.remainingStops)
+    case .live, .lastKnown, .hidden:
+        return String(format: RideText.string("a11y.minimal.state"), attributes.routeNumber, RideText.string(guidance.copy.headline))
     }
 }
 

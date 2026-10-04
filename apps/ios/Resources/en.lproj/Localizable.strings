@@ -198,6 +198,12 @@
 "a11y.island.hint" = "Touch and hold for ride details";
 "a11y.compact.count" = "%ld stops left.";
 "a11y.compact.count.one" = "%ld stop left.";
+"a11y.minimal.count" = "Route %1$@, %2$ld stops to your stop";
+"a11y.minimal.count.one" = "Route %1$@, %2$ld stop to your stop";
+"a11y.minimal.estimated" = "Route %1$@, about %2$ld stops to your stop, estimated";
+"a11y.minimal.estimated.one" = "Route %1$@, about %2$ld stop to your stop, estimated";
+"a11y.minimal.state" = "Route %1$@, %2$@";
+"trust.qualifier.estimated" = "Estimated · by stop";
 "a11y.stopPair" = "Board at %1$@, get off at %2$@";
 "a11y.proposal" = "Route %1$@, plate ending %2$@, %3$@";
 "a11y.trust.plate" = "plate ending %@";

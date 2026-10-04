@@ -99,6 +99,49 @@ final class RidePresentationTests: XCTestCase {
         }
     }
 
+    // MARK: Dynamic Island Coexistence V3
+
+    /// Minimal says "bus ride + count" at every count the gate names, and 2 / 1 / arrival are
+    /// three different objects (symbol and shape), never one colour change.
+    func testMinimalIslandCarriesIdentityAndCountAndDistinctDecisions() {
+        // Riding needs three or more stops; 2 and 1 are the prepare and next-stop decisions below.
+        for count in [3, 8, 12, 18] {
+            let riding = IslandMinimalStyle.style(for: makeState(.active, count).guidance, remainingStops: count)
+            XCTAssertEqual(riding.symbol, "bus.fill", "count \(count)")
+            XCTAssertEqual(riding.count, String(count))
+            XCTAssertEqual(riding.shape, .plain)
+        }
+        let prepare = IslandMinimalStyle.style(for: makeState(.approachingDestination, 2).guidance, remainingStops: 2)
+        let next = IslandMinimalStyle.style(for: makeState(.nextStopIsDestination, 1).guidance, remainingStops: 1)
+        let arrival = IslandMinimalStyle.style(for: makeState(.arrived, 0).guidance, remainingStops: 0)
+        XCTAssertEqual(prepare.shape, .ring); XCTAssertEqual(prepare.count, "2"); XCTAssertEqual(prepare.symbol, "figure.stand")
+        XCTAssertEqual(next.shape, .filled); XCTAssertEqual(next.count, "1"); XCTAssertEqual(next.symbol, "bell.fill")
+        XCTAssertEqual(arrival.shape, .filled); XCTAssertNil(arrival.count, "arrival shows no number"); XCTAssertEqual(arrival.symbol, "figure.walk")
+        XCTAssertEqual(Set([prepare.symbol, next.symbol, arrival.symbol]).count, 3, "three decisions, three symbols")
+        XCTAssertNotEqual(prepare.shape, next.shape)
+
+        let estimated = IslandMinimalStyle.style(for: makeState(.active, 8, estimated: true).guidance, remainingStops: 8)
+        XCTAssertEqual(estimated.count, "~8", "an estimate is marked, not disguised")
+        let rechecking = IslandMinimalStyle.style(for: makeState(.active, 8, freshness: .aging).guidance, remainingStops: 8)
+        XCTAssertEqual(rechecking.count, "8"); XCTAssertTrue(rechecking.dimmed); XCTAssertEqual(rechecking.symbol, "arrow.clockwise")
+        let lost = IslandMinimalStyle.style(for: makeState(.vehicleTemporarilyLost, 8).guidance, remainingStops: 8)
+        XCTAssertNil(lost.count, "a lost bus shows no count to act on")
+    }
+
+    /// VoiceOver on the minimal island reads the bus and the count from real data, never the glyphs.
+    func testMinimalIslandVoiceOverNamesTheBusAndTheCount() {
+        let attributes = TapsoActivityAttributes(routeNumber: "3001", routeID: "JEB405900101", boardingStopName: "제주국제공항", destinationName: "제주시청", totalStops: 20, vehiclePlate: "••3913")
+        let riding = makeState(.active, 8)
+        let label = minimalAccessibilityLabel(attributes, riding, riding.guidance)
+        XCTAssertEqual(label, String(format: RideText.string("a11y.minimal.count"), "3001", 8))
+        XCTAssertTrue(label.contains("3001") && label.contains("8"))
+        for word in ["bus.fill", "figure", "bell"] { XCTAssertFalse(label.contains(word)) }
+        let next = makeState(.nextStopIsDestination, 1)
+        XCTAssertEqual(minimalAccessibilityLabel(attributes, next, next.guidance), String(format: RideText.string("a11y.minimal.state"), "3001", RideText.string("ride.nextStop.headline")))
+        let estimated = makeState(.active, 8, estimated: true)
+        XCTAssertEqual(minimalAccessibilityLabel(attributes, estimated, estimated.guidance), String(format: RideText.string("a11y.minimal.estimated"), "3001", 8))
+    }
+
     // MARK: One truth for every surface
 
     func testContentStateCarriesTheSameGuidanceAsTheApp() {
@@ -391,17 +434,20 @@ final class RidePresentationTests: XCTestCase {
         _ remaining: Int,
         passed: Bool = false,
         offline: Bool = false,
-        next: String? = "제주여자상업고등학교"
+        next: String? = "제주여자상업고등학교",
+        freshness: DataFreshness = .fresh,
+        estimated: Bool = false
     ) -> TapsoActivityAttributes.ContentState {
         TapsoActivityAttributes.ContentState(
             phase: phase,
             currentStopName: "동문로터리",
             nextStopName: next,
             remainingStops: remaining,
-            freshness: .fresh,
+            freshness: freshness,
             updatedAt: Date(timeIntervalSince1970: 1_800_000_000),
             destinationPassed: passed,
-            isOffline: offline
+            isOffline: offline,
+            isEstimated: estimated
         )
     }
 }
