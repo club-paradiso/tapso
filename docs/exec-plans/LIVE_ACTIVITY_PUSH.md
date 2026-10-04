@@ -79,6 +79,49 @@ Started 2026-10-01. Living document; update it as milestones land.
      - stale dates read as "확인 중".
    - Simulator runs are not evidence for this milestone.
 
+## 3a. Who owns ride progression, by app state
+
+One ride, two writers that must never disagree: the app's own session reads
+(and, behind `-tapsoHybridTracking`, the on-device hybrid engine) and the
+server's scheduler pushing through APNs. The rule that keeps them from racing:
+**the server's session row is the ride; every Live Activity update, local or
+pushed, is a rendering of a session read.** A local update and a pushed one
+for the same read carry the same `evidenceAt` (`liveActivityContent.ts` ports
+the app's own policy), and ActivityKit keeps the newer timestamp.
+
+| App state | Who reads the session | Who updates the Live Activity | Notes |
+|---|---|---|---|
+| Foreground, ride screen | the app, every 15 s (`TapsoAppModel.beginLivePolling`) | the app, locally, after each read | The tick leaves a session read in the last 15 s alone (`LIVE_ACTIVITY_TICK_MIN_AGE_MS`), so the scheduler does not double-refresh a ride the app is already reading |
+| Background (Home, another app) | the scheduler, every 20 s while the push index holds the ride | the server, by APNs | The app's poll loop skips reads while not in the foreground; local updates stop |
+| Suspended / locked | the scheduler | the server, by APNs | Nothing runs on the device; the stale date (120 s) marks content the server stopped refreshing |
+| Restored (relaunch, unlock) | the app, at once, then every 15 s | the app, locally; a pushed update that arrives for the same read is not newer and is dropped by timestamp | Milestones already signalled are in the app's `alertedMilestones` and in the row's `liveActivityPush.delivery`; a milestone is alerted once by whichever side reaches it first, and the other side sees it already delivered |
+| Hybrid tracking on (development flag) | the app; the device sample is fused locally and never written to the server | the app only; no push token is registered (`TapsoAppModel.startLiveActivity`) | Until a hybrid ride can report its fused position to the server, hybrid and APNs are mutually exclusive by design, so they cannot contradict each other on one activity |
+
+What this does not claim: continuous device-side computation after suspension
+(none exists), or that a pushed update has reached a device (milestone 6).
+
+## 3b. Owner setup for APNs (code side complete; needs the paid Apple team)
+
+1. Apple Developer → Certificates, Identifiers & Profiles → Keys → create an
+   **Apple Push Notifications service (APNs)** key; download the `.p8` once.
+   Note the **Key ID** (10 characters) and the **Team ID**.
+2. Identifiers → `com.lucanomics.tapso` → enable **Push Notifications**.
+   Regenerate the development provisioning profile; add the
+   `aps-environment` entitlement to the app target (`development` for a
+   debug install, `production` for TestFlight).
+3. Vercel project `tapso-api`, Production environment, five variables:
+   `APNS_TEAM_ID`, `APNS_KEY_ID`, `APNS_BUNDLE_ID=com.lucanomics.tapso`,
+   `APNS_ENVIRONMENT` (`development` for a Debug install from Xcode,
+   `production` for TestFlight / App Store) and `APNS_PRIVATE_KEY` (the `.p8`
+   file's contents, marked Sensitive; newlines may be written as `\n`).
+   Redeploy. `/health` → `liveActivityPush.enabled: true` with the
+   environment; the app then asks ActivityKit for a push token and registers
+   it, and the collector's ticker starts calling the tick route on its own.
+4. Nothing to change on Railway: the ticker reads `/health` and switches
+   itself on.
+5. Rollback: delete the five variables; the ticker falls back to probing
+   `/health` every five minutes and stops calling the tick route.
+
 ## 4. Decisions
 
 - **The server decides what to push.** The client registers a token and does nothing else. The matcher, freshness and milestone logic stay where they are, so the pushed content is the same `RideGuidancePolicy` result the app would show.
@@ -109,3 +152,4 @@ xcodebuild ... test   # TapsoActivityAttributesTests.testServerPushContentStateD
     - On an enabled route the token is checked before anything else, so a wrong token would have read `unauthorized`.
     - The 503 the ticker got is therefore `LIVE_ACTIVITY_PUSH_UNAVAILABLE`: the request passed the operator check and the sessions check, and stopped at the missing APNs configuration.
   - Rollback: delete the two variables.
+- 2026-10-04: the ticker reads the API's `/health` before its first tick and after every refusal, and calls the tick route only while `liveActivityPush.enabled` is true; while push is off it probes every 5 minutes and logs each state change once (`liveActivityScheduler.test.ts`). The collector's `/health` shows `liveActivityTicker.apnsPush`. This ends the expected-503 traffic on the API without hiding that APNs is unconfigured. Authority by app state and the owner's APNs steps are written up in §3a and §3b. Device evidence (milestone 6) remains `BLOCKED_BY_PHYSICAL_DEVICE` and `BLOCKED_BY_APPLE_ACCOUNT`.
