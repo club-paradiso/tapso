@@ -152,6 +152,9 @@ struct LiveRideState: Codable, Hashable {
     var currentStopSequence: Int?
     /// Set when the server ended or lost the session; the ride stops polling.
     var endedByServer: Bool
+    /// The server's hybrid rollout switch as read when this ride started, so a relaunch keeps the
+    /// same authority for the whole ride. Absent on rides saved before the switch existed.
+    var hybridTracking: Bool?
 }
 
 /// A ride in progress. Persisted so a relaunch resumes it instead of losing it.
@@ -342,8 +345,12 @@ final class TapsoAppModel {
     @ObservationIgnored private var lastMoment: RideMoment?
     /// The live session being set up, before a bus is confirmed.
     @ObservationIgnored private var liveSetupSession: JourneySessionSnapshot?
-    // Opt-in until real-device validation; no debug surfaces in release builds.
-    let hybridTrackingEnabled = ProcessInfo.processInfo.arguments.contains("-tapsoHybridTracking")
+    /// The development opt-in; no debug surfaces in release builds.
+    private let hybridLaunchArgument = ProcessInfo.processInfo.arguments.contains("-tapsoHybridTracking")
+    /// Whether this ride fuses device evidence: the launch argument, or the server's rollout switch
+    /// read when the ride started (`/health` → `hybridTracking.enabled`, off by default). Fixed for
+    /// the ride's lifetime, relaunches included, so authority never flips mid-ride.
+    private(set) var hybridTrackingEnabled = ProcessInfo.processInfo.arguments.contains("-tapsoHybridTracking")
     private(set) var isRecheckingPosition = false
     private(set) var hybridDiagnosticLines: [String] = []
     #if DEBUG
@@ -389,6 +396,7 @@ final class TapsoAppModel {
         )
         library = store.loadLibrary()
         if var saved = store.loadActiveRide(), Date().timeIntervalSince(saved.lastUpdateAt) < 8 * 3_600 {
+            hybridTrackingEnabled = hybridLaunchArgument || (saved.live?.hybridTracking ?? false)
             // Re-age restored data against the wall clock: a ride saved at the next stop and
             // reopened later is shown as delayed (or checking), never as a fresh milestone.
             let age = FreshnessPolicy.conservativeDefault.classify(observedAt: saved.lastObservedAt, relativeTo: Date())
@@ -1468,6 +1476,11 @@ final class TapsoAppModel {
         liveSetupSession = nil
         vehicleCheck = VehicleCheck.evaluate(proposals: vehicleCheck.proposals, hasSearched: true, confirmed: proposal.vehicleID)
 
+        // The hybrid rollout switch is read once, here, and travels with the ride.
+        var hybridForThisRide = hybridLaunchArgument
+        if !hybridForThisRide { hybridForThisRide = await api.hybridTrackingEnabled() }
+        hybridTrackingEnabled = hybridForThisRide
+
         let now = Date()
         var session = RideSession(plan: draft.plan, startedAt: now, state: .vehicleConfirmationRequired)
         session.confirm(vehicleID: proposal.vehicleID)
@@ -1487,7 +1500,8 @@ final class TapsoAppModel {
                 vehicleID: proposal.vehicleID.rawValue,
                 signal: LiveSessionInterpreter.rideSignal(for: snapshot),
                 currentStopSequence: LiveSessionInterpreter.currentStopSequence(for: snapshot),
-                endedByServer: false
+                endedByServer: false,
+                hybridTracking: hybridForThisRide
             )
         )
         outcome = nil

@@ -121,6 +121,13 @@ struct TapsoAPIClient: Sendable {
         return health.liveActivityPush?.enabled == true
     }
 
+    /// Whether the server lets this build fuse device evidence into a live ride (the hybrid
+    /// engine's rollout switch, `TAPSO_V1_RELEASE_CLOSURE.md` §6). Any failure reads as no.
+    func hybridTrackingEnabled() async -> Bool {
+        guard let health = try? await send(makeRequest(path: "/health"), as: HealthResponse.self) else { return false }
+        return health.hybridTracking?.enabled == true
+    }
+
     /// Hands the ride's Live Activity push token to the server, which is the only side that pushes.
     /// A rotated token is registered the same way and replaces the old one.
     func registerLiveActivityToken(sessionID: String, token: Data) async throws {
@@ -140,7 +147,12 @@ struct TapsoAPIClient: Sendable {
             let enabled: Bool
         }
 
+        struct HybridTracking: Decodable {
+            let enabled: Bool
+        }
+
         let liveActivityPush: LiveActivityPush?
+        let hybridTracking: HybridTracking?
     }
 
     private struct PushTokenRequest: Encodable {

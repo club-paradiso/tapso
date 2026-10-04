@@ -117,9 +117,12 @@ riding / 12 `278:282`.
   GPS noise never advances a milestone; official recovery resumes the count;
   Energy Log over a 40-minute ride acceptable; false destination-passage rate
   measured on at least the five ride classes in §7.
-- **Disable / kill switch:** the launch argument today; in production a
-  server flag in `/health` (`hybridTracking.enabled`) read at ride start, so
-  rollback is a configuration change, not a build.
+- **Disable / kill switch:** `TRANSIT_HYBRID_TRACKING_ENABLED` on the API
+  (`/health` → `hybridTracking.enabled`, default false; PR #113). The app reads
+  it once when a live ride starts and stores the decision in the ride, so a
+  relaunch keeps the same authority and the switch never flips a ride in
+  progress. The `-tapsoHybridTracking` launch argument stays as the
+  development opt-in. Rollback is deleting the variable, not a build.
 - **Rollback:** official-only authority (today's default).
 - **Owner:** the repository owner; **removal condition:** the flag is deleted
   the release after hybrid has been the default for one full ride-class sweep
@@ -141,7 +144,7 @@ diagnostics must show the commit under test.
 | A | `fix/live-ride-reliability-v3` | confirmed-ride policy, reliability view, trust word, dedupe, timeout copy, forensic doc, this plan, tests, fixtures | [PR #110](https://github.com/club-paradiso/tapso/pull/110) |
 | E | `fix/brand-integrity-gate` | `BrandWordmark`, build identity, brand guard, snapshots | [PR #111](https://github.com/club-paradiso/tapso/pull/111) |
 | B | `feat/dynamic-island-coexistence-v3` | after Gate B | not started |
-| C | `feat/hybrid-production-readiness-v1` | Debug ride trace (this PR, stacked on #110 and #111); rollout flag and device evidence next | open |
+| C | `feat/hybrid-production-readiness-v1` | Debug ride trace and the server rollout switch (stacked on #110 and #111); device evidence next | [PR #113](https://github.com/club-paradiso/tapso/pull/113) |
 | D | `feat/live-activity-background-production-v1` | ticker gated on `/health`, authority by app state, owner APNs steps | [PR #112](https://github.com/club-paradiso/tapso/pull/112); APNs itself still blocked |
 
 ## 9. Reproduction

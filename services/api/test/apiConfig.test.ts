@@ -280,3 +280,9 @@ test("store credentials never reach the config object", () => {
   // A category is all a reader gets, the same rule the TAGO key follows.
   assert.equal(config.sessions.store, "redis");
 });
+
+test("hybrid tracking is off by default and on only when an operator sets the switch", () => {
+  assert.deepEqual(readTransitApiConfig({}, NODE).hybridTracking, { enabled: false });
+  assert.deepEqual(readTransitApiConfig({ TRANSIT_HYBRID_TRACKING_ENABLED: "true" }, NODE).hybridTracking, { enabled: true });
+  assert.deepEqual(readTransitApiConfig({ TRANSIT_HYBRID_TRACKING_ENABLED: "false" }, NODE).hybridTracking, { enabled: false });
+});

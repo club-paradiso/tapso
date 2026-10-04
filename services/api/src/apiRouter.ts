@@ -768,6 +768,8 @@ function healthPayload(
     freshness: freshnessPosture(config),
     // The app asks ActivityKit for a push token only when this says enabled.
     liveActivityPush: liveActivityPush ?? { enabled: false },
+    // The app fuses device evidence into a live ride only when this says enabled (rollout switch; off until the hybrid gate passes).
+    hybridTracking: config.hybridTracking,
     // Which reviewed data files this build serves, by version only.
     staticData: staticDataHealth(staticData),
     // Per warm instance, never global, and never an input to a rider decision.
