@@ -1,13 +1,13 @@
 {
-  "generatedAt": "2026-10-03T08:56:42.191Z",
+  "generatedAt": "2026-10-04T22:38:29.683Z",
   "base": "https://tapso-api.vercel.app",
   "catalogVersion": "794f3bcb831d783e",
   "discovery": [
     {
       "method": "all_routes",
       "query": "",
-      "routeIds": 0,
-      "status": 504
+      "routeIds": 992,
+      "status": 200
     },
     {
       "method": "number_search",
