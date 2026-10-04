@@ -11,11 +11,19 @@
  * Off unless both variables are set:
  *   LIVE_ACTIVITY_TICK_URL    https://…/operator/live-activity/tick
  *   LIVE_ACTIVITY_TICK_TOKEN  the API's RIDE_CAPTURE_OPERATOR_TOKEN
- * A deployment without APNs answers 503; the ticker then waits five minutes
- * before asking again. The token is never logged.
+ * A deployment without APNs cannot push, and a disabled feature must not fill
+ * the API's error log with expected 503s. So the ticker reads the API's
+ * `/health` (public, no token) before its first tick and again after any
+ * refusal, and calls the tick route only while `liveActivityPush.enabled` is
+ * true; while it is false the ticker waits five minutes and asks `/health`
+ * again, logging the state once per change. A 503 from the tick route itself
+ * (push turned off between a probe and a tick) is handled the same way. The
+ * token is never logged.
  */
 
 export const LIVE_ACTIVITY_TICK_PATH = "/operator/live-activity/tick";
+/** The API's public health route, read without the token, says whether APNs push is configured. */
+export const LIVE_ACTIVITY_HEALTH_PATH = "/health";
 /** Inside the 15–30 s the plan asks for; a session read within 15 s is left alone by the API. */
 export const LIVE_ACTIVITY_TICK_INTERVAL_MS = 20_000;
 export const LIVE_ACTIVITY_TICK_TIMEOUT_MS = 15_000;
@@ -48,7 +56,8 @@ export function readTickerConfig(env: Record<string, string | undefined>): Ticke
 
 export type TickOutcome =
   | { kind: "ok"; counts: Record<string, number> }
-  | { kind: "push_unavailable" }
+  /** `health`: `/health` says push is not configured, so the tick route was not called. `tick`: the tick route refused. */
+  | { kind: "push_unavailable"; source: "health" | "tick" }
   | { kind: "unauthorized" }
   | { kind: "failed"; reason: string }
   | { kind: "skipped"; reason: "running" | "paused" };
@@ -59,6 +68,8 @@ export interface TickerStatus {
   intervalMs?: number;
   last?: { at: string; outcome: TickOutcome["kind"]; counts?: Record<string, number> };
   pausedUntil?: string;
+  /** What `/health` last said about APNs push: the tick route is called only while `enabled`. */
+  apnsPush?: "enabled" | "disabled" | "unknown";
 }
 
 export class LiveActivityTicker {
@@ -68,6 +79,8 @@ export class LiveActivityTicker {
   private readonly log: (entry: Record<string, unknown>) => void;
   private running = false;
   private pausedUntilMs = 0;
+  /** `undefined` until `/health` has answered once; re-read after every refusal. */
+  private pushEnabled: boolean | undefined;
   private last: TickerStatus["last"];
   private timer: ReturnType<typeof setInterval> | undefined;
 
@@ -98,6 +111,7 @@ export class LiveActivityTicker {
     return {
       state: "enabled",
       intervalMs: LIVE_ACTIVITY_TICK_INTERVAL_MS,
+      apnsPush: this.pushEnabled === undefined ? "unknown" : this.pushEnabled ? "enabled" : "disabled",
       ...(this.last ? { last: this.last } : {}),
       ...(this.pausedUntilMs > this.now() ? { pausedUntil: new Date(this.pausedUntilMs).toISOString() } : {}),
     };
@@ -110,11 +124,35 @@ export class LiveActivityTicker {
     if (this.pausedUntilMs > this.now()) return { kind: "skipped", reason: "paused" };
     this.running = true;
     try {
+      if (this.pushEnabled !== true) {
+        const probe = await this.probe(this.config.url);
+        if (probe !== "enabled") {
+          this.pushEnabled = probe === "disabled" ? false : this.pushEnabled;
+          const outcome: TickOutcome = probe === "disabled" ? { kind: "push_unavailable", source: "health" } : { kind: "failed", reason: probe.reason };
+          this.record(outcome);
+          return outcome;
+        }
+        this.pushEnabled = true;
+      }
       const outcome = await this.call(this.config);
+      if (outcome.kind === "push_unavailable") this.pushEnabled = false;
       this.record(outcome);
       return outcome;
     } finally {
       this.running = false;
+    }
+  }
+
+  /** `GET /health` on the API that serves the tick route: `liveActivityPush.enabled`, read fail-closed. */
+  private async probe(tickUrl: string): Promise<"enabled" | "disabled" | { reason: string }> {
+    try {
+      const url = new URL(LIVE_ACTIVITY_HEALTH_PATH, tickUrl).href;
+      const response = await this.fetchImpl(url, { method: "GET", headers: { accept: "application/json" }, signal: AbortSignal.timeout(LIVE_ACTIVITY_TICK_TIMEOUT_MS) });
+      if (response.status !== 200) return { reason: `health HTTP ${response.status}` };
+      const body = await response.json().catch(() => undefined) as { liveActivityPush?: { enabled?: unknown } } | undefined;
+      return body?.liveActivityPush?.enabled === true ? "enabled" : "disabled";
+    } catch (error) {
+      return { reason: `health ${error instanceof Error ? error.name : "unknown"}` };
     }
   }
 
@@ -133,7 +171,7 @@ export class LiveActivityTicker {
       if (response.status === 401) return { kind: "unauthorized" };
       const error = typeof body?.error === "string" ? body.error : undefined;
       if (response.status === 503 && (error === "LIVE_ACTIVITY_PUSH_UNAVAILABLE" || error === "SESSIONS_UNAVAILABLE" || error === "OPERATOR_DISABLED")) {
-        return { kind: "push_unavailable" };
+        return { kind: "push_unavailable", source: "tick" };
       }
       return { kind: "failed", reason: `HTTP ${response.status}${error ? ` ${error}` : ""}` };
     } catch (error) {
@@ -152,6 +190,7 @@ export class LiveActivityTicker {
         level: outcome.kind === "ok" || outcome.kind === "push_unavailable" ? "info" : "warn",
         event: "live_activity_ticker",
         outcome: outcome.kind,
+        ...(outcome.kind === "push_unavailable" ? { source: outcome.source } : {}),
         ...(outcome.kind === "ok" ? outcome.counts : {}),
         ...(outcome.kind === "failed" ? { reason: outcome.reason } : {}),
       });

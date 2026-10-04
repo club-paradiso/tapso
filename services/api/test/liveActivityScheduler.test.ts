@@ -257,15 +257,20 @@ test("the ticker posts with the bearer token, never overlaps, pauses on a deploy
   let now = 1_000_000;
   const requests: Array<{ url: string; authorization: string | null }> = [];
   let answer: () => Promise<Response> = async () => new Response(JSON.stringify({ sampled: 2, refreshed: 1, recent: 1, removed: 0, failed: 0, deferred: 0 }), { status: 200 });
+  let health = { liveActivityPush: { enabled: true } };
   const fetchImpl = (async (url: string | URL | Request, init: RequestInit = {}) => {
     requests.push({ url: String(url), authorization: new Headers(init.headers).get("authorization") });
+    if (String(url).endsWith("/health")) return new Response(JSON.stringify(health), { status: 200 });
     return answer();
   }) as unknown as typeof fetch;
   const logs: Array<Record<string, unknown>> = [];
   const ticker = new LiveActivityTicker(config, { fetchImpl, now: () => now, log: (entry) => logs.push(entry) });
 
   assert.deepEqual(await ticker.tickOnce(), { kind: "ok", counts: { sampled: 2, refreshed: 1, recent: 1, removed: 0, failed: 0, deferred: 0 } });
-  assert.deepEqual(requests[0], { url: config.url, authorization: `Bearer ${token}` });
+  // The API's health is read first, without the token; only then the tick route, with it.
+  assert.deepEqual(requests[0], { url: "https://api.test/health", authorization: null });
+  assert.deepEqual(requests[1], { url: config.url, authorization: `Bearer ${token}` });
+  assert.equal(ticker.status().apnsPush, "enabled");
 
   let release!: () => void;
   answer = () => new Promise((resolve) => {
@@ -277,7 +282,8 @@ test("the ticker posts with the bearer token, never overlaps, pauses on a deploy
   await first;
 
   answer = async () => new Response(JSON.stringify({ error: "LIVE_ACTIVITY_PUSH_UNAVAILABLE" }), { status: 503 });
-  assert.deepEqual(await ticker.tickOnce(), { kind: "push_unavailable" });
+  assert.deepEqual(await ticker.tickOnce(), { kind: "push_unavailable", source: "tick" });
+  assert.equal(ticker.status().apnsPush, "disabled", "a refusal from the tick route is remembered");
   const asked = requests.length;
   now += LIVE_ACTIVITY_TICK_PAUSE_MS - 1;
   assert.deepEqual(await ticker.tickOnce(), { kind: "skipped", reason: "paused" });
@@ -297,6 +303,50 @@ test("the ticker posts with the bearer token, never overlaps, pauses on a deploy
   assert.ok(logs.length > 0);
   assert.ok(logs.every((entry) => !JSON.stringify(entry).includes(token)), "the token is never logged");
   assert.ok(!JSON.stringify(ticker.status()).includes(token), "nor shown in health");
+});
+
+test("while /health says push is not configured, the ticker never calls the tick route and logs the state once", async () => {
+  const token = "s".repeat(32);
+  const config: TickerConfig = { enabled: true, url: "https://api.test/operator/live-activity/tick", token };
+  let now = 5_000_000;
+  let health: Record<string, unknown> = { liveActivityPush: { enabled: false, missing: ["APNS_KEY_ID"] } };
+  const calls: string[] = [];
+  const fetchImpl = (async (url: string | URL | Request) => {
+    calls.push(String(url));
+    if (String(url).endsWith("/health")) return new Response(JSON.stringify(health), { status: 200 });
+    return new Response(JSON.stringify({ sampled: 0, refreshed: 0, recent: 0, removed: 0, failed: 0, deferred: 0 }), { status: 200 });
+  }) as unknown as typeof fetch;
+  const logs: Array<Record<string, unknown>> = [];
+  const ticker = new LiveActivityTicker(config, { fetchImpl, now: () => now, log: (entry) => logs.push(entry) });
+
+  assert.deepEqual(await ticker.tickOnce(), { kind: "push_unavailable", source: "health" });
+  assert.deepEqual(calls, ["https://api.test/health"], "the tick route is not called while push is off");
+  assert.equal(ticker.status().apnsPush, "disabled");
+  assert.ok(ticker.status().pausedUntil, "and the ticker waits before asking again");
+  assert.deepEqual(logs.map((entry) => [entry.outcome, entry.source]), [["push_unavailable", "health"]]);
+
+  // Inside the pause nothing is asked; after it, /health again, still disabled, and nothing new is logged.
+  now += LIVE_ACTIVITY_TICK_PAUSE_MS - 1;
+  assert.deepEqual(await ticker.tickOnce(), { kind: "skipped", reason: "paused" });
+  now += 1;
+  assert.deepEqual(await ticker.tickOnce(), { kind: "push_unavailable", source: "health" });
+  assert.deepEqual(calls, ["https://api.test/health", "https://api.test/health"]);
+  assert.equal(logs.length, 1, "an unchanged state is not logged again");
+
+  // The owner configures APNs: the next probe sees it, and the tick route is called from then on without re-probing.
+  health = { liveActivityPush: { enabled: true, environment: "development" } };
+  now += LIVE_ACTIVITY_TICK_PAUSE_MS;
+  assert.equal((await ticker.tickOnce()).kind, "ok");
+  assert.equal((await ticker.tickOnce()).kind, "ok");
+  assert.deepEqual(calls.slice(2), ["https://api.test/health", config.url, config.url]);
+  assert.equal(ticker.status().apnsPush, "enabled");
+  assert.ok(logs.every((entry) => !JSON.stringify(entry).includes(token)));
+
+  // A health route that fails is a failed tick, not a refusal: no five-minute pause, retried at the next interval.
+  const flaky = new LiveActivityTicker(config, { fetchImpl: (async () => { throw new TypeError("fetch failed"); }) as unknown as typeof fetch, now: () => now, log: () => {} });
+  assert.deepEqual(await flaky.tickOnce(), { kind: "failed", reason: "health TypeError" });
+  assert.equal(flaky.status().pausedUntil, undefined);
+  assert.equal(flaky.status().apnsPush, "unknown");
 });
 
 test("a disabled ticker sends nothing", async () => {
