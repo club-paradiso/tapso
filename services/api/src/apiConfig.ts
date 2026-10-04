@@ -117,6 +117,13 @@ export interface TransitApiConfig {
    * Turning sessions on only makes the endpoints reachable; it must never be
    * enough to let the server pick a rider's bus for them.
    */
+  /**
+   * The hybrid ride position engine's production switch
+   * (`docs/exec-plans/TAPSO_V1_RELEASE_CLOSURE.md` §6). The app reads it from
+   * `/health` when a live ride starts; off by default until the hybrid release
+   * gate passes on physical devices. Turning it off is the rollback.
+   */
+  hybridTracking: { enabled: boolean };
   matching: {
     /** The matcher policy serving sessions and `POST /v1/matches`. */
     matcherPolicy: string;
@@ -279,6 +286,7 @@ export function readTransitApiConfig(
         ? { problem: storeProblem }
         : sessionsRequested && namespaceProblem !== undefined ? { problem: namespaceProblem } : {}),
     },
+    hybridTracking: { enabled: boolean(env, "TRANSIT_HYBRID_TRACKING_ENABLED", false) },
     matching: {
       matcherPolicy: MATCHER_POLICY_VERSION,
       automaticMatchingEnabled,

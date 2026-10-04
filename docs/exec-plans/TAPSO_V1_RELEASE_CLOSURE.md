@@ -57,7 +57,7 @@ Status vocabulary: `DONE`, `ACTIVE`, `BLOCKED`, `NOT_YET_VERIFIED`, `FAILED`.
 | I. Background / APNs production completion | BLOCKED | Token route, store, index, scheduler and pusher exist in code; ticker on Railway now gated on `/health` (PR #112, tested); APNs variables absent | Owner: paid Apple team, then the five `APNS_*` variables on `tapso-api` (`LIVE_ACTIVITY_PUSH.md` §3b); then the device protocol | Apple team / APNs key | Background/APNs (§68) |
 | J. Screenshot / map-import regression | NOT_YET_VERIFIED | CI evidence from #102–#105, #109 on simulator; share extension `UNVERIFIED` on device | Re-run `ScreenshotImportFlowTests`, `MapHandoffFlowTests` on the device build | Physical device | Screenshot/map import (§83) |
 | K. Offline / cache / recovery validation | NOT_YET_VERIFIED | Catalog ETag cache, schedule provenance, restored-ride path exist and are unit-tested; vehicle cache never serves stale rows (`cachedTransitProvider.ts`) | Device check: airplane mode mid-ride, reconnect | Physical device | Offline/recovery (§70) |
-| L. Observability / field diagnostics | NOT_YET_VERIFIED | Structured `transit_api_request` logs with `durationMs`, `cache`, route; `reliability` now on every selected-vehicle view; Debug hybrid diagnostic lines exist only behind the flag | Debug ride trace (build SHA, route, variant, masked vehicle, provider sequence, state, reliability, hybrid, lifecycle, milestone, LA event) in PR C | — | — |
+| L. Observability / field diagnostics | ACTIVE | Structured `transit_api_request` logs with `durationMs`, `cache`, route; `reliability` on every selected-vehicle view (PR #110); Debug `RideTrace` (PR C): every poll, failure, guidance change, milestone, lifecycle change, Live Activity update and hybrid evaluation recorded automatically with build SHA, route, variant, masked plate, provider sequence, session state, server trust, moment, trust, remaining stops, hybrid state, GPS accuracy bucket; exported as text from the ride screen's "Ride trace" sheet; never coordinates, tokens or session ids | Server-side counters (rides entering estimated / rechecking / lost, push success and failure) once Vercel logs are readable | — | — |
 | M. Real-device validation | BLOCKED | None since #100; device `UNVERIFIED` everywhere the README says so | The ride protocol in §7 on a build whose SHA the phone shows | Tester with the phone | Real-device (§83) |
 | N. Final v1 release gates | NOT_YET_VERIFIED | #109 gates green on `a8f5940` (`artifacts/release-gates/jeju-v1.md`) | Re-run `scripts/release-gates/jeju-v1.ts --check` on every PR | — | CI (§71) |
 
@@ -117,9 +117,12 @@ riding / 12 `278:282`.
   GPS noise never advances a milestone; official recovery resumes the count;
   Energy Log over a 40-minute ride acceptable; false destination-passage rate
   measured on at least the five ride classes in §7.
-- **Disable / kill switch:** the launch argument today; in production a
-  server flag in `/health` (`hybridTracking.enabled`) read at ride start, so
-  rollback is a configuration change, not a build.
+- **Disable / kill switch:** `TRANSIT_HYBRID_TRACKING_ENABLED` on the API
+  (`/health` → `hybridTracking.enabled`, default false; PR #113). The app reads
+  it once when a live ride starts and stores the decision in the ride, so a
+  relaunch keeps the same authority and the switch never flips a ride in
+  progress. The `-tapsoHybridTracking` launch argument stays as the
+  development opt-in. Rollback is deleting the variable, not a build.
 - **Rollback:** official-only authority (today's default).
 - **Owner:** the repository owner; **removal condition:** the flag is deleted
   the release after hybrid has been the default for one full ride-class sweep
@@ -141,7 +144,7 @@ diagnostics must show the commit under test.
 | A | `fix/live-ride-reliability-v3` | confirmed-ride policy, reliability view, trust word, dedupe, timeout copy, forensic doc, this plan, tests, fixtures | [PR #110](https://github.com/club-paradiso/tapso/pull/110) |
 | E | `fix/brand-integrity-gate` | `BrandWordmark`, build identity, brand guard, snapshots | [PR #111](https://github.com/club-paradiso/tapso/pull/111) |
 | B | `feat/dynamic-island-coexistence-v3` | after Gate B | not started |
-| C | `feat/hybrid-production-readiness-v1` | rollout flag, diagnostics trace, device evidence | not started |
+| C | `feat/hybrid-production-readiness-v1` | Debug ride trace and the server rollout switch (stacked on #110 and #111); device evidence next | [PR #113](https://github.com/club-paradiso/tapso/pull/113) |
 | D | `feat/live-activity-background-production-v1` | ticker gated on `/health`, authority by app state, owner APNs steps | [PR #112](https://github.com/club-paradiso/tapso/pull/112); APNs itself still blocked |
 
 ## 9. Reproduction

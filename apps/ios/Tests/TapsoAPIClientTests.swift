@@ -102,6 +102,26 @@ final class TapsoAPIClientTests: XCTestCase {
         XCTAssertFalse(offline)
     }
 
+    /// The hybrid engine's rollout switch: on only when the server says so; silence, failure and no network read as off.
+    func testHybridTrackingIsOnOnlyWhenTheServerSaysSo() async {
+        StubURLProtocol.respond { _ in (200, Data(#"{"ok":true,"hybridTracking":{"enabled":true}}"#.utf8)) }
+        let enabled = await makeClient().hybridTrackingEnabled()
+        XCTAssertTrue(enabled)
+        XCTAssertEqual(StubURLProtocol.recorded.first?.url?.path, "/health")
+        StubURLProtocol.respond { _ in (200, Data(#"{"ok":true,"hybridTracking":{"enabled":false}}"#.utf8)) }
+        let disabled = await makeClient().hybridTrackingEnabled()
+        XCTAssertFalse(disabled)
+        StubURLProtocol.respond { _ in (200, Data(#"{"ok":true}"#.utf8)) }
+        let older = await makeClient().hybridTrackingEnabled()
+        XCTAssertFalse(older, "a server from before the switch reads as off")
+        StubURLProtocol.respond { _ in (500, Data(#"{"error":"INTERNAL_ERROR","message":"internal error"}"#.utf8)) }
+        let failed = await makeClient().hybridTrackingEnabled()
+        XCTAssertFalse(failed)
+        StubURLProtocol.fail(with: URLError(.notConnectedToInternet))
+        let offline = await makeClient().hybridTrackingEnabled()
+        XCTAssertFalse(offline)
+    }
+
     func testAPushTokenIsRegisteredOnTheRidesSessionAsHex() async throws {
         // SYNTHETIC: invented token bytes.
         StubURLProtocol.respond { _ in (200, Data(#"{"sessionId":"syn-session","liveActivityPush":{"registered":true,"fingerprint":"0123456789ab","registeredAt":"2026-10-01T09:00:00.000Z"}}"#.utf8)) }
