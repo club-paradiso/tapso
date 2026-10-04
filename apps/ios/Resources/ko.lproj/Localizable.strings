@@ -181,6 +181,8 @@
 "demo.scenario.offline" = "인터넷 끊김";
 "demo.scenario.passedDestination" = "목적지 지나침";
 "demo.playback" = "재생";
+"demo.build" = "이 빌드";
+"demo.build.footer" = "테스트 폰이 어떤 커밋을 실행 중인지 여기서 확인해요.";
 "demo.speed" = "속도";
 "demo.chip.hint" = "체험 설정을 열어요";
 "demo.speed.manual" = "단계별";

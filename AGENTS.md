@@ -23,6 +23,7 @@ npm --prefix services/api test
 python3 -m unittest discover -s scripts/tago -p 'test_*.py'
 python3 -m unittest discover -s scripts/timetables -p 'test_*.py'
 python3 scripts/ios/check_localization.py
+python3 scripts/ios/check_brand.py
 python3 scripts/ios/sync_xcodeproj.py --check
 npm --prefix apps/web test
 npm --prefix apps/web run typecheck:vercel

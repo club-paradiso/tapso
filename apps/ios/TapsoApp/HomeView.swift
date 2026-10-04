@@ -115,16 +115,9 @@ struct HomeContent: View {
         }
     }
 
+    /// The canonical wordmark (`BrandWordmark`); never a string literal here.
     private var brand: some View {
-        HStack(spacing: TapsoSpace.xs) {
-            DolBuddy(moment: .riding, size: 28)
-            Text(verbatim: "TAPSŌ")
-                .font(.system(.title3, design: .rounded, weight: .black))
-                .tracking(1.2)
-                .foregroundStyle(TapsoColor.textPrimary)
-        }
-        .accessibilityElement(children: .ignore)
-        .accessibilityLabel(Text("brand.name"))
+        BrandWordmark()
     }
 
     /// The synthetic-data label doubles as the way into the demo settings.

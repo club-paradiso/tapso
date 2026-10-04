@@ -123,6 +123,22 @@ final class SnapshotEvidenceTests: XCTestCase {
         }
     }
 
+    // MARK: Brand
+
+    /// The visual wordmark on Home: the release build's Home, the Debug/demo Home with its chip,
+    /// at the compact width and at a large accessibility size. Evidence that the macron on Ō is
+    /// drawn, nothing clips, and the mark never breaks across lines (release gate "Brand integrity").
+    func testRenderBrandWordmark() throws {
+        let directory = try outputDirectory()
+        let release = AnyView(HomeContent(library: JourneyLibrary(), onSearch: {}, onDestination: { _ in }, onRideAgain: { _ in }, onToggleFavorite: { _ in }, onMapImport: {}, onSample: {}, showsDemo: false))
+        let demo = AnyView(HomeContent(library: JourneyLibrary(), onSearch: {}, onDestination: { _ in }, onRideAgain: { _ in }, onToggleFavorite: { _ in }, onMapImport: {}, onSample: {}, showsDemo: true))
+        try render(in: directory, release, name: "00-brand-home-release-402", width: 402, scheme: .light)
+        try render(in: directory, demo, name: "00-brand-home-demo-402", width: 402, scheme: .light)
+        try render(in: directory, demo, name: "00-brand-home-demo-320", width: 320, scheme: .light)
+        try render(in: directory, demo, name: "00-brand-home-demo-ax5", width: 402, scheme: .light, typeSize: .accessibility5)
+        try render(in: directory, AnyView(BrandWordmark().padding()), name: "00-brand-wordmark", width: 240, scheme: .dark)
+    }
+
     // MARK: Live Activity and Dynamic Island
 
     func testRenderRideSurfaces() throws {
