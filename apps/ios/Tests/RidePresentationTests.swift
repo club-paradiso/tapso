@@ -37,6 +37,68 @@ final class RidePresentationTests: XCTestCase {
         }
     }
 
+    // MARK: One root condition, one message
+
+    /// A transient failure (a slow answer, a provider hiccup) ages the ride into its own calm
+    /// banner; the failure notice is not stacked on top of it. Only a failure the ride cannot
+    /// recover from, or one that left the guidance healthy, gets its own notice.
+    func testATransientFailureIsNotSaidTwice() {
+        XCTAssertFalse(RideView.showsFailureNotice(.timedOut, trust: .rechecking))
+        XCTAssertFalse(RideView.showsFailureNotice(.providerTimeout, trust: .rechecking))
+        XCTAssertFalse(RideView.showsFailureNotice(.server, trust: .unavailable))
+        XCTAssertTrue(RideView.showsFailureNotice(.timedOut, trust: .live), "a timeout that did not age the ride is still worth one line")
+        XCTAssertTrue(RideView.showsFailureNotice(.sessionExpired, trust: .rechecking), "the ride cannot recover: say so")
+        XCTAssertTrue(RideView.showsFailureNotice(.sessionNotFound, trust: nil))
+    }
+
+    /// Every moment carries exactly one trust word, and healthy moments carry no warning.
+    func testEveryMomentHasOneTrustWord() {
+        for moment in RideMoment.allCases {
+            let guidance = RideGuidancePolicy.guidance(for: signal(for: moment))
+            switch guidance.trust {
+            case .live, .estimated:
+                XCTAssertFalse([.delayed, .checking, .vehicleLost, .offline].contains(moment), "\(moment)")
+            case .rechecking:
+                XCTAssertTrue([.delayed, .checking].contains(moment), "\(moment)")
+                XCTAssertNil(guidance.milestone, "\(moment) never alerts")
+            case .unavailable:
+                XCTAssertTrue([.vehicleLost, .offline].contains(moment), "\(moment)")
+                XCTAssertNil(guidance.milestone, "\(moment) never alerts")
+            }
+        }
+        XCTAssertEqual(RideGuidancePolicy.guidance(for: RideSignal(phase: .active, remainingStops: 5, freshness: .fresh, isEstimated: true)).trust, .estimated)
+    }
+
+    /// The timeout copy describes the phone's wait, never a server fault it cannot see:
+    /// the 3001 / 3913 ride showed "탑서 서버가 늦게 답하고 있어요" over HTTP 200 answers.
+    func testTimeoutCopyBlamesNoServer() throws {
+        for language in ["ko", "en"] {
+            let path = try XCTUnwrap(Bundle.main.path(forResource: language, ofType: "lproj"))
+            let bundle = try XCTUnwrap(Bundle(path: path))
+            for key in ["live.error.timedOut.title", "live.error.timedOut.body"] {
+                let value = bundle.localizedString(forKey: key, value: nil, table: nil)
+                for word in ["서버", "server", "Server"] {
+                    XCTAssertFalse(value.contains(word), "\(language) \(key): \(value)")
+                }
+            }
+        }
+    }
+
+    private func signal(for moment: RideMoment) -> RideSignal {
+        switch moment {
+        case .riding: RideSignal(phase: .active, remainingStops: 5, freshness: .fresh)
+        case .prepare: RideSignal(phase: .approachingDestination, remainingStops: 2, freshness: .fresh)
+        case .nextStop: RideSignal(phase: .nextStopIsDestination, remainingStops: 1, freshness: .fresh)
+        case .arrived: RideSignal(phase: .arrived, remainingStops: 0, freshness: .fresh)
+        case .passedDestination: RideSignal(phase: .arrived, remainingStops: 0, freshness: .fresh, destinationPassed: true)
+        case .delayed: RideSignal(phase: .active, remainingStops: 4, freshness: .aging)
+        case .vehicleLost: RideSignal(phase: .vehicleTemporarilyLost, remainingStops: 4, freshness: .stale)
+        case .offline: RideSignal(phase: .active, remainingStops: 4, freshness: .fresh, isOffline: true)
+        case .checking: RideSignal(phase: .vehicleRecovery, remainingStops: -1, freshness: .unknown)
+        case .ended: RideSignal(phase: .completed, remainingStops: 0, freshness: .fresh)
+        }
+    }
+
     // MARK: One truth for every surface
 
     func testContentStateCarriesTheSameGuidanceAsTheApp() {

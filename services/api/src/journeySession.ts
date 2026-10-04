@@ -9,11 +9,18 @@ import {
   type PositionFacts,
 } from "./matching.ts";
 import {
+  CONFIRMED_PROGRESSION_POLICY_V1,
+  evaluateConfirmedProgression,
+  type ConfirmedProgressionPolicy,
+  type PendingPassage,
+} from "./confirmedRideProgression.ts";
+import {
   appendCadenceObservation,
   classifyTagoCadenceFreshness,
   evidenceTimeMs,
   recentlySeenVehicles,
   type SourceFreshnessEvidence,
+  type SourceFreshnessState,
 } from "./sourceFreshness.ts";
 import { tokenFingerprint } from "./apns.ts";
 import type { LiveActivityDelivery } from "./liveActivityContent.ts";
@@ -161,7 +168,39 @@ export function vehicleChoicePresentation(level: ReadinessLevel): VehicleChoiceP
 /** Enough for a busy variant; a longer list is a list nobody reads at a bus stop. */
 export const RIDER_VISIBLE_VEHICLE_LIMIT = 8;
 
-export type TrackingIntegrity = "route_conflict" | "direction_conflict" | "backward_conflict";
+export type TrackingIntegrity =
+  | "route_conflict"
+  | "direction_conflict"
+  | "backward_conflict"
+  | "corrupt_sequence"
+  | "topology_conflict"
+  | "implausible_jump"
+  | "destination_passage_unconfirmed";
+
+/**
+ * The ride's reliability, one dimension at a time, so that a client never has
+ * to collapse them into a single "delayed" flag. The network dimension is the
+ * client's own and is absent here.
+ *
+ * - `provider`: whether the provider read behind this view succeeded.
+ * - `observation`: what the confirmed bus's latest row showed relative to the
+ *   last accepted step. `unchanged` is a bus held at a stop, not a fault.
+ * - `position`: whether `progress` is this read's position, the last accepted
+ *   one, or nothing usable.
+ * - `vehicle`: whether the identified bus is still being followed.
+ * - `matcherCadence`: the automatic matcher's cadence verdict for the selected
+ *   bus, published for diagnostics. On a rider-confirmed ride it is not the gate.
+ * - `trust`: the rider-facing summary every surface may show without
+ *   further interpretation.
+ */
+export interface RideReliabilityView {
+  provider: "responding" | "temporarily_unavailable";
+  observation: "changing" | "unchanged" | "unknown_timestamp" | "stale" | "conflicted";
+  position: "official" | "last_known" | "unavailable";
+  vehicle: "confirmed" | "rechecking" | "lost";
+  matcherCadence?: SourceFreshnessState;
+  trust: "live" | "rechecking" | "unavailable";
+}
 
 export interface JourneySessionView {
   trackingIntegrity?: TrackingIntegrity;
@@ -206,6 +245,8 @@ export interface JourneySessionView {
    * failure itself.
    */
   providerRead?: { state: "failed"; consecutiveFailures: number };
+  /** Present once a bus is selected: the ride's reliability by dimension. See `RideReliabilityView`. */
+  reliability?: RideReliabilityView;
   createdAt: string;
   updatedAt: string;
   expiresAt: string;
@@ -249,6 +290,8 @@ export interface JourneySessionCoordinatorOptions {
   automaticMatchingEnabled?: boolean;
   /** How many consecutive failed provider reads a session tolerates. */
   maxConsecutiveProviderFailures?: number;
+  /** The confirmed-ride progression policy (`confirmedRideProgression.ts`). */
+  confirmedProgressionPolicy?: ConfirmedProgressionPolicy;
   /** Defaults to an in-process store. See `sessionStore.ts`. */
   store?: JourneySessionStore;
   /**
@@ -337,6 +380,8 @@ type SessionRecord = SessionInput & {
   cadenceHistory: Map<string, VehicleObservation[]>;
   /** Reset to zero by every successful provider read. */
   consecutiveProviderFailures: number;
+  /** A destination passage seen once on a confirmed ride, awaiting a second sighting. */
+  pendingPassage?: PendingPassage;
   /** What the matcher has seen pass the boarding stop during this session. */
   passage?: PassageMemory;
   /** Present from an automatic selection for a waiting rider on. */
@@ -354,6 +399,7 @@ export class JourneySessionCoordinator {
   private readonly nearStopRadiusMeters: number;
   private readonly automaticMatchingEnabled: boolean;
   private readonly maxConsecutiveProviderFailures: number;
+  private readonly confirmedProgressionPolicy: ConfirmedProgressionPolicy;
   private readonly store: JourneySessionStore;
   private readonly matchingReadiness: ReadinessLevel;
 
@@ -386,6 +432,7 @@ export class JourneySessionCoordinator {
       DEFAULT_MAX_CONSECUTIVE_PROVIDER_FAILURES,
       "maxConsecutiveProviderFailures",
     );
+    this.confirmedProgressionPolicy = options.confirmedProgressionPolicy ?? CONFIRMED_PROGRESSION_POLICY_V1;
   }
 
   /** Shadow mode ranks and publishes; it never assigns `selectedVehicleId`. */
@@ -719,6 +766,15 @@ export class JourneySessionCoordinator {
     return this.view(record, {
       state,
       progress: retainedProgress(record.lastProgress),
+      ...(record.selectedVehicleId === undefined ? {} : {
+        reliability: {
+          provider: "responding",
+          observation: "unknown_timestamp",
+          position: record.lastProgress ? "last_known" : "unavailable",
+          vehicle: "confirmed",
+          trust: "rechecking",
+        },
+      }),
       explanation: merged
         ? "A concurrent update to this session was accepted first. What this request saw of the boarding "
           + "stop was added to it, and its stored state is returned."
@@ -752,6 +808,15 @@ export class JourneySessionCoordinator {
         "The provider read failed. The last accepted progress is retained, no freshness was inferred, "
         + "and no vehicle was rematched.",
       providerRead: { state: "failed", consecutiveFailures: record.consecutiveProviderFailures },
+      ...(record.selectedVehicleId === undefined ? {} : {
+        reliability: {
+          provider: "temporarily_unavailable",
+          observation: "unknown_timestamp",
+          position: record.lastProgress ? "last_known" : "unavailable",
+          vehicle: "confirmed",
+          trust: "rechecking",
+        },
+      }),
     });
   }
 
@@ -958,6 +1023,14 @@ export class JourneySessionCoordinator {
     record.updatedAtMs = now.getTime();
     const evidence = sourceFreshness ? { sourceFreshness } : {};
 
+    // A bus the rider identified is not a matching problem any more. Its
+    // progression, conflicts included, is judged by the confirmed-ride policy;
+    // the matcher's cadence verdict is published beside it, not obeyed.
+    if (record.selectionMode === "explicit" && observation.timestampSource === "unavailable") {
+      const cadence = classifyTagoCadenceFreshness(record.cadenceHistory.get(observation.vehicleId) ?? [], now);
+      return this.evaluateConfirmedRide(record, observation, now, evidence, cadence.state);
+    }
+
     if (observation.routeId !== record.routeId) {
       return this.view(record, { ...evidence, state: "degraded", trackingIntegrity: "route_conflict", explanation: "Selected vehicle reported the wrong route; no rematch was attempted." });
     }
@@ -969,12 +1042,13 @@ export class JourneySessionCoordinator {
     let evidenceAtMs: number | undefined;
     if (observation.timestampSource === "unavailable") {
       // No provider observation time exists for this record, so the only thing
-      // available is the server-observed cadence surrogate. It has to be fresh
-      // on its own terms before the receipt time may order anything.
+      // available is the server-observed cadence surrogate.
       const cadence = classifyTagoCadenceFreshness(
         record.cadenceHistory.get(observation.vehicleId) ?? [],
         now,
       );
+      // An automatically selected bus has to be fresh on the matcher's own
+      // terms before the receipt time may order anything.
       if (cadence.state !== "fresh") {
         return this.view(record, {
           ...evidence,
@@ -1051,6 +1125,122 @@ export class JourneySessionCoordinator {
     });
   }
 
+  /**
+   * The rider-confirmed bus, judged by `evaluateConfirmedProgression`. Every
+   * refusal keeps the last accepted progress and says which dimension failed;
+   * an unchanged row keeps the ride `tracking`, because a bus held at a stop
+   * is not a fault. The automatic matcher's cadence verdict rides along in
+   * `reliability.matcherCadence` for diagnostics.
+   */
+  private evaluateConfirmedRide(
+    record: SessionRecord,
+    observation: VehicleObservation,
+    now: Date,
+    evidence: { sourceFreshness?: ReadonlyMap<string, SourceFreshnessEvidence> },
+    matcherCadence: SourceFreshnessState,
+  ): JourneySessionView {
+    const evidenceAtMs = evidenceTimeMs(observation);
+    const reliability = (
+      observation: RideReliabilityView["observation"],
+      position: RideReliabilityView["position"],
+      vehicle: RideReliabilityView["vehicle"] = "confirmed",
+    ): RideReliabilityView => ({
+      provider: "responding",
+      observation,
+      position,
+      vehicle,
+      matcherCadence,
+      trust: position === "official" ? "live" : vehicle === "lost" ? "unavailable" : "rechecking",
+    });
+    if (evidenceAtMs === undefined) {
+      return this.view(record, {
+        ...evidence,
+        state: "degraded",
+        progress: retainedProgress(record.lastProgress),
+        reliability: reliability("unknown_timestamp", record.lastProgress ? "last_known" : "unavailable"),
+        explanation: "Confirmed vehicle has no usable evidence timestamp.",
+      });
+    }
+    const lastStep = record.lastProgress && record.lastObservation
+      ? (() => {
+          const at = evidenceTimeMs(record.lastObservation!);
+          return at === undefined ? undefined : { stopSequence: record.lastProgress!.currentStopSequence, evidenceAtMs: at };
+        })()
+      : undefined;
+    const verdict = evaluateConfirmedProgression({
+      observation,
+      evidenceAtMs,
+      now,
+      routeId: record.routeId,
+      directionCode: record.directionCode,
+      stops: record.stops,
+      destinationSequence: record.destinationStop.sequence,
+      lastStep,
+      pendingPassage: record.pendingPassage,
+      nearStopRadiusMeters: this.nearStopRadiusMeters,
+      policy: this.confirmedProgressionPolicy,
+    });
+
+    switch (verdict.kind) {
+      case "retain":
+        return this.view(record, {
+          ...evidence,
+          state: record.lastProgress ? stateFromProgress(record.lastProgress) : "degraded",
+          progress: retainedProgress(record.lastProgress),
+          reliability: reliability("unchanged", record.lastProgress ? "official" : "unavailable"),
+          explanation: verdict.explanation,
+        });
+      case "unresolved":
+        record.lastObservation = { ...observation };
+        return this.view(record, {
+          ...evidence,
+          state: "degraded",
+          progress: retainedProgress(record.lastProgress),
+          reliability: reliability("unknown_timestamp", record.lastProgress ? "last_known" : "unavailable"),
+          explanation: verdict.explanation,
+        });
+      case "reject": {
+        if (verdict.pendingPassage) record.pendingPassage = verdict.pendingPassage;
+        const integrity: TrackingIntegrity | undefined = verdict.reason === "stale_evidence" ? undefined : verdict.reason;
+        return this.view(record, {
+          ...evidence,
+          state: "degraded",
+          progress: retainedProgress(record.lastProgress),
+          ...(integrity ? { trackingIntegrity: integrity } : {}),
+          reliability: reliability(
+            verdict.reason === "stale_evidence" ? "stale" : "conflicted",
+            record.lastProgress ? "last_known" : "unavailable",
+            "rechecking",
+          ),
+          explanation: verdict.explanation,
+        });
+      }
+      case "accept": {
+        record.lastObservation = { ...observation };
+        delete record.pendingPassage;
+        const delta = record.destinationStop.sequence - verdict.stop.sequence;
+        const progress: JourneyProgressView = {
+          currentStopSequence: verdict.stop.sequence,
+          currentStopId: verdict.stop.stopId,
+          remainingStops: Math.max(delta, 0),
+          phase: progressPhase(delta),
+          source: verdict.source,
+          observedAt: observation.observedAt,
+          evidenceAt: new Date(evidenceAtMs).toISOString(),
+          evidenceAtIs: "tapso_server_receipt",
+        };
+        record.lastProgress = progress;
+        return this.view(record, {
+          ...evidence,
+          state: stateFromProgress(progress),
+          progress,
+          reliability: reliability(verdict.observation, "official"),
+          explanation: verdict.explanation,
+        });
+      }
+    }
+  }
+
   private recordCadenceSnapshot(
     record: SessionRecord,
     vehicles: VehicleObservation[],
@@ -1084,14 +1274,22 @@ export class JourneySessionCoordinator {
 
   private handleMissingObservation(record: SessionRecord, now: Date): JourneySessionView {
     record.updatedAtMs = now.getTime();
+    const missing = (vehicle: "rechecking" | "lost"): RideReliabilityView => ({
+      provider: "responding",
+      observation: "unknown_timestamp",
+      position: vehicle === "lost" || !record.lastProgress ? "unavailable" : "last_known",
+      vehicle,
+      trust: vehicle === "lost" ? "unavailable" : "rechecking",
+    });
     if (!record.lastObservation) {
-      return this.view(record, { state: "degraded", explanation: "Selected vehicle is absent from the current route snapshot." });
+      return this.view(record, { state: "degraded", reliability: missing("rechecking"), explanation: "Selected vehicle is absent from the current route snapshot." });
     }
     const lastSeen = evidenceTimeMs(record.lastObservation);
     if (lastSeen !== undefined && Number.isFinite(lastSeen) && now.getTime() - lastSeen <= this.missingGraceMs) {
       return this.view(record, {
         state: "degraded",
         progress: retainedProgress(record.lastProgress),
+        reliability: missing("rechecking"),
         explanation: "Selected vehicle is temporarily missing; last accepted progress retained within the grace window.",
       });
     }
@@ -1101,6 +1299,7 @@ export class JourneySessionCoordinator {
     return this.view(record, {
       state: "lost",
       progress: retainedProgress(record.lastProgress),
+      reliability: missing("lost"),
       explanation: "Selected vehicle has been missing beyond the bounded grace window; automatic rematching is disabled.",
     });
   }
@@ -1132,6 +1331,7 @@ export class JourneySessionCoordinator {
       shadowSelection?: ShadowSelectionView;
       sourceFreshness?: ReadonlyMap<string, SourceFreshnessEvidence>;
       providerRead?: { state: "failed"; consecutiveFailures: number };
+      reliability?: RideReliabilityView;
     },
   ): JourneySessionView {
     return {
@@ -1157,6 +1357,7 @@ export class JourneySessionCoordinator {
         ? { sourceFreshness: Object.fromEntries(state.sourceFreshness) }
         : {}),
       ...(state.providerRead ? { providerRead: state.providerRead } : {}),
+      ...(state.reliability ? { reliability: state.reliability } : {}),
       createdAt: new Date(record.createdAtMs).toISOString(),
       updatedAt: new Date(record.updatedAtMs).toISOString(),
       expiresAt: new Date(record.expiresAtMs).toISOString(),
@@ -1194,6 +1395,7 @@ function toStored(record: SessionRecord): StoredJourneySession {
     ...(record.lastProgress === undefined ? {} : { lastProgress: record.lastProgress }),
     cadenceHistory: [...record.cadenceHistory],
     consecutiveProviderFailures: record.consecutiveProviderFailures,
+    ...(record.pendingPassage === undefined ? {} : { pendingPassage: record.pendingPassage }),
     ...(record.passage === undefined ? {} : { passage: record.passage }),
     ...(record.boardingWatch === undefined ? {} : { boardingWatch: record.boardingWatch }),
     ...(record.liveActivityPush === undefined ? {} : { liveActivityPush: record.liveActivityPush }),
@@ -1222,6 +1424,7 @@ function toRecord(session: StoredJourneySession): SessionRecord {
     ...(session.lastProgress === undefined ? {} : { lastProgress: session.lastProgress }),
     cadenceHistory: new Map(session.cadenceHistory),
     consecutiveProviderFailures: session.consecutiveProviderFailures,
+    ...(session.pendingPassage === undefined ? {} : { pendingPassage: session.pendingPassage }),
     ...(session.passage !== undefined
       ? { passage: session.passage }
       // Every decision since the directed matcher stores its memory, so a row

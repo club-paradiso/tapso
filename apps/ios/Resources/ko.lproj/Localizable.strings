@@ -238,7 +238,7 @@
 "live.error.offline.title" = "인터넷 연결이 끊겼어요";
 "live.error.offline.body" = "연결되면 바로 다시 확인할게요.";
 "live.error.timedOut.title" = "응답이 늦어요";
-"live.error.timedOut.body" = "탑서 서버가 늦게 답하고 있어요. 잠시 후 다시 확인할게요.";
+"live.error.timedOut.body" = "답을 기다리다 시간이 지났어요. 잠시 후 다시 확인할게요.";
 "live.error.providerTimeout.title" = "버스 정보가 늦게 와요";
 "live.error.providerTimeout.body" = "버스 정보 시스템 응답이 늦어요. 잠시 후 다시 확인할게요.";
 "live.error.providerUnavailable.title" = "버스 정보를 못 받았어요";

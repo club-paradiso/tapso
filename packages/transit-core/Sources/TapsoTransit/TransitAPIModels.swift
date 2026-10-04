@@ -141,6 +141,9 @@ public struct JourneySessionSnapshot: Codable, Hashable, Sendable {
     public let matchingMode: String?
     public let trackingIntegrity: String?
     public let providerRead: ProviderRead?
+    /// The ride's reliability by dimension (`RideReliabilityView`), present once a bus is
+    /// selected. Absent from a server from before it existed: the state alone is read then.
+    public let reliability: Reliability?
     public let updatedAt: String?
     public let expiresAt: String?
 
@@ -186,6 +189,32 @@ public struct JourneySessionSnapshot: Codable, Hashable, Sendable {
     public struct ProviderRead: Codable, Hashable, Sendable {
         public let state: String
         public let consecutiveFailures: Int
+    }
+
+    /// One dimension each, never collapsed into one flag on the wire. Unknown
+    /// values fail closed: the state is read as if the block were absent.
+    public struct Reliability: Codable, Hashable, Sendable {
+        /// `responding` or `temporarily_unavailable`.
+        public let provider: String
+        /// `changing`, `unchanged`, `unknown_timestamp`, `stale` or `conflicted`.
+        public let observation: String
+        /// `official`, `last_known` or `unavailable`.
+        public let position: String
+        /// `confirmed`, `rechecking` or `lost`.
+        public let vehicle: String
+        /// The automatic matcher's cadence verdict for the selected bus; diagnostics only.
+        public let matcherCadence: String?
+        /// `live`, `rechecking` or `unavailable`: the server's rider-facing summary.
+        public let trust: String
+
+        public init(provider: String, observation: String, position: String, vehicle: String, matcherCadence: String? = nil, trust: String) {
+            self.provider = provider
+            self.observation = observation
+            self.position = position
+            self.vehicle = vehicle
+            self.matcherCadence = matcherCadence
+            self.trust = trust
+        }
     }
 
     public var sessionState: LiveSessionState { LiveSessionState(rawValue: state) ?? .unrecognized }

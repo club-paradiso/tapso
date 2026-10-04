@@ -99,7 +99,7 @@ test("unchanged content within the refresh interval is not pushed again", () => 
 test("late or missing data is pushed as such, never as a milestone", () => {
   const tracked = planLiveActivityPush(view("tracking-next-stop"), stops, undefined);
   assert.ok(tracked.send);
-  for (const id of ["degraded-provider-timeout", "degraded-missing", "lost", "confirmed-cadence-unknown"]) {
+  for (const id of ["degraded-provider-timeout", "degraded-missing", "lost"]) {
     const late = view(id);
     late.updatedAt = new Date(Date.parse(late.updatedAt) + 10 * 60_000).toISOString();
     if (late.progress?.evidenceAt) late.progress.evidenceAt = late.updatedAt;
@@ -108,6 +108,13 @@ test("late or missing data is pushed as such, never as a milestone", () => {
     assert.equal(plan.push.alert, undefined, id);
     assert.notEqual(plan.push.contentState.freshness, "fresh", id);
   }
+  // A bus the rider identified on the first poll is live (`confirmedRideProgression.ts`):
+  // pushed as fresh, six stops out, and with no alert because riding is no milestone.
+  const confirmed = planLiveActivityPush(view("confirmed-cadence-unknown"), stops, undefined);
+  assert.ok(confirmed.send);
+  assert.equal(confirmed.push.contentState.freshness, "fresh");
+  assert.equal(confirmed.push.contentState.remainingStops, 6);
+  assert.equal(confirmed.push.alert, undefined);
 });
 
 test("the end push reads as ended, comes after anything pushed, and leaves within a minute", () => {

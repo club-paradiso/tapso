@@ -46,6 +46,22 @@ public enum DataLinkStatus: String, Codable, Hashable, Sendable {
     case checking
 }
 
+/// What a rider may be told about the ride's reliability, and nothing finer.
+///
+/// Four words for every surface: the app, the Lock Screen and the Dynamic
+/// Island say the same thing, and a root condition is said once. Backend
+/// dimensions (cadence, receipts, matcher readiness) never reach this enum.
+public enum RideTrust: String, Codable, Hashable, Sendable {
+    /// No warning. The count is current and the milestones may fire.
+    case live
+    /// A useful bounded estimate: the count is shown with a small qualifier.
+    case estimated
+    /// Temporary uncertainty: one calm recovery message, the last count dimmed.
+    case rechecking
+    /// TAPSO cannot guide safely: one clear warning and what to do.
+    case unavailable
+}
+
 /// A get-off milestone. Each fires at most once per ride.
 public enum RideMilestone: String, Codable, Hashable, Sendable {
     case prepare
@@ -166,6 +182,9 @@ public struct RideGuidance: Hashable, Sendable {
     public let relevanceScore: Double
     /// How the remaining-stop count may be shown.
     public let count: RideCountPresentation
+
+    /// The one reliability word this moment carries (`RideTrust`).
+    public var trust: RideTrust { RideGuidancePolicy.trust(for: moment, estimated: copy.eyebrow == "ride.predicted.eyebrow") }
 }
 
 /// Whether a remaining-stop count is current, a last-known value, or withheld.
@@ -244,6 +263,16 @@ public enum RideGuidancePolicy {
             relevanceScore: relevanceScore(for: moment),
             count: countPresentation(for: moment)
         )
+    }
+
+    /// One trust word per moment. `estimated` only for a predicted count that is still riding.
+    public static func trust(for moment: RideMoment, estimated: Bool = false) -> RideTrust {
+        switch moment {
+        case .riding: estimated ? .estimated : .live
+        case .prepare, .nextStop, .arrived, .passedDestination, .ended: .live
+        case .delayed, .checking: .rechecking
+        case .vehicleLost, .offline: .unavailable
+        }
     }
 
     public static func countPresentation(for moment: RideMoment) -> RideCountPresentation {

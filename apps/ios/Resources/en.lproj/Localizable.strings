@@ -238,7 +238,7 @@
 "live.error.offline.title" = "You're offline";
 "live.error.offline.body" = "TAPSO checks again as soon as you're connected.";
 "live.error.timedOut.title" = "Slow response";
-"live.error.timedOut.body" = "TAPSO's server is answering slowly. Checking again shortly.";
+"live.error.timedOut.body" = "The answer did not arrive in time. Checking again shortly.";
 "live.error.providerTimeout.title" = "Bus data is running late";
 "live.error.providerTimeout.body" = "The bus information system is slow to answer. Checking again shortly.";
 "live.error.providerUnavailable.title" = "No bus data right now";

@@ -107,7 +107,7 @@ async function earlyConfirmation(): Promise<void> {
   await sessions.create({ routeId, cityCode, boardingStopSequence: 4, destinationStopSequence: 9 });
   record(
     "confirmed-cadence-unknown",
-    "confirmed on the first poll: no cadence evidence yet, so no progress is shown",
+    "confirmed on the first poll: the bus the rider identified is followed at once; the matcher's cadence is still unknown and is published, not obeyed",
     await sessions.confirm("syn-session-early", { vehicleId: "SYN70가0611" }),
   );
 }
