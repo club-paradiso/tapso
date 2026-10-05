@@ -57,6 +57,8 @@ struct TapsoRootView: View {
             MapImportView(model: model)
         case .vehicleCheck:
             VehicleCheckView(model: model)
+        case .autoStart:
+            AutoStartGuideView()
         case .liveRoutes:
             LiveRouteSearchView(model: model)
         case let .liveStops(routeID):

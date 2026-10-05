@@ -499,3 +499,60 @@ final class RideAgainControlTests: XCTestCase {
         XCTAssertEqual(ShortcutInbox.shared.rideAgainRequests, before + 1)
     }
 }
+
+/// Shortcuts automations name a saved journey (`AUTO_START.md`, M2).
+@MainActor
+final class SavedJourneyEntityTests: XCTestCase {
+    private var defaults: UserDefaults!
+
+    override func setUp() async throws {
+        defaults = UserDefaults(suiteName: "SavedJourneyEntityTests")
+        defaults.removePersistentDomain(forName: "SavedJourneyEntityTests")
+        SavedJourneyQuery.store = JourneyStore(defaults: defaults)
+    }
+
+    override func tearDown() async throws {
+        SavedJourneyQuery.store = JourneyStore()
+        defaults.removePersistentDomain(forName: "SavedJourneyEntityTests")
+    }
+
+    private func journey(_ route: String, _ destination: String) -> SavedJourney {
+        SavedJourney(
+            routeID: RouteID(rawValue: "SYN-\(route)"),
+            routeNumber: route,
+            headsign: "합성 종점",
+            boardingStopID: StopID(rawValue: "SYN-B"),
+            boardingStopName: "합성 정류장",
+            destinationStopID: StopID(rawValue: "SYN-\(destination)"),
+            destinationStopName: destination,
+            lastRiddenAt: Date(timeIntervalSince1970: 0)
+        )
+    }
+
+    func testQueryResolvesSavedJourneysAndSuggestsFavouritesFirstOnce() async throws {
+        let a = journey("365", "합성 도착 A")
+        let b = journey("202", "합성 도착 B")
+        var library = JourneyLibrary()
+        library.recordRide(a, at: Date(timeIntervalSince1970: 200))
+        library.recordRide(b, at: Date(timeIntervalSince1970: 100))
+        _ = library.toggleFavorite(id: b.id)
+        SavedJourneyQuery.store.saveLibrary(library)
+
+        let resolved = try await SavedJourneyQuery().entities(for: [a.id, "missing"])
+        XCTAssertEqual(resolved.map(\.id), [a.id])
+        XCTAssertEqual(resolved.first?.label, "365 · 합성 정류장 → 합성 도착 A")
+
+        let suggested = try await SavedJourneyQuery().suggestedEntities()
+        XCTAssertEqual(suggested.first?.id, b.id)
+        XCTAssertEqual(Set(suggested.map(\.id)), [a.id, b.id])
+        XCTAssertEqual(suggested.count, 2)
+    }
+
+    func testRideAgainIntentPassesTheChosenJourney() async throws {
+        var intent = RideAgainIntent()
+        intent.journey = SavedJourneyEntity(journey("365", "합성 도착 A"))
+        _ = try await intent.perform()
+        XCTAssertEqual(ShortcutInbox.shared.requestedJourneyID, journey("365", "합성 도착 A").id)
+        ShortcutInbox.shared.requestedJourneyID = nil
+    }
+}

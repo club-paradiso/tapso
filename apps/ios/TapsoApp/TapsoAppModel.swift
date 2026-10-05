@@ -33,6 +33,8 @@ enum SetupStep: Hashable {
     case liveStops(routeID: String)
     /// Destination-first on the canonical catalog: the variants that reach a place.
     case catalogRoutes(placeName: String)
+    /// "자동으로 시작하기": Shortcuts automation recipes (`AUTO_START.md`, M2).
+    case autoStart
 }
 
 /// A destination chosen from the canonical catalog. The live stop list opens with it fixed,
@@ -698,15 +700,22 @@ final class TapsoAppModel {
         beginVehicleCheck()
     }
 
-    /// From the "다시 타기" App Shortcut: the last ride, or search when there is none.
+    /// From the "다시 타기" App Shortcut, control or automation: the journey it
+    /// named, else the last ride, else search.
     func rideAgainFromShortcut() {
         guard !hasActiveRide else { return }
         outcome = nil
-        if let last = library.lastRide {
-            rideAgain(last)
+        let requested = ShortcutInbox.shared.requestedJourneyID.flatMap { library.journey(id: $0) }
+        ShortcutInbox.shared.requestedJourneyID = nil
+        if let journey = requested ?? library.lastRide {
+            rideAgain(journey)
         } else {
             openSearch()
         }
+    }
+
+    func openAutoStartGuide() {
+        path = [.autoStart]
     }
 
     func toggleFavorite(_ journey: SavedJourney) {

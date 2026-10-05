@@ -36,6 +36,7 @@ final class SnapshotEvidenceTests: XCTestCase {
             ("06-boarding-stop", AnyView(BoardingStopContent(route: DemoCatalog.outbound, destination: DemoCatalog.outbound.stops[8], onChoose: { _ in }))),
             ("07-map-import", AnyView(MapImportContent(place: nil, paste: AnyView(pastePlaceholder), onChooseDemo: { _ in }, onSearch: {}))),
             ("08-map-import-found", AnyView(MapImportContent(place: sharedPlace, demoMatches: ["제주시청(아라방면)"], paste: AnyView(pastePlaceholder), onChooseDemo: { _ in }, onSearch: {}))),
+            ("08b-auto-start-guide", AnyView(AutoStartGuideContent(onOpenShortcuts: {}))),
             ("09-check-searching", check(.evaluate(proposals: [], hasSearched: false))),
             ("10-check-proposed", check(.evaluate(proposals: DemoCatalog.proposals(for: .smooth, route: DemoCatalog.outbound), hasSearched: true))),
             ("11-check-similar-buses", check(.evaluate(proposals: DemoCatalog.proposals(for: .similarBuses, route: DemoCatalog.outbound), hasSearched: true))),

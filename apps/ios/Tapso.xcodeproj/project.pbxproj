@@ -84,6 +84,7 @@
 		A573345F7E44EBD980F707BE /* ShortcutInbox.swift in Sources */ = {isa = PBXBuildFile; fileRef = DA5BC3BF98153B4CED44933B /* ShortcutInbox.swift */; };
 		B0C8973287FB766CBDC41B9C /* ShortcutInbox.swift in Sources */ = {isa = PBXBuildFile; fileRef = DA5BC3BF98153B4CED44933B /* ShortcutInbox.swift */; };
 		BC537E74602056783FF8F8A4 /* RideAgainControl.swift in Sources */ = {isa = PBXBuildFile; fileRef = F50D3A8DC28E981BCD5CF414 /* RideAgainControl.swift */; };
+		4529FC35F853D45B55597C98 /* AutoStartGuideView.swift in Sources */ = {isa = PBXBuildFile; fileRef = ABFD8AA3417276C50E02F62B /* AutoStartGuideView.swift */; };
 /* End PBXBuildFile section */
 
 /* Begin PBXContainerItemProxy section */
@@ -190,6 +191,7 @@
 		C6E05EE62093C184B4EE9E8F /* RideAgainOpenIntent.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = RideAgainOpenIntent.swift; sourceTree = "<group>"; };
 		DA5BC3BF98153B4CED44933B /* ShortcutInbox.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = ShortcutInbox.swift; sourceTree = "<group>"; };
 		F50D3A8DC28E981BCD5CF414 /* RideAgainControl.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = RideAgainControl.swift; sourceTree = "<group>"; };
+		ABFD8AA3417276C50E02F62B /* AutoStartGuideView.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = AutoStartGuideView.swift; sourceTree = "<group>"; };
 /* End PBXFileReference section */
 
 /* Begin PBXFrameworksBuildPhase section */
@@ -300,6 +302,7 @@
 			isa = PBXGroup;
 			children = (
 				0536FBEED2B9B31942781186 /* AppComponents.swift */,
+				ABFD8AA3417276C50E02F62B /* AutoStartGuideView.swift */,
 				B22F19D0E9218D35C723520C /* CatalogSearchViews.swift */,
 				40E4AA7B89142869EB276D08 /* DemoControlsView.swift */,
 				8A4DC107A685A8022F94C559 /* HomeView.swift */,
@@ -558,6 +561,7 @@
 			buildActionMask = 2147483647;
 			files = (
 				8F65C63671DC8F13C4B219C8 /* AppComponents.swift in Sources */,
+				4529FC35F853D45B55597C98 /* AutoStartGuideView.swift in Sources */,
 				27D3B0A355DC8BCC07907E1D /* BrandWordmark.swift in Sources */,
 				21314EBAC48BF9850B409EF3 /* CatalogSearchViews.swift in Sources */,
 				3CC3ABC68AFD26260A4BD353 /* DemoControlsView.swift in Sources */,

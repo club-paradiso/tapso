@@ -8,4 +8,6 @@ import Observation
 final class ShortcutInbox {
     static let shared = ShortcutInbox()
     var rideAgainRequests = 0
+    /// The saved journey a Shortcuts automation asked for; `nil` means the last ride.
+    var requestedJourneyID: String?
 }
