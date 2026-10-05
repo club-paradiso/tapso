@@ -225,3 +225,16 @@ This is option 2 of issue #80 (the approach of the closed #77), applied on the s
 ## Variants that share one stop list under two route IDs stay separate (2026-10-03)
 
 **Decision:** the first catalog build (`794f3bcb831d783e`) lists 32 stop lists twice under one number with two provider route IDs (e.g. 202 `JEB405320213` and `JEB405320237`). Live positions are read per route ID, so the two are kept as separate variants: `DestinationSearchIndex.routeOptions(to:)` numbers same-ended variants no stop tells apart (`DestinationRouteOption.twin`, in route ID order), the route choice screen labels them "같은 정류장을 도는 별도 운행 n/m" and tells the rider to come back and choose the other if their bus does not appear, and the readiness audit warns on both. *Rejected:* merging them (the session would read one route ID and miss the other's buses); hiding one (no source says which runs); reading both IDs in one session (doubles provider reads and changes the server's matching input, which this slice does not touch).
+
+## 2026-10-06: Route choice is boarding-first
+
+**Context:** on a device, the destination-first route screen ("어떤 버스를 탈까요?") listed every variant reaching the destination by terminus and origin ("신사동 방면 · 한라병원 출발 · 1곳에서 탈 수 있어요"), before the rider had said where they board. The owner found it very hard to use.
+
+**Decision:** setup goes destination → **어디서 타요?** (only stops from which a variant reaches the destination later on its list: search, 최근 탄 곳, an optional one-shot "내 근처") → **the buses from there to there** (`DestinationSearchIndex.trips(from:to:)`: one option per variant, the shortest ride on a loop). Each bus shows its ride length and where its nearest bus is now (`/v1/vehicles`, `StopNudge.nearestStopsAway`). The list is sorted soonest first, and the first is marked 가장 빨리 와요. Choosing one loads the server's current stop list and, when it confirms both ends at the same sequences, goes straight to the vehicle check.
+
+Twins (the decision above) stay separate and are labelled "같은 길을 도는 별도 운행 n/m". The live column usually shows which of the two has a bus.
+
+*Rejected:*
+- keeping the variant list and adding live data to it (the rider still has to read origins and termini);
+- ordering boarding stops by location by default (location stays optional: "내 근처" is a button, and one sample is never kept or sent).
+

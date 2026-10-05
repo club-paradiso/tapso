@@ -86,6 +86,7 @@
 		BC537E74602056783FF8F8A4 /* RideAgainControl.swift in Sources */ = {isa = PBXBuildFile; fileRef = F50D3A8DC28E981BCD5CF414 /* RideAgainControl.swift */; };
 		4529FC35F853D45B55597C98 /* AutoStartGuideView.swift in Sources */ = {isa = PBXBuildFile; fileRef = ABFD8AA3417276C50E02F62B /* AutoStartGuideView.swift */; };
 		DFE64596386385FB792ED2A5 /* StopNudgeController.swift in Sources */ = {isa = PBXBuildFile; fileRef = 9E99E6802828197D6A068162 /* StopNudgeController.swift */; };
+		687C453830C42053B292CF3C /* BoardingFirstViews.swift in Sources */ = {isa = PBXBuildFile; fileRef = 33BDF9583F4139C5640E9DBA /* BoardingFirstViews.swift */; };
 /* End PBXBuildFile section */
 
 /* Begin PBXContainerItemProxy section */
@@ -194,6 +195,7 @@
 		F50D3A8DC28E981BCD5CF414 /* RideAgainControl.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = RideAgainControl.swift; sourceTree = "<group>"; };
 		ABFD8AA3417276C50E02F62B /* AutoStartGuideView.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = AutoStartGuideView.swift; sourceTree = "<group>"; };
 		9E99E6802828197D6A068162 /* StopNudgeController.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = StopNudgeController.swift; sourceTree = "<group>"; };
+		33BDF9583F4139C5640E9DBA /* BoardingFirstViews.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = BoardingFirstViews.swift; sourceTree = "<group>"; };
 /* End PBXFileReference section */
 
 /* Begin PBXFrameworksBuildPhase section */
@@ -305,6 +307,7 @@
 			children = (
 				0536FBEED2B9B31942781186 /* AppComponents.swift */,
 				ABFD8AA3417276C50E02F62B /* AutoStartGuideView.swift */,
+				33BDF9583F4139C5640E9DBA /* BoardingFirstViews.swift */,
 				B22F19D0E9218D35C723520C /* CatalogSearchViews.swift */,
 				40E4AA7B89142869EB276D08 /* DemoControlsView.swift */,
 				8A4DC107A685A8022F94C559 /* HomeView.swift */,
@@ -565,6 +568,7 @@
 			files = (
 				8F65C63671DC8F13C4B219C8 /* AppComponents.swift in Sources */,
 				4529FC35F853D45B55597C98 /* AutoStartGuideView.swift in Sources */,
+				687C453830C42053B292CF3C /* BoardingFirstViews.swift in Sources */,
 				27D3B0A355DC8BCC07907E1D /* BrandWordmark.swift in Sources */,
 				21314EBAC48BF9850B409EF3 /* CatalogSearchViews.swift in Sources */,
 				3CC3ABC68AFD26260A4BD353 /* DemoControlsView.swift in Sources */,

@@ -63,8 +63,10 @@ struct TapsoRootView: View {
             LiveRouteSearchView(model: model)
         case let .liveStops(routeID):
             LiveStopPickerView(model: model, routeID: routeID)
-        case let .catalogRoutes(placeName):
-            CatalogRouteSelectView(model: model, placeName: placeName)
+        case let .catalogBoarding(placeName):
+            CatalogBoardingView(model: model, placeName: placeName)
+        case let .catalogTrips(placeName, boardingName):
+            CatalogTripsView(model: model, placeName: placeName, boardingName: boardingName)
         }
     }
 }

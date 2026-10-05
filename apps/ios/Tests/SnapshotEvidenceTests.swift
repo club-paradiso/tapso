@@ -108,11 +108,14 @@ final class SnapshotEvidenceTests: XCTestCase {
             ))),
             ("38-catalog-search", AnyView(CatalogDestinationSearchContent(query: "", index: catalogIndex, recentNames: ["합성시청[동]"], generatedAt: "2026-10-03T00:00:00.000Z", onChoose: { _ in }))),
             ("39-catalog-results", AnyView(CatalogDestinationSearchContent(query: "합성", index: catalogIndex, recentNames: [], generatedAt: "2026-10-03T00:00:00.000Z", onChoose: { _ in }))),
-            ("40-catalog-route-select", AnyView(CatalogRouteSelectContent(
+            ("40-catalog-boarding", AnyView(CatalogBoardingContent(
                 placeName: "합성대학교",
-                groups: catalogIndex.routeOptions(to: catalogIndex.places.first { $0.name == "합성대학교" }!),
+                places: catalogIndex.boardingPlaces(toward: catalogIndex.places.first { $0.name == "합성대학교" }!),
+                query: "",
+                recentNames: ["합성터미널"],
                 onChoose: { _ in }
             ))),
+            ("40b-catalog-trips", catalogTrips()),
             ("41-stop-picker-fixed-destination", stopPickerWithFixedDestination()),
             ("42-timetable-today", AnyView(TimetableCard(routeNumber: "202", load: .loaded(timetable(Self.timetableToday)), onLoad: {}, onShowAll: { _ in }).padding())),
             ("43-timetable-unavailable", AnyView(TimetableCard(routeNumber: "999", load: .loaded(timetable(Self.timetableNone)), onLoad: {}, onShowAll: { _ in }).padding())),
@@ -240,6 +243,22 @@ final class SnapshotEvidenceTests: XCTestCase {
                 .init(routeId: "SYN510A", routeNo: "510", start: "합성공항", end: "합성대학교", stops: [4, 3]),
                 .init(routeId: "SYN510B", routeNo: "510", start: "합성공항", end: "합성대학교", stops: [4, 3]),
             ]
+        ))
+    }
+
+    /// Boarding-first trips with live arrivals of every kind.
+    private func catalogTrips() -> AnyView {
+        let index = catalogIndex
+        let destination = index.places.first { $0.name == "합성대학교" }!
+        let boarding = index.boardingPlaces(toward: destination).first { $0.name == "합성터미널" }!
+        let trips = index.trips(from: boarding, to: destination)
+        var arrivals: [String: TripArrival] = [:]
+        for (offset, trip) in trips.enumerated() {
+            arrivals[trip.id] = [TripArrival.stopsAway(3), .noneNearby, .loading, .stopsAway(0)][offset % 4]
+        }
+        return AnyView(CatalogTripsContent(
+            boardingName: boarding.name, placeName: destination.name,
+            trips: TripArrival.soonestFirst(trips, arrivals: arrivals), arrivals: arrivals, onChoose: { _ in }
         ))
     }
 
