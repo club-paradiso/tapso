@@ -383,7 +383,7 @@ struct RideHeroCard: View {
         .frame(maxWidth: .infinity, alignment: .leading)
         .background(TapsoColor.backgroundSecondary, in: RoundedRectangle(cornerRadius: TapsoRadius.hero, style: .continuous))
         .overlay(alignment: .topTrailing) {
-            DolBuddy(moment: guidance.moment, size: 34)
+            DolBuddy(moment: guidance.moment, size: 34, animated: true)
                 .padding(TapsoSpace.md)
         }
         .accessibilityElement(children: .ignore)

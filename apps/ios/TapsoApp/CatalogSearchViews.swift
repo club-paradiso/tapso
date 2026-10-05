@@ -48,7 +48,7 @@ struct CatalogDestinationSearchContent: View {
                     tint: TapsoColor.textTertiary
                 )
             } else {
-                section("search.results", places: results, symbol: "mappin.circle.fill")
+                section("search.results", places: results, symbol: "mappin")
             }
             Label {
                 Text(String(format: RideText.string(refreshFailed ? "search.catalog.asOfStale" : "search.catalog.asOf"), Self.day(generatedAt)))

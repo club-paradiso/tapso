@@ -20,11 +20,16 @@ struct LiveRideEntryCard: View {
                     .frame(width: 40, height: 40)
                     .background(TapsoColor.journeyActive.opacity(0.14), in: RoundedRectangle(cornerRadius: TapsoRadius.sm, style: .continuous))
                 VStack(alignment: .leading, spacing: 2) {
-                    HStack(spacing: TapsoSpace.xs) {
-                        Text("live.entry.title")
-                            .font(.body.weight(.semibold))
-                            .foregroundStyle(TapsoColor.textPrimary)
-                        LiveBadge()
+                    // On a narrow phone the badge drops below the title instead of breaking it.
+                    ViewThatFits(in: .horizontal) {
+                        HStack(spacing: TapsoSpace.xs) {
+                            entryTitle
+                            LiveBadge()
+                        }
+                        VStack(alignment: .leading, spacing: TapsoSpace.xxs) {
+                            entryTitle
+                            LiveBadge()
+                        }
                     }
                     Text("live.entry.body")
                         .font(.footnote)
@@ -43,6 +48,14 @@ struct LiveRideEntryCard: View {
         }
         .buttonStyle(.plain)
         .accessibilityIdentifier("live-ride-entry")
+    }
+
+    private var entryTitle: some View {
+        Text("live.entry.title")
+            .font(.body.weight(.semibold))
+            .foregroundStyle(TapsoColor.textPrimary)
+            .lineLimit(1)
+            .fixedSize()
     }
 }
 

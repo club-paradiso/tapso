@@ -55,7 +55,12 @@ struct VehicleCheckContent: View {
 
             VStack(alignment: .leading, spacing: TapsoSpace.xs) {
                 HStack(spacing: TapsoSpace.sm) {
-                    DolBuddy(moment: check.stage == .proposed || check.stage == .confirmed ? .riding : .checking, size: 32)
+                    // Proposed: 돌이 looks at the rider, who checks the plate. Confirmed: it can rest.
+                    DolBuddy(
+                        expression: check.stage == .confirmed ? .ride(.riding) : check.stage == .proposed ? .awake : .ride(.checking),
+                        size: 32,
+                        animated: true
+                    )
                     Text(LocalizedStringKey(check.headlineKey))
                         .font(.title2.weight(.bold))
                         .foregroundStyle(TapsoColor.textPrimary)

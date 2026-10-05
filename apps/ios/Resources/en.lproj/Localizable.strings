@@ -17,6 +17,12 @@
 "home.sample.body" = "Ride from 제주버스터미널 to 제주시청(아라방면) and follow every step, from finding the bus to getting off.";
 "home.sample.action" = "Try the sample ride";
 "home.privacy" = "TAPSO tracks the bus, not you. No location permission needed.";
+"home.intro.title" = "Just tell us where you get off";
+"home.intro.body" = "Once your bus is confirmed, 돌이 watches the stops until you get off.";
+"home.intro.step1" = "Your stop";
+"home.intro.step2" = "Confirm the bus";
+"home.intro.step3" = "Phone away";
+"home.otherWays" = "Other ways to start";
 "favorite.add" = "Add to favorites";
 "favorite.remove" = "Remove from favorites";
 "favorite.from" = "From %@";

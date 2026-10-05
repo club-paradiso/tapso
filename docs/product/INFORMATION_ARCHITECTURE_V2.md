@@ -16,15 +16,24 @@ Home ──▶ Setup (pushed) ──▶ Ride (replaces setup) ──▶ End (rep
 
 ## Home — "어디서 내릴까요?"
 
-Priority order (`HomeContent`):
+Priority order (`HomeContent`). A first-run question with no context ("어디서 내릴까요?" as the first thing a new rider sees) read as a quiz on a device, so Home now differs by whether the rider has ridden before:
 
-1. The question and a search field (opens search; typing happens on the next screen, so Home never raises a keyboard).
-2. Recent destinations as chips — one tap starts destination-first setup at that stop.
-3. **최근 여정** — the most recent ride with **다시 타기**, which goes straight to the bus check. The star saves it as a favourite.
-4. **즐겨찾기** — other favourites, one tap each.
-5. **지도 앱에서 가져오기** — paste intake.
-6. First run only: **처음이라면** — the sample ride, because the app has no live data.
-7. The privacy promise: no location permission.
+First ride (no recent journey):
+
+1. **내릴 곳만 알려 주세요** (`HomeIntroCard`): an awake, blinking 돌이, one line of promise, and the three steps of the product: 내릴 정류장 → 탈 버스 확인 → 폰은 주머니에.
+2. The search field (opens search; typing happens on the next screen, so Home never raises a keyboard).
+
+Returning rider:
+
+1. **최근 여정**: the most recent ride with **다시 타기**, which goes straight to the bus check. The star saves it as a favourite.
+2. The question **어디서 내릴까요?**, the search field and recent destinations as chips; one tap starts destination-first setup at that stop.
+
+Both:
+
+3. **즐겨찾기**: other favourites, one tap each.
+4. **다른 방법으로 시작**: **버스 번호로 타기** (live, beta) and **지도 앱에서 가져오기** (paste intake), grouped as alternatives to the search rather than peers of it.
+5. Demo builds, first run only: **처음이라면**, the sample ride.
+6. The privacy promise: no location permission.
 
 Not on Home: news, promotions, a map, nearby stops, dashboards.
 
