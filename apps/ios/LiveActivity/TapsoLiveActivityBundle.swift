@@ -6,5 +6,8 @@ struct TapsoLiveActivityBundle: WidgetBundle {
     var body: some Widget {
         TapsoLiveActivityWidget()
         TapsoReturnActivityWidget()
+        if #available(iOS 18.0, *) {
+            RideAgainControl()
+        }
     }
 }

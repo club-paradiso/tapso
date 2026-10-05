@@ -444,3 +444,9 @@
 "route.timetable.sheet.conditional" = "* 계절·장날·수요응답처럼 조건이 붙은 운행이에요";
 "route.timetable.sheet.noDay" = "요일 구분 없음";
 "route.timetable.sheet.effective" = "시행일 %@";
+"control.rideAgain.title" = "탑서 다시 타기";
+"control.rideAgain.label" = "다시 타기";
+"control.rideAgain.displayName" = "탑서 다시 타기";
+"control.rideAgain.description" = "마지막 여정의 버스 확인으로 바로 가요.";
+"control.rideAgain.target" = "여는 곳";
+"control.rideAgain.lastRide" = "마지막 여정";

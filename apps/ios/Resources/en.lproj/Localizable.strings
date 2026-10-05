@@ -444,3 +444,9 @@
 "route.timetable.sheet.conditional" = "* Runs only under a condition (season, market day, on demand)";
 "route.timetable.sheet.noDay" = "No day type stated";
 "route.timetable.sheet.effective" = "In effect from %@";
+"control.rideAgain.title" = "Ride again with TAPSO";
+"control.rideAgain.label" = "Ride again";
+"control.rideAgain.displayName" = "TAPSO Ride Again";
+"control.rideAgain.description" = "Goes straight to the bus check for your last ride.";
+"control.rideAgain.target" = "Destination";
+"control.rideAgain.lastRide" = "Last ride";
