@@ -41,16 +41,21 @@ Sources are Apple's primary documentation, read on 2026-10-05. `UNVERIFIED` mean
 
 Each milestone ships alone and is useful alone. They are ordered by how little they ask of the rider and of the Apple account.
 
-### M1. One press, app closed — `NOT_STARTED`
+### M1a. One press to the vehicle check — `IN_REVIEW` (PR #124)
 
 No new permission, no APNs.
 
-1. `StartLastRideIntent: LiveActivityIntent`. It creates the server session for the last saved journey, starts the Live Activity in the **checking** moment ("365번 찾는 중"), and leaves the app closed (C6).
-2. A `ControlWidgetButton` "탑서 · 다시 타기" for Control Center, the Lock Screen and the Action button (C7).
-3. The same intent in `TapsoShortcuts`, so Siri, Spotlight and the Shortcuts app can run it (C8).
-4. The bus proposal reaches the rider without opening the app: an alert update on the activity ("이 버스 맞아요? ••6639"). The tap opens the vehicle check at that proposal. Confirming from the Lock Screen itself waits for C15.
+- `RideAgainOpenIntent`, an `OpenIntent` compiled into the app and the widget extension. Apple requires both: "The system requires the Target Membership of the app intent to be set to both the app and the widget extension to open the app" ([Creating controls](https://developer.apple.com/documentation/widgetkit/creating-controls-to-perform-actions-across-the-system)).
+- `RideAgainControl`, an iOS 18 `ControlWidgetButton` "다시 타기", for Control Center, the Lock Screen and the Action button (C7).
+- One press opens TAPSO at the vehicle check for the last ride. With no saved ride it opens search.
 
-**Done when:** on the iPhone, with TAPSO closed, the Action button or the Control Center button starts the activity within 3 s; the activity shows checking, then the proposal; one tap reaches the vehicle check with that bus; a test proves the intent refuses when there is no saved journey and says why. Evidence: a screen recording and the test names.
+**Done when:** on the iPhone, the control is added to Control Center (and the Action button set to it); one press with TAPSO closed lands on the vehicle check of the last ride. Evidence: a screen recording. Tests: `RideAgainControlTests`.
+
+### M1b. One press, app closed — `BLOCKED_BY_APPLE_ACCOUNT`
+
+`StartLastRideIntent: LiveActivityIntent` starts the Live Activity in **checking** without opening the app (C6). The bus proposal then reaches the Lock Screen as an alert update.
+
+This is deferred, not dropped. Without APNs (C13) the activity stops updating when the app is suspended and reads "확인 중" after 120 s (`KNOWN_ISSUES.md`). An activity that freezes is worse than opening the app (M1a). It ships with M4's APNs work. Confirming from the Lock Screen also waits for C15.
 
 ### M2. The rider's own automation — `NOT_STARTED`
 
@@ -105,7 +110,7 @@ This waits until the matcher passes `READY_FOR_BOUNDED_AUTOMATION` (≥ 300 traj
   - Core Motion "in a vehicle": cannot wake the app (C11);
   - in-bus NFC or beacons: needs an operator.
 - **D2 (owner).** Is opt-in, saved-stop-only region monitoring with Always permission acceptable under principle 9? Recommendation: **yes, as M3**. It is off by default, monitors stops rather than the rider, keeps location on the device, and leaves every feature working without it. If the answer is no, M3 is dropped and M2's Shortcuts "Arrive" recipe covers the same moment, with Shortcuts holding the location instead.
-- **D3 (taken).** Ship order: M1 → M2 → M3, with M4 as soon as the account allows. M1 and M2 need nothing from Apple and nothing from the rider beyond a button.
+- **D3 (taken).** Ship order: M1a → M2 → M3, with M1b and M4 as soon as the account allows APNs. M1a and M2 need nothing from Apple and nothing from the rider beyond a button.
 
 ## 5. Reproduction and evidence
 
@@ -129,4 +134,5 @@ Intents, controls and Live Activity starts only prove themselves on a device. A 
   - The Personal Team may not provision Control widgets or time-sensitive notifications. Check before M1 or M3 respectively.
   - Starting a Live Activity from an intent may be throttled, or may fail when Live Activities are off (`areActivitiesEnabled`). Say so in the UI instead of failing silently.
   - Region events can be minutes late (C3), so a bus that is already at the stop is missed. M3's notification must name the bus after it when the nearest one is already at the stop.
-- **Exact next action:** verify C15 and `ControlWidget` provisioning on the Personal Team, then start M1 with `StartLastRideIntent` and its refusal test.
+- 2026-10-05: M1a in PR #124 (control + `OpenIntent`), 95 iOS tests green in the simulator. On the device: not yet proven.
+- **Exact next action:** on the iPhone, add "탑서 다시 타기" to Control Center and record one press from the Lock Screen to the vehicle check (M1a evidence); then M2's recipe screen.
