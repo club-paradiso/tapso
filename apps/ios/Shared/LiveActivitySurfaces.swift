@@ -193,6 +193,8 @@ struct IslandCompactLeading: View {
             Text(verbatim: attributes.routeNumber)
                 .font(.caption.weight(.heavy))
                 .monospacedDigit()
+                .lineLimit(1)
+                .minimumScaleFactor(0.7)
                 .foregroundStyle(TapsoColor.journey(guidance.colorRole))
         }
         .accessibilityElement(children: .ignore)
@@ -220,6 +222,7 @@ struct IslandCompactTrailing: View {
                         .font(.system(size: 9, weight: .black))
                     Text(LocalizedStringKey(compact))
                         .lineLimit(1)
+                        .minimumScaleFactor(0.8)
                     if guidance.moment == .prepare {
                         Text(state.remainingStops, format: .number)
                             .fontWeight(.black)
@@ -307,15 +310,22 @@ struct IslandMinimal: View {
 
     var body: some View {
         let style = style
-        HStack(spacing: 1.5) {
-            Image(systemName: style.symbol)
-                .font(.system(size: style.count == nil ? 14 : 9, weight: .black))
+        // Minimal is a circle of about 36 pt with 26–28 pt usable (05B evidence), and iOS
+        // gives TAPSO this circle whenever music or another activity owns the island.
+        // A glyph and a numeral side by side truncated there to "🚌 …" on a device
+        // (2026-10-05), so the glyph sits above the numeral, and a numeral that still
+        // does not fit drops the glyph: the count is what the rider needs.
+        ViewThatFits {
             if let count = style.count {
-                Text(verbatim: count)
-                    .font(.system(size: 14, weight: .black, design: .rounded))
-                    .monospacedDigit()
-                    .opacity(style.dimmed ? RemainingOrSymbol.lastKnownOpacity : 1)
-                    .contentTransition(.numericText())
+                VStack(spacing: -2) {
+                    Image(systemName: style.symbol)
+                        .font(.system(size: 7, weight: .black))
+                    countText(count, style: style, size: 12.5)
+                }
+                countText(count, style: style, size: 14)
+            } else {
+                Image(systemName: style.symbol)
+                    .font(.system(size: 14, weight: .black))
             }
         }
         .foregroundStyle(style.foreground)
@@ -331,6 +341,16 @@ struct IslandMinimal: View {
         .accessibilityElement(children: .ignore)
         .accessibilityLabel(Text(minimalAccessibilityLabel(attributes, state, guidance)))
         .accessibilityHint(Text("a11y.island.hint"))
+    }
+
+    private func countText(_ count: String, style: IslandMinimalStyle, size: CGFloat) -> some View {
+        Text(verbatim: count)
+            .font(.system(size: size, weight: .black, design: .rounded))
+            .monospacedDigit()
+            .lineLimit(1)
+            .minimumScaleFactor(0.6)
+            .opacity(style.dimmed ? RemainingOrSymbol.lastKnownOpacity : 1)
+            .contentTransition(.numericText())
     }
 }
 

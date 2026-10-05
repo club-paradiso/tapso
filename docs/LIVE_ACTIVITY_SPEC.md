@@ -13,7 +13,7 @@ The activity starts only after the rider confirms the bus; there is no Live Acti
 - **Lock Screen:** route badge and destination; the moment's headline and detail; the count (or, when withheld, the moment's symbol); a progress rail ending at the tangerine destination. A data badge appears only when data is not live; 돌이 appears while riding. The surface is basalt while riding and in every uncertain state, turns **coral at the next stop** and **tangerine on arrival** (`activityBackgroundTint`). The coral surface has no rail, which would vanish coral-on-coral; the destination name carries it.
 - **Compact leading:** 돌이 (expression by moment) and the route number in the moment colour. VoiceOver hint: touch and hold for details.
 - **Compact trailing:** while riding, the count and "정거장"; otherwise a pill with symbol and word — 준비 2, 다음 하차, 내려요, 지났어요, 지연, 찾는 중, 오프라인, 확인 중.
-- **Minimal:** the live count, else the moment symbol.
+- **Minimal:** the moment glyph stacked above the live count, else the moment symbol alone. The content area is about 26 pt inside the 36–37 pt circle; when a count still does not fit, the glyph drops and the count stays (`ViewThatFits`). Side by side, a two-digit count truncated on a device (18 drawn as "1", 2026-10-05), so the snapshot mocks now lay the minimal out in 26 pt.
 - **Expanded:** leading 돌이 + route; centre the eyebrow; trailing the count (dimmed and labelled 마지막 확인 when last-known) or symbol; bottom the headline, destination, rail or detail, and both trust badges (vehicle identity and data freshness, never merged).
 
 Counts are `live` for riding, prepare and next stop, `lastKnown` for delayed, lost and offline, and hidden for arrival, passed destination, checking and ended.
