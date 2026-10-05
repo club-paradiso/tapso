@@ -138,6 +138,10 @@ The basalt companion stays, smaller: 18–36 pt on ride surfaces, one expression
 | ended | smiling arcs |
 | delayed, vehicleLost, offline | squinting bars |
 
+Off the ride (Home, the wordmark, a proposed bus to check) 돌이 is **awake**: open eyes, looking at the rider.
+
+In the app 돌이 moves (`DolBuddy(animated: true)`, timings in `DolMotion`): open eyes blink every 4.2 s with a double blink every third time, checking glances side to side, resting eyes peek open for a second every 7 s ("still watching"), arrival hops, and the pebble breathes slightly. Live Activities draw the same face still, because ActivityKit allows only built-in transitions; Reduce Motion stills it everywhere.
+
 It is always decorative (`accessibilityHidden`), never larger than the count, never on its own screen, and never the only carrier of meaning. The app icon is 돌이 looking up at the tangerine destination dot (Figma `App Icon / B`, `289:36`), drawn as flat vectors in Figma: no texture, no generated imagery.
 
 ## What V2 removed

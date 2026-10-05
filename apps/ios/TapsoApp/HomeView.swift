@@ -2,7 +2,8 @@ import SwiftUI
 import TapsoTransit
 
 /// Home answers one question — where are you getting off? — and makes a
-/// repeat ride one tap. No map, no feed, no dashboard. Figma: `03 iOS — GO` › `V2 / 01 Home · first ride`
+/// repeat ride one tap. A first ride opens with what TAPSO does (`HomeIntroCard`);
+/// a returning rider sees the last ride first. No map, no feed, no dashboard. Figma: `03 iOS — GO` › `V2 / 01 Home · first ride`
 /// (`157:15`) and `V2 / 02 Home · recent & favourites` (`157:73`).
 struct HomeView: View {
     @Bindable var model: TapsoAppModel
@@ -47,15 +48,8 @@ struct HomeContent: View {
         VStack(alignment: .leading, spacing: TapsoSpace.xl) {
             header
 
-            VStack(alignment: .leading, spacing: TapsoSpace.md) {
-                QuestionTitle("home.question")
-                SearchFieldButton(action: onSearch)
-                if !library.recentDestinationNames.isEmpty {
-                    recentDestinations
-                }
-            }
-
             if let recent = library.recents.first {
+                // A returning rider: the fastest ride is the last one, so it leads.
                 VStack(alignment: .leading, spacing: TapsoSpace.sm) {
                     SectionTitle("home.recentJourney")
                     RecentJourneyCard(
@@ -63,6 +57,20 @@ struct HomeContent: View {
                         onRide: { onRideAgain(recent) },
                         onToggleFavorite: { onToggleFavorite(recent) }
                     )
+                }
+
+                VStack(alignment: .leading, spacing: TapsoSpace.md) {
+                    QuestionTitle("home.question")
+                    SearchFieldButton(action: onSearch)
+                    if !library.recentDestinationNames.isEmpty {
+                        recentDestinations
+                    }
+                }
+            } else {
+                // A first ride: say what TAPSO does before asking anything.
+                VStack(alignment: .leading, spacing: TapsoSpace.md) {
+                    HomeIntroCard()
+                    SearchFieldButton(action: onSearch)
                 }
             }
 
@@ -83,9 +91,12 @@ struct HomeContent: View {
                 }
             }
 
-            MapHandoffIntakeCard(pendingPlaceName: pendingPlaceName, action: onMapImport)
-
-            LiveRideEntryCard(action: onLive)
+            // The other two ways in are alternatives to the search, not peers of it.
+            VStack(alignment: .leading, spacing: TapsoSpace.sm) {
+                SectionTitle("home.otherWays")
+                LiveRideEntryCard(action: onLive)
+                MapHandoffIntakeCard(pendingPlaceName: pendingPlaceName, action: onMapImport)
+            }
 
             if showsDemo, library.recents.isEmpty {
                 firstRideCard
@@ -171,6 +182,64 @@ struct HomeContent: View {
                 Button("home.sample.action", action: onSample)
                     .buttonStyle(SecondaryButtonStyle())
                     .accessibilityIdentifier("start-demo-ride")
+            }
+        }
+    }
+}
+
+/// Home's first-ride card: what TAPSO does, in the rider's order, before the
+/// search asks anything. 돌이 is awake and blinks; the promise is one line and
+/// the three steps are the whole product. Figma: no Figma component yet; drawn inside the screens.
+struct HomeIntroCard: View {
+    var body: some View {
+        VStack(alignment: .leading, spacing: TapsoSpace.md) {
+            HStack(alignment: .center, spacing: TapsoSpace.md) {
+                DolBuddy(expression: .awake, size: 64, animated: true)
+                VStack(alignment: .leading, spacing: TapsoSpace.xxs) {
+                    Text("home.intro.title")
+                        .font(.title2.weight(.bold))
+                        .foregroundStyle(TapsoColor.textPrimary)
+                        .accessibilityAddTraits(.isHeader)
+                    Text("home.intro.body")
+                        .font(.subheadline)
+                        .foregroundStyle(TapsoColor.textSecondary)
+                }
+                .fixedSize(horizontal: false, vertical: true)
+            }
+
+            ViewThatFits(in: .horizontal) {
+                HStack(spacing: TapsoSpace.xs) { steps(separated: true) }
+                VStack(alignment: .leading, spacing: TapsoSpace.xs) { steps(separated: false) }
+            }
+            .accessibilityElement(children: .combine)
+        }
+        .padding(TapsoSpace.lg)
+        .frame(maxWidth: .infinity, alignment: .leading)
+        .background(TapsoColor.journeyActive.opacity(0.10), in: RoundedRectangle(cornerRadius: TapsoRadius.hero, style: .continuous))
+    }
+
+    private static let stepKeys: [LocalizedStringKey] = ["home.intro.step1", "home.intro.step2", "home.intro.step3"]
+
+    @ViewBuilder
+    private func steps(separated: Bool) -> some View {
+        ForEach(Array(Self.stepKeys.enumerated()), id: \.offset) { index, key in
+            if separated, index > 0 {
+                Image(systemName: "chevron.forward")
+                    .font(.caption2.weight(.bold))
+                    .foregroundStyle(TapsoColor.textTertiary)
+                    .accessibilityHidden(true)
+            }
+            HStack(spacing: 6) {
+                Text(verbatim: String(index + 1))
+                    .font(.system(.caption, design: .rounded, weight: .black))
+                    .foregroundStyle(TapsoColor.textOnAccent)
+                    .frame(width: 20, height: 20)
+                    .background(TapsoColor.journeyActive, in: Circle())
+                Text(key)
+                    .font(.footnote.weight(.semibold))
+                    .foregroundStyle(TapsoColor.textPrimary)
+                    .lineLimit(1)
+                    .fixedSize()
             }
         }
     }

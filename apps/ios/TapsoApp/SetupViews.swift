@@ -89,7 +89,7 @@ struct DestinationSearchContent: View {
                 if !recentNames.isEmpty {
                     section("search.recent", names: recentNames, symbol: "clock.arrow.circlepath")
                 }
-                section("search.allStops", names: DemoCatalog.destinationNames, symbol: "mappin.circle.fill")
+                section("search.allStops", names: DemoCatalog.destinationNames, symbol: "mappin")
                 Label("search.demoNote", systemImage: "testtube.2")
                     .font(.footnote)
                     .foregroundStyle(TapsoColor.textSecondary)
@@ -102,7 +102,7 @@ struct DestinationSearchContent: View {
                     tint: TapsoColor.textTertiary
                 )
             } else {
-                section("search.results", names: results, symbol: "mappin.circle.fill")
+                section("search.results", names: results, symbol: "mappin")
             }
         }
         .padding(.horizontal, TapsoSpace.gutter)

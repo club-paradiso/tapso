@@ -77,7 +77,7 @@ struct RideEndContent: View {
     var body: some View {
         VStack(alignment: .leading, spacing: TapsoSpace.xl) {
             VStack(alignment: .leading, spacing: TapsoSpace.sm) {
-                DolBuddy(moment: passed ? .passedDestination : .arrived, size: 56)
+                DolBuddy(moment: passed ? .passedDestination : .arrived, size: 56, animated: true)
                 Text(passed ? LocalizedStringKey("end.passed.title") : LocalizedStringKey("end.title"))
                     .font(.largeTitle.weight(.bold))
                     .foregroundStyle(TapsoColor.textPrimary)

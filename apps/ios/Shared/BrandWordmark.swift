@@ -25,7 +25,7 @@ struct BrandWordmark: View {
     var body: some View {
         HStack(spacing: TapsoSpace.xs) {
             if showsBuddy {
-                DolBuddy(moment: .riding, size: 28)
+                DolBuddy(expression: .awake, size: 28, animated: true)
             }
             Text(verbatim: TapsoBrand.wordmark)
                 .font(.system(textStyle, design: .rounded, weight: .black))

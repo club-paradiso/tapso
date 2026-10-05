@@ -451,3 +451,39 @@ final class RidePresentationTests: XCTestCase {
         )
     }
 }
+
+/// 돌이's motion is a pure function of time; these pin the timings the
+/// design names so a refactor cannot quietly freeze or speed it up.
+final class DolMotionTests: XCTestCase {
+    func testStillIsOpenAndUnmoved() {
+        XCTAssertEqual(DolMotion.still, DolMotion())
+        XCTAssertEqual(DolMotion.still.openness, 1)
+    }
+
+    func testAwakeBlinksOncePerPeriodAndDoublesEveryThird() {
+        let period = DolMotion.blinkPeriod
+        XCTAssertLessThan(DolMotion.blink(at: DolMotion.blinkDuration / 2), 0.1)
+        XCTAssertEqual(DolMotion.blink(at: period / 2), 1)
+        // Third cycle: a second blink 0.28 s after the first.
+        XCTAssertLessThan(DolMotion.blink(at: period * 2 + 0.28 + DolMotion.blinkDuration / 2), 0.1)
+        XCTAssertEqual(DolMotion.blink(at: 0.28 + DolMotion.blinkDuration / 2), 1)
+    }
+
+    func testRidingRestsThenPeeks() {
+        XCTAssertFalse(DolMotion(expression: .ride(.riding), time: 1).peeking)
+        XCTAssertTrue(DolMotion(expression: .ride(.riding), time: DolMotion.peekStart + 0.5).peeking)
+    }
+
+    func testCheckingGlancesBothWays() {
+        XCTAssertGreaterThan(DolMotion(expression: .ride(.checking), time: 0.45).glance, 3)
+        XCTAssertLessThan(DolMotion(expression: .ride(.checking), time: 1.35).glance, -3)
+    }
+
+    func testArrivalHopsAndUncertainStaysStill() {
+        XCTAssertLessThan(DolMotion(expression: .ride(.arrived), time: DolMotion.hopDuration / 2).hop, -4)
+        let lost = DolMotion(expression: .ride(.vehicleLost), time: 0.08)
+        XCTAssertEqual(lost.openness, 1)
+        XCTAssertEqual(lost.glance, 0)
+        XCTAssertEqual(lost.hop, 0)
+    }
+}
