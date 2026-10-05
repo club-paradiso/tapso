@@ -163,8 +163,19 @@ final class SnapshotEvidenceTests: XCTestCase {
                 name: "la-lockscreen-\(name)", width: 370, scheme: .dark, background: .black
             )
             try render(in: directory, AnyView(IslandCompactMock(attributes: attributes, state: state, isStale: isStale)), name: "di-compact-\(name)", width: 300, scheme: .dark, background: .white)
-            try render(in: directory, AnyView(IslandMinimalMock(state: state, isStale: isStale)), name: "di-minimal-\(name)", width: 60, scheme: .dark, background: .white)
+            try render(in: directory, AnyView(IslandMinimalMock(attributes: attributes, state: state, isStale: isStale)), name: "di-minimal-\(name)", width: 60, scheme: .dark, background: .white)
             try render(in: directory, AnyView(IslandExpandedMock(attributes: attributes, state: state, isStale: isStale)), name: "di-expanded-\(name)", width: 380, scheme: .dark, background: .white)
+        }
+        // V3 coexistence evidence: the minimal circle at every count the gate names, and beside a
+        // Now Playing mock (music owns the compact pair; TAPSO is the circle on its right).
+        for (name, state) in [
+            ("v3-18", self.state(.active, 18)), ("v3-12", self.state(.active, 12)), ("v3-8", self.state(.active, 8)),
+            ("v3-2", self.state(.approachingDestination, 2)), ("v3-1", self.state(.nextStopIsDestination, 1)),
+            ("v3-arrival", self.state(.arrived, 0)), ("v3-estimated", self.state(.active, 8, estimated: true)),
+            ("v3-rechecking", self.state(.active, 8, freshness: .aging)), ("v3-lost", self.state(.vehicleTemporarilyLost, 8)),
+        ] {
+            try render(in: directory, AnyView(IslandMinimalMock(attributes: attributes, state: state, isStale: false)), name: "di-minimal-\(name)", width: 60, scheme: .dark, background: .white)
+            try render(in: directory, AnyView(MusicCoexistenceMock(attributes: attributes, state: state)), name: "di-music-\(name)", width: 360, scheme: .dark, background: .white)
         }
         // "돌아갈 시간": counting down, then past the time to be at the stop. The timer runs from now.
         let countdown = TapsoReturnAttributes.ContentState(startedAt: Date(), beAtStopBy: Date().addingTimeInterval(83 * 60))
@@ -406,7 +417,8 @@ final class SnapshotEvidenceTests: XCTestCase {
         _ remaining: Int,
         freshness: DataFreshness = .fresh,
         passed: Bool = false,
-        offline: Bool = false
+        offline: Bool = false,
+        estimated: Bool = false
     ) -> TapsoActivityAttributes.ContentState {
         TapsoActivityAttributes.ContentState(
             phase: phase,
@@ -417,7 +429,8 @@ final class SnapshotEvidenceTests: XCTestCase {
             freshness: freshness,
             updatedAt: DemoFixtures.referenceDate,
             destinationPassed: passed,
-            isOffline: offline
+            isOffline: offline,
+            isEstimated: estimated
         )
     }
 
@@ -512,14 +525,42 @@ private struct IslandCompactMock: View {
 }
 
 private struct IslandMinimalMock: View {
+    let attributes: TapsoActivityAttributes
     let state: TapsoActivityAttributes.ContentState
     let isStale: Bool
 
     var body: some View {
-        IslandMinimal(state: state, isStale: isStale)
+        IslandMinimal(attributes: attributes, state: state, isStale: isStale)
             .frame(width: 37, height: 37)
             .background(Color.black, in: Circle())
             .padding(10)
+    }
+}
+
+/// Music owns the compact pair; TAPSO is the minimal circle beside it (system layout mocked).
+private struct MusicCoexistenceMock: View {
+    let attributes: TapsoActivityAttributes
+    let state: TapsoActivityAttributes.ContentState
+
+    var body: some View {
+        HStack(spacing: 6) {
+            HStack {
+                RoundedRectangle(cornerRadius: 5, style: .continuous).fill(Color(hex: 0xBF5AF2)).frame(width: 22, height: 22)
+                Spacer(minLength: 60)
+                HStack(spacing: 3) {
+                    ForEach([8, 16, 11, 18, 9, 14], id: \.self) { height in
+                        Capsule().fill(Color(hex: 0xFF9F0A)).frame(width: 3, height: CGFloat(height))
+                    }
+                }
+            }
+            .padding(.horizontal, 10)
+            .frame(width: 230, height: 37)
+            .background(Color.black, in: Capsule())
+            IslandMinimal(attributes: attributes, state: state)
+                .frame(width: 37, height: 37)
+                .background(Color.black, in: Circle())
+        }
+        .padding(10)
     }
 }
 

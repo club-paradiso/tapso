@@ -68,7 +68,7 @@ export const IOS_COPY = {
   "ride.vehicleLost.eyebrow": "위치 확인 필요",
   "ride.vehicleLost.headline": "현재 위치를 정확히 확인하기 어려워요",
   "ride.vehicleLost.detail": "차내 안내방송과 정류장 표시를 함께 확인해주세요.",
-  "ride.vehicleLost.compact": "위치 확인",
+  "ride.vehicleLost.compact": "버스 찾는 중",
   "ride.offline.eyebrow": "위치 확인 필요",
   "ride.offline.headline": "현재 위치를 정확히 확인하기 어려워요",
   "ride.offline.detail": "차내 안내방송과 정류장 표시를 함께 확인해주세요.",

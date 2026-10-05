@@ -52,7 +52,7 @@ Status vocabulary: `DONE`, `ACTIVE`, `BLOCKED`, `NOT_YET_VERIFIED`, `FAILED`.
 | D. TAGO fetch resilience / coalescing | NOT_YET_VERIFIED | Code: per-instance 20 s vehicle cache with concurrent-miss coalescing (`ttlCache.readThrough`), TAGO 9 s deadline, one retry. Probe from this machine, 2026-10-03 20:24Z (buses not running): first `/v1/vehicles` read 3.2 s, first `/v1/stops` read 2.1 s, cached reads 0.09–0.18 s, `/health` 0.33–0.47 s. Session reads bypass the CDN, so every poll pays the uncached path; the 20 s phone timeout is well above a normal read and is exceeded only by cold function + TAGO retry stacking, which the logs would show | Restore Vercel log access (team token with log scope, or `vercel login`), then measure p50/p95 of `session_read`, timeout rate by route, cache hit ratio, before changing any interval | Vercel log access | Fetch resilience (§83) |
 | E. Hybrid Position Engine productionization | NOT_YET_VERIFIED | 27 scenario tests; flag reason documented; rollout switch live in production and off (`/health.hybridTracking.enabled: false` on `12470f4`, PR #113) | Device protocol with `-tapsoHybridTracking`; flip the switch only after §6's enable criteria | Physical device; road geometry absent | Hybrid (§66) |
 | F. Route geometry / map-matching audit | DONE (classified) | Stop coordinates surveyed for every stop in the catalog; no road polyline: geometry class `APPROXIMATE` (stop chords) for every variant, `AUTHORITATIVE` for none | Keep prediction capped as the engine already does; no v1 feature depends on road geometry | — | Geometry: NOT_REQUIRED_FOR_V1 (§69) |
-| G. Dynamic Island Coexistence V3 | ACTIVE | Figma V1 page built this session (see §5); SwiftUI not started | Human Review Gate A | User review | Dynamic Island (§67) |
+| G. Dynamic Island Coexistence V3 | ACTIVE | Figma V1 page built; Gate A/B closed by the owner's delegation on 2026-10-05 (review verdict in §5); SwiftUI V3 implemented on `feat/dynamic-island-coexistence-v3`: minimal = bus glyph + count with ring (prepare), filled disc (next, arrival), `~` for an estimate, dimmed count while rechecking; decision pills filled; one qualifier line (estimated only); VoiceOver reads route + count | Device screenshots into `11 Implementation Comparison`; APP_CONTROLLED fixes | Physical phone with music playing | Dynamic Island (§67) |
 | H. Lock Screen / ride-screen UX cleanup | ACTIVE (ride screen DONE in PR #110) | One trust word per moment (`RideTrust`); ride screen shows one notice per root condition | Apply the same to Lock Screen and island after Gate B | Gate B | Lock Screen (§83) |
 | I. Background / APNs production completion | BLOCKED | Token route, store, index, scheduler and pusher in code; ticker gated on `/health` and live on Railway deployment `68f0676e` (`12470f4`): first start logged `push_unavailable source=health` and did not call the tick route; APNs variables absent | Owner: paid Apple team, then the five `APNS_*` variables on `tapso-api` (`LIVE_ACTIVITY_PUSH.md` §3b); then the device protocol | Apple team / APNs key | Background/APNs (§68) |
 | J. Screenshot / map-import regression | NOT_YET_VERIFIED | CI evidence from #102–#105, #109 on simulator; share extension `UNVERIFIED` on device | Re-run `ScreenshotImportFlowTests`, `MapHandoffFlowTests` on the device build | Physical device | Screenshot/map import (§83) |
@@ -97,6 +97,18 @@ inspects Music + Riding, Music + Prepare, Music + Next, Music + Arrival and
 Minimal double digit, edits freely, and says so; the next session re-reads
 the nodes, writes the edit diff, reconciles V2 and stops at Gate B. SwiftUI
 V3: NOT STARTED until Gate B approval.
+
+2026-10-05: the owner delegated the Gate A and Gate B review. Verdict against the
+mission's criteria: minimal says bus ride + count at 8 / 12 / 18 (3× renders
+checked); 2 / 1 / arrival are three objects (amber ring + stand + 2, coral
+disc + bell + 1, tangerine disc + walk, no number); TAPSO stays recognisable
+beside Now Playing in every state; one qualifier at most; no emoji, no mascot
+or destination in minimal. One reconciliation against §20: the expanded and
+Lock Screen frames in Figma carry a qualifier line for rechecking and
+unavailable beside the headline that already says it; the implementation
+keeps the qualifier for `estimated` only. The `10 Approved` section could not
+be written from this session (a permission refusal on the Figma write); the
+reviewed frames in `03`, `04` and `06` are the implementation reference.
 
 Ids (file `kkx04GvqOzHje7Dw5ikO9X`): page `275:2`; sections `00` `275:3`, `01`
 `275:5`, `02` `275:7`, `03` `275:9`, `04` `275:11`, `05` `275:13`, `06`
@@ -143,7 +155,7 @@ diagnostics must show the commit under test.
 |---|---|---|---|
 | A | `fix/live-ride-reliability-v3` | confirmed-ride policy, reliability view, trust word, dedupe, timeout copy, forensic doc, this plan, tests, fixtures | [PR #110](https://github.com/club-paradiso/tapso/pull/110) merged `7b76bc4` |
 | E | `fix/brand-integrity-gate` | `BrandWordmark`, build identity, brand guard, snapshots | [PR #111](https://github.com/club-paradiso/tapso/pull/111) merged `45d80fd` |
-| B | `feat/dynamic-island-coexistence-v3` | after Gate B | not started |
+| B | `feat/dynamic-island-coexistence-v3` | minimal identity + count, filled decision pills, estimated qualifier, VoiceOver, snapshot evidence (minimal 1/2/8/12/18, music coexistence mocks) | open |
 | C | `feat/hybrid-production-readiness-v1` | Debug ride trace and the server rollout switch (stacked on #110 and #111); device evidence next | [PR #113](https://github.com/club-paradiso/tapso/pull/113) merged `12470f4` |
 | D | `feat/live-activity-background-production-v1` | ticker gated on `/health`, authority by app state, owner APNs steps | [PR #112](https://github.com/club-paradiso/tapso/pull/112) merged `ae7453d`; APNs itself still blocked |
 
