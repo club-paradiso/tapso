@@ -366,10 +366,13 @@ final class TapsoAppModel {
     @ObservationIgnored private var retainedDeviceSample: DevicePositionSample?
     @ObservationIgnored private var hybridPermissionRequested = false
 
-    /// Seconds between session reads while the rider waits at the stop and while riding.
-    /// Each read costs one bus-feed request on the server.
+    /// Seconds between session reads while the rider waits at the stop. Each read costs one
+    /// bus-feed request on the server. During the ride the cadence comes from
+    /// `LivePollingPolicy`: 15 s far out, 10 s near the destination or while rechecking (bounded).
     static let liveCheckInterval: Duration = .seconds(10)
-    static let liveRideInterval: Duration = .seconds(15)
+    static let liveRideInterval: Duration = LivePollingPolicy.farInterval
+    /// When the ride entered rechecking without a break; `nil` while it is trusted.
+    @ObservationIgnored private var recoveryStartedAt: Date?
 
     init(
         store: JourneyStore = JourneyStore(),
@@ -1534,10 +1537,12 @@ final class TapsoAppModel {
         playbackTask?.cancel()
         guard let live = activeRide?.live, !live.endedByServer else { return }
         let sessionID = live.sessionID
+        recoveryStartedAt = nil
         playbackTask = Task { [weak self] in
             while !Task.isCancelled {
-                try? await Task.sleep(for: Self.liveRideInterval)
-                guard !Task.isCancelled, let self else { return }
+                guard let self else { return }
+                try? await Task.sleep(for: self.livePollingInterval())
+                guard !Task.isCancelled else { return }
                 guard self.rideInForeground else { continue }
                 if self.hybridTrackingEnabled {
                     await self.reconcileRidePosition(manual: false)
@@ -1547,6 +1552,19 @@ final class TapsoAppModel {
                 }
             }
         }
+    }
+
+    /// The next read's delay from the ride's trust and count (`LivePollingPolicy`).
+    private func livePollingInterval() -> Duration {
+        guard let guidance = activeRide?.guidance else { return LivePollingPolicy.farInterval }
+        let now = Date()
+        if guidance.trust == .rechecking {
+            if recoveryStartedAt == nil { recoveryStartedAt = now }
+        } else {
+            recoveryStartedAt = nil
+        }
+        let elapsed = recoveryStartedAt.map { Duration.seconds(now.timeIntervalSince($0)) }
+        return LivePollingPolicy.interval(trust: guidance.trust, remainingStops: activeRide?.signal.remainingStops ?? -1, recoveryElapsed: elapsed)
     }
 
     func rideSceneChanged(isActive: Bool) async {
