@@ -49,6 +49,9 @@ final class SnapshotEvidenceTests: XCTestCase {
             ("11-check-similar-buses", check(.evaluate(proposals: DemoCatalog.proposals(for: .similarBuses, route: DemoCatalog.outbound), hasSearched: true))),
             ("12-check-not-found", check(.evaluate(proposals: [], hasSearched: true))),
             ("13-ride-riding", ride(.active, 6)),
+            ("13b-ride-live-keep-alive-off", ride(.active, 6, background: .liveForegroundOnly)),
+            ("13c-ride-live-keep-alive-on", ride(.active, 6, background: .liveKeepAlive)),
+            ("13d-ride-live-keep-alive-denied", ride(.active, 6, background: .liveForegroundOnly, keepAliveDenied: true)),
             ("14-ride-prepare", ride(.approachingDestination, 2)),
             ("15-ride-next-stop", ride(.nextStopIsDestination, 1)),
             ("16-ride-arrived", ride(.arrived, 0)),
@@ -373,7 +376,9 @@ final class SnapshotEvidenceTests: XCTestCase {
         resumed: Bool = false,
         liveActivityOff: Bool = false,
         rescue: PassedStopAdvice? = nil,
-        kakaoAvailable: Bool = false
+        kakaoAvailable: Bool = false,
+        background: RideSnapshot.BackgroundUpdates = .demo,
+        keepAliveDenied: Bool = false
     ) -> AnyView {
         let guidance = RideGuidancePolicy.guidance(for: RideSignal(
             phase: phase, remainingStops: remaining, freshness: freshness, destinationPassed: passed, isOffline: offline
@@ -393,7 +398,9 @@ final class SnapshotEvidenceTests: XCTestCase {
                 liveActivityUnavailable: liveActivityOff,
                 resumed: resumed,
                 rescue: rescue,
-                kakaoAvailable: kakaoAvailable
+                kakaoAvailable: kakaoAvailable,
+                backgroundUpdates: background,
+                keepAliveDenied: keepAliveDenied
             ),
             onFinish: {},
             onMapSearch: { _ in },

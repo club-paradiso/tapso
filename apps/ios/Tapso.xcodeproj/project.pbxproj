@@ -87,6 +87,7 @@
 		4529FC35F853D45B55597C98 /* AutoStartGuideView.swift in Sources */ = {isa = PBXBuildFile; fileRef = ABFD8AA3417276C50E02F62B /* AutoStartGuideView.swift */; };
 		DFE64596386385FB792ED2A5 /* StopNudgeController.swift in Sources */ = {isa = PBXBuildFile; fileRef = 9E99E6802828197D6A068162 /* StopNudgeController.swift */; };
 		687C453830C42053B292CF3C /* BoardingFirstViews.swift in Sources */ = {isa = PBXBuildFile; fileRef = 33BDF9583F4139C5640E9DBA /* BoardingFirstViews.swift */; };
+		CC04D368747C18BD79E23EDE /* RideKeepAlive.swift in Sources */ = {isa = PBXBuildFile; fileRef = 13198596FFB79BF6CE328491 /* RideKeepAlive.swift */; };
 /* End PBXBuildFile section */
 
 /* Begin PBXContainerItemProxy section */
@@ -196,6 +197,7 @@
 		ABFD8AA3417276C50E02F62B /* AutoStartGuideView.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = AutoStartGuideView.swift; sourceTree = "<group>"; };
 		9E99E6802828197D6A068162 /* StopNudgeController.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = StopNudgeController.swift; sourceTree = "<group>"; };
 		33BDF9583F4139C5640E9DBA /* BoardingFirstViews.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = BoardingFirstViews.swift; sourceTree = "<group>"; };
+		13198596FFB79BF6CE328491 /* RideKeepAlive.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = RideKeepAlive.swift; sourceTree = "<group>"; };
 /* End PBXFileReference section */
 
 /* Begin PBXFrameworksBuildPhase section */
@@ -319,6 +321,7 @@
 				85623FA1F6C3B0EE2F9DC99A /* PhotoLibraryScreenshotEraser.swift */,
 				1BA1E189F8D5241F18ABD214 /* RideEndView.swift */,
 				857A4229A2F4867FB62DD336 /* RideFeedback.swift */,
+				13198596FFB79BF6CE328491 /* RideKeepAlive.swift */,
 				813AFBE6918965418D110364 /* RideLocationSampler.swift */,
 				52D0922404CBE0BFEAC62CCE /* RideTrace.swift */,
 				B71E19ABC4E943435650D65F /* RideView.swift */,
@@ -583,6 +586,7 @@
 				499B6807EDD8F3BA8C1EAAA7 /* RideAgainOpenIntent.swift in Sources */,
 				E90C569F723A43A0F30ED146 /* RideEndView.swift in Sources */,
 				3D1562DEB72025EBE17ABDCD /* RideFeedback.swift in Sources */,
+				CC04D368747C18BD79E23EDE /* RideKeepAlive.swift in Sources */,
 				C698235F4923522CB7ED7EFA /* RideLocationSampler.swift in Sources */,
 				BB8FAE7699DAE3EAEA47D888 /* RideSurfaceComponents.swift in Sources */,
 				757ECDCE342BEDD66CD09D74 /* RideTrace.swift in Sources */,

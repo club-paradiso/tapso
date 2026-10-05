@@ -28,6 +28,7 @@ Past the destination, `nextStopName` carries the stop to get off at (`PassedStop
 - Passing the destination is its own moment: no arrival alert, a single attention haptic in the app, a recovery action.
 - Starting a ride ends any existing TAPSO activity first. At launch the app resumes a persisted ride and its activity, re-ageing its data against the wall clock (a ride saved at the next stop and reopened later shows delayed or checking until the next observation); an activity left without a ride is ended.
 - Updates come only from the running app. There is no background mode or remote push in this build, so a suspended app sends nothing and the activity turns to delayed at its stale date (`KNOWN_ISSUES.md`).
+  Exception, opt-in since 2026-10-06: **앱을 닫아도 계속 알려 주기** (`RideKeepAlive`, `UIBackgroundModes: location`) keeps the app running during a live ride without push. Its location fixes are dropped; only the ride's polling runs.
 - Finishing a ride ends the activity with the ended state ("여정을 마쳤어요") for a one-minute dismissal window; cancelling ends it immediately.
 
 ## The way back: "돌아갈 시간" (V2.4d)

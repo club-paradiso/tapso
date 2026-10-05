@@ -41,3 +41,8 @@ TAPSO's default architecture tracks a public transit vehicle, not continuous pas
 - Do not store passenger GPS histories, contact data, or identity unless a later feature has a specific lawful need and consent design.
 
 Authentication is intentionally absent from the scaffold. Add it only when persistent user-specific data creates an actual boundary.
+
+**앱을 닫아도 계속 알려 주기** (2026-10-06) is off by default and works only during a live ride without push.
+- iOS's location service runs at its coarsest accuracy so that TAPSO is not suspended, and iOS shows the blue indicator while it runs.
+- TAPSO drops every fix and sends none; the ride's polling is the same vehicle-session read as in the foreground.
+- It stops when the ride ends, or when the server can push instead.

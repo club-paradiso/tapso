@@ -318,6 +318,10 @@ final class TapsoAppModel {
     private(set) var returnService: ReturnService = .idle
     /// The server accepted this ride's Live Activity push token: the Lock Screen can update while TAPSO is closed.
     private(set) var liveActivityPushRegistered = false
+    /// "앱을 닫아도 계속 갱신" (`RideKeepAlive`): the rider's choice, and whether iOS refused it.
+    private(set) var keepAliveEnabled = false
+    private(set) var keepAliveDenied = false
+    @ObservationIgnored private let rideKeepAlive = RideKeepAlive()
     /// The canonical Jeju catalog on this phone, searched locally.
     private(set) var catalogIndex: DestinationSearchIndex?
     private(set) var catalogStatus: CatalogStatus = .idle
@@ -408,6 +412,7 @@ final class TapsoAppModel {
             source: catalog
         )
         library = store.loadLibrary()
+        keepAliveEnabled = rideKeepAlive.isEnabled
         if var saved = store.loadActiveRide(), Date().timeIntervalSince(saved.lastUpdateAt) < 8 * 3_600 {
             hybridTrackingEnabled = hybridLaunchArgument || (saved.live?.hybridTracking ?? false)
             // Re-age restored data against the wall clock: a ride saved at the next stop and
@@ -1145,6 +1150,7 @@ final class TapsoAppModel {
         )
         returnService = .idle
         activeRide = nil
+        rideKeepAlive.stop()
         store.saveActiveRide(nil)
     }
 
@@ -1160,6 +1166,7 @@ final class TapsoAppModel {
             await liveActivity?.end(state: state, immediately: true)
         }
         activeRide = nil
+        rideKeepAlive.stop()
         outcome = nil
         store.saveActiveRide(nil)
     }
@@ -1636,7 +1643,8 @@ final class TapsoAppModel {
                 guard let self else { return }
                 try? await Task.sleep(for: self.livePollingInterval())
                 guard !Task.isCancelled else { return }
-                guard self.rideInForeground else { continue }
+                // In the background only while the rider asked TAPSO to keep going (`RideKeepAlive`).
+                guard self.rideInForeground || self.rideKeepAlive.isRunning else { continue }
                 if self.hybridTrackingEnabled {
                     await self.reconcileRidePosition(manual: false)
                     if self.activeRide?.live?.endedByServer != false { return }
@@ -1949,6 +1957,29 @@ final class TapsoAppModel {
             return
         }
         registerPushTokens()
+        updateKeepAlive()
+    }
+
+    /// Runs `RideKeepAlive` when the rider asked for it and nothing better keeps
+    /// the Lock Screen current: a live ride, still on, with no push token and a
+    /// Live Activity on screen. Called from the foreground (a start must be).
+    func updateKeepAlive() {
+        let wanted = rideKeepAlive.isEnabled && isLiveRide && activeRide?.live?.endedByServer == false
+            && !liveActivityPushRegistered && !liveActivityUnavailable
+        if wanted { rideKeepAlive.start() } else { rideKeepAlive.stop() }
+    }
+
+    func setRideKeepAlive(_ on: Bool) {
+        rideKeepAlive.isEnabled = on
+        keepAliveEnabled = on
+        keepAliveDenied = false
+        rideKeepAlive.onDenied = { [weak self] in
+            guard let self else { return }
+            self.rideKeepAlive.isEnabled = false
+            self.keepAliveEnabled = false
+            self.keepAliveDenied = true
+        }
+        updateKeepAlive()
     }
 
     /// Sends each push token of the live ride's activity to the server, rotations included. The
@@ -1963,7 +1994,11 @@ final class TapsoAppModel {
             for await token in tokens {
                 guard !Task.isCancelled else { return }
                 let accepted = (try? await api.registerLiveActivityToken(sessionID: sessionID, token: token)) != nil
-                if accepted { self.liveActivityPushRegistered = true }
+                if accepted {
+                    self.liveActivityPushRegistered = true
+                    // The server pushes now; the location service is no longer needed.
+                    self.updateKeepAlive()
+                }
             }
         }
     }
