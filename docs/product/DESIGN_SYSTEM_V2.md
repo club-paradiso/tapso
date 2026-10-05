@@ -104,7 +104,7 @@ Motion lives in code only (Figma has no motion variables).
 | Icon / V2 (`152:86`) | 23 glyphs | SF Symbols named by `RideGuidance.symbolName` |
 | CitrusDot / V2 (`153:2`) | — | `CitrusDot` |
 | RouteBadge / V2 (`153:89`) | role × size | `RouteBadge` |
-| 돌이 / V2 (`153:130`) | riding, prepare, nextStop, arrived, uncertain | `DolBuddy` |
+| 돌이 / V3 (`287:35`, page `05C`; replaces V2 `153:130`) | checking, riding, prepare, nextStop, arrived, uncertain | `DolBuddy` |
 | Button / V2 (`153:137`) | primary, secondary, onArrival | `PrimaryButtonStyle`, `SecondaryButtonStyle` |
 | TrustBadge / V2 (`153:173`) | 3 vehicle + 4 data signals | `TrustBadge` |
 | SearchField / V2 (`154:62`) | — | `SearchFieldButton` |
@@ -126,7 +126,19 @@ Motion lives in code only (Figma has no motion variables).
 
 ## 돌이
 
-The basalt companion stays, smaller: 18–36 pt, one expression per moment (calm smile, "o" at two stops, open mouth at the next stop, wide smile on arrival, flat line and squint when uncertain). It is always decorative (`accessibilityHidden`), never larger than the count, never on its own screen, and never the only carrier of meaning.
+The basalt companion stays, smaller: 18–36 pt on ride surfaces, one expression per moment. V3 (2026-10-05, Figma `05C · 돌이 V3 · App Icon (Proposal)`) idea: 돌이 watches so the rider does not have to. The body is a pebble resting on its flat side with one sheen and three faint pores (drawn from 30 pt up); the face is eyes only, and the rim takes the moment colour:
+
+| Moment | Eyes |
+|---|---|
+| checking | glancing to the side |
+| riding | resting, closed arcs ("you can rest") |
+| prepare | open, looking ahead |
+| nextStop, passedDestination | wide, with pupils and a glint |
+| arrived | smiling arcs and a tangerine blush, the only moment with a blush |
+| ended | smiling arcs |
+| delayed, vehicleLost, offline | squinting bars |
+
+It is always decorative (`accessibilityHidden`), never larger than the count, never on its own screen, and never the only carrier of meaning. The app icon is 돌이 looking up at the tangerine destination dot (Figma `App Icon / B`, `289:36`), drawn as flat vectors in Figma: no texture, no generated imagery.
 
 ## What V2 removed
 
