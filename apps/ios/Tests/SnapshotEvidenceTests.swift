@@ -530,7 +530,10 @@ private struct IslandMinimalMock: View {
     let isStale: Bool
 
     var body: some View {
+        // The circle is about 37 pt, but iOS lays the content out in about 26 pt
+        // (05B evidence). A 37 pt content frame hid the "🚌 …" truncation seen on a device.
         IslandMinimal(attributes: attributes, state: state, isStale: isStale)
+            .frame(width: 26, height: 26)
             .frame(width: 37, height: 37)
             .background(Color.black, in: Circle())
             .padding(10)
@@ -557,6 +560,7 @@ private struct MusicCoexistenceMock: View {
             .frame(width: 230, height: 37)
             .background(Color.black, in: Capsule())
             IslandMinimal(attributes: attributes, state: state)
+                .frame(width: 26, height: 26)
                 .frame(width: 37, height: 37)
                 .background(Color.black, in: Circle())
         }

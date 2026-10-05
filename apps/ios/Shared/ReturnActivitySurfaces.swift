@@ -136,6 +136,8 @@ struct ReturnIslandCompactLeading: View {
             Text(verbatim: attributes.routeNumber)
                 .font(.caption.weight(.heavy))
                 .monospacedDigit()
+                .lineLimit(1)
+                .minimumScaleFactor(0.7)
         }
         .foregroundStyle(ReturnSurfacePalette.accent(isLate: isStale))
         .accessibilityElement(children: .ignore)
