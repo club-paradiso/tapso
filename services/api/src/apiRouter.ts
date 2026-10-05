@@ -612,6 +612,23 @@ async function dispatch(
   if (resolved.route === "session_read") {
     const session = await sessions.refresh(sessionId);
     await dependencies.liveActivityPusher?.afterRead(session);
+    // One line per read, by dimension (TAPSO_V1_RELEASE_CLOSURE.md, workstream L):
+    // how many rides are live, rechecking or unavailable, and why, is a count over these.
+    logEvent("journey_session_read", {
+      sessionId: session.id,
+      routeId: session.routeId,
+      state: session.state,
+      selected: session.selectedVehicleId !== undefined,
+      remainingStops: session.progress?.remainingStops,
+      progressSource: session.progress?.source,
+      trackingIntegrity: session.trackingIntegrity,
+      trust: session.reliability?.trust,
+      provider: session.reliability?.provider,
+      observation: session.reliability?.observation,
+      position: session.reliability?.position,
+      vehicle: session.reliability?.vehicle,
+      matcherCadence: session.reliability?.matcherCadence,
+    });
     return { response: json(session, 200, { "cache-control": "no-store" }) };
   }
 
