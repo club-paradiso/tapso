@@ -501,3 +501,6 @@
 "boardFirst.arrival.none" = "근처에 없음";
 "boardFirst.arrival.unavailable" = "버스 위치를 받지 못했어요";
 "boardFirst.trips.twin" = "같은 길을 도는 별도 운행 %d/%d";
+"ride.keepAlive.title" = "앱을 닫아도 계속 알려 주기";
+"ride.keepAlive.on" = "앱을 닫아도 내릴 때까지 잠금 화면과 다이나믹 아일랜드를 갱신해요. 그동안 iPhone 위치 서비스가 켜져 있지만, 탑서는 위치를 쓰지도 보내지도 않아요.";
+"ride.keepAlive.denied" = "위치 권한이 없어 켤 수 없어요. 설정에서 탑서의 위치를 ‘앱을 사용하는 동안’으로 바꿀 수 있어요.";

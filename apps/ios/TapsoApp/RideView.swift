@@ -43,7 +43,8 @@ struct RideView: View {
                             guard let request = model.rescueMapRequest(for: app) else { return }
                             Task { await model.openMapApp(request) }
                         },
-                        onDismissResume: { model.dismissResumeNotice() }
+                        onDismissResume: { model.dismissResumeNotice() },
+                        onKeepAlive: { model.setRideKeepAlive($0) }
                     )
                     .animation(TapsoMotion.animation(TapsoMotion.emphasis, reduceMotion: reduceMotion), value: guidance.moment)
                 }
@@ -174,12 +175,16 @@ struct RideSnapshot {
     let kakaoAvailable: Bool
     /// What keeps the Lock Screen current while TAPSO is closed, said plainly on the ride screen.
     let backgroundUpdates: BackgroundUpdates
+    /// The rider asked to keep going when closed, and location access was refused.
+    let keepAliveDenied: Bool
 
     enum BackgroundUpdates: Equatable {
         /// The synthetic demo plays only while the app is open.
         case demo
         /// A live ride without a registered push token: updates arrive while TAPSO is open.
         case liveForegroundOnly
+        /// The rider asked TAPSO to keep going when closed (`RideKeepAlive`).
+        case liveKeepAlive
         /// The server accepted the Live Activity push token and updates it in the background.
         case livePush
     }
@@ -200,7 +205,10 @@ struct RideSnapshot {
             mapHandoffFailed: model.mapHandoffFailed,
             rescue: model.passedStopAdvice,
             kakaoAvailable: model.rescueMapRequest(for: .kakaoMap) != nil,
-            backgroundUpdates: !model.isLiveRide ? .demo : (model.liveActivityPushRegistered ? .livePush : .liveForegroundOnly)
+            backgroundUpdates: !model.isLiveRide ? .demo
+                : model.liveActivityPushRegistered ? .livePush
+                : model.keepAliveEnabled ? .liveKeepAlive : .liveForegroundOnly,
+            keepAliveDenied: model.keepAliveDenied
         )
     }
 
@@ -218,7 +226,8 @@ struct RideSnapshot {
         mapHandoffFailed: MapApp? = nil,
         rescue: PassedStopAdvice? = nil,
         kakaoAvailable: Bool = false,
-        backgroundUpdates: BackgroundUpdates = .demo
+        backgroundUpdates: BackgroundUpdates = .demo,
+        keepAliveDenied: Bool = false
     ) {
         self.guidance = guidance
         self.routeNumber = routeNumber
@@ -234,6 +243,7 @@ struct RideSnapshot {
         self.rescue = rescue
         self.kakaoAvailable = kakaoAvailable
         self.backgroundUpdates = backgroundUpdates
+        self.keepAliveDenied = keepAliveDenied
     }
 }
 
@@ -244,12 +254,14 @@ struct RideContent: View {
         switch snapshot.backgroundUpdates {
         case .demo: "ride.closeApp"
         case .liveForegroundOnly: "ride.closeApp.live"
+        case .liveKeepAlive: "ride.keepAlive.on"
         case .livePush: "ride.closeApp.livePush"
         }
     }
     let onFinish: () -> Void
     let onMapSearch: (MapApp) -> Void
     let onDismissResume: () -> Void
+    var onKeepAlive: (Bool) -> Void = { _ in }
 
     private var guidance: RideGuidance { snapshot.guidance }
 
@@ -311,11 +323,40 @@ struct RideContent: View {
                 message: "ride.liveActivityOff.body",
                 tint: TapsoColor.journeyDegraded
             )
+        } else if snapshot.backgroundUpdates == .liveForegroundOnly || snapshot.backgroundUpdates == .liveKeepAlive,
+                  [.riding, .prepare].contains(guidance.moment) {
+            keepAliveCard
         } else if guidance.moment == .riding {
             Label(closeAppKey, systemImage: "iphone.gen3.radiowaves.left.and.right")
                 .font(.footnote)
                 .foregroundStyle(TapsoColor.textSecondary)
                 .fixedSize(horizontal: false, vertical: true)
+        }
+    }
+
+    /// Without push, the rider chooses whether TAPSO keeps going when closed (`RideKeepAlive`).
+    private var keepAliveCard: some View {
+        let on = snapshot.backgroundUpdates == .liveKeepAlive
+        return TapsoCard {
+            VStack(alignment: .leading, spacing: TapsoSpace.xs) {
+                Toggle(isOn: Binding(get: { on }, set: { onKeepAlive($0) })) {
+                    Label("ride.keepAlive.title", systemImage: "lock.iphone")
+                        .font(.subheadline.weight(.semibold))
+                        .foregroundStyle(TapsoColor.textPrimary)
+                }
+                .tint(TapsoColor.journeyActive)
+                .accessibilityIdentifier("ride-keep-alive")
+                Text(on ? "ride.keepAlive.on" : "ride.closeApp.live")
+                    .font(.footnote)
+                    .foregroundStyle(TapsoColor.textSecondary)
+                    .fixedSize(horizontal: false, vertical: true)
+                if snapshot.keepAliveDenied {
+                    Text("ride.keepAlive.denied")
+                        .font(.footnote.weight(.semibold))
+                        .foregroundStyle(TapsoColor.journeyNext)
+                        .fixedSize(horizontal: false, vertical: true)
+                }
+            }
         }
     }
 }

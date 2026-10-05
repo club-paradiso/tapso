@@ -501,3 +501,6 @@
 "boardFirst.arrival.none" = "None near";
 "boardFirst.arrival.unavailable" = "Couldn't get bus positions";
 "boardFirst.trips.twin" = "separate service on the same stops %d/%d";
+"ride.keepAlive.title" = "Keep updating when closed";
+"ride.keepAlive.on" = "The Lock Screen and the Dynamic Island keep updating until you get off, even with TAPSO closed. iPhone's location service stays on meanwhile, but TAPSO neither uses nor sends your location.";
+"ride.keepAlive.denied" = "Needs location access. You can set TAPSO's location to While Using the App in Settings.";
