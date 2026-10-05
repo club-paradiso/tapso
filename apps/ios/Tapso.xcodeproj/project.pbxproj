@@ -79,6 +79,11 @@
 		4DA1D1D973E57698519C31FC /* BrandTests.swift in Sources */ = {isa = PBXBuildFile; fileRef = 5E327558E2B513FF963AD97E /* BrandTests.swift */; };
 		757ECDCE342BEDD66CD09D74 /* RideTrace.swift in Sources */ = {isa = PBXBuildFile; fileRef = 52D0922404CBE0BFEAC62CCE /* RideTrace.swift */; };
 		1E35209170DFE0C3B68B31CC /* RideTraceTests.swift in Sources */ = {isa = PBXBuildFile; fileRef = 19459AAF91BDF6A8B061D08F /* RideTraceTests.swift */; };
+		499B6807EDD8F3BA8C1EAAA7 /* RideAgainOpenIntent.swift in Sources */ = {isa = PBXBuildFile; fileRef = C6E05EE62093C184B4EE9E8F /* RideAgainOpenIntent.swift */; };
+		277BEA6265BF2C3FAD4489E5 /* RideAgainOpenIntent.swift in Sources */ = {isa = PBXBuildFile; fileRef = C6E05EE62093C184B4EE9E8F /* RideAgainOpenIntent.swift */; };
+		A573345F7E44EBD980F707BE /* ShortcutInbox.swift in Sources */ = {isa = PBXBuildFile; fileRef = DA5BC3BF98153B4CED44933B /* ShortcutInbox.swift */; };
+		B0C8973287FB766CBDC41B9C /* ShortcutInbox.swift in Sources */ = {isa = PBXBuildFile; fileRef = DA5BC3BF98153B4CED44933B /* ShortcutInbox.swift */; };
+		BC537E74602056783FF8F8A4 /* RideAgainControl.swift in Sources */ = {isa = PBXBuildFile; fileRef = F50D3A8DC28E981BCD5CF414 /* RideAgainControl.swift */; };
 /* End PBXBuildFile section */
 
 /* Begin PBXContainerItemProxy section */
@@ -182,6 +187,9 @@
 		5E327558E2B513FF963AD97E /* BrandTests.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = BrandTests.swift; sourceTree = "<group>"; };
 		52D0922404CBE0BFEAC62CCE /* RideTrace.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = RideTrace.swift; sourceTree = "<group>"; };
 		19459AAF91BDF6A8B061D08F /* RideTraceTests.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = RideTraceTests.swift; sourceTree = "<group>"; };
+		C6E05EE62093C184B4EE9E8F /* RideAgainOpenIntent.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = RideAgainOpenIntent.swift; sourceTree = "<group>"; };
+		DA5BC3BF98153B4CED44933B /* ShortcutInbox.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = ShortcutInbox.swift; sourceTree = "<group>"; };
+		F50D3A8DC28E981BCD5CF414 /* RideAgainControl.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = RideAgainControl.swift; sourceTree = "<group>"; };
 /* End PBXFileReference section */
 
 /* Begin PBXFrameworksBuildPhase section */
@@ -251,7 +259,9 @@
 				C61FF6E913F7DCDE87D983B5 /* BrandWordmark.swift */,
 				3A6FA6A0937D209C796FC84C /* LiveActivitySurfaces.swift */,
 				D102FEDCF3DA956AE2EC37A9 /* ReturnActivitySurfaces.swift */,
+				C6E05EE62093C184B4EE9E8F /* RideAgainOpenIntent.swift */,
 				DE291882CA4321AAC786EA59 /* RideSurfaceComponents.swift */,
+				DA5BC3BF98153B4CED44933B /* ShortcutInbox.swift */,
 				8A8C62072A571904D527220A /* TapsoActivityAttributes.swift */,
 				B4DD18CE5239D89359B55287 /* TapsoLiveActivityPolicy.swift */,
 				DB410939543F5C21ABBF6A70 /* TapsoReturnAttributes.swift */,
@@ -278,6 +288,7 @@
 			isa = PBXGroup;
 			children = (
 				56ADD839CF48109E865CAA8C /* Info.plist */,
+				F50D3A8DC28E981BCD5CF414 /* RideAgainControl.swift */,
 				55D60E620C5E250E23C2DF09 /* TapsoLiveActivityBundle.swift */,
 				01434169EBED9CD788681A50 /* TapsoLiveActivityWidget.swift */,
 				2B52DB562472A43D4D48F471 /* TapsoReturnActivityWidget.swift */,
@@ -558,6 +569,7 @@
 				15C8BE959913FD7DC74C90BC /* LiveRouteImportCatalog.swift in Sources */,
 				5511485E8DD9FA463D1FB2A9 /* PhotoLibraryScreenshotEraser.swift in Sources */,
 				9E47BA264E7738D256848D31 /* ReturnActivitySurfaces.swift in Sources */,
+				499B6807EDD8F3BA8C1EAAA7 /* RideAgainOpenIntent.swift in Sources */,
 				E90C569F723A43A0F30ED146 /* RideEndView.swift in Sources */,
 				3D1562DEB72025EBE17ABDCD /* RideFeedback.swift in Sources */,
 				C698235F4923522CB7ED7EFA /* RideLocationSampler.swift in Sources */,
@@ -566,6 +578,7 @@
 				FC181FC49F83051C0EF18002 /* RideView.swift in Sources */,
 				DBA3F1C6B60D01B4A4505125 /* ScreenshotImportViews.swift in Sources */,
 				8CA644A203D52AA38D49E70F /* SetupViews.swift in Sources */,
+				A573345F7E44EBD980F707BE /* ShortcutInbox.swift in Sources */,
 				E3F7A3852EAB2CEF59630AC9 /* TapsoActivityAttributes.swift in Sources */,
 				2664941987948A2833A62902 /* TapsoAPIClient.swift in Sources */,
 				F6C551D45E737E795E1AA04C /* TapsoApp.swift in Sources */,
@@ -590,7 +603,10 @@
 				11F216705CBD35830606908D /* BrandWordmark.swift in Sources */,
 				E7D6FCED61BA991CB675260B /* LiveActivitySurfaces.swift in Sources */,
 				780FE7AA8EE44BC0BAAB03E2 /* ReturnActivitySurfaces.swift in Sources */,
+				BC537E74602056783FF8F8A4 /* RideAgainControl.swift in Sources */,
+				277BEA6265BF2C3FAD4489E5 /* RideAgainOpenIntent.swift in Sources */,
 				E87AC521F6825585467E54DD /* RideSurfaceComponents.swift in Sources */,
+				B0C8973287FB766CBDC41B9C /* ShortcutInbox.swift in Sources */,
 				47E014F012F2F08A882914D1 /* TapsoActivityAttributes.swift in Sources */,
 				92EE1A4C38FE50BF1064B9C5 /* TapsoLiveActivityBundle.swift in Sources */,
 				C6863947685AA1A8FDC89A21 /* TapsoLiveActivityPolicy.swift in Sources */,

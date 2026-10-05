@@ -487,3 +487,15 @@ final class DolMotionTests: XCTestCase {
         XCTAssertEqual(lost.hop, 0)
     }
 }
+
+/// The "다시 타기" control (`AUTO_START.md`, M1) hands its press to the app.
+@MainActor
+final class RideAgainControlTests: XCTestCase {
+    func testOpenIntentTargetsTheLastRideAndPostsToTheInbox() async throws {
+        let intent = RideAgainOpenIntent()
+        XCTAssertEqual(intent.target, .lastRide)
+        let before = ShortcutInbox.shared.rideAgainRequests
+        _ = try await intent.perform()
+        XCTAssertEqual(ShortcutInbox.shared.rideAgainRequests, before + 1)
+    }
+}

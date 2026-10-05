@@ -1,5 +1,4 @@
 import AppIntents
-import Observation
 
 /// "탑서로 다시 타기": Siri, Spotlight, the Action button or a Shortcut opens
 /// TAPSO at the vehicle check for the last ride. It opens the app rather than
@@ -29,12 +28,4 @@ struct TapsoShortcuts: AppShortcutsProvider {
             systemImageName: "bus.fill"
         )
     }
-}
-
-/// Hands a shortcut's request to the running app.
-@Observable
-@MainActor
-final class ShortcutInbox {
-    static let shared = ShortcutInbox()
-    var rideAgainRequests = 0
 }
