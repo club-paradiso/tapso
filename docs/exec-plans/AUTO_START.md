@@ -57,16 +57,16 @@ No new permission, no APNs.
 
 This is deferred, not dropped. Without APNs (C13) the activity stops updating when the app is suspended and reads "확인 중" after 120 s (`KNOWN_ISSUES.md`). An activity that freezes is worse than opening the app (M1a). It ships with M4's APNs work. Confirming from the Lock Screen also waits for C15.
 
-### M2. The rider's own automation — `NOT_STARTED`
+### M2. The rider's own automation — `IN_REVIEW` (PR #125)
 
 Still no new permission. TAPSO cannot create automations (C9), but it can make one take ten seconds.
 
-1. A settings screen, "자동으로 시작하기", with two recipes, each a step-by-step guide plus a deep link to the Shortcuts app:
-   - **정류장에 도착하면** (Arrive at a location → run "탑서 · 다시 타기", Run Immediately). The location stays inside Shortcuts; TAPSO never sees it.
-   - **시간이 되면** (Time of Day, weekdays at 08:05 → the same).
-2. The intent from M1 gains a parameter: which saved journey to start.
+- `AutoStartGuideView` ("자동으로 시작하기"), reached from Home under 최근 여정 once there is a ride to repeat. It has two recipes, **정류장에 도착하면** (Arrive) and **정한 시간이 되면** (Time of Day), and a button that opens the Shortcuts app (`shortcuts://`; if it fails, the screen says so). The location stays inside Shortcuts; TAPSO never sees it.
+- The step wording follows Apple's Korean Shortcuts guide: 자동화 탭, 개인용 자동화, 도착, 특정 시간, 동작 추가. The "run without asking" option is described, not named: its Korean label was not found in Apple's guide, and it differs across iOS versions.
+- `RideAgainIntent` gains an optional `journey: SavedJourneyEntity` parameter. `SavedJourneyQuery` reads the on-device library and suggests favourites first. With no journey named, the intent starts the last ride.
+- Opening `shortcuts://` without parameters is not in Apple's guide (only `shortcuts://run-shortcut` and the gallery URLs are): `UNVERIFIED` until a device opens it.
 
-**Done when:** a rider follows the guide on the device and the automation starts the activity with the app closed. Evidence: a recording of the setup and the trigger.
+**Done when:** on the device, a rider follows the guide and the automation opens the vehicle check for the chosen journey; the Shortcuts button opens Shortcuts. Evidence: a recording of the setup and the trigger. Tests: `SavedJourneyEntityTests`.
 
 ### M3. "탑서가 먼저 말을 건다" at saved stops — `NEEDS_OWNER_DECISION`
 
@@ -135,4 +135,5 @@ Intents, controls and Live Activity starts only prove themselves on a device. A 
   - Starting a Live Activity from an intent may be throttled, or may fail when Live Activities are off (`areActivitiesEnabled`). Say so in the UI instead of failing silently.
   - Region events can be minutes late (C3), so a bus that is already at the stop is missed. M3's notification must name the bus after it when the nearest one is already at the stop.
 - 2026-10-05: M1a in PR #124 (control + `OpenIntent`), 95 iOS tests green in the simulator. On the device: not yet proven.
-- **Exact next action:** on the iPhone, add "탑서 다시 타기" to Control Center and record one press from the Lock Screen to the vehicle check (M1a evidence); then M2's recipe screen.
+- 2026-10-05: M1a merged (#124). M2 in PR #125, with 97 iOS tests green in the simulator. Device evidence is still owed for both.
+- **Exact next action:** device evidence for M1a (the control) and M2 (one automation set up from the guide); then the owner's decision D2 for M3.

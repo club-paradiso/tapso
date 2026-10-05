@@ -19,6 +19,7 @@ struct HomeView: View {
                 onMapImport: { model.openMapImport() },
                 onLive: { model.openLiveSearch() },
                 onSample: { model.startDemo() },
+                onAutoStart: { model.openAutoStartGuide() },
                 onDemoSettings: { model.isDemoPanelPresented = true },
                 pendingPlaceName: model.sharedPlace.flatMap { $0.name ?? $0.address }
             )
@@ -38,6 +39,7 @@ struct HomeContent: View {
     let onMapImport: () -> Void
     var onLive: () -> Void = {}
     let onSample: () -> Void
+    var onAutoStart: () -> Void = {}
     var onDemoSettings: () -> Void = {}
     /// A place shared from a map app that is waiting for a ride.
     var pendingPlaceName: String? = nil
@@ -57,6 +59,7 @@ struct HomeContent: View {
                         onRide: { onRideAgain(recent) },
                         onToggleFavorite: { onToggleFavorite(recent) }
                     )
+                    AutoStartEntryRow(action: onAutoStart)
                 }
 
                 VStack(alignment: .leading, spacing: TapsoSpace.md) {
