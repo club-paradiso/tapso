@@ -475,8 +475,8 @@ final class DolMotionTests: XCTestCase {
     }
 
     func testCheckingGlancesBothWays() {
-        XCTAssertGreaterThan(DolMotion(expression: .ride(.checking), time: 0.45).glance, 3)
-        XCTAssertLessThan(DolMotion(expression: .ride(.checking), time: 1.35).glance, -3)
+        XCTAssertGreaterThan(DolMotion(expression: .ride(.checking), time: 0.45).glance, 2)
+        XCTAssertLessThan(DolMotion(expression: .ride(.checking), time: 1.35).glance, -2)
     }
 
     func testArrivalHopsAndUncertainStaysStill() {

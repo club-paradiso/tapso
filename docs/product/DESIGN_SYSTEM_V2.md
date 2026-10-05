@@ -126,17 +126,17 @@ Motion lives in code only (Figma has no motion variables).
 
 ## 돌이
 
-The basalt companion stays, smaller: 18–36 pt on ride surfaces, one expression per moment. V3 (2026-10-05, Figma `05C · 돌이 V3 · App Icon (Proposal)`) idea: 돌이 watches so the rider does not have to. The body is a pebble resting on its flat side with one sheen and three faint pores (drawn from 30 pt up); the face is eyes only, and the rim takes the moment colour:
+The basalt companion stays, smaller: 18–36 pt on ride surfaces, one expression per moment. V3 (2026-10-05, Figma `05C · 돌이 V3 · App Icon (Proposal)`) idea: 돌이 watches so the rider does not have to. The body is a pebble resting on its flat side with one sheen and three faint pores (drawn from 30 pt up). V3.1 (same day, after a device check found the dot eyes blank) gives it the app icon's eyes: a white eye, a basalt pupil and a glint (from 26 pt up; white eyes alone below), coral cheeks (`TapsoColor.dolCheek`) on the calm moments, and a tangerine hair pin on the crown (leaf and glint from 22 pt up). Figma: `돌이 V3.1 · eye options` (`291:407`), option "P · 눈 올림 + 감귤 핀". The rim takes the moment colour:
 
-| Moment | Eyes |
-|---|---|
-| checking | glancing to the side |
-| riding | resting, closed arcs ("you can rest") |
-| prepare | open, looking ahead |
-| nextStop, passedDestination | wide, with pupils and a glint |
-| arrived | smiling arcs and a tangerine blush, the only moment with a blush |
-| ended | smiling arcs |
-| delayed, vehicleLost, offline | squinting bars |
+| Moment | Eyes | Cheeks |
+|---|---|---|
+| awake (Home, wordmark, a proposed bus) | open, looking at the rider | yes |
+| checking | open, pupils glancing side to side | no |
+| riding | resting, closed arcs; peeks open | yes |
+| prepare | open, pupils looking ahead | yes |
+| nextStop, passedDestination | wide, pupils up | no |
+| arrived, ended | smiling arcs | yes |
+| delayed, vehicleLost, offline | squinting bars | no |
 
 Off the ride (Home, the wordmark, a proposed bus to check) 돌이 is **awake**: open eyes, looking at the rider.
 

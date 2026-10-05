@@ -51,8 +51,8 @@ struct CitrusDot: View {
 /// 돌이, TAPSO's basalt companion. A small supporting mark whose expression
 /// follows the ride; it never carries information on its own. Decorative.
 /// Figma: `돌이 / V3` (`287:35`, page `05C`). A pebble that sits on its flat
-/// side, one sheen and three faint pores for basalt, and a face made of eyes
-/// only. The rim takes the moment's colour; the blush appears on arrival alone.
+/// side, one sheen and three faint pores for basalt, a tangerine hair pin, and
+/// a face of eyes and cheeks. The rim takes the moment's colour.
 ///
 /// In the app 돌이 is alive (`animated`): it blinks, glances while checking,
 /// peeks now and then while the rider rests, and hops on arrival. Live
@@ -122,8 +122,8 @@ struct DolBuddy: View {
                     .fill(.white.opacity(0.10))
             }
             face(motion)
-                .offset(x: motion.glance * unit)
-                .scaleEffect(x: 1, y: motion.openness, anchor: UnitPoint(x: 0.5, y: 37 / 72))
+                .scaleEffect(x: 1, y: motion.openness, anchor: UnitPoint(x: 0.5, y: 37.5 / 72))
+            tangerinePin
         }
         .scaleEffect(x: 1, y: motion.breath, anchor: UnitPoint(x: 0.5, y: 62 / 72))
         .offset(y: motion.hop * unit)
@@ -134,31 +134,70 @@ struct DolBuddy: View {
         let eyeStroke = StrokeStyle(lineWidth: max(1, 3.4 * unit), lineCap: .round)
         switch expression {
         case .awake:
-            DolShape(kind: .circles(DolFace.awake)).fill(.white)
+            eyes(gaze: .zero)
+            cheeks
         case let .ride(moment):
             switch moment {
             case .checking:
-                DolShape(kind: .circles(DolFace.glancing)).fill(.white)
+                eyes(gaze: CGPoint(x: motion.glance, y: -0.5))
             case .riding:
                 if motion.peeking {
-                    DolShape(kind: .circles(DolFace.awake)).fill(.white)
+                    eyes(gaze: .zero)
                 } else {
                     DolShape(kind: .arcs(DolFace.resting)).stroke(.white, style: eyeStroke)
                 }
+                cheeks
             case .prepare:
-                DolShape(kind: .circles(DolFace.lookingAhead)).fill(.white)
+                eyes(gaze: CGPoint(x: 2.2, y: 0))
+                cheeks
             case .nextStop, .passedDestination:
-                DolShape(kind: .circles(DolFace.wideEyes)).fill(.white)
-                DolShape(kind: .circles(DolFace.widePupils)).fill(TapsoColor.basalt)
-                DolShape(kind: .circles(DolFace.wideGlints)).fill(.white)
-            case .arrived:
+                eyes(gaze: CGPoint(x: -0.8, y: -1.4), radius: 8, pupil: 3.2)
+            case .arrived, .ended:
                 DolShape(kind: .arcs(DolFace.smiling)).stroke(.white, style: eyeStroke)
-                DolShape(kind: .ellipses(DolFace.blush)).fill(TapsoColor.tangerine.opacity(0.85))
-            case .ended:
-                DolShape(kind: .arcs(DolFace.smiling)).stroke(.white, style: eyeStroke)
+                cheeks
             case .delayed, .vehicleLost, .offline:
                 DolShape(kind: .bars(DolFace.squinting)).fill(.white)
             }
+        }
+    }
+
+    /// Open eyes: a white eye, a basalt pupil and a glint.
+    /// Under 26 pt the pupil and glint are under a point and muddy the eye, so
+    /// the island draws white eyes only.
+    @ViewBuilder
+    private func eyes(gaze: CGPoint, radius: CGFloat = 7, pupil: CGFloat = 3.7) -> some View {
+        let eyes = DolFace.eyes(gaze: gaze, radius: radius, pupil: pupil)
+        if size < 26 {
+            DolShape(kind: .circles(DolFace.eyes(gaze: .zero, radius: 5.2, pupil: 0).whites)).fill(.white)
+        } else {
+            DolShape(kind: .circles(eyes.whites)).fill(.white)
+            DolShape(kind: .circles(eyes.pupils)).fill(TapsoColor.basalt)
+            DolShape(kind: .circles(eyes.glints)).fill(.white)
+        }
+    }
+
+    /// A tangerine hair pin on the crown: Jeju, and the destination colour,
+    /// worn rather than placed beside. The basalt ring keeps it apart from the
+    /// rim; the leaf and glint drop under 22 pt.
+    @ViewBuilder
+    private var tangerinePin: some View {
+        if size >= 22 {
+            DolShape(kind: .leaf).fill(DolFace.leafGreen)
+            DolShape(kind: .bars([DolFace.stem])).fill(DolFace.leafGreen)
+        }
+        DolShape(kind: .circles([DolFace.pin])).fill(TapsoColor.tangerine)
+        DolShape(kind: .circles([DolFace.pin])).stroke(TapsoColor.basalt, lineWidth: max(0.5, 1.6 * unit))
+        if size >= 22 {
+            DolShape(kind: .circles([DolFace.pinGlint])).fill(.white.opacity(0.55))
+        }
+    }
+
+    /// Coral cheeks on the calm moments; off in alerts and uncertainty, and
+    /// under 22 pt, where they are under a point.
+    @ViewBuilder
+    private var cheeks: some View {
+        if size >= 22 {
+            DolShape(kind: .ellipses(DolFace.blush)).fill(TapsoColor.dolCheek)
         }
     }
 }
@@ -168,7 +207,7 @@ struct DolBuddy: View {
 struct DolMotion: Equatable {
     /// 1 open, 0 shut. Applies to open eyes; arcs and bars are already shut.
     var openness: CGFloat = 1
-    /// Horizontal eye offset while checking.
+    /// Horizontal pupil offset while checking.
     var glance: CGFloat = 0
     /// Resting eyes open for a moment: "still watching".
     var peeking = false
@@ -220,7 +259,7 @@ struct DolMotion: Equatable {
         if moment == .checking {
             // Dwell at each side, then cross: tanh flattens the sine's peaks.
             let swing = tanh(3 * sin(2 * .pi * time / 1.8)) / tanh(3)
-            glance = 4 * CGFloat(swing)
+            glance = 2.6 * CGFloat(swing)
         }
     }
 
@@ -252,22 +291,35 @@ private enum DolFace {
     struct Arc: Sendable { let x0, x1, y, cx, cy: CGFloat }
     struct Box: Sendable { let x, y, width, height: CGFloat }
 
-    static let awake = [Dot(x: 28, y: 37, r: 5.2), Dot(x: 46, y: 37, r: 5.2)]
     static let pores = [Dot(x: 46, y: 55.5, r: 1.3), Dot(x: 52.5, y: 57, r: 0.95), Dot(x: 41, y: 58.2, r: 0.8)]
-    static let glancing = [Dot(x: 24, y: 38, r: 4.6), Dot(x: 42, y: 38, r: 4.6)]
-    static let lookingAhead = [Dot(x: 32, y: 37, r: 5), Dot(x: 50, y: 37, r: 5)]
-    static let wideEyes = [Dot(x: 28, y: 37, r: 7.5), Dot(x: 47, y: 37, r: 7.5)]
-    static let widePupils = [Dot(x: 30.5, y: 35.5, r: 3.3), Dot(x: 49.5, y: 35.5, r: 3.3)]
-    static let wideGlints = [Dot(x: 31.6, y: 34.3, r: 1.1), Dot(x: 50.6, y: 34.3, r: 1.1)]
-    static let resting = [Arc(x0: 23, x1: 33, y: 37, cx: 28, cy: 43), Arc(x0: 41, x1: 51, y: 37, cx: 46, cy: 43)]
-    static let smiling = [Arc(x0: 22, x1: 33, y: 40, cx: 27.5, cy: 31), Arc(x0: 41, x1: 52, y: 40, cx: 46.5, cy: 31)]
-    static let blush = [Box(x: 14.5, y: 46.5, width: 6.8, height: 4), Box(x: 53, y: 46.5, width: 6.8, height: 4)]
-    static let squinting = [Box(x: 23, y: 36.3, width: 10, height: 3.4), Box(x: 41, y: 36.3, width: 10, height: 3.4)]
+    /// Eye centres: close together, a little above the middle of the face.
+    static let eyeCentres = [CGPoint(x: 29, y: 37.5), CGPoint(x: 45, y: 37.5)]
+    static let resting = [Arc(x0: 23, x1: 35, y: 37.5, cx: 29, cy: 43.5), Arc(x0: 39, x1: 51, y: 37.5, cx: 45, cy: 43.5)]
+    static let smiling = [Arc(x0: 23, x1: 35, y: 40.5, cx: 29, cy: 31.5), Arc(x0: 39, x1: 51, y: 40.5, cx: 45, cy: 31.5)]
+    static let blush = [Box(x: 13.2, y: 43.2, width: 7.6, height: 4.6), Box(x: 53.2, y: 43.2, width: 7.6, height: 4.6)]
+    static let pin = Dot(x: 55, y: 16, r: 6.4)
+    static let pinGlint = Dot(x: 53.2, y: 14.2, r: 1.5)
+    static let stem = Box(x: 54.2, y: 8.4, width: 1.6, height: 2.6)
+    /// The leaf green of `CitrusDot`.
+    static let leafGreen = Color(hex: 0x33BD6E)
+    static let squinting = [Box(x: 24, y: 35.8, width: 10, height: 3.4), Box(x: 40, y: 35.8, width: 10, height: 3.4)]
+
+    /// Whites, pupils and glints for a gaze (artboard units from a pupil that
+    /// sits slightly down and in, looking at the rider).
+    static func eyes(gaze: CGPoint, radius: CGFloat, pupil: CGFloat) -> (whites: [Dot], pupils: [Dot], glints: [Dot]) {
+        let reach = max(0, radius - pupil - 0.6)
+        let dx = min(reach, max(-reach, 0.8 + gaze.x))
+        let dy = min(reach, max(-reach, 1 + gaze.y))
+        let whites = eyeCentres.map { Dot(x: $0.x, y: $0.y, r: radius) }
+        let pupils = eyeCentres.map { Dot(x: $0.x + dx, y: $0.y + dy, r: pupil) }
+        let glints = pupils.map { Dot(x: $0.x + $0.r * 0.35, y: $0.y - $0.r * 0.4, r: $0.r * 0.36) }
+        return (whites, pupils, glints)
+    }
 }
 
 private struct DolShape: Shape {
     enum Kind: Sendable {
-        case body, sheen
+        case body, sheen, leaf
         case circles([DolFace.Dot])
         case arcs([DolFace.Arc])
         case ellipses([DolFace.Box])
@@ -292,6 +344,11 @@ private struct DolShape: Shape {
             path.addCurve(to: CGPoint(x: 33, y: 16.5), control1: CGPoint(x: 17, y: 22), control2: CGPoint(x: 24, y: 17))
             path.addCurve(to: CGPoint(x: 17.5, y: 31), control1: CGPoint(x: 26, y: 19.5), control2: CGPoint(x: 20, y: 24))
             path.addCurve(to: CGPoint(x: 14, y: 29), control1: CGPoint(x: 16.8, y: 32.6), control2: CGPoint(x: 13.6, y: 31.6))
+            path.closeSubpath()
+        case .leaf:
+            path.move(to: CGPoint(x: 58.5, y: 9.5))
+            path.addCurve(to: CGPoint(x: 67.5, y: 7), control1: CGPoint(x: 61, y: 6), control2: CGPoint(x: 65.5, y: 5.5))
+            path.addCurve(to: CGPoint(x: 58.5, y: 9.5), control1: CGPoint(x: 65.5, y: 10), control2: CGPoint(x: 61.5, y: 11))
             path.closeSubpath()
         case let .circles(dots):
             for dot in dots {

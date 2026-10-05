@@ -41,6 +41,8 @@ enum TapsoColor {
 
     // MARK: Identity
     static let tangerine = Color(hex: 0xF7972F)
+    /// 돌이's cheeks: the bright coral, which stays pink on basalt in both appearances.
+    static let dolCheek = Color(hex: 0xFF7A6E)
     static let basalt = Color(hex: 0x0F171A)
     static let basaltRaised = Color(hex: 0x1A2528)
     static let mintDeep = dynamic(light: 0x0B7F6D, dark: 0x2FC7AA)
