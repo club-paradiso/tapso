@@ -280,6 +280,12 @@ struct MapImportView: View {
                 demoMatches: model.sharedPlace.map { model.stopNames(inSharedText: $0.searchText) } ?? [],
                 matchesAreSynthetic: model.sharedTextMatchesAreSynthetic,
                 screenshot: AnyView(ScreenshotImportSection(model: model)),
+                showsOtherWays: {
+                    switch model.screenshotImport {
+                    case .confirm, .choose: false
+                    case .idle, .reading, .failed: true
+                    }
+                }(),
                 paste: AnyView(
                     PasteButton(payloadType: String.self) { strings in
                         pasted = strings.joined(separator: "\n")
@@ -314,7 +320,10 @@ struct MapImportContent: View {
     /// Whether those names came from the synthetic demo, and are labelled so.
     var matchesAreSynthetic = true
     /// The screenshot entry (`ScreenshotImportSection`): the primary way in.
-    var screenshot: AnyView = AnyView(EmptyView())
+    var screenshot: AnyView? = nil
+    /// Off once a screenshot has a route to confirm or choose: that result is the
+    /// screen's one question, and its own "다른 스크린샷" stays.
+    var showsOtherWays = true
     let paste: AnyView
     var onLive: () -> Void = {}
     let onChooseDemo: (String) -> Void
@@ -328,17 +337,24 @@ struct MapImportContent: View {
                 SharedPlaceCard(place: place, onClear: onClear)
                 actions(for: place)
             } else {
-                screenshot
-                VStack(alignment: .leading, spacing: TapsoSpace.sm) {
-                    SectionTitle("mapImport.other")
-                    Text("mapImport.other.hint")
-                        .font(.footnote)
-                        .foregroundStyle(TapsoColor.textSecondary)
-                        .fixedSize(horizontal: false, vertical: true)
-                    paste
-                    Button("mapImport.search", action: onSearch)
-                        .buttonStyle(SecondaryButtonStyle())
-                        .accessibilityIdentifier("map-import-search")
+                if let screenshot {
+                    screenshot
+                }
+                if showsOtherWays {
+                    VStack(alignment: .leading, spacing: TapsoSpace.sm) {
+                        // "다른 방법" only reads right after the screenshot way in.
+                        if screenshot != nil {
+                            SectionTitle("mapImport.other")
+                        }
+                        Text("mapImport.other.hint")
+                            .font(.footnote)
+                            .foregroundStyle(TapsoColor.textSecondary)
+                            .fixedSize(horizontal: false, vertical: true)
+                        paste
+                        Button("mapImport.search", action: onSearch)
+                            .buttonStyle(SecondaryButtonStyle())
+                            .accessibilityIdentifier("map-import-search")
+                    }
                 }
                 if unreadable {
                     NoticeCard(

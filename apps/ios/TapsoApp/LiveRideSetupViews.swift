@@ -23,11 +23,12 @@ struct LiveRideEntryCard: View {
                     // On a narrow phone the badge drops below the title instead of breaking it.
                     ViewThatFits(in: .horizontal) {
                         HStack(spacing: TapsoSpace.xs) {
-                            entryTitle
+                            entryTitle.lineLimit(1).fixedSize()
                             LiveBadge()
                         }
+                        // Stacked, the title may wrap: at the largest type it is wider than the screen.
                         VStack(alignment: .leading, spacing: TapsoSpace.xxs) {
-                            entryTitle
+                            entryTitle.fixedSize(horizontal: false, vertical: true)
                             LiveBadge()
                         }
                     }
@@ -54,8 +55,6 @@ struct LiveRideEntryCard: View {
         Text("live.entry.title")
             .font(.body.weight(.semibold))
             .foregroundStyle(TapsoColor.textPrimary)
-            .lineLimit(1)
-            .fixedSize()
     }
 }
 
