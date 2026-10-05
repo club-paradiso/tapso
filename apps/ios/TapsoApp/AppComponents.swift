@@ -131,16 +131,17 @@ struct RecentJourneyCard: View {
     let journey: SavedJourney
     let onRide: () -> Void
     let onToggleFavorite: () -> Void
+    @Environment(\.dynamicTypeSize) private var typeSize
 
     var body: some View {
         TapsoCard {
             VStack(alignment: .leading, spacing: TapsoSpace.md) {
                 HStack(spacing: TapsoSpace.xs) {
                     RouteBadge(number: journey.routeNumber)
-                    Text(String(format: RideText.string("route.headsign"), journey.headsign))
-                        .font(.subheadline)
-                        .foregroundStyle(TapsoColor.textSecondary)
-                        .lineLimit(1)
+                    // At accessibility sizes the direction gets its own line instead of an ellipsis.
+                    if !typeSize.isAccessibilitySize {
+                        headsign.lineLimit(1)
+                    }
                     Spacer(minLength: 0)
                     Button(action: onToggleFavorite) {
                         Image(systemName: journey.isFavorite ? "star.fill" : "star")
@@ -149,6 +150,9 @@ struct RecentJourneyCard: View {
                             .frame(width: TapsoSize.minimumTouch, height: TapsoSize.minimumTouch)
                     }
                     .accessibilityLabel(Text(journey.isFavorite ? LocalizedStringKey("favorite.remove") : LocalizedStringKey("favorite.add")))
+                }
+                if typeSize.isAccessibilitySize {
+                    headsign.fixedSize(horizontal: false, vertical: true)
                 }
                 StopPair(boarding: journey.boardingStopName, destination: journey.destinationStopName)
                 Button(action: onRide) {
@@ -160,18 +164,31 @@ struct RecentJourneyCard: View {
             }
         }
     }
+
+    private var headsign: some View {
+        Text(String(format: RideText.string("route.headsign"), journey.headsign))
+            .font(.subheadline)
+            .foregroundStyle(TapsoColor.textSecondary)
+    }
 }
 
 /// A compact favourite. Figma: no Figma component yet; drawn inside the screens.
 struct FavoriteJourneyRow: View {
     let journey: SavedJourney
     let onRide: () -> Void
+    @Environment(\.dynamicTypeSize) private var typeSize
 
     var body: some View {
         Button(action: onRide) {
             HStack(spacing: TapsoSpace.sm) {
-                RouteBadge(number: journey.routeNumber)
+                if !typeSize.isAccessibilitySize {
+                    RouteBadge(number: journey.routeNumber)
+                }
                 VStack(alignment: .leading, spacing: 2) {
+                    // At accessibility sizes the badge sits above the names, which then get the full width.
+                    if typeSize.isAccessibilitySize {
+                        RouteBadge(number: journey.routeNumber)
+                    }
                     Text(verbatim: journey.destinationStopName)
                         .font(.body.weight(.semibold))
                         .foregroundStyle(TapsoColor.textPrimary)

@@ -194,9 +194,15 @@ struct HomeContent: View {
 /// search asks anything. 돌이 is awake and blinks; the promise is one line and
 /// the three steps are the whole product. Figma: no Figma component yet; drawn inside the screens.
 struct HomeIntroCard: View {
+    @Environment(\.dynamicTypeSize) private var typeSize
+
     var body: some View {
         VStack(alignment: .leading, spacing: TapsoSpace.md) {
-            HStack(alignment: .center, spacing: TapsoSpace.md) {
+            // At accessibility sizes 돌이 sits above the words, which then get the full width.
+            let layout = typeSize.isAccessibilitySize
+                ? AnyLayout(VStackLayout(alignment: .leading, spacing: TapsoSpace.sm))
+                : AnyLayout(HStackLayout(alignment: .center, spacing: TapsoSpace.md))
+            layout {
                 DolBuddy(expression: .awake, size: 64, animated: true)
                 VStack(alignment: .leading, spacing: TapsoSpace.xxs) {
                     Text("home.intro.title")
@@ -238,11 +244,20 @@ struct HomeIntroCard: View {
                     .foregroundStyle(TapsoColor.textOnAccent)
                     .frame(width: 20, height: 20)
                     .background(TapsoColor.journeyActive, in: Circle())
-                Text(key)
-                    .font(.footnote.weight(.semibold))
-                    .foregroundStyle(TapsoColor.textPrimary)
-                    .lineLimit(1)
-                    .fixedSize()
+                // In a row the steps keep their width so ViewThatFits can measure them;
+                // stacked, they wrap instead of running off a narrow or large-type screen.
+                if separated {
+                    Text(key)
+                        .font(.footnote.weight(.semibold))
+                        .foregroundStyle(TapsoColor.textPrimary)
+                        .lineLimit(1)
+                        .fixedSize()
+                } else {
+                    Text(key)
+                        .font(.footnote.weight(.semibold))
+                        .foregroundStyle(TapsoColor.textPrimary)
+                        .fixedSize(horizontal: false, vertical: true)
+                }
             }
         }
     }

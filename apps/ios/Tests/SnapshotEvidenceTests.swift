@@ -313,18 +313,33 @@ final class SnapshotEvidenceTests: XCTestCase {
     }
 
     private func screenshotImport(_ state: ScreenshotImportState) -> AnyView {
-        AnyView(MapImportContent(
+        let hasResult: Bool = switch state {
+        case .confirm, .choose: true
+        case .idle, .reading, .failed: false
+        }
+        return AnyView(MapImportContent(
             place: nil,
-            screenshot: AnyView(ScreenshotImportContent(state: state, picker: AnyView(pastePlaceholder), anotherPicker: AnyView(pastePlaceholder))),
+            screenshot: AnyView(ScreenshotImportContent(state: state, picker: AnyView(pickerPlaceholder(prominent: true)), anotherPicker: AnyView(pickerPlaceholder(prominent: false)))),
+            showsOtherWays: !hasResult,
             paste: AnyView(pastePlaceholder),
             onChooseDemo: { _ in },
             onSearch: {}
         ))
     }
 
+    /// The system PasteButton cannot render here; this mirrors its mint tint in the app.
     private var pastePlaceholder: some View {
         Label("Paste", systemImage: "doc.on.clipboard")
             .buttonStyleLike()
+    }
+
+    /// The PhotosPicker labels as the app draws them (`ScreenshotImportSection.pickerButton`).
+    private func pickerPlaceholder(prominent: Bool) -> some View {
+        Label(prominent ? "mapImport.shot.action" : "mapImport.shot.another", systemImage: "photo.on.rectangle")
+            .font(.headline)
+            .foregroundStyle(prominent ? TapsoColor.textOnAccent : TapsoColor.textPrimary)
+            .frame(maxWidth: .infinity, minHeight: TapsoSize.primaryButtonHeight - (prominent ? 0 : 8))
+            .background(prominent ? TapsoColor.journeyActive : TapsoColor.backgroundSecondary, in: RoundedRectangle(cornerRadius: TapsoRadius.md, style: .continuous))
     }
 
     private func sampleLibrary() -> JourneyLibrary {
@@ -484,11 +499,12 @@ final class SnapshotEvidenceTests: XCTestCase {
 }
 
 private extension View {
+    /// The app's PasteButton: `.tint(TapsoColor.journeyActive)`, large, rounded (`MapImportView`).
     func buttonStyleLike() -> some View {
         font(.headline)
             .foregroundStyle(.white)
             .frame(maxWidth: .infinity, minHeight: 50)
-            .background(Color.black, in: RoundedRectangle(cornerRadius: 14, style: .continuous))
+            .background(TapsoColor.journeyActive, in: RoundedRectangle(cornerRadius: TapsoRadius.md, style: .continuous))
     }
 }
 
