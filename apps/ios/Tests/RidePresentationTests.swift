@@ -556,3 +556,37 @@ final class SavedJourneyEntityTests: XCTestCase {
         ShortcutInbox.shared.requestedJourneyID = nil
     }
 }
+
+/// The saved-stop nudge's words and list (`AUTO_START.md`, M3).
+@MainActor
+final class StopNudgePresentationTests: XCTestCase {
+    func testBodyNamesTheRouteAndTheCount() {
+        let approaching = StopNudgeText.body(.approaching(routeNumber: "365", stopsAway: 2))
+        XCTAssertTrue(approaching.contains("365") && approaching.contains("2"), approaching)
+        XCTAssertTrue(StopNudgeText.body(.atStop(routeNumber: "365")).contains("365"))
+        XCTAssertTrue(StopNudgeText.body(.unknown(routeNumber: "365")).contains("365"))
+    }
+
+    func testRowsListFavouritesFirstAndOnlyLiveRidesCanBeSwitchedOn() {
+        let demo = SavedJourney(
+            routeID: "SYN-A", routeNumber: "365", headsign: "합성", boardingStopID: "SYN-B", boardingStopName: "합성 정류장",
+            destinationStopID: "SYN-D1", destinationStopName: "합성 도착 1", lastRiddenAt: Date(timeIntervalSince1970: 0)
+        )
+        let live = SavedJourney(
+            routeID: "SYN-L", routeNumber: "202", headsign: "합성", boardingStopID: "SYN-B", boardingStopName: "합성 정류장",
+            destinationStopID: "SYN-D2", destinationStopName: "합성 도착 2", lastRiddenAt: Date(timeIntervalSince1970: 0),
+            cityCode: "39", boardingSequence: 3, destinationSequence: 9
+        )
+        var library = JourneyLibrary()
+        library.recordRide(demo, at: Date(timeIntervalSince1970: 200))
+        library.recordRide(live, at: Date(timeIntervalSince1970: 100))
+        _ = library.toggleFavorite(id: live.id)
+        var settings = StopNudgeSettings()
+        settings.enable(.init(journeyID: live.id, latitude: 33.5, longitude: 126.5))
+
+        let rows = StopNudgeRow.rows(library: library, settings: settings)
+        XCTAssertEqual(rows.map(\.id), [live.id, demo.id])
+        XCTAssertEqual(rows.map(\.isOn), [true, false])
+        XCTAssertEqual(rows.map(\.isLive), [true, false])
+    }
+}

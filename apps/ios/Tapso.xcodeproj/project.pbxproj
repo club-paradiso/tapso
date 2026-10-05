@@ -85,6 +85,7 @@
 		B0C8973287FB766CBDC41B9C /* ShortcutInbox.swift in Sources */ = {isa = PBXBuildFile; fileRef = DA5BC3BF98153B4CED44933B /* ShortcutInbox.swift */; };
 		BC537E74602056783FF8F8A4 /* RideAgainControl.swift in Sources */ = {isa = PBXBuildFile; fileRef = F50D3A8DC28E981BCD5CF414 /* RideAgainControl.swift */; };
 		4529FC35F853D45B55597C98 /* AutoStartGuideView.swift in Sources */ = {isa = PBXBuildFile; fileRef = ABFD8AA3417276C50E02F62B /* AutoStartGuideView.swift */; };
+		DFE64596386385FB792ED2A5 /* StopNudgeController.swift in Sources */ = {isa = PBXBuildFile; fileRef = 9E99E6802828197D6A068162 /* StopNudgeController.swift */; };
 /* End PBXBuildFile section */
 
 /* Begin PBXContainerItemProxy section */
@@ -192,6 +193,7 @@
 		DA5BC3BF98153B4CED44933B /* ShortcutInbox.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = ShortcutInbox.swift; sourceTree = "<group>"; };
 		F50D3A8DC28E981BCD5CF414 /* RideAgainControl.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = RideAgainControl.swift; sourceTree = "<group>"; };
 		ABFD8AA3417276C50E02F62B /* AutoStartGuideView.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = AutoStartGuideView.swift; sourceTree = "<group>"; };
+		9E99E6802828197D6A068162 /* StopNudgeController.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = StopNudgeController.swift; sourceTree = "<group>"; };
 /* End PBXFileReference section */
 
 /* Begin PBXFrameworksBuildPhase section */
@@ -319,6 +321,7 @@
 				B71E19ABC4E943435650D65F /* RideView.swift */,
 				B44662751CB9EDA0A65897FC /* ScreenshotImportViews.swift */,
 				004C91C027949523F56247EA /* SetupViews.swift */,
+				9E99E6802828197D6A068162 /* StopNudgeController.swift */,
 				6BBD1C360D871CE9BD6C1F6E /* Tapso.entitlements */,
 				DA0A54842582C43E01555CBD /* TapsoAPIClient.swift */,
 				BCE2DF2EA2CB13C5D00C238B /* TapsoApp.swift */,
@@ -583,6 +586,7 @@
 				DBA3F1C6B60D01B4A4505125 /* ScreenshotImportViews.swift in Sources */,
 				8CA644A203D52AA38D49E70F /* SetupViews.swift in Sources */,
 				A573345F7E44EBD980F707BE /* ShortcutInbox.swift in Sources */,
+				DFE64596386385FB792ED2A5 /* StopNudgeController.swift in Sources */,
 				E3F7A3852EAB2CEF59630AC9 /* TapsoActivityAttributes.swift in Sources */,
 				2664941987948A2833A62902 /* TapsoAPIClient.swift in Sources */,
 				F6C551D45E737E795E1AA04C /* TapsoApp.swift in Sources */,

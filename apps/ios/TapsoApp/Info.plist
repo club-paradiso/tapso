@@ -35,8 +35,10 @@
 	<false/>
 	<key>LSRequiresIPhoneOS</key>
 	<true/>
+	<key>NSLocationAlwaysAndWhenInUseUsageDescription</key>
+	<string>알림을 켠 정류장에 다가가면 앱을 열지 않아도 탈 버스가 어디쯤인지 알려 드리는 데 사용합니다. 정류장 근처인지는 iPhone 안에서만 판단하고, 위치는 탑서 서버로 보내지 않습니다.</string>
 	<key>NSLocationWhenInUseUsageDescription</key>
-	<string>승차 중 버스 위치를 보완하고 내릴 정류장을 확인하는 데 사용합니다.</string>
+	<string>승차 중 버스 위치를 보완하고 내릴 정류장을 확인하는 데, 그리고 알림을 켠 정류장에 다가갔는지 iPhone 안에서 확인하는 데 사용합니다.</string>
 	<key>NSPhotoLibraryUsageDescription</key>
 	<string>스크린샷 원본을 사진 앱에서 지울 때만 써요. / Used only to delete a screenshot's original from Photos when you ask.</string>
 	<key>NSSupportsLiveActivities</key>
