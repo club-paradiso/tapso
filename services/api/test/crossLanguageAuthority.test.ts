@@ -80,6 +80,9 @@ test("the network client talks only to TAPSO's own API, through documented endpo
     "/v1/routes",
     "/v1/stops",
     "/v1/route-info",
+    // The saved-stop nudge and boarding-first trips read a route's buses
+    // (`AUTO_START.md` M3, `DECISIONS.md` 2026-10-06); documented in PRODUCTION_TRANSIT_API.md.
+    "/v1/vehicles",
     "/v1/catalog",
     "/v1/timetables",
     "/v1/sessions",
