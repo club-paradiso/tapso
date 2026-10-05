@@ -50,87 +50,132 @@ struct CitrusDot: View {
 
 /// 돌이, TAPSO's basalt companion. A small supporting mark whose expression
 /// follows the ride; it never carries information on its own. Decorative.
+/// Figma: `돌이 / V3` (`287:35`, page `05C`). A pebble that sits on its flat
+/// side, one sheen and three faint pores for basalt, and a face made of eyes
+/// only. The rim takes the moment's colour; the blush appears on arrival alone.
 struct DolBuddy: View {
     let moment: RideMoment
     var size: CGFloat = 36
 
     private var accent: Color { TapsoColor.journey(RideGuidancePolicy.colorRole(for: moment)) }
-    private var unit: CGFloat { size / 36 }
+    /// Points per unit of the 72-unit Figma artboard.
+    private var unit: CGFloat { size / 72 }
 
     var body: some View {
         ZStack {
-            RoundedRectangle(cornerRadius: 11 * unit, style: .continuous)
-                .fill(LinearGradient(
-                    colors: [TapsoColor.basaltRaised, TapsoColor.basalt],
-                    startPoint: .topLeading,
-                    endPoint: .bottomTrailing
-                ))
-                .overlay {
-                    RoundedRectangle(cornerRadius: 11 * unit, style: .continuous)
-                        .stroke(accent.opacity(0.5), lineWidth: max(0.6, 0.9 * unit))
-                }
-            Capsule()
-                .fill(accent)
-                .frame(width: 20 * unit, height: 4 * unit)
-                .offset(y: -11 * unit)
-            HStack(spacing: 7 * unit) {
-                eye
-                eye
+            DolShape(kind: .body)
+                .fill(TapsoColor.basalt)
+            DolShape(kind: .body)
+                .stroke(accent, lineWidth: max(1, 3 * unit))
+            DolShape(kind: .sheen)
+                .fill(.white.opacity(0.13))
+            // Below 30 pt the pores are under a pixel: noise, not texture.
+            if size >= 30 {
+                DolShape(kind: .circles(DolFace.pores))
+                    .fill(.white.opacity(0.10))
             }
-            .offset(y: -2 * unit)
-            HStack(spacing: 13 * unit) {
-                Circle().fill(TapsoColor.tangerine.opacity(0.85))
-                Circle().fill(TapsoColor.tangerine.opacity(0.85))
-            }
-            .frame(width: 18 * unit, height: 3 * unit)
-            .offset(y: 4 * unit)
-            mouth
-                .offset(y: 8 * unit)
+            face
         }
         .frame(width: size, height: size)
         .accessibilityHidden(true)
     }
 
     @ViewBuilder
-    private var eye: some View {
+    private var face: some View {
+        let eyeStroke = StrokeStyle(lineWidth: max(1, 3.4 * unit), lineCap: .round)
         switch moment {
-        case .checking, .vehicleLost, .offline, .delayed:
-            Capsule().fill(.white.opacity(0.9)).frame(width: 3 * unit, height: 1.4 * unit)
-        default:
-            Circle().fill(.white.opacity(0.92)).frame(width: 3 * unit, height: 3 * unit)
-        }
-    }
-
-    @ViewBuilder
-    private var mouth: some View {
-        switch moment {
-        case .riding, .ended:
-            SmileShape()
-                .stroke(.white.opacity(0.8), style: StrokeStyle(lineWidth: 1.2 * unit, lineCap: .round))
-                .frame(width: 8 * unit, height: 4 * unit)
-        case .arrived:
-            SmileShape()
-                .stroke(.white.opacity(0.9), style: StrokeStyle(lineWidth: 1.5 * unit, lineCap: .round))
-                .frame(width: 10 * unit, height: 5 * unit)
+        case .checking:
+            DolShape(kind: .circles(DolFace.glancing)).fill(.white)
+        case .riding:
+            DolShape(kind: .arcs(DolFace.resting)).stroke(.white, style: eyeStroke)
         case .prepare:
-            Circle().fill(.white.opacity(0.8)).frame(width: 3 * unit, height: 3 * unit)
+            DolShape(kind: .circles(DolFace.lookingAhead)).fill(.white)
         case .nextStop, .passedDestination:
-            Capsule().fill(.white.opacity(0.85)).frame(width: 3.2 * unit, height: 5 * unit)
-        case .delayed, .vehicleLost, .offline, .checking:
-            Capsule().fill(.white.opacity(0.72)).frame(width: 7 * unit, height: 1.4 * unit)
+            DolShape(kind: .circles(DolFace.wideEyes)).fill(.white)
+            DolShape(kind: .circles(DolFace.widePupils)).fill(TapsoColor.basalt)
+            DolShape(kind: .circles(DolFace.wideGlints)).fill(.white)
+        case .arrived:
+            DolShape(kind: .arcs(DolFace.smiling)).stroke(.white, style: eyeStroke)
+            DolShape(kind: .ellipses(DolFace.blush)).fill(TapsoColor.tangerine.opacity(0.85))
+        case .ended:
+            DolShape(kind: .arcs(DolFace.smiling)).stroke(.white, style: eyeStroke)
+        case .delayed, .vehicleLost, .offline:
+            DolShape(kind: .bars(DolFace.squinting)).fill(.white)
         }
     }
 }
 
-private struct SmileShape: Shape {
+/// 돌이's geometry on the 72-unit Figma artboard (`돌이 / V3`).
+private enum DolFace {
+    struct Dot: Sendable { let x, y, r: CGFloat }
+    /// A quadratic arc from (x0, y) through control (cx, cy) to (x1, y).
+    struct Arc: Sendable { let x0, x1, y, cx, cy: CGFloat }
+    struct Box: Sendable { let x, y, width, height: CGFloat }
+
+    static let pores = [Dot(x: 46, y: 55.5, r: 1.3), Dot(x: 52.5, y: 57, r: 0.95), Dot(x: 41, y: 58.2, r: 0.8)]
+    static let glancing = [Dot(x: 24, y: 38, r: 4.6), Dot(x: 42, y: 38, r: 4.6)]
+    static let lookingAhead = [Dot(x: 32, y: 37, r: 5), Dot(x: 50, y: 37, r: 5)]
+    static let wideEyes = [Dot(x: 28, y: 37, r: 7.5), Dot(x: 47, y: 37, r: 7.5)]
+    static let widePupils = [Dot(x: 30.5, y: 35.5, r: 3.3), Dot(x: 49.5, y: 35.5, r: 3.3)]
+    static let wideGlints = [Dot(x: 31.6, y: 34.3, r: 1.1), Dot(x: 50.6, y: 34.3, r: 1.1)]
+    static let resting = [Arc(x0: 23, x1: 33, y: 37, cx: 28, cy: 43), Arc(x0: 41, x1: 51, y: 37, cx: 46, cy: 43)]
+    static let smiling = [Arc(x0: 22, x1: 33, y: 40, cx: 27.5, cy: 31), Arc(x0: 41, x1: 52, y: 40, cx: 46.5, cy: 31)]
+    static let blush = [Box(x: 14.5, y: 46.5, width: 6.8, height: 4), Box(x: 53, y: 46.5, width: 6.8, height: 4)]
+    static let squinting = [Box(x: 23, y: 36.3, width: 10, height: 3.4), Box(x: 41, y: 36.3, width: 10, height: 3.4)]
+}
+
+private struct DolShape: Shape {
+    enum Kind: Sendable {
+        case body, sheen
+        case circles([DolFace.Dot])
+        case arcs([DolFace.Arc])
+        case ellipses([DolFace.Box])
+        case bars([DolFace.Box])
+    }
+
+    let kind: Kind
+
     func path(in rect: CGRect) -> Path {
         var path = Path()
-        path.move(to: CGPoint(x: rect.minX, y: rect.minY))
-        path.addQuadCurve(
-            to: CGPoint(x: rect.maxX, y: rect.minY),
-            control: CGPoint(x: rect.midX, y: rect.maxY)
-        )
-        return path
+        switch kind {
+        case .body:
+            path.move(to: CGPoint(x: 30, y: 14))
+            path.addCurve(to: CGPoint(x: 66, y: 30), control1: CGPoint(x: 44, y: 11), control2: CGPoint(x: 60, y: 15))
+            path.addCurve(to: CGPoint(x: 48, y: 61), control1: CGPoint(x: 71, y: 43), control2: CGPoint(x: 66, y: 58))
+            path.addCurve(to: CGPoint(x: 8, y: 52), control1: CGPoint(x: 34, y: 63), control2: CGPoint(x: 16, y: 62))
+            path.addCurve(to: CGPoint(x: 12, y: 23), control1: CGPoint(x: 2, y: 44), control2: CGPoint(x: 4, y: 31))
+            path.addCurve(to: CGPoint(x: 30, y: 14), control1: CGPoint(x: 17, y: 18), control2: CGPoint(x: 23, y: 15))
+            path.closeSubpath()
+        case .sheen:
+            path.move(to: CGPoint(x: 14, y: 29))
+            path.addCurve(to: CGPoint(x: 33, y: 16.5), control1: CGPoint(x: 17, y: 22), control2: CGPoint(x: 24, y: 17))
+            path.addCurve(to: CGPoint(x: 17.5, y: 31), control1: CGPoint(x: 26, y: 19.5), control2: CGPoint(x: 20, y: 24))
+            path.addCurve(to: CGPoint(x: 14, y: 29), control1: CGPoint(x: 16.8, y: 32.6), control2: CGPoint(x: 13.6, y: 31.6))
+            path.closeSubpath()
+        case let .circles(dots):
+            for dot in dots {
+                path.addEllipse(in: CGRect(x: dot.x - dot.r, y: dot.y - dot.r, width: dot.r * 2, height: dot.r * 2))
+            }
+        case let .arcs(arcs):
+            for arc in arcs {
+                path.move(to: CGPoint(x: arc.x0, y: arc.y))
+                path.addQuadCurve(to: CGPoint(x: arc.x1, y: arc.y), control: CGPoint(x: arc.cx, y: arc.cy))
+            }
+        case let .ellipses(boxes):
+            for box in boxes {
+                path.addEllipse(in: CGRect(x: box.x, y: box.y, width: box.width, height: box.height))
+            }
+        case let .bars(boxes):
+            for box in boxes {
+                path.addRoundedRect(
+                    in: CGRect(x: box.x, y: box.y, width: box.width, height: box.height),
+                    cornerSize: CGSize(width: box.height / 2, height: box.height / 2)
+                )
+            }
+        }
+        let scale = CGAffineTransform(translationX: rect.minX, y: rect.minY)
+            .scaledBy(x: rect.width / 72, y: rect.height / 72)
+        return path.applying(scale)
     }
 }
 

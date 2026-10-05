@@ -27,7 +27,7 @@ Keep this file current when either side changes. Code Connect for Swift is not s
 | Figma component (node) | SwiftUI | Tokens | Journey state | Localization keys | Accessibility |
 |---|---|---|---|---|---|
 | RouteBadge / V2 (`153:89`) `role`, `size` | `RouteBadge(number:role:compact:)` — `Shared/RideSurfaceComponents.swift` | `journey/*` fill, `text/on-accent` · `on-urgent` · `on-dark-surface`, `size/route-badge` | `RideGuidance.colorRole`; `neutral` on coral/tangerine Lock Screens | `a11y.route` | One element: "365번 버스" |
-| 돌이 / V2 (`153:130`) `moment` | `DolBuddy(moment:size:)` | `identity/basalt(-raised)`, `journey/*`, tangerine | `RideMoment`; `uncertain` = delayed, vehicleLost, offline, checking | — | Hidden |
+| 돌이 / V3 (`287:35`) `state` | `DolBuddy(moment:size:)` | `identity/basalt`, `journey/*` rim, tangerine blush (arrived only) | `RideMoment`; `uncertain` = delayed, vehicleLost, offline; `checking` has its own glance | — | Hidden |
 | CitrusDot / V2 (`153:2`) | `CitrusDot(size:)` | `identity/tangerine` | Destination | — | Hidden |
 | Icon / V2 (`152:86`) | SF Symbols from `RideGuidance.symbolName` | inherits | per moment | — | Paired with text; decorative alone |
 | Button / V2 (`153:137`) `kind` | `PrimaryButtonStyle`, `SecondaryButtonStyle` — `TapsoApp/AppComponents.swift` | `journey/active`, `background/secondary`, `size/button-primary`, `radius/md` | — | `home.rideAgain`, `check.confirm`, `check.reject`, `ride.gotOff`, `end.done` | ≥ 48 pt; label is the action |
