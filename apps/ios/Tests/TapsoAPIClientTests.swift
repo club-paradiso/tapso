@@ -25,6 +25,22 @@ final class TapsoAPIClientTests: XCTestCase {
         XCTAssertEqual(query.first { $0.name == "routeNo" }?.value, "202")
     }
 
+    /// The saved-stop nudge (`AUTO_START.md`, M3) reads the route's buses and
+    /// sends the route and city only: never a position.
+    func testVehicleStopSequencesSendsTheRouteAndNothingAboutTheRider() async throws {
+        StubURLProtocol.respond { _ in
+            (200, Data(#"{"items":[{"vehicleId":"SYN-1","stopSequence":7},{"vehicleId":"SYN-2"}],"meta":{}}"#.utf8))
+        }
+        let sequences = try await makeClient().vehicleStopSequences(routeID: "SYN-202-W", cityCode: "39")
+        XCTAssertEqual(sequences, [7, nil])
+        let request = try XCTUnwrap(StubURLProtocol.recorded.first)
+        XCTAssertEqual(request.httpMethod, "GET")
+        XCTAssertEqual(request.url?.path, "/v1/vehicles")
+        let query = URLComponents(url: try XCTUnwrap(request.url), resolvingAgainstBaseURL: false)?.queryItems ?? []
+        XCTAssertEqual(Set(query.map(\.name)), ["routeId", "cityCode"])
+        XCTAssertNil(request.httpBody)
+    }
+
     func testCreatingASessionDeclaresAWaitingRiderAndNoVehicle() async throws {
         StubURLProtocol.respond { _ in (201, Payload.session(state: "confirmation_required")) }
         let snapshot = try await makeClient().createSession(routeID: "SYN-202-W", cityCode: "39", boardingSequence: 4, destinationSequence: 10)

@@ -40,6 +40,19 @@ struct TapsoAPIClient: Sendable {
         return try await send(request, as: TransitAPIStopList.self)
     }
 
+    /// Where a variant's buses are now, as stop sequences (`nil` when the
+    /// provider did not place one). For the saved-stop nudge (`AUTO_START.md`,
+    /// M3): the request carries the route and city only, never a position.
+    func vehicleStopSequences(routeID: String, cityCode: String = TapsoAPIClient.jejuCityCode) async throws -> [Int?] {
+        let request = makeRequest(path: "/v1/vehicles", query: [("routeId", routeID), ("cityCode", cityCode)])
+        return try await send(request, as: VehicleSnapshot.self).items.map(\.stopSequence)
+    }
+
+    private struct VehicleSnapshot: Decodable {
+        let items: [Item]
+        struct Item: Decodable { let stopSequence: Int? }
+    }
+
     /// One variant's published service day: first and last departure from its starting stop, and headways.
     func routeInfo(routeID: String, cityCode: String = TapsoAPIClient.jejuCityCode) async throws -> TransitAPIRouteServiceHours {
         let request = makeRequest(path: "/v1/route-info", query: [("routeId", routeID), ("cityCode", cityCode)])

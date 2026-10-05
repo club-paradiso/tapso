@@ -68,24 +68,29 @@ Still no new permission. TAPSO cannot create automations (C9), but it can make o
 
 **Done when:** on the device, a rider follows the guide and the automation opens the vehicle check for the chosen journey; the Shortcuts button opens Shortcuts. Evidence: a recording of the setup and the trigger. Tests: `SavedJourneyEntityTests`.
 
-### M3. "탑서가 먼저 말을 건다" at saved stops — `NEEDS_OWNER_DECISION`
+### M3. "탑서가 먼저 말을 건다" at saved stops — `IN_REVIEW` (PR #126)
 
-This milestone uses passenger location, which principle 9 keeps optional, so the owner decides first (§4, D2).
+The owner decided D2 (yes) on 2026-10-05.
 
-1. Opt-in from a saved journey: "이 정류장에 오면 알려 주세요". It is off by default; a "아니요" keeps every other feature.
-2. `CLMonitor` with one `CircularGeographicCondition` per saved boarding stop, at most 20 (C2); TAPSO uses at most 10 and leaves room for future features. Radius: start at 150 m and tune it on the device (C3).
-3. On entry (the app is relaunched if needed, C1/C2): within the background runtime, read where the next bus of the saved route is from `GET /v1/vehicles` against the route's stop list. That gives stops away, not minutes: TAPSO has no arrival-time estimate today. Then post a **time-sensitive** local notification, "365번이 2정거장 전이에요 · 탈 거예요?", with the actions **탈게요** and **오늘은 아니에요**.
-4. **탈게요** starts the ride. Path A: a background action handler starts the activity (C10, unverified). Path B: a `.foreground` action opens the vehicle check. Ship B; switch to A only after a device proves it.
-5. Purpose strings in Korean and English that say exactly this and nothing more (C12). No location leaves the phone; the server sees only a vehicle read for route 365, as it does today.
+- **Opt-in.** The switches sit at the top of "자동으로 시작하기", one per saved journey, favourites first. Only live journeys can be switched on, because only they have a real stop. Everything is off by default.
+- **Permissions.** Turning one on asks for notifications, then When In Use, then Always (Apple shows the Always prompt once, sometimes later: C12). Without Always, the screen says the nudge works only while TAPSO is open. With no location access, the switch stays off and the screen says why.
+- **Monitoring.** `StopNudgeController` runs one `CLMonitor` ("tapso.stopNudges") with a 150 m `CircularGeographicCondition` per boarding stop, at most `StopNudge.maximumStops` = 10 (C2). The stop's coordinates come from the route's current `/v1/stops` list at opt-in, matched by stop id and provider sequence. The monitor and the notification delegate start in `TapsoApp.init`, so a relaunch for an event finds them (C1).
+- **On entry.**
+  - TAPSO reads `/v1/vehicles` for the route; the request carries `routeId` and `cityCode` only, and a test proves it.
+  - `StopNudge.nearestStopsAway` names the nearest bus that has not passed the stop, within 12 stops.
+  - TAPSO posts "제주버스터미널 정류장이에요 · 365번이 2정거장 전이에요. 탈 거예요?". If the bus is at the stop or not found, the text says so.
+- **Actions.** **탈게요** (foreground) opens the vehicle check for that journey, through the same inbox as the control. **오늘은 아니에요** silences that stop until the start of the next day.
+- **Privacy.** Whether the phone is near a stop is decided on the phone; no coordinate is sent. The purpose strings in `project.yml` (`NSLocationWhenInUseUsageDescription`, new `NSLocationAlwaysAndWhenInUseUsageDescription`) say exactly this.
+- **Not yet.** The notification is `.active`, not time-sensitive: the Time Sensitive entitlement is unverified for the Personal Team (C12 risk). Starting from the notification without opening the app waits for C10 and M1b.
 
 **Done when:**
-- the owner has decided D2;
-- on the device, walking to a saved stop with the app terminated produces the notification within 5 minutes;
-- "오늘은 아니에요" silences that stop until tomorrow;
-- denying Always leaves M1 and M2 working;
-- a test proves no coordinate is ever sent to the API.
+- on the device, with TAPSO terminated and Always granted, walking into a switched-on stop produces the notification within 5 minutes;
+- **탈게요** opens that journey's vehicle check;
+- **오늘은 아니에요** silences it until tomorrow;
+- denying location leaves M1a and M2 working;
+- one day of battery use is recorded from Settings › Battery.
 
-Evidence: the recording, battery use over one day from Settings › Battery, and the test.
+Tests: `StopNudgeTests` (core), `StopNudgePresentationTests`, `testVehicleStopSequencesSendsTheRouteAndNothingAboutTheRider`.
 
 ### M4. Push-to-start from the rider's schedule — `BLOCKED_BY_APPLE_ACCOUNT`
 
@@ -109,7 +114,7 @@ This waits until the matcher passes `READY_FOR_BOUNDED_AUTOMATION` (≥ 300 traj
   - background GPS that detects boarding: principle 9, C12, and battery cost;
   - Core Motion "in a vehicle": cannot wake the app (C11);
   - in-bus NFC or beacons: needs an operator.
-- **D2 (owner).** Is opt-in, saved-stop-only region monitoring with Always permission acceptable under principle 9? Recommendation: **yes, as M3**. It is off by default, monitors stops rather than the rider, keeps location on the device, and leaves every feature working without it. If the answer is no, M3 is dropped and M2's Shortcuts "Arrive" recipe covers the same moment, with Shortcuts holding the location instead.
+- **D2 (owner, decided yes on 2026-10-05).** Is opt-in, saved-stop-only region monitoring with Always permission acceptable under principle 9? Recommendation: **yes, as M3**. It is off by default, monitors stops rather than the rider, keeps location on the device, and leaves every feature working without it. If the answer is no, M3 is dropped and M2's Shortcuts "Arrive" recipe covers the same moment, with Shortcuts holding the location instead.
 - **D3 (taken).** Ship order: M1a → M2 → M3, with M1b and M4 as soon as the account allows APNs. M1a and M2 need nothing from Apple and nothing from the rider beyond a button.
 
 ## 5. Reproduction and evidence
@@ -136,4 +141,5 @@ Intents, controls and Live Activity starts only prove themselves on a device. A 
   - Region events can be minutes late (C3), so a bus that is already at the stop is missed. M3's notification must name the bus after it when the nearest one is already at the stop.
 - 2026-10-05: M1a in PR #124 (control + `OpenIntent`), 95 iOS tests green in the simulator. On the device: not yet proven.
 - 2026-10-05: M1a merged (#124). M2 in PR #125, with 97 iOS tests green in the simulator. Device evidence is still owed for both.
-- **Exact next action:** device evidence for M1a (the control) and M2 (one automation set up from the guide); then the owner's decision D2 for M3.
+- 2026-10-05: M2 merged (#125). The owner decided D2 (yes). M3 in PR #126: 100 iOS tests and 245 core tests green in the simulator.
+- **Exact next action:** device evidence for M1a, M2 and M3, the last by walking to a switched-on stop with TAPSO terminated.

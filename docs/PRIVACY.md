@@ -2,6 +2,12 @@
 
 TAPSO's default architecture tracks a public transit vehicle, not continuous passenger location. A future one-shot boarding location may be optional and must work only with explicit permission; it is not required by the current core.
 
+**Saved-stop alerts** (`docs/exec-plans/AUTO_START.md`, M3; owner decision D2, 2026-10-05) are the one feature that uses location while TAPSO is not on screen.
+- They are off by default; the rider switches them on per saved journey, for at most 10 stops.
+- iOS watches a 150 m circle around each switched-on boarding stop (`CLMonitor`). The decision "near the stop" is made on the phone, and no coordinate leaves it.
+- On entry, the only network read is the route's vehicle snapshot (`/v1/vehicles?routeId=&cityCode=`), the same read a ride makes.
+- Turning the alert off removes the circle. Every other feature works without location permission.
+
 - Government and APNs keys remain server-side and are excluded by `.gitignore`.
 - `apps/ios/Resources/PrivacyInfo.xcprivacy` (app, Live Activity extension and share extension): no tracking, no collected data types, and `UserDefaults` for the app's own state (reason `CA92.1`) and for the App Group hand-off inbox the share extension writes and the app reads (`HandoffInbox`, reason `1C8F.1`). Reason texts checked against Apple's `NSPrivacyAccessedAPITypeReasons` documentation on 2026-10-01. Whether live-ride session data counts as "collected" for App Store Connect's privacy label is the owner's call at submission; this repository's reading is that it serves only the ride in progress and is deleted at its end.
 - The iOS demo collects no user data and makes no network request. Live rides

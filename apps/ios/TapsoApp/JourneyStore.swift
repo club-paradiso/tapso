@@ -6,6 +6,7 @@ import TapsoTransit
 struct JourneyStore {
     private static let libraryKey = "tapso.journeyLibrary.v1"
     private static let activeRideKey = "tapso.activeRide.v1"
+    private static let stopNudgesKey = "tapso.stopNudges.v1"
 
     private let defaults: UserDefaults
 
@@ -22,6 +23,19 @@ struct JourneyStore {
 
     func saveLibrary(_ library: JourneyLibrary) {
         defaults.set(try? JSONEncoder().encode(library), forKey: Self.libraryKey)
+    }
+
+    /// Saved-stop nudges (`AUTO_START.md`, M3): opt-ins with the boarding stop's
+    /// coordinates, and today's silences. On the phone only.
+    func loadStopNudges() -> StopNudgeSettings {
+        guard let data = defaults.data(forKey: Self.stopNudgesKey),
+              let settings = try? JSONDecoder().decode(StopNudgeSettings.self, from: data)
+        else { return StopNudgeSettings() }
+        return settings
+    }
+
+    func saveStopNudges(_ settings: StopNudgeSettings) {
+        defaults.set(try? JSONEncoder().encode(settings), forKey: Self.stopNudgesKey)
     }
 
     func loadActiveRide() -> ActiveRide? {

@@ -4,6 +4,12 @@ import SwiftUI
 struct TapsoApp: App {
     @State private var model = TapsoAppModel()
 
+    init() {
+        // Before the first scene: a relaunch for a saved-stop event needs the
+        // monitor and the notification delegate in place (`AUTO_START.md`, M3).
+        StopNudgeController.shared.start()
+    }
+
     var body: some Scene {
         WindowGroup {
             TapsoRootView(model: model)
