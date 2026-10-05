@@ -379,11 +379,28 @@ test("an enabled session withholds automatic tracking while freshness is unknown
     [["제주70자1234", ["source_cadence_not_fresh"]]],
   );
 
-  const refreshed = await get(handler, `/v1/sessions/${session.id}`);
+  // Every read logs one structured line by dimension (workstream L); the confirmation flow
+  // below carries reliability, this pre-selection read carries the state alone.
+  const lines: string[] = [];
+  const info = console.info;
+  console.info = (line: string) => { lines.push(String(line)); };
+  let refreshed: Response;
+  try {
+    refreshed = await get(handler, `/v1/sessions/${session.id}`);
+  } finally {
+    console.info = info;
+  }
   assert.equal(refreshed.status, 200);
   const refreshedSession = await refreshed.json();
   assert.equal(refreshedSession.state, "confirmation_required");
   assert.equal(refreshedSession.selectedVehicleId, undefined);
+  const read = lines.map((line) => JSON.parse(line) as Record<string, unknown>).find((entry) => entry.event === "journey_session_read");
+  assert.ok(read, "a session read is logged");
+  assert.equal(read.sessionId, session.id);
+  assert.equal(read.routeId, ROUTE);
+  assert.equal(read.state, "confirmation_required");
+  assert.equal(read.selected, false);
+  assert.equal(read.trust, undefined, "no reliability before a bus is selected");
 
   const rewritten = await get(handler, `/v1/session?sessionId=${session.id}`);
   assert.equal(rewritten.status, 200, "the production rewrite target resolves the same session");
@@ -397,7 +414,9 @@ test("an enabled session withholds automatic tracking while freshness is unknown
   assert.equal(badId.status, 400);
 });
 
-test("explicit confirmation stays degraded because TAGO freshness is unknown", async () => {
+test("explicit confirmation stays degraded when the row's receipt is outside the evidence window", async () => {
+  // The harness row was received on 2026-09-12: far beyond the 90 s the confirmed-ride
+  // policy allows (`confirmedRideProgression.ts`), so the bus is followed but not placed.
   const { handler } = harness({ TRANSIT_SESSIONS_ENABLED: "true" });
   const created = await postJson(handler, "/v1/sessions", {
     routeId: ROUTE,
@@ -413,6 +432,8 @@ test("explicit confirmation stays degraded because TAGO freshness is unknown", a
   assert.equal(body.selectionMode, "explicit");
   assert.equal(body.state, "degraded");
   assert.equal(body.progress, undefined);
+  assert.equal(body.reliability?.observation, "stale");
+  assert.equal(body.reliability?.vehicle, "rechecking");
 
   const rewritten = await postJson(handler, `/v1/session-confirm?sessionId=${session.id}`, { vehicleId: "제주70자1234" });
   assert.equal(rewritten.status, 200, "the production rewrite target confirms the same session");
