@@ -31,8 +31,10 @@ enum SetupStep: Hashable {
     case liveRoutes
     /// Live: boarding and destination on one variant's real stop list.
     case liveStops(routeID: String)
-    /// Destination-first on the canonical catalog: the variants that reach a place.
-    case catalogRoutes(placeName: String)
+    /// Boarding-first on the canonical catalog: "어디서 타요?" for a destination place.
+    case catalogBoarding(placeName: String)
+    /// The buses from a boarding place to the destination, soonest first.
+    case catalogTrips(placeName: String, boardingName: String)
     /// "자동으로 시작하기": Shortcuts automation recipes (`AUTO_START.md`, M2).
     case autoStart
 }
@@ -321,6 +323,12 @@ final class TapsoAppModel {
     private(set) var catalogStatus: CatalogStatus = .idle
     /// A destination chosen from the catalog, while its route's stop list is set up.
     private(set) var catalogDestination: CatalogDestination?
+    /// The boarding stop of a boarding-first trip; consumed once the live stop list confirms it.
+    private(set) var catalogBoarding: CatalogDestination?
+    /// "내 근처" on the boarding screen.
+    private(set) var nearbyBoarding: NearbyBoarding = .idle
+    /// Trip id → where its nearest bus is.
+    private(set) var tripArrivals: [String: TripArrival] = [:]
     /// Official timetables per route number (`GET /v1/timetables`), never live.
     private(set) var timetables: [String: TimetableLoad] = [:]
     /// The way back pinned to the Lock Screen as a countdown, if one is running.
@@ -482,6 +490,7 @@ final class TapsoAppModel {
 
     func openSearch() {
         catalogDestination = nil
+        catalogBoarding = nil
         path = [.search]
     }
 
@@ -801,34 +810,100 @@ final class TapsoAppModel {
     }
 
     /// A place chosen in search: a single way there opens its stop list, several are listed.
+    /// A destination from the catalog: next, where the rider boards.
     func chooseCatalogPlace(_ place: DestinationPlace) {
-        guard let index = catalogIndex else { return }
-        let options = index.routeOptions(to: place).flatMap(\.options)
-        if options.count == 1, let only = options.first {
-            Task { await chooseCatalogRoute(only, placeName: place.name) }
-        } else if !options.isEmpty {
-            path.append(.catalogRoutes(placeName: place.name))
+        guard let index = catalogIndex, !index.boardingPlaces(toward: place).isEmpty else { return }
+        nearbyBoarding = .idle
+        path.append(.catalogBoarding(placeName: place.name))
+    }
+
+    /// Where the rider boards: next, only the buses from there to the destination.
+    func chooseBoardingPlace(_ boarding: BoardingPlace, destinationName: String) {
+        guard let index = catalogIndex, let destination = catalogPlace(named: destinationName) else { return }
+        let trips = index.trips(from: boarding, to: destination)
+        guard !trips.isEmpty else { return }
+        path.append(.catalogTrips(placeName: destinationName, boardingName: boarding.name))
+        Task { await loadTripArrivals(trips) }
+    }
+
+    /// The boarding places toward a destination, for the screen.
+    func boardingPlaces(towardPlaceNamed name: String) -> [BoardingPlace] {
+        guard let index = catalogIndex, let place = catalogPlace(named: name) else { return [] }
+        return index.boardingPlaces(toward: place)
+    }
+
+    /// The trips from a boarding place to a destination, soonest bus first.
+    func trips(fromBoardingNamed boardingName: String, toPlaceNamed placeName: String) -> [TripOption] {
+        guard let index = catalogIndex, let destination = catalogPlace(named: placeName),
+              let boarding = index.boardingPlaces(toward: destination).first(where: { $0.name == boardingName })
+        else { return [] }
+        return TripArrival.soonestFirst(index.trips(from: boarding, to: destination), arrivals: tripArrivals)
+    }
+
+    /// "내 근처": one foreground location sample, never kept or sent.
+    func findNearbyBoarding(towardPlaceNamed name: String) async {
+        nearbyBoarding = .locating
+        guard let sample = await locationSampler.sample(urgent: false, requestPermission: true) else {
+            nearbyBoarding = .unavailable
+            return
+        }
+        let places = boardingPlaces(towardPlaceNamed: name)
+        nearbyBoarding = .found(DestinationSearchIndex.nearest(places, latitude: sample.coordinate.latitude, longitude: sample.coordinate.longitude))
+    }
+
+    /// Where each trip's nearest bus is now. Reads `/v1/vehicles` per variant, at most eight.
+    func loadTripArrivals(_ trips: [TripOption]) async {
+        let wanted = Array(trips.prefix(8))
+        for trip in wanted { tripArrivals[trip.id] = .loading }
+        await withTaskGroup(of: (String, TripArrival).self) { group in
+            for trip in wanted {
+                let api = self.api
+                group.addTask {
+                    do {
+                        let sequences = try await api.vehicleStopSequences(routeID: trip.route.routeId)
+                        let away = StopNudge.nearestStopsAway(boardingSequence: trip.boardingSequence, vehicleSequences: sequences)
+                        return (trip.id, away.map(TripArrival.stopsAway) ?? .noneNearby)
+                    } catch {
+                        return (trip.id, .unavailable)
+                    }
+                }
+            }
+            for await (id, arrival) in group { tripArrivals[id] = arrival }
         }
     }
 
-    /// One variant chosen for a place: the server's current stop list opens with the place fixed.
-    func chooseCatalogRoute(_ option: DestinationRouteOption, placeName: String) async {
+    /// A trip chosen: the server's current stop list opens with both ends fixed,
+    /// and goes straight on to the vehicle check when it confirms them.
+    func chooseTrip(_ trip: TripOption, placeName: String) async {
         guard let index = catalogIndex else { return }
         screenshotDestination = nil
         screenshotDestinationRoute = nil
         catalogDestination = CatalogDestination(
-            routeID: option.route.routeId,
-            sequence: option.destinationSequence,
-            stopID: option.destinationStopID,
+            routeID: trip.route.routeId,
+            sequence: trip.destinationSequence,
+            stopID: trip.destinationStopID,
             placeName: placeName
         )
-        await chooseLiveRoute(index.catalog.apiRoute(option.route))
+        catalogBoarding = CatalogDestination(
+            routeID: trip.route.routeId,
+            sequence: trip.boardingSequence,
+            stopID: trip.boardingStopID,
+            placeName: trip.boardingName
+        )
+        await chooseLiveRoute(index.catalog.apiRoute(trip.route))
     }
 
     /// The catalog's destination on the server's current list: the same stop at the same sequence, or nothing.
     func fixedDestination(on stops: LiveRouteStops) -> RouteStop? {
         guard let destination = catalogDestination, destination.routeID == stops.apiRoute.routeId else { return nil }
         guard let stop = stops.route.routeStop(sequence: destination.sequence), stop.stop.id.rawValue == destination.stopID else { return nil }
+        return stop
+    }
+
+    /// The catalog's boarding stop on the server's current list, like `fixedDestination`.
+    func fixedBoarding(on stops: LiveRouteStops) -> RouteStop? {
+        guard let boarding = catalogBoarding, boarding.routeID == stops.apiRoute.routeId else { return nil }
+        guard let stop = stops.route.routeStop(sequence: boarding.sequence), stop.stop.id.rawValue == boarding.stopID else { return nil }
         return stop
     }
 
@@ -1280,6 +1355,7 @@ final class TapsoAppModel {
     /// (`chooseCatalogPlace`) and joins this flow at the variant's stop list.
     func openLiveSearch() {
         catalogDestination = nil
+        catalogBoarding = nil
         screenshotDestination = nil
         screenshotDestinationRoute = nil
         searchTask?.cancel()
@@ -1320,12 +1396,20 @@ final class TapsoAppModel {
             let list = try await api.stops(routeID: route.routeId)
             guard case let .loading(current) = liveStops, current.routeId == route.routeId else { return }
             let built = TransitRoute.live(route, stops: list.items)
-            liveStops = .loaded(LiveRouteStops(
+            let loaded = LiveRouteStops(
                 apiRoute: route,
                 route: built.route,
                 coordinatesAreSurveyed: built.coordinatesAreSurveyed,
                 topology: list.meta?.topology?.kind ?? "linear"
-            ))
+            )
+            liveStops = .loaded(loaded)
+            // Boarding-first: both ends already chosen and confirmed on the live list, so go on.
+            if let boarding = fixedBoarding(on: loaded), let destination = fixedDestination(on: loaded) {
+                catalogBoarding = nil
+                chooseLiveStops(boarding: boarding, destination: destination, on: loaded)
+            } else {
+                catalogBoarding = nil
+            }
         } catch {
             guard case let .loading(current) = liveStops, current.routeId == route.routeId else { return }
             liveStops = .failed(route, Self.failure(error))
@@ -1920,6 +2004,42 @@ enum LiveStops: Equatable {
     case loading(TransitAPIRoute)
     case loaded(LiveRouteStops)
     case failed(TransitAPIRoute, TransitAPIFailure)
+}
+
+/// "내 근처" on the boarding screen.
+enum NearbyBoarding: Equatable {
+    case idle
+    case locating
+    /// No permission or no fix: the screen says to search by name.
+    case unavailable
+    case found([BoardingPlace])
+}
+
+/// Where a trip's nearest bus is, from `/v1/vehicles`.
+enum TripArrival: Equatable {
+    case loading
+    case stopsAway(Int)
+    /// No bus of this variant within `StopNudge.horizonStops` before the stop.
+    case noneNearby
+    case unavailable
+
+    var stops: Int? {
+        if case let .stopsAway(count) = self { return count }
+        return nil
+    }
+
+    /// Buses that are coming first, nearest first; then the rest by ride length.
+    static func soonestFirst(_ trips: [TripOption], arrivals: [String: TripArrival]) -> [TripOption] {
+        trips.enumerated().sorted { left, right in
+            let l = arrivals[left.element.id]?.stops, r = arrivals[right.element.id]?.stops
+            switch (l, r) {
+            case let (l?, r?) where l != r: return l < r
+            case (.some, .none): return true
+            case (.none, .some): return false
+            default: return left.offset < right.offset
+            }
+        }.map(\.element)
+    }
 }
 
 struct LiveRouteStops: Equatable {

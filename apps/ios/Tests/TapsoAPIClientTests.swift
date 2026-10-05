@@ -429,11 +429,16 @@ final class TapsoAPIClientTests: XCTestCase {
         XCTAssertEqual(URLComponents(url: try XCTUnwrap(request.url), resolvingAgainstBaseURL: false)?.queryItems?.first { $0.name == "routeNo" }?.value, "202")
     }
 
-    func testDestinationSearchRunsOnTheCatalogAndFixesTheStopOnTheServersList() async throws {
+    /// Boarding-first (DECISIONS.md, 2026-10-06): destination on the catalog, then
+    /// where the rider boards, then only the buses from there, soonest first; the
+    /// chosen trip is fixed at both ends on the server's own list and goes straight
+    /// to the vehicle check.
+    func testBoardingFirstRunsOnTheCatalogAndFixesBothEndsOnTheServersList() async throws {
         StubURLProtocol.respond { request in
             switch request.url?.path {
             case "/v1/catalog": (200, Payload.catalog)
             case "/v1/stops": (200, Payload.stops)
+            case "/v1/vehicles": (200, Data(#"{"items":[{"vehicleId":"SYN-1","stopSequence":2},{"vehicleId":"SYN-2","stopSequence":9}],"meta":{}}"#.utf8))
             default: (404, Data(#"{"error":"NOT_FOUND","message":"x"}"#.utf8))
             }
         }
@@ -443,16 +448,32 @@ final class TapsoAPIClientTests: XCTestCase {
         let place = try XCTUnwrap(index.search("합성 정류장 10").first)
         XCTAssertEqual(place.name, "합성 정류장 10")
         XCTAssertFalse(index.places.contains { $0.name == "합성 정류장 1" }, "a variant's first stop is nowhere to get off")
+
         model.openSearch()
         model.chooseCatalogPlace(place)
-        try await waitUntil {
-            if case .loaded = model.liveStops { return true }
-            return false
-        }
+        XCTAssertEqual(model.path, [.search, .catalogBoarding(placeName: place.name)])
+        let boardingPlaces = model.boardingPlaces(towardPlaceNamed: place.name)
+        XCTAssertEqual(boardingPlaces.count, 9, "stops 1–9 come before stop 10; stops 11–12 do not")
+        let boarding = try XCTUnwrap(boardingPlaces.first { $0.name == "합성 정류장 4" })
+
+        model.chooseBoardingPlace(boarding, destinationName: place.name)
+        XCTAssertEqual(model.path.last, .catalogTrips(placeName: place.name, boardingName: "합성 정류장 4"))
+        let trip = try XCTUnwrap(model.trips(fromBoardingNamed: "합성 정류장 4", toPlaceNamed: place.name).first)
+        XCTAssertEqual(trip.stopCount, 6)
+        try await waitUntil { model.tripArrivals[trip.id].map { $0 != .loading } ?? false }
+        XCTAssertEqual(model.tripArrivals[trip.id], .stopsAway(2), "the bus at 2 is two stops before 4; the one at 9 has passed")
+
+        await model.chooseTrip(trip, placeName: place.name)
+        try await waitUntil { model.path.last == .vehicleCheck }
+        XCTAssertEqual(
+            model.path,
+            [.search, .catalogBoarding(placeName: place.name), .catalogTrips(placeName: place.name, boardingName: "합성 정류장 4"), .liveStops(routeID: "SYN-202-W"), .vehicleCheck]
+        )
+        XCTAssertEqual(model.draft?.boardingSequence, 4)
+        XCTAssertEqual(model.draft?.destinationSequence, 10)
         guard case let .loaded(stops) = model.liveStops else { return XCTFail("the stop list did not load") }
-        XCTAssertEqual(model.path, [.search, .liveStops(routeID: "SYN-202-W")])
         XCTAssertEqual(model.fixedDestination(on: stops)?.sequence, 10)
-        XCTAssertFalse(model.catalogDestinationMoved(on: stops))
+        XCTAssertNil(model.fixedBoarding(on: stops), "consumed once the vehicle check starts")
     }
 
     // MARK: Helpers
