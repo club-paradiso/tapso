@@ -4,7 +4,7 @@
  *
  *   node --experimental-strip-types scripts/crosswalk/jeju-stop-crosswalk.ts            # write artifacts
  *   node --experimental-strip-types scripts/crosswalk/jeju-stop-crosswalk.ts --check    # fail if they are stale
- *   … --evidence work/crosswalk/evidence.json                                            # classify collected evidence
+ *   … --evidence <file>   # another evidence file (default: artifacts/jeju-stop-crosswalk/evidence.json when present)
  *
  * Offline: reads the committed catalog and, when given, an evidence file
  * (`{ "<TAGO stop id>": StationEvidence }`) collected from the official
@@ -19,9 +19,10 @@
  * No vehicle, session or rider data is read or written.
  */
 
-import { readFileSync, writeFileSync, mkdirSync } from "node:fs";
+import { existsSync, mkdirSync, readFileSync, writeFileSync } from "node:fs";
 import {
   classifyCrosswalk,
+  nextStopNamesByStop,
   runtimeEntries,
   summarizeCrosswalk,
   type CatalogStop,
@@ -34,8 +35,13 @@ const option = (name: string): string | undefined => {
   return index >= 0 ? args[index + 1] : undefined;
 };
 const check = args.includes("--check");
-const evidencePath = option("--evidence");
-const verifiedOn = option("--verified-on") ?? "none";
+// The committed evidence (collected by the workflow) is read by default, so
+// `--check` in CI reproduces exactly what was committed.
+const defaultEvidence = new URL("../../artifacts/jeju-stop-crosswalk/evidence.json", import.meta.url);
+const evidencePath = option("--evidence") ?? (existsSync(defaultEvidence) ? defaultEvidence.pathname : undefined);
+type EvidenceFile = { collectedOn: string; evidence: Record<string, StationEvidence> };
+const evidenceFile: EvidenceFile | undefined = evidencePath ? JSON.parse(readFileSync(evidencePath, "utf8")) as EvidenceFile : undefined;
+const verifiedOn = evidenceFile?.collectedOn ?? "none";
 
 const root = new URL("../../", import.meta.url);
 const catalog = JSON.parse(readFileSync(new URL("services/api/data/jeju-transit-catalog.json", root), "utf8")) as {
@@ -47,10 +53,8 @@ const catalog = JSON.parse(readFileSync(new URL("services/api/data/jeju-transit-
 const routeCounts = catalog.stops.map(() => 0);
 for (const route of catalog.routes) for (const index of new Set(route.stops)) routeCounts[index]! += 1;
 
-const evidence = new Map<string, StationEvidence>(
-  evidencePath ? Object.entries(JSON.parse(readFileSync(evidencePath, "utf8")) as Record<string, StationEvidence>) : [],
-);
-const rows = classifyCrosswalk(catalog.stops, routeCounts, evidence);
+const evidence = new Map<string, StationEvidence>(Object.entries(evidenceFile?.evidence ?? {}));
+const rows = classifyCrosswalk(catalog.stops, routeCounts, evidence, nextStopNamesByStop(catalog.stops, catalog.routes));
 const summary = summarizeCrosswalk(rows);
 const entries = runtimeEntries(rows, catalog.stops, verifiedOn);
 
@@ -66,14 +70,14 @@ const summaryJson = `${JSON.stringify({
   catalogVersion: catalog.catalogVersion,
   evidence: {
     collected: evidence.size,
-    source: evidence.size > 0 ? "bus.jeju.go.kr passenger station pages" : "none: bus.jeju.go.kr not yet read for this audit",
+    source: evidence.size > 0 ? "bus.jeju.go.kr passenger station pages (ko-KR), collected by scripts/crosswalk/collect-bis-station-evidence.ts" : "none: bus.jeju.go.kr not yet read for this audit",
     verifiedOn,
   },
   hypothesis: "candidate BIS station id = TAGO stop id without its JEB prefix; never assumed, verified per pole",
   rules: {
-    VERIFIED_EXACT: "official page names the exact pole (direction marker included) within 30 m of the catalog pole",
-    VERIFIED_BY_NAME_COORDINATE: "same place within 30 m, name differs in form, no sibling pole within 150 m; not used at runtime",
-    AMBIGUOUS: "no coordinates to compare, 30–100 m apart, or a sibling pole nearby with a marker-less official name",
+    VERIFIED_EXACT: "the candidate's official page names the exact pole (direction marker included) and either its coordinates are within 30 m or its facing direction is the catalog's next stop on a variant through this pole",
+    VERIFIED_BY_NAME_COORDINATE: "same place (coordinates within 30 m or matching direction), name differs in form, no sibling pole within 150 m; not used at runtime",
+    AMBIGUOUS: "neither coordinates nor a matching facing direction, 30–100 m apart, or a sibling pole nearby with a marker-less official name",
     MISSING: "no official page for the candidate, or the TAGO id lacks the JEB405/JEB406 form",
     CONFLICT: "different place name, opposite direction marker, or more than 100 m apart",
     UNCHECKED: "no evidence collected (or the read failed)",

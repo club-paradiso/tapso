@@ -9,9 +9,9 @@
   },
   "hypothesis": "candidate BIS station id = TAGO stop id without its JEB prefix; never assumed, verified per pole",
   "rules": {
-    "VERIFIED_EXACT": "official page names the exact pole (direction marker included) within 30 m of the catalog pole",
-    "VERIFIED_BY_NAME_COORDINATE": "same place within 30 m, name differs in form, no sibling pole within 150 m; not used at runtime",
-    "AMBIGUOUS": "no coordinates to compare, 30–100 m apart, or a sibling pole nearby with a marker-less official name",
+    "VERIFIED_EXACT": "the candidate's official page names the exact pole (direction marker included) and either its coordinates are within 30 m or its facing direction is the catalog's next stop on a variant through this pole",
+    "VERIFIED_BY_NAME_COORDINATE": "same place (coordinates within 30 m or matching direction), name differs in form, no sibling pole within 150 m; not used at runtime",
+    "AMBIGUOUS": "neither coordinates nor a matching facing direction, 30–100 m apart, or a sibling pole nearby with a marker-less official name",
     "MISSING": "no official page for the candidate, or the TAGO id lacks the JEB405/JEB406 form",
     "CONFLICT": "different place name, opposite direction marker, or more than 100 m apart",
     "UNCHECKED": "no evidence collected (or the read failed)"

@@ -4,6 +4,8 @@ import { readFileSync } from "node:fs";
 import {
   candidateBisStationId,
   classifyCrosswalk,
+  nextStopNamesByStop,
+  parseStationPage,
   runtimeEntries,
   summarizeCrosswalk,
   type CatalogStop,
@@ -132,4 +134,80 @@ test("the committed catalog: every stop has the JEB405/JEB406 form and candidate
   assert.equal(summary.structure.candidateCollisions, 0);
   assert.equal(summary.byStatus.UNCHECKED, catalog.stops.length, "no evidence is committed, so nothing is verified");
   assert.equal(summary.byStatus.VERIFIED_EXACT, 0);
+});
+
+// ---- Direction rule and page parser (probe evidence, 2026-10-06) ----
+
+
+/**
+ * Excerpts of the official passenger station page as recorded by the probe
+ * workflow on 2026-10-06 (public page, no personal data), reduced to the
+ * elements the parser reads. Not a full copy of the page.
+ */
+function officialPageExcerpt(stationId: string, name: string | null, after: string): string {
+  return `<html><head><title>제주버스정보시스템</title></head><body>
+    <input type="hidden" id="pagenm"/><input type="hidden" name="routeId" value=""/>
+    <input type="hidden" name="stationId" value="${stationId}"/>
+    <table><colgroup><col width="11%"></colgroup><tbody><tr>
+    ${name === null ? "" : `<td colspan="3" class="station-name"> ${name} </td>`}
+    <td></td><td class="text-center"><i class="fas fa-redo-alt btn-refre"></i></td></tr>
+    <tr><td>${name ?? ""} ${stationId} | ${after}</td></tr></tbody></table>
+    <script>var locale = "ko_KR"; function showTab1() { var dataUrl = "/data/search/getNewArriveScheduleByStationId"; }</script>
+    </body></html>`;
+}
+
+test("the page parser reads the exact name and the facing direction", () => {
+  assert.deepEqual(parseStationPage(officialPageExcerpt("405000007", "노형주공아파트[동]", "S중앙병원 방향 도착예정"), "405000007"),
+    { kind: "found", name: "노형주공아파트[동]", direction: "S중앙병원" });
+  assert.deepEqual(parseStationPage(officialPageExcerpt("406000002", "롯데호텔", "켄싱턴리조트 중문점입구/롯데호텔 입구[남] 방향 도착예정"), "406000002"),
+    { kind: "found", name: "롯데호텔", direction: "켄싱턴리조트 중문점입구/롯데호텔 입구[남]" });
+});
+
+test("an id the site does not know answers 200 with no name: not_found", () => {
+  assert.deepEqual(parseStationPage(officialPageExcerpt("405009999", null, "종점 도착예정"), "405009999"), { kind: "not_found" });
+});
+
+test("a page that does not echo the requested id is never evidence", () => {
+  assert.deepEqual(parseStationPage(officialPageExcerpt("405000314", "용문사거리[동]", "용담1동주민센터[남] 방향"), "405000315"), { kind: "read_failed" });
+  assert.deepEqual(parseStationPage("<html>error</html>", "405000315"), { kind: "read_failed" });
+});
+
+test("exact name plus the official facing direction verifies a pole without coordinates", () => {
+  const stops: CatalogStop[] = [
+    { id: "JEB405000314", name: "용문사거리[동]", lat: 33.508658, lng: 126.510227 },
+    { id: "JEB405000315", name: "용문사거리[서]", lat: 33.508808, lng: 126.510051 },
+    { id: "JEB405000500", name: "용담1동주민센터[남]", lat: 33.5100, lng: 126.5110 },
+    { id: "JEB405000501", name: "용문마을[서]", lat: 33.5080, lng: 126.5090 },
+  ];
+  const routes = [{ stops: [0, 2] }, { stops: [1, 3] }];
+  const rows = classifyCrosswalk(stops, [1, 1, 1, 1], new Map<string, StationEvidence>([
+    ["JEB405000314", { kind: "found", name: "용문사거리[동]", direction: "용담1동주민센터[남]" }],
+    ["JEB405000315", { kind: "found", name: "용문사거리[서]", direction: "용담1동주민센터[남]" }],
+  ]), nextStopNamesByStop(stops, routes));
+  assert.equal(rows[0]!.status, "VERIFIED_EXACT");
+  assert.equal(rows[0]!.reason, "exact_name_and_direction");
+  // The west pole's page facing the east pole's next stop does not fit this pole.
+  assert.equal(rows[1]!.status, "AMBIGUOUS");
+  assert.equal(rows[1]!.reason, "direction_mismatch");
+});
+
+test("a same-named, same-marker stop elsewhere is not verified by name alone", () => {
+  const stops: CatalogStop[] = [
+    { id: "JEB405000900", name: "마을회관[동]", lat: 33.30, lng: 126.30 },
+    { id: "JEB405000901", name: "다음정류장", lat: 33.301, lng: 126.30 },
+  ];
+  const [row] = classifyCrosswalk(stops, [1, 1], new Map<string, StationEvidence>([
+    ["JEB405000900", { kind: "found", name: "마을회관[동]", direction: "다른 마을 정류장" }],
+  ]), nextStopNamesByStop(stops, [{ stops: [0, 1] }]));
+  assert.equal(row!.status, "AMBIGUOUS");
+  const [noDirection] = classifyCrosswalk(stops, [1, 1], new Map<string, StationEvidence>([
+    ["JEB405000900", { kind: "found", name: "마을회관[동]" }],
+  ]), nextStopNamesByStop(stops, [{ stops: [0, 1] }]));
+  assert.equal(noDirection!.status, "AMBIGUOUS");
+  assert.equal(noDirection!.reason, "no_coordinates_to_compare");
+});
+
+test("next-stop names come from every variant through the pole", () => {
+  const stops: CatalogStop[] = [{ id: "A", name: "A" }, { id: "B", name: "B" }, { id: "C", name: "C" }];
+  assert.deepEqual(nextStopNamesByStop(stops, [{ stops: [0, 1] }, { stops: [0, 2] }, { stops: [2, 0] }]), [["B", "C"], [], ["A"]]);
 });

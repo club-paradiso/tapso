@@ -504,3 +504,13 @@
 "ride.keepAlive.title" = "앱을 닫아도 계속 알려 주기";
 "ride.keepAlive.on" = "앱을 닫아도 내릴 때까지 잠금 화면과 다이나믹 아일랜드를 갱신해요. 그동안 iPhone 위치 서비스가 켜져 있지만, 탑서는 위치를 쓰지도 보내지도 않아요.";
 "ride.keepAlive.denied" = "위치 권한이 없어 켤 수 없어요. 설정에서 탑서의 위치를 ‘앱을 사용하는 동안’으로 바꿀 수 있어요.";
+
+/* Boarding anchor + position V2 (BOARDING_ANCHOR_POSITION_V2.md) */
+"boardFirst.nearby.approximate" = "정확한 위치가 꺼져 있어 가까운 정류장을 고를 수 없어요. 이름으로 찾아 주세요.";
+"check.accessibility.title" = "교통약자 승차예약";
+"check.accessibility.body" = "제주버스 공식 서비스에서 기사님께 탑승 지원을 요청할 수 있어요. 제주버스 로그인이 필요하고, 예약과 결과 확인은 제주버스에서 해요.";
+"check.accessibility.context" = "%@번 · %@에서 타요";
+"check.accessibility.action" = "제주버스에서 예약하기";
+"check.accessibility.external" = "제주버스 웹사이트가 열려요";
+"check.accessibility.failed" = "제주버스 페이지를 열지 못했어요.";
+"ride.location.approximate" = "정확한 위치가 꺼져 있어 버스 정보로만 안내해요.";

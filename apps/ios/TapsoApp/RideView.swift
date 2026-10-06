@@ -48,6 +48,16 @@ struct RideView: View {
                     )
                     .animation(TapsoMotion.animation(TapsoMotion.emphasis, reduceMotion: reduceMotion), value: guidance.moment)
                 }
+                // A hybrid ride without Precise Location continues on official progress alone; say so plainly.
+                if model.isLiveRide, model.hybridTrackingEnabled, model.ridePrecision == .reducedAccuracy {
+                    Label("ride.location.approximate", systemImage: "location.slash")
+                        .font(.footnote)
+                        .foregroundStyle(TapsoColor.textSecondary)
+                        .frame(maxWidth: .infinity, alignment: .leading)
+                        .padding(.horizontal, TapsoSpace.gutter)
+                        .padding(.bottom, TapsoSpace.md)
+                        .accessibilityIdentifier("ride-location-approximate")
+                }
             }
             .refreshable { await model.recheckRidePosition() }
             .background(TapsoColor.backgroundPrimary)

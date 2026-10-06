@@ -24,6 +24,16 @@ struct VehicleCheckView: View {
                     onConfirm: { proposal in Task { await model.confirmVehicle(proposal) } },
                     onReject: { model.rejectProposal($0) }
                 )
+                // Only for a pole whose 제주버스 station id is verified; otherwise nothing is shown.
+                if let handoff = model.accessibilityBoardingHandoff {
+                    AccessibilityBoardingCard(
+                        handoff: handoff,
+                        openFailed: model.accessibilityHandoffFailed,
+                        onOpen: { Task { await model.openAccessibilityBoarding(handoff) } }
+                    )
+                    .padding(.horizontal, TapsoSpace.gutter)
+                    .padding(.bottom, TapsoSpace.lg)
+                }
             }
         }
         .background(TapsoColor.backgroundPrimary)
@@ -134,6 +144,45 @@ struct VehicleCheckContent: View {
 }
 
 /// Route, boarding stop and destination for the ride being set up. Figma: `BoardingContextCard / V2`.
+/// The official 제주버스 "교통약자 승차예약" handoff (`BOARDING_ANCHOR_POSITION_V2.md` §2).
+/// An accessibility boarding-support request made on the official site, not a seat booking:
+/// TAPSO opens the page and claims nothing about the result. Not every rider needs it, so it
+/// sits below the vehicle check as a quiet card, never a step.
+struct AccessibilityBoardingCard: View {
+    let handoff: JejuAccessibilityBoardingHandoff
+    let openFailed: Bool
+    let onOpen: () -> Void
+
+    var body: some View {
+        TapsoCard {
+            VStack(alignment: .leading, spacing: TapsoSpace.xs) {
+                Label("check.accessibility.title", systemImage: "figure.roll")
+                    .font(.subheadline.weight(.semibold))
+                    .foregroundStyle(TapsoColor.textPrimary)
+                Text("check.accessibility.body")
+                    .font(.footnote)
+                    .foregroundStyle(TapsoColor.textSecondary)
+                    .fixedSize(horizontal: false, vertical: true)
+                Text(verbatim: String(format: RideText.string("check.accessibility.context"), handoff.routeNumber, handoff.stopName))
+                    .font(.footnote.weight(.semibold))
+                    .foregroundStyle(TapsoColor.textSecondary)
+                Button(action: onOpen) {
+                    Label("check.accessibility.action", systemImage: "arrow.up.right.square")
+                }
+                .buttonStyle(SecondaryButtonStyle())
+                .accessibilityHint(Text("check.accessibility.external"))
+                .accessibilityIdentifier("accessibility-boarding-open")
+                if openFailed {
+                    Text("check.accessibility.failed")
+                        .font(.footnote)
+                        .foregroundStyle(TapsoColor.textSecondary)
+                }
+            }
+        }
+        .accessibilityIdentifier("accessibility-boarding")
+    }
+}
+
 struct BoardingContextCard: View {
     let routeNumber: String
     let boardingName: String

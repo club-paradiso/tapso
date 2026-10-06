@@ -29,6 +29,8 @@ deployment is `VERIFIED_LIVE_INFRASTRUCTURE`, `IMPLEMENTED` is
         │                      │    │   cache headers, error shape, logging
         │                      ▼    │
         │   CachedTransitProvider   │   6 h stops / 20 s vehicles / 6 h discovery
+        │   (public reads only; ride sessions use ActiveRideSnapshotProvider: < 5 s
+        │    route share, receipt time kept, per-instance budget — BOARDING_ANCHOR_POSITION_V2.md §4)
         │                      │    │   + CDN s-maxage with the same numbers
         │                      ▼    │
         │    TagoTransitProvider    │   fixed official hosts, no redirects,

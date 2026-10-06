@@ -8,9 +8,9 @@
  * evidence has to confirm, pole by pole.
  *
  * The evidence is what the official passenger-facing station page says about
- * the candidate id. How that page is read is deliberately not in this module:
- * until the page's markup has been inspected by a person, no extractor exists,
- * and every stop stays `UNCHECKED`.
+ * the candidate id (`parseStationPage`, written against the markup the probe
+ * recorded on 2026-10-06). The page renders the station name with its
+ * direction marker and a "<next station> 방향" line, but no coordinates.
  */
 
 /** The five audit outcomes, plus `UNCHECKED` for a stop no evidence was collected for. */
@@ -24,6 +24,8 @@ export type CrosswalkStatus =
 
 export type CrosswalkReason =
   | "exact_name_and_coordinates"
+  | "exact_name_and_direction"
+  | "direction_mismatch"
   | "same_place_coordinates_unique_pole"
   | "invalid_tago_id_form"
   | "no_official_station_page"
@@ -45,7 +47,7 @@ export interface CatalogStop {
 
 /** What the official page says about one candidate station id. */
 export type StationEvidence =
-  | { kind: "found"; name: string; latitude?: number; longitude?: number }
+  | { kind: "found"; name: string; latitude?: number; longitude?: number; direction?: string }
   | { kind: "not_found" }
   | { kind: "read_failed" };
 
@@ -120,6 +122,8 @@ export function classifyCrosswalk(
   stops: readonly CatalogStop[],
   routeCounts: readonly number[],
   evidence: ReadonlyMap<string, StationEvidence> = new Map(),
+  /** Per stop: the names of the stops that follow it on any variant through it. */
+  nextStopNames: readonly (readonly string[])[] = [],
 ): CrosswalkRow[] {
   const byPlace = new Map<string, number[]>();
   const byFullName = new Map<string, number>();
@@ -148,7 +152,7 @@ export function classifyCrosswalk(
       siblingPolesNearby: siblings,
       duplicateFullName: (byFullName.get(normalizeOfficialName(stop.name)) ?? 1) - 1,
     };
-    return { ...base, ...classifyOne(stop, base, evidence.get(stop.id)) };
+    return { ...base, ...classifyOne(stop, base, evidence.get(stop.id), nextStopNames[index] ?? []) };
   });
 }
 
@@ -156,6 +160,7 @@ function classifyOne(
   stop: CatalogStop,
   row: Pick<CrosswalkRow, "candidateBisStationId" | "directionMarker" | "siblingPolesNearby" | "duplicateFullName">,
   evidence: StationEvidence | undefined,
+  nextStopNames: readonly string[],
 ): Pick<CrosswalkRow, "status" | "reason" | "coordinateDeltaM"> {
   if (row.candidateBisStationId === null) return { status: "MISSING", reason: "invalid_tago_id_form" };
   if (!evidence) return { status: "UNCHECKED", reason: "evidence_not_collected" };
@@ -175,22 +180,83 @@ function classifyOne(
     && Number.isFinite(evidence.latitude) && Number.isFinite(evidence.longitude)
     ? { lat: evidence.latitude, lng: evidence.longitude }
     : undefined;
-  if (!here || !there) return { status: "AMBIGUOUS", reason: "no_coordinates_to_compare" };
-  const delta = distanceMeters(here, there);
-  const coordinateDeltaM = Math.round(delta);
-  if (delta > CONFLICT_COORDINATE_DISTANCE_M) return { status: "CONFLICT", reason: "coordinate_mismatch", coordinateDeltaM };
-  if (delta > EXACT_COORDINATE_TOLERANCE_M) return { status: "AMBIGUOUS", reason: "coordinate_near_miss", coordinateDeltaM };
+  let coordinateDeltaM: number | undefined;
+  let coordinatesAgree = false;
+  if (here && there) {
+    const delta = distanceMeters(here, there);
+    coordinateDeltaM = Math.round(delta);
+    if (delta > CONFLICT_COORDINATE_DISTANCE_M) return { status: "CONFLICT", reason: "coordinate_mismatch", coordinateDeltaM };
+    if (delta > EXACT_COORDINATE_TOLERANCE_M) return { status: "AMBIGUOUS", reason: "coordinate_near_miss", coordinateDeltaM };
+    coordinatesAgree = true;
+  }
+  // The page's "<station> 방향" names the stop this pole faces. It must be a stop
+  // that follows this very pole on some variant: that is what tells this pole
+  // apart from another stop elsewhere with the identical name and marker.
+  const direction = evidence.direction ? normalizeOfficialName(evidence.direction) : undefined;
+  const directionAgrees = direction !== undefined && nextStopNames.some((name) => normalizeOfficialName(name) === direction);
+  const withDelta = coordinateDeltaM === undefined ? {} : { coordinateDeltaM };
+  const unconfirmed = (): Pick<CrosswalkRow, "status" | "reason" | "coordinateDeltaM"> => (direction !== undefined
+    ? { status: "AMBIGUOUS", reason: "direction_mismatch", ...withDelta }
+    : { status: "AMBIGUOUS", reason: "no_coordinates_to_compare", ...withDelta });
 
   if (officialName === catalogName) {
-    // The full name, marker included, and the position agree. A duplicate full
-    // name elsewhere does not matter here: the candidate id and the position
-    // single this pole out.
-    return { status: "VERIFIED_EXACT", reason: "exact_name_and_coordinates", coordinateDeltaM };
+    // The full name, marker included, plus position or facing direction.
+    if (coordinatesAgree) return { status: "VERIFIED_EXACT", reason: "exact_name_and_coordinates", ...withDelta };
+    if (directionAgrees) return { status: "VERIFIED_EXACT", reason: "exact_name_and_direction", ...withDelta };
+    return unconfirmed();
   }
   // Same place, a name that differs in form (usually a missing marker). Only
   // safe when no sibling pole could be the one the page means.
-  if (row.siblingPolesNearby > 0) return { status: "AMBIGUOUS", reason: "sibling_pole_nearby", coordinateDeltaM };
-  return { status: "VERIFIED_BY_NAME_COORDINATE", reason: "same_place_coordinates_unique_pole", coordinateDeltaM };
+  if (!coordinatesAgree && !directionAgrees) return unconfirmed();
+  if (row.siblingPolesNearby > 0) return { status: "AMBIGUOUS", reason: "sibling_pole_nearby", ...withDelta };
+  return { status: "VERIFIED_BY_NAME_COORDINATE", reason: "same_place_coordinates_unique_pole", ...withDelta };
+}
+
+/**
+ * Reads the official passenger station page
+ * (`/mobile/station/detailStation/<id>?type=station&mode=ridebooking`, fetched
+ * with `accept-language: ko-KR`). Written against the markup recorded by
+ * `probe-bis-station-pages.ts` on 2026-10-06:
+ *
+ *   <input type="hidden" name="stationId" value="405000007"/>
+ *   <td colspan="3" class="station-name"> 노형주공아파트[동] </td>
+ *   visible text "노형주공아파트[동] 405000007 | S중앙병원 방향"
+ *
+ * An id the site does not know still answers HTTP 200, with no station-name
+ * cell ("405009999 | 종점"): that is `not_found`. Anything that does not echo
+ * the requested id is `read_failed`, never evidence.
+ */
+export function parseStationPage(html: string, stationId: string): StationEvidence {
+  const echoed = /<input[^>]*name=["']stationId["'][^>]*value=["'](\d+)["']/i.exec(html)?.[1];
+  if (echoed !== stationId) return { kind: "read_failed" };
+  const name = /<td[^>]*class=["'][^"']*\bstation-name\b[^"']*["'][^>]*>([\s\S]*?)<\/td>/i.exec(html)?.[1];
+  const cleaned = name === undefined ? "" : normalizeOfficialName(decodeEntities(name.replace(/<[^>]+>/g, " ")));
+  if (!cleaned) return { kind: "not_found" };
+  const text = normalizeOfficialName(decodeEntities(html.replace(/<script[\s\S]*?<\/script>/gi, " ").replace(/<style[\s\S]*?<\/style>/gi, " ").replace(/<[^>]+>/g, " ")));
+  const escapedId = stationId.replace(/[^0-9]/g, "");
+  const direction = new RegExp(`${escapedId}\\s*\\|\\s*(.+?)\\s+방향`).exec(text)?.[1];
+  return direction ? { kind: "found", name: cleaned, direction: normalizeOfficialName(direction) } : { kind: "found", name: cleaned };
+}
+
+function decodeEntities(value: string): string {
+  return value
+    .replace(/&nbsp;/g, " ")
+    .replace(/&amp;/g, "&")
+    .replace(/&lt;/g, "<")
+    .replace(/&gt;/g, ">")
+    .replace(/&quot;/g, '"')
+    .replace(/&#39;/g, "'");
+}
+
+/** For each stop, the names of the stops right after it on every variant through it. */
+export function nextStopNamesByStop(stops: readonly CatalogStop[], routes: readonly { stops: readonly number[] }[]): string[][] {
+  const result = stops.map(() => new Set<string>());
+  for (const route of routes) {
+    for (let position = 0; position + 1 < route.stops.length; position += 1) {
+      result[route.stops[position]!]?.add(stops[route.stops[position + 1]!]!.name);
+    }
+  }
+  return result.map((names) => [...names].sort());
 }
 
 export interface CrosswalkSummary {
