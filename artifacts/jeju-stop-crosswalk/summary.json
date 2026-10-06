@@ -1,11 +1,11 @@
 {
   "schemaVersion": "tapso-jeju-stop-crosswalk-audit-v1",
-  "label": "STRUCTURAL_ONLY",
+  "label": "OFFICIAL_DERIVED",
   "catalogVersion": "794f3bcb831d783e",
   "evidence": {
-    "collected": 0,
-    "source": "none: bus.jeju.go.kr not yet read for this audit",
-    "verifiedOn": "none"
+    "collected": 4338,
+    "source": "bus.jeju.go.kr passenger station pages (ko-KR), collected by scripts/crosswalk/collect-bis-station-evidence.ts",
+    "verifiedOn": "2026-10-07"
   },
   "hypothesis": "candidate BIS station id = TAGO stop id without its JEB prefix; never assumed, verified per pole",
   "rules": {
@@ -16,19 +16,22 @@
     "CONFLICT": "different place name, opposite direction marker, or more than 100 m apart",
     "UNCHECKED": "no evidence collected (or the read failed)"
   },
-  "runtimeEntries": 0,
+  "runtimeEntries": 4286,
   "summary": {
     "stops": 4338,
     "byStatus": {
-      "VERIFIED_EXACT": 0,
+      "VERIFIED_EXACT": 4286,
       "VERIFIED_BY_NAME_COORDINATE": 0,
-      "AMBIGUOUS": 0,
-      "MISSING": 0,
+      "AMBIGUOUS": 45,
+      "MISSING": 7,
       "CONFLICT": 0,
-      "UNCHECKED": 4338
+      "UNCHECKED": 0
     },
     "byReason": {
-      "evidence_not_collected": 4338
+      "exact_name_and_direction": 4286,
+      "no_coordinates_to_compare": 33,
+      "direction_mismatch": 12,
+      "no_official_station_page": 7
     },
     "structure": {
       "validTagoIdForm": 4338,
@@ -47,241 +50,241 @@
       "tagoStopId": "JEB405000002",
       "name": "오광로입구[남]",
       "routeCount": 28,
-      "status": "UNCHECKED"
+      "status": "VERIFIED_EXACT"
     },
     {
       "tagoStopId": "JEB405000003",
       "name": "오광로입구[북]",
       "routeCount": 29,
-      "status": "UNCHECKED"
+      "status": "VERIFIED_EXACT"
     },
     {
       "tagoStopId": "JEB405000004",
       "name": "이호2동[남]",
       "routeCount": 32,
-      "status": "UNCHECKED"
+      "status": "VERIFIED_EXACT"
     },
     {
       "tagoStopId": "JEB405000005",
       "name": "이호2동[북]",
       "routeCount": 37,
-      "status": "UNCHECKED"
+      "status": "VERIFIED_EXACT"
     },
     {
       "tagoStopId": "JEB405000006",
       "name": "노형주공아파트[서]",
       "routeCount": 15,
-      "status": "UNCHECKED"
+      "status": "VERIFIED_EXACT"
     },
     {
       "tagoStopId": "JEB405000007",
       "name": "노형주공아파트[동]",
       "routeCount": 12,
-      "status": "UNCHECKED"
+      "status": "VERIFIED_EXACT"
     },
     {
       "tagoStopId": "JEB405000010",
       "name": "노형우체국[북]",
       "routeCount": 21,
-      "status": "UNCHECKED"
+      "status": "VERIFIED_EXACT"
     },
     {
       "tagoStopId": "JEB405000011",
       "name": "노형우체국[남]",
       "routeCount": 14,
-      "status": "UNCHECKED"
+      "status": "VERIFIED_EXACT"
     },
     {
       "tagoStopId": "JEB405000013",
       "name": "롯데마트[남]",
       "routeCount": 24,
-      "status": "UNCHECKED"
+      "status": "VERIFIED_EXACT"
     },
     {
       "tagoStopId": "JEB405000014",
       "name": "롯데마트[북]",
       "routeCount": 23,
-      "status": "UNCHECKED"
+      "status": "VERIFIED_EXACT"
     },
     {
       "tagoStopId": "JEB405000016",
       "name": "관전동[남]",
       "routeCount": 36,
-      "status": "UNCHECKED"
+      "status": "VERIFIED_EXACT"
     },
     {
       "tagoStopId": "JEB405000017",
       "name": "관전동[북]",
       "routeCount": 32,
-      "status": "UNCHECKED"
+      "status": "VERIFIED_EXACT"
     },
     {
       "tagoStopId": "JEB405000018",
       "name": "연대마을 서쪽입구[서]",
       "routeCount": 36,
-      "status": "UNCHECKED"
+      "status": "VERIFIED_EXACT"
     },
     {
       "tagoStopId": "JEB405000019",
       "name": "연대마을 서쪽입구[동]",
       "routeCount": 32,
-      "status": "UNCHECKED"
+      "status": "VERIFIED_EXACT"
     },
     {
       "tagoStopId": "JEB405000022",
       "name": "모감동[남]",
       "routeCount": 19,
-      "status": "UNCHECKED"
+      "status": "VERIFIED_EXACT"
     },
     {
       "tagoStopId": "JEB405000023",
       "name": "모감동[북]",
       "routeCount": 19,
-      "status": "UNCHECKED"
+      "status": "VERIFIED_EXACT"
     },
     {
       "tagoStopId": "JEB405000024",
       "name": "번대동[서]",
       "routeCount": 15,
-      "status": "UNCHECKED"
+      "status": "VERIFIED_EXACT"
     },
     {
       "tagoStopId": "JEB405000025",
       "name": "번대동[동]",
       "routeCount": 21,
-      "status": "UNCHECKED"
+      "status": "VERIFIED_EXACT"
     },
     {
       "tagoStopId": "JEB405000026",
       "name": "하귀리[북]",
       "routeCount": 16,
-      "status": "UNCHECKED"
+      "status": "VERIFIED_EXACT"
     },
     {
       "tagoStopId": "JEB405000027",
       "name": "하귀초등학교[남]",
       "routeCount": 50,
-      "status": "UNCHECKED"
+      "status": "VERIFIED_EXACT"
     },
     {
       "tagoStopId": "JEB405000028",
       "name": "외도초등학교[남]",
       "routeCount": 54,
-      "status": "UNCHECKED"
+      "status": "VERIFIED_EXACT"
     },
     {
       "tagoStopId": "JEB405000029",
       "name": "외도초등학교[북]",
       "routeCount": 53,
-      "status": "UNCHECKED"
+      "status": "VERIFIED_EXACT"
     },
     {
       "tagoStopId": "JEB405000030",
       "name": "내도동 서마을[남]",
       "routeCount": 45,
-      "status": "UNCHECKED"
+      "status": "VERIFIED_EXACT"
     },
     {
       "tagoStopId": "JEB405000031",
       "name": "내도동 서마을[북]",
       "routeCount": 39,
-      "status": "UNCHECKED"
+      "status": "VERIFIED_EXACT"
     },
     {
       "tagoStopId": "JEB405000032",
       "name": "내도동 동마을[남]",
       "routeCount": 45,
-      "status": "UNCHECKED"
+      "status": "VERIFIED_EXACT"
     },
     {
       "tagoStopId": "JEB405000033",
       "name": "내도동 동마을[북]",
       "routeCount": 40,
-      "status": "UNCHECKED"
+      "status": "VERIFIED_EXACT"
     },
     {
       "tagoStopId": "JEB405000034",
       "name": "신산마을[북]",
       "routeCount": 40,
-      "status": "UNCHECKED"
+      "status": "VERIFIED_EXACT"
     },
     {
       "tagoStopId": "JEB405000035",
       "name": "신산마을[남]",
       "routeCount": 45,
-      "status": "UNCHECKED"
+      "status": "VERIFIED_EXACT"
     },
     {
       "tagoStopId": "JEB405000036",
       "name": "현사마을[남]",
       "routeCount": 45,
-      "status": "UNCHECKED"
+      "status": "VERIFIED_EXACT"
     },
     {
       "tagoStopId": "JEB405000037",
       "name": "현사마을[북]",
       "routeCount": 40,
-      "status": "UNCHECKED"
+      "status": "VERIFIED_EXACT"
     },
     {
       "tagoStopId": "JEB405000038",
       "name": "하귀초등학교[북]",
       "routeCount": 52,
-      "status": "UNCHECKED"
+      "status": "VERIFIED_EXACT"
     },
     {
       "tagoStopId": "JEB405000039",
       "name": "하귀우체국[남]",
       "routeCount": 43,
-      "status": "UNCHECKED"
+      "status": "VERIFIED_EXACT"
     },
     {
       "tagoStopId": "JEB405000040",
       "name": "하귀우체국[북]",
       "routeCount": 41,
-      "status": "UNCHECKED"
+      "status": "VERIFIED_EXACT"
     },
     {
       "tagoStopId": "JEB405000041",
       "name": "안남동[서]",
       "routeCount": 40,
-      "status": "UNCHECKED"
+      "status": "VERIFIED_EXACT"
     },
     {
       "tagoStopId": "JEB405000042",
       "name": "안남동[동]",
       "routeCount": 41,
-      "status": "UNCHECKED"
+      "status": "VERIFIED_EXACT"
     },
     {
       "tagoStopId": "JEB405000043",
       "name": "남주동[남]",
       "routeCount": 41,
-      "status": "UNCHECKED"
+      "status": "VERIFIED_EXACT"
     },
     {
       "tagoStopId": "JEB405000044",
       "name": "남주동[북]",
       "routeCount": 40,
-      "status": "UNCHECKED"
+      "status": "VERIFIED_EXACT"
     },
     {
       "tagoStopId": "JEB405000045",
       "name": "하귀환승정류장(하귀하나로마트)[남]",
       "routeCount": 27,
-      "status": "UNCHECKED"
+      "status": "VERIFIED_EXACT"
     },
     {
       "tagoStopId": "JEB405000046",
       "name": "하귀환승정류장(하귀하나로마트)[북]",
       "routeCount": 29,
-      "status": "UNCHECKED"
+      "status": "VERIFIED_EXACT"
     },
     {
       "tagoStopId": "JEB405000048",
       "name": "학원동[동]",
       "routeCount": 18,
-      "status": "UNCHECKED"
+      "status": "VERIFIED_EXACT"
     }
   ]
 }
