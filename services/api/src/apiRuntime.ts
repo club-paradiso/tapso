@@ -9,6 +9,7 @@
 import { readTransitApiConfig, readUpstashCredentials, type ServerEnv, type TransitApiConfig } from "./apiConfig.ts";
 import { createTransitApiHandler, type TransitApiHandler } from "./apiRouter.ts";
 import { ApnsLiveActivitySender, describeApns, Http2ApnsTransport, readApnsConfig } from "./apns.ts";
+import { ActiveRideSnapshotProvider } from "./activeRideSnapshot.ts";
 import { CachedTransitProvider } from "./cachedTransitProvider.ts";
 import { JourneySessionCoordinator } from "./journeySession.ts";
 import { LiveActivityPusher } from "./liveActivityPusher.ts";
@@ -81,11 +82,14 @@ export function createTransitApi(env: ServerEnv = process.env as ServerEnv): Tra
   // rather than asserted: wiring that silently produced a store with an empty
   // token would fail on every request instead of at boot.
   const sessionStore = createSessionStore(config, env);
-  // Journey sessions read the uncached provider on purpose. Server-observed
+  // Journey sessions never read the shared 20 s vehicle cache. Server-observed
   // cadence is only evidence if consecutive reads are genuinely consecutive;
-  // the shared 20 s snapshot cache would replay one receipt as several and
-  // manufacture a liveness signal that never existed.
-  const sessions = new JourneySessionCoordinator(upstream, {
+  // that cache would hand one rider the same receipt on several polls. Their
+  // own path shares a route snapshot only below the fastest foreground poll,
+  // keeps each row's original receipt time (which the cadence history records
+  // at most once) and bounds upstream reads per instance (`activeRideSnapshot.ts`).
+  const activeRideReads = new ActiveRideSnapshotProvider(upstream);
+  const sessions = new JourneySessionCoordinator(activeRideReads, {
     automaticMatchingEnabled: config.matching.automaticMatchingEnabled,
     store: sessionStore,
   });
@@ -120,10 +124,11 @@ export function createTransitApi(env: ServerEnv = process.env as ServerEnv): Tra
       discovery: upstream,
       provider,
       // As `directProvider`, the uncached provider reaches exactly one route:
-      // the authenticated operator snapshot. It also backs discovery and the
-      // session coordinator above, which must see consecutive, uncached reads.
+      // the authenticated operator snapshot. It also backs discovery and,
+      // through `activeRideReads`, the session coordinator above.
       directProvider: upstream,
       sessions,
+      activeRideReads,
       liveActivityPush: describeApns(apns),
       ...(apns.enabled
         ? { liveActivityPusher: new LiveActivityPusher(new ApnsLiveActivitySender(apns, new Http2ApnsTransport()), sessions) }

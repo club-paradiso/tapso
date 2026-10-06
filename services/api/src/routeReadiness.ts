@@ -20,7 +20,7 @@
  *
  * Geometry is reported separately and honestly: TAPSO has stop coordinates
  * only, no surveyed road shape, so the hybrid engine can at most predict
- * along stop chords (`HybridPositionEngine.swift`, `verifiedRoadShape: false`).
+ * along stop chords (`HybridPositionEngine.swift`, `RouteGeometryQuality.stopChords`).
  */
 
 import type { TimetableBundle } from "./officialTimetable.ts";

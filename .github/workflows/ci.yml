@@ -134,6 +134,8 @@ jobs:
       - run: python3 -m unittest discover -s scripts/timetables -p 'test_*.py'
       - name: Release gates the repository decides (docs/exec-plans/JEJU_PRODUCTION_V1.md)
         run: node --experimental-strip-types scripts/release-gates/jeju-v1.ts --check
+      - name: Stop crosswalk table matches the committed audit
+        run: node --experimental-strip-types scripts/crosswalk/jeju-stop-crosswalk.ts --check
 
   matcher-evidence:
     # The offline half of release gate matcher-passive-safety-v4: every check

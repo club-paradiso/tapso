@@ -1,0 +1,51 @@
+name: Jeju stop crosswalk probe
+
+# Read-only evidence the agent environment cannot fetch itself: how the
+# official 제주버스정보시스템 passenger station page presents a station, for six
+# catalog stops (docs/validation/JEJU_BIS_TAGO_STOP_CROSSWALK.md). The
+# crosswalk extractor is written against this output, never against a guess.
+# Passenger-facing page only, one request per second, no key, no write, no
+# vehicle data, and nothing here becomes a runtime dependency.
+on:
+  workflow_dispatch:
+  push:
+    paths:
+      - .github/workflows/jeju-stop-crosswalk.yml
+      - scripts/crosswalk/probe-bis-station-pages.ts
+
+permissions:
+  contents: read
+
+concurrency:
+  group: jeju-stop-crosswalk
+  cancel-in-progress: false
+
+jobs:
+  probe:
+    runs-on: ubuntu-latest
+    timeout-minutes: 10
+    steps:
+      - uses: actions/checkout@v4
+        with:
+          persist-credentials: false
+      - uses: actions/setup-node@v4
+        with:
+          node-version: 22
+      # Same check as data-source-probe.yml: bus.jeju.go.kr omits its intermediate
+      # certificate; it is fetched from the CA Issuers URL and used only if it verifies
+      # against the runner's system roots. Verification stays on.
+      - name: Complete bus.jeju.go.kr's certificate chain (verified against the system roots)
+        continue-on-error: true
+        run: |
+          set -euo pipefail
+          openssl s_client -connect bus.jeju.go.kr:443 -servername bus.jeju.go.kr -showcerts </dev/null 2>/dev/null > chain.txt || true
+          openssl x509 -in chain.txt -out leaf.pem
+          uri=$(openssl x509 -in leaf.pem -noout -ext authorityInfoAccess | sed -n 's/.*CA Issuers - URI:\(.*\)/\1/p' | head -1)
+          curl -fsS --max-time 20 "$uri" -o issuer.raw
+          openssl x509 -inform DER -in issuer.raw -out issuer.pem 2>/dev/null || openssl x509 -in issuer.raw -out issuer.pem
+          openssl verify -CAfile /etc/ssl/certs/ca-certificates.crt issuer.pem
+          openssl verify -CAfile /etc/ssl/certs/ca-certificates.crt -untrusted issuer.pem leaf.pem
+          cp issuer.pem "$RUNNER_TEMP/bis-intermediate.pem"
+          echo "NODE_EXTRA_CA_CERTS=$RUNNER_TEMP/bis-intermediate.pem" >> "$GITHUB_ENV"
+      - name: Official station page structure for six catalog stops
+        run: node --experimental-strip-types scripts/crosswalk/probe-bis-station-pages.ts
