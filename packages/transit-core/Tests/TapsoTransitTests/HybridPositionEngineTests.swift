@@ -16,7 +16,7 @@ final class HybridPositionEngineTests: XCTestCase {
 
     func engine(verified: Bool = false, surveyed: Bool = true) -> HybridPositionEngine {
         HybridPositionEngine(vehicleID: "bus", route: route, destinationSequence: 8, surveyed: surveyed,
-                             geometry: verified ? RideRouteGeometry(points: route.stops.map { $0.stop.coordinate }, verifiedRoadShape: true) : nil)
+                             geometry: verified ? RideRouteGeometry(points: route.stops.map { $0.stop.coordinate }, quality: .authoritative) : nil)
     }
 
     func sample(_ seconds: Double, latitude: Double = 33, longitude: Double = 126, accuracy: Double = 10, speed: Double? = 8, course: Double? = 0) -> DevicePositionSample {
@@ -242,6 +242,140 @@ final class HybridPositionEngineTests: XCTestCase {
         let explicit = #"{"phase":"active","remainingStops":7,"freshness":"fresh","destinationPassed":false,"isOffline":false,"isEstimated":false}"#
         XCTAssertEqual(try JSONDecoder().decode(RideSignal.self, from: Data(legacy.utf8)),
                        try JSONDecoder().decode(RideSignal.self, from: Data(explicit.utf8)))
+    }
+
+    // MARK: V2 — boarding anchor, geometry quality, reconciliation (BOARDING_ANCHOR_POSITION_V2.md)
+
+    /// SYNTHETIC: stops 2.2 km apart, rider boards at sequence 4.
+    var sparseRoute: TransitRoute {
+        TransitRoute(id: "synthetic-sparse", number: "TEST", direction: .outbound, originName: "A", destinationName: "F",
+                     stops: (1...6).map { index in
+            RouteStop(stop: Stop(id: StopID(rawValue: "p\(index)"), name: "P\(index)",
+                                coordinate: Coordinate(latitude: 33 + Double(index - 1) * 0.02, longitude: 126)), sequence: index)
+        })
+    }
+
+    func testRiderWaitingAtPoleIsNotAConflictWithADistantConfirmedBus() {
+        let official = RideSignal(phase: .active, remainingStops: 5, freshness: .fresh)
+        let atPole = sample(0, latitude: 33.06)
+        // V1 (no anchor) compared the rider's phone with the bus's stop and lost the ride.
+        var unanchored = HybridPositionEngine(vehicleID: "bus", route: sparseRoute, destinationSequence: 6, surveyed: true)
+        XCTAssertEqual(unanchored.evaluate(official: official, sequence: 1, evidenceAt: start, selectedVehicleID: "bus", device: atPole, now: start).reason,
+                       "official_device_conflict")
+        var anchored = HybridPositionEngine(vehicleID: "bus", route: sparseRoute, destinationSequence: 6, surveyed: true, boardingSequence: 4)
+        let result = anchored.evaluate(official: official, sequence: 1, evidenceAt: start, selectedVehicleID: "bus", device: atPole, now: start)
+        XCTAssertEqual(result.state, .live)
+        XCTAssertEqual(result.reason, "consistent_official")
+        XCTAssertEqual(result.remainingStops, 5)
+    }
+
+    func testPhoneFarFromBoardingPoleIsFlaggedButCannotOverrideOfficialProgress() {
+        var value = HybridPositionEngine(vehicleID: "bus", route: sparseRoute, destinationSequence: 6, surveyed: true, boardingSequence: 4)
+        let result = value.evaluate(official: RideSignal(phase: .active, remainingStops: 5, freshness: .fresh), sequence: 1,
+                                    evidenceAt: start, selectedVehicleID: "bus", device: sample(0, latitude: 33.10), now: start)
+        XCTAssertEqual(result.state, .live)
+        XCTAssertEqual(result.reason, "boarding_anchor_mismatch")
+        XCTAssertEqual(result.remainingStops, 5)
+    }
+
+    func testNoDeviceEstimateBeforeTheBusOfficiallyReachesTheBoardingPole() {
+        var value = HybridPositionEngine(vehicleID: "bus", route: route, destinationSequence: 8, surveyed: true, boardingSequence: 4)
+        XCTAssertEqual(seed(&value, gps: sample(0, latitude: 33.003)).state, .live)
+        // The feed stalls while the rider still waits: their phone says nothing about the bus.
+        let stalled = delayed(&value, at: 20, gps: sample(20, latitude: 33.003, speed: 0))
+        XCTAssertEqual(stalled.state, .lost)
+        XCTAssertEqual(stalled.reason, "boarding_needs_official")
+    }
+
+    func testDeviceEstimateResumesOnceOfficialProgressReachesTheBoardingPole() {
+        var value = HybridPositionEngine(vehicleID: "bus", route: route, destinationSequence: 8, surveyed: true, boardingSequence: 4)
+        let boarded = value.evaluate(official: RideSignal(phase: .active, remainingStops: 4, freshness: .fresh), sequence: 4,
+                                     evidenceAt: start, selectedVehicleID: "bus", device: sample(0, latitude: 33.003), now: start)
+        XCTAssertEqual(boarded.state, .live)
+        let stalled = delayed(&value, at: 20, gps: sample(20, latitude: 33.0035))
+        XCTAssertEqual(stalled.state, .predicted)
+        XCTAssertEqual(stalled.currentStopSequence, 4)
+    }
+
+    func testUnsurveyedBoardingPoleIsNotUsedAsAnAnchor() {
+        var value = HybridPositionEngine(vehicleID: "bus", route: sparseRoute, destinationSequence: 6, surveyed: false, boardingSequence: 4)
+        let result = value.evaluate(official: RideSignal(phase: .active, remainingStops: 5, freshness: .fresh), sequence: 1,
+                                    evidenceAt: start, selectedVehicleID: "bus", device: sample(0, latitude: 33.10), now: start)
+        XCTAssertEqual(result.state, .live)
+        XCTAssertEqual(result.reason, "consistent_official")
+    }
+
+    func testOfficialRecoveryReconcilesAnEarlyDeviceEstimateDownward() {
+        var value = engine()
+        seed(&value, gps: sample(0))
+        _ = delayed(&value, at: 15, gps: sample(15, latitude: 33.001))
+        XCTAssertEqual(delayed(&value, at: 25, gps: sample(25, latitude: 33.0015)).currentStopSequence, 2)
+        // TAGO's sequence can trail the bus; when it returns still at 1, the official count wins.
+        let now = start.addingTimeInterval(30)
+        let result = value.evaluate(official: RideSignal(phase: .active, remainingStops: 7, freshness: .fresh), sequence: 1,
+                                    evidenceAt: now, selectedVehicleID: "bus", device: nil, now: now)
+        XCTAssertEqual(result.state, .live)
+        XCTAssertEqual(result.reason, "official_reconciled_estimate")
+        XCTAssertEqual(result.currentStopSequence, 1)
+        XCTAssertEqual(result.remainingStops, 7)
+    }
+
+    func testOfficialProgressItselfStillCannotMoveBackward() {
+        var value = engine()
+        seed(&value, sequence: 3)
+        let now = start.addingTimeInterval(30)
+        let result = value.evaluate(official: RideSignal(phase: .active, remainingStops: 6, freshness: .fresh), sequence: 2,
+                                    evidenceAt: now, selectedVehicleID: "bus", device: nil, now: now)
+        XCTAssertEqual(result.state, .lost)
+        XCTAssertEqual(result.reason, "official_backward_conflict")
+    }
+
+    func testDerivedTraceGeometryIsCappedAndNeverFuses() {
+        var value = HybridPositionEngine(vehicleID: "bus", route: route, destinationSequence: 8, surveyed: true,
+                                         geometry: RideRouteGeometry(points: route.stops.map { $0.stop.coordinate }, quality: .derivedVehicleTrace))
+        seed(&value, gps: sample(0))
+        let result = delayed(&value, at: 15, gps: sample(15, latitude: 33.0005))
+        XCTAssertEqual(result.state, .predicted)
+        XCTAssertEqual(result.confidence, RouteGeometryQuality.derivedVehicleTrace.predictionConfidence)
+        XCTAssertLessThan(result.confidence, 0.75)
+        XCTAssertNotEqual(result.confidenceCategory, "high")
+        XCTAssertFalse(RouteGeometryQuality.derivedVehicleTrace.allowsFusion)
+        XCTAssertFalse(RouteGeometryQuality.stopChords.allowsFusion)
+    }
+
+    func testWrongDirectionFailsClosed() {
+        var value = engine(verified: true)
+        seed(&value, gps: sample(0))
+        let result = delayed(&value, at: 15, gps: sample(15, latitude: 33.0005, course: 180))
+        XCTAssertEqual(result.state, .lost)
+        XCTAssertEqual(result.reason, "direction_conflict")
+    }
+
+    func testStationaryBusAtAStopDoesNotAdvance() {
+        var value = engine()
+        seed(&value, gps: sample(0))
+        for seconds in [15.0, 25, 40, 55] {
+            let result = delayed(&value, at: seconds, gps: sample(seconds, latitude: 33.001, speed: 0, course: nil))
+            XCTAssertEqual(result.currentStopSequence, 1, "t=\(seconds)")
+        }
+    }
+
+    func testEvenAuthoritativeGeometryCannotHoldANearDestinationMilestone() {
+        var value = engine(verified: true)
+        seed(&value, sequence: 5, gps: sample(0, latitude: 33.004))
+        _ = delayed(&value, at: 10, gps: sample(10, latitude: 33.005))
+        let result = delayed(&value, at: 20, gps: sample(20, latitude: 33.0056))
+        XCTAssertEqual(result.state, .lost)
+        XCTAssertEqual(result.reason, "destination_needs_confirmation")
+        XCTAssertNil(RideGuidancePolicy.guidance(for: result.signal(at: start.addingTimeInterval(20))).milestone)
+        XCTAssertNotEqual(result.signal(at: start.addingTimeInterval(20)).phase, .arrived)
+    }
+
+    func testDeviceAcceptanceBoundsMatchTheSamplingPolicy() {
+        for mode in LocationSamplingMode.allCases where mode.isRide {
+            XCTAssertLessThanOrEqual(LocationSamplingPolicy.policy(for: mode).acceptableAccuracy, HybridPositionEngine.maximumDeviceAccuracy, "\(mode)")
+            XCTAssertLessThanOrEqual(LocationSamplingPolicy.policy(for: mode).maximumFixAge, HybridPositionEngine.maximumDeviceAge, "\(mode)")
+        }
     }
 
     func testSegmentMedianNeedsEnoughCleanSamples() {

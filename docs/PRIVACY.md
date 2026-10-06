@@ -1,6 +1,10 @@
 # Privacy and security
 
-TAPSO's default architecture tracks a public transit vehicle, not continuous passenger location. A future one-shot boarding location may be optional and must work only with explicit permission; it is not required by the current core.
+TAPSO's default architecture tracks a public transit vehicle, not continuous passenger location. Device location is optional, asked as When In Use only, and never required: a denied or approximate permission leaves every ride working on official progress.
+
+**Ride position sampling** (hybrid tracking, internal opt-in; `exec-plans/BOARDING_ANCHOR_POSITION_V2.md` §5): while a hybrid ride is on screen, Core Location runs for at most 4–6 s per sample and stops; fixes stay in memory on the phone, are never sent, logged or written to RideTrace (which keeps only a 10 m accuracy bucket and the sample outcome). With Approximate Location (reduced accuracy) no fix is used at all and the ride says so. "내 근처" takes one bounded sample to order nearby stops, used once and discarded.
+
+**교통약자 승차예약**: TAPSO only opens the official 제주버스 page for a verified boarding pole. Nothing about the rider or the reservation is sent to or recorded by TAPSO; the login and the request happen on 제주버스.
 
 **Saved-stop alerts** (`docs/exec-plans/AUTO_START.md`, M3; owner decision D2, 2026-10-05) are the one feature that uses location while TAPSO is not on screen.
 - They are off by default; the rider switches them on per saved journey, for at most 10 stops.

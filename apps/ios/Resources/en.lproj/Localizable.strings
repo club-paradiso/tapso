@@ -504,3 +504,13 @@
 "ride.keepAlive.title" = "Keep updating when closed";
 "ride.keepAlive.on" = "The Lock Screen and the Dynamic Island keep updating until you get off, even with TAPSO closed. iPhone's location service stays on meanwhile, but TAPSO neither uses nor sends your location.";
 "ride.keepAlive.denied" = "Needs location access. You can set TAPSO's location to While Using the App in Settings.";
+
+/* Boarding anchor + position V2 (BOARDING_ANCHOR_POSITION_V2.md) */
+"boardFirst.nearby.approximate" = "Precise Location is off, so nearby stops can't be told apart. Search by name instead.";
+"check.accessibility.title" = "Accessible boarding request";
+"check.accessibility.body" = "Ask the driver for boarding assistance through Jeju Bus's official service. It needs a Jeju Bus login; the request and its result stay on Jeju Bus.";
+"check.accessibility.context" = "Route %@ · boarding at %@";
+"check.accessibility.action" = "Request on Jeju Bus";
+"check.accessibility.external" = "Opens the Jeju Bus website";
+"check.accessibility.failed" = "Couldn't open the Jeju Bus page.";
+"ride.location.approximate" = "Precise Location is off, so guidance uses bus data only.";

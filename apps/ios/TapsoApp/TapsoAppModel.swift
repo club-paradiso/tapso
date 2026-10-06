@@ -379,6 +379,11 @@ final class TapsoAppModel {
     @ObservationIgnored private var rideInForeground = true
     @ObservationIgnored private var retainedDeviceSample: DevicePositionSample?
     @ObservationIgnored private var hybridPermissionRequested = false
+    /// Location permission as last seen by a ride sample. Reduced accuracy is shown honestly on
+    /// the ride screen: the ride continues on official progress alone.
+    private(set) var ridePrecision: LocationPermission = .notDetermined
+    /// The official reservation page could not be opened.
+    private(set) var accessibilityHandoffFailed = false
 
     /// Seconds between session reads while the rider waits at the stop. Each read costs one
     /// bus-feed request on the server. During the ride the cadence comes from
@@ -845,11 +850,34 @@ final class TapsoAppModel {
         return TripArrival.soonestFirst(index.trips(from: boarding, to: destination), arrivals: tripArrivals)
     }
 
-    /// "내 근처": one foreground location sample, never kept or sent.
+    /// The official 제주버스 "교통약자 승차예약" page for the exact pole being set up, only when that
+    /// pole's station id is verified (`JejuStopCrosswalk.shipped`, VERIFIED_EXACT rows only).
+    /// `nil` otherwise, and then no card appears: an unverified id is never shown or opened.
+    var accessibilityBoardingHandoff: JejuAccessibilityBoardingHandoff? {
+        guard let draft, draft.isLive, let route = draft.route, let boarding = draft.boardingRouteStop else { return nil }
+        let anchor = BoardingAnchor(
+            tagoStopID: boarding.stop.id.rawValue, routeID: route.id.rawValue, routeNumber: route.number,
+            sequence: boarding.sequence, stopName: boarding.stop.name,
+            coordinate: draft.coordinatesAreSurveyed == true ? boarding.stop.coordinate : nil,
+            provenance: .liveStopList, crosswalk: .shipped
+        )
+        return JejuAccessibilityBoardingHandoff(anchor: anchor)
+    }
+
+    /// Opens the official page. TAPSO makes no reservation and records no outcome.
+    func openAccessibilityBoarding(_ handoff: JejuAccessibilityBoardingHandoff) async {
+        accessibilityHandoffFailed = false
+        let opened = await UIApplication.shared.open(handoff.url)
+        if !opened { accessibilityHandoffFailed = true }
+    }
+
+    /// "내 근처": one bounded foreground location sample, never kept or sent.
     func findNearbyBoarding(towardPlaceNamed name: String) async {
         nearbyBoarding = .locating
-        guard let sample = await locationSampler.sample(urgent: false, requestPermission: true) else {
-            nearbyBoarding = .unavailable
+        let outcome = await locationSampler.sample(.nearbyStops, requestPermission: true)
+        guard let sample = outcome.sample else {
+            // Approximate Location cannot single out a pole a few hundred metres away; never pretend it can.
+            nearbyBoarding = outcome == .unavailable(.reducedAccuracy) ? .approximateOnly : .unavailable
             return
         }
         let places = boardingPlaces(towardPlaceNamed: name)
@@ -1716,24 +1744,33 @@ final class TapsoAppModel {
         readInFlight = true
         defer { readInFlight = false }
         let sessionID = live.sessionID
+        let boardingSequence = ride.draft.boardingRouteStop?.sequence
         if hybridSessionID != sessionID {
+            // The boarding anchor is the draft's exact pole on this variant, read from the same route.
             hybridEngine = HybridPositionEngine(vehicleID: live.vehicleID, route: route,
-                destinationSequence: destination, surveyed: ride.draft.coordinatesAreSurveyed == true)
+                destinationSequence: destination, surveyed: ride.draft.coordinatesAreSurveyed == true,
+                boardingSequence: boardingSequence)
             hybridSessionID = sessionID
             retainedDeviceSample = nil
+            locationSampler.resetThrottle()
         }
-        let urgent = manual || ride.signal.remainingStops <= 3 || ride.hybridPosition?.state != .live
+        let samplingMode = LocationSamplingPolicy.rideMode(
+            remainingStops: ride.signal.remainingStops, hybridState: ride.hybridPosition?.state, manual: manual,
+            officialSequence: live.currentStopSequence, boardingSequence: boardingSequence)
         let requestPermission = !hybridPermissionRequested
         hybridPermissionRequested = true
-        async let sample = locationSampler.sample(urgent: urgent, requestPermission: requestPermission)
+        async let sample = locationSampler.sample(samplingMode, requestPermission: requestPermission)
         var snapshot: JourneySessionSnapshot?
         var failure: TransitAPIFailure?
         do { snapshot = try await api.session(id: sessionID) }
         catch is CancellationError { return }
         catch { failure = Self.failure(error) }
-        let freshDevice = await sample
+        let sampleOutcome = await sample
+        ridePrecision = locationSampler.permission
         guard var current = activeRide, current.live?.sessionID == sessionID else { return }
-        if let freshDevice { retainedDeviceSample = freshDevice }
+        if let freshDevice = sampleOutcome.sample { retainedDeviceSample = freshDevice }
+        // Without Precise Location no earlier precise fix may linger as evidence either.
+        if !ridePrecision.allowsPreciseRideEvidence { retainedDeviceSample = nil }
         if let failure, !failure.isTransient { current.live?.endedByServer = true }
         if let snapshot {
             current.live?.signal = LiveSessionInterpreter.rideSignal(for: snapshot)
@@ -1760,11 +1797,15 @@ final class TapsoAppModel {
             let deviceAge = retainedDeviceSample.map { Int(Date().timeIntervalSince($0.timestamp) / 5) * 5 } ?? -1
             let accuracy = retainedDeviceSample.map { Int($0.accuracy / 10) * 10 } ?? -1
             let officialAge = evidenceAt.map { Int(Date().timeIntervalSince($0) / 5) * 5 } ?? -1
-            let line = "\(Int(result.evaluatedAt.timeIntervalSince1970)) route=\(route.number) variant=\(route.id.rawValue) direction=\(route.direction.rawValue) vehicle=\(current.plate) state=\(result.state.rawValue) source=\(result.source) category=\(result.confidenceCategory) confidence=\(Int(result.confidence * 100)) reason=\(result.reason) route100m=\(result.routeDistanceBucket ?? -1) stop=\(result.currentStopSequence ?? -1) remaining=\(result.remainingStops) officialAge5s=\(officialAge) gpsAge5s=\(deviceAge) accuracy10m=\(accuracy) legacy=\(current.live?.signal.freshness.rawValue ?? "unknown") legacyRemaining=\(current.live?.signal.remainingStops ?? -1) officialSequence=\(snapshot?.progress?.currentStopSequence ?? -1)"
+            let sampled: String = switch sampleOutcome {
+            case .fix: "fix"
+            case .unavailable(let reason): reason.rawValue
+            }
+            let line = "\(Int(result.evaluatedAt.timeIntervalSince1970)) mode=\(samplingMode.rawValue) sample=\(sampled) route=\(route.number) variant=\(route.id.rawValue) direction=\(route.direction.rawValue) vehicle=\(current.plate) state=\(result.state.rawValue) source=\(result.source) category=\(result.confidenceCategory) confidence=\(Int(result.confidence * 100)) reason=\(result.reason) route100m=\(result.routeDistanceBucket ?? -1) stop=\(result.currentStopSequence ?? -1) remaining=\(result.remainingStops) officialAge5s=\(officialAge) gpsAge5s=\(deviceAge) accuracy10m=\(accuracy) legacy=\(current.live?.signal.freshness.rawValue ?? "unknown") legacyRemaining=\(current.live?.signal.remainingStops ?? -1) officialSequence=\(snapshot?.progress?.currentStopSequence ?? -1)"
             hybridDiagnosticLines.append(line)
             if hybridDiagnosticLines.count > 200 { hybridDiagnosticLines.removeFirst(hybridDiagnosticLines.count - 200) }
         }
-        trace(failure == nil ? "hybrid" : "poll_failed", snapshot: snapshot, detail: failure?.name ?? "\(result?.source ?? "-") \(result?.reason ?? "-")")
+        trace(failure == nil ? "hybrid" : "poll_failed", snapshot: snapshot, detail: failure?.name ?? "\(result?.source ?? "-") \(result?.reason ?? "-") mode=\(samplingMode.rawValue)")
         #endif
         store.saveActiveRide(activeRide)
         await rideDidChange()
@@ -2047,6 +2088,8 @@ enum NearbyBoarding: Equatable {
     case locating
     /// No permission or no fix: the screen says to search by name.
     case unavailable
+    /// Only Approximate Location is allowed: nearby poles cannot be told apart.
+    case approximateOnly
     case found([BoardingPlace])
 }
 

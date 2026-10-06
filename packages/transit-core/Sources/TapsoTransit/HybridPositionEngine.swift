@@ -20,14 +20,43 @@ public struct DevicePositionSample: Hashable, Sendable {
     }
 }
 
+/// Where a ride's corridor came from (`BOARDING_ANCHOR_POSITION_V2.md` §6).
+/// Only an `authoritative` shape may fuse device evidence into high-confidence
+/// guidance; the other two can at most support a capped, never-actionable estimate.
+public enum RouteGeometryQuality: String, Codable, Hashable, Sendable, CaseIterable {
+    /// Straight lines between surveyed stop coordinates. Every Jeju variant today.
+    case stopChords
+    /// Built from many independent official vehicle traversals (`DerivedRouteCorridor`).
+    /// Evidence, not a survey: never authoritative.
+    case derivedVehicleTrace
+    /// A published road shape from an authoritative source under usable terms. None exists yet for Jeju.
+    case authoritative
+
+    public var allowsFusion: Bool { self == .authoritative }
+
+    /// The confidence a bounded device estimate on this corridor may carry; always below `fused`.
+    public var predictionConfidence: Double {
+        switch self {
+        case .stopChords: 0.45
+        case .derivedVehicleTrace: 0.5
+        case .authoritative: 0.6
+        }
+    }
+}
+
 /// Stop chords are a fallback corridor, NEVER an authoritative road shape.
 public struct RideRouteGeometry: Sendable {
     public let points: [Coordinate]
-    public let verifiedRoadShape: Bool
+    public let quality: RouteGeometryQuality
 
-    public init(points: [Coordinate], verifiedRoadShape: Bool) {
+    public init(points: [Coordinate], quality: RouteGeometryQuality) {
         self.points = points
-        self.verifiedRoadShape = verifiedRoadShape
+        self.quality = quality
+    }
+
+    /// The surveyed stops in route order, labelled as the approximation they are.
+    public static func stopChords(of route: TransitRoute) -> RideRouteGeometry {
+        RideRouteGeometry(points: route.stops.map { $0.stop.coordinate }, quality: .stopChords)
     }
 }
 
@@ -116,13 +145,25 @@ public struct HybridRidePosition: Codable, Hashable, Sendable {
 /// A trip-scoped, deterministic engine; never selects/rematches a vehicle.
 /// Thresholds are conservative initial assumptions, requiring real-ride calibration.
 public struct HybridPositionEngine: Sendable {
+    /// The worst device fix the engine accepts. `LocationSamplingPolicy` asks for fixes at least this good.
+    public static let maximumDeviceAccuracy = 50.0
+    /// The oldest device fix the engine accepts, seconds.
+    public static let maximumDeviceAge = 20.0
+    /// Before the bus officially reaches the rider's pole, the phone is with the rider at that pole.
+    /// Farther than this from it, the phone cannot be describing this ride (lag-tolerant: TAGO's
+    /// stop sequence can trail the bus by a stop or more).
+    public static let boardingAnchorRadius = 1_000.0
+
     private let vehicleID: String
     private let stops: [RouteStop]
     private let destination: Int
     private let geometry: RideRouteGeometry
+    private let boarding: RouteStop?
     private var officialSequence: Int?
     private var strongAt: Date?
     private var committed: Int?
+    /// True while `committed` came from device stop passage rather than official progress.
+    private var committedFromDevice = false
     private var lastProjection: RouteProjection?
     private var lastDeviceAt: Date?
     private var passageCandidate: Int?
@@ -130,11 +171,16 @@ public struct HybridPositionEngine: Sendable {
     private var passageSamples = 0
     private var consistentSamples = 0
 
-    public init(vehicleID: String, route: TransitRoute, destinationSequence: Int, surveyed: Bool, geometry: RideRouteGeometry? = nil) {
+    /// - Parameter boardingSequence: the rider's exact boarding pole on this variant (`BoardingAnchor`).
+    ///   Its coordinate is read from `route`, never passed separately. `nil` keeps the V1 behaviour.
+    public init(vehicleID: String, route: TransitRoute, destinationSequence: Int, surveyed: Bool,
+                geometry: RideRouteGeometry? = nil, boardingSequence: Int? = nil) {
         self.vehicleID = vehicleID
         stops = route.stops
         destination = destinationSequence
-        self.geometry = geometry ?? RideRouteGeometry(points: surveyed ? route.stops.map { $0.stop.coordinate } : [], verifiedRoadShape: false)
+        self.geometry = geometry ?? (surveyed ? .stopChords(of: route) : RideRouteGeometry(points: [], quality: .stopChords))
+        // An unsurveyed pole has no coordinate worth anchoring to; a sequence not on the route is ignored.
+        boarding = surveyed ? boardingSequence.flatMap { sequence in route.stops.first { $0.sequence == sequence } } : nil
     }
 
     public mutating func evaluate(
@@ -162,26 +208,52 @@ public struct HybridPositionEngine: Sendable {
             && official?.phase != .vehicleRecovery && official?.phase != .vehicleTemporarilyLost
             && sequenceValid && official.map { RideGuidancePolicy.moment(for: $0) != .checking } == true
             && (officialAge.map { $0 >= 0 && $0 <= 30 } ?? false)
-        // Newer official progress may reconcile an estimate, but cannot move it backward.
+        // Newer official progress reconciles a device estimate, even downward: an
+        // estimate that ran ahead of the official count may have been early, and a
+        // late display is preferable to an early one. Official progress itself
+        // never moves backward.
+        var reconciled = false
         if officialStrong, let sequence, let evidenceAt {
-            if let committed, sequence < committed { return result(.lost, 0.2, "official_backward_conflict") }
+            if let committed, sequence < committed {
+                guard committedFromDevice, sequence >= (officialSequence ?? sequence) else {
+                    return result(.lost, 0.2, "official_backward_conflict")
+                }
+                reconciled = true
+                clearDeviceContinuity()
+            }
             if let old = officialSequence, sequence > old + 1, let strongAt,
                evidenceAt.timeIntervalSince(strongAt) < Double(sequence - old) * 8 {
                 return result(.lost, 0.2, "official_implausible_jump")
             }
             officialSequence = sequence
             committed = sequence
+            committedFromDevice = false
             strongAt = evidenceAt
         }
 
         let gpsAge = device.map { now.timeIntervalSince($0.timestamp) }
         let deviceValid = device.map {
-            $0.accuracy.isFinite && $0.accuracy > 0 && $0.accuracy <= 50
+            $0.accuracy.isFinite && $0.accuracy > 0 && $0.accuracy <= Self.maximumDeviceAccuracy
                 && RideMapMatcher.valid($0.coordinate)
                 && ($0.speed.map { $0.isFinite && $0 >= 0 && $0 <= 35 } ?? true)
                 && ($0.course.map { $0.isFinite && $0 >= 0 && $0 < 360 } ?? true)
         } ?? false
-        let recentDevice = deviceValid && (gpsAge.map { $0 >= 0 && $0 <= 20 } ?? false)
+        let recentDevice = deviceValid && (gpsAge.map { $0 >= 0 && $0 <= Self.maximumDeviceAge } ?? false)
+        let officialReason = reconciled ? "official_reconciled_estimate" : "consistent_official"
+        let officialValidity = max(0, 30 - (officialAge ?? 30))
+
+        // Until official progress puts the bus at the rider's pole, the phone
+        // describes the rider waiting there, not the bus: it may neither seed
+        // the bus's continuity nor produce an estimate, and a phone far from the
+        // pole cannot overturn the official reading either.
+        if let boarding, (committed ?? Int.min) < boarding.sequence {
+            clearDeviceContinuity()
+            guard officialStrong else { return result(.lost, 0.15, "boarding_needs_official") }
+            if recentDevice, let device, device.coordinate.distance(to: boarding.stop.coordinate) > Self.boardingAnchorRadius {
+                return result(.live, 0.95, "boarding_anchor_mismatch", officialValidity)
+            }
+            return result(.live, 0.95, officialReason, officialValidity)
+        }
         var projection: RouteProjection?
         if recentDevice, let device {
             projection = RideMapMatcher.project(device.coordinate, onto: geometry.points, after: lastProjection?.distanceAlong)
@@ -224,7 +296,7 @@ public struct HybridPositionEngine: Sendable {
                 lastDeviceAt = device.timestamp
             }
         }
-        if officialStrong { return result(.live, 0.95, "consistent_official", max(0, 30 - (officialAge ?? 30))) }
+        if officialStrong { return result(.live, 0.95, officialReason, officialValidity) }
         guard let strongAt, now.timeIntervalSince(strongAt) >= 0, now.timeIntervalSince(strongAt) <= 180,
               let committed else { return result(.lost, 0.1, "association_expired") }
         guard recentDevice, let device, let projection else {
@@ -234,7 +306,10 @@ public struct HybridPositionEngine: Sendable {
         // Surveyed stop proximity followed by forward departure can advance an approximate
         // count. A chord alone or elapsed time can never do so; approximate results cannot alert.
         advanceConfirmedPassage(device: device, projection: projection, now: now)
-        if geometry.verifiedRoadShape {
+        // No device evidence, on any geometry, holds an actionable 2/1/0-stop
+        // milestone: near the destination only fresh official progress counts.
+        guard destination - (self.committed ?? committed) > 2 else { return result(.lost, 0.3, "destination_needs_confirmation") }
+        if geometry.quality.allowsFusion {
             let ageFactor = max(0, 1 - now.timeIntervalSince(strongAt) / 240)
             let accuracyFactor = max(0, 1 - device.accuracy / 100)
             let routeFactor = max(0, 1 - projection.distanceFromRoute / 160)
@@ -244,9 +319,7 @@ public struct HybridPositionEngine: Sendable {
                 return result(.fused, confidence, "verified_route_device_fusion", min(20, 180 - now.timeIntervalSince(strongAt)))
             }
         }
-        // A prediction never causes an actionable 2/1/0-stop milestone.
-        guard destination - (self.committed ?? committed) > 2 else { return result(.lost, 0.3, "destination_needs_confirmation") }
-        return result(.predicted, geometry.verifiedRoadShape ? 0.6 : 0.45, "bounded_device_estimate", min(20, 180 - now.timeIntervalSince(strongAt)))
+        return result(.predicted, geometry.quality.predictionConfidence, "bounded_device_estimate", min(20, 180 - now.timeIntervalSince(strongAt)))
     }
 
     private mutating func clearDeviceContinuity() {
@@ -279,6 +352,7 @@ public struct HybridPositionEngine: Sendable {
                 // Do not claim arrival from passing a shape point; destination needs official evidence.
                 guard next.sequence < destination else { return }
                 self.committed = next.sequence
+                committedFromDevice = true
                 passageCandidate = nil
                 self.passageAt = nil
             }

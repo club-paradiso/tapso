@@ -36,7 +36,7 @@ TAGO route records reported `routetp=급행버스` for all six 365 variants. Do 
 
 Requests use `serviceKey`, `_type=json`, and where applicable `cityCode`, `routeId`, `pageNo`, `numOfRows`. The city code is a TAGO identifier, not the former B551982 `stdgCd`. Do not infer one from the other. Resolve IDs from official live responses; no production city/route ID is hardcoded.
 
-[Jeju Bus Information System](https://bus.jeju.go.kr/) remains the official passenger-facing corroboration source for route existence, schedule, endpoint, and local classification. No undocumented Jeju BIS endpoint is treated as a supported TAPSO product API.
+[Jeju Bus Information System](https://bus.jeju.go.kr/) remains the official passenger-facing corroboration source for route existence, schedule, endpoint, and local classification. No undocumented Jeju BIS endpoint is treated as a supported TAPSO product API. (2026-10-06) The app may *open* the official passenger station page (`/mobile/station/detailStation/<id>?type=station&mode=ridebooking`) for the 교통약자 승차예약 handoff, only for a station id verified by the offline crosswalk audit (`validation/JEJU_BIS_TAGO_STOP_CROSSWALK.md`); opening a page in the browser is not an API dependency, and the site's own data requests (`reservationTrafficWeak`, `getNewStationInfoByStationId`, `getNewArriveScheduleByStationId`) are never called by TAPSO.
 
 ## Jeju timetables: the last bus
 

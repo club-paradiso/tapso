@@ -1,0 +1,70 @@
+name: Jeju stop crosswalk audit
+
+# Reads the official 제주버스정보시스템 passenger station page for every catalog
+# stop's JEB-stripped candidate id and classifies the TAGO ↔ BIS mapping
+# (docs/validation/JEJU_BIS_TAGO_STOP_CROSSWALK.md). Triggered only by a reviewed
+# change to ops/jeju-stop-crosswalk/request.json. Sequential, one request per
+# 1.2 s, stops after ten consecutive failed reads; passenger page only, no key,
+# no vehicle data. The result (dated evidence, summary, and the VERIFIED_EXACT
+# table the app ships) is committed to the requesting branch, never to main.
+on:
+  push:
+    paths:
+      - ops/jeju-stop-crosswalk/request.json
+
+permissions:
+  contents: write
+
+concurrency:
+  group: jeju-stop-crosswalk-audit-${{ github.ref }}
+  cancel-in-progress: false
+
+jobs:
+  audit:
+    if: github.ref != 'refs/heads/main'
+    runs-on: ubuntu-latest
+    timeout-minutes: 150
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-node@v4
+        with:
+          node-version: 22
+      # Same check as data-source-probe.yml: verification stays on.
+      - name: Complete bus.jeju.go.kr's certificate chain (verified against the system roots)
+        continue-on-error: true
+        run: |
+          set -euo pipefail
+          openssl s_client -connect bus.jeju.go.kr:443 -servername bus.jeju.go.kr -showcerts </dev/null 2>/dev/null > chain.txt || true
+          openssl x509 -in chain.txt -out leaf.pem
+          uri=$(openssl x509 -in leaf.pem -noout -ext authorityInfoAccess | sed -n 's/.*CA Issuers - URI:\(.*\)/\1/p' | head -1)
+          curl -fsS --max-time 20 "$uri" -o issuer.raw
+          openssl x509 -inform DER -in issuer.raw -out issuer.pem 2>/dev/null || openssl x509 -in issuer.raw -out issuer.pem
+          openssl verify -CAfile /etc/ssl/certs/ca-certificates.crt issuer.pem
+          openssl verify -CAfile /etc/ssl/certs/ca-certificates.crt -untrusted issuer.pem leaf.pem
+          cp issuer.pem "$RUNNER_TEMP/bis-intermediate.pem"
+          echo "NODE_EXTRA_CA_CERTS=$RUNNER_TEMP/bis-intermediate.pem" >> "$GITHUB_ENV"
+      - name: Collect evidence from the official station pages (paced, read-only)
+        run: |
+          limit=$(node -e 'const r=JSON.parse(require("fs").readFileSync("ops/jeju-stop-crosswalk/request.json","utf8")); console.log(Number.isInteger(r.limit) && r.limit > 0 ? r.limit : "")')
+          ids=$(node -e 'const r=JSON.parse(require("fs").readFileSync("ops/jeju-stop-crosswalk/request.json","utf8")); const ok=Array.isArray(r.ids)&&r.ids.length>0&&r.ids.length<=200&&r.ids.every((id)=>/^JEB40[56]\d{6}$/.test(id)); console.log(ok ? r.ids.join(",") : "")')
+          if [ -n "$ids" ]; then
+            node --experimental-strip-types scripts/crosswalk/collect-bis-station-evidence.ts --ids "$ids"
+          elif [ -n "$limit" ]; then
+            node --experimental-strip-types scripts/crosswalk/collect-bis-station-evidence.ts --limit "$limit"
+          else
+            node --experimental-strip-types scripts/crosswalk/collect-bis-station-evidence.ts
+          fi
+      - name: Classify and regenerate the shipped table
+        run: node --experimental-strip-types scripts/crosswalk/jeju-stop-crosswalk.ts
+      - name: Commit the result to the requesting branch
+        run: |
+          set -euo pipefail
+          git config user.name "github-actions[bot]"
+          git config user.email "41898282+github-actions[bot]@users.noreply.github.com"
+          git add artifacts/jeju-stop-crosswalk packages/transit-core/Sources/TapsoTransit/JejuStopCrosswalkData.swift
+          if git diff --cached --quiet; then echo "unchanged"; exit 0; fi
+          git commit -m "data: Jeju stop crosswalk evidence ($(TZ=Asia/Seoul date +%F))" -m "Workflow run ${GITHUB_RUN_ID}."
+          for attempt in 1 2 3; do
+            git pull --rebase origin "${GITHUB_REF_NAME}" && git push origin "HEAD:${GITHUB_REF_NAME}" && break
+            sleep $((attempt * 5))
+          done

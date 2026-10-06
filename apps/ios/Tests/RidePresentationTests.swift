@@ -37,6 +37,40 @@ final class RidePresentationTests: XCTestCase {
         }
     }
 
+    /// Boarding anchor + position V2 copy: no engineering terms, and the accessibility
+    /// card never claims TAPSO books anything or knows the outcome (제주버스 is the source of truth).
+    func testPositionV2CopyIsPlainAndClaimsNoReservationOutcome() throws {
+        let keys = ["check.accessibility.title", "check.accessibility.body", "check.accessibility.context",
+                    "check.accessibility.action", "check.accessibility.external", "check.accessibility.failed",
+                    "boardFirst.nearby.approximate", "ride.location.approximate"]
+        let banned = ["TAGO", "GPS", "nodeord", "confidence", "cache", "캐시", "BIS", "%)", "좌석", "seat",
+                      "예약되었", "예약 완료", "예약됐", "reserved", "confirmed"]
+        for language in ["ko", "en"] {
+            let path = try XCTUnwrap(Bundle.main.path(forResource: language, ofType: "lproj"))
+            let bundle = try XCTUnwrap(Bundle(path: path))
+            for key in keys {
+                let value = bundle.localizedString(forKey: key, value: "\u{0}", table: nil)
+                XCTAssertNotEqual(value, "\u{0}", "\(language) is missing \(key)")
+                for word in banned {
+                    XCTAssertFalse(value.localizedCaseInsensitiveContains(word), "\(language) \(key): \(value)")
+                }
+            }
+        }
+    }
+
+    func testNoAccessibilityHandoffWithoutAVerifiedStation() {
+        // The shipped crosswalk holds only VERIFIED_EXACT rows; until the audit has classified
+        // official evidence it is empty, and no pole may get a station id or a reservation link.
+        let anchor = BoardingAnchor(tagoStopID: "JEB405000314", routeID: "JEB405999901", routeNumber: "999", sequence: 3,
+                                    stopName: "용문사거리[동]", coordinate: Coordinate(latitude: 33.508658, longitude: 126.510227),
+                                    provenance: .liveStopList, crosswalk: .shipped)
+        if JejuStopCrosswalk.shipped.entries.isEmpty {
+            XCTAssertNil(anchor.bisStation)
+            XCTAssertNil(JejuAccessibilityBoardingHandoff(anchor: anchor))
+        }
+        XCTAssertTrue(JejuStopCrosswalk.shipped.entries.allSatisfy { $0.status == .verifiedExact })
+    }
+
     // MARK: One root condition, one message
 
     /// A transient failure (a slow answer, a provider hiccup) ages the ride into its own calm

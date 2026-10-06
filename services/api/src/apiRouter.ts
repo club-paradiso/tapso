@@ -16,6 +16,7 @@ import type { MatchRequest } from "./domain.ts";
 import { matchVehicle } from "./matching.ts";
 import { analyzeRideCapture, classifyTopology, RideCaptureInputError, type RideCapture } from "./rideCapture.ts";
 import { operatorTokenMatches, readBearerToken } from "./operatorAuth.ts";
+import type { ActiveRideSnapshotProvider } from "./activeRideSnapshot.ts";
 import type { CachedTransitProvider } from "./cachedTransitProvider.ts";
 import type { TransitProvider } from "./provider.ts";
 import type { TagoCity, TagoRoute, TagoRouteServiceHours, TagoTransitProvider } from "./tagoProvider.ts";
@@ -130,6 +131,11 @@ export interface TransitApiDependencies {
    */
   directProvider?: Pick<TransitProvider, "vehicles">;
   sessions?: JourneySessionCoordinator;
+  /**
+   * The sessions' vehicle read path (`activeRideSnapshot.ts`). Only its policy
+   * and outcome counters are read here, for `/health`; never an identifier.
+   */
+  activeRideReads?: Pick<ActiveRideSnapshotProvider, "policy" | "stats">;
   limiter?: BurstLimiter;
   /** Separate budget so a ride never spends the public API's burst allowance. */
   operatorLimiter?: BurstLimiter;
@@ -325,7 +331,7 @@ async function dispatch(
   const { config, provider, discovery } = dependencies;
 
   if (resolved.route === "health") {
-    return { response: json(healthPayload(config, support.now(), dependencies.sessions, dependencies.liveActivityPush, dependencies.providerHealth, dependencies.staticData), 200, { "cache-control": "no-store" }) };
+    return { response: json(healthPayload(config, support.now(), dependencies.sessions, dependencies.liveActivityPush, dependencies.providerHealth, dependencies.staticData, dependencies.activeRideReads), 200, { "cache-control": "no-store" }) };
   }
 
   if (resolved.route === "catalog") {
@@ -748,6 +754,7 @@ function healthPayload(
   liveActivityPush: TransitApiDependencies["liveActivityPush"],
   providerHealth: TransitApiDependencies["providerHealth"],
   staticData?: StaticTransitData,
+  activeRideReads?: TransitApiDependencies["activeRideReads"],
 ): Record<string, unknown> {
   return {
     ok: true,
@@ -767,6 +774,10 @@ function healthPayload(
       vehicleTtlMs: config.cachePolicy.vehicleTtlMs,
     },
     cachePolicy: config.cachePolicy,
+    // Active rides never read the public vehicle cache above. Their own route
+    // snapshot is shared for at most `shareWindowMs` (receipt time preserved),
+    // per warm instance; the counters are this instance's only.
+    ...(activeRideReads ? { activeRideReads: { policy: activeRideReads.policy, outcomes: activeRideReads.stats() } } : {}),
     sessionStore: config.sessions.store,
     sessions: config.sessions,
     rateLimit: config.rateLimit,

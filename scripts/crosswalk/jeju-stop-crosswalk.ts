@@ -1,0 +1,143 @@
+/**
+ * The TAGO ↔ 제주버스정보시스템 stop crosswalk audit
+ * (`docs/validation/JEJU_BIS_TAGO_STOP_CROSSWALK.md`).
+ *
+ *   node --experimental-strip-types scripts/crosswalk/jeju-stop-crosswalk.ts            # write artifacts
+ *   node --experimental-strip-types scripts/crosswalk/jeju-stop-crosswalk.ts --check    # fail if they are stale
+ *   … --evidence <file>   # another evidence file (default: artifacts/jeju-stop-crosswalk/evidence.json when present)
+ *
+ * Offline: reads the committed catalog and, when given, an evidence file
+ * (`{ "<TAGO stop id>": StationEvidence }`) collected from the official
+ * passenger pages by a reviewed extractor. Without evidence every stop is
+ * `UNCHECKED` and the shipped table holds no station id — the fail-closed
+ * state. Writes:
+ *
+ *   artifacts/jeju-stop-crosswalk/summary.json        counts, structure, the poles that need care
+ *   packages/transit-core/Sources/TapsoTransit/JejuStopCrosswalkData.swift
+ *                                                     VERIFIED_EXACT rows only, what the phone uses
+ *
+ * No vehicle, session or rider data is read or written.
+ */
+
+import { existsSync, mkdirSync, readFileSync, writeFileSync } from "node:fs";
+import {
+  classifyCrosswalk,
+  nextStopNamesByStop,
+  runtimeEntries,
+  summarizeCrosswalk,
+  type CatalogStop,
+  type StationEvidence,
+} from "../../services/api/src/stopCrosswalk.ts";
+
+const args = process.argv.slice(2);
+const option = (name: string): string | undefined => {
+  const index = args.indexOf(name);
+  return index >= 0 ? args[index + 1] : undefined;
+};
+const check = args.includes("--check");
+// The committed evidence (collected by the workflow) is read by default, so
+// `--check` in CI reproduces exactly what was committed.
+const defaultEvidence = new URL("../../artifacts/jeju-stop-crosswalk/evidence.json", import.meta.url);
+const evidencePath = option("--evidence") ?? (existsSync(defaultEvidence) ? defaultEvidence.pathname : undefined);
+type EvidenceFile = { collectedOn: string; evidence: Record<string, StationEvidence> };
+const evidenceFile: EvidenceFile | undefined = evidencePath ? JSON.parse(readFileSync(evidencePath, "utf8")) as EvidenceFile : undefined;
+const verifiedOn = evidenceFile?.collectedOn ?? "none";
+
+const root = new URL("../../", import.meta.url);
+const catalog = JSON.parse(readFileSync(new URL("services/api/data/jeju-transit-catalog.json", root), "utf8")) as {
+  catalogVersion: string;
+  stops: CatalogStop[];
+  routes: { routeId: string; stops: number[] }[];
+};
+
+const routeCounts = catalog.stops.map(() => 0);
+for (const route of catalog.routes) for (const index of new Set(route.stops)) routeCounts[index]! += 1;
+
+const evidence = new Map<string, StationEvidence>(Object.entries(evidenceFile?.evidence ?? {}));
+const rows = classifyCrosswalk(catalog.stops, routeCounts, evidence, nextStopNamesByStop(catalog.stops, catalog.routes));
+const summary = summarizeCrosswalk(rows);
+const entries = runtimeEntries(rows, catalog.stops, verifiedOn);
+
+// The poles a name-only or position-only mapping would most likely get wrong:
+// same place, opposite sides, close together. Public catalog names and ids only.
+const siblingPairs = rows
+  .filter((row) => row.siblingPolesNearby > 0)
+  .map((row) => ({ tagoStopId: row.tagoStopId, name: row.name, routeCount: row.routeCount, status: row.status }));
+
+const summaryJson = `${JSON.stringify({
+  schemaVersion: "tapso-jeju-stop-crosswalk-audit-v1",
+  label: evidence.size > 0 ? "OFFICIAL_DERIVED" : "STRUCTURAL_ONLY",
+  catalogVersion: catalog.catalogVersion,
+  evidence: {
+    collected: evidence.size,
+    source: evidence.size > 0 ? "bus.jeju.go.kr passenger station pages (ko-KR), collected by scripts/crosswalk/collect-bis-station-evidence.ts" : "none: bus.jeju.go.kr not yet read for this audit",
+    verifiedOn,
+  },
+  hypothesis: "candidate BIS station id = TAGO stop id without its JEB prefix; never assumed, verified per pole",
+  rules: {
+    VERIFIED_EXACT: "the candidate's official page names the exact pole (direction marker included) and either its coordinates are within 30 m or its facing direction is the catalog's next stop on a variant through this pole",
+    VERIFIED_BY_NAME_COORDINATE: "same place (coordinates within 30 m or matching direction), name differs in form, no sibling pole within 150 m; not used at runtime",
+    AMBIGUOUS: "neither coordinates nor a matching facing direction, 30–100 m apart, or a sibling pole nearby with a marker-less official name",
+    MISSING: "no official page for the candidate, or the TAGO id lacks the JEB405/JEB406 form",
+    CONFLICT: "different place name, opposite direction marker, or more than 100 m apart",
+    UNCHECKED: "no evidence collected (or the read failed)",
+  },
+  runtimeEntries: entries.length,
+  summary,
+  siblingPoleSample: siblingPairs.slice(0, 40),
+}, null, 2)}\n`;
+
+// One raw JSON string literal, decoded once on first use: thousands of rows as
+// Swift initializer calls would strain the type checker. A row that fails to
+// decode (e.g. a malformed station id) makes the whole table `.empty`: fail closed.
+const tableJson = JSON.stringify({
+  schemaVersion: "tapso-jeju-stop-crosswalk-v1",
+  catalogVersion: catalog.catalogVersion,
+  generatedAt: verifiedOn,
+  entries,
+});
+if (tableJson.includes('"##')) throw new Error("table JSON would close the Swift raw string literal");
+const swift = `// GENERATED by scripts/crosswalk/jeju-stop-crosswalk.ts. Do not edit.
+// VERIFIED_EXACT rows only (docs/validation/JEJU_BIS_TAGO_STOP_CROSSWALK.md).
+// ${entries.length === 0 ? "Empty: no official evidence has been classified yet, so no stop has a station id." : `${entries.length} verified poles, evidence collected ${verifiedOn}.`}
+
+import Foundation
+
+extension JejuStopCrosswalk {
+    public static let shipped: JejuStopCrosswalk =
+        (try? JSONDecoder().decode(JejuStopCrosswalk.self, from: Data(shippedJSON.utf8))) ?? .empty
+
+    static let shippedJSON = ##"""
+${tableJson}
+"""##
+}
+`;
+
+const outputs: [URL, string][] = [
+  [new URL("artifacts/jeju-stop-crosswalk/summary.json", root), summaryJson],
+  [new URL("packages/transit-core/Sources/TapsoTransit/JejuStopCrosswalkData.swift", root), swift],
+];
+
+let stale = false;
+for (const [url, content] of outputs) {
+  if (check) {
+    let current = "";
+    try {
+      current = readFileSync(url, "utf8");
+    } catch {
+      current = "";
+    }
+    if (current !== content) {
+      console.error(`stale: ${url.pathname}`);
+      stale = true;
+    }
+  } else {
+    mkdirSync(new URL(".", url), { recursive: true });
+    writeFileSync(url, content);
+  }
+}
+console.log(JSON.stringify({ stops: summary.stops, byStatus: summary.byStatus, runtimeEntries: entries.length, structure: summary.structure }));
+if (stale) {
+  console.error("run: node --experimental-strip-types scripts/crosswalk/jeju-stop-crosswalk.ts");
+  process.exit(1);
+}

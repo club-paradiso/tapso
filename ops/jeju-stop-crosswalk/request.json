@@ -1,0 +1,21 @@
+{
+  "requestedOn": "2026-10-06",
+  "reason": "First island-wide TAGO <-> Jeju BIS stop crosswalk audit (BOARDING_ANCHOR_POSITION_V2.md §7). Remove limit for all stops.",
+  "limit": null,
+  "attempt": 3,
+  "note": "Attempt 2 (run 37472612785) read all 4338 pages. Attempt 3 re-reads only the 12 poles whose direction contains \"(… 방향)\" and was truncated by parser v1 (fixed); their evidence is merged, all other rows are kept.",
+  "ids": [
+    "JEB405000405",
+    "JEB405000617",
+    "JEB405002793",
+    "JEB405002795",
+    "JEB405002796",
+    "JEB405002797",
+    "JEB405002798",
+    "JEB405002799",
+    "JEB405002800",
+    "JEB405002801",
+    "JEB405002802",
+    "JEB405002803"
+  ]
+}

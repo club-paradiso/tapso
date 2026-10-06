@@ -149,6 +149,12 @@ struct CatalogBoardingContent: View {
                 Button("boardFirst.nearby.retry", action: onNearby)
                     .font(.footnote.weight(.semibold))
             }
+        case .approximateOnly:
+            // Approximate Location cannot tell one pole from the one across the road.
+            Text("boardFirst.nearby.approximate")
+                .font(.footnote)
+                .foregroundStyle(TapsoColor.textSecondary)
+                .fixedSize(horizontal: false, vertical: true)
         case let .found(found):
             if !found.isEmpty {
                 section("boardFirst.nearby.title", places: found, symbol: "location.fill")
