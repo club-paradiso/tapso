@@ -42,9 +42,25 @@ The direction rule is what separates a pole from another stop elsewhere with the
 
 So name-only matching would be wrong for most of the island: only an id-specific page that names this pole and faces this pole's next stop is accepted.
 
-## Island-wide results
+## Island-wide results (`MEASURED`, evidence dated 2026-10-07 KST)
 
-Pending the audit run requested on 2026-10-06; this section is filled from `artifacts/jeju-stop-crosswalk/summary.json` when it lands. Until then `JejuStopCrosswalk.shipped` is empty and no reservation card appears.
+Run 37472612785 read the official page for all 4,338 candidates with 0 failed reads; run 37486819771 (attempt 2) re-read 12 poles after a parser fix. `artifacts/jeju-stop-crosswalk/evidence.json` holds what each page said; `summary.json` the classification.
+
+| Status | Stops | Reason |
+|---|---:|---|
+| `VERIFIED_EXACT` | **4,298** (99.1 %) | exact name + marker, and the page's "방향" station is this pole's catalog next stop |
+| `AMBIGUOUS` | 33 | no "방향" line: all 33 are terminals with no next stop on any variant (e.g. 제주버스터미널(종점)), so never a boarding pole in TAPSO |
+| `MISSING` | 7 | no station on the official page: all 7 are TAGO virtual stops (제주버스터미널(가상정류소) ×2, 서귀포버스터미널(가상정류소) ×2, 신사동(가상정류소), 차고지(가상), 제주관광대학(가상)/제주영송학교) |
+| `CONFLICT` | **0** | no stripped id named another place or the opposite pole |
+| `UNCHECKED` | 0 | |
+
+So the hypothesis "BIS station id = TAGO id without `JEB`" held for every stop that has an official station, and every boardable real pole has a verified id. It is still applied per pole, never assumed: a renamed or moved pole fails closed on the phone, and a future catalog stop has no row until the audit is re-run.
+
+**Parser defect found and fixed during the audit.** Twelve poles first came out `direction_mismatch` because their next station's own name contains "(노형로 방향)" / "(동광로 방향)" and parser v1 stopped at that first "방향" (e.g. "월구마을/동성마을(노형로"). The defect could only fail closed. Parser v2 anchors on "방향 도착예정"; the twelve were re-read (`amended` in the evidence file) and all verified.
+
+**Runner reachability.** Three GitHub-hosted runners could not reach `bus.jeju.go.kr` at all (TCP timeouts), while others read every page. The collector stops after ten consecutive failures, never replaces held evidence with a failed read, and a run that reads nothing fails without committing.
+
+**What the app now does.** `JejuStopCrosswalk.shipped` holds the 4,298 rows, and the 교통약자 승차예약 card appears on the vehicle-check screen for those poles. Before release a person should review this table and tap through the official page from a device for a sample of poles (`BOARDING_ANCHOR_POSITION_V2.md` §11).
 
 ## Limits
 

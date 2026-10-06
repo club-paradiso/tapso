@@ -80,7 +80,7 @@ Derived corridors (`services/api/src/derivedCorridor.ts`, schema + builder + tes
 
 ## 7. Stop identifier crosswalk
 
-See `docs/validation/JEJU_BIS_TAGO_STOP_CROSSWALK.md` (method, evidence, results) and `artifacts/jeju-stop-crosswalk/summary.json`.
+See `docs/validation/JEJU_BIS_TAGO_STOP_CROSSWALK.md` (method, evidence, results) and `artifacts/jeju-stop-crosswalk/summary.json`. Result (`MEASURED`, 2026-10-07): 4,298 / 4,338 `VERIFIED_EXACT`, 0 `CONFLICT`; the 40 others are 33 terminals (no next stop, never boarding poles) and 7 TAGO virtual stops (no official station). Every boardable real pole has a verified station id.
 
 ## 8. Jeju BIS as validation oracle
 
@@ -96,7 +96,7 @@ Primary safety metric: **false early stop passage / false early arrival** (`posi
 
 ## 11. Release gates and rollback
 
-Gate (all required before enabling `TRANSIT_HYBRID_TRACKING_ENABLED` for anyone): macOS CI green; ≥ 10 real-device rides covering §12 with zero early stop passage and zero false early arrival; GPS acceptance and Energy Log reviewed; owner sign-off. The reservation card additionally needs a classified crosswalk (`VERIFIED_EXACT` rows reviewed by a person) and one device tap-through per test pole.
+Gate (all required before enabling `TRANSIT_HYBRID_TRACKING_ENABLED` for anyone): macOS CI green; ≥ 10 real-device rides covering §12 with zero early stop passage and zero false early arrival; GPS acceptance and Energy Log reviewed; owner sign-off. The reservation card (live in builds from this branch for the 4,298 verified poles) additionally needs a person's review of the shipped table and a device tap-through for a sample of poles (opposite-pole pairs included) before release.
 
 Rollback: hybrid stays behind `-tapsoHybridTracking` / `TRANSIT_HYBRID_TRACKING_ENABLED` (off). The reservation card disappears with an empty `JejuStopCrosswalk.shipped` (regenerate without evidence). The active-ride read path is one constructor in `apiRuntime.ts`; passing `upstream` again restores V1 exactly.
 
@@ -111,4 +111,5 @@ TAGO quota (`MISSING`); TAGO observation lag (unmeasurable without a provider ti
 ## 14. Progress
 
 - 2026-10-06: audit (§1); API active-ride path + tests; crosswalk classifier, offline audit, probe workflow; transit-core anchor/crosswalk/handoff/sampling/V2 engine + tests (macOS `swift test` green on first push); derived corridor + metrics; iOS sampler, model, card, copy. Probe runs 1–2 in `JEJU_BIS_TAGO_STOP_CROSSWALK.md`.
-- Next: classify the crosswalk from official evidence (§7), then device validation (§12). Do not enable hybrid in production.
+- 2026-10-06/07: probe runs 1–2 established the page structure; island-wide audit read 4,338 pages (0 failures); parser v1 truncated 12 directions containing "(… 방향)" (fail-closed), fixed and re-read; 4,298 verified. Red team: boarding-mode spacing 10 → 20 s; collector fails without committing when it reads nothing; generated table emitted as one JSON literal (thousands of Swift initializers risked type-checker cost).
+- Next: a person reviews the shipped crosswalk and taps through the official page on a device for sample poles; then device validation (§12). Do not enable hybrid in production.
