@@ -16,21 +16,20 @@
     "CONFLICT": "different place name, opposite direction marker, or more than 100 m apart",
     "UNCHECKED": "no evidence collected (or the read failed)"
   },
-  "runtimeEntries": 4286,
+  "runtimeEntries": 4298,
   "summary": {
     "stops": 4338,
     "byStatus": {
-      "VERIFIED_EXACT": 4286,
+      "VERIFIED_EXACT": 4298,
       "VERIFIED_BY_NAME_COORDINATE": 0,
-      "AMBIGUOUS": 45,
+      "AMBIGUOUS": 33,
       "MISSING": 7,
       "CONFLICT": 0,
       "UNCHECKED": 0
     },
     "byReason": {
-      "exact_name_and_direction": 4286,
+      "exact_name_and_direction": 4298,
       "no_coordinates_to_compare": 33,
-      "direction_mismatch": 12,
       "no_official_station_page": 7
     },
     "structure": {

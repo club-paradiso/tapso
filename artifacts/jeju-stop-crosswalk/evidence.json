@@ -3,6 +3,21 @@
  "label": "OFFICIAL_DATED",
  "source": "bus.jeju.go.kr passenger station page (/mobile/station/detailStation/<id>?type=station&mode=ridebooking), ko-KR",
  "collectedOn": "2026-10-07",
+ "amendedOn": "2026-10-07",
+ "amended": [
+  "JEB405000405",
+  "JEB405000617",
+  "JEB405002793",
+  "JEB405002795",
+  "JEB405002796",
+  "JEB405002797",
+  "JEB405002798",
+  "JEB405002799",
+  "JEB405002800",
+  "JEB405002801",
+  "JEB405002802",
+  "JEB405002803"
+ ],
  "counts": {
   "found": 4331,
   "not_found": 7,
@@ -1817,7 +1832,7 @@
   "JEB405000405": {
    "kind": "found",
    "name": "월성마을회관[서]",
-   "direction": "월구마을/동성마을(동광로"
+   "direction": "월구마을/동성마을(동광로 방향)"
   },
   "JEB405000406": {
    "kind": "found",
@@ -2802,7 +2817,7 @@
   "JEB405000617": {
    "kind": "found",
    "name": "연동입구[동]",
-   "direction": "명신마을/오라3동(동광로"
+   "direction": "명신마을/오라3동(동광로 방향)"
   },
   "JEB405000618": {
    "kind": "found",
@@ -12165,7 +12180,7 @@
   "JEB405002793": {
    "kind": "found",
    "name": "탐라장애인 종합복지관(노형로 방향)",
-   "direction": "용천마을/남서광마을(노형로"
+   "direction": "용천마을/남서광마을(노형로 방향)"
   },
   "JEB405002794": {
    "kind": "found",
@@ -12175,47 +12190,47 @@
   "JEB405002795": {
    "kind": "found",
    "name": "용천마을/남서광마을(동광로 방향)",
-   "direction": "탐라장애인 종합복지관(동광로"
+   "direction": "탐라장애인 종합복지관(동광로 방향)"
   },
   "JEB405002796": {
    "kind": "found",
    "name": "용천마을/남서광마을(노형로 방향)",
-   "direction": "한국병원(노형로"
+   "direction": "한국병원(노형로 방향)"
   },
   "JEB405002797": {
    "kind": "found",
    "name": "한국병원(동광로 방향)",
-   "direction": "용천마을/남서광마을(동광로"
+   "direction": "용천마을/남서광마을(동광로 방향)"
   },
   "JEB405002798": {
    "kind": "found",
    "name": "한국병원(노형로 방향)",
-   "direction": "제주버스터미널(노형로"
+   "direction": "제주버스터미널(노형로 방향)"
   },
   "JEB405002799": {
    "kind": "found",
    "name": "제주버스터미널(동광로 방향)",
-   "direction": "한국병원(동광로"
+   "direction": "한국병원(동광로 방향)"
   },
   "JEB405002800": {
    "kind": "found",
    "name": "제주버스터미널(노형로 방향)",
-   "direction": "월구마을/동성마을(노형로"
+   "direction": "월구마을/동성마을(노형로 방향)"
   },
   "JEB405002801": {
    "kind": "found",
    "name": "월구마을/동성마을(동광로 방향)",
-   "direction": "제주버스터미널(동광로"
+   "direction": "제주버스터미널(동광로 방향)"
   },
   "JEB405002802": {
    "kind": "found",
    "name": "월구마을/동성마을(노형로 방향)",
-   "direction": "명신마을/오라3동(노형로"
+   "direction": "명신마을/오라3동(노형로 방향)"
   },
   "JEB405002803": {
    "kind": "found",
    "name": "명신마을/오라3동(동광로 방향)",
-   "direction": "월구마을/동성마을(동광로"
+   "direction": "월구마을/동성마을(동광로 방향)"
   },
   "JEB405002804": {
    "kind": "found",
