@@ -37,7 +37,8 @@ async function get(url: string): Promise<{ status: number; type: string; body: s
   await pause(1_000);
   try {
     const response = await fetch(url, {
-      headers: { "user-agent": "TAPSO-crosswalk-probe/1.0 (+https://github.com/club-paradiso/tapso)" },
+      // Run 1 (no language header) rendered English names; the catalog is Korean.
+      headers: { "user-agent": "TAPSO-crosswalk-probe/1.0 (+https://github.com/club-paradiso/tapso)", "accept-language": "ko-KR,ko;q=0.9" },
       signal: AbortSignal.timeout(20_000),
     });
     const bytes = new Uint8Array(await response.arrayBuffer());
@@ -98,6 +99,11 @@ for (const tagoId of SAMPLE) {
     printed += 1;
     console.log(`CODE inline:${index + 1}: ${line.trim().slice(0, 300)}`);
   });
+  // The raw markup around the station id, so an extractor targets real elements.
+  const at = page.body.indexOf(`>${station}`) >= 0 ? page.body.indexOf(`>${station}`) : page.body.lastIndexOf(station);
+  if (at >= 0) console.log(`HTML ${page.body.slice(Math.max(0, at - 700), at + 500).replace(/\s+/g, " ")}`);
+  const hidden = [...page.body.matchAll(/<input[^>]+type=["']hidden["'][^>]*>/gi)].map((match) => match[0]).slice(0, 12);
+  for (const input of hidden) console.log(`HIDDEN ${input.replace(/\s+/g, " ")}`);
   // Visible text, briefly: what a rider sees on the page.
   const text = page.body.replace(/<script[\s\S]*?<\/script>/gi, " ").replace(/<style[\s\S]*?<\/style>/gi, " ").replace(/<[^>]+>/g, " ").replace(/\s+/g, " ").trim();
   console.log(`TEXT ${text.slice(0, 600)}`);
