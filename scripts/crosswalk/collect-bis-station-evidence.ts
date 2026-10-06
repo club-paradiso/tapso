@@ -84,3 +84,9 @@ writeFileSync(out, `${JSON.stringify({
   evidence,
 }, null, 1)}\n`);
 console.log(JSON.stringify({ done: Object.keys(evidence).length, ...counts }));
+// A run that never reached the site (runner unreachable, site down) is not
+// evidence about any stop: fail so the workflow commits nothing.
+if (counts.found! + counts.not_found! === 0) {
+  console.error("no page was read; nothing to classify");
+  process.exitCode = 3;
+}
