@@ -63,8 +63,13 @@ public struct LocationSamplingPolicy: Hashable, Sendable {
             // Battery-conscious: shorter window, every other far-band poll at most.
             return .init(mode: mode, requestedAccuracy: 10, goodEnoughAccuracy: 20, acceptableAccuracy: engineLimit,
                          window: 4, maximumFixAge: 10, minimumInterval: 30)
-        case .boarding, .destinationNear:
-            // The exact pole matters; at most once per near-band poll.
+        case .boarding:
+            // The rider is still waiting at the pole: the phone only checks the anchor
+            // (the engine uses no estimate before boarding), so it need not run every poll.
+            return .init(mode: mode, requestedAccuracy: 10, goodEnoughAccuracy: 15, acceptableAccuracy: engineLimit,
+                         window: 6, maximumFixAge: 10, minimumInterval: 20)
+        case .destinationNear:
+            // The last stops: at most once per near-band poll.
             return .init(mode: mode, requestedAccuracy: 10, goodEnoughAccuracy: 15, acceptableAccuracy: engineLimit,
                          window: 6, maximumFixAge: 10, minimumInterval: 10)
         case .recovery:

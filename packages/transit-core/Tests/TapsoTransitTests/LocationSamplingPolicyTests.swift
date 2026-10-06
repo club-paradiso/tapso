@@ -131,6 +131,8 @@ final class LocationSamplingPolicyTests: XCTestCase {
         XCTAssertTrue(throttle.begin(.policy(for: .nearbyStops), now: start.addingTimeInterval(10)), "내 근처 is never blocked by a ride")
         XCTAssertTrue(throttle.begin(.policy(for: .nearbyStops), now: start.addingTimeInterval(11)))
         XCTAssertTrue(throttle.begin(.policy(for: .destinationNear), now: start.addingTimeInterval(20)))
+        XCTAssertFalse(throttle.begin(.policy(for: .boarding), now: start.addingTimeInterval(35)), "waiting at the pole samples at most every 20 s")
+        XCTAssertTrue(throttle.begin(.policy(for: .boarding), now: start.addingTimeInterval(40)))
         throttle.reset()
         XCTAssertTrue(throttle.begin(.policy(for: .normal), now: start.addingTimeInterval(21)))
     }

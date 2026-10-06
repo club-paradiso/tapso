@@ -58,7 +58,7 @@ Three separate quantities, never conflated:
 |---|---|---|---|---|---|---|---|
 | nearbyStops | "내 근처" | 10 m | 30 m | 150 m | 5 s | 30 s | none (user-initiated, own clock) |
 | normal | live, > 3 stops, bus past the pole | 10 m | 20 m | 50 m | 4 s | 10 s | 30 s |
-| boarding | bus not yet past the rider's pole | 10 m | 15 m | 50 m | 6 s | 10 s | 10 s |
+| boarding | bus not yet past the rider's pole | 10 m | 15 m | 50 m | 6 s | 10 s | 20 s (red team: the phone only checks the anchor while waiting) |
 | destinationNear | ≤ 3 stops | 10 m | 15 m | 50 m | 6 s | 10 s | 10 s |
 | recovery | not live, manual recheck, or nothing evaluated yet | 10 m | 20 m | 50 m | 6 s | 10 s | 10 s |
 
