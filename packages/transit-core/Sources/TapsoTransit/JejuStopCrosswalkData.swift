@@ -2,10 +2,13 @@
 // VERIFIED_EXACT rows only (docs/validation/JEJU_BIS_TAGO_STOP_CROSSWALK.md).
 // Empty: no official evidence has been classified yet, so no stop has a station id.
 
+import Foundation
+
 extension JejuStopCrosswalk {
-    public static let shipped = JejuStopCrosswalk(
-        catalogVersion: "794f3bcb831d783e",
-        generatedAt: "none",
-        entries: []
-    )
+    public static let shipped: JejuStopCrosswalk =
+        (try? JSONDecoder().decode(JejuStopCrosswalk.self, from: Data(shippedJSON.utf8))) ?? .empty
+
+    static let shippedJSON = ##"""
+{"schemaVersion":"tapso-jeju-stop-crosswalk-v1","catalogVersion":"794f3bcb831d783e","generatedAt":"none","entries":[]}
+"""##
 }

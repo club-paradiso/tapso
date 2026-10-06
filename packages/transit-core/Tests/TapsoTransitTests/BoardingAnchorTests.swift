@@ -96,6 +96,15 @@ final class BoardingAnchorTests: XCTestCase {
         XCTAssertNil(anchor(table).bisStation)
     }
 
+    func testShippedTableDecodesEveryGeneratedRow() {
+        // A decode failure falls back to `.empty` (fail closed); this makes sure that never happens silently.
+        let generatedRows = JejuStopCrosswalk.shippedJSON.components(separatedBy: "\"tagoStopID\"").count - 1
+        XCTAssertEqual(JejuStopCrosswalk.shipped.entries.count, generatedRows)
+        XCTAssertEqual(JejuStopCrosswalk.shipped.schemaVersion, JejuStopCrosswalk.schemaVersion)
+        XCTAssertTrue(JejuStopCrosswalk.shipped.entries.allSatisfy { $0.status == .verifiedExact })
+        XCTAssertEqual(Set(JejuStopCrosswalk.shipped.entries.map(\.tagoStopID)).count, JejuStopCrosswalk.shipped.entries.count)
+    }
+
     // MARK: reservation handoff
 
     func testVerifiedStopGeneratesTheOfficialPassengerURL() throws {
