@@ -1,5 +1,7 @@
 {
   "requestedOn": "2026-10-06",
   "reason": "First island-wide TAGO <-> Jeju BIS stop crosswalk audit (BOARDING_ANCHOR_POSITION_V2.md §7). Remove limit for all stops.",
-  "limit": null
+  "limit": null,
+  "attempt": 2,
+  "note": "Attempt 1 (run 37472275364) was cancelled: the runner could not reach bus.jeju.go.kr (TCP timeout in the certificate step); nothing was collected."
 }
