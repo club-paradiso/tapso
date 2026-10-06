@@ -220,7 +220,7 @@ function classifyOne(
  *
  *   <input type="hidden" name="stationId" value="405000007"/>
  *   <td colspan="3" class="station-name"> 노형주공아파트[동] </td>
- *   visible text "노형주공아파트[동] 405000007 | S중앙병원 방향"
+ *   visible text "노형주공아파트[동] 405000007 | S중앙병원 방향 도착예정"
  *
  * An id the site does not know still answers HTTP 200, with no station-name
  * cell ("405009999 | 종점"): that is `not_found`. Anything that does not echo
@@ -234,7 +234,10 @@ export function parseStationPage(html: string, stationId: string): StationEviden
   if (!cleaned) return { kind: "not_found" };
   const text = normalizeOfficialName(decodeEntities(html.replace(/<script[\s\S]*?<\/script>/gi, " ").replace(/<style[\s\S]*?<\/style>/gi, " ").replace(/<[^>]+>/g, " ")));
   const escapedId = stationId.replace(/[^0-9]/g, "");
-  const direction = new RegExp(`${escapedId}\\s*\\|\\s*(.+?)\\s+방향`).exec(text)?.[1];
+  // "<id> | <next station> 방향 도착예정". Anchored on "방향 도착예정": a station name
+  // may itself contain "(노형로 방향)", and stopping at its first "방향" truncated
+  // it (12 poles in the 2026-10-07 audit, all failed closed as direction_mismatch).
+  const direction = new RegExp(`${escapedId}\\s*\\|\\s*(.+?)\\s+방향\\s+도착예정`).exec(text)?.[1];
   return direction ? { kind: "found", name: cleaned, direction: normalizeOfficialName(direction) } : { kind: "found", name: cleaned };
 }
 

@@ -163,6 +163,16 @@ test("the page parser reads the exact name and the facing direction", () => {
     { kind: "found", name: "롯데호텔", direction: "켄싱턴리조트 중문점입구/롯데호텔 입구[남]" });
 });
 
+test("a direction whose own name contains \"방향\" is read whole (audit 2026-10-07)", () => {
+  assert.deepEqual(parseStationPage(officialPageExcerpt("405002800", "제주버스터미널(노형로 방향)", "월구마을/동성마을(노형로 방향) 방향 도착예정"), "405002800"),
+    { kind: "found", name: "제주버스터미널(노형로 방향)", direction: "월구마을/동성마을(노형로 방향)" });
+});
+
+test("a terminal page has no direction line", () => {
+  assert.deepEqual(parseStationPage(officialPageExcerpt("405002000", "제주버스터미널(종점)", "종점 도착예정"), "405002000"),
+    { kind: "found", name: "제주버스터미널(종점)" });
+});
+
 test("an id the site does not know answers 200 with no name: not_found", () => {
   assert.deepEqual(parseStationPage(officialPageExcerpt("405009999", null, "종점 도착예정"), "405009999"), { kind: "not_found" });
 });

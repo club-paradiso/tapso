@@ -46,7 +46,10 @@ jobs:
       - name: Collect evidence from the official station pages (paced, read-only)
         run: |
           limit=$(node -e 'const r=JSON.parse(require("fs").readFileSync("ops/jeju-stop-crosswalk/request.json","utf8")); console.log(Number.isInteger(r.limit) && r.limit > 0 ? r.limit : "")')
-          if [ -n "$limit" ]; then
+          ids=$(node -e 'const r=JSON.parse(require("fs").readFileSync("ops/jeju-stop-crosswalk/request.json","utf8")); const ok=Array.isArray(r.ids)&&r.ids.length>0&&r.ids.length<=200&&r.ids.every((id)=>/^JEB40[56]\d{6}$/.test(id)); console.log(ok ? r.ids.join(",") : "")')
+          if [ -n "$ids" ]; then
+            node --experimental-strip-types scripts/crosswalk/collect-bis-station-evidence.ts --ids "$ids"
+          elif [ -n "$limit" ]; then
             node --experimental-strip-types scripts/crosswalk/collect-bis-station-evidence.ts --limit "$limit"
           else
             node --experimental-strip-types scripts/crosswalk/collect-bis-station-evidence.ts
