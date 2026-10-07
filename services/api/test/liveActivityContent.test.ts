@@ -138,6 +138,7 @@ test("a ride that turns degraded or lost is pushed at the transition, not at its
     const plan = planLiveActivityPush(failed, stops, tracked.next);
     assert.ok(plan.send, id);
     assert.equal(plan.push.timestampMs, tracked.next.lastTimestampMs + 20_000, id);
+    assert.equal(plan.push.staleDateMs, tracked.next.lastTimestampMs + 120_000, `${id}: stale from the old evidence, not the re-evaluation`);
   }
 });
 

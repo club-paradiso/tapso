@@ -238,13 +238,17 @@ export function planLiveActivityPush(
     return { send: false, reason: "unchanged" };
   }
   const terminal = contentState.phase === "arrived";
+  // The push is ordered by when its state became true, but it goes stale from when the bus was
+  // last observed: re-evaluating retained progress later does not make that evidence newer.
+  const evidenceMs = Date.parse(view.progress?.evidenceAt ?? "");
+  const staleBaseMs = Number.isFinite(evidenceMs) ? Math.min(evidenceMs, timestampMs) : timestampMs;
   return {
     send: true,
     push: {
       event: "update",
       contentState,
       timestampMs,
-      ...(terminal ? {} : { staleDateMs: timestampMs + LIVE_ACTIVITY_STALE_INTERVAL_MS }),
+      ...(terminal ? {} : { staleDateMs: staleBaseMs + LIVE_ACTIVITY_STALE_INTERVAL_MS }),
       ...(alert ? { alert: MILESTONE_ALERTS[alert] } : {}),
     },
     next: {
