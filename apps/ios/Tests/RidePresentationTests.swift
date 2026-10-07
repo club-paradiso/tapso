@@ -515,10 +515,19 @@ final class DolMotionTests: XCTestCase {
 
     func testArrivalHopsAndUncertainStaysStill() {
         XCTAssertLessThan(DolMotion(expression: .ride(.arrived), time: DolMotion.hopDuration / 2).hop, -4)
-        let lost = DolMotion(expression: .ride(.vehicleLost), time: 0.08)
-        XCTAssertEqual(lost.openness, 1)
-        XCTAssertEqual(lost.glance, 0)
-        XCTAssertEqual(lost.hop, 0)
+        for moment in [RideMoment.vehicleLost, .delayed, .offline, .ended] {
+            for time in stride(from: 0.0, through: 7.0, by: 0.25) {
+                XCTAssertEqual(DolMotion(expression: .ride(moment), time: time), .still, "\(moment) at \(time): stale data is never drawn alive")
+            }
+        }
+    }
+
+    func testRidingBreathIsVisibleAtRideCardSize() {
+        // Peak-to-peak breath in points on the 34 pt ride card.
+        let samples = stride(from: 0.0, through: DolMotion.breathPeriod, by: 0.05).map { DolMotion(expression: .ride(.riding), time: $0).breath }
+        let travel = (samples.max()! - samples.min()!) * 34
+        XCTAssertGreaterThan(travel, 1.2, "under a point of motion reads as a still picture")
+        XCTAssertLessThan(travel, 2.5, "calm, not bouncy")
     }
 }
 
