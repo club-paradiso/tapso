@@ -203,6 +203,16 @@ struct DolBuddy: View {
     }
 }
 
+extension View {
+    /// On a Live Activity 돌이 cannot move continuously; ActivityKit animates only the
+    /// change between two pushed or updated contents. A new moment is a new identity,
+    /// so the pose swaps with a short scale-and-fade; the same moment keeps its identity
+    /// and an unchanged (or stale, re-sent) content does not animate at all.
+    func dolPoseTransition(_ moment: RideMoment) -> some View {
+        id(moment).transition(.opacity.combined(with: .scale(scale: 0.8)))
+    }
+}
+
 /// 돌이's motion at one instant, a pure function of the clock so every frame
 /// is reproducible and nothing is stored. Units are the 72-unit artboard.
 struct DolMotion: Equatable {
