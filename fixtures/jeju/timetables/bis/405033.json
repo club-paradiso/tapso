@@ -6,11 +6,11 @@
     "dataset": "data.go.kr 3043887",
     "page": "https://bus.jeju.go.kr/publicTrafficInformation/generalBusSchedule",
     "file": "405033.xlsx",
-    "sha256": "ceb492e391c243da131861d32974a9e7a8afdce82589b9f020847c74888dd66c",
+    "sha256": "e3a62766a610411c5a2782396f9785e19ac963300beadfa73c4b26b71e77bf28",
     "scheduleId": "405033",
     "listedName": "346"
   },
-  "retrievedOn": "2026-10-03",
+  "retrievedOn": "2026-10-12",
   "parser": {
     "name": "jeju-bis-xlsx",
     "version": "3"
