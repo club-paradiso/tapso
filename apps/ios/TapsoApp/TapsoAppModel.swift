@@ -1160,8 +1160,9 @@ final class TapsoAppModel {
             }
         }
         if isLiveRide {
-            // A restored ride reads at once: what it shows is from before the relaunch.
-            beginLivePolling(readNow: true)
+            // A restored ride reads at once: what it shows is from before the relaunch. The
+            // scene's first `active` may already have started the loop; then this joins it.
+            requestRideRefresh(.resume)
         } else {
             beginPlayback()
         }
@@ -1687,7 +1688,7 @@ final class TapsoAppModel {
         guard let live = activeRide?.live, !live.endedByServer else { return }
         let sessionID = live.sessionID
         recoveryStartedAt = nil
-        readScheduler = RideReadScheduler()
+        readScheduler = RideReadScheduler(continuingFrom: readScheduler.generation)
         if readNow {
             readScheduler.request(.resume)
         } else {

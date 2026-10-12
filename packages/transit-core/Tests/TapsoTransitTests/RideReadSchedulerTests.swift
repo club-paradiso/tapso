@@ -86,6 +86,19 @@ final class RideReadSchedulerTests: XCTestCase {
         XCTAssertLessThan(first, second)
     }
 
+    func testARestartedLoopKeepsOrderingAnswers() {
+        var first = RideReadScheduler()
+        for second in 0..<7 {
+            _ = first.begin(now: Double(second) * 15)
+            first.finish()
+        }
+        let shown = RideEvidenceOrder.Stamp(generation: first.generation, evidenceAt: nil)
+        var restarted = RideReadScheduler(continuingFrom: first.generation)
+        let next = restarted.begin(now: 200).generation
+        XCTAssertTrue(RideEvidenceOrder.accepts(.init(generation: next, evidenceAt: nil), over: shown),
+                      "a fresh answer after a restart is never mistaken for an old one")
+    }
+
     // MARK: Ordering
 
     func testAnOlderReadCompletingLastCannotRollTheCountBack() {

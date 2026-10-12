@@ -49,7 +49,11 @@ public struct RideReadScheduler: Sendable, Equatable {
     /// Increases by one per read, so an answer can be ordered by when its read began.
     public private(set) var generation = 0
 
-    public init() {}
+    /// - Parameter generation: the last generation already issued for this ride. A loop that
+    ///   restarts mid-ride carries it on, so answers keep ordering after the restart.
+    public init(continuingFrom generation: Int = 0) {
+        self.generation = generation
+    }
 
     /// Asks for a read outside the cadence.
     @discardableResult
