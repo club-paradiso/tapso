@@ -110,7 +110,7 @@ Motion lives in code only (Figma has no motion variables).
 | SearchField / V2 (`154:62`) | — | `SearchFieldButton` |
 | StopPair / V2 (`154:73`) | — | `StopPair` |
 | StopRow / V2 (`154:83`) | — | `StopRow` |
-| RecentJourneyCard / V2 (`154:107`) | — | `RideAgainRow` (V3: compact row; the card was retired from Home) |
+| RecentJourneyCard / V2 (`154:107`) | — | `RideAgainRow` — Figma `RideAgainRow / V3` (`295:6024`); the card was retired from Home |
 | BoardingContextCard / V2 (`154:125`) | — | `BoardingContextCard` |
 | StatusBanner / V2 (`154:153`) | delayed, vehicleLost, offline, checking | `StatusBanner` |
 | ConfirmationCard / V2 (`154:199`) | proposed, selectable, confirmed | `ConfirmationCard` |

@@ -330,7 +330,27 @@ Measured from Korea against production on `iad1`, server time only (first byte �
 
 A Redis call costing ~190 ms from iad1 means the Upstash database is not in US East; every live read paid the Pacific twice for the client and again for Redis. `services/api/vercel.json` now pins `regions: ["icn1"]`.
 
-**After the move: PENDING.** Not yet measured; this PR is unmerged and production still runs on iad1. Once it deploys, the same probe (server time = first byte − request sent, median of 10, same three requests) is run against `icn1` and the numbers are recorded here. If the session read is slower than 455 ms, the move is reverted.
+**After the move (2026-10-13, production `e309efc` on `icn1`, same probe):**
+
+| Request | iad1 | icn1 |
+|---|---|---|
+| `/health` (no I/O) | 264 ms | 55 ms |
+| `GET /v1/sessions/<unknown>` (one Upstash read) | 455 ms | 221 ms |
+| `/v1/vehicles` (edge-cached) | 63 ms | 25 ms |
+
+Kept: a live read's server time fell by ~230 ms. Still open: one Redis call costs ~166 ms from icn1 (221 − 55), so the Upstash database is not beside Seoul either, or every REST call pays a fresh connection. Next step: read the database region in the Upstash console (owner) and, if it is not `ap-northeast`, move it or add a read replica near Seoul; separately check whether the client reuses its HTTPS connection.
+
+## 18b. Figma (2026-10-13)
+
+File `kkx04GvqOzHje7Dw5ikO9X`:
+- 02F: `RideAgainRow / V3` (`295:6024`), `돌이 RailMarker / V3` (`295:1109`, live/degraded), swapped into all `JourneyRail / V2` variants with the rail's role colour on the rim; `RecentJourneyCard / V2` described as retired.
+- 03 GO: `V3 / 02 Home · returning rider` light (`296:527`), dark (`297:598`), EN (`297:656`). V2 boards kept as history.
+- New page `06 Roadmap · Future Workspaces`: scope order 1–9 with status, how to start a feature, kit `Workspace / StatusChip · GateRow · Slot · FlowStep`.
+- Workspaces beside the existing status notes: 07 Discover (`306:2`), 08 Eat (`307:87`), 10 Passport / Share (`307:182`). Wireframe level only; the "don't draw until the data exists" rule stands. The operating-session gate is READY (production `/health`).
+
+## 18c. Hybrid decision (2026-10-13)
+
+`HYBRID_TRACKING` stays **OFF** in production. No field ride has been measured, so the zero-false-early gate has no evidence; turning it on would put an unmeasured GPS path between the rider and the stop count. Revisit after the first physical rides with the Debug trace.
 
 ## 19. Progress log
 
