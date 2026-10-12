@@ -7,6 +7,9 @@
 	objects = {
 
 /* Begin PBXBuildFile section */
+		12CEE7B30A7D2A23CEFD18AA /* InfoPlist.strings in Resources */ = {isa = PBXBuildFile; fileRef = 8763DF409FB7AFBBA81AE41B /* InfoPlist.strings */; };
+		A6C082602623004FBB8962F7 /* InfoPlist.strings in Resources */ = {isa = PBXBuildFile; fileRef = 8763DF409FB7AFBBA81AE41B /* InfoPlist.strings */; };
+		3E7DBE7EB2F31B0847BF5653 /* InfoPlist.strings in Resources */ = {isa = PBXBuildFile; fileRef = 8763DF409FB7AFBBA81AE41B /* InfoPlist.strings */; };
 		0680D4D7CF8A696EB6E160B8 /* TapsoLiveActivityPolicy.swift in Sources */ = {isa = PBXBuildFile; fileRef = B4DD18CE5239D89359B55287 /* TapsoLiveActivityPolicy.swift */; };
 		08FB3E51251C3A9CF62EF0E7 /* TapsoTransit in Frameworks */ = {isa = PBXBuildFile; productRef = D955D5E21D25DFC7D7609008 /* TapsoTransit */; };
 		1CF4D9AD7A50157B60FD707B /* TapsoTransit in Frameworks */ = {isa = PBXBuildFile; productRef = 07DFDA3C29C3D74240DDDBB1 /* TapsoTransit */; };
@@ -88,6 +91,9 @@
 		DFE64596386385FB792ED2A5 /* StopNudgeController.swift in Sources */ = {isa = PBXBuildFile; fileRef = 9E99E6802828197D6A068162 /* StopNudgeController.swift */; };
 		687C453830C42053B292CF3C /* BoardingFirstViews.swift in Sources */ = {isa = PBXBuildFile; fileRef = 33BDF9583F4139C5640E9DBA /* BoardingFirstViews.swift */; };
 		CC04D368747C18BD79E23EDE /* RideKeepAlive.swift in Sources */ = {isa = PBXBuildFile; fileRef = 13198596FFB79BF6CE328491 /* RideKeepAlive.swift */; };
+		B7B5643C711535E6538F9B0F /* RideReadSupport.swift in Sources */ = {isa = PBXBuildFile; fileRef = A3552CAA846219CA33AAC43D /* RideReadSupport.swift */; };
+		0240EF3208A9B31BE5D78DA3 /* DolLivenessTests.swift in Sources */ = {isa = PBXBuildFile; fileRef = 249AFC02A3DC5CB4E2E074B0 /* DolLivenessTests.swift */; };
+		18663C4A2F8795B643DDD18D /* HomeLayoutTests.swift in Sources */ = {isa = PBXBuildFile; fileRef = BE2000063775934C20DB408B /* HomeLayoutTests.swift */; };
 		522C090B8191DE45D0C20C8D /* HybridRideReconcileTests.swift in Sources */ = {isa = PBXBuildFile; fileRef = 12873EA81968F53A1B70B049 /* HybridRideReconcileTests.swift */; };
 		753B05637D7A255F05962663 /* RideLocationSamplerTests.swift in Sources */ = {isa = PBXBuildFile; fileRef = E3ECAC8A2E99BE066DF83D63 /* RideLocationSamplerTests.swift */; };
 /* End PBXBuildFile section */
@@ -132,6 +138,8 @@
 /* End PBXCopyFilesBuildPhase section */
 
 /* Begin PBXFileReference section */
+		7BC02BE181B474930126A341 /* ko */ = {isa = PBXFileReference; lastKnownFileType = text.plist.strings; name = ko; path = ko.lproj/InfoPlist.strings; sourceTree = "<group>"; };
+		9893879DB2AB27CE93C66F4C /* en */ = {isa = PBXFileReference; lastKnownFileType = text.plist.strings; name = en; path = en.lproj/InfoPlist.strings; sourceTree = "<group>"; };
 		01434169EBED9CD788681A50 /* TapsoLiveActivityWidget.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = TapsoLiveActivityWidget.swift; sourceTree = "<group>"; };
 		185322C93CB8D33570D783DF /* Tapso.app */ = {isa = PBXFileReference; includeInIndex = 0; lastKnownFileType = wrapper.application; path = Tapso.app; sourceTree = BUILT_PRODUCTS_DIR; };
 		25F8D8F9725AF79DC9F83B2B /* Assets.xcassets */ = {isa = PBXFileReference; lastKnownFileType = folder.assetcatalog; path = Assets.xcassets; sourceTree = "<group>"; };
@@ -200,6 +208,9 @@
 		9E99E6802828197D6A068162 /* StopNudgeController.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = StopNudgeController.swift; sourceTree = "<group>"; };
 		33BDF9583F4139C5640E9DBA /* BoardingFirstViews.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = BoardingFirstViews.swift; sourceTree = "<group>"; };
 		13198596FFB79BF6CE328491 /* RideKeepAlive.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = RideKeepAlive.swift; sourceTree = "<group>"; };
+		A3552CAA846219CA33AAC43D /* RideReadSupport.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = RideReadSupport.swift; sourceTree = "<group>"; };
+		249AFC02A3DC5CB4E2E074B0 /* DolLivenessTests.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = DolLivenessTests.swift; sourceTree = "<group>"; };
+		BE2000063775934C20DB408B /* HomeLayoutTests.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = HomeLayoutTests.swift; sourceTree = "<group>"; };
 		12873EA81968F53A1B70B049 /* HybridRideReconcileTests.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = HybridRideReconcileTests.swift; sourceTree = "<group>"; };
 		E3ECAC8A2E99BE066DF83D63 /* RideLocationSamplerTests.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = RideLocationSamplerTests.swift; sourceTree = "<group>"; };
 /* End PBXFileReference section */
@@ -244,6 +255,8 @@
 			isa = PBXGroup;
 			children = (
 				5E327558E2B513FF963AD97E /* BrandTests.swift */,
+				249AFC02A3DC5CB4E2E074B0 /* DolLivenessTests.swift */,
+				BE2000063775934C20DB408B /* HomeLayoutTests.swift */,
 				12873EA81968F53A1B70B049 /* HybridRideReconcileTests.swift */,
 				0254DEF030E85E3CF7322DF3 /* MapHandoffFlowTests.swift */,
 				E3ECAC8A2E99BE066DF83D63 /* RideLocationSamplerTests.swift */,
@@ -261,6 +274,7 @@
 			isa = PBXGroup;
 			children = (
 				25F8D8F9725AF79DC9F83B2B /* Assets.xcassets */,
+				8763DF409FB7AFBBA81AE41B /* InfoPlist.strings */,
 				2436CA0171BFA7890857165A /* Localizable.strings */,
 				F1AB819C471FE37B33ADB3E4 /* PrivacyInfo.xcprivacy */,
 			);
@@ -329,6 +343,7 @@
 				857A4229A2F4867FB62DD336 /* RideFeedback.swift */,
 				13198596FFB79BF6CE328491 /* RideKeepAlive.swift */,
 				813AFBE6918965418D110364 /* RideLocationSampler.swift */,
+				A3552CAA846219CA33AAC43D /* RideReadSupport.swift */,
 				52D0922404CBE0BFEAC62CCE /* RideTrace.swift */,
 				B71E19ABC4E943435650D65F /* RideView.swift */,
 				B44662751CB9EDA0A65897FC /* ScreenshotImportViews.swift */,
@@ -524,6 +539,7 @@
 			isa = PBXResourcesBuildPhase;
 			buildActionMask = 2147483647;
 			files = (
+				12CEE7B30A7D2A23CEFD18AA /* InfoPlist.strings in Resources */,
 				593B1456AA2D7A490909919B /* Assets.xcassets in Resources */,
 				C2176B27F64CF25CB4B735B1 /* Localizable.strings in Resources */,
 				901ED55A886FE33A92009E7E /* PrivacyInfo.xcprivacy in Resources */,
@@ -534,6 +550,7 @@
 			isa = PBXResourcesBuildPhase;
 			buildActionMask = 2147483647;
 			files = (
+				A6C082602623004FBB8962F7 /* InfoPlist.strings in Resources */,
 				9DF797D657D259EB1CC12E82 /* Assets.xcassets in Resources */,
 				DD911FC6501FE330D9D8A2BF /* Localizable.strings in Resources */,
 				85AEE919B98FC2B4F142ADF3 /* PrivacyInfo.xcprivacy in Resources */,
@@ -544,6 +561,7 @@
 			isa = PBXResourcesBuildPhase;
 			buildActionMask = 2147483647;
 			files = (
+				3E7DBE7EB2F31B0847BF5653 /* InfoPlist.strings in Resources */,
 				E1D9CBB280C029E1C60C756D /* Assets.xcassets in Resources */,
 				B17CE88DC78FF832C6AEE2EE /* Localizable.strings in Resources */,
 				3E5A0C71D2B94F8A6C1E0B27 /* PrivacyInfo.xcprivacy in Resources */,
@@ -594,6 +612,7 @@
 				3D1562DEB72025EBE17ABDCD /* RideFeedback.swift in Sources */,
 				CC04D368747C18BD79E23EDE /* RideKeepAlive.swift in Sources */,
 				C698235F4923522CB7ED7EFA /* RideLocationSampler.swift in Sources */,
+				B7B5643C711535E6538F9B0F /* RideReadSupport.swift in Sources */,
 				BB8FAE7699DAE3EAEA47D888 /* RideSurfaceComponents.swift in Sources */,
 				757ECDCE342BEDD66CD09D74 /* RideTrace.swift in Sources */,
 				FC181FC49F83051C0EF18002 /* RideView.swift in Sources */,
@@ -644,6 +663,8 @@
 			buildActionMask = 2147483647;
 			files = (
 				4DA1D1D973E57698519C31FC /* BrandTests.swift in Sources */,
+				0240EF3208A9B31BE5D78DA3 /* DolLivenessTests.swift in Sources */,
+				18663C4A2F8795B643DDD18D /* HomeLayoutTests.swift in Sources */,
 				522C090B8191DE45D0C20C8D /* HybridRideReconcileTests.swift in Sources */,
 				6C7EC458E60617F296856254 /* MapHandoffFlowTests.swift in Sources */,
 				753B05637D7A255F05962663 /* RideLocationSamplerTests.swift in Sources */,
@@ -688,6 +709,15 @@
 /* End PBXTargetDependency section */
 
 /* Begin PBXVariantGroup section */
+		8763DF409FB7AFBBA81AE41B /* InfoPlist.strings */ = {
+			isa = PBXVariantGroup;
+			children = (
+				9893879DB2AB27CE93C66F4C /* en */,
+				7BC02BE181B474930126A341 /* ko */,
+			);
+			name = InfoPlist.strings;
+			sourceTree = "<group>";
+		};
 		2436CA0171BFA7890857165A /* Localizable.strings */ = {
 			isa = PBXVariantGroup;
 			children = (

@@ -126,88 +126,73 @@ struct StopPair: View {
     }
 }
 
-/// A saved or recent ride, restartable in one tap. Figma: `RecentJourneyCard / V2`.
-struct RecentJourneyCard: View {
+/// A ride to repeat, in one tap: the last ride first, then favourites
+/// (`LIVE_RIDE_RELIABILITY_HOME_V3.md` §10). Compact on purpose: Home asks
+/// where the rider is getting off first, and a repeat ride is a shortcut
+/// below that question, not the screen's headline. The star sits beside the
+/// row, never inside its button, so one tap never does two things.
+struct RideAgainRow: View {
     let journey: SavedJourney
+    /// The most recent ride, tagged as such.
+    var isLatest = false
     let onRide: () -> Void
-    let onToggleFavorite: () -> Void
+    var onToggleFavorite: (() -> Void)? = nil
     @Environment(\.dynamicTypeSize) private var typeSize
 
     var body: some View {
-        TapsoCard {
-            VStack(alignment: .leading, spacing: TapsoSpace.md) {
-                HStack(spacing: TapsoSpace.xs) {
-                    RouteBadge(number: journey.routeNumber)
-                    // At accessibility sizes the direction gets its own line instead of an ellipsis.
+        HStack(spacing: TapsoSpace.xs) {
+            Button(action: onRide) {
+                HStack(spacing: TapsoSpace.sm) {
                     if !typeSize.isAccessibilitySize {
-                        headsign.lineLimit(1)
-                    }
-                    Spacer(minLength: 0)
-                    Button(action: onToggleFavorite) {
-                        Image(systemName: journey.isFavorite ? "star.fill" : "star")
-                            .font(.body.weight(.semibold))
-                            .foregroundStyle(journey.isFavorite ? TapsoColor.tangerine : TapsoColor.textTertiary)
-                            .frame(width: TapsoSize.minimumTouch, height: TapsoSize.minimumTouch)
-                    }
-                    .accessibilityLabel(Text(journey.isFavorite ? LocalizedStringKey("favorite.remove") : LocalizedStringKey("favorite.add")))
-                }
-                if typeSize.isAccessibilitySize {
-                    headsign.fixedSize(horizontal: false, vertical: true)
-                }
-                StopPair(boarding: journey.boardingStopName, destination: journey.destinationStopName)
-                Button(action: onRide) {
-                    Label("home.rideAgain", systemImage: "arrow.forward")
-                        .labelStyle(TrailingIconLabelStyle())
-                }
-                .buttonStyle(PrimaryButtonStyle())
-                .accessibilityHint(Text("home.rideAgain.hint"))
-            }
-        }
-    }
-
-    private var headsign: some View {
-        Text(String(format: RideText.string("route.headsign"), journey.headsign))
-            .font(.subheadline)
-            .foregroundStyle(TapsoColor.textSecondary)
-    }
-}
-
-/// A compact favourite. Figma: no Figma component yet; drawn inside the screens.
-struct FavoriteJourneyRow: View {
-    let journey: SavedJourney
-    let onRide: () -> Void
-    @Environment(\.dynamicTypeSize) private var typeSize
-
-    var body: some View {
-        Button(action: onRide) {
-            HStack(spacing: TapsoSpace.sm) {
-                if !typeSize.isAccessibilitySize {
-                    RouteBadge(number: journey.routeNumber)
-                }
-                VStack(alignment: .leading, spacing: 2) {
-                    // At accessibility sizes the badge sits above the names, which then get the full width.
-                    if typeSize.isAccessibilitySize {
                         RouteBadge(number: journey.routeNumber)
                     }
-                    Text(verbatim: journey.destinationStopName)
-                        .font(.body.weight(.semibold))
-                        .foregroundStyle(TapsoColor.textPrimary)
-                    Text(String(format: RideText.string("favorite.from"), journey.boardingStopName))
-                        .font(.footnote)
-                        .foregroundStyle(TapsoColor.textSecondary)
+                    VStack(alignment: .leading, spacing: 2) {
+                        // At accessibility sizes the badge sits above the names, which then get the full width.
+                        if typeSize.isAccessibilitySize {
+                            RouteBadge(number: journey.routeNumber)
+                        }
+                        if isLatest {
+                            Text("home.rideAgain.latest")
+                                .font(.caption.weight(.semibold))
+                                .foregroundStyle(TapsoColor.textSecondary)
+                        }
+                        Text(verbatim: journey.destinationStopName)
+                            .font(.body.weight(.semibold))
+                            .foregroundStyle(TapsoColor.textPrimary)
+                        Text(String(format: RideText.string("favorite.from"), journey.boardingStopName))
+                            .font(.footnote)
+                            .foregroundStyle(TapsoColor.textSecondary)
+                    }
+                    .multilineTextAlignment(.leading)
+                    Spacer(minLength: 0)
+                    // At accessibility sizes the names need the width; the whole row is still the button.
+                    if !typeSize.isAccessibilitySize {
+                        Image(systemName: "arrow.forward.circle.fill")
+                            .font(.title2)
+                            .foregroundStyle(TapsoColor.journeyActive)
+                            .accessibilityHidden(true)
+                    }
                 }
-                .multilineTextAlignment(.leading)
-                Spacer(minLength: 0)
-                Image(systemName: "chevron.forward")
-                    .font(.footnote.weight(.bold))
-                    .foregroundStyle(TapsoColor.textTertiary)
+                .padding(.vertical, TapsoSpace.sm)
+                .frame(minHeight: TapsoSize.minimumTouch)
+                .contentShape(Rectangle())
             }
-            .padding(.vertical, TapsoSpace.sm)
-            .frame(minHeight: TapsoSize.minimumTouch)
-            .contentShape(Rectangle())
+            .buttonStyle(.plain)
+            .accessibilityElement(children: .combine)
+            .accessibilityAddTraits(.isButton)
+            .accessibilityHint(Text("home.rideAgain.hint"))
+            .accessibilityIdentifier(isLatest ? "ride-again-latest" : "ride-again")
+            if let onToggleFavorite {
+                Button(action: onToggleFavorite) {
+                    Image(systemName: journey.isFavorite ? "star.fill" : "star")
+                        .font(.body.weight(.semibold))
+                        .foregroundStyle(journey.isFavorite ? TapsoColor.tangerine : TapsoColor.textTertiary)
+                        .frame(width: TapsoSize.minimumTouch, height: TapsoSize.minimumTouch)
+                }
+                .buttonStyle(.plain)
+                .accessibilityLabel(Text(journey.isFavorite ? LocalizedStringKey("favorite.remove") : LocalizedStringKey("favorite.add")))
+            }
         }
-        .buttonStyle(.plain)
-        .accessibilityHint(Text("home.rideAgain.hint"))
     }
 }
 

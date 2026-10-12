@@ -80,7 +80,13 @@ const gates: Gate[] = [];
   const build = text("apps/ios/TapsoApp/TapsoBuild.swift");
   if (!/#if DEBUG\s+static let showsDemo = true\s+#else\s+static let showsDemo = false\s+#endif/.test(build)) failures.push("TapsoBuild.showsDemo is not false outside DEBUG");
   const home = text("apps/ios/TapsoApp/HomeView.swift");
-  if (!/if showsDemo, library\.recents\.isEmpty \{\s+firstRideCard/.test(home)) failures.push("Home's sample ride is not behind showsDemo");
+  // Home is built from HomeLayout.sections: the sample ride is a section that only a demo build adds,
+  // and firstRideCard is drawn only for that section.
+  const sampleGated = /if showsDemo, !returning \{ sections\.append\(\.sample\) \}/.test(home)
+    && (home.match(/\.append\(\.sample\)/g) ?? []).length === 1
+    && /case \.sample:\s+firstRideCard\b/.test(home)
+    && (home.match(/^\s+firstRideCard\s*$/gm) ?? []).length === 1;
+  if (!sampleGated) failures.push("Home's sample ride is not behind showsDemo");
   if ((home.match(/if showsDemo \{ demoChip \}/g) ?? []).length !== 2) failures.push("Home's demo chip is not behind showsDemo");
   const setup = text("apps/ios/TapsoApp/SetupViews.swift");
   const search = setup.slice(setup.indexOf("struct DestinationSearchView"), setup.indexOf("struct DestinationSearchContent"));

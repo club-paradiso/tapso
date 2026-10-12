@@ -3,7 +3,8 @@ import TapsoTransit
 
 /// Home answers one question — where are you getting off? — and makes a
 /// repeat ride one tap. A first ride opens with what TAPSO does (`HomeIntroCard`);
-/// a returning rider sees the last ride first. No map, no feed, no dashboard. Figma: `03 iOS — GO` › `V2 / 01 Home · first ride`
+/// a returning rider is asked the question first and finds the last ride and
+/// favourites as one-tap rows below it (`HomeLayout`). No map, no feed, no dashboard. Figma: `03 iOS — GO` › `V2 / 01 Home · first ride`
 /// (`157:15`) and `V2 / 02 Home · recent & favourites` (`157:73`).
 struct HomeView: View {
     @Bindable var model: TapsoAppModel
@@ -49,70 +50,75 @@ struct HomeContent: View {
     var body: some View {
         VStack(alignment: .leading, spacing: TapsoSpace.xl) {
             header
+            ForEach(HomeLayout.sections(for: library, showsDemo: showsDemo), id: \.self) { section in
+                view(for: section)
+            }
+        }
+        .padding(.horizontal, TapsoSpace.gutter)
+        .padding(.vertical, TapsoSpace.xl)
+        .frame(maxWidth: .infinity, alignment: .leading)
+    }
 
-            if let recent = library.recents.first {
-                // A returning rider: the fastest ride is the last one, so it leads.
-                VStack(alignment: .leading, spacing: TapsoSpace.sm) {
-                    SectionTitle("home.recentJourney")
-                    RecentJourneyCard(
-                        journey: recent,
-                        onRide: { onRideAgain(recent) },
-                        onToggleFavorite: { onToggleFavorite(recent) }
-                    )
-                    AutoStartEntryRow(action: onAutoStart)
-                }
-
-                VStack(alignment: .leading, spacing: TapsoSpace.md) {
-                    QuestionTitle("home.question")
-                    SearchFieldButton(action: onSearch)
-                    if !library.recentDestinationNames.isEmpty {
-                        recentDestinations
-                    }
-                }
-            } else {
-                // A first ride: say what TAPSO does before asking anything.
-                VStack(alignment: .leading, spacing: TapsoSpace.md) {
-                    HomeIntroCard()
-                    SearchFieldButton(action: onSearch)
+    @ViewBuilder
+    private func view(for section: HomeSection) -> some View {
+        switch section {
+        case .intro:
+            // A first ride: say what TAPSO does before asking anything.
+            VStack(alignment: .leading, spacing: TapsoSpace.md) {
+                HomeIntroCard()
+                SearchFieldButton(action: onSearch)
+            }
+        case .destination:
+            VStack(alignment: .leading, spacing: TapsoSpace.md) {
+                QuestionTitle("home.question")
+                SearchFieldButton(action: onSearch)
+                if !library.recentDestinationNames.isEmpty {
+                    recentDestinations
                 }
             }
-
-            let favorites = library.favorites.filter { $0.id != library.recents.first?.id }
-            if !favorites.isEmpty {
-                VStack(alignment: .leading, spacing: TapsoSpace.xxs) {
-                    SectionTitle("home.favorites")
-                    VStack(spacing: 0) {
-                        ForEach(favorites) { journey in
-                            FavoriteJourneyRow(journey: journey) { onRideAgain(journey) }
-                            if journey.id != favorites.last?.id {
-                                Divider().overlay(TapsoColor.separator)
-                            }
-                        }
-                    }
-                    .padding(.horizontal, TapsoSpace.md)
-                    .background(TapsoColor.backgroundSecondary, in: RoundedRectangle(cornerRadius: TapsoRadius.lg, style: .continuous))
-                }
-            }
-
+        case .rideAgain:
+            rideAgain
+        case .autoStart:
+            AutoStartEntryRow(action: onAutoStart)
+        case .otherWays:
             // The other two ways in are alternatives to the search, not peers of it.
             VStack(alignment: .leading, spacing: TapsoSpace.sm) {
                 SectionTitle("home.otherWays")
                 LiveRideEntryCard(action: onLive)
                 MapHandoffIntakeCard(pendingPlaceName: pendingPlaceName, action: onMapImport)
             }
-
-            if showsDemo, library.recents.isEmpty {
-                firstRideCard
-            }
-
+        case .sample:
+            firstRideCard
+        case .privacy:
             Label("home.privacy", systemImage: "location.slash")
                 .font(.footnote)
                 .foregroundStyle(TapsoColor.textSecondary)
                 .fixedSize(horizontal: false, vertical: true)
         }
-        .padding(.horizontal, TapsoSpace.gutter)
-        .padding(.vertical, TapsoSpace.xl)
-        .frame(maxWidth: .infinity, alignment: .leading)
+    }
+
+    /// The last ride, then favourites: each one tap from the bus check.
+    private var rideAgain: some View {
+        let journeys = HomeLayout.rideAgainJourneys(in: library)
+        return VStack(alignment: .leading, spacing: TapsoSpace.xxs) {
+            SectionTitle("home.rideAgain")
+            VStack(spacing: 0) {
+                ForEach(journeys) { journey in
+                    RideAgainRow(
+                        journey: journey,
+                        isLatest: journey.id == library.recents.first?.id,
+                        onRide: { onRideAgain(journey) },
+                        onToggleFavorite: { onToggleFavorite(journey) }
+                    )
+                    if journey.id != journeys.last?.id {
+                        Divider().overlay(TapsoColor.separator)
+                    }
+                }
+            }
+            .padding(.leading, TapsoSpace.md)
+            .padding(.trailing, TapsoSpace.xxs)
+            .background(TapsoColor.backgroundSecondary, in: RoundedRectangle(cornerRadius: TapsoRadius.lg, style: .continuous))
+        }
     }
 
     private var header: some View {
@@ -333,5 +339,44 @@ struct MapHandoffIntakeCard: View {
             .contentShape(Rectangle())
         }
         .buttonStyle(.plain)
+    }
+}
+
+/// One block of Home. The order is decided by `HomeLayout`, not by the view, so a
+/// new way in (a future "오늘 뭐하젠?" discovery entry, `LIVE_RIDE_RELIABILITY_HOME_V3.md`
+/// §12) is one case and one rule here, never another branch in a growing stack.
+enum HomeSection: Hashable, CaseIterable {
+    /// First ride only: what TAPSO does, then the search.
+    case intro
+    /// "어디서 내릴까요?", the search and recent stops: the primary action.
+    case destination
+    /// The last ride and favourites, one tap each.
+    case rideAgain
+    /// The automatic-start guide entry.
+    case autoStart
+    /// Bus number and map import.
+    case otherWays
+    /// The synthetic sample ride, demo builds only.
+    case sample
+    case privacy
+}
+
+enum HomeLayout {
+    /// Home's blocks, top to bottom. Destination search always comes before any shortcut.
+    static func sections(for library: JourneyLibrary, showsDemo: Bool) -> [HomeSection] {
+        let returning = !library.recents.isEmpty
+        var sections: [HomeSection] = returning ? [.destination] : [.intro]
+        if !rideAgainJourneys(in: library).isEmpty { sections.append(.rideAgain) }
+        if returning { sections.append(.autoStart) }
+        sections.append(.otherWays)
+        if showsDemo, !returning { sections.append(.sample) }
+        sections.append(.privacy)
+        return sections
+    }
+
+    /// The last ride first, then favourites without repeating it.
+    static func rideAgainJourneys(in library: JourneyLibrary) -> [SavedJourney] {
+        let latest = library.recents.first
+        return (latest.map { [$0] } ?? []) + library.favorites.filter { $0.id != latest?.id }
     }
 }

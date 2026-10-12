@@ -83,6 +83,8 @@ struct RideView: View {
                         #if DEBUG
                         if model.isLiveRide {
                             Button("Ride trace", systemImage: "waveform.path") { showingDiagnostics = true }
+                            // Field validation: tap the moment the bus passes a stop (RideTrace `ground_truth_stop`).
+                            Button("Bus passed a stop now", systemImage: "mappin.and.ellipse") { model.markPhysicalStopPassage() }
                         }
                         #endif
                         if !model.isLiveRide {

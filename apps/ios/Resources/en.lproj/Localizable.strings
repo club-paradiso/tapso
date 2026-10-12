@@ -7,16 +7,15 @@
 "home.search.hint" = "Search for the stop you'll get off at";
 "home.recentDestinations" = "Recent stops";
 "home.destinationChip.hint" = "Starts a ride to this stop";
-"home.recentJourney" = "Recent ride";
 "home.rideAgain" = "Ride again";
 "home.rideAgain.hint" = "Starts finding your bus for this ride";
-"home.favorites" = "Favorites";
+"home.rideAgain.latest" = "Last ride";
 "home.mapImport.title" = "Import from a map app";
 "home.mapImport.body" = "Start from a screenshot or a place shared from a map app";
 "home.sample.title" = "New to TAPSO?";
 "home.sample.body" = "Ride from 제주버스터미널 to 제주시청(아라방면) and follow every step, from finding the bus to getting off.";
 "home.sample.action" = "Try the sample ride";
-"home.privacy" = "TAPSO tracks the bus, not you. No location permission needed.";
+"home.privacy" = "TAPSO follows the bus without your location. If you allow location, it stays on your iPhone.";
 "home.intro.title" = "Just tell us where you get off";
 "home.intro.body" = "Once your bus is confirmed, 돌이 watches the stops until you get off.";
 "home.intro.step1" = "Your stop";
@@ -248,7 +247,7 @@
 "live.stops.count.one" = "%ld stop later";
 "live.stops.loopNote" = "This is a loop route, so a stop name can appear twice. Check the order.";
 "live.ride.ended.title" = "Live tracking has ended";
-"live.ride.ended.body" = "The server is no longer following this journey. If you have left the bus, end the journey.";
+"live.ride.ended.body" = "TAPSO can no longer follow this ride. If you've got off the bus, end the ride.";
 "live.error.offline.title" = "You're offline";
 "live.error.offline.body" = "TAPSO checks again as soon as you're connected.";
 "live.error.timedOut.title" = "Slow response";
@@ -391,6 +390,7 @@
 "ride.predicted.detail" = "Estimated from the route stops";
 "share.screenshot.title" = "Read from your screenshot";
 "share.screenshot.detail" = "%@ · %ld possible stops";
+"share.screenshot.busNumber" = "%@";
 "share.screenshot.unavailable" = "This install can't hand it to the app directly. In TAPSO, use Import a route and choose the screenshot.";
 "share.screenshot.saved.body" = "Open TAPSO within 30 minutes and it checks this route.";
 "share.screenshot.nothing.title" = "Couldn't read a route";
@@ -416,7 +416,7 @@
 "live.stops.toDestination.one" = "%ld stop before your stop";
 "live.stops.catalogMoved.title" = "This route has changed";
 "live.stops.catalogMoved.body" = "Choose your stop again on the route's current stop list.";
-"ride.closeApp.live" = "TAPSO checks the bus while it's open. If you close it, the Lock Screen may stay at the last check.";
+"ride.closeApp.live" = "TAPSO checks the bus while it's open. If you leave the app, the Lock Screen may stay at the last check.";
 "ride.closeApp.livePush" = "Even with TAPSO closed, the Lock Screen and Dynamic Island keep updating.";
 "route.timetable.loading" = "Checking the official timetable";
 "route.timetable.failed" = "Couldn't load the official timetable. You can still ride with live data.";
@@ -501,8 +501,8 @@
 "boardFirst.arrival.none" = "None near";
 "boardFirst.arrival.unavailable" = "Couldn't get bus positions";
 "boardFirst.trips.twin" = "separate service on the same stops %d/%d";
-"ride.keepAlive.title" = "Keep updating when closed";
-"ride.keepAlive.on" = "The Lock Screen and the Dynamic Island keep updating until you get off, even with TAPSO closed. iPhone's location service stays on meanwhile, but TAPSO neither uses nor sends your location.";
+"ride.keepAlive.title" = "Keep updating in the background";
+"ride.keepAlive.on" = "The Lock Screen and the Dynamic Island keep updating until you get off, even while you use other apps or lock your iPhone. Swiping TAPSO away in the app switcher stops it. Location Services stay on meanwhile, but this feature neither uses nor sends your location.";
 "ride.keepAlive.denied" = "Needs location access. You can set TAPSO's location to While Using the App in Settings.";
 
 /* Boarding anchor + position V2 (BOARDING_ANCHOR_POSITION_V2.md) */

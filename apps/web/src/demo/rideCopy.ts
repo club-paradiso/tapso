@@ -10,11 +10,11 @@
 export const IOS_COPY = {
   "home.question": "어디서 내릴까요?",
   "home.search.placeholder": "내릴 정류장 검색",
-  "home.privacy": "탑서는 버스를 따라가요. 내 위치 권한은 필요 없어요.",
+  "home.privacy": "버스를 따라가는 데는 위치가 필요 없어요. 위치를 허용해도 iPhone 안에서만 써요.",
   "demo.chip": "체험판 · 합성 데이터",
   "home.recentDestinations": "최근 내린 곳",
-  "home.recentJourney": "최근 여정",
   "home.rideAgain": "다시 타기",
+  "home.rideAgain.latest": "최근",
   "favorite.from": "%@에서 타요",
   "home.mapImport.title": "지도 앱에서 가져오기",
   "home.mapImport.body": "스크린샷이나 공유한 장소로 시작",

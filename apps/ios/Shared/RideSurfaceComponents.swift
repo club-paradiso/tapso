@@ -97,7 +97,8 @@ struct DolBuddy: View {
     var body: some View {
         Group {
             if animated, !reduceMotion {
-                TimelineView(.animation(minimumInterval: 1 / 30)) { context in
+                // 24 fps redraws only this small view; the motion is slow enough not to need more.
+                TimelineView(.animation(minimumInterval: 1 / 24)) { context in
                     figure(DolMotion(expression: expression, time: context.date.timeIntervalSinceReferenceDate))
                 }
             } else {
@@ -202,6 +203,16 @@ struct DolBuddy: View {
     }
 }
 
+extension View {
+    /// On a Live Activity 돌이 cannot move continuously; ActivityKit animates only the
+    /// change between two pushed or updated contents. A new moment is a new identity,
+    /// so the pose swaps with a short scale-and-fade; the same moment keeps its identity
+    /// and an unchanged (or stale, re-sent) content does not animate at all.
+    func dolPoseTransition(_ moment: RideMoment) -> some View {
+        id(moment).transition(.opacity.combined(with: .scale(scale: 0.8)))
+    }
+}
+
 /// 돌이's motion at one instant, a pure function of the clock so every frame
 /// is reproducible and nothing is stored. Units are the 72-unit artboard.
 struct DolMotion: Equatable {
@@ -221,8 +232,14 @@ struct DolMotion: Equatable {
     static let blinkPeriod: Double = 4.2
     static let blinkDuration: Double = 0.16
     static let peekPeriod: Double = 7
-    static let peekStart: Double = 5.4
-    static let peekDuration: Double = 1.0
+    static let peekStart: Double = 5.2
+    static let peekDuration: Double = 1.4
+    /// Breath depth as a share of the pebble's height. At the ride card's 34 pt the
+    /// earlier 2 % was 0.7 pt, under a pixel's worth of change on most frames: a
+    /// still picture to the rider (`LIVE_RIDE_RELIABILITY_HOME_V3.md` §7). 4.5 % is
+    /// about 1.5 pt, visible without becoming a bounce.
+    static let breathDepth: CGFloat = 0.045
+    static let breathPeriod: Double = 3.4
     static let hopPeriod: Double = 2.4
     static let hopDuration: Double = 0.5
 
@@ -235,8 +252,12 @@ struct DolMotion: Equatable {
     }
 
     init(expression: DolBuddy.Expression, time: Double) {
-        breath = 1 - 0.02 * CGFloat(0.5 + 0.5 * sin(2 * .pi * time / 3.4))
         let moment: RideMoment? = if case let .ride(moment) = expression { moment } else { nil }
+        // Delayed, lost, offline and ended are drawn still: 돌이 never looks carefree
+        // over data that is not current. Motion means "TAPSO is following the bus".
+        if !Self.isStill(moment) {
+            breath = 1 - Self.breathDepth * CGFloat(0.5 + 0.5 * sin(2 * .pi * time / Self.breathPeriod))
+        }
 
         switch moment {
         case nil, .checking, .prepare, .nextStop, .passedDestination:
@@ -260,6 +281,14 @@ struct DolMotion: Equatable {
             // Dwell at each side, then cross: tanh flattens the sine's peaks.
             let swing = tanh(3 * sin(2 * .pi * time / 1.8)) / tanh(3)
             glance = 2.6 * CGFloat(swing)
+        }
+    }
+
+    /// Moments whose 돌이 does not move at all.
+    static func isStill(_ moment: RideMoment?) -> Bool {
+        switch moment {
+        case .delayed, .vehicleLost, .offline, .ended: true
+        default: false
         }
     }
 
@@ -303,6 +332,10 @@ private enum DolFace {
     /// The leaf green of `CitrusDot`.
     static let leafGreen = Color(hex: 0x33BD6E)
     static let squinting = [Box(x: 24, y: 35.8, width: 10, height: 3.4), Box(x: 40, y: 35.8, width: 10, height: 3.4)]
+    /// The rail marker's face: larger, plainer eyes and pin that survive 16 pt.
+    static let markerEyes = [Dot(x: 27, y: 38, r: 7), Dot(x: 46, y: 38, r: 7)]
+    static let markerSquint = [Box(x: 19, y: 35, width: 15, height: 6), Box(x: 39, y: 35, width: 15, height: 6)]
+    static let markerPin = Dot(x: 56, y: 15, r: 8.5)
 
     /// Whites, pupils and glints for a gaze (artboard units from a pupil that
     /// sits slightly down and in, looking at the rider).
@@ -377,14 +410,25 @@ private struct DolShape: Shape {
     }
 }
 
-/// Progress from boarding to destination: a moving bus that ends at the
-/// tangerine destination. Figma: `JourneyRail / V2`.
+/// Progress from boarding to destination: 돌이 travelling along the rail to the
+/// tangerine destination. Figma: `JourneyRail / V2`, marker per
+/// `LIVE_RIDE_RELIABILITY_HOME_V3.md` §8.
+///
+/// The marker sits where the evidence puts the ride (`progress(remaining:total:)`)
+/// and moves only when that changes: a new answer slides it from the old place to
+/// the new one. Nothing advances it between answers, and a jump of two stops is
+/// one slide, not an invented stop in between.
 struct JourneyRail: View {
     /// 0 at boarding, 1 at the destination.
     let progress: Double
     let role: RideColorRole
     var trackColor: Color = TapsoColor.separator
     var height: CGFloat = 10
+
+    @Environment(\.accessibilityReduceMotion) private var reduceMotion
+
+    /// How long the marker takes to reach a new position.
+    static let moveDuration: Double = 0.7
 
     var body: some View {
         GeometryReader { proxy in
@@ -398,25 +442,46 @@ struct JourneyRail: View {
                     .frame(width: max(marker / 2, travel * clamped + marker / 2), height: height / 2.5)
                 CitrusDot(size: height)
                     .offset(x: proxy.size.width - height)
-                RoundedRectangle(cornerRadius: marker * 0.32, style: .continuous)
-                    .fill(TapsoColor.journey(role))
-                    .frame(width: marker, height: marker)
-                    .overlay {
-                        Image(systemName: "bus.fill")
-                            .font(.system(size: marker * 0.52, weight: .bold))
-                            .foregroundStyle(TapsoColor.onJourney(role))
-                    }
+                DolRailMarker(size: marker, role: role)
                     .offset(x: travel * clamped)
             }
             .frame(maxHeight: .infinity)
+            .animation(reduceMotion ? nil : .smooth(duration: Self.moveDuration), value: clamped)
         }
         .frame(height: height + 8)
         .accessibilityHidden(true)
     }
 
+    /// An unknown count (`-1`) is no progress at all, never "at the destination".
     static func progress(remaining: Int, total: Int) -> Double {
+        guard remaining >= 0 else { return 0 }
         let total = max(1, total)
         return 1 - Double(min(max(remaining, 0), total)) / Double(total)
+    }
+}
+
+/// 돌이 reduced to a rail marker (16–18 pt): the basalt pebble, a rim in the
+/// moment's colour, two bold eyes and the tangerine pin. The sheen, pores and
+/// cheeks of `DolBuddy` are under a point at this size and are left out rather
+/// than shrunk into noise. Squinting when the data is degraded, like `DolBuddy`.
+struct DolRailMarker: View {
+    let size: CGFloat
+    let role: RideColorRole
+
+    var body: some View {
+        let unit = size / 72
+        ZStack {
+            DolShape(kind: .body).fill(TapsoColor.basalt)
+            DolShape(kind: .body).stroke(TapsoColor.journey(role), lineWidth: max(1.5, 6 * unit))
+            if role == .journeyDegraded {
+                DolShape(kind: .bars(DolFace.markerSquint)).fill(.white)
+            } else {
+                DolShape(kind: .circles(DolFace.markerEyes)).fill(.white)
+            }
+            DolShape(kind: .circles([DolFace.markerPin])).fill(TapsoColor.tangerine)
+        }
+        .frame(width: size, height: size)
+        .accessibilityHidden(true)
     }
 }
 

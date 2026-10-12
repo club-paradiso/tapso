@@ -352,7 +352,21 @@ final class TapsoAppModel {
     @ObservationIgnored private let originalEraser: any ScreenshotOriginalEraser
     @ObservationIgnored private var screenshotTask: Task<Void, Never>?
     @ObservationIgnored private var searchTask: Task<Void, Never>?
-    @ObservationIgnored private var playbackTask: Task<Void, Never>?
+    /// The demo ride's scripted playback. Never the live ride's tracking.
+    @ObservationIgnored private var demoPlaybackTask: Task<Void, Never>?
+    /// The live ride's one polling loop (`RideReadScheduler`). Owned by nothing else.
+    @ObservationIgnored private var livePollingTask: Task<Void, Never>?
+    /// Identifies the running loop, so a loop that ended can be told from one that was replaced.
+    @ObservationIgnored private var livePollingLoopID = 0
+    @ObservationIgnored private var livePollingRunning = false
+    @ObservationIgnored private var readScheduler = RideReadScheduler()
+    @ObservationIgnored private let pollWaker = RidePollWaker()
+    @ObservationIgnored private let networkMonitor = RideNetworkMonitor()
+    /// Riders waiting on a refresh they asked for; answered when the next read to begin ends.
+    @ObservationIgnored private var refreshWaiters: [CheckedContinuation<Void, Never>] = []
+    /// The evidence on screen, so an older answer never replaces it (`RideEvidenceOrder`).
+    @ObservationIgnored private var appliedEvidence: RideEvidenceOrder.Stamp?
+    @ObservationIgnored private var consecutiveReadFailures = 0
     /// Registers the live ride's Live Activity push tokens with the server.
     @ObservationIgnored private var pushTokenTask: Task<Void, Never>?
     @ObservationIgnored private var rejectedVehicles: Set<VehicleIdentifier> = []
@@ -372,9 +386,12 @@ final class TapsoAppModel {
     private(set) var rideTrace = RideTrace()
     #endif
     @ObservationIgnored private let locationSampler: RideLocationSampler
+    /// Tests only: stands in for `RideKeepAlive.isRunning`, which a test host cannot start.
+    @ObservationIgnored private let readsInBackgroundOverride: (@MainActor () -> Bool)?
+    /// Whether the loop may read while the ride is off screen: only while `RideKeepAlive` keeps TAPSO running.
+    private var readsInBackground: Bool { readsInBackgroundOverride?() ?? rideKeepAlive.isRunning }
     @ObservationIgnored private var hybridEngine: HybridPositionEngine?
     @ObservationIgnored private var hybridSessionID: String?
-    @ObservationIgnored private var lastManualRefresh: Date?
     @ObservationIgnored private var readInFlight = false
     @ObservationIgnored private var rideInForeground = true
     @ObservationIgnored private var retainedDeviceSample: DevicePositionSample?
@@ -402,10 +419,12 @@ final class TapsoAppModel {
         screenshotImporter: ScreenshotRouteImporter? = nil,
         originalEraser: (any ScreenshotOriginalEraser)? = nil,
         catalogFile: TransitCatalogFile? = nil,
-        locationSampler: RideLocationSampler? = nil
+        locationSampler: RideLocationSampler? = nil,
+        readsInBackground: (@MainActor () -> Bool)? = nil
     ) {
         self.store = store
         self.locationSampler = locationSampler ?? RideLocationSampler()
+        self.readsInBackgroundOverride = readsInBackground
         self.catalogFile = catalogFile ?? .standard
         self.liveActivity = liveActivity
         self.returnReminders = returnReminders
@@ -1135,7 +1154,6 @@ final class TapsoAppModel {
 
     func speedChanged() {
         guard !isLiveRide else { return }
-        playbackTask?.cancel()
         beginPlayback()
     }
 
@@ -1148,7 +1166,6 @@ final class TapsoAppModel {
         if hybridTrackingEnabled, isLiveRide {
             // A restored old activity may have an APNs token. End it before local authority begins.
             await liveActivity?.endAll()
-            await reconcileRidePosition(manual: false)
         }
         if let state = contentState() {
             if liveActivity?.activityID == nil {
@@ -1159,7 +1176,9 @@ final class TapsoAppModel {
             }
         }
         if isLiveRide {
-            beginLivePolling()
+            // A restored ride reads at once: what it shows is from before the relaunch. The
+            // scene's first `active` may already have started the loop; then this joins it.
+            requestRideRefresh(.resume)
         } else {
             beginPlayback()
         }
@@ -1167,7 +1186,8 @@ final class TapsoAppModel {
 
     func finishRide() async {
         resetHybridTracking()
-        playbackTask?.cancel()
+        stopLivePolling()
+        demoPlaybackTask?.cancel()
         pushTokenTask?.cancel()
         guard var ride = activeRide, let destination = ride.draft.destination else { return }
         endLiveRideSession(ride)
@@ -1194,7 +1214,8 @@ final class TapsoAppModel {
 
     func cancelRide() async {
         resetHybridTracking()
-        playbackTask?.cancel()
+        stopLivePolling()
+        demoPlaybackTask?.cancel()
         pushTokenTask?.cancel()
         guard var ride = activeRide else { return }
         endLiveRideSession(ride)
@@ -1662,38 +1683,127 @@ final class TapsoAppModel {
         if draft.finalPlace != nil { sharedPlace = nil }
         path = []
 
-        if hybridTrackingEnabled { await reconcileRidePosition(manual: false) }
+        appliedEvidence = nil
+        consecutiveReadFailures = 0
         await startLiveActivity()
         guard activeRide != nil else {
             await liveActivity?.endAll()
             return
         }
-        beginLivePolling()
+        // The confirmation answered with a fresh session; a Hybrid ride still reads now to take its first device sample.
+        beginLivePolling(readNow: hybridTrackingEnabled)
     }
 
-    private func beginLivePolling() {
-        playbackTask?.cancel()
+    /// Starts the ride's one polling loop, replacing any earlier one. Reads run at
+    /// `LivePollingPolicy`'s interval measured start to start (`RideReadScheduler`), one at a
+    /// time; a refresh asked for meanwhile runs right after. In the background the loop reads
+    /// only while `RideKeepAlive` keeps TAPSO running; otherwise iOS suspends it and the Live
+    /// Activity goes stale at its stale date, and the return to the app reads at once.
+    private func beginLivePolling(readNow: Bool) {
+        livePollingTask?.cancel()
         guard let live = activeRide?.live, !live.endedByServer else { return }
         let sessionID = live.sessionID
         recoveryStartedAt = nil
-        playbackTask = Task { [weak self] in
+        readScheduler = RideReadScheduler(continuingFrom: readScheduler.generation)
+        if readNow {
+            readScheduler.request(.resume)
+        } else {
+            // The answer that started the ride is the first read.
+            _ = readScheduler.begin(now: RideMonotonicClock.now)
+            readScheduler.finish()
+        }
+        networkMonitor.onRestored = { [weak self] in self?.requestRideRefresh(.networkRestored) }
+        networkMonitor.start()
+        livePollingLoopID += 1
+        let loopID = livePollingLoopID
+        livePollingRunning = true
+        livePollingTask = Task { [weak self] in
+            defer { if self?.livePollingLoopID == loopID { self?.livePollingRunning = false } }
             while !Task.isCancelled {
                 guard let self else { return }
-                try? await Task.sleep(for: self.livePollingInterval())
-                guard !Task.isCancelled else { return }
-                // In the background only while the rider asked TAPSO to keep going (`RideKeepAlive`).
-                guard self.rideInForeground || self.rideKeepAlive.isRunning else { continue }
-                if self.hybridTrackingEnabled {
-                    await self.reconcileRidePosition(manual: false)
-                    if self.activeRide?.live?.endedByServer != false { return }
-                } else {
-                    guard await self.refreshLiveRide(sessionID: sessionID) else { return }
+                let interval = self.livePollingInterval().timeInterval
+                let delay = self.readScheduler.delay(now: RideMonotonicClock.now, interval: interval)
+                if delay > 0 {
+                    await self.pollWaker.sleep(seconds: delay)
+                    // Woken early by a refresh request, or the delay passed: decide again.
+                    continue
                 }
+                guard !Task.isCancelled else { return }
+                self.ageSilentRide()
+                // In the background only while the rider asked TAPSO to keep going (`RideKeepAlive`).
+                guard self.rideInForeground || self.readsInBackground else {
+                    await self.pollWaker.sleep(seconds: interval)
+                    continue
+                }
+                let (trigger, generation) = self.readScheduler.begin(now: RideMonotonicClock.now)
+                let waiters = self.refreshWaiters
+                self.refreshWaiters = []
+                self.trace("poll_start", detail: "trigger=\(trigger.rawValue) gen=\(generation) net=\(self.networkMonitor.context.rawValue)")
+                let keepGoing: Bool
+                if self.hybridTrackingEnabled {
+                    await self.reconcileRidePosition(manual: trigger == .manual, generation: generation)
+                    keepGoing = self.activeRide?.live?.endedByServer == false
+                } else {
+                    keepGoing = await self.refreshLiveRide(sessionID: sessionID, generation: generation)
+                }
+                self.readScheduler.finish()
+                waiters.forEach { $0.resume() }
+                self.isRecheckingPosition = !self.refreshWaiters.isEmpty
+                if !keepGoing { break }
             }
+            self?.answerRefreshWaiters()
         }
     }
 
-    /// The next read's delay from the ride's trust and count (`LivePollingPolicy`).
+    private func stopLivePolling() {
+        livePollingTask?.cancel()
+        livePollingTask = nil
+        livePollingRunning = false
+        networkMonitor.stop()
+        networkMonitor.onRestored = nil
+        pollWaker.wake()
+        answerRefreshWaiters()
+    }
+
+    private func answerRefreshWaiters() {
+        let waiters = refreshWaiters
+        refreshWaiters = []
+        waiters.forEach { $0.resume() }
+        isRecheckingPosition = false
+    }
+
+    /// Asks the polling loop for a read now (or right after the one in flight), restarting
+    /// the loop if it has ended while the ride is still tracked.
+    @discardableResult
+    private func requestRideRefresh(_ trigger: RideReadScheduler.Trigger) -> RideReadScheduler.RequestOutcome? {
+        guard let live = activeRide?.live, !live.endedByServer else { return nil }
+        let outcome = readScheduler.request(trigger)
+        trace("refresh_requested", detail: "trigger=\(trigger.rawValue) outcome=\(outcome.rawValue)")
+        if livePollingRunning {
+            pollWaker.wake()
+        } else {
+            beginLivePolling(readNow: true)
+        }
+        return outcome
+    }
+
+    /// The product watchdog: silence ages what the ride shows, whatever stopped the answers.
+    /// A ride whose last evidence is older than `FreshnessPolicy.conservativeDefault` allows is
+    /// never drawn as current, even when no read has failed (a read that never ran fails nothing).
+    private func ageSilentRide(now: Date = Date()) {
+        guard var ride = activeRide, let live = ride.live, !live.endedByServer, ride.hybridPosition == nil else { return }
+        let aged = FreshnessPolicy.conservativeDefault.classify(observedAt: ride.lastObservedAt, relativeTo: now)
+        guard aged != .fresh, aged != ride.freshnessOverride else { return }
+        let before = ride.guidance
+        ride.freshnessOverride = aged
+        activeRide = ride
+        trace("stale_transition", detail: "freshness=\(aged.rawValue)")
+        if ride.guidance != before {
+            Task { await self.rideDidChange() }
+        }
+    }
+
+    /// The next read's interval from the ride's trust and count (`LivePollingPolicy`).
     private func livePollingInterval() -> Duration {
         guard let guidance = activeRide?.guidance else { return LivePollingPolicy.farInterval }
         let now = Date()
@@ -1708,31 +1818,37 @@ final class TapsoAppModel {
 
     func rideSceneChanged(isActive: Bool) async {
         rideInForeground = isActive
-        trace("lifecycle")
-        guard hybridTrackingEnabled, isLiveRide else { return }
+        trace("lifecycle", detail: isActive ? "active" : "inactive")
+        guard isLiveRide else { return }
         if isActive {
-            await reconcileRidePosition(manual: false)
-        } else {
+            // Back in the app: read now instead of waiting out the rest of an old sleep.
+            requestRideRefresh(.foreground)
+        } else if hybridTrackingEnabled {
             locationSampler.stop()
             retainedDeviceSample = nil
         }
     }
 
+    /// The rider's refresh. Never dropped: with a read in flight it is queued and runs right
+    /// after; repeated taps join the same queued read. Returns when a read that began after
+    /// the tap has ended, so a pull-to-refresh spinner means what it shows.
     func recheckRidePosition() async {
-        guard !isRecheckingPosition, !readInFlight, let live = activeRide?.live, !live.endedByServer else { return }
-        let now = Date()
-        guard lastManualRefresh.map({ now.timeIntervalSince($0) >= 10 }) ?? true else { return }
-        lastManualRefresh = now
+        guard let outcome = requestRideRefresh(.manual) else { return }
         isRecheckingPosition = true
-        defer { isRecheckingPosition = false }
-        trace("recheck")
         UIImpactFeedbackGenerator(style: .light).impactOccurred()
-        if hybridTrackingEnabled {
-            await reconcileRidePosition(manual: true)
-        } else {
-            _ = await refreshLiveRide(sessionID: live.sessionID)
-        }
+        trace("recheck", detail: outcome.rawValue)
+        await withCheckedContinuation { refreshWaiters.append($0) }
     }
+
+    #if DEBUG
+    /// Debug field validation (`LIVE_RIDE_RELIABILITY_HOME_V3.md` §9): the tester marks the
+    /// moment the bus physically passes a stop, so the trace can separate provider, server,
+    /// app and Live Activity lateness.
+    func markPhysicalStopPassage() {
+        trace("ground_truth_stop", detail: "remainingShown=\(activeRide?.signal.remainingStops ?? -1)")
+        UIImpactFeedbackGenerator(style: .rigid).impactOccurred()
+    }
+    #endif
 
     private func resetHybridTracking() {
         locationSampler.stop()
@@ -1744,13 +1860,15 @@ final class TapsoAppModel {
         rideTrace.reset()
         #endif
         hybridPermissionRequested = false
-        lastManualRefresh = nil
+        appliedEvidence = nil
+        consecutiveReadFailures = 0
     }
 
     /// One official read, evaluated by the hybrid engine. Only device sampling needs the ride on
     /// screen: in the background (`RideKeepAlive`) the read still happens and the engine sees no
-    /// device evidence, so the Live Activity keeps following official progress.
-    private func reconcileRidePosition(manual: Bool) async {
+    /// device evidence, so the Live Activity keeps following official progress. `generation` is the
+    /// poll loop's read generation; an answer older than the one the ride shows is not applied.
+    private func reconcileRidePosition(manual: Bool, generation: Int) async {
         guard !readInFlight, let ride = activeRide, let live = ride.live,
               !live.endedByServer, let route = ride.draft.route,
               let destination = ride.draft.destinationRouteStop?.sequence else { return }
@@ -1776,6 +1894,7 @@ final class TapsoAppModel {
         async let sample = rideSample(samplingMode, requestPermission: requestPermission, enabled: sampling)
         var snapshot: JourneySessionSnapshot?
         var failure: TransitAPIFailure?
+        let requestedAt = Date()
         do { snapshot = try await api.session(id: sessionID) }
         catch is CancellationError {
             // End the window now rather than wait it out with `readInFlight` held.
@@ -1783,6 +1902,7 @@ final class TapsoAppModel {
             return
         }
         catch { failure = Self.failure(error) }
+        let receivedAt = Date()
         let sampleOutcome = await sample
         ridePrecision = locationSampler.permission
         guard var current = activeRide, current.live?.sessionID == sessionID else { return }
@@ -1791,12 +1911,31 @@ final class TapsoAppModel {
         retainedDeviceSample = RideDeviceEvidencePolicy.retained(
             previous: retainedDeviceSample, outcome: sampleOutcome,
             permission: ridePrecision, foreground: rideInForeground)
-        if let failure, !failure.isTransient { current.live?.endedByServer = true }
+        var evidenceAt: Date?
+        if let answered = snapshot {
+            evidenceAt = Self.evidenceAt(of: answered, receivedAt: receivedAt)
+            let stamp = RideEvidenceOrder.Stamp(generation: generation, evidenceAt: evidenceAt)
+            if RideEvidenceOrder.accepts(stamp, over: appliedEvidence) {
+                appliedEvidence = stamp
+            } else {
+                // Older than what the ride shows: the engine sees no official answer this round.
+                trace("poll_out_of_order", snapshot: answered, detail: "gen=\(generation)")
+                snapshot = nil
+                evidenceAt = nil
+            }
+        }
+        if let failure {
+            consecutiveReadFailures += 1
+            if RideReadFailurePolicy.action(for: failure, consecutiveFailures: consecutiveReadFailures) == .endSession {
+                current.live?.endedByServer = true
+            }
+        } else {
+            consecutiveReadFailures = 0
+        }
         if let snapshot {
             current.live?.signal = LiveSessionInterpreter.rideSignal(for: snapshot)
             if let sequence = snapshot.progress?.currentStopSequence { current.live?.currentStopSequence = sequence }
         }
-        let evidenceAt = snapshot?.progress?.evidenceAt.flatMap { ISO8601DateFormatter.tapsoEvidence.date(from: $0) }
         let usableOfficial = snapshot?.progress?.source != "retained_last_known" ? snapshot.map { LiveSessionInterpreter.rideSignal(for: $0) } : nil
         let snapshotMatchesRide = snapshot.map {
             $0.id == sessionID && $0.routeId == current.draft.routeID.rawValue
@@ -1809,9 +1948,12 @@ final class TapsoAppModel {
         current.hybridPosition = result
         current.isOffline = false // Connectivity alone is not passenger reliability.
         current.freshnessOverride = nil
-        current.lastObservedAt = result?.evaluatedAt
+        // The time the bus was last observed, not when the engine re-evaluated it: a failed or
+        // out-of-order read leaves it where it was.
+        if let evidenceAt { current.lastObservedAt = evidenceAt }
         activeRide = current
         liveFailure = current.live?.endedByServer == true ? failure : nil
+        traceReadTiming(requestedAt: requestedAt, receivedAt: receivedAt, evidenceAt: evidenceAt, failure: failure)
         #if DEBUG
         if let result {
             let deviceAge = retainedDeviceSample.map { Int(Date().timeIntervalSince($0.timestamp) / 5) * 5 } ?? -1
@@ -1866,37 +2008,55 @@ final class TapsoAppModel {
     }
 
     /// One session read during the ride. False when polling should stop.
-    private func refreshLiveRide(sessionID: String) async -> Bool {
+    private func refreshLiveRide(sessionID: String, generation: Int) async -> Bool {
         guard !readInFlight else { return true }
         readInFlight = true
         defer { readInFlight = false }
+        let requestedAt = Date()
         do {
             let snapshot = try await api.session(id: sessionID)
+            let receivedAt = Date()
             guard var ride = activeRide, ride.live?.sessionID == sessionID else { return false }
+            let evidenceAt = Self.evidenceAt(of: snapshot, receivedAt: receivedAt)
+            let stamp = RideEvidenceOrder.Stamp(generation: generation, evidenceAt: evidenceAt)
+            consecutiveReadFailures = 0
+            guard RideEvidenceOrder.accepts(stamp, over: appliedEvidence) else {
+                // An answer older than what the ride shows never rolls it back.
+                trace("poll_out_of_order", snapshot: snapshot, detail: "gen=\(generation)")
+                return true
+            }
+            appliedEvidence = stamp
             ride.live?.signal = LiveSessionInterpreter.rideSignal(for: snapshot)
             if let sequence = LiveSessionInterpreter.currentStopSequence(for: snapshot) {
                 ride.live?.currentStopSequence = sequence
             }
             ride.isOffline = false
-            ride.freshnessOverride = nil
-            ride.lastObservedAt = Date()
+            // When the bus was last observed; an answer without progress was observed on arrival.
+            ride.lastObservedAt = evidenceAt ?? receivedAt
+            // Retained evidence keeps its age: a re-read does not make an old row fresh.
+            let age = FreshnessPolicy.conservativeDefault.classify(observedAt: ride.lastObservedAt, relativeTo: receivedAt)
+            ride.freshnessOverride = age == .fresh ? nil : age
             activeRide = ride
             liveFailure = nil
             trace("poll", snapshot: snapshot)
+            traceReadTiming(requestedAt: requestedAt, receivedAt: receivedAt, evidenceAt: evidenceAt, failure: nil)
         } catch is CancellationError {
             return false
         } catch {
             guard var ride = activeRide, ride.live?.sessionID == sessionID else { return false }
             let failure = Self.failure(error)
-            liveFailure = failure
-            trace("poll_failed", detail: failure.name)
-            switch failure {
-            case .sessionExpired, .sessionNotFound, .sessionsUnavailable, .serviceUnavailable, .rejected:
+            consecutiveReadFailures += 1
+            let action = RideReadFailurePolicy.action(for: failure, consecutiveFailures: consecutiveReadFailures)
+            // A store hiccup being retried mid-ride reads as a passing server problem ("잠시 후 다시
+            // 확인할게요"), not as setup copy that asks the rider to start again. The trace keeps the real one.
+            liveFailure = action == .retry && !failure.isTransient ? .server : failure
+            trace("poll_failed", detail: "\(failure.name) consecutive=\(consecutiveReadFailures) action=\(action.rawValue) net=\(networkMonitor.context.rawValue)")
+            traceReadTiming(requestedAt: requestedAt, receivedAt: Date(), evidenceAt: nil, failure: failure)
+            if action == .endSession {
                 ride.live?.endedByServer = true
-            case .offline:
-                ride.isOffline = true
-            default:
-                // Silence ages the data; it never makes it fresher.
+            } else {
+                // Keep the last confirmed progress; silence ages it and never makes it fresher.
+                if failure == .offline { ride.isOffline = true }
                 ride.freshnessOverride = FreshnessPolicy.conservativeDefault.classify(
                     observedAt: ride.lastObservedAt,
                     relativeTo: Date()
@@ -1907,6 +2067,25 @@ final class TapsoAppModel {
         store.saveActiveRide(activeRide)
         await rideDidChange()
         return !(activeRide?.live?.endedByServer ?? true)
+    }
+
+    /// The answer's evidence time on the phone's clock (`RideEvidenceClock`).
+    private static func evidenceAt(of snapshot: JourneySessionSnapshot, receivedAt: Date) -> Date? {
+        let formatter = ISO8601DateFormatter.tapsoEvidence
+        return RideEvidenceClock.evidenceAt(
+            serverEvidenceAt: snapshot.progress?.evidenceAt.flatMap { formatter.date(from: $0) },
+            serverEvaluatedAt: snapshot.updatedAt.flatMap { formatter.date(from: $0) },
+            receivedAt: receivedAt
+        )
+    }
+
+    /// Request duration and evidence age, bucketed (`RideTrace`): which part of the chain was late.
+    private func traceReadTiming(requestedAt: Date, receivedAt: Date, evidenceAt: Date?, failure: TransitAPIFailure?) {
+        #if DEBUG
+        let durationMs = Int(receivedAt.timeIntervalSince(requestedAt) * 1000) / 250 * 250
+        let evidenceAge = evidenceAt.map { String(Int(receivedAt.timeIntervalSince($0)) / 5 * 5) } ?? "-"
+        trace("read_timing", detail: "request250ms=\(durationMs) evidenceAge5s=\(evidenceAge) failure=\(failure?.name ?? "-") net=\(networkMonitor.context.rawValue)")
+        #endif
     }
 
     private func endLiveSetupSession() {
@@ -1994,9 +2173,9 @@ final class TapsoAppModel {
     }
 
     private func beginPlayback() {
-        playbackTask?.cancel()
+        demoPlaybackTask?.cancel()
         guard let interval = speed.interval else { return }
-        playbackTask = Task { [weak self] in
+        demoPlaybackTask = Task { [weak self] in
             while !Task.isCancelled {
                 try? await Task.sleep(for: interval)
                 guard !Task.isCancelled, let self, self.canAdvanceDemo else { return }

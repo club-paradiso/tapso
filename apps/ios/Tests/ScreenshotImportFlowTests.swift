@@ -16,6 +16,10 @@ final class ScreenshotImportFlowTests: XCTestCase {
     private let inbound = ["합성종점", "제주시청(공항방면)", "국립제주트라우마치유센터", "사대부고", "대학동", "용담어린이집", "고산동산(공항방면)"]
     private let kakaoLight = ["9:41", "LTE", "경로", "도보 5분", "440번", "고산동산(아라방면)", "용담어린이집", "대학동", "사대부고", "국립제주트라우마치유센터", "안내 시작"]
 
+    override func setUp() async throws {
+        StubURLProtocol.beginTest()
+    }
+
     // MARK: Confirmation comes first
 
     func testAScreenshotBecomesAConfirmationNotARide() async throws {

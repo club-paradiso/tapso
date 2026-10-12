@@ -75,7 +75,8 @@ struct LockScreenRideView: View {
                     .lineLimit(1)
                     .truncationMode(.middle)
                 Spacer(minLength: 4)
-                if moment == .riding {
+                // A riding Lock Screen shows 돌이 once, as the rail marker that moves with the ride.
+                if moment == .riding, !showsRail {
                     DolBuddy(moment: moment, size: 22)
                 }
             }
@@ -190,6 +191,7 @@ struct IslandCompactLeading: View {
     var body: some View {
         HStack(spacing: 4) {
             DolBuddy(moment: guidance.moment, size: 18)
+                .dolPoseTransition(guidance.moment)
             Text(verbatim: attributes.routeNumber)
                 .font(.caption.weight(.heavy))
                 .monospacedDigit()
@@ -365,6 +367,7 @@ struct IslandExpandedLeading: View {
     var body: some View {
         HStack(spacing: 6) {
             DolBuddy(moment: guidance.moment, size: 26)
+                .dolPoseTransition(guidance.moment)
             RouteBadge(number: attributes.routeNumber, role: guidance.colorRole, compact: true)
         }
         .padding(.leading, 4)

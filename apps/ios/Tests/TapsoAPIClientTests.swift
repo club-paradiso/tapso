@@ -11,6 +11,10 @@ import XCTest
 final class TapsoAPIClientTests: XCTestCase {
     // Every test starts with `StubURLProtocol.respond` or `.fail`, which also clears what earlier tests recorded.
 
+    override func setUp() async throws {
+        StubURLProtocol.beginTest()
+    }
+
     // MARK: Client
 
     func testRoutesAsksTheTapsoAPIForEveryVariantOfANumber() async throws {
@@ -202,16 +206,108 @@ final class TapsoAPIClientTests: XCTestCase {
         let confirmJSON = try XCTUnwrap(JSONSerialization.jsonObject(with: confirm) as? [String: Any])
         XCTAssertEqual(confirmJSON["vehicleId"] as? String, "SYN70가0412")
 
-        let beforeRefresh = StubURLProtocol.recorded.filter { $0.url?.path == "/v1/sessions/syn-session" && $0.httpMethod == "GET" }.count
+        let beforeRefresh = sessionReads()
         await model.recheckRidePosition()
-        await model.recheckRidePosition()
-        let afterRefresh = StubURLProtocol.recorded.filter { $0.url?.path == "/v1/sessions/syn-session" && $0.httpMethod == "GET" }.count
-        XCTAssertEqual(afterRefresh - beforeRefresh, 1, "manual refresh reconciles once and has a cooldown")
+        XCTAssertEqual(sessionReads() - beforeRefresh, 1, "a manual refresh reads once and returns when that read has ended")
         XCTAssertFalse(model.isRecheckingPosition)
         XCTAssertEqual(model.contentState()?.remainingStops, model.remainingStops)
         await model.cancelRide()
         XCTAssertFalse(model.hasActiveRide)
         try await waitUntil { StubURLProtocol.recorded.contains { $0.httpMethod == "DELETE" } }
+    }
+
+    // MARK: Live ride reliability (`LIVE_RIDE_RELIABILITY_HOME_V3.md`)
+
+    /// Confirms a synthetic live ride; afterwards every `GET /v1/sessions/syn-session` is answered by `read`.
+    private func startTrackedRide(read: @escaping @Sendable (Int) -> (Int, Data)) async throws -> TapsoAppModel {
+        let reads = ReadCounter()
+        StubURLProtocol.respond { request in
+            switch (request.httpMethod ?? "GET", request.url?.path ?? "") {
+            case ("GET", "/v1/routes"): (200, Payload.routes)
+            case ("GET", "/v1/stops"): (200, Payload.stops)
+            case ("POST", "/v1/sessions"): (201, Payload.session(state: "confirmation_required"))
+            case ("POST", "/v1/sessions/syn-session/confirm"): (200, Payload.session(state: "tracking", selected: true))
+            case ("GET", "/v1/sessions/syn-session"): read(reads.next())
+            case ("DELETE", "/v1/sessions/syn-session"): (204, Data())
+            default: (404, Data(#"{"error":"NOT_FOUND","message":"no such endpoint"}"#.utf8))
+            }
+        }
+        let model = makeModel()
+        let api = TransitAPIRoute(routeId: "SYN-202-W", routeNumber: "202", startStopName: "합성 정류장 1", endStopName: "합성 정류장 12")
+        await model.chooseLiveRoute(api)
+        guard case let .loaded(stops) = model.liveStops else { throw XCTSkip("no stops") }
+        model.chooseLiveStops(boarding: try XCTUnwrap(stops.route.routeStop(sequence: 4)),
+                              destination: try XCTUnwrap(stops.route.routeStop(sequence: 10)), on: stops)
+        try await waitUntil { model.vehicleCheck.stage == .choose }
+        await model.confirmVehicle(try XCTUnwrap(model.vehicleCheck.proposals.first))
+        XCTAssertTrue(model.isLiveRide)
+        return model
+    }
+
+    private func sessionReads() -> Int {
+        StubURLProtocol.recorded.filter { $0.url?.path == "/v1/sessions/syn-session" && $0.httpMethod == "GET" }.count
+    }
+
+    func testTapsDuringAReadCollapseIntoOneQueuedRefresh() async throws {
+        let model = try await startTrackedRide { _ in (200, Payload.session(state: "tracking", selected: true)) }
+        let before = sessionReads()
+        await withTaskGroup(of: Void.self) { group in
+            for _ in 0..<6 { group.addTask { await model.recheckRidePosition() } }
+        }
+        let extra = sessionReads() - before
+        XCTAssertGreaterThanOrEqual(extra, 1, "a tap is never dropped")
+        XCTAssertLessThanOrEqual(extra, 2, "six taps: at most the read in flight plus one queued read")
+        XCTAssertFalse(model.isRecheckingPosition)
+        await model.cancelRide()
+    }
+
+    func testReturningToTheAppReadsWithoutWaitingOutTheCadence() async throws {
+        let model = try await startTrackedRide { _ in (200, Payload.session(state: "tracking", selected: true)) }
+        await model.rideSceneChanged(isActive: false)
+        let before = sessionReads()
+        await model.rideSceneChanged(isActive: true)
+        // The cadence is 15 s; the return reads after at most the 2 s minimum gap.
+        try await waitUntil { self.sessionReads() > before }
+        await model.cancelRide()
+    }
+
+    func testASessionStoreHiccupMidRideKeepsTrackingAndRecovers() async throws {
+        let model = try await startTrackedRide { count in
+            count < 2
+                ? (503, Data(#"{"error":"SESSION_STORE_UNAVAILABLE","message":"x"}"#.utf8))
+                : (200, Payload.session(state: "tracking", selected: true, at: 6))
+        }
+        await model.recheckRidePosition()
+        XCTAssertEqual(model.liveFailure, .server, "said as a passing problem, never as 'start again'")
+        XCTAssertFalse(model.liveRideEndedByServer, "one store hiccup does not end the ride")
+        XCTAssertEqual(model.remainingStops, 5, "the last confirmed progress is kept")
+        await model.recheckRidePosition()
+        await model.recheckRidePosition()
+        XCTAssertNil(model.liveFailure)
+        XCTAssertEqual(model.remainingStops, 4, "and the ride recovers by itself")
+        await model.cancelRide()
+    }
+
+    func testAnExpiredSessionStillEndsTheRide() async throws {
+        let model = try await startTrackedRide { _ in (410, Data(#"{"error":"SESSION_EXPIRED","message":"x"}"#.utf8)) }
+        await model.recheckRidePosition()
+        XCTAssertTrue(model.liveRideEndedByServer)
+        await model.cancelRide()
+    }
+
+    func testAnAnswerWithOlderEvidenceNeverRollsTheCountBack() async throws {
+        let model = try await startTrackedRide { count in
+            count == 0
+                // Received by the server 1 s before it answered: 3 stops left.
+                ? (200, Payload.session(state: "tracking", selected: true, at: 7, evidenceAt: "2026-10-01T06:00:09.000Z"))
+                // A later answer carrying a row 40 s old: 5 stops left.
+                : (200, Payload.session(state: "tracking", selected: true, at: 5, evidenceAt: "2026-10-01T05:59:30.000Z"))
+        }
+        await model.recheckRidePosition()
+        XCTAssertEqual(model.remainingStops, 3)
+        await model.recheckRidePosition()
+        XCTAssertEqual(model.remainingStops, 3, "older evidence completing later does not move the ride back")
+        await model.cancelRide()
     }
 
     func testSessionsSwitchedOffOnTheServerAreSaidPlainlyAndNothingIsInvented() async throws {
@@ -479,9 +575,7 @@ final class TapsoAPIClientTests: XCTestCase {
     // MARK: Helpers
 
     private func makeClient() -> TapsoAPIClient {
-        let configuration = URLSessionConfiguration.ephemeral
-        configuration.protocolClasses = [StubURLProtocol.self]
-        return TapsoAPIClient(session: URLSession(configuration: configuration))
+        TapsoAPIClient(session: URLSession(configuration: StubURLProtocol.configuration()))
     }
 
     private func makeModel() -> TapsoAppModel {
@@ -536,14 +630,15 @@ private enum Payload {
         """#.utf8)
     }
 
-    static func session(state: String, selected: Bool = false, at sequence: Int = 5, phase: String = "active") -> Data {
+    static func session(state: String, selected: Bool = false, at sequence: Int = 5, phase: String = "active", evidenceAt: String? = nil) -> Data {
         let stop = { (sequence: Int) in
             #"{"stopId":"SYN-STOP-\#(sequence)","name":"합성 정류장 \#(sequence)","sequence":\#(sequence)}"#
         }
         let candidates = selected ? "" : #","candidates":[{"vehicleId":"SYN70가0412","score":0,"evidence":[],"rejectedReasons":[],"stopOffset":-2,"zone":"approaching"}],"vehicleChoice":{"presentation":"rider_identifies","readiness":"READY_FOR_SHADOW","vehicles":[{"vehicleId":"SYN70가0412","stopsAway":2}]}"#
         let selection = selected ? #","selectedVehicleId":"SYN70가0412","selectionMode":"explicit""# : ""
+        let evidence = evidenceAt.map { #","evidenceAt":"\#($0)","evidenceAtIs":"tapso_server_receipt""# } ?? ""
         let progress = selected
-            ? #","progress":{"currentStopSequence":\#(sequence),"currentStopId":"SYN-STOP-\#(sequence)","remainingStops":\#(max(0, 10 - sequence)),"phase":"\#(phase)","source":"provider_stop_sequence","observedAt":"1970-01-01T00:00:00.000Z"}"#
+            ? #","progress":{"currentStopSequence":\#(sequence),"currentStopId":"SYN-STOP-\#(sequence)","remainingStops":\#(max(0, 10 - sequence)),"phase":"\#(phase)","source":"provider_stop_sequence","observedAt":"1970-01-01T00:00:00.000Z"\#(evidence)}"#
             : ""
         return Data(#"""
         {"id":"syn-session","routeId":"SYN-202-W","cityCode":"39","boardingStop":\#(stop(4)),"destinationStop":\#(stop(10)),"riderState":"waiting_at_stop","matchConfidence":"unknown","state":"\#(state)","explanation":"synthetic","matchingMode":"shadow"\#(selection)\#(progress)\#(candidates),"createdAt":"2026-10-01T06:00:00.000Z","updatedAt":"2026-10-01T06:00:10.000Z","expiresAt":"2026-10-01T10:00:00.000Z"}
@@ -555,9 +650,21 @@ extension TapsoAPIClient {
     /// A client whose every request `StubURLProtocol` answers in-process. The only place besides
     /// `TapsoAPIClient` that may name the networking types (`crossLanguageAuthority.test.ts`).
     static func stubbed() -> TapsoAPIClient {
-        let configuration = URLSessionConfiguration.ephemeral
-        configuration.protocolClasses = [StubURLProtocol.self]
-        return TapsoAPIClient(session: URLSession(configuration: configuration))
+        TapsoAPIClient(session: URLSession(configuration: StubURLProtocol.configuration()))
+    }
+}
+
+/// Counts reads across URLSession's loading threads.
+final class ReadCounter: @unchecked Sendable {
+    private let lock = NSLock()
+    private var count = 0
+
+    /// The number of reads before this one.
+    func next() -> Int {
+        lock.withLock {
+            defer { count += 1 }
+            return count
+        }
     }
 }
 
@@ -567,7 +674,32 @@ final class StubURLProtocol: URLProtocol {
     nonisolated(unsafe) private static var failure: URLError?
     nonisolated(unsafe) private(set) static var recorded: [URLRequest] = []
     nonisolated(unsafe) private(set) static var bodies: [Data] = []
+    /// Which test a client belongs to. A ride model keeps polling on its own task, so a model
+    /// left over from an earlier test can still send a read while a later test is running; that
+    /// read must not be recorded as the later test's request.
+    nonisolated(unsafe) private static var generation = 0
     private static let lock = NSLock()
+    private static let generationHeader = "X-Tapso-Stub-Generation"
+
+    /// Starts a test: every client made from here on belongs to it, and requests from clients
+    /// made by earlier tests fail as cancelled without being recorded.
+    static func beginTest() {
+        lock.withLock {
+            generation += 1
+            handler = nil
+            failure = nil
+            recorded = []
+            bodies = []
+        }
+    }
+
+    /// A session whose requests this stub answers, tagged with the running test.
+    static func configuration() -> URLSessionConfiguration {
+        let configuration = URLSessionConfiguration.ephemeral
+        configuration.protocolClasses = [StubURLProtocol.self]
+        configuration.httpAdditionalHeaders = [generationHeader: String(lock.withLock { generation })]
+        return configuration
+    }
 
     /// Answers every request with `handler`, forgetting what earlier tests recorded.
     /// The handler runs on URLSession's loading thread, never the main actor, so it is
@@ -596,10 +728,17 @@ final class StubURLProtocol: URLProtocol {
 
     override func startLoading() {
         let body = Self.readBody(of: request)
-        let (handler, failure) = Self.lock.withLock { () -> ((@Sendable (URLRequest) -> (Int, Data))?, URLError?) in
+        let tag = request.value(forHTTPHeaderField: Self.generationHeader).flatMap(Int.init)
+        let (stale, handler, failure) = Self.lock.withLock { () -> (Bool, (@Sendable (URLRequest) -> (Int, Data))?, URLError?) in
+            // An untagged request is treated as the running test's, as before tagging existed.
+            if let tag, tag != Self.generation { return (true, nil, nil) }
             Self.recorded.append(request)
             if let body { Self.bodies.append(body) }
-            return (Self.handler, Self.failure)
+            return (false, Self.handler, Self.failure)
+        }
+        if stale {
+            client?.urlProtocol(self, didFailWithError: URLError(.cancelled))
+            return
         }
         if let failure {
             client?.urlProtocol(self, didFailWithError: failure)
