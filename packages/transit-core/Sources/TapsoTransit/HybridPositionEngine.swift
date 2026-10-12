@@ -114,6 +114,10 @@ public struct HybridRidePosition: Codable, Hashable, Sendable {
     public let validUntil: Date
     public let reason: String
     public let routeDistanceBucket: Int?
+    /// The last official stop sequence the engine accepted; never device-derived. A read the
+    /// engine refuses (a jump, another vehicle, a backward or reordered sequence) never lands here.
+    /// Optional for rides saved before it existed.
+    public let officialStopSequence: Int?
 
     public var source: String {
         switch state {
@@ -122,6 +126,13 @@ public struct HybridRidePosition: Codable, Hashable, Sendable {
         case .predicted: "device_stop_estimate"
         case .lost: "unavailable"
         }
+    }
+
+    /// The stop a passenger surface may name. A `lost` result keeps whatever count the engine
+    /// last held, possibly device-derived, so it names only the official stop the engine accepted.
+    /// Never the latest read: the engine may just have refused it, and it can run ahead.
+    public var usableStopSequence: Int? {
+        state == .lost ? officialStopSequence : currentStopSequence
     }
 
     public var confidenceCategory: String {
@@ -192,7 +203,8 @@ public struct HybridPositionEngine: Sendable {
                                remainingStops: committed.map { max(0, destination - $0) } ?? -1,
                                destinationPassed: committed.map { $0 > destination } ?? false,
                                evaluatedAt: now, validUntil: now.addingTimeInterval(validity), reason: reason,
-                               routeDistanceBucket: lastProjection.map { Int($0.distanceAlong / 100) })
+                               routeDistanceBucket: lastProjection.map { Int($0.distanceAlong / 100) },
+                               officialStopSequence: officialSequence)
         }
         guard selectedVehicleID == vehicleID else {
             clearDeviceContinuity()
@@ -214,6 +226,12 @@ public struct HybridPositionEngine: Sendable {
         // never moves backward.
         var reconciled = false
         if officialStrong, let sequence, let evidenceAt {
+            // Evidence older than what the engine already holds is a reordered read (two server
+            // instances can answer with snapshots of different age). It may neither re-anchor the
+            // association clock nor count as a backward move: it changes nothing and fails closed.
+            if let strongAt, evidenceAt < strongAt {
+                return result(.lost, 0.2, "official_stale_reordered")
+            }
             if let committed, sequence < committed {
                 guard committedFromDevice, sequence >= (officialSequence ?? sequence) else {
                     return result(.lost, 0.2, "official_backward_conflict")

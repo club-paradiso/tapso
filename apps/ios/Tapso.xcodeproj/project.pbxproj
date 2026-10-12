@@ -94,6 +94,8 @@
 		B7B5643C711535E6538F9B0F /* RideReadSupport.swift in Sources */ = {isa = PBXBuildFile; fileRef = A3552CAA846219CA33AAC43D /* RideReadSupport.swift */; };
 		0240EF3208A9B31BE5D78DA3 /* DolLivenessTests.swift in Sources */ = {isa = PBXBuildFile; fileRef = 249AFC02A3DC5CB4E2E074B0 /* DolLivenessTests.swift */; };
 		18663C4A2F8795B643DDD18D /* HomeLayoutTests.swift in Sources */ = {isa = PBXBuildFile; fileRef = BE2000063775934C20DB408B /* HomeLayoutTests.swift */; };
+		522C090B8191DE45D0C20C8D /* HybridRideReconcileTests.swift in Sources */ = {isa = PBXBuildFile; fileRef = 12873EA81968F53A1B70B049 /* HybridRideReconcileTests.swift */; };
+		753B05637D7A255F05962663 /* RideLocationSamplerTests.swift in Sources */ = {isa = PBXBuildFile; fileRef = E3ECAC8A2E99BE066DF83D63 /* RideLocationSamplerTests.swift */; };
 /* End PBXBuildFile section */
 
 /* Begin PBXContainerItemProxy section */
@@ -209,6 +211,8 @@
 		A3552CAA846219CA33AAC43D /* RideReadSupport.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = RideReadSupport.swift; sourceTree = "<group>"; };
 		249AFC02A3DC5CB4E2E074B0 /* DolLivenessTests.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = DolLivenessTests.swift; sourceTree = "<group>"; };
 		BE2000063775934C20DB408B /* HomeLayoutTests.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = HomeLayoutTests.swift; sourceTree = "<group>"; };
+		12873EA81968F53A1B70B049 /* HybridRideReconcileTests.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = HybridRideReconcileTests.swift; sourceTree = "<group>"; };
+		E3ECAC8A2E99BE066DF83D63 /* RideLocationSamplerTests.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = RideLocationSamplerTests.swift; sourceTree = "<group>"; };
 /* End PBXFileReference section */
 
 /* Begin PBXFrameworksBuildPhase section */
@@ -253,7 +257,9 @@
 				5E327558E2B513FF963AD97E /* BrandTests.swift */,
 				249AFC02A3DC5CB4E2E074B0 /* DolLivenessTests.swift */,
 				BE2000063775934C20DB408B /* HomeLayoutTests.swift */,
+				12873EA81968F53A1B70B049 /* HybridRideReconcileTests.swift */,
 				0254DEF030E85E3CF7322DF3 /* MapHandoffFlowTests.swift */,
+				E3ECAC8A2E99BE066DF83D63 /* RideLocationSamplerTests.swift */,
 				4F3242CAC95098615B71E4AF /* RidePresentationTests.swift */,
 				19459AAF91BDF6A8B061D08F /* RideTraceTests.swift */,
 				6DB796C0ED563974A2B95EA4 /* ScreenshotImportFlowTests.swift */,
@@ -659,7 +665,9 @@
 				4DA1D1D973E57698519C31FC /* BrandTests.swift in Sources */,
 				0240EF3208A9B31BE5D78DA3 /* DolLivenessTests.swift in Sources */,
 				18663C4A2F8795B643DDD18D /* HomeLayoutTests.swift in Sources */,
+				522C090B8191DE45D0C20C8D /* HybridRideReconcileTests.swift in Sources */,
 				6C7EC458E60617F296856254 /* MapHandoffFlowTests.swift in Sources */,
+				753B05637D7A255F05962663 /* RideLocationSamplerTests.swift in Sources */,
 				F0FCB5D5AF2DDFA92C6AD18C /* RidePresentationTests.swift in Sources */,
 				1E35209170DFE0C3B68B31CC /* RideTraceTests.swift in Sources */,
 				22E0764272F0461035C8207B /* ScreenshotImportFlowTests.swift in Sources */,

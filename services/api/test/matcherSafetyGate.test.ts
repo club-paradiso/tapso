@@ -16,6 +16,7 @@ import {
   type ReadinessLevel,
 } from "../src/matcherSafetyGate.ts";
 import { NEGATIVE_CONTROLS } from "../../../scripts/negative-controls/mutations.ts";
+import { renderGateSummary } from "../../../scripts/matcher-evidence/gateSummary.ts";
 
 /*
  * Release gate `matcher-passive-safety-v4`. Every fixture below is synthetic
@@ -373,4 +374,36 @@ test("the result is a pure function of the evidence", () => {
   assert.deepEqual(evaluateGate(evidence), evaluateGate(structuredClone(evidence)));
   const levels = new Set<ReadinessLevel>(READINESS_LEVELS);
   assert.ok(levels.has(evaluateGate(evidence).awarded));
+});
+
+test("the gate summary shows a CA-5 FAIL as a warning while the award stays READY_FOR_SHADOW (issue #74 visibility)", () => {
+  // SYNTHETIC: the shape of gate-evidence run 36871560482 — 23 expectation
+  // failures on real bases — not its data.
+  const result = evaluateGate(confirmationEvidence({
+    counterfactualsOnLiveBases: { ...COUNTERFACTUALS, expectationFailures: 23, wrongAgainstRederivedTruth: 23 },
+  }));
+  assert.equal(result.awarded, "READY_FOR_SHADOW");
+  const summary = renderGateSummary(result);
+  assert.match(summary.markdown, /\| CA-5 \| FAIL \|/);
+  assert.match(summary.markdown, /expectation failures 23/);
+  assert.match(summary.markdown, /Awarded: \*\*READY_FOR_SHADOW\*\*/);
+  assert.match(summary.markdown, /not a domain-quality pass/);
+  // Every criterion is listed, whatever its status.
+  for (const row of result.criteria) assert.ok(summary.markdown.includes(`| ${row.id} | ${row.status} |`), row.id);
+  // One warning per FAIL criterion (higher levels FAIL too, e.g. unmet human-only mitigations).
+  const failing = result.criteria.filter((row) => row.status === "FAIL").map((row) => row.id);
+  assert.deepEqual(summary.warnings.map((line) => /^::warning title=([^:]+) FAIL::/.exec(line)?.[1]), failing);
+  const ca5 = summary.warnings.find((line) => line.startsWith("::warning title=CA-5 FAIL::"));
+  assert.ok(ca5, "CA-5 FAIL is annotated");
+  assert.match(ca5, /expectation failures 23/);
+  assert.ok(summary.warnings.every((line) => !line.includes("\n")));
+});
+
+test("the gate summary warns only on FAIL: a MISSING criterion is listed as MISSING, never as a pass or a warning", () => {
+  const result = evaluateGate(shadowEvidence());
+  const summary = renderGateSummary(result);
+  assert.equal(result.criteria.find((row) => row.id === "CA-5")?.status, "MISSING");
+  assert.match(summary.markdown, /\| CA-5 \| MISSING \|/);
+  assert.ok(!summary.warnings.some((line) => line.includes("title=CA-5")));
+  assert.equal(summary.warnings.length, result.criteria.filter((row) => row.status === "FAIL").length);
 });

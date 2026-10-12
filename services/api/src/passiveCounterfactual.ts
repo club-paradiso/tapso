@@ -810,11 +810,17 @@ function decoysAbsent(): Counterfactual {
   };
 }
 
-function lateAppearance(): Counterfactual {
+/**
+ * `late_appearance_s_minus_2` is the id recorded in gate-evidence run
+ * 36871560482 (issue #74) and stays stable; s-1 and s-3 bracket it so a rule
+ * tuned to two stops can be judged on the edges it was not tuned on.
+ */
+function lateAppearance(stopsBefore: number): Counterfactual {
+  const words = ["zero", "one", "two", "three"];
   return {
-    id: "late_appearance_s_minus_2",
+    id: `late_appearance_s_minus_${stopsBefore}`,
     family: "late_appearance",
-    doc: "Drops the true bus's rows until it first reports two stops before the boarding stop, which happens inside the session.",
+    doc: `Drops the true bus's rows until it first reports ${words[stopsBefore] ?? stopsBefore} stop${stopsBefore === 1 ? "" : "s"} before the boarding stop, which happens inside the session.`,
     scenarios: WAIT,
     expectations: ["NOT_WRONG"],
     groundTruthShift: "UNCHANGED",
@@ -824,7 +830,7 @@ function lateAppearance(): Counterfactual {
       const stop = passiveCase.meta.boardingSequence;
       const truthId = context.truth.vehicleId;
       const track = trackOf(world, truthId);
-      const appears = track.find((point) => point.row.stopSequence !== undefined && point.row.stopSequence >= stop - 2);
+      const appears = track.find((point) => point.row.stopSequence !== undefined && point.row.stopSequence >= stop - stopsBefore);
       if (!appears || appears.at < world.sessionStartAt || appears.at > context.boardingAt) return undefined;
       if (!track.some((point) => point.at < appears.at)) return undefined;
       return { world: mapRows(world, (row, snapshot) => (row.vehicleId === truthId && timeOf(snapshot) < appears.at ? undefined : row)) };
@@ -1345,7 +1351,7 @@ export const COUNTERFACTUALS: readonly Counterfactual[] = [
   ...[60_000, 120_000].map((ms) => boardingStopDwell(ms)),
   trueBusAbsent(),
   decoysAbsent(),
-  lateAppearance(),
+  ...[1, 2, 3].map((stops) => lateAppearance(stops)),
   truthHole("candidate_disappearance_60s", "candidate_disappearance",
     "Drops the true bus's rows for the 60 s before the modelled boarding; it is next seen at the stop.", 60_000, 0, false),
   ...[180_000, 360_000].map((ms) => lostLeaderFollower(3, ms)),
