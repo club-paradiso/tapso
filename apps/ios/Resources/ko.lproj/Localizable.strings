@@ -17,7 +17,7 @@
 "home.sample.action" = "샘플 여정 체험하기";
 "home.privacy" = "버스를 따라가는 데는 위치가 필요 없어요. 위치를 허용해도 iPhone 안에서만 써요.";
 "home.intro.title" = "내릴 곳만 알려 주세요";
-"home.intro.body" = "버스를 확인하고 나면, 내릴 때까지 돌이가 대신 볼게요.";
+"home.intro.body" = "버스를 확인하고 나면 내릴 때까지 돌이가 대신 볼게요.";
 "home.intro.step1" = "내릴 정류장";
 "home.intro.step2" = "탈 버스 확인";
 "home.intro.step3" = "폰은 주머니에";
@@ -57,7 +57,7 @@
 "check.proposed.headline" = "이 버스로 보여요";
 "check.proposed.detail" = "탈 때 번호판 끝자리를 확인해주세요";
 "check.similarBuses.headline" = "비슷한 버스가 있어요";
-"check.similarBuses.detail" = "탑승한 버스를 골라주세요";
+"check.similarBuses.detail" = "탄 버스를 골라주세요";
 "check.choose.headline" = "타는 버스를 골라주세요";
 "check.choose.detail" = "번호판 끝자리가 같은 버스를 눌러주세요";
 "check.notFoundYet.headline" = "아직 오는 버스가 안 보여요";
@@ -177,7 +177,7 @@
 "live_activity.disabled" = "실시간 현황이 꺼져 있어요.";
 "demo.title" = "체험 설정";
 "demo.scenario" = "시나리오";
-"demo.scenario.footer" = "탑서 앱은 아직 실시간 데이터에 연결되지 않았어요. 모든 버스와 번호판은 합성 데이터예요. 시나리오는 다음 버스 확인부터 적용돼요.";
+"demo.scenario.footer" = "체험판은 실시간 데이터에 연결하지 않아요. 모든 버스와 번호판은 합성 데이터예요. 시나리오는 다음 버스 확인부터 적용돼요.";
 "demo.scenario.smooth" = "순조로운 여정";
 "demo.scenario.similarBuses" = "비슷한 버스 두 대";
 "demo.scenario.noBusYet" = "아직 오는 버스 없음";
@@ -292,8 +292,8 @@
 "mapImport.outside.body" = "탑서는 제주 버스만 도와요. 제주 안에 있는 장소를 공유해 주세요.";
 "mapImport.another" = "다른 장소 받기";
 "mapImport.linkOnly.title" = "링크만 받았어요";
-"mapImport.linkOnly.body" = "탑서는 공유받은 링크를 열어보지 않아서, 링크만으로는 어디인지 알 수 없어요. 장소 이름이 함께 공유되는지 확인하거나 직접 검색해 주세요.";
-"mapImport.live.title" = "이곳으로 가는 버스를 타세요?";
+"mapImport.linkOnly.body" = "탑서는 공유받은 링크를 열어보지 않아서 링크만으로는 어디인지 알 수 없어요. 장소 이름이 함께 공유되는지 확인하거나 직접 검색해 주세요.";
+"mapImport.live.title" = "이곳까지 버스를 타고 가세요?";
 "mapImport.live.body" = "지도 앱에서 확인한 버스 번호를 알려 주세요. 그 노선에서 이곳과 가까운 정류장을 먼저 보여 드려요.";
 "mapImport.live.action" = "버스 번호 입력";
 "home.mapImport.pending" = "받은 장소: %@";
@@ -318,7 +318,7 @@
 "share.copy" = "복사하기";
 "share.copied.title" = "복사했어요";
 "share.copied.body" = "탑서를 열고 ‘지도 앱에서 가져오기’에서 붙여넣기를 눌러 주세요.";
-"share.unavailable" = "이 설치본은 앱으로 바로 넘길 수 없어요. 복사한 다음 탑서에서 붙여넣어 주세요.";
+"share.unavailable" = "지금 설치된 탑서에는 바로 넘길 수 없어요. 복사한 다음 탑서에서 붙여넣어 주세요.";
 "share.done" = "완료";
 "share.close" = "닫기";
 "share.privacy" = "공유한 내용은 이 기기 안에서만 읽어요. 링크를 열어보지 않고, 어디에도 보내지 않아요.";
@@ -391,7 +391,7 @@
 "share.screenshot.title" = "스크린샷에서 읽었어요";
 "share.screenshot.detail" = "%@ · 정류장 후보 %ld곳";
 "share.screenshot.busNumber" = "%@번";
-"share.screenshot.unavailable" = "이 설치본은 앱으로 바로 넘길 수 없어요. 탑서에서 ‘경로 가져오기’로 스크린샷을 직접 골라 주세요.";
+"share.screenshot.unavailable" = "지금 설치된 탑서에는 바로 넘길 수 없어요. 탑서에서 ‘경로 가져오기’로 스크린샷을 직접 골라 주세요.";
 "share.screenshot.saved.body" = "30분 안에 탑서를 열면 이 경로를 확인해요.";
 "share.screenshot.nothing.title" = "경로를 읽지 못했어요";
 "share.screenshot.nothing.body" = "버스 번호와 정류장이 보이는 지도 앱 화면을 공유해 주세요.";
@@ -434,7 +434,7 @@
 "route.timetable.stale" = "기준일 %@의 오래된 시간표예요. 지금과 다를 수 있어요";
 "route.timetable.showAll" = "공식 시간표 보기";
 "route.timetable.sheet.title" = "%@번 공식 시간표";
-"route.timetable.sheet.source" = "제주특별자치도 버스정보시스템 공식 시간표 · 기준일 %@. 실시간 위치가 아니고, 표에 적힌 지점 사이의 시각은 TAPSO가 짐작하지 않아요.";
+"route.timetable.sheet.source" = "제주특별자치도 버스정보시스템 공식 시간표 · 기준일 %@. 실시간 위치가 아니고, 표에 적힌 지점 사이의 시각은 탑서가 짐작하지 않아요.";
 "route.timetable.sheet.timepoint" = "지점";
 "route.timetable.sheet.none" = "이 지점에 적힌 시각이 없어요";
 "route.timetable.sheet.conditional" = "* 계절·장날·수요응답처럼 조건이 붙은 운행이에요";
@@ -447,13 +447,13 @@
 "control.rideAgain.target" = "여는 곳";
 "control.rideAgain.lastRide" = "마지막 여정";
 "autoStart.title" = "자동으로 시작하기";
-"autoStart.intro" = "단축어 앱에 자동화를 한 번 만들어 두면, 정류장에 가거나 정한 시간이 되면 탑서가 버스 확인을 바로 열어요.";
+"autoStart.intro" = "단축어 앱에 자동화를 한 번 만들어 두세요. 정류장에 가거나 정한 시간이 되면 탑서가 버스 확인을 바로 열어요.";
 "autoStart.arrive.title" = "정류장에 도착하면";
 "autoStart.time.title" = "정한 시간이 되면";
 "autoStart.step.new" = "단축어 앱의 자동화 탭에서 새 개인용 자동화를 만드세요.";
-"autoStart.arrive.trigger" = "‘도착’을 고르고, 버스를 타는 정류장을 위치로 정하세요.";
-"autoStart.time.trigger" = "‘특정 시간’을 고르고, 평소 집을 나서는 시간과 요일을 정하세요.";
-"autoStart.step.action" = "동작 추가에서 ‘탑서로 다시 타기’를 고르고, 탈 여정을 정하세요.";
+"autoStart.arrive.trigger" = "‘도착’을 고르고 버스를 타는 정류장을 위치로 정하세요.";
+"autoStart.time.trigger" = "‘특정 시간’을 고르고 평소 집을 나서는 시간과 요일을 정하세요.";
+"autoStart.step.action" = "동작 추가에서 ‘탑서로 다시 타기’를 고르고 탈 여정을 정하세요.";
 "autoStart.step.noAsk" = "실행하기 전에 묻지 않도록 설정하면 탑서가 바로 열려요.";
 "autoStart.openShortcuts" = "단축어 앱 열기";
 "autoStart.openFailed" = "단축어 앱을 열 수 없어요. 단축어 앱이 설치되어 있는지 확인해 주세요.";
@@ -464,7 +464,7 @@
 "shortcut.rideAgain.journey" = "여정";
 "shortcut.journey.type" = "탑서 여정";
 "stopNudge.section.title" = "정류장에 다가가면 알림";
-"stopNudge.section.body" = "알림을 켠 여정의 타는 정류장에 다가가면, 탑서가 버스가 어디쯤인지 먼저 알려 드려요.";
+"stopNudge.section.body" = "알림을 켠 여정의 타는 정류장에 다가가면 탑서가 버스가 어디쯤인지 먼저 알려 드려요.";
 "stopNudge.needsAlways" = "앱을 닫아 둬도 알려 드리려면 설정에서 탑서의 위치 권한을 ‘항상’으로 바꿔 주세요. 지금은 탑서가 열려 있을 때만 알려 드려요.";
 "stopNudge.privacy" = "정류장 근처인지는 iPhone 안에서만 판단해요. 위치는 탑서 서버로 보내지 않아요.";
 "stopNudge.failure.notLive" = "실시간으로 탄 여정만 정류장 알림을 켤 수 있어요.";
@@ -489,7 +489,7 @@
 "boardFirst.routeCount" = "버스 %d개";
 "boardFirst.nearby.action" = "내 근처 정류장 찾기";
 "boardFirst.nearby.locating" = "근처 정류장을 찾는 중이에요";
-"boardFirst.nearby.unavailable" = "지금 위치를 확인하지 못했어요. 위치 권한을 허용했다면 다시 눌러 주시고, 아니면 이름으로 찾아 주세요.";
+"boardFirst.nearby.unavailable" = "지금 위치를 확인하지 못했어요. 위치 권한을 허용했다면 다시 눌러 주시고 아니면 이름으로 찾아 주세요.";
 "boardFirst.nearby.retry" = "다시 찾기";
 "boardFirst.nearby.title" = "내 근처";
 "boardFirst.trips.soonest" = "가장 빨리 와요";
@@ -502,7 +502,7 @@
 "boardFirst.arrival.unavailable" = "버스 위치를 받지 못했어요";
 "boardFirst.trips.twin" = "같은 길을 도는 별도 운행 %d/%d";
 "ride.keepAlive.title" = "앱을 나가도 계속 알려 주기";
-"ride.keepAlive.on" = "다른 앱을 쓰거나 화면을 꺼도 내릴 때까지 잠금 화면과 다이나믹 아일랜드를 갱신해요. 앱 전환 화면에서 탑서를 위로 밀어 닫으면 멈춰요. 이 기능을 쓰는 동안 위치 서비스 표시가 보이지만, 위치를 쓰지도 보내지도 않아요.";
+"ride.keepAlive.on" = "다른 앱을 쓰거나 화면을 꺼도 내릴 때까지 잠금 화면과 다이나믹 아일랜드를 갱신해요. 앱 전환 화면에서 탑서를 위로 밀어 닫으면 멈춰요. 이 기능을 쓰는 동안 위치 서비스 표시가 보이지만 위치를 쓰지도 보내지도 않아요.";
 "ride.keepAlive.denied" = "위치 권한이 없어 켤 수 없어요. 설정에서 탑서의 위치를 ‘앱을 사용하는 동안’으로 바꿀 수 있어요.";
 
 /* Boarding anchor + position V2 (BOARDING_ANCHOR_POSITION_V2.md) */

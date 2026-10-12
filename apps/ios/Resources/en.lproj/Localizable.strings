@@ -177,7 +177,7 @@
 "live_activity.disabled" = "Live Activities are off.";
 "demo.title" = "Preview settings";
 "demo.scenario" = "Scenario";
-"demo.scenario.footer" = "The app isn't connected to live data yet. Every bus and plate is synthetic. A scenario applies from the next bus check.";
+"demo.scenario.footer" = "The preview doesn't use live data. Every bus and plate is synthetic. A scenario applies from the next bus check.";
 "demo.scenario.smooth" = "Smooth ride";
 "demo.scenario.similarBuses" = "Two similar buses";
 "demo.scenario.noBusYet" = "No bus yet";

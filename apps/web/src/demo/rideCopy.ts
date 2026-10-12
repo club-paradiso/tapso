@@ -31,7 +31,7 @@ export const IOS_COPY = {
   "check.proposed.headline": "이 버스로 보여요",
   "check.proposed.detail": "탈 때 번호판 끝자리를 확인해주세요",
   "check.similarBuses.headline": "비슷한 버스가 있어요",
-  "check.similarBuses.detail": "탑승한 버스를 골라주세요",
+  "check.similarBuses.detail": "탄 버스를 골라주세요",
   "check.confirmed.headline": "버스를 확인했어요",
   "check.confirmed.detail": "이 버스로 따라갈게요",
   "check.confirm": "맞아요, 이 버스를 탔어요",
