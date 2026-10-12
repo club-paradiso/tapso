@@ -91,6 +91,11 @@ So it is lost coverage, not lost risk.
   `late_appearance_s_minus_3` beside the existing family. A rule can then be judged on
   families it was not tuned on. This adds to the catalogue and removes nothing. It is a
   release-gate change for a reviewed PR.
+  - **Done 2026-10-12** (branch `feat/boarding-position-release-validation`): both are in
+    the catalogue beside s-2, whose id is unchanged. On the synthetic bases all three apply
+    with 0 wrong commits (`SIMULATED`, `MATCHER_SAFETY_EVIDENCE_V4.md` §5). Their real-base
+    result is `MISSING` until the next gate-evidence run, and the source digest changed, so
+    CA-5 reads `MISSING` until then. The s-2 FAIL recorded above still stands.
 - Field evidence of how often a Jeju bus is absent from TAGO while within four stops of
   a stop would turn the hidden-leader hazard from `SIMULATED` into a measured rate.
   Today it is `MISSING`.

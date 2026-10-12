@@ -161,10 +161,11 @@ reruns the whole catalogue on every push and pull request.
 
 ## 5. Counterfactual suite
 
-`SIMULATED`. Thirty-three counterfactual families (54 transformations) in
+`SIMULATED`. Thirty-three counterfactual families (56 transformations) in
 `services/api/src/passiveCounterfactual.ts`: departed and approaching decoys,
 leaders and followers at 1–10 stops, overtaking, dwelling at the stop, the true
-bus or every decoy removed, late appearance, disappearance and reappearance,
+bus or every decoy removed, late appearance at one, two and three stops before
+the boarding stop, disappearance and reappearance,
 stale frames, coordinate and content freezes, receipt jitter, packet loss,
 polling gaps, error bursts, loop seams, duplicated stop names, repeated
 geometry, route-variant twins, backwards decoys, delayed and early movement,
@@ -179,19 +180,28 @@ Committed result, `artifacts/matcher-directed-v1/counterfactual-synthetic-summar
 
 | Base | Base cases | Evaluations | Families applied / exercised | Correct | Wrong | Abstain | GT indeterminate | Invariant violations | Expectation failures |
 |---|---:|---:|---|---:|---:|---:|---:|---:|---:|
-| A (30 stops, 10 s polls) | 218 | 8 040 | 33 / 33 | 4 970 | **0** | 2 057 | 901 | **0** | **0** |
-| R (36 stops, 20–40 s receipts) | 669 | 26 160 | 33 / 33 | 8 373 | **0** | 13 196 | 4 330 | **0** | **0** |
+| A (30 stops, 10 s polls) | 218 | 8 315 | 33 / 33 | 5 224 | **0** | 2 078 | 901 | **0** | **0** |
+| R (36 stops, 20–40 s receipts) | 669 | 27 061 | 33 / 33 | 8 557 | **0** | 13 913 | 4 330 | **0** | **0** |
 
 "Exercised" means the family's own expectations could be decided on at least
 one case. One transformation, `long_polling_gap_120s`, never can (a 120 s gap
 always splits the trajectory the model needs): it is reported, its family is
 exercised by `long_polling_gap_110s_resumed`, and a test fails if any other
 transformation goes unexercised (R26). The committed summary had fallen behind
-that catalogue change and is regenerated with this package (R36).
+that catalogue change and is regenerated with this package (R36). It was
+regenerated again on 2026-10-12, by its script, when `late_appearance_s_minus_1`
+and `late_appearance_s_minus_3` joined `late_appearance_s_minus_2` (issue #74):
+on both synthetic bases all three apply and are exercised with 0 wrong commits
+and 0 expectation failures (base A: 146 / 126 / 108 correct of 157 / 137 / 118
+applicable; base R: 15 / 111 / 169 of 512 / 449 / 389). That is `SIMULATED` on
+synthetic bases; it says nothing about real bases, where s-2 fails.
 
 The checks bite. The legacy matcher on the same bases (control, `SIMULATED`):
 base A 1 026 wrong commits, 2 489 invariant violations, 2 819 expectation
 failures, 32 of 33 families failing; base R 2 592 / 9 359 / 10 572, 32 of 33.
+These control counts predate the two added late-appearance transformations and
+were not re-measured on 2026-10-12; the unit test pins that the legacy matcher
+fails s-1 and s-3 on the live-labelled synthetic stand-in.
 A test-only matcher with every protection removed trips each individual
 expectation (`passiveCounterfactual.test.ts`, "every family expectation
 bites"), and a transformation that does not produce the answer it declares is
@@ -206,11 +216,25 @@ matcher selected the follower in 4 of 4 applicable base-A cases), and the
 fourth review found two transformations that could never decide their own
 expectations (R26).
 
-**On real bases: `MISSING`.** `scripts/passive-shadow/counterfactual.ts` runs
-the same catalogue over the Passive Shadow v3 raw streams in the evidence
-workflow. Only a complete run (every case, the whole catalogue, the production
-matcher and replay) can feed gate criterion CA-5, and only families actually
-exercised count toward its 30.
+**On real bases: FAIL** (as of 2026-10-12). `scripts/passive-shadow/counterfactual.ts`
+runs the same catalogue over the retained raw passive collections in the
+evidence workflow. Only a complete run (every case, the whole catalogue, the
+production matcher and replay) can feed gate criterion CA-5, and only families
+actually exercised count toward its 30. Gate-evidence run 36871560482
+(`SYNTHETIC_OR_PERTURBED`, `COUNTERFACTUAL_OF_LIVE_PASSIVE`) recorded 23
+expectation failures and 23 wrong commits, all `late_appearance_s_minus_2`, all
+on one collection (`ISSUE_74_LATE_APPEARANCE_2026-10-02.md`, issue #74). CA-5 is
+FAIL. That run was green: the scheduled job fails only when the gate awards
+less than the code claims, and CA-5 sits above the awarded level. A green run
+is not a domain-quality pass; `gate.ts` now prints every FAIL as a workflow
+`::warning` and writes the criterion table to the job summary.
+
+Adding `late_appearance_s_minus_1` and `late_appearance_s_minus_3` changed
+`passiveCounterfactual.ts`, which is in the matcher source digest
+(`scripts/matcher-evidence/sourceDigest.ts`). Counterfactual evidence recorded
+under the old digest is stale, so CA-5 reads `MISSING` until the next
+gate-evidence run. `MISSING` is never a pass, and it does not mean the FAIL went
+away.
 
 ## 5a. Ground-truth journey sessions
 
@@ -311,7 +335,7 @@ automated windows accumulate; provider lag, rider data entry and hardware UX are
 | Level | Status | Why |
 |---|---|---|
 | `READY_FOR_SHADOW` | **awarded** | SH-1…SH-6 pass (see gate result) |
-| `READY_FOR_CONFIRMATION_ASSISTED` | not awarded | CA-1…CA-5 `MISSING` (full-window raw replay and real-base counterfactuals have not run); CA-6/CA-7 need ≥ 60 trajectories, ≥ 30 vehicles, ≥ 30 contested trajectories, ≥ 8 routes, ≥ 3 windows, ≥ 2 time bands — v3 alone has 29 trajectories with cases by its own split (the gate's unit can only merge them), 27 vehicles, 5 routes, 1 window and 1 time band (its 46 contested cases come from at most 29 trajectories; the exact counts need its raw) |
+| `READY_FOR_CONFIRMATION_ASSISTED` | not awarded | As of 2026-10-12: CA-5 **FAIL** on real bases (gate-evidence run 36871560482: 23 `late_appearance_s_minus_2` wrong commits, issue #74), and CA-6/CA-7 **FAIL** on sample volume. The committed gate result still shows CA-1…CA-7 `MISSING`, because live evidence is never committed; after the s-1/s-3 addition CA-5 reads `MISSING` (stale digest) until the next gate-evidence run, and `MISSING` is never a pass. CA-6/CA-7 need ≥ 60 trajectories, ≥ 30 vehicles, ≥ 30 contested trajectories, ≥ 8 routes, ≥ 3 windows, ≥ 2 time bands — v3 alone has 29 trajectories with cases by its own split (the gate's unit can only merge them), 27 vehicles, 5 routes, 1 window and 1 time band (its 46 contested cases come from at most 29 trajectories; the exact counts need its raw) |
 | `READY_FOR_BOUNDED_AUTOMATION` | not awarded | also needs 300 trajectories, direct-TAGO evidence, and three client/device mitigations that do not exist yet |
 | `READY_FOR_AUTOMATIC_MATCHING` | not awarded, not a target | needs rider behaviour measured by humans |
 
