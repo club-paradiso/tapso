@@ -1,6 +1,6 @@
 {
-  "probedAt": "2026-10-03T14:36:56.641Z",
-  "startedAt": "2026-10-03T14:03:17.605Z",
+  "probedAt": "2026-10-12T00:10:46.496Z",
+  "startedAt": "2026-10-11T23:35:23.728Z",
   "firstType": "순환버스",
   "base": "https://tapso-api.vercel.app",
   "catalogVersion": "794f3bcb831d783e",
@@ -8,15 +8,15 @@
   "probes": {
     "JEB405900101": {
       "status": 200,
-      "vehicles": 2,
-      "withStopSequence": 2,
-      "sequenceInRange": 2
+      "vehicles": 0,
+      "withStopSequence": 0,
+      "sequenceInRange": 0
     },
     "JEB405900102": {
       "status": 200,
-      "vehicles": 2,
-      "withStopSequence": 2,
-      "sequenceInRange": 2
+      "vehicles": 0,
+      "withStopSequence": 0,
+      "sequenceInRange": 0
     },
     "JEB405900103": {
       "status": 200,
@@ -140,15 +140,15 @@
     },
     "JEB405900701": {
       "status": 200,
-      "vehicles": 1,
-      "withStopSequence": 1,
-      "sequenceInRange": 1
+      "vehicles": 0,
+      "withStopSequence": 0,
+      "sequenceInRange": 0
     },
     "JEB405900801": {
       "status": 200,
-      "vehicles": 1,
-      "withStopSequence": 1,
-      "sequenceInRange": 1
+      "vehicles": 0,
+      "withStopSequence": 0,
+      "sequenceInRange": 0
     },
     "JEB405900802": {
       "status": 200,
@@ -200,15 +200,15 @@
     },
     "JEB405410111": {
       "status": 200,
-      "vehicles": 0,
-      "withStopSequence": 0,
-      "sequenceInRange": 0
+      "vehicles": 3,
+      "withStopSequence": 3,
+      "sequenceInRange": 3
     },
     "JEB405410112": {
       "status": 200,
-      "vehicles": 0,
-      "withStopSequence": 0,
-      "sequenceInRange": 0
+      "vehicles": 2,
+      "withStopSequence": 2,
+      "sequenceInRange": 2
     },
     "JEB405410113": {
       "status": 200,
@@ -218,15 +218,15 @@
     },
     "JEB405410114": {
       "status": 200,
-      "vehicles": 0,
-      "withStopSequence": 0,
-      "sequenceInRange": 0
-    },
-    "JEB405410115": {
-      "status": 200,
       "vehicles": 1,
       "withStopSequence": 1,
       "sequenceInRange": 1
+    },
+    "JEB405410115": {
+      "status": 200,
+      "vehicles": 0,
+      "withStopSequence": 0,
+      "sequenceInRange": 0
     },
     "JEB405410116": {
       "status": 200,
@@ -242,27 +242,27 @@
     },
     "JEB405410221": {
       "status": 200,
-      "vehicles": 0,
-      "withStopSequence": 0,
-      "sequenceInRange": 0
+      "vehicles": 1,
+      "withStopSequence": 1,
+      "sequenceInRange": 1
     },
     "JEB405410222": {
       "status": 200,
-      "vehicles": 0,
-      "withStopSequence": 0,
-      "sequenceInRange": 0
+      "vehicles": 2,
+      "withStopSequence": 2,
+      "sequenceInRange": 2
     },
     "JEB405410223": {
       "status": 200,
-      "vehicles": 0,
-      "withStopSequence": 0,
-      "sequenceInRange": 0
+      "vehicles": 2,
+      "withStopSequence": 2,
+      "sequenceInRange": 2
     },
     "JEB405410224": {
       "status": 200,
-      "vehicles": 0,
-      "withStopSequence": 0,
-      "sequenceInRange": 0
+      "vehicles": 2,
+      "withStopSequence": 2,
+      "sequenceInRange": 2
     },
     "JEB405410225": {
       "status": 200,
@@ -320,15 +320,15 @@
     },
     "JEB405411101": {
       "status": 200,
-      "vehicles": 0,
-      "withStopSequence": 0,
-      "sequenceInRange": 0
+      "vehicles": 1,
+      "withStopSequence": 1,
+      "sequenceInRange": 1
     },
     "JEB405411102": {
       "status": 200,
-      "vehicles": 0,
-      "withStopSequence": 0,
-      "sequenceInRange": 0
+      "vehicles": 2,
+      "withStopSequence": 2,
+      "sequenceInRange": 2
     },
     "JEB405411103": {
       "status": 200,
@@ -356,9 +356,9 @@
     },
     "JEB405411171": {
       "status": 200,
-      "vehicles": 0,
-      "withStopSequence": 0,
-      "sequenceInRange": 0
+      "vehicles": 1,
+      "withStopSequence": 1,
+      "sequenceInRange": 1
     },
     "JEB405411172": {
       "status": 200,
@@ -392,9 +392,9 @@
     },
     "JEB405412101": {
       "status": 200,
-      "vehicles": 0,
-      "withStopSequence": 0,
-      "sequenceInRange": 0
+      "vehicles": 1,
+      "withStopSequence": 1,
+      "sequenceInRange": 1
     },
     "JEB405412102": {
       "status": 200,
@@ -410,9 +410,9 @@
     },
     "JEB405412104": {
       "status": 200,
-      "vehicles": 1,
-      "withStopSequence": 1,
-      "sequenceInRange": 1
+      "vehicles": 0,
+      "withStopSequence": 0,
+      "sequenceInRange": 0
     },
     "JEB405412105": {
       "status": 200,
@@ -440,21 +440,21 @@
     },
     "JEB405412202": {
       "status": 200,
-      "vehicles": 0,
-      "withStopSequence": 0,
-      "sequenceInRange": 0
+      "vehicles": 1,
+      "withStopSequence": 1,
+      "sequenceInRange": 1
     },
     "JEB405413101": {
       "status": 200,
-      "vehicles": 0,
-      "withStopSequence": 0,
-      "sequenceInRange": 0
+      "vehicles": 1,
+      "withStopSequence": 1,
+      "sequenceInRange": 1
     },
     "JEB405413102": {
       "status": 200,
-      "vehicles": 0,
-      "withStopSequence": 0,
-      "sequenceInRange": 0
+      "vehicles": 1,
+      "withStopSequence": 1,
+      "sequenceInRange": 1
     },
     "JEB405413103": {
       "status": 200,
@@ -464,9 +464,9 @@
     },
     "JEB405413104": {
       "status": 200,
-      "vehicles": 1,
-      "withStopSequence": 1,
-      "sequenceInRange": 1
+      "vehicles": 0,
+      "withStopSequence": 0,
+      "sequenceInRange": 0
     },
     "JEB405413105": {
       "status": 200,
@@ -482,9 +482,9 @@
     },
     "JEB405413202": {
       "status": 200,
-      "vehicles": 0,
-      "withStopSequence": 0,
-      "sequenceInRange": 0
+      "vehicles": 1,
+      "withStopSequence": 1,
+      "sequenceInRange": 1
     },
     "JEB405413203": {
       "status": 200,
@@ -512,15 +512,15 @@
     },
     "JEB405415101": {
       "status": 200,
-      "vehicles": 0,
-      "withStopSequence": 0,
-      "sequenceInRange": 0
+      "vehicles": 3,
+      "withStopSequence": 3,
+      "sequenceInRange": 3
     },
     "JEB405415102": {
       "status": 200,
-      "vehicles": 0,
-      "withStopSequence": 0,
-      "sequenceInRange": 0
+      "vehicles": 2,
+      "withStopSequence": 2,
+      "sequenceInRange": 2
     },
     "JEB405415104": {
       "status": 200,
@@ -554,9 +554,9 @@
     },
     "JEB405415112": {
       "status": 200,
-      "vehicles": 0,
-      "withStopSequence": 0,
-      "sequenceInRange": 0
+      "vehicles": 1,
+      "withStopSequence": 1,
+      "sequenceInRange": 1
     },
     "JEB405415171": {
       "status": 200,
@@ -566,9 +566,9 @@
     },
     "JEB405415172": {
       "status": 200,
-      "vehicles": 0,
-      "withStopSequence": 0,
-      "sequenceInRange": 0
+      "vehicles": 1,
+      "withStopSequence": 1,
+      "sequenceInRange": 1
     },
     "JEB405415173": {
       "status": 200,
@@ -578,45 +578,45 @@
     },
     "JEB405415175": {
       "status": 200,
-      "vehicles": 1,
-      "withStopSequence": 1,
-      "sequenceInRange": 1
+      "vehicles": 0,
+      "withStopSequence": 0,
+      "sequenceInRange": 0
     },
     "JEB405418101": {
       "status": 200,
-      "vehicles": 0,
-      "withStopSequence": 0,
-      "sequenceInRange": 0
+      "vehicles": 4,
+      "withStopSequence": 4,
+      "sequenceInRange": 4
     },
     "JEB405418102": {
       "status": 200,
-      "vehicles": 1,
-      "withStopSequence": 1,
-      "sequenceInRange": 1
+      "vehicles": 0,
+      "withStopSequence": 0,
+      "sequenceInRange": 0
     },
     "JEB405418103": {
       "status": 200,
+      "vehicles": 1,
+      "withStopSequence": 1,
+      "sequenceInRange": 1
+    },
+    "JEB405418104": {
+      "status": 200,
       "vehicles": 0,
       "withStopSequence": 0,
       "sequenceInRange": 0
     },
-    "JEB405418104": {
+    "JEB405418105": {
       "status": 200,
       "vehicles": 1,
       "withStopSequence": 1,
       "sequenceInRange": 1
     },
-    "JEB405418105": {
-      "status": 200,
-      "vehicles": 0,
-      "withStopSequence": 0,
-      "sequenceInRange": 0
-    },
     "JEB405418201": {
       "status": 200,
-      "vehicles": 0,
-      "withStopSequence": 0,
-      "sequenceInRange": 0
+      "vehicles": 2,
+      "withStopSequence": 2,
+      "sequenceInRange": 2
     },
     "JEB405418202": {
       "status": 200,
@@ -638,9 +638,9 @@
     },
     "JEB405418205": {
       "status": 200,
-      "vehicles": 0,
-      "withStopSequence": 0,
-      "sequenceInRange": 0
+      "vehicles": 1,
+      "withStopSequence": 1,
+      "sequenceInRange": 1
     },
     "JEB405418206": {
       "status": 200,
@@ -650,51 +650,51 @@
     },
     "JEB405418271": {
       "status": 200,
-      "vehicles": 0,
-      "withStopSequence": 0,
-      "sequenceInRange": 0
+      "vehicles": 1,
+      "withStopSequence": 1,
+      "sequenceInRange": 1
     },
     "JEB405320111": {
       "status": 200,
-      "vehicles": 0,
-      "withStopSequence": 0,
-      "sequenceInRange": 0
+      "vehicles": 3,
+      "withStopSequence": 3,
+      "sequenceInRange": 3
     },
     "JEB405320112": {
       "status": 200,
-      "vehicles": 0,
-      "withStopSequence": 0,
-      "sequenceInRange": 0
+      "vehicles": 4,
+      "withStopSequence": 4,
+      "sequenceInRange": 4
     },
     "JEB405320113": {
       "status": 200,
-      "vehicles": 0,
-      "withStopSequence": 0,
-      "sequenceInRange": 0
+      "vehicles": 3,
+      "withStopSequence": 3,
+      "sequenceInRange": 3
     },
     "JEB405320114": {
       "status": 200,
-      "vehicles": 0,
-      "withStopSequence": 0,
-      "sequenceInRange": 0
+      "vehicles": 4,
+      "withStopSequence": 4,
+      "sequenceInRange": 4
     },
     "JEB405320115": {
       "status": 200,
-      "vehicles": 0,
-      "withStopSequence": 0,
-      "sequenceInRange": 0
+      "vehicles": 1,
+      "withStopSequence": 1,
+      "sequenceInRange": 1
     },
     "JEB405320116": {
       "status": 200,
-      "vehicles": 0,
-      "withStopSequence": 0,
-      "sequenceInRange": 0
+      "vehicles": 2,
+      "withStopSequence": 2,
+      "sequenceInRange": 2
     },
     "JEB405320117": {
       "status": 200,
-      "vehicles": 0,
-      "withStopSequence": 0,
-      "sequenceInRange": 0
+      "vehicles": 3,
+      "withStopSequence": 3,
+      "sequenceInRange": 3
     },
     "JEB405320118": {
       "status": 200,
@@ -704,9 +704,9 @@
     },
     "JEB405320119": {
       "status": 200,
-      "vehicles": 0,
-      "withStopSequence": 0,
-      "sequenceInRange": 0
+      "vehicles": 2,
+      "withStopSequence": 2,
+      "sequenceInRange": 2
     },
     "JEB405320120": {
       "status": 200,
@@ -740,39 +740,39 @@
     },
     "JEB405320125": {
       "status": 200,
-      "vehicles": 0,
-      "withStopSequence": 0,
-      "sequenceInRange": 0
+      "vehicles": 1,
+      "withStopSequence": 1,
+      "sequenceInRange": 1
     },
     "JEB405320126": {
       "status": 200,
-      "vehicles": 1,
-      "withStopSequence": 1,
-      "sequenceInRange": 1
+      "vehicles": 0,
+      "withStopSequence": 0,
+      "sequenceInRange": 0
     },
     "JEB405320127": {
       "status": 200,
+      "vehicles": 0,
+      "withStopSequence": 0,
+      "sequenceInRange": 0
+    },
+    "JEB405320128": {
+      "status": 200,
       "vehicles": 1,
       "withStopSequence": 1,
       "sequenceInRange": 1
     },
-    "JEB405320128": {
-      "status": 200,
-      "vehicles": 0,
-      "withStopSequence": 0,
-      "sequenceInRange": 0
-    },
     "JEB405320130": {
       "status": 200,
-      "vehicles": 0,
-      "withStopSequence": 0,
-      "sequenceInRange": 0
+      "vehicles": 1,
+      "withStopSequence": 1,
+      "sequenceInRange": 1
     },
     "JEB405320132": {
       "status": 200,
-      "vehicles": 0,
-      "withStopSequence": 0,
-      "sequenceInRange": 0
+      "vehicles": 1,
+      "withStopSequence": 1,
+      "sequenceInRange": 1
     },
     "JEB405320213": {
       "status": 200,
@@ -782,9 +782,9 @@
     },
     "JEB405320214": {
       "status": 200,
-      "vehicles": 0,
-      "withStopSequence": 0,
-      "sequenceInRange": 0
+      "vehicles": 4,
+      "withStopSequence": 4,
+      "sequenceInRange": 4
     },
     "JEB405320215": {
       "status": 200,
@@ -794,9 +794,9 @@
     },
     "JEB405320216": {
       "status": 200,
-      "vehicles": 0,
-      "withStopSequence": 0,
-      "sequenceInRange": 0
+      "vehicles": 2,
+      "withStopSequence": 2,
+      "sequenceInRange": 2
     },
     "JEB405320217": {
       "status": 200,
@@ -818,9 +818,9 @@
     },
     "JEB405320220": {
       "status": 200,
-      "vehicles": 0,
-      "withStopSequence": 0,
-      "sequenceInRange": 0
+      "vehicles": 1,
+      "withStopSequence": 1,
+      "sequenceInRange": 1
     },
     "JEB405320221": {
       "status": 200,
@@ -848,9 +848,9 @@
     },
     "JEB405320226": {
       "status": 200,
-      "vehicles": 0,
-      "withStopSequence": 0,
-      "sequenceInRange": 0
+      "vehicles": 1,
+      "withStopSequence": 1,
+      "sequenceInRange": 1
     },
     "JEB405320227": {
       "status": 200,
@@ -860,9 +860,9 @@
     },
     "JEB405320228": {
       "status": 200,
-      "vehicles": 0,
-      "withStopSequence": 0,
-      "sequenceInRange": 0
+      "vehicles": 1,
+      "withStopSequence": 1,
+      "sequenceInRange": 1
     },
     "JEB405320229": {
       "status": 200,
@@ -872,9 +872,9 @@
     },
     "JEB405320230": {
       "status": 200,
-      "vehicles": 0,
-      "withStopSequence": 0,
-      "sequenceInRange": 0
+      "vehicles": 1,
+      "withStopSequence": 1,
+      "sequenceInRange": 1
     },
     "JEB405320231": {
       "status": 200,
@@ -884,9 +884,9 @@
     },
     "JEB405320232": {
       "status": 200,
-      "vehicles": 0,
-      "withStopSequence": 0,
-      "sequenceInRange": 0
+      "vehicles": 1,
+      "withStopSequence": 1,
+      "sequenceInRange": 1
     },
     "JEB405320233": {
       "status": 200,
@@ -908,15 +908,15 @@
     },
     "JEB405320237": {
       "status": 200,
-      "vehicles": 0,
-      "withStopSequence": 0,
-      "sequenceInRange": 0
+      "vehicles": 5,
+      "withStopSequence": 5,
+      "sequenceInRange": 5
     },
     "JEB405320239": {
       "status": 200,
-      "vehicles": 0,
-      "withStopSequence": 0,
-      "sequenceInRange": 0
+      "vehicles": 5,
+      "withStopSequence": 5,
+      "sequenceInRange": 5
     },
     "JEB405320251": {
       "status": 200,
@@ -944,9 +944,9 @@
     },
     "JEB405320203": {
       "status": 200,
-      "vehicles": 0,
-      "withStopSequence": 0,
-      "sequenceInRange": 0
+      "vehicles": 2,
+      "withStopSequence": 2,
+      "sequenceInRange": 2
     },
     "JEB405320204": {
       "status": 200,
@@ -962,9 +962,9 @@
     },
     "JEB405321101": {
       "status": 200,
-      "vehicles": 0,
-      "withStopSequence": 0,
-      "sequenceInRange": 0
+      "vehicles": 1,
+      "withStopSequence": 1,
+      "sequenceInRange": 1
     },
     "JEB405321102": {
       "status": 200,
@@ -974,15 +974,15 @@
     },
     "JEB405321103": {
       "status": 200,
-      "vehicles": 0,
-      "withStopSequence": 0,
-      "sequenceInRange": 0
+      "vehicles": 1,
+      "withStopSequence": 1,
+      "sequenceInRange": 1
     },
     "JEB405321104": {
       "status": 200,
-      "vehicles": 0,
-      "withStopSequence": 0,
-      "sequenceInRange": 0
+      "vehicles": 1,
+      "withStopSequence": 1,
+      "sequenceInRange": 1
     },
     "JEB405321105": {
       "status": 200,
@@ -998,15 +998,15 @@
     },
     "JEB405321201": {
       "status": 200,
-      "vehicles": 0,
-      "withStopSequence": 0,
-      "sequenceInRange": 0
+      "vehicles": 1,
+      "withStopSequence": 1,
+      "sequenceInRange": 1
     },
     "JEB405321202": {
       "status": 200,
-      "vehicles": 0,
-      "withStopSequence": 0,
-      "sequenceInRange": 0
+      "vehicles": 1,
+      "withStopSequence": 1,
+      "sequenceInRange": 1
     },
     "JEB405321203": {
       "status": 200,
@@ -1022,15 +1022,15 @@
     },
     "JEB405321205": {
       "status": 200,
-      "vehicles": 0,
-      "withStopSequence": 0,
-      "sequenceInRange": 0
+      "vehicles": 1,
+      "withStopSequence": 1,
+      "sequenceInRange": 1
     },
     "JEB405321206": {
       "status": 200,
-      "vehicles": 0,
-      "withStopSequence": 0,
-      "sequenceInRange": 0
+      "vehicles": 1,
+      "withStopSequence": 1,
+      "sequenceInRange": 1
     },
     "JEB405321251": {
       "status": 200,
@@ -1070,9 +1070,9 @@
     },
     "JEB405322101": {
       "status": 200,
-      "vehicles": 0,
-      "withStopSequence": 0,
-      "sequenceInRange": 0
+      "vehicles": 1,
+      "withStopSequence": 1,
+      "sequenceInRange": 1
     },
     "JEB405322102": {
       "status": 200,
@@ -1088,9 +1088,9 @@
     },
     "JEB405322104": {
       "status": 200,
-      "vehicles": 0,
-      "withStopSequence": 0,
-      "sequenceInRange": 0
+      "vehicles": 1,
+      "withStopSequence": 1,
+      "sequenceInRange": 1
     },
     "JEB405322105": {
       "status": 200,
@@ -1100,9 +1100,9 @@
     },
     "JEB405322201": {
       "status": 200,
-      "vehicles": 0,
-      "withStopSequence": 0,
-      "sequenceInRange": 0
+      "vehicles": 1,
+      "withStopSequence": 1,
+      "sequenceInRange": 1
     },
     "JEB405322202": {
       "status": 200,
@@ -1118,9 +1118,9 @@
     },
     "JEB405322204": {
       "status": 200,
-      "vehicles": 0,
-      "withStopSequence": 0,
-      "sequenceInRange": 0
+      "vehicles": 1,
+      "withStopSequence": 1,
+      "sequenceInRange": 1
     },
     "JEB405322272": {
       "status": 200,
@@ -1130,21 +1130,21 @@
     },
     "JEB405323101": {
       "status": 200,
-      "vehicles": 0,
-      "withStopSequence": 0,
-      "sequenceInRange": 0
+      "vehicles": 1,
+      "withStopSequence": 1,
+      "sequenceInRange": 1
     },
     "JEB405323102": {
       "status": 200,
-      "vehicles": 0,
-      "withStopSequence": 0,
-      "sequenceInRange": 0
+      "vehicles": 1,
+      "withStopSequence": 1,
+      "sequenceInRange": 1
     },
     "JEB405323103": {
       "status": 200,
-      "vehicles": 0,
-      "withStopSequence": 0,
-      "sequenceInRange": 0
+      "vehicles": 1,
+      "withStopSequence": 1,
+      "sequenceInRange": 1
     },
     "JEB405323104": {
       "status": 200,
@@ -1178,15 +1178,15 @@
     },
     "JEB405323122": {
       "status": 200,
-      "vehicles": 0,
-      "withStopSequence": 0,
-      "sequenceInRange": 0
+      "vehicles": 1,
+      "withStopSequence": 1,
+      "sequenceInRange": 1
     },
     "JEB405323123": {
       "status": 200,
-      "vehicles": 0,
-      "withStopSequence": 0,
-      "sequenceInRange": 0
+      "vehicles": 1,
+      "withStopSequence": 1,
+      "sequenceInRange": 1
     },
     "JEB405323124": {
       "status": 200,
@@ -1220,9 +1220,9 @@
     },
     "JEB405323202": {
       "status": 200,
-      "vehicles": 0,
-      "withStopSequence": 0,
-      "sequenceInRange": 0
+      "vehicles": 1,
+      "withStopSequence": 1,
+      "sequenceInRange": 1
     },
     "JEB405323203": {
       "status": 200,
@@ -1340,15 +1340,15 @@
     },
     "JEB405324001": {
       "status": 200,
-      "vehicles": 0,
-      "withStopSequence": 0,
-      "sequenceInRange": 0
+      "vehicles": 1,
+      "withStopSequence": 1,
+      "sequenceInRange": 1
     },
     "JEB405324002": {
       "status": 200,
-      "vehicles": 0,
-      "withStopSequence": 0,
-      "sequenceInRange": 0
+      "vehicles": 1,
+      "withStopSequence": 1,
+      "sequenceInRange": 1
     },
     "JEB405324003": {
       "status": 200,
@@ -1364,9 +1364,9 @@
     },
     "JEB405324005": {
       "status": 200,
-      "vehicles": 0,
-      "withStopSequence": 0,
-      "sequenceInRange": 0
+      "vehicles": 1,
+      "withStopSequence": 1,
+      "sequenceInRange": 1
     },
     "JEB405324006": {
       "status": 200,
@@ -1388,15 +1388,15 @@
     },
     "JEB405325105": {
       "status": 200,
-      "vehicles": 0,
-      "withStopSequence": 0,
-      "sequenceInRange": 0
+      "vehicles": 2,
+      "withStopSequence": 2,
+      "sequenceInRange": 2
     },
     "JEB405325106": {
       "status": 200,
-      "vehicles": 0,
-      "withStopSequence": 0,
-      "sequenceInRange": 0
+      "vehicles": 2,
+      "withStopSequence": 2,
+      "sequenceInRange": 2
     },
     "JEB405325107": {
       "status": 200,
@@ -1412,21 +1412,21 @@
     },
     "JEB405325109": {
       "status": 200,
-      "vehicles": 0,
-      "withStopSequence": 0,
-      "sequenceInRange": 0
+      "vehicles": 2,
+      "withStopSequence": 2,
+      "sequenceInRange": 2
     },
     "JEB405325110": {
       "status": 200,
-      "vehicles": 0,
-      "withStopSequence": 0,
-      "sequenceInRange": 0
+      "vehicles": 2,
+      "withStopSequence": 2,
+      "sequenceInRange": 2
     },
     "JEB405325201": {
       "status": 200,
-      "vehicles": 0,
-      "withStopSequence": 0,
-      "sequenceInRange": 0
+      "vehicles": 1,
+      "withStopSequence": 1,
+      "sequenceInRange": 1
     },
     "JEB405325202": {
       "status": 200,
@@ -1442,33 +1442,33 @@
     },
     "JEB405325204": {
       "status": 200,
-      "vehicles": 0,
-      "withStopSequence": 0,
-      "sequenceInRange": 0
+      "vehicles": 1,
+      "withStopSequence": 1,
+      "sequenceInRange": 1
     },
     "JEB405325301": {
       "status": 200,
-      "vehicles": 0,
-      "withStopSequence": 0,
-      "sequenceInRange": 0
+      "vehicles": 1,
+      "withStopSequence": 1,
+      "sequenceInRange": 1
     },
     "JEB405325302": {
       "status": 200,
-      "vehicles": 0,
-      "withStopSequence": 0,
-      "sequenceInRange": 0
+      "vehicles": 1,
+      "withStopSequence": 1,
+      "sequenceInRange": 1
     },
     "JEB405325303": {
       "status": 200,
-      "vehicles": 0,
-      "withStopSequence": 0,
-      "sequenceInRange": 0
+      "vehicles": 1,
+      "withStopSequence": 1,
+      "sequenceInRange": 1
     },
     "JEB405325304": {
       "status": 200,
-      "vehicles": 0,
-      "withStopSequence": 0,
-      "sequenceInRange": 0
+      "vehicles": 1,
+      "withStopSequence": 1,
+      "sequenceInRange": 1
     },
     "JEB405325401": {
       "status": 200,
@@ -1478,9 +1478,9 @@
     },
     "JEB405325402": {
       "status": 200,
-      "vehicles": 0,
-      "withStopSequence": 0,
-      "sequenceInRange": 0
+      "vehicles": 1,
+      "withStopSequence": 1,
+      "sequenceInRange": 1
     },
     "JEB405325403": {
       "status": 200,
@@ -1496,15 +1496,15 @@
     },
     "JEB405325501": {
       "status": 200,
-      "vehicles": 0,
-      "withStopSequence": 0,
-      "sequenceInRange": 0
+      "vehicles": 3,
+      "withStopSequence": 3,
+      "sequenceInRange": 3
     },
     "JEB405325502": {
       "status": 200,
-      "vehicles": 0,
-      "withStopSequence": 0,
-      "sequenceInRange": 0
+      "vehicles": 2,
+      "withStopSequence": 2,
+      "sequenceInRange": 2
     },
     "JEB405325582": {
       "status": 200,
@@ -1514,15 +1514,15 @@
     },
     "JEB405326001": {
       "status": 200,
-      "vehicles": 0,
-      "withStopSequence": 0,
-      "sequenceInRange": 0
+      "vehicles": 2,
+      "withStopSequence": 2,
+      "sequenceInRange": 2
     },
     "JEB405326002": {
       "status": 200,
-      "vehicles": 0,
-      "withStopSequence": 0,
-      "sequenceInRange": 0
+      "vehicles": 1,
+      "withStopSequence": 1,
+      "sequenceInRange": 1
     },
     "JEB405326003": {
       "status": 200,
@@ -1532,15 +1532,15 @@
     },
     "JEB405327001": {
       "status": 200,
-      "vehicles": 0,
-      "withStopSequence": 0,
-      "sequenceInRange": 0
+      "vehicles": 1,
+      "withStopSequence": 1,
+      "sequenceInRange": 1
     },
     "JEB405327002": {
       "status": 200,
-      "vehicles": 0,
-      "withStopSequence": 0,
-      "sequenceInRange": 0
+      "vehicles": 1,
+      "withStopSequence": 1,
+      "sequenceInRange": 1
     },
     "JEB405327003": {
       "status": 200,
@@ -1550,9 +1550,9 @@
     },
     "JEB405327004": {
       "status": 200,
-      "vehicles": 0,
-      "withStopSequence": 0,
-      "sequenceInRange": 0
+      "vehicles": 1,
+      "withStopSequence": 1,
+      "sequenceInRange": 1
     },
     "JEB405327005": {
       "status": 200,
@@ -1580,15 +1580,15 @@
     },
     "JEB405328101": {
       "status": 200,
-      "vehicles": 1,
-      "withStopSequence": 1,
-      "sequenceInRange": 1
+      "vehicles": 7,
+      "withStopSequence": 7,
+      "sequenceInRange": 7
     },
     "JEB405328102": {
       "status": 200,
-      "vehicles": 1,
-      "withStopSequence": 1,
-      "sequenceInRange": 1
+      "vehicles": 10,
+      "withStopSequence": 10,
+      "sequenceInRange": 10
     },
     "JEB405328103": {
       "status": 200,
@@ -1604,15 +1604,15 @@
     },
     "JEB405328201": {
       "status": 200,
-      "vehicles": 1,
-      "withStopSequence": 1,
-      "sequenceInRange": 1
+      "vehicles": 2,
+      "withStopSequence": 2,
+      "sequenceInRange": 2
     },
     "JEB405328202": {
       "status": 200,
-      "vehicles": 1,
-      "withStopSequence": 1,
-      "sequenceInRange": 1
+      "vehicles": 3,
+      "withStopSequence": 3,
+      "sequenceInRange": 3
     },
     "JEB405328203": {
       "status": 200,
@@ -1628,15 +1628,15 @@
     },
     "JEB405328205": {
       "status": 200,
-      "vehicles": 0,
-      "withStopSequence": 0,
-      "sequenceInRange": 0
+      "vehicles": 5,
+      "withStopSequence": 5,
+      "sequenceInRange": 5
     },
     "JEB405328206": {
       "status": 200,
-      "vehicles": 0,
-      "withStopSequence": 0,
-      "sequenceInRange": 0
+      "vehicles": 4,
+      "withStopSequence": 4,
+      "sequenceInRange": 4
     },
     "JEB405328207": {
       "status": 200,
@@ -1676,15 +1676,15 @@
     },
     "JEB405329101": {
       "status": 200,
-      "vehicles": 0,
-      "withStopSequence": 0,
-      "sequenceInRange": 0
+      "vehicles": 2,
+      "withStopSequence": 2,
+      "sequenceInRange": 2
     },
     "JEB405329102": {
       "status": 200,
-      "vehicles": 0,
-      "withStopSequence": 0,
-      "sequenceInRange": 0
+      "vehicles": 2,
+      "withStopSequence": 2,
+      "sequenceInRange": 2
     },
     "JEB405329105": {
       "status": 200,
@@ -1700,9 +1700,9 @@
     },
     "JEB405329202": {
       "status": 200,
-      "vehicles": 0,
-      "withStopSequence": 0,
-      "sequenceInRange": 0
+      "vehicles": 1,
+      "withStopSequence": 1,
+      "sequenceInRange": 1
     },
     "JEB405329203": {
       "status": 200,
@@ -1712,21 +1712,21 @@
     },
     "JEB405329204": {
       "status": 200,
-      "vehicles": 0,
-      "withStopSequence": 0,
-      "sequenceInRange": 0
+      "vehicles": 1,
+      "withStopSequence": 1,
+      "sequenceInRange": 1
     },
     "JEB405329301": {
       "status": 200,
-      "vehicles": 0,
-      "withStopSequence": 0,
-      "sequenceInRange": 0
+      "vehicles": 1,
+      "withStopSequence": 1,
+      "sequenceInRange": 1
     },
     "JEB405329302": {
       "status": 200,
-      "vehicles": 0,
-      "withStopSequence": 0,
-      "sequenceInRange": 0
+      "vehicles": 2,
+      "withStopSequence": 2,
+      "sequenceInRange": 2
     },
     "JEB405329303": {
       "status": 200,
@@ -1742,9 +1742,9 @@
     },
     "JEB406329501": {
       "status": 200,
-      "vehicles": 0,
-      "withStopSequence": 0,
-      "sequenceInRange": 0
+      "vehicles": 1,
+      "withStopSequence": 1,
+      "sequenceInRange": 1
     },
     "JEB406329502": {
       "status": 200,
@@ -1778,15 +1778,15 @@
     },
     "JEB405130001": {
       "status": 200,
-      "vehicles": 0,
-      "withStopSequence": 0,
-      "sequenceInRange": 0
+      "vehicles": 1,
+      "withStopSequence": 1,
+      "sequenceInRange": 1
     },
     "JEB405130002": {
       "status": 200,
-      "vehicles": 0,
-      "withStopSequence": 0,
-      "sequenceInRange": 0
+      "vehicles": 3,
+      "withStopSequence": 3,
+      "sequenceInRange": 3
     },
     "JEB405130003": {
       "status": 200,
@@ -1808,9 +1808,9 @@
     },
     "JEB405130021": {
       "status": 200,
-      "vehicles": 0,
-      "withStopSequence": 0,
-      "sequenceInRange": 0
+      "vehicles": 2,
+      "withStopSequence": 2,
+      "sequenceInRange": 2
     },
     "JEB405130022": {
       "status": 200,
@@ -1844,9 +1844,9 @@
     },
     "JEB405130102": {
       "status": 200,
-      "vehicles": 0,
-      "withStopSequence": 0,
-      "sequenceInRange": 0
+      "vehicles": 2,
+      "withStopSequence": 2,
+      "sequenceInRange": 2
     },
     "JEB405130103": {
       "status": 200,
@@ -1862,9 +1862,9 @@
     },
     "JEB405130121": {
       "status": 200,
-      "vehicles": 0,
-      "withStopSequence": 0,
-      "sequenceInRange": 0
+      "vehicles": 1,
+      "withStopSequence": 1,
+      "sequenceInRange": 1
     },
     "JEB405130122": {
       "status": 200,
@@ -1886,15 +1886,15 @@
     },
     "JEB405130201": {
       "status": 200,
-      "vehicles": 0,
-      "withStopSequence": 0,
-      "sequenceInRange": 0
+      "vehicles": 2,
+      "withStopSequence": 2,
+      "sequenceInRange": 2
     },
     "JEB405130202": {
       "status": 200,
-      "vehicles": 0,
-      "withStopSequence": 0,
-      "sequenceInRange": 0
+      "vehicles": 1,
+      "withStopSequence": 1,
+      "sequenceInRange": 1
     },
     "JEB405130203": {
       "status": 200,
@@ -1904,15 +1904,15 @@
     },
     "JEB405130204": {
       "status": 200,
-      "vehicles": 0,
-      "withStopSequence": 0,
-      "sequenceInRange": 0
+      "vehicles": 2,
+      "withStopSequence": 2,
+      "sequenceInRange": 2
     },
     "JEB405130205": {
       "status": 200,
-      "vehicles": 0,
-      "withStopSequence": 0,
-      "sequenceInRange": 0
+      "vehicles": 1,
+      "withStopSequence": 1,
+      "sequenceInRange": 1
     },
     "JEB405130206": {
       "status": 200,
@@ -1934,15 +1934,15 @@
     },
     "JEB405130301": {
       "status": 200,
-      "vehicles": 0,
-      "withStopSequence": 0,
-      "sequenceInRange": 0
+      "vehicles": 2,
+      "withStopSequence": 2,
+      "sequenceInRange": 2
     },
     "JEB405130302": {
       "status": 200,
-      "vehicles": 0,
-      "withStopSequence": 0,
-      "sequenceInRange": 0
+      "vehicles": 2,
+      "withStopSequence": 2,
+      "sequenceInRange": 2
     },
     "JEB405130303": {
       "status": 200,
@@ -1958,15 +1958,15 @@
     },
     "JEB405131101": {
       "status": 200,
-      "vehicles": 0,
-      "withStopSequence": 0,
-      "sequenceInRange": 0
+      "vehicles": 3,
+      "withStopSequence": 3,
+      "sequenceInRange": 3
     },
     "JEB405131102": {
       "status": 200,
-      "vehicles": 0,
-      "withStopSequence": 0,
-      "sequenceInRange": 0
+      "vehicles": 2,
+      "withStopSequence": 2,
+      "sequenceInRange": 2
     },
     "JEB405131103": {
       "status": 200,
@@ -2012,21 +2012,21 @@
     },
     "JEB405131172": {
       "status": 200,
-      "vehicles": 0,
-      "withStopSequence": 0,
-      "sequenceInRange": 0
+      "vehicles": 1,
+      "withStopSequence": 1,
+      "sequenceInRange": 1
     },
     "JEB405131201": {
       "status": 200,
-      "vehicles": 0,
-      "withStopSequence": 0,
-      "sequenceInRange": 0
+      "vehicles": 2,
+      "withStopSequence": 2,
+      "sequenceInRange": 2
     },
     "JEB405131202": {
       "status": 200,
-      "vehicles": 0,
-      "withStopSequence": 0,
-      "sequenceInRange": 0
+      "vehicles": 3,
+      "withStopSequence": 3,
+      "sequenceInRange": 3
     },
     "JEB405131203": {
       "status": 200,
@@ -2048,21 +2048,21 @@
     },
     "JEB405131271": {
       "status": 200,
-      "vehicles": 0,
-      "withStopSequence": 0,
-      "sequenceInRange": 0
+      "vehicles": 1,
+      "withStopSequence": 1,
+      "sequenceInRange": 1
     },
     "JEB405131501": {
       "status": 200,
-      "vehicles": 0,
-      "withStopSequence": 0,
-      "sequenceInRange": 0
+      "vehicles": 2,
+      "withStopSequence": 2,
+      "sequenceInRange": 2
     },
     "JEB405131502": {
       "status": 200,
-      "vehicles": 0,
-      "withStopSequence": 0,
-      "sequenceInRange": 0
+      "vehicles": 2,
+      "withStopSequence": 2,
+      "sequenceInRange": 2
     },
     "JEB405131503": {
       "status": 200,
@@ -2090,15 +2090,15 @@
     },
     "JEB405131601": {
       "status": 200,
-      "vehicles": 0,
-      "withStopSequence": 0,
-      "sequenceInRange": 0
+      "vehicles": 3,
+      "withStopSequence": 3,
+      "sequenceInRange": 3
     },
     "JEB405131602": {
       "status": 200,
-      "vehicles": 0,
-      "withStopSequence": 0,
-      "sequenceInRange": 0
+      "vehicles": 3,
+      "withStopSequence": 3,
+      "sequenceInRange": 3
     },
     "JEB405131603": {
       "status": 200,
@@ -2114,21 +2114,21 @@
     },
     "JEB405132001": {
       "status": 200,
-      "vehicles": 0,
-      "withStopSequence": 0,
-      "sequenceInRange": 0
+      "vehicles": 5,
+      "withStopSequence": 5,
+      "sequenceInRange": 5
     },
     "JEB405132002": {
       "status": 200,
-      "vehicles": 0,
-      "withStopSequence": 0,
-      "sequenceInRange": 0
+      "vehicles": 4,
+      "withStopSequence": 4,
+      "sequenceInRange": 4
     },
     "JEB405132003": {
       "status": 200,
-      "vehicles": 0,
-      "withStopSequence": 0,
-      "sequenceInRange": 0
+      "vehicles": 1,
+      "withStopSequence": 1,
+      "sequenceInRange": 1
     },
     "JEB405132004": {
       "status": 200,
@@ -2162,21 +2162,21 @@
     },
     "JEB405132071": {
       "status": 200,
-      "vehicles": 0,
-      "withStopSequence": 0,
-      "sequenceInRange": 0
+      "vehicles": 1,
+      "withStopSequence": 1,
+      "sequenceInRange": 1
     },
     "JEB405132511": {
       "status": 200,
-      "vehicles": 0,
-      "withStopSequence": 0,
-      "sequenceInRange": 0
+      "vehicles": 2,
+      "withStopSequence": 2,
+      "sequenceInRange": 2
     },
     "JEB405132512": {
       "status": 200,
-      "vehicles": 0,
-      "withStopSequence": 0,
-      "sequenceInRange": 0
+      "vehicles": 3,
+      "withStopSequence": 3,
+      "sequenceInRange": 3
     },
     "JEB405132513": {
       "status": 200,
@@ -2210,9 +2210,9 @@
     },
     "JEB405132672": {
       "status": 200,
-      "vehicles": 0,
-      "withStopSequence": 0,
-      "sequenceInRange": 0
+      "vehicles": 1,
+      "withStopSequence": 1,
+      "sequenceInRange": 1
     },
     "JEB405133101": {
       "status": 200,
@@ -2222,15 +2222,15 @@
     },
     "JEB405133102": {
       "status": 200,
-      "vehicles": 0,
-      "withStopSequence": 0,
-      "sequenceInRange": 0
+      "vehicles": 2,
+      "withStopSequence": 2,
+      "sequenceInRange": 2
     },
     "JEB405133103": {
       "status": 200,
-      "vehicles": 0,
-      "withStopSequence": 0,
-      "sequenceInRange": 0
+      "vehicles": 1,
+      "withStopSequence": 1,
+      "sequenceInRange": 1
     },
     "JEB405133104": {
       "status": 200,
@@ -2252,15 +2252,15 @@
     },
     "JEB405133201": {
       "status": 200,
-      "vehicles": 0,
-      "withStopSequence": 0,
-      "sequenceInRange": 0
+      "vehicles": 2,
+      "withStopSequence": 2,
+      "sequenceInRange": 2
     },
     "JEB405133202": {
       "status": 200,
-      "vehicles": 0,
-      "withStopSequence": 0,
-      "sequenceInRange": 0
+      "vehicles": 1,
+      "withStopSequence": 1,
+      "sequenceInRange": 1
     },
     "JEB405133203": {
       "status": 200,
@@ -2294,15 +2294,15 @@
     },
     "JEB405133521": {
       "status": 200,
-      "vehicles": 0,
-      "withStopSequence": 0,
-      "sequenceInRange": 0
+      "vehicles": 2,
+      "withStopSequence": 2,
+      "sequenceInRange": 2
     },
     "JEB405133522": {
       "status": 200,
-      "vehicles": 0,
-      "withStopSequence": 0,
-      "sequenceInRange": 0
+      "vehicles": 2,
+      "withStopSequence": 2,
+      "sequenceInRange": 2
     },
     "JEB405133523": {
       "status": 200,
@@ -2342,15 +2342,15 @@
     },
     "JEB405133601": {
       "status": 200,
-      "vehicles": 0,
-      "withStopSequence": 0,
-      "sequenceInRange": 0
+      "vehicles": 2,
+      "withStopSequence": 2,
+      "sequenceInRange": 2
     },
     "JEB405133602": {
       "status": 200,
-      "vehicles": 0,
-      "withStopSequence": 0,
-      "sequenceInRange": 0
+      "vehicles": 2,
+      "withStopSequence": 2,
+      "sequenceInRange": 2
     },
     "JEB405133603": {
       "status": 200,
@@ -2402,21 +2402,21 @@
     },
     "JEB405133702": {
       "status": 200,
-      "vehicles": 0,
-      "withStopSequence": 0,
-      "sequenceInRange": 0
+      "vehicles": 1,
+      "withStopSequence": 1,
+      "sequenceInRange": 1
     },
     "JEB405134101": {
       "status": 200,
-      "vehicles": 0,
-      "withStopSequence": 0,
-      "sequenceInRange": 0
+      "vehicles": 1,
+      "withStopSequence": 1,
+      "sequenceInRange": 1
     },
     "JEB405134102": {
       "status": 200,
-      "vehicles": 0,
-      "withStopSequence": 0,
-      "sequenceInRange": 0
+      "vehicles": 2,
+      "withStopSequence": 2,
+      "sequenceInRange": 2
     },
     "JEB405134103": {
       "status": 200,
@@ -2456,15 +2456,15 @@
     },
     "JEB405134201": {
       "status": 200,
-      "vehicles": 0,
-      "withStopSequence": 0,
-      "sequenceInRange": 0
+      "vehicles": 2,
+      "withStopSequence": 2,
+      "sequenceInRange": 2
     },
     "JEB405134202": {
       "status": 200,
-      "vehicles": 0,
-      "withStopSequence": 0,
-      "sequenceInRange": 0
+      "vehicles": 2,
+      "withStopSequence": 2,
+      "sequenceInRange": 2
     },
     "JEB405134203": {
       "status": 200,
@@ -2480,9 +2480,9 @@
     },
     "JEB405134522": {
       "status": 200,
-      "vehicles": 0,
-      "withStopSequence": 0,
-      "sequenceInRange": 0
+      "vehicles": 3,
+      "withStopSequence": 3,
+      "sequenceInRange": 3
     },
     "JEB405134601": {
       "status": 200,
@@ -2498,15 +2498,15 @@
     },
     "JEB405134603": {
       "status": 200,
-      "vehicles": 0,
-      "withStopSequence": 0,
-      "sequenceInRange": 0
+      "vehicles": 1,
+      "withStopSequence": 1,
+      "sequenceInRange": 1
     },
     "JEB405134604": {
       "status": 200,
-      "vehicles": 0,
-      "withStopSequence": 0,
-      "sequenceInRange": 0
+      "vehicles": 1,
+      "withStopSequence": 1,
+      "sequenceInRange": 1
     },
     "JEB405134605": {
       "status": 200,
@@ -2564,15 +2564,15 @@
     },
     "JEB405134622": {
       "status": 200,
-      "vehicles": 0,
-      "withStopSequence": 0,
-      "sequenceInRange": 0
+      "vehicles": 1,
+      "withStopSequence": 1,
+      "sequenceInRange": 1
     },
     "JEB405134623": {
       "status": 200,
-      "vehicles": 0,
-      "withStopSequence": 0,
-      "sequenceInRange": 0
+      "vehicles": 1,
+      "withStopSequence": 1,
+      "sequenceInRange": 1
     },
     "JEB405134624": {
       "status": 200,
@@ -2654,9 +2654,9 @@
     },
     "JEB405134701": {
       "status": 200,
-      "vehicles": 0,
-      "withStopSequence": 0,
-      "sequenceInRange": 0
+      "vehicles": 3,
+      "withStopSequence": 3,
+      "sequenceInRange": 3
     },
     "JEB405134702": {
       "status": 200,
@@ -2690,27 +2690,27 @@
     },
     "JEB405135101": {
       "status": 200,
-      "vehicles": 0,
-      "withStopSequence": 0,
-      "sequenceInRange": 0
+      "vehicles": 2,
+      "withStopSequence": 2,
+      "sequenceInRange": 2
     },
     "JEB405135102": {
       "status": 200,
-      "vehicles": 0,
-      "withStopSequence": 0,
-      "sequenceInRange": 0
+      "vehicles": 2,
+      "withStopSequence": 2,
+      "sequenceInRange": 2
     },
     "JEB405135103": {
       "status": 200,
-      "vehicles": 0,
-      "withStopSequence": 0,
-      "sequenceInRange": 0
+      "vehicles": 1,
+      "withStopSequence": 1,
+      "sequenceInRange": 1
     },
     "JEB405135104": {
       "status": 200,
-      "vehicles": 0,
-      "withStopSequence": 0,
-      "sequenceInRange": 0
+      "vehicles": 1,
+      "withStopSequence": 1,
+      "sequenceInRange": 1
     },
     "JEB405135105": {
       "status": 200,
@@ -2732,15 +2732,15 @@
     },
     "JEB405135521": {
       "status": 200,
-      "vehicles": 0,
-      "withStopSequence": 0,
-      "sequenceInRange": 0
+      "vehicles": 3,
+      "withStopSequence": 3,
+      "sequenceInRange": 3
     },
     "JEB405135522": {
       "status": 200,
-      "vehicles": 0,
-      "withStopSequence": 0,
-      "sequenceInRange": 0
+      "vehicles": 3,
+      "withStopSequence": 3,
+      "sequenceInRange": 3
     },
     "JEB405135523": {
       "status": 200,
@@ -2774,15 +2774,15 @@
     },
     "JEB405135601": {
       "status": 200,
-      "vehicles": 0,
-      "withStopSequence": 0,
-      "sequenceInRange": 0
+      "vehicles": 2,
+      "withStopSequence": 2,
+      "sequenceInRange": 2
     },
     "JEB405135602": {
       "status": 200,
-      "vehicles": 0,
-      "withStopSequence": 0,
-      "sequenceInRange": 0
+      "vehicles": 2,
+      "withStopSequence": 2,
+      "sequenceInRange": 2
     },
     "JEB405135603": {
       "status": 200,
@@ -2840,15 +2840,15 @@
     },
     "JEB405136001": {
       "status": 200,
-      "vehicles": 0,
-      "withStopSequence": 0,
-      "sequenceInRange": 0
+      "vehicles": 5,
+      "withStopSequence": 5,
+      "sequenceInRange": 5
     },
     "JEB405136002": {
       "status": 200,
-      "vehicles": 0,
-      "withStopSequence": 0,
-      "sequenceInRange": 0
+      "vehicles": 5,
+      "withStopSequence": 5,
+      "sequenceInRange": 5
     },
     "JEB405136003": {
       "status": 200,
@@ -2918,15 +2918,15 @@
     },
     "JEB405136521": {
       "status": 200,
-      "vehicles": 0,
-      "withStopSequence": 0,
-      "sequenceInRange": 0
+      "vehicles": 6,
+      "withStopSequence": 6,
+      "sequenceInRange": 6
     },
     "JEB405136522": {
       "status": 200,
-      "vehicles": 0,
-      "withStopSequence": 0,
-      "sequenceInRange": 0
+      "vehicles": 5,
+      "withStopSequence": 5,
+      "sequenceInRange": 5
     },
     "JEB405136523": {
       "status": 200,
@@ -2972,15 +2972,15 @@
     },
     "JEB405137001": {
       "status": 200,
-      "vehicles": 0,
-      "withStopSequence": 0,
-      "sequenceInRange": 0
+      "vehicles": 1,
+      "withStopSequence": 1,
+      "sequenceInRange": 1
     },
     "JEB405137002": {
       "status": 200,
-      "vehicles": 0,
-      "withStopSequence": 0,
-      "sequenceInRange": 0
+      "vehicles": 1,
+      "withStopSequence": 1,
+      "sequenceInRange": 1
     },
     "JEB405137003": {
       "status": 200,
@@ -2990,21 +2990,21 @@
     },
     "JEB405138001": {
       "status": 200,
-      "vehicles": 0,
-      "withStopSequence": 0,
-      "sequenceInRange": 0
+      "vehicles": 1,
+      "withStopSequence": 1,
+      "sequenceInRange": 1
     },
     "JEB405138002": {
       "status": 200,
-      "vehicles": 0,
-      "withStopSequence": 0,
-      "sequenceInRange": 0
+      "vehicles": 1,
+      "withStopSequence": 1,
+      "sequenceInRange": 1
     },
     "JEB405241101": {
       "status": 200,
-      "vehicles": 0,
-      "withStopSequence": 0,
-      "sequenceInRange": 0
+      "vehicles": 2,
+      "withStopSequence": 2,
+      "sequenceInRange": 2
     },
     "JEB405241102": {
       "status": 200,
@@ -3020,9 +3020,9 @@
     },
     "JEB405241201": {
       "status": 200,
-      "vehicles": 0,
-      "withStopSequence": 0,
-      "sequenceInRange": 0
+      "vehicles": 3,
+      "withStopSequence": 3,
+      "sequenceInRange": 3
     },
     "JEB405241202": {
       "status": 200,
@@ -3044,15 +3044,15 @@
     },
     "JEB405241501": {
       "status": 200,
-      "vehicles": 0,
-      "withStopSequence": 0,
-      "sequenceInRange": 0
+      "vehicles": 5,
+      "withStopSequence": 5,
+      "sequenceInRange": 5
     },
     "JEB405241502": {
       "status": 200,
-      "vehicles": 0,
-      "withStopSequence": 0,
-      "sequenceInRange": 0
+      "vehicles": 4,
+      "withStopSequence": 4,
+      "sequenceInRange": 4
     },
     "JEB405241503": {
       "status": 200,
@@ -3062,9 +3062,9 @@
     },
     "JEB405242101": {
       "status": 200,
-      "vehicles": 0,
-      "withStopSequence": 0,
-      "sequenceInRange": 0
+      "vehicles": 1,
+      "withStopSequence": 1,
+      "sequenceInRange": 1
     },
     "JEB405242103": {
       "status": 200,
@@ -3074,9 +3074,9 @@
     },
     "JEB405242201": {
       "status": 200,
-      "vehicles": 0,
-      "withStopSequence": 0,
-      "sequenceInRange": 0
+      "vehicles": 1,
+      "withStopSequence": 1,
+      "sequenceInRange": 1
     },
     "JEB405242203": {
       "status": 200,
@@ -3098,9 +3098,9 @@
     },
     "JEB405242505": {
       "status": 200,
-      "vehicles": 0,
-      "withStopSequence": 0,
-      "sequenceInRange": 0
+      "vehicles": 1,
+      "withStopSequence": 1,
+      "sequenceInRange": 1
     },
     "JEB405242506": {
       "status": 200,
@@ -3110,27 +3110,27 @@
     },
     "JEB405242601": {
       "status": 200,
-      "vehicles": 0,
-      "withStopSequence": 0,
-      "sequenceInRange": 0
+      "vehicles": 2,
+      "withStopSequence": 2,
+      "sequenceInRange": 2
     },
     "JEB405242602": {
       "status": 200,
-      "vehicles": 0,
-      "withStopSequence": 0,
-      "sequenceInRange": 0
+      "vehicles": 1,
+      "withStopSequence": 1,
+      "sequenceInRange": 1
     },
     "JEB405104309": {
       "status": 200,
-      "vehicles": 0,
-      "withStopSequence": 0,
-      "sequenceInRange": 0
+      "vehicles": 1,
+      "withStopSequence": 1,
+      "sequenceInRange": 1
     },
     "JEB405104310": {
       "status": 200,
-      "vehicles": 0,
-      "withStopSequence": 0,
-      "sequenceInRange": 0
+      "vehicles": 1,
+      "withStopSequence": 1,
+      "sequenceInRange": 1
     },
     "JEB405104311": {
       "status": 200,
@@ -3182,15 +3182,15 @@
     },
     "JEB405104301": {
       "status": 200,
-      "vehicles": 0,
-      "withStopSequence": 0,
-      "sequenceInRange": 0
+      "vehicles": 1,
+      "withStopSequence": 1,
+      "sequenceInRange": 1
     },
     "JEB405104302": {
       "status": 200,
-      "vehicles": 0,
-      "withStopSequence": 0,
-      "sequenceInRange": 0
+      "vehicles": 1,
+      "withStopSequence": 1,
+      "sequenceInRange": 1
     },
     "JEB405104303": {
       "status": 200,
@@ -3248,15 +3248,15 @@
     },
     "JEB405243101": {
       "status": 200,
-      "vehicles": 0,
-      "withStopSequence": 0,
-      "sequenceInRange": 0
+      "vehicles": 2,
+      "withStopSequence": 2,
+      "sequenceInRange": 2
     },
     "JEB405243201": {
       "status": 200,
-      "vehicles": 0,
-      "withStopSequence": 0,
-      "sequenceInRange": 0
+      "vehicles": 2,
+      "withStopSequence": 2,
+      "sequenceInRange": 2
     },
     "JEB405243202": {
       "status": 200,
@@ -3266,9 +3266,9 @@
     },
     "JEB405243401": {
       "status": 200,
-      "vehicles": 0,
-      "withStopSequence": 0,
-      "sequenceInRange": 0
+      "vehicles": 1,
+      "withStopSequence": 1,
+      "sequenceInRange": 1
     },
     "JEB405243402": {
       "status": 200,
@@ -3284,15 +3284,15 @@
     },
     "JEB405243471": {
       "status": 200,
-      "vehicles": 0,
-      "withStopSequence": 0,
-      "sequenceInRange": 0
+      "vehicles": 1,
+      "withStopSequence": 1,
+      "sequenceInRange": 1
     },
     "JEB405243511": {
       "status": 200,
-      "vehicles": 0,
-      "withStopSequence": 0,
-      "sequenceInRange": 0
+      "vehicles": 2,
+      "withStopSequence": 2,
+      "sequenceInRange": 2
     },
     "JEB405243512": {
       "status": 200,
@@ -3314,15 +3314,15 @@
     },
     "JEB405243610": {
       "status": 200,
-      "vehicles": 0,
-      "withStopSequence": 0,
-      "sequenceInRange": 0
+      "vehicles": 1,
+      "withStopSequence": 1,
+      "sequenceInRange": 1
     },
     "JEB405243701": {
       "status": 200,
-      "vehicles": 0,
-      "withStopSequence": 0,
-      "sequenceInRange": 0
+      "vehicles": 1,
+      "withStopSequence": 1,
+      "sequenceInRange": 1
     },
     "JEB405244001": {
       "status": 200,
@@ -3338,21 +3338,21 @@
     },
     "JEB405244003": {
       "status": 200,
-      "vehicles": 0,
-      "withStopSequence": 0,
-      "sequenceInRange": 0
+      "vehicles": 2,
+      "withStopSequence": 2,
+      "sequenceInRange": 2
     },
     "JEB405244004": {
       "status": 200,
-      "vehicles": 0,
-      "withStopSequence": 0,
-      "sequenceInRange": 0
+      "vehicles": 2,
+      "withStopSequence": 2,
+      "sequenceInRange": 2
     },
     "JEB405244107": {
       "status": 200,
-      "vehicles": 0,
-      "withStopSequence": 0,
-      "sequenceInRange": 0
+      "vehicles": 1,
+      "withStopSequence": 1,
+      "sequenceInRange": 1
     },
     "JEB405244108": {
       "status": 200,
@@ -3392,9 +3392,9 @@
     },
     "JEB405244201": {
       "status": 200,
-      "vehicles": 0,
-      "withStopSequence": 0,
-      "sequenceInRange": 0
+      "vehicles": 1,
+      "withStopSequence": 1,
+      "sequenceInRange": 1
     },
     "JEB405244202": {
       "status": 200,
@@ -3428,9 +3428,9 @@
     },
     "JEB405244401": {
       "status": 200,
-      "vehicles": 0,
-      "withStopSequence": 0,
-      "sequenceInRange": 0
+      "vehicles": 2,
+      "withStopSequence": 2,
+      "sequenceInRange": 2
     },
     "JEB405244402": {
       "status": 200,
@@ -3446,9 +3446,9 @@
     },
     "JEB405244505": {
       "status": 200,
-      "vehicles": 0,
-      "withStopSequence": 0,
-      "sequenceInRange": 0
+      "vehicles": 1,
+      "withStopSequence": 1,
+      "sequenceInRange": 1
     },
     "JEB405244506": {
       "status": 200,
@@ -3464,9 +3464,9 @@
     },
     "JEB405244601": {
       "status": 200,
-      "vehicles": 0,
-      "withStopSequence": 0,
-      "sequenceInRange": 0
+      "vehicles": 1,
+      "withStopSequence": 1,
+      "sequenceInRange": 1
     },
     "JEB405244602": {
       "status": 200,
@@ -3482,9 +3482,9 @@
     },
     "JEB405244604": {
       "status": 200,
-      "vehicles": 0,
-      "withStopSequence": 0,
-      "sequenceInRange": 0
+      "vehicles": 2,
+      "withStopSequence": 2,
+      "sequenceInRange": 2
     },
     "JEB405244605": {
       "status": 200,
@@ -3506,9 +3506,9 @@
     },
     "JEB405244701": {
       "status": 200,
-      "vehicles": 0,
-      "withStopSequence": 0,
-      "sequenceInRange": 0
+      "vehicles": 1,
+      "withStopSequence": 1,
+      "sequenceInRange": 1
     },
     "JEB405244702": {
       "status": 200,
@@ -3524,9 +3524,9 @@
     },
     "JEB405245101": {
       "status": 200,
-      "vehicles": 0,
-      "withStopSequence": 0,
-      "sequenceInRange": 0
+      "vehicles": 2,
+      "withStopSequence": 2,
+      "sequenceInRange": 2
     },
     "JEB405245110": {
       "status": 200,
@@ -3536,15 +3536,15 @@
     },
     "JEB405245201": {
       "status": 200,
-      "vehicles": 0,
-      "withStopSequence": 0,
-      "sequenceInRange": 0
+      "vehicles": 2,
+      "withStopSequence": 2,
+      "sequenceInRange": 2
     },
     "JEB405245210": {
       "status": 200,
-      "vehicles": 0,
-      "withStopSequence": 0,
-      "sequenceInRange": 0
+      "vehicles": 1,
+      "withStopSequence": 1,
+      "sequenceInRange": 1
     },
     "JEB405245301": {
       "status": 200,
@@ -3572,21 +3572,21 @@
     },
     "JEB405245507": {
       "status": 200,
-      "vehicles": 0,
-      "withStopSequence": 0,
-      "sequenceInRange": 0
+      "vehicles": 2,
+      "withStopSequence": 2,
+      "sequenceInRange": 2
     },
     "JEB405245508": {
       "status": 200,
-      "vehicles": 0,
-      "withStopSequence": 0,
-      "sequenceInRange": 0
+      "vehicles": 2,
+      "withStopSequence": 2,
+      "sequenceInRange": 2
     },
     "JEB405245511": {
       "status": 200,
-      "vehicles": 0,
-      "withStopSequence": 0,
-      "sequenceInRange": 0
+      "vehicles": 1,
+      "withStopSequence": 1,
+      "sequenceInRange": 1
     },
     "JEB405245512": {
       "status": 200,
@@ -3608,15 +3608,15 @@
     },
     "JEB405246101": {
       "status": 200,
-      "vehicles": 0,
-      "withStopSequence": 0,
-      "sequenceInRange": 0
+      "vehicles": 1,
+      "withStopSequence": 1,
+      "sequenceInRange": 1
     },
     "JEB405246102": {
       "status": 200,
-      "vehicles": 0,
-      "withStopSequence": 0,
-      "sequenceInRange": 0
+      "vehicles": 1,
+      "withStopSequence": 1,
+      "sequenceInRange": 1
     },
     "JEB405246103": {
       "status": 200,
@@ -3638,9 +3638,9 @@
     },
     "JEB405246202": {
       "status": 200,
-      "vehicles": 0,
-      "withStopSequence": 0,
-      "sequenceInRange": 0
+      "vehicles": 1,
+      "withStopSequence": 1,
+      "sequenceInRange": 1
     },
     "JEB405246203": {
       "status": 200,
@@ -3650,9 +3650,9 @@
     },
     "JEB405246507": {
       "status": 200,
-      "vehicles": 0,
-      "withStopSequence": 0,
-      "sequenceInRange": 0
+      "vehicles": 3,
+      "withStopSequence": 3,
+      "sequenceInRange": 3
     },
     "JEB405246508": {
       "status": 200,
@@ -3668,9 +3668,9 @@
     },
     "JEB405246601": {
       "status": 200,
-      "vehicles": 0,
-      "withStopSequence": 0,
-      "sequenceInRange": 0
+      "vehicles": 3,
+      "withStopSequence": 3,
+      "sequenceInRange": 3
     },
     "JEB405246602": {
       "status": 200,
@@ -3686,27 +3686,27 @@
     },
     "JEB405247101": {
       "status": 200,
-      "vehicles": 0,
-      "withStopSequence": 0,
-      "sequenceInRange": 0
+      "vehicles": 1,
+      "withStopSequence": 1,
+      "sequenceInRange": 1
     },
     "JEB405247102": {
       "status": 200,
-      "vehicles": 0,
-      "withStopSequence": 0,
-      "sequenceInRange": 0
+      "vehicles": 1,
+      "withStopSequence": 1,
+      "sequenceInRange": 1
     },
     "JEB405247201": {
       "status": 200,
-      "vehicles": 0,
-      "withStopSequence": 0,
-      "sequenceInRange": 0
+      "vehicles": 1,
+      "withStopSequence": 1,
+      "sequenceInRange": 1
     },
     "JEB405247202": {
       "status": 200,
-      "vehicles": 0,
-      "withStopSequence": 0,
-      "sequenceInRange": 0
+      "vehicles": 1,
+      "withStopSequence": 1,
+      "sequenceInRange": 1
     },
     "JEB405247301": {
       "status": 200,
@@ -3740,9 +3740,9 @@
     },
     "JEB405247701": {
       "status": 200,
-      "vehicles": 0,
-      "withStopSequence": 0,
-      "sequenceInRange": 0
+      "vehicles": 3,
+      "withStopSequence": 3,
+      "sequenceInRange": 3
     },
     "JEB405247702": {
       "status": 200,
@@ -3752,9 +3752,9 @@
     },
     "JEB405249001": {
       "status": 200,
-      "vehicles": 0,
-      "withStopSequence": 0,
-      "sequenceInRange": 0
+      "vehicles": 1,
+      "withStopSequence": 1,
+      "sequenceInRange": 1
     },
     "JEB405249101": {
       "status": 200,
@@ -3770,15 +3770,15 @@
     },
     "JEB406150001": {
       "status": 200,
-      "vehicles": 0,
-      "withStopSequence": 0,
-      "sequenceInRange": 0
+      "vehicles": 1,
+      "withStopSequence": 1,
+      "sequenceInRange": 1
     },
     "JEB406150002": {
       "status": 200,
-      "vehicles": 0,
-      "withStopSequence": 0,
-      "sequenceInRange": 0
+      "vehicles": 2,
+      "withStopSequence": 2,
+      "sequenceInRange": 2
     },
     "JEB406150003": {
       "status": 200,
@@ -3806,21 +3806,21 @@
     },
     "JEB406150071": {
       "status": 200,
-      "vehicles": 0,
-      "withStopSequence": 0,
-      "sequenceInRange": 0
+      "vehicles": 1,
+      "withStopSequence": 1,
+      "sequenceInRange": 1
     },
     "JEB406150101": {
       "status": 200,
-      "vehicles": 0,
-      "withStopSequence": 0,
-      "sequenceInRange": 0
+      "vehicles": 2,
+      "withStopSequence": 2,
+      "sequenceInRange": 2
     },
     "JEB406150102": {
       "status": 200,
-      "vehicles": 0,
-      "withStopSequence": 0,
-      "sequenceInRange": 0
+      "vehicles": 1,
+      "withStopSequence": 1,
+      "sequenceInRange": 1
     },
     "JEB406150104": {
       "status": 200,
@@ -3830,15 +3830,15 @@
     },
     "JEB406151001": {
       "status": 200,
-      "vehicles": 0,
-      "withStopSequence": 0,
-      "sequenceInRange": 0
+      "vehicles": 5,
+      "withStopSequence": 5,
+      "sequenceInRange": 5
     },
     "JEB406151002": {
       "status": 200,
-      "vehicles": 0,
-      "withStopSequence": 0,
-      "sequenceInRange": 0
+      "vehicles": 3,
+      "withStopSequence": 3,
+      "sequenceInRange": 3
     },
     "JEB406151003": {
       "status": 200,
@@ -3848,9 +3848,9 @@
     },
     "JEB406151004": {
       "status": 200,
-      "vehicles": 0,
-      "withStopSequence": 0,
-      "sequenceInRange": 0
+      "vehicles": 2,
+      "withStopSequence": 2,
+      "sequenceInRange": 2
     },
     "JEB406151005": {
       "status": 200,
@@ -3932,15 +3932,15 @@
     },
     "JEB406152001": {
       "status": 200,
-      "vehicles": 0,
-      "withStopSequence": 0,
-      "sequenceInRange": 0
+      "vehicles": 2,
+      "withStopSequence": 2,
+      "sequenceInRange": 2
     },
     "JEB406152002": {
       "status": 200,
-      "vehicles": 0,
-      "withStopSequence": 0,
-      "sequenceInRange": 0
+      "vehicles": 2,
+      "withStopSequence": 2,
+      "sequenceInRange": 2
     },
     "JEB406152003": {
       "status": 200,
@@ -3986,9 +3986,9 @@
     },
     "JEB406153102": {
       "status": 200,
-      "vehicles": 0,
-      "withStopSequence": 0,
-      "sequenceInRange": 0
+      "vehicles": 2,
+      "withStopSequence": 2,
+      "sequenceInRange": 2
     },
     "JEB406153103": {
       "status": 200,
@@ -4022,9 +4022,9 @@
     },
     "JEB406153109": {
       "status": 200,
-      "vehicles": 0,
-      "withStopSequence": 0,
-      "sequenceInRange": 0
+      "vehicles": 1,
+      "withStopSequence": 1,
+      "sequenceInRange": 1
     },
     "JEB406153110": {
       "status": 200,
@@ -4052,9 +4052,9 @@
     },
     "JEB406153201": {
       "status": 200,
-      "vehicles": 0,
-      "withStopSequence": 0,
-      "sequenceInRange": 0
+      "vehicles": 1,
+      "withStopSequence": 1,
+      "sequenceInRange": 1
     },
     "JEB406153202": {
       "status": 200,
@@ -4070,9 +4070,9 @@
     },
     "JEB406153204": {
       "status": 200,
-      "vehicles": 0,
-      "withStopSequence": 0,
-      "sequenceInRange": 0
+      "vehicles": 1,
+      "withStopSequence": 1,
+      "sequenceInRange": 1
     },
     "JEB406153205": {
       "status": 200,
@@ -4100,15 +4100,15 @@
     },
     "JEB405660001": {
       "status": 200,
-      "vehicles": 1,
-      "withStopSequence": 1,
-      "sequenceInRange": 1
+      "vehicles": 3,
+      "withStopSequence": 3,
+      "sequenceInRange": 3
     },
     "JEB405660002": {
       "status": 200,
-      "vehicles": 0,
-      "withStopSequence": 0,
-      "sequenceInRange": 0
+      "vehicles": 2,
+      "withStopSequence": 2,
+      "sequenceInRange": 2
     },
     "JEB405660003": {
       "status": 200,
@@ -4124,15 +4124,15 @@
     },
     "JEB405660101": {
       "status": 200,
-      "vehicles": 0,
-      "withStopSequence": 0,
-      "sequenceInRange": 0
+      "vehicles": 1,
+      "withStopSequence": 1,
+      "sequenceInRange": 1
     },
     "JEB405660102": {
       "status": 200,
-      "vehicles": 0,
-      "withStopSequence": 0,
-      "sequenceInRange": 0
+      "vehicles": 1,
+      "withStopSequence": 1,
+      "sequenceInRange": 1
     },
     "JEB405660104": {
       "status": 200,
@@ -4148,9 +4148,9 @@
     },
     "JEB406261102": {
       "status": 200,
-      "vehicles": 0,
-      "withStopSequence": 0,
-      "sequenceInRange": 0
+      "vehicles": 1,
+      "withStopSequence": 1,
+      "sequenceInRange": 1
     },
     "JEB406261103": {
       "status": 200,
@@ -4166,9 +4166,9 @@
     },
     "JEB406261201": {
       "status": 200,
-      "vehicles": 0,
-      "withStopSequence": 0,
-      "sequenceInRange": 0
+      "vehicles": 1,
+      "withStopSequence": 1,
+      "sequenceInRange": 1
     },
     "JEB406261202": {
       "status": 200,
@@ -4190,9 +4190,9 @@
     },
     "JEB406261507": {
       "status": 200,
-      "vehicles": 0,
-      "withStopSequence": 0,
-      "sequenceInRange": 0
+      "vehicles": 1,
+      "withStopSequence": 1,
+      "sequenceInRange": 1
     },
     "JEB406261508": {
       "status": 200,
@@ -4208,9 +4208,9 @@
     },
     "JEB406262102": {
       "status": 200,
-      "vehicles": 0,
-      "withStopSequence": 0,
-      "sequenceInRange": 0
+      "vehicles": 1,
+      "withStopSequence": 1,
+      "sequenceInRange": 1
     },
     "JEB406262201": {
       "status": 200,
@@ -4220,9 +4220,9 @@
     },
     "JEB406262202": {
       "status": 200,
-      "vehicles": 0,
-      "withStopSequence": 0,
-      "sequenceInRange": 0
+      "vehicles": 1,
+      "withStopSequence": 1,
+      "sequenceInRange": 1
     },
     "JEB406262203": {
       "status": 200,
@@ -4244,9 +4244,9 @@
     },
     "JEB406262304": {
       "status": 200,
-      "vehicles": 0,
-      "withStopSequence": 0,
-      "sequenceInRange": 0
+      "vehicles": 1,
+      "withStopSequence": 1,
+      "sequenceInRange": 1
     },
     "JEB406262305": {
       "status": 200,
@@ -4292,15 +4292,15 @@
     },
     "JEB406262503": {
       "status": 200,
-      "vehicles": 0,
-      "withStopSequence": 0,
-      "sequenceInRange": 0
+      "vehicles": 1,
+      "withStopSequence": 1,
+      "sequenceInRange": 1
     },
     "JEB406262504": {
       "status": 200,
-      "vehicles": 0,
-      "withStopSequence": 0,
-      "sequenceInRange": 0
+      "vehicles": 1,
+      "withStopSequence": 1,
+      "sequenceInRange": 1
     },
     "JEB406262505": {
       "status": 200,
@@ -4346,15 +4346,15 @@
     },
     "JEB406263001": {
       "status": 200,
-      "vehicles": 0,
-      "withStopSequence": 0,
-      "sequenceInRange": 0
+      "vehicles": 1,
+      "withStopSequence": 1,
+      "sequenceInRange": 1
     },
     "JEB406263002": {
       "status": 200,
-      "vehicles": 0,
-      "withStopSequence": 0,
-      "sequenceInRange": 0
+      "vehicles": 1,
+      "withStopSequence": 1,
+      "sequenceInRange": 1
     },
     "JEB406263003": {
       "status": 200,
@@ -4376,9 +4376,9 @@
     },
     "JEB406263302": {
       "status": 200,
-      "vehicles": 0,
-      "withStopSequence": 0,
-      "sequenceInRange": 0
+      "vehicles": 1,
+      "withStopSequence": 1,
+      "sequenceInRange": 1
     },
     "JEB406263303": {
       "status": 200,
@@ -4388,9 +4388,9 @@
     },
     "JEB406263304": {
       "status": 200,
-      "vehicles": 0,
-      "withStopSequence": 0,
-      "sequenceInRange": 0
+      "vehicles": 1,
+      "withStopSequence": 1,
+      "sequenceInRange": 1
     },
     "JEB406263305": {
       "status": 200,
@@ -4418,9 +4418,9 @@
     },
     "JEB406263502": {
       "status": 200,
-      "vehicles": 0,
-      "withStopSequence": 0,
-      "sequenceInRange": 0
+      "vehicles": 1,
+      "withStopSequence": 1,
+      "sequenceInRange": 1
     },
     "JEB406263503": {
       "status": 200,
@@ -4436,9 +4436,9 @@
     },
     "JEB406264101": {
       "status": 200,
-      "vehicles": 0,
-      "withStopSequence": 0,
-      "sequenceInRange": 0
+      "vehicles": 1,
+      "withStopSequence": 1,
+      "sequenceInRange": 1
     },
     "JEB406264102": {
       "status": 200,
@@ -4460,9 +4460,9 @@
     },
     "JEB406264301": {
       "status": 200,
-      "vehicles": 0,
-      "withStopSequence": 0,
-      "sequenceInRange": 0
+      "vehicles": 2,
+      "withStopSequence": 2,
+      "sequenceInRange": 2
     },
     "JEB406264302": {
       "status": 200,
@@ -4490,9 +4490,9 @@
     },
     "JEB406264403": {
       "status": 200,
-      "vehicles": 0,
-      "withStopSequence": 0,
-      "sequenceInRange": 0
+      "vehicles": 1,
+      "withStopSequence": 1,
+      "sequenceInRange": 1
     },
     "JEB406264501": {
       "status": 200,
@@ -4508,15 +4508,15 @@
     },
     "JEB406264505": {
       "status": 200,
-      "vehicles": 0,
-      "withStopSequence": 0,
-      "sequenceInRange": 0
+      "vehicles": 3,
+      "withStopSequence": 3,
+      "sequenceInRange": 3
     },
     "JEB406264506": {
       "status": 200,
-      "vehicles": 0,
-      "withStopSequence": 0,
-      "sequenceInRange": 0
+      "vehicles": 2,
+      "withStopSequence": 2,
+      "sequenceInRange": 2
     },
     "JEB406264507": {
       "status": 200,
@@ -4544,15 +4544,15 @@
     },
     "JEB406265106": {
       "status": 200,
-      "vehicles": 0,
-      "withStopSequence": 0,
-      "sequenceInRange": 0
+      "vehicles": 1,
+      "withStopSequence": 1,
+      "sequenceInRange": 1
     },
     "JEB406265205": {
       "status": 200,
-      "vehicles": 0,
-      "withStopSequence": 0,
-      "sequenceInRange": 0
+      "vehicles": 1,
+      "withStopSequence": 1,
+      "sequenceInRange": 1
     },
     "JEB406265206": {
       "status": 200,
@@ -4562,15 +4562,15 @@
     },
     "JEB406265501": {
       "status": 200,
-      "vehicles": 0,
-      "withStopSequence": 0,
-      "sequenceInRange": 0
+      "vehicles": 1,
+      "withStopSequence": 1,
+      "sequenceInRange": 1
     },
     "JEB406265502": {
       "status": 200,
-      "vehicles": 0,
-      "withStopSequence": 0,
-      "sequenceInRange": 0
+      "vehicles": 2,
+      "withStopSequence": 2,
+      "sequenceInRange": 2
     },
     "JEB406265503": {
       "status": 200,
@@ -4586,9 +4586,9 @@
     },
     "JEB406268001": {
       "status": 200,
-      "vehicles": 0,
-      "withStopSequence": 0,
-      "sequenceInRange": 0
+      "vehicles": 1,
+      "withStopSequence": 1,
+      "sequenceInRange": 1
     },
     "JEB406268002": {
       "status": 200,
@@ -4640,9 +4640,9 @@
     },
     "JEB406269005": {
       "status": 200,
-      "vehicles": 0,
-      "withStopSequence": 0,
-      "sequenceInRange": 0
+      "vehicles": 1,
+      "withStopSequence": 1,
+      "sequenceInRange": 1
     },
     "JEB406269006": {
       "status": 200,
@@ -4676,9 +4676,9 @@
     },
     "JEB405570101": {
       "status": 200,
-      "vehicles": 0,
-      "withStopSequence": 0,
-      "sequenceInRange": 0
+      "vehicles": 1,
+      "withStopSequence": 1,
+      "sequenceInRange": 1
     },
     "JEB405570102": {
       "status": 200,
@@ -4718,9 +4718,9 @@
     },
     "JEB405570204": {
       "status": 200,
-      "vehicles": 0,
-      "withStopSequence": 0,
-      "sequenceInRange": 0
+      "vehicles": 1,
+      "withStopSequence": 1,
+      "sequenceInRange": 1
     },
     "JEB405570210": {
       "status": 200,
@@ -4742,9 +4742,9 @@
     },
     "JEB405570401": {
       "status": 200,
-      "vehicles": 0,
-      "withStopSequence": 0,
-      "sequenceInRange": 0
+      "vehicles": 1,
+      "withStopSequence": 1,
+      "sequenceInRange": 1
     },
     "JEB405570411": {
       "status": 200,
@@ -4802,9 +4802,9 @@
     },
     "JEB405570409": {
       "status": 200,
-      "vehicles": 0,
-      "withStopSequence": 0,
-      "sequenceInRange": 0
+      "vehicles": 1,
+      "withStopSequence": 1,
+      "sequenceInRange": 1
     },
     "JEB405570410": {
       "status": 200,
@@ -4820,9 +4820,9 @@
     },
     "JEB405270502": {
       "status": 200,
-      "vehicles": 0,
-      "withStopSequence": 0,
-      "sequenceInRange": 0
+      "vehicles": 1,
+      "withStopSequence": 1,
+      "sequenceInRange": 1
     },
     "JEB405571101": {
       "status": 200,
@@ -4874,15 +4874,15 @@
     },
     "JEB405571103": {
       "status": 200,
-      "vehicles": 0,
-      "withStopSequence": 0,
-      "sequenceInRange": 0
+      "vehicles": 1,
+      "withStopSequence": 1,
+      "sequenceInRange": 1
     },
     "JEB405571104": {
       "status": 200,
-      "vehicles": 0,
-      "withStopSequence": 0,
-      "sequenceInRange": 0
+      "vehicles": 1,
+      "withStopSequence": 1,
+      "sequenceInRange": 1
     },
     "JEB405571105": {
       "status": 200,
@@ -4922,9 +4922,9 @@
     },
     "JEB406572104": {
       "status": 200,
-      "vehicles": 0,
-      "withStopSequence": 0,
-      "sequenceInRange": 0
+      "vehicles": 1,
+      "withStopSequence": 1,
+      "sequenceInRange": 1
     },
     "JEB406572107": {
       "status": 200,
@@ -4952,15 +4952,15 @@
     },
     "JEB406572201": {
       "status": 200,
-      "vehicles": 0,
-      "withStopSequence": 0,
-      "sequenceInRange": 0
+      "vehicles": 1,
+      "withStopSequence": 1,
+      "sequenceInRange": 1
     },
     "JEB406572202": {
       "status": 200,
-      "vehicles": 0,
-      "withStopSequence": 0,
-      "sequenceInRange": 0
+      "vehicles": 1,
+      "withStopSequence": 1,
+      "sequenceInRange": 1
     },
     "JEB406572205": {
       "status": 200,
@@ -4970,9 +4970,9 @@
     },
     "JEB406572203": {
       "status": 200,
-      "vehicles": 0,
-      "withStopSequence": 0,
-      "sequenceInRange": 0
+      "vehicles": 1,
+      "withStopSequence": 1,
+      "sequenceInRange": 1
     },
     "JEB406572204": {
       "status": 200,
@@ -4994,9 +4994,9 @@
     },
     "JEB406573101": {
       "status": 200,
-      "vehicles": 0,
-      "withStopSequence": 0,
-      "sequenceInRange": 0
+      "vehicles": 1,
+      "withStopSequence": 1,
+      "sequenceInRange": 1
     },
     "JEB406573102": {
       "status": 200,
@@ -5006,9 +5006,9 @@
     },
     "JEB406573103": {
       "status": 200,
-      "vehicles": 0,
-      "withStopSequence": 0,
-      "sequenceInRange": 0
+      "vehicles": 1,
+      "withStopSequence": 1,
+      "sequenceInRange": 1
     },
     "JEB406573104": {
       "status": 200,
@@ -5084,9 +5084,9 @@
     },
     "JEB406574102": {
       "status": 200,
-      "vehicles": 0,
-      "withStopSequence": 0,
-      "sequenceInRange": 0
+      "vehicles": 1,
+      "withStopSequence": 1,
+      "sequenceInRange": 1
     },
     "JEB406574107": {
       "status": 200,
@@ -5102,9 +5102,9 @@
     },
     "JEB406574201": {
       "status": 200,
-      "vehicles": 0,
-      "withStopSequence": 0,
-      "sequenceInRange": 0
+      "vehicles": 1,
+      "withStopSequence": 1,
+      "sequenceInRange": 1
     },
     "JEB406574203": {
       "status": 200,
@@ -5126,9 +5126,9 @@
     },
     "JEB406574202": {
       "status": 200,
-      "vehicles": 0,
-      "withStopSequence": 0,
-      "sequenceInRange": 0
+      "vehicles": 1,
+      "withStopSequence": 1,
+      "sequenceInRange": 1
     },
     "JEB406574204": {
       "status": 200,
@@ -5168,9 +5168,9 @@
     },
     "JEB406575102": {
       "status": 200,
-      "vehicles": 0,
-      "withStopSequence": 0,
-      "sequenceInRange": 0
+      "vehicles": 1,
+      "withStopSequence": 1,
+      "sequenceInRange": 1
     },
     "JEB406575109": {
       "status": 200,
@@ -5192,9 +5192,9 @@
     },
     "JEB406575107": {
       "status": 200,
-      "vehicles": 0,
-      "withStopSequence": 0,
-      "sequenceInRange": 0
+      "vehicles": 1,
+      "withStopSequence": 1,
+      "sequenceInRange": 1
     },
     "JEB406575108": {
       "status": 200,
@@ -5216,9 +5216,9 @@
     },
     "JEB406575203": {
       "status": 200,
-      "vehicles": 0,
-      "withStopSequence": 0,
-      "sequenceInRange": 0
+      "vehicles": 1,
+      "withStopSequence": 1,
+      "sequenceInRange": 1
     },
     "JEB406575205": {
       "status": 200,
@@ -5252,9 +5252,9 @@
     },
     "JEB406575206": {
       "status": 200,
-      "vehicles": 0,
-      "withStopSequence": 0,
-      "sequenceInRange": 0
+      "vehicles": 1,
+      "withStopSequence": 1,
+      "sequenceInRange": 1
     },
     "JEB406575208": {
       "status": 200,
@@ -5270,9 +5270,9 @@
     },
     "JEB406575301": {
       "status": 200,
-      "vehicles": 0,
-      "withStopSequence": 0,
-      "sequenceInRange": 0
+      "vehicles": 1,
+      "withStopSequence": 1,
+      "sequenceInRange": 1
     },
     "JEB406576101": {
       "status": 200,
@@ -5324,15 +5324,15 @@
     },
     "JEB405577102": {
       "status": 200,
-      "vehicles": 0,
-      "withStopSequence": 0,
-      "sequenceInRange": 0
+      "vehicles": 1,
+      "withStopSequence": 1,
+      "sequenceInRange": 1
     },
     "JEB405577103": {
       "status": 200,
-      "vehicles": 0,
-      "withStopSequence": 0,
-      "sequenceInRange": 0
+      "vehicles": 1,
+      "withStopSequence": 1,
+      "sequenceInRange": 1
     },
     "JEB405577104": {
       "status": 200,
@@ -5342,15 +5342,15 @@
     },
     "JEB405577201": {
       "status": 200,
-      "vehicles": 0,
-      "withStopSequence": 0,
-      "sequenceInRange": 0
+      "vehicles": 1,
+      "withStopSequence": 1,
+      "sequenceInRange": 1
     },
     "JEB405577202": {
       "status": 200,
-      "vehicles": 0,
-      "withStopSequence": 0,
-      "sequenceInRange": 0
+      "vehicles": 1,
+      "withStopSequence": 1,
+      "sequenceInRange": 1
     },
     "JEB405578101": {
       "status": 200,
@@ -5438,9 +5438,9 @@
     },
     "JEB405578311": {
       "status": 200,
-      "vehicles": 0,
-      "withStopSequence": 0,
-      "sequenceInRange": 0
+      "vehicles": 1,
+      "withStopSequence": 1,
+      "sequenceInRange": 1
     },
     "JEB405578312": {
       "status": 200,
@@ -5456,9 +5456,9 @@
     },
     "JEB405578402": {
       "status": 200,
-      "vehicles": 0,
-      "withStopSequence": 0,
-      "sequenceInRange": 0
+      "vehicles": 1,
+      "withStopSequence": 1,
+      "sequenceInRange": 1
     },
     "JEB405578407": {
       "status": 200,
@@ -5474,15 +5474,15 @@
     },
     "JEB405578404": {
       "status": 200,
-      "vehicles": 0,
-      "withStopSequence": 0,
-      "sequenceInRange": 0
+      "vehicles": 1,
+      "withStopSequence": 1,
+      "sequenceInRange": 1
     },
     "JEB405578405": {
       "status": 200,
-      "vehicles": 0,
-      "withStopSequence": 0,
-      "sequenceInRange": 0
+      "vehicles": 1,
+      "withStopSequence": 1,
+      "sequenceInRange": 1
     },
     "JEB405578505": {
       "status": 200,
@@ -5534,9 +5534,9 @@
     },
     "JEB405579101": {
       "status": 200,
-      "vehicles": 0,
-      "withStopSequence": 0,
-      "sequenceInRange": 0
+      "vehicles": 2,
+      "withStopSequence": 2,
+      "sequenceInRange": 2
     },
     "JEB405579102": {
       "status": 200,
@@ -5546,9 +5546,9 @@
     },
     "JEB405579203": {
       "status": 200,
-      "vehicles": 0,
-      "withStopSequence": 0,
-      "sequenceInRange": 0
+      "vehicles": 1,
+      "withStopSequence": 1,
+      "sequenceInRange": 1
     },
     "JEB405579204": {
       "status": 200,
@@ -5606,9 +5606,9 @@
     },
     "JEB405579305": {
       "status": 200,
-      "vehicles": 0,
-      "withStopSequence": 0,
-      "sequenceInRange": 0
+      "vehicles": 1,
+      "withStopSequence": 1,
+      "sequenceInRange": 1
     },
     "JEB405579306": {
       "status": 200,
@@ -5630,9 +5630,9 @@
     },
     "JEB405579407": {
       "status": 200,
-      "vehicles": 0,
-      "withStopSequence": 0,
-      "sequenceInRange": 0
+      "vehicles": 1,
+      "withStopSequence": 1,
+      "sequenceInRange": 1
     },
     "JEB405579403": {
       "status": 200,
@@ -5684,15 +5684,15 @@
     },
     "JEB405579507": {
       "status": 200,
-      "vehicles": 0,
-      "withStopSequence": 0,
-      "sequenceInRange": 0
+      "vehicles": 1,
+      "withStopSequence": 1,
+      "sequenceInRange": 1
     },
     "JEB405579508": {
       "status": 200,
-      "vehicles": 0,
-      "withStopSequence": 0,
-      "sequenceInRange": 0
+      "vehicles": 1,
+      "withStopSequence": 1,
+      "sequenceInRange": 1
     },
     "JEB405579510": {
       "status": 200,
@@ -5702,15 +5702,15 @@
     },
     "JEB405680001": {
       "status": 200,
-      "vehicles": 0,
-      "withStopSequence": 0,
-      "sequenceInRange": 0
+      "vehicles": 1,
+      "withStopSequence": 1,
+      "sequenceInRange": 1
     },
     "JEB405680002": {
       "status": 200,
-      "vehicles": 0,
-      "withStopSequence": 0,
-      "sequenceInRange": 0
+      "vehicles": 3,
+      "withStopSequence": 3,
+      "sequenceInRange": 3
     },
     "JEB405680003": {
       "status": 200,
@@ -5732,9 +5732,9 @@
     },
     "JEB405680051": {
       "status": 200,
-      "vehicles": 1,
-      "withStopSequence": 1,
-      "sequenceInRange": 1
+      "vehicles": 0,
+      "withStopSequence": 0,
+      "sequenceInRange": 0
     },
     "JEB405680052": {
       "status": 200,
@@ -5744,15 +5744,15 @@
     },
     "JEB405680101": {
       "status": 200,
-      "vehicles": 0,
-      "withStopSequence": 0,
-      "sequenceInRange": 0
+      "vehicles": 2,
+      "withStopSequence": 2,
+      "sequenceInRange": 2
     },
     "JEB405680102": {
       "status": 200,
-      "vehicles": 0,
-      "withStopSequence": 0,
-      "sequenceInRange": 0
+      "vehicles": 2,
+      "withStopSequence": 2,
+      "sequenceInRange": 2
     },
     "JEB405680103": {
       "status": 200,
@@ -5780,9 +5780,9 @@
     },
     "JEB405881003": {
       "status": 200,
-      "vehicles": 0,
-      "withStopSequence": 0,
-      "sequenceInRange": 0
+      "vehicles": 1,
+      "withStopSequence": 1,
+      "sequenceInRange": 1
     },
     "JEB405881002": {
       "status": 200,
@@ -5798,9 +5798,9 @@
     },
     "JEB405882001": {
       "status": 200,
-      "vehicles": 0,
-      "withStopSequence": 0,
-      "sequenceInRange": 0
+      "vehicles": 2,
+      "withStopSequence": 2,
+      "sequenceInRange": 2
     },
     "JEB405882005": {
       "status": 200,
@@ -5816,9 +5816,9 @@
     },
     "JEB405882006": {
       "status": 200,
-      "vehicles": 0,
-      "withStopSequence": 0,
-      "sequenceInRange": 0
+      "vehicles": 1,
+      "withStopSequence": 1,
+      "sequenceInRange": 1
     },
     "JEB405882003": {
       "status": 200,
@@ -5834,9 +5834,9 @@
     },
     "JEB406888001": {
       "status": 200,
-      "vehicles": 0,
-      "withStopSequence": 0,
-      "sequenceInRange": 0
+      "vehicles": 1,
+      "withStopSequence": 1,
+      "sequenceInRange": 1
     },
     "JEB405090001": {
       "status": 200,
@@ -5930,9 +5930,9 @@
     },
     "JEB405091001": {
       "status": 200,
-      "vehicles": 0,
-      "withStopSequence": 0,
-      "sequenceInRange": 0
+      "vehicles": 1,
+      "withStopSequence": 1,
+      "sequenceInRange": 1
     },
     "JEB405091002": {
       "status": 200,
