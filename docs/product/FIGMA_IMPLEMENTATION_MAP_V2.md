@@ -5,13 +5,14 @@ File: `TAPSO — Product / Marketing Design System`, key `kkx04GvqOzHje7Dw5ikO9X
 | Figma page | Node | Contents |
 |---|---|---|
 | 00 Cover / Index | `46:2` | Page map and editing rules; the Handoff boards (`13:2` reality labels and rules, `162:2` this table, condensed) |
-| 02F iOS Ride V2 | `152:2` | V2 components (below) |
+| 02F iOS Ride V2 | `152:2` | V2 components (below), plus the V3 additions `RideAgainRow / V3` (`295:6024`) and `돌이 RailMarker / V3` (`295:1109`) |
 | 02G iOS Product V3 | `212:2` | V3 components: `ReturnTripRow / V3` (`212:123`), `RescueOption / V3` (`212:139`), `ReturnCountdown / Lock Screen V3` (`212:162`), `ReturnCountdown / Island V3` (`212:193`) |
-| 03 iOS — GO › iOS — GO · Product V2 + V3 | `205:3310` | Home to the rider's confirmation: V2 01–09 with Dark · 02, Dark · 08 and EN · 02, and the map hand-off V3 20–24 |
+| 03 iOS — GO › iOS — GO · Product V2 + V3 | `205:3310` | Home to the rider's confirmation: V2 01–09 with Dark · 02, Dark · 08 and EN · 02, and the map hand-off V3 20–24. The current Home is `V3 / 02 Home · returning rider` light `296:527`, dark `297:598`, EN `297:656`; the V2 02 boards are history |
 | 04 iOS — RIDE › iOS — RIDE · Product V2 | `157:10` | The ride: V2 10–19 with their dark, EN and SE 375 variants |
 | 05 Live Activity · Dynamic Island | `160:1208` | One row per ride moment: compact, minimal, expanded, Lock Screen |
 | 05B · Dynamic Island Coexistence V3 | page `275:2` | V3 proposal awaiting Human Review Gate A (`TAPSO_V1_RELEASE_CLOSURE.md` §5): sections `00 Evidence` `275:3` … `11 Implementation Comparison` `275:25`; V3 component sets on `02 Components` `275:7`: `RideStateSymbol` `276:32`, `RemainingStopsIndicator` `276:41`, `TrustQualifier` `276:57`, `DynamicIslandMinimal` `276:93`, `DynamicIslandCompactLeading` `276:164`, `DynamicIslandCompactTrailing` `276:204`, `DynamicIslandExpanded` `276:490`. Implemented in `Shared/LiveActivitySurfaces.swift` (`IslandMinimalStyle`, `IslandMinimal`, `IslandCompactTrailing`, `TrustQualifier`) after the owner's delegated review on 2026-10-05; the V2 row above still maps the Lock Screen and expanded layout |
-| 07 Discover, 08 Eat, 10 Passport / Share | `205:4`, `205:5`, `205:7` | Status cards only: not designed, and why |
+| 06 Roadmap · Future Workspaces | page (named `06 Roadmap · Future Workspaces`), hub `300:3` | Scope order 1–9 with status, how to start a feature, and the workspace kit: `Workspace / StatusChip` `299:15`, `Workspace / GateRow` `299:16`, `Workspace / Slot` `299:22`, `Workspace / FlowStep` `299:33`. Transfer (3) and Mystery (9) start here until they have a page |
+| 07 Discover, 08 Eat, 10 Passport / Share | pages `205:4`, `205:5`, `205:7`; workspaces `306:2`, `307:87`, `307:182` | Each page keeps its status card (why it is not designed) and now has a **wireframe** workspace beside it: brief, data gates, Home entry slot, flow skeleton handing off to existing screens, component inbox, decision log. No screen is designed; the "do not draw until the data exists" rule stands |
 | 09 Return / Rescue › Return / Rescue · Product V3 | `193:2956` | V3 25–27: the way back, rescue past your stop, the countdown |
 | 11 Marketing Web | `3:4` | The marketing site V3 as built, four widths (`218:2`, below); the V2 board `165:54` is on `13 Archive` |
 | 12 Prototype | `205:8` | Clickable flows A (map hand-off → ride), B (confirmation → island → arrival), D (passed stop → rescue), built from labelled copies |
