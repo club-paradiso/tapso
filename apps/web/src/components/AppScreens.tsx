@@ -51,14 +51,15 @@ function SearchScreen() {
         <span className="app-chip">{stopName(20)}</span>
         <span className="app-chip">{stopName(34)}</span>
       </div>
-      <p className="app-section-label">{IOS_COPY["home.recentJourney"]}</p>
+      <p className="app-section-label">{IOS_COPY["home.rideAgain"]}</p>
       <div className="app-recent">
         <RouteBadge number={DEMO_ROUTE.number} role="active" />
         <span>
+          <small>{IOS_COPY["home.rideAgain.latest"]}</small>
           <b>{DESTINATION_STOP}</b>
           <small>{t("favorite.from", BOARDING_STOP)}</small>
         </span>
-        <span className="app-recent-again">{IOS_COPY["home.rideAgain"]}</span>
+        <span className="app-recent-again" aria-hidden="true">→</span>
       </div>
       <div className="app-import">
         <b>{IOS_COPY["home.mapImport.title"]}</b>
