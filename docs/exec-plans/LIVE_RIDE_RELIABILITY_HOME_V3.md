@@ -318,6 +318,20 @@ Recommendation: **READY_FOR_MORE_DEVICE_TESTING**. `HYBRID_TRACKING: KEEP_OFF` �
 
 Each milestone is its own commit; revert in reverse order. The server change is one line of stale-date arithmetic (`liveActivityContent.ts`) with no stored state. No schema, data or protected-file change; `JejuStopCrosswalk` untouched; no feature flag changed.
 
+## 18a. Server region (2026-10-12)
+
+Measured from Korea against production on `iad1`, server time only (first byte − request sent), median of 10:
+
+| Request | iad1 |
+|---|---|
+| `/health` (no I/O) | 264 ms |
+| `GET /v1/sessions/<unknown>` (one Upstash read) | 455 ms → one Redis call ≈ 190 ms |
+| `/v1/vehicles` (edge-cached) | 63 ms |
+
+A Redis call costing ~190 ms from iad1 means the Upstash database is not in US East; every live read paid the Pacific twice for the client and again for Redis. `services/api/vercel.json` now pins `regions: ["icn1"]`.
+
+**After the move: PENDING.** Not yet measured; this PR is unmerged and production still runs on iad1. Once it deploys, the same probe (server time = first byte − request sent, median of 10, same three requests) is run against `icn1` and the numbers are recorded here. If the session read is slower than 455 ms, the move is reverted.
+
 ## 18b. Figma (2026-10-13)
 
 File `kkx04GvqOzHje7Dw5ikO9X`:
