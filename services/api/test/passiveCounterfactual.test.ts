@@ -109,6 +109,13 @@ function runA(): CounterfactualRun {
   return sharedRunA;
 }
 
+let sharedLive: CounterfactualRun | undefined;
+/** The whole catalogue over every generated case of the live-labelled stand-in, once. */
+function runLiveStandIn(): CounterfactualRun {
+  sharedLive ??= runCounterfactuals([liveStandIn()]);
+  return sharedLive;
+}
+
 function evaluationsOf(run: CounterfactualRun, id: string) {
   return (run.evaluations ?? []).filter((evaluation) => evaluation.counterfactualId === id);
 }
@@ -155,7 +162,7 @@ const FAMILY_CHECKS: Partial<Record<CounterfactualFamily, (rows: CounterfactualR
     assert.ok(rows[0]!.correct > 0);
   },
   decoys_absent: (rows) => assert.ok(rows[0]!.correct > 0),
-  late_appearance: (rows) => assert.ok(rows[0]!.correct > 0),
+  late_appearance: (rows) => assert.ok(row(rows, "late_appearance_s_minus_2").correct > 0),
   candidate_disappearance: (rows) => assert.ok(rows[0]!.correct > 0),
   lost_leader: (rows) => {
     for (const item of rows) assert.equal(item.selectionsOfInjected, 0, `${item.id}: the follower is never picked while the leader may be ahead of it`);
@@ -228,7 +235,7 @@ test("counterfactual ids are unique, stable and documented, over at least 30 fam
     "follower_overtaking",
     "leader_ahead_k1", "leader_ahead_k2", "leader_ahead_k3", "leader_ahead_k4", "leader_ahead_k5", "leader_ahead_k10",
     "boarding_stop_dwell_60s", "boarding_stop_dwell_120s",
-    "true_bus_absent", "decoys_absent", "late_appearance_s_minus_2", "candidate_disappearance_60s",
+    "true_bus_absent", "decoys_absent", "late_appearance_s_minus_1", "late_appearance_s_minus_2", "late_appearance_s_minus_3", "candidate_disappearance_60s",
     "lost_leader_follower_k3_180s", "lost_leader_follower_k3_360s", "reappearance_60s", "reappearance_100s",
     "stale_repeated_frames_60s", "coordinate_freeze", "content_freeze_from_60s_before_boarding",
     "receipt_jitter_10s", "receipt_jitter_20s", "receipt_jitter_40s", "packet_loss_20pct", "packet_loss_50pct",
@@ -506,7 +513,7 @@ test("a counterfactual of a LIVE_PASSIVE case is SYNTHETIC_OR_PERTURBED, labelle
 test("gate evidence exists only for a complete run over live bases under the production matcher", () => {
   assert.equal(counterfactualGateEvidence(runA().report), undefined, "synthetic bases are never gate evidence");
   // The whole catalogue over every generated case of a live-labelled stand-in.
-  const live = runCounterfactuals([liveStandIn()]);
+  const live = runLiveStandIn();
   const evidence = counterfactualGateEvidence(live.report);
   assert.ok(evidence);
   assert.equal(evidence.sourceClass, "SYNTHETIC_OR_PERTURBED");
@@ -534,6 +541,36 @@ test("gate evidence exists only for a complete run over live bases under the pro
   for (const run of partial) assert.equal(counterfactualGateEvidence(run.report), undefined, JSON.stringify(run.report.restrictions));
   assert.equal(partial[1]!.report.restrictions.caseFilter, true);
   assert.equal(partial[2]!.report.baseCases.capped, true);
+});
+
+test("late appearance at s-1, s-2 and s-3 is applied, judged and counted in the CA-5 gate evidence (issue #74)", () => {
+  const ids = ["late_appearance_s_minus_1", "late_appearance_s_minus_2", "late_appearance_s_minus_3"];
+  const live = runLiveStandIn();
+  const evidence = counterfactualGateEvidence(live.report);
+  assert.ok(evidence);
+  for (const id of ids) {
+    const item = row(live.report.counterfactuals, id);
+    assert.equal(item.family, "late_appearance");
+    assert.ok(item.applicable > 0 && item.exercised > 0, `${id} applied ${item.applicable}, exercised ${item.exercised}`);
+  }
+  // CA-5 reads the run's totals, and the totals are every row's failures: none is left out.
+  const sum = (rows: CounterfactualRow[]) => rows.reduce((total, item) => total + item.expectationFailures.count, 0);
+  assert.equal(live.report.totals.expectationFailures, sum(live.report.counterfactuals));
+  assert.equal(evidence.expectationFailures, live.report.totals.expectationFailures);
+  assert.equal(evidence.wrongAgainstRederivedTruth, live.report.counterfactuals.reduce((total, item) => total + item.wrong, 0));
+
+  // Teeth: the legacy symmetric matcher fails s-1 and s-3 here, and those
+  // failures land in the totals (never gate evidence: a custom matcher is a restriction).
+  const legacy = runCounterfactuals([liveStandIn()], {
+    counterfactuals: pick(...ids),
+    matcher: matchVehicleLegacySymmetricV0,
+    matcherPolicy: LEGACY_MATCHER_POLICY_VERSION,
+  });
+  assert.equal(counterfactualGateEvidence(legacy.report), undefined);
+  for (const id of ["late_appearance_s_minus_1", "late_appearance_s_minus_3"]) {
+    assert.ok(row(legacy.report.counterfactuals, id).expectationFailures.count > 0, `${id} has no teeth against the legacy matcher`);
+  }
+  assert.equal(legacy.report.totals.expectationFailures, sum(legacy.report.counterfactuals));
 });
 
 /* -------------------------------------------------------------- teeth */

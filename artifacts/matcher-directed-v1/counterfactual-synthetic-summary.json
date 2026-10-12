@@ -14,10 +14,10 @@
       "families": 33,
       "familiesExercised": 33,
       "totals": {
-        "applicable": 8040,
-        "correct": 4970,
+        "applicable": 8315,
+        "correct": 5224,
         "wrong": 0,
-        "abstain": 2057,
+        "abstain": 2078,
         "groundTruthIndeterminate": 901,
         "invariantViolations": 0,
         "matcherInvariantErrors": 0,
@@ -379,6 +379,22 @@
           "expectationFailures": 0
         },
         {
+          "id": "late_appearance_s_minus_1",
+          "family": "late_appearance",
+          "expectations": [
+            "NOT_WRONG",
+            "NO_INVARIANT_VIOLATION"
+          ],
+          "applicable": 157,
+          "exercised": 157,
+          "correct": 146,
+          "wrong": 0,
+          "abstain": 11,
+          "groundTruthIndeterminate": 0,
+          "invariantViolations": 0,
+          "expectationFailures": 0
+        },
+        {
           "id": "late_appearance_s_minus_2",
           "family": "late_appearance",
           "expectations": [
@@ -390,6 +406,22 @@
           "correct": 126,
           "wrong": 0,
           "abstain": 11,
+          "groundTruthIndeterminate": 0,
+          "invariantViolations": 0,
+          "expectationFailures": 0
+        },
+        {
+          "id": "late_appearance_s_minus_3",
+          "family": "late_appearance",
+          "expectations": [
+            "NOT_WRONG",
+            "NO_INVARIANT_VIOLATION"
+          ],
+          "applicable": 118,
+          "exercised": 118,
+          "correct": 108,
+          "wrong": 0,
+          "abstain": 10,
           "groundTruthIndeterminate": 0,
           "invariantViolations": 0,
           "expectationFailures": 0
@@ -901,10 +933,10 @@
       "families": 33,
       "familiesExercised": 33,
       "totals": {
-        "applicable": 26160,
-        "correct": 8373,
+        "applicable": 27061,
+        "correct": 8557,
         "wrong": 0,
-        "abstain": 13196,
+        "abstain": 13913,
         "groundTruthIndeterminate": 4330,
         "invariantViolations": 0,
         "matcherInvariantErrors": 0,
@@ -1266,6 +1298,22 @@
           "expectationFailures": 0
         },
         {
+          "id": "late_appearance_s_minus_1",
+          "family": "late_appearance",
+          "expectations": [
+            "NOT_WRONG",
+            "NO_INVARIANT_VIOLATION"
+          ],
+          "applicable": 512,
+          "exercised": 512,
+          "correct": 15,
+          "wrong": 0,
+          "abstain": 497,
+          "groundTruthIndeterminate": 0,
+          "invariantViolations": 0,
+          "expectationFailures": 0
+        },
+        {
           "id": "late_appearance_s_minus_2",
           "family": "late_appearance",
           "expectations": [
@@ -1277,6 +1325,22 @@
           "correct": 111,
           "wrong": 0,
           "abstain": 338,
+          "groundTruthIndeterminate": 0,
+          "invariantViolations": 0,
+          "expectationFailures": 0
+        },
+        {
+          "id": "late_appearance_s_minus_3",
+          "family": "late_appearance",
+          "expectations": [
+            "NOT_WRONG",
+            "NO_INVARIANT_VIOLATION"
+          ],
+          "applicable": 389,
+          "exercised": 389,
+          "correct": 169,
+          "wrong": 0,
+          "abstain": 220,
           "groundTruthIndeterminate": 0,
           "invariantViolations": 0,
           "expectationFailures": 0

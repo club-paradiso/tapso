@@ -173,6 +173,13 @@ jobs:
               --expect-summary=${{ steps.req.outputs.expectSummary }} \
               --expect-ledger=${{ steps.req.outputs.expectLedger }} || status=$?
             if [ "${status:-0}" -ne 0 ] && [ "${status:-0}" -ne 5 ]; then exit "$status"; fi
+            # Exit 5 (blockers: a new wrong commit or a correct->wrong regression)
+            # does not fail this job, by design, but it is never silent: a green
+            # run is not a domain-quality pass (issue #74).
+            if [ "${status:-0}" -eq 5 ]; then
+              echo "::warning title=migration blockers::migrate.ts run $n exited 5: blockers present (new wrong commit or correct->wrong); see migration-summary.json blockers"
+              echo "- migrate.ts run $n exited 5: blockers present (new wrong commit or correct->wrong regression). The job stays green; this is not a domain-quality pass." >> "$GITHUB_STEP_SUMMARY"
+            fi
           done
           a="$(cat work/evidence/run-1/migration-*.json | sha256sum)"; b="$(cat work/evidence/run-2/migration-*.json | sha256sum)"
           echo "run 1: $a"; echo "run 2: $b"
@@ -281,7 +288,16 @@ jobs:
           dir="$(cat collection-dir.txt)"
           node --experimental-strip-types scripts/passive-shadow/evaluate.ts "$dir" \
             --summary=work/evidence/current-policy-summary.json --sensitive-out=work/sensitive
-          node --experimental-strip-types scripts/passive-shadow/migrate.ts "$dir" --out-dir=work/evidence || [ $? -eq 5 ]
+          # Exit 5 (blockers: a new wrong commit or a correct->wrong regression)
+          # does not fail this job, by design, but it is never silent: a green
+          # run is not a domain-quality pass (issue #74).
+          status=0
+          node --experimental-strip-types scripts/passive-shadow/migrate.ts "$dir" --out-dir=work/evidence || status=$?
+          if [ "$status" -ne 0 ] && [ "$status" -ne 5 ]; then exit "$status"; fi
+          if [ "$status" -eq 5 ]; then
+            echo "::warning title=migration blockers::migrate.ts exited 5: blockers present (new wrong commit or correct->wrong); see migration-summary.json blockers"
+            echo "- migrate.ts exited 5: blockers present (new wrong commit or correct->wrong regression). The job stays green; this is not a domain-quality pass." >> "$GITHUB_STEP_SUMMARY"
+          fi
           node --experimental-strip-types scripts/passive-shadow/counterfactual.ts "$dir" --out=work/evidence/counterfactual-summary.json
           node -e 'const s=require(process.argv[1]); const {rows, ...rest}=s; console.log(JSON.stringify({named: rest.named, invariant: rest.invariant, blockers: rest.blockers}, null, 2))' "$(pwd)/work/evidence/migration-summary.json"
       - uses: actions/upload-artifact@v4
@@ -449,6 +465,8 @@ jobs:
             cmp work/gate/run-1/counterfactual-live-evidence.json work/gate/run-2/counterfactual-live-evidence.json
           fi
           # Fresh evidence that no longer supports the readiness the code claims turns this run red.
+          # A FAIL above the awarded level (CA-5 in run 36871560482) does not; gate.ts
+          # prints it as a ::warning and writes every criterion to the step summary.
           node --experimental-strip-types scripts/matcher-evidence/gate.ts --fail-below-claim \
             --live-replay=work/gate/run-1/live-replay-evidence.json --counterfactual-live=work/gate/run-1/counterfactual-live-evidence.json \
             --out=work/gate/gate-result.json
