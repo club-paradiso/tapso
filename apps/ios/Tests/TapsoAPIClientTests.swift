@@ -11,6 +11,11 @@ import XCTest
 final class TapsoAPIClientTests: XCTestCase {
     // Every test starts with `StubURLProtocol.respond` or `.fail`, which also clears what earlier tests recorded.
 
+    override func setUp() async throws {
+        try await super.setUp()
+        StubURLProtocol.beginTest()
+    }
+
     // MARK: Client
 
     func testRoutesAsksTheTapsoAPIForEveryVariantOfANumber() async throws {
@@ -571,9 +576,7 @@ final class TapsoAPIClientTests: XCTestCase {
     // MARK: Helpers
 
     private func makeClient() -> TapsoAPIClient {
-        let configuration = URLSessionConfiguration.ephemeral
-        configuration.protocolClasses = [StubURLProtocol.self]
-        return TapsoAPIClient(session: URLSession(configuration: configuration))
+        TapsoAPIClient(session: URLSession(configuration: StubURLProtocol.configuration()))
     }
 
     private func makeModel() -> TapsoAppModel {
@@ -648,9 +651,7 @@ extension TapsoAPIClient {
     /// A client whose every request `StubURLProtocol` answers in-process. The only place besides
     /// `TapsoAPIClient` that may name the networking types (`crossLanguageAuthority.test.ts`).
     static func stubbed() -> TapsoAPIClient {
-        let configuration = URLSessionConfiguration.ephemeral
-        configuration.protocolClasses = [StubURLProtocol.self]
-        return TapsoAPIClient(session: URLSession(configuration: configuration))
+        TapsoAPIClient(session: URLSession(configuration: StubURLProtocol.configuration()))
     }
 }
 
@@ -674,7 +675,32 @@ final class StubURLProtocol: URLProtocol {
     nonisolated(unsafe) private static var failure: URLError?
     nonisolated(unsafe) private(set) static var recorded: [URLRequest] = []
     nonisolated(unsafe) private(set) static var bodies: [Data] = []
+    /// Which test a client belongs to. A ride model keeps polling on its own task, so a model
+    /// left over from an earlier test can still send a read while a later test is running; that
+    /// read must not be recorded as the later test's request.
+    nonisolated(unsafe) private static var generation = 0
     private static let lock = NSLock()
+    private static let generationHeader = "X-Tapso-Stub-Generation"
+
+    /// Starts a test: every client made from here on belongs to it, and requests from clients
+    /// made by earlier tests fail as cancelled without being recorded.
+    static func beginTest() {
+        lock.withLock {
+            generation += 1
+            handler = nil
+            failure = nil
+            recorded = []
+            bodies = []
+        }
+    }
+
+    /// A session whose requests this stub answers, tagged with the running test.
+    static func configuration() -> URLSessionConfiguration {
+        let configuration = URLSessionConfiguration.ephemeral
+        configuration.protocolClasses = [StubURLProtocol.self]
+        configuration.httpAdditionalHeaders = [generationHeader: String(lock.withLock { generation })]
+        return configuration
+    }
 
     /// Answers every request with `handler`, forgetting what earlier tests recorded.
     /// The handler runs on URLSession's loading thread, never the main actor, so it is
@@ -703,10 +729,17 @@ final class StubURLProtocol: URLProtocol {
 
     override func startLoading() {
         let body = Self.readBody(of: request)
-        let (handler, failure) = Self.lock.withLock { () -> ((@Sendable (URLRequest) -> (Int, Data))?, URLError?) in
+        let tag = request.value(forHTTPHeaderField: Self.generationHeader).flatMap(Int.init)
+        let (stale, handler, failure) = Self.lock.withLock { () -> (Bool, (@Sendable (URLRequest) -> (Int, Data))?, URLError?) in
+            // An untagged request is treated as the running test's, as before tagging existed.
+            if let tag, tag != Self.generation { return (true, nil, nil) }
             Self.recorded.append(request)
             if let body { Self.bodies.append(body) }
-            return (Self.handler, Self.failure)
+            return (false, Self.handler, Self.failure)
+        }
+        if stale {
+            client?.urlProtocol(self, didFailWithError: URLError(.cancelled))
+            return
         }
         if let failure {
             client?.urlProtocol(self, didFailWithError: failure)
