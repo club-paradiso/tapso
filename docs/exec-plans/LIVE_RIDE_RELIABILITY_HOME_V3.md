@@ -272,7 +272,53 @@ Deliberately absent: the intent picker (바다/숲/카페/…), any recommendati
 
 Apple's documentation (fetched 2026-10-12): `NSSupportsLiveActivitiesFrequentUpdates` "enable[s] your Live Activities to receive frequent updates with **remote push notifications**"; push updates have an hourly budget, priority 5 does not count against it. It does not govern updates made by the running app. TAPSO updates locally (push is disabled), so the key is not added; reconsider with APNs, where priority 5 for unchanged-progress refreshes and 10 for milestones is the documented pattern.
 
-## 14. Progress log
+## 14. Red team (fixed in this branch)
+
+- **Generation reset on loop restart** (found reviewing my own change): a new `RideReadScheduler` restarted at generation 0, so after any mid-ride loop restart every answer looked older than the one on screen and was dropped — a silent freeze. Generations now continue (`RideReadScheduler(continuingFrom:)`, test `testARestartedLoopKeepsOrderingAnswers`).
+- **Double loop at launch**: the scene's first `active` and `resumeIfNeeded` each started a loop; the second cancelled the first mid-read. Relaunch now joins the running loop.
+- **Mid-ride setup copy**: a retried store hiccup would have shown "실시간 승차는 준비 중이에요 … 다시 시도해 주세요".
+- **Rail at an unknown count** drew 돌이 at the destination (unreachable today; fixed).
+- **Stale 돌이 breathing** (observed live in the simulator).
+- Checked and unchanged: network loss during a read (retry, last progress kept, offline flag), foreground during a read (queued), refresh spam (coalesced), stale answer last (dropped), repeated identical observation (server cadence → `unchanged`; client keeps evidence age), 12 → 10 (one slide), Reduce Motion (no motion anywhere), long English strings and AX3 Home (snapshots), many favourites (search stays first), no recent journeys (first-ride layout).
+- Not attacked here, `DEVICE_REQUIRED`: push-token rotation and APNs (blocked), GPS multipath and loops (Hybrid off), Low Power Mode, permission changed mid-ride on a real ride, force quit.
+
+## 15. Physical-device matrix
+
+Device: iPhone 15, iOS 26.6.1. This session had no rider on a bus and no view of the phone's screen (iPhone Mirroring was declined earlier), so every ride row is `NOT_TESTED`. Nothing below is inferred from tests.
+
+| # | Case | Result |
+|---|---|---|
+| — | Debug build `9c4d4c7`+ installs and launches on the iPhone | see §16 |
+| A–E | cellular ride; screen on; locked; background; foreground return | NOT_TESTED |
+| F–G | airplane mode; reconnect | NOT_TESTED |
+| H–I | refresh spam; refresh during a read | NOT_TESTED (deterministic tests pass) |
+| J–K | repeated identical observation; 12 → 10 | NOT_TESTED |
+| L | 4 → 3 → 2 → 1 → 0 | NOT_TESTED |
+| M–N | Precise Location off; location denied | NOT_TESTED |
+| O–P | Reduce Motion; Low Power Mode | NOT_TESTED |
+| Q–R | island compact; expanded | NOT_TESTED (snapshots only) |
+| S–U | lock/unlock; relaunch; force quit | NOT_TESTED |
+| V–W | 돌이 app motion; rail progression | NOT_TESTED on device (simulator + hosted tests) |
+| X–Y | reservation handoff; opposite-side stop | NOT_TESTED (unchanged from #130) |
+| Z | Hybrid with a far confirmed bus | NOT_TESTED |
+
+How to run it: Debug build, start a live ride, tap **Bus passed a stop now** at each physical stop passage, lock/unlock and toggle airplane mode as the matrix says, then export the trace (ride menu → Ride trace) and screen-record the Lock Screen for the visible-update times.
+
+## 16. Energy
+
+Not measured (no device session with Xcode Energy Log). By construction: 돌이 redraws only its own ≤ 34 pt view at 24 fps (was 30) and not at all in stale states; the rail animates only on a count change; polling cadence is unchanged except that it no longer drifts longer (start-to-start), which slightly *raises* the read count — by at most one read per ~6 at 15 s with a 3 s read; foreground/network-restored reads are bounded by the 2 s gap and shared by the server within 5 s. KeepAlive and the sampler are unchanged.
+
+## 17. Release gates and recommendation
+
+Green CI is not enough (§15 is all `NOT_TESTED`). Required before release: physical evidence for foreground progression, foreground return, disconnect/reconnect, background with KeepAlive, lock/unlock, island, 돌이 motion, rail marker, 3 → 2 → 1 → 0, reservation handoff, approximate and denied location.
+
+Recommendation: **READY_FOR_MORE_DEVICE_TESTING**. `HYBRID_TRACKING: KEEP_OFF` — no Hybrid field sample exists, so the zero-false-early gate has no evidence.
+
+## 18. Rollback
+
+Each milestone is its own commit; revert in reverse order. The server change is one line of stale-date arithmetic (`liveActivityContent.ts`) with no stored state. No schema, data or protected-file change; `JejuStopCrosswalk` untouched; no feature flag changed.
+
+## 19. Progress log
 
 - 2026-10-07: audit, baseline, reliability core (`8fa7f72`), server stale date + ground-truth mark (`7668530`), 돌이 (`b214423`, `a517c64`), Home (`07585ae`).
 - 2026-10-07: disk ran out mid-test (0 bytes; even the shell's output file failed). The owner approved deleting the Codex cache, Playwright browsers and simulator data (7.6 GB freed).
