@@ -22,11 +22,11 @@ final class HybridRideReconcileTests: XCTestCase {
     }
 
     func testABackgroundRideStillReadsOfficialProgressWithoutSampling() async throws {
-        let ride = try await makeHybridRide()
+        let ride = try await makeHybridRide(readsInBackground: true) // `RideKeepAlive` running
         defer { ride.clock.fire() }
         StubURLProtocol.respond { [body = session(ride, sequence: ride.boarding + 1, evidenceAt: Date())] _ in (200, body) }
-        await ride.model.rideSceneChanged(isActive: false) // locked, `RideKeepAlive` running
-        await ride.model.recheckRidePosition()
+        await ride.model.rideSceneChanged(isActive: false) // locked
+        await ride.model.recheckRidePosition() // returns once a read that began after it has ended
 
         XCTAssertTrue(StubURLProtocol.recorded.contains { $0.url?.path == "/v1/sessions/synthetic-session" },
                       "the background read happens")
@@ -52,13 +52,13 @@ final class HybridRideReconcileTests: XCTestCase {
             gate.wait()
             return (200, body)
         }
-        let reconcile = Task { await ride.model.rideSceneChanged(isActive: true) }
-        for _ in 0..<200 where ride.fake.startCount == 0 { await Task.yield() }
+        await ride.model.rideSceneChanged(isActive: true) // asks the ride's loop for a read now
+        try await waitUntil { ride.fake.startCount > 0 }
         XCTAssertEqual(ride.fake.startCount, 1, "the foreground reconcile samples")
         ride.sampler.receive([RideLocationSamplerTests.fix(accuracy: 9)]) // the fix arrives first
         await ride.model.rideSceneChanged(isActive: false) // then the rider locks the phone
         gate.signal() // and only then does the official read return
-        await reconcile.value
+        try await waitUntil { ride.model.activeRide?.hybridPosition != nil }
 
         let position = try XCTUnwrap(ride.model.activeRide?.hybridPosition)
         XCTAssertEqual(position.state, .live, "official progress still applies")
@@ -75,14 +75,14 @@ final class HybridRideReconcileTests: XCTestCase {
         let ahead = ride.boarding + 2
         let behind = ride.boarding + 1
         StubURLProtocol.respond { [body = session(ride, sequence: ahead, evidenceAt: Date())] _ in (200, body) }
-        await ride.model.rideSceneChanged(isActive: true)
+        await ride.model.recheckRidePosition()
         XCTAssertEqual(ride.model.activeRide?.hybridPosition?.currentStopSequence, ahead)
         XCTAssertEqual(ride.model.currentStopName, name(ride, ahead))
 
         // A newer official read one stop back: the engine flags it and keeps its own count.
         try await Task.sleep(for: .milliseconds(5))
         StubURLProtocol.respond { [body = session(ride, sequence: behind, evidenceAt: Date())] _ in (200, body) }
-        await ride.model.rideSceneChanged(isActive: true)
+        await ride.model.recheckRidePosition()
         let position = try XCTUnwrap(ride.model.activeRide?.hybridPosition)
         XCTAssertEqual(position.state, .lost)
         XCTAssertEqual(position.reason, "official_backward_conflict")
@@ -107,7 +107,7 @@ final class HybridRideReconcileTests: XCTestCase {
         defer { ride.clock.fire() }
         let accepted = ride.boarding + 1
         StubURLProtocol.respond { [body = session(ride, sequence: accepted, evidenceAt: Date())] _ in (200, body) }
-        await ride.model.rideSceneChanged(isActive: true)
+        await ride.model.recheckRidePosition()
         XCTAssertEqual(ride.model.activeRide?.hybridPosition?.state, .live)
 
         // Four stops ahead a few milliseconds later, and then the same read for another bus.
@@ -115,7 +115,7 @@ final class HybridRideReconcileTests: XCTestCase {
         for (vehicle, reason) in [("synthetic-bus", "official_implausible_jump"), ("synthetic-other-bus", "vehicle_identity_conflict")] {
             try await Task.sleep(for: .milliseconds(5))
             StubURLProtocol.respond { [body = session(ride, sequence: ahead, evidenceAt: Date(), vehicle: vehicle)] _ in (200, body) }
-            await ride.model.rideSceneChanged(isActive: true)
+            await ride.model.recheckRidePosition()
             let position = try XCTUnwrap(ride.model.activeRide?.hybridPosition)
             XCTAssertEqual(position.state, .lost, reason)
             XCTAssertEqual(position.reason, reason)
@@ -132,7 +132,7 @@ final class HybridRideReconcileTests: XCTestCase {
     // MARK: Helpers
 
     /// A hybrid live ride on the synthetic demo route, saved and reopened with the fakes.
-    private func makeHybridRide(status: CLAuthorizationStatus = .authorizedWhenInUse) async throws -> Ride {
+    private func makeHybridRide(status: CLAuthorizationStatus = .authorizedWhenInUse, readsInBackground: Bool = false) async throws -> Ride {
         let defaults = try XCTUnwrap(UserDefaults(suiteName: "tapso.tests.\(UUID().uuidString)"))
         let demo = TapsoAppModel(store: JourneyStore(defaults: defaults), liveActivity: nil)
         demo.speed = .manual
@@ -158,11 +158,21 @@ final class HybridRideReconcileTests: XCTestCase {
         fake.authorizationStatus = status
         let clock = ManualClock()
         let sampler = RideLocationSampler(manager: fake, sleep: clock.sleep)
-        let model = TapsoAppModel(store: store, liveActivity: nil, api: .stubbed(), locationSampler: sampler)
+        let model = TapsoAppModel(store: store, liveActivity: nil, api: .stubbed(), locationSampler: sampler,
+                                  readsInBackground: { readsInBackground })
         XCTAssertTrue(model.hybridTrackingEnabled)
         XCTAssertTrue(model.isLiveRide)
         return Ride(model: model, sampler: sampler, fake: fake, clock: clock, route: route,
                     boarding: boarding.sequence, destination: destination.sequence)
+    }
+
+    /// The ride's reads run on its own loop; waits (up to 5 s) for what one produces.
+    private func waitUntil(_ condition: () -> Bool, file: StaticString = #filePath, line: UInt = #line) async throws {
+        for _ in 0..<100 {
+            if condition() { return }
+            try await Task.sleep(for: .milliseconds(50))
+        }
+        XCTFail("condition not met within 5 s", file: file, line: line)
     }
 
     private func name(_ ride: Ride, _ sequence: Int) -> String? {

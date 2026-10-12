@@ -386,6 +386,10 @@ final class TapsoAppModel {
     private(set) var rideTrace = RideTrace()
     #endif
     @ObservationIgnored private let locationSampler: RideLocationSampler
+    /// Tests only: stands in for `RideKeepAlive.isRunning`, which a test host cannot start.
+    @ObservationIgnored private let readsInBackgroundOverride: (@MainActor () -> Bool)?
+    /// Whether the loop may read while the ride is off screen: only while `RideKeepAlive` keeps TAPSO running.
+    private var readsInBackground: Bool { readsInBackgroundOverride?() ?? rideKeepAlive.isRunning }
     @ObservationIgnored private var hybridEngine: HybridPositionEngine?
     @ObservationIgnored private var hybridSessionID: String?
     @ObservationIgnored private var readInFlight = false
@@ -415,10 +419,12 @@ final class TapsoAppModel {
         screenshotImporter: ScreenshotRouteImporter? = nil,
         originalEraser: (any ScreenshotOriginalEraser)? = nil,
         catalogFile: TransitCatalogFile? = nil,
-        locationSampler: RideLocationSampler? = nil
+        locationSampler: RideLocationSampler? = nil,
+        readsInBackground: (@MainActor () -> Bool)? = nil
     ) {
         self.store = store
         self.locationSampler = locationSampler ?? RideLocationSampler()
+        self.readsInBackgroundOverride = readsInBackground
         self.catalogFile = catalogFile ?? .standard
         self.liveActivity = liveActivity
         self.returnReminders = returnReminders
@@ -1725,7 +1731,7 @@ final class TapsoAppModel {
                 guard !Task.isCancelled else { return }
                 self.ageSilentRide()
                 // In the background only while the rider asked TAPSO to keep going (`RideKeepAlive`).
-                guard self.rideInForeground || self.rideKeepAlive.isRunning else {
+                guard self.rideInForeground || self.readsInBackground else {
                     await self.pollWaker.sleep(seconds: interval)
                     continue
                 }
