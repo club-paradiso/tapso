@@ -330,7 +330,15 @@ Measured from Korea against production on `iad1`, server time only (first byte �
 
 A Redis call costing ~190 ms from iad1 means the Upstash database is not in US East; every live read paid the Pacific twice for the client and again for Redis. `services/api/vercel.json` now pins `regions: ["icn1"]`.
 
-**After the move: PENDING.** Not yet measured; this PR is unmerged and production still runs on iad1. Once it deploys, the same probe (server time = first byte − request sent, median of 10, same three requests) is run against `icn1` and the numbers are recorded here. If the session read is slower than 455 ms, the move is reverted.
+**After the move (2026-10-13, production `e309efc` on `icn1`, same probe):**
+
+| Request | iad1 | icn1 |
+|---|---|---|
+| `/health` (no I/O) | 264 ms | 55 ms |
+| `GET /v1/sessions/<unknown>` (one Upstash read) | 455 ms | 221 ms |
+| `/v1/vehicles` (edge-cached) | 63 ms | 25 ms |
+
+Kept: a live read's server time fell by ~230 ms. Still open: one Redis call costs ~166 ms from icn1 (221 − 55), so the Upstash database is not beside Seoul either, or every REST call pays a fresh connection. Next step: read the database region in the Upstash console (owner) and, if it is not `ap-northeast`, move it or add a read replica near Seoul; separately check whether the client reuses its HTTPS connection.
 
 ## 18b. Figma (2026-10-13)
 
