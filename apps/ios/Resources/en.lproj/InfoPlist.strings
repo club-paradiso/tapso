@@ -1,0 +1,4 @@
+/* iOS permission prompts (Info.plist keys), localized. `project.yml` holds the Korean fallback. */
+"NSLocationWhenInUseUsageDescription" = "TAPSO follows the bus without your location. If you allow it, your iPhone uses it on the device only: to check your position during a ride, to notice when you near a stop you set an alert for, and to keep TAPSO running when “Keep updating in the background” is on. Your location is never sent to TAPSO's server.";
+"NSLocationAlwaysAndWhenInUseUsageDescription" = "When you near a stop you set an alert for, TAPSO tells you where your bus is without opening the app. Whether you're near the stop is decided on your iPhone; your location is never sent to TAPSO's server.";
+"NSPhotoLibraryUsageDescription" = "Used only to delete a screenshot's original from Photos when you ask.";

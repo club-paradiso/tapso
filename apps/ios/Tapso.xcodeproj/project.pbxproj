@@ -7,6 +7,9 @@
 	objects = {
 
 /* Begin PBXBuildFile section */
+		12CEE7B30A7D2A23CEFD18AA /* InfoPlist.strings in Resources */ = {isa = PBXBuildFile; fileRef = 8763DF409FB7AFBBA81AE41B /* InfoPlist.strings */; };
+		A6C082602623004FBB8962F7 /* InfoPlist.strings in Resources */ = {isa = PBXBuildFile; fileRef = 8763DF409FB7AFBBA81AE41B /* InfoPlist.strings */; };
+		3E7DBE7EB2F31B0847BF5653 /* InfoPlist.strings in Resources */ = {isa = PBXBuildFile; fileRef = 8763DF409FB7AFBBA81AE41B /* InfoPlist.strings */; };
 		0680D4D7CF8A696EB6E160B8 /* TapsoLiveActivityPolicy.swift in Sources */ = {isa = PBXBuildFile; fileRef = B4DD18CE5239D89359B55287 /* TapsoLiveActivityPolicy.swift */; };
 		08FB3E51251C3A9CF62EF0E7 /* TapsoTransit in Frameworks */ = {isa = PBXBuildFile; productRef = D955D5E21D25DFC7D7609008 /* TapsoTransit */; };
 		1CF4D9AD7A50157B60FD707B /* TapsoTransit in Frameworks */ = {isa = PBXBuildFile; productRef = 07DFDA3C29C3D74240DDDBB1 /* TapsoTransit */; };
@@ -133,6 +136,8 @@
 /* End PBXCopyFilesBuildPhase section */
 
 /* Begin PBXFileReference section */
+		7BC02BE181B474930126A341 /* ko */ = {isa = PBXFileReference; lastKnownFileType = text.plist.strings; name = ko; path = ko.lproj/InfoPlist.strings; sourceTree = "<group>"; };
+		9893879DB2AB27CE93C66F4C /* en */ = {isa = PBXFileReference; lastKnownFileType = text.plist.strings; name = en; path = en.lproj/InfoPlist.strings; sourceTree = "<group>"; };
 		01434169EBED9CD788681A50 /* TapsoLiveActivityWidget.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = TapsoLiveActivityWidget.swift; sourceTree = "<group>"; };
 		185322C93CB8D33570D783DF /* Tapso.app */ = {isa = PBXFileReference; includeInIndex = 0; lastKnownFileType = wrapper.application; path = Tapso.app; sourceTree = BUILT_PRODUCTS_DIR; };
 		25F8D8F9725AF79DC9F83B2B /* Assets.xcassets */ = {isa = PBXFileReference; lastKnownFileType = folder.assetcatalog; path = Assets.xcassets; sourceTree = "<group>"; };
@@ -263,6 +268,7 @@
 			isa = PBXGroup;
 			children = (
 				25F8D8F9725AF79DC9F83B2B /* Assets.xcassets */,
+				8763DF409FB7AFBBA81AE41B /* InfoPlist.strings */,
 				2436CA0171BFA7890857165A /* Localizable.strings */,
 				F1AB819C471FE37B33ADB3E4 /* PrivacyInfo.xcprivacy */,
 			);
@@ -527,6 +533,7 @@
 			isa = PBXResourcesBuildPhase;
 			buildActionMask = 2147483647;
 			files = (
+				12CEE7B30A7D2A23CEFD18AA /* InfoPlist.strings in Resources */,
 				593B1456AA2D7A490909919B /* Assets.xcassets in Resources */,
 				C2176B27F64CF25CB4B735B1 /* Localizable.strings in Resources */,
 				901ED55A886FE33A92009E7E /* PrivacyInfo.xcprivacy in Resources */,
@@ -537,6 +544,7 @@
 			isa = PBXResourcesBuildPhase;
 			buildActionMask = 2147483647;
 			files = (
+				A6C082602623004FBB8962F7 /* InfoPlist.strings in Resources */,
 				9DF797D657D259EB1CC12E82 /* Assets.xcassets in Resources */,
 				DD911FC6501FE330D9D8A2BF /* Localizable.strings in Resources */,
 				85AEE919B98FC2B4F142ADF3 /* PrivacyInfo.xcprivacy in Resources */,
@@ -547,6 +555,7 @@
 			isa = PBXResourcesBuildPhase;
 			buildActionMask = 2147483647;
 			files = (
+				3E7DBE7EB2F31B0847BF5653 /* InfoPlist.strings in Resources */,
 				E1D9CBB280C029E1C60C756D /* Assets.xcassets in Resources */,
 				B17CE88DC78FF832C6AEE2EE /* Localizable.strings in Resources */,
 				3E5A0C71D2B94F8A6C1E0B27 /* PrivacyInfo.xcprivacy in Resources */,
@@ -692,6 +701,15 @@
 /* End PBXTargetDependency section */
 
 /* Begin PBXVariantGroup section */
+		8763DF409FB7AFBBA81AE41B /* InfoPlist.strings */ = {
+			isa = PBXVariantGroup;
+			children = (
+				9893879DB2AB27CE93C66F4C /* en */,
+				7BC02BE181B474930126A341 /* ko */,
+			);
+			name = InfoPlist.strings;
+			sourceTree = "<group>";
+		};
 		2436CA0171BFA7890857165A /* Localizable.strings */ = {
 			isa = PBXVariantGroup;
 			children = (

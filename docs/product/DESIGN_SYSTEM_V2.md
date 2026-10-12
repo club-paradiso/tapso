@@ -110,7 +110,7 @@ Motion lives in code only (Figma has no motion variables).
 | SearchField / V2 (`154:62`) | — | `SearchFieldButton` |
 | StopPair / V2 (`154:73`) | — | `StopPair` |
 | StopRow / V2 (`154:83`) | — | `StopRow` |
-| RecentJourneyCard / V2 (`154:107`) | — | `RecentJourneyCard` |
+| RecentJourneyCard / V2 (`154:107`) | — | `RideAgainRow` (V3: compact row; the card was retired from Home) |
 | BoardingContextCard / V2 (`154:125`) | — | `BoardingContextCard` |
 | StatusBanner / V2 (`154:153`) | delayed, vehicleLost, offline, checking | `StatusBanner` |
 | ConfirmationCard / V2 (`154:199`) | proposed, selectable, confirmed | `ConfirmationCard` |
@@ -140,7 +140,7 @@ The basalt companion stays, smaller: 18–36 pt on ride surfaces, one expression
 
 Off the ride (Home, the wordmark, a proposed bus to check) 돌이 is **awake**: open eyes, looking at the rider.
 
-In the app 돌이 moves (`DolBuddy(animated: true)`, timings in `DolMotion`): open eyes blink every 4.2 s with a double blink every third time, checking glances side to side, resting eyes peek open for a second every 7 s ("still watching"), arrival hops, and the pebble breathes slightly. Live Activities draw the same face still, because ActivityKit allows only built-in transitions; Reduce Motion stills it everywhere.
+In the app 돌이 moves (`DolBuddy(animated: true)`, timings in `DolMotion`, 24 fps on its own small view): open eyes blink every 4.2 s with a double blink every third time, checking glances side to side, resting eyes peek open for 1.4 s every 7 s ("still watching"), arrival hops, and the pebble breathes by 4.5 % of its height (about 1.5 pt on the 34 pt ride card; the earlier 2 % was under a point and read as a still picture). Delayed, lost, offline and ended are drawn completely still, so stale data never looks alive. Live Activities draw the same face without continuous motion, because ActivityKit animates only the change between two contents: a new moment swaps the pose with a short scale-and-fade (`dolPoseTransition`), and unchanged content does not animate. On the journey rail 돌이 is the position marker (`DolRailMarker`: pebble, rim, two eyes, tangerine pin; squinting when degraded), moving to a new position over 0.7 s only when a new answer changes the count. Reduce Motion stills it everywhere.
 
 It is always decorative (`accessibilityHidden`), never larger than the count, never on its own screen, and never the only carrier of meaning. The app icon is 돌이 looking up at the tangerine destination dot (Figma `App Icon / B`, `289:36`), drawn as flat vectors in Figma: no texture, no generated imagery.
 

@@ -15,7 +15,7 @@
 "home.sample.title" = "처음이라면";
 "home.sample.body" = "제주버스터미널에서 제주시청(아라방면)까지, 버스 확인부터 하차까지 그대로 따라가 보세요.";
 "home.sample.action" = "샘플 여정 체험하기";
-"home.privacy" = "탑서는 버스를 따라가요. 내 위치 권한은 필요 없어요.";
+"home.privacy" = "버스를 따라가는 데는 위치가 필요 없어요. 위치를 허용해도 iPhone 안에서만 써요.";
 "home.intro.title" = "내릴 곳만 알려 주세요";
 "home.intro.body" = "버스를 확인하고 나면, 내릴 때까지 돌이가 대신 볼게요.";
 "home.intro.step1" = "내릴 정류장";
@@ -247,7 +247,7 @@
 "live.stops.count.one" = "%ld정거장 뒤";
 "live.stops.loopNote" = "순환 노선이라 같은 이름의 정류장이 두 번 나올 수 있어요. 순서를 꼭 확인해 주세요.";
 "live.ride.ended.title" = "실시간 추적이 끝났어요";
-"live.ride.ended.body" = "서버가 이 여정을 더는 따라가지 않아요. 버스에서 내렸다면 여정을 끝내 주세요.";
+"live.ride.ended.body" = "탑서가 이 여정을 더는 따라갈 수 없어요. 버스에서 내렸다면 여정을 끝내 주세요.";
 "live.error.offline.title" = "인터넷 연결이 끊겼어요";
 "live.error.offline.body" = "연결되면 바로 다시 확인할게요.";
 "live.error.timedOut.title" = "응답이 늦어요";
@@ -390,6 +390,7 @@
 "ride.predicted.detail" = "정류장 기준 예상 위치";
 "share.screenshot.title" = "스크린샷에서 읽었어요";
 "share.screenshot.detail" = "%@ · 정류장 후보 %ld곳";
+"share.screenshot.busNumber" = "%@번";
 "share.screenshot.unavailable" = "이 설치본은 앱으로 바로 넘길 수 없어요. 탑서에서 ‘경로 가져오기’로 스크린샷을 직접 골라 주세요.";
 "share.screenshot.saved.body" = "30분 안에 탑서를 열면 이 경로를 확인해요.";
 "share.screenshot.nothing.title" = "경로를 읽지 못했어요";
@@ -415,7 +416,7 @@
 "live.stops.toDestination.one" = "내릴 곳까지 %ld정거장";
 "live.stops.catalogMoved.title" = "노선 정보가 바뀌었어요";
 "live.stops.catalogMoved.body" = "지금 이 노선의 정류장 목록에서 내릴 곳을 다시 골라 주세요.";
-"ride.closeApp.live" = "TAPSO를 열어 두는 동안 버스 위치를 확인해요. 앱을 닫으면 잠금 화면 안내가 마지막 확인에 머물 수 있어요.";
+"ride.closeApp.live" = "탑서를 열어 두는 동안 버스 위치를 확인해요. 앱을 나가면 잠금 화면 안내가 마지막 확인에 머물 수 있어요.";
 "ride.closeApp.livePush" = "앱을 닫아도 잠금 화면과 다이나믹 아일랜드 안내가 갱신돼요.";
 "route.timetable.loading" = "공식 시간표를 확인하는 중이에요";
 "route.timetable.failed" = "공식 시간표를 불러오지 못했어요. 실시간 탑승은 그대로 할 수 있어요.";
@@ -500,8 +501,8 @@
 "boardFirst.arrival.none" = "근처에 없음";
 "boardFirst.arrival.unavailable" = "버스 위치를 받지 못했어요";
 "boardFirst.trips.twin" = "같은 길을 도는 별도 운행 %d/%d";
-"ride.keepAlive.title" = "앱을 닫아도 계속 알려 주기";
-"ride.keepAlive.on" = "앱을 닫아도 내릴 때까지 잠금 화면과 다이나믹 아일랜드를 갱신해요. 그동안 iPhone 위치 서비스가 켜져 있지만, 탑서는 위치를 쓰지도 보내지도 않아요.";
+"ride.keepAlive.title" = "앱을 나가도 계속 알려 주기";
+"ride.keepAlive.on" = "다른 앱을 쓰거나 화면을 꺼도 내릴 때까지 잠금 화면과 다이나믹 아일랜드를 갱신해요. 앱 전환 화면에서 탑서를 위로 밀어 닫으면 멈춰요. 이 기능을 쓰는 동안 위치 서비스 표시가 보이지만, 위치를 쓰지도 보내지도 않아요.";
 "ride.keepAlive.denied" = "위치 권한이 없어 켤 수 없어요. 설정에서 탑서의 위치를 ‘앱을 사용하는 동안’으로 바꿀 수 있어요.";
 
 /* Boarding anchor + position V2 (BOARDING_ANCHOR_POSITION_V2.md) */

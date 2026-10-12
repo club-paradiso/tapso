@@ -294,7 +294,10 @@ struct ShareScreenshotSummary: View {
     }
 
     private var detail: String {
-        let numbers = reading.busNumbers.map { $0.number + "번" }.joined(separator: ", ")
+        // "%@번" in Korean, the bare number in English: the unit is the locale's, not glued on here.
+        let numbers = reading.busNumbers
+            .map { String(format: String(localized: "share.screenshot.busNumber"), $0.number) }
+            .formatted(.list(type: .and, width: .narrow))
         return String(format: String(localized: "share.screenshot.detail"), numbers, reading.stopLines.count)
     }
 }

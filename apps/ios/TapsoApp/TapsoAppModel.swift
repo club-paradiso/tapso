@@ -2016,9 +2016,11 @@ final class TapsoAppModel {
         } catch {
             guard var ride = activeRide, ride.live?.sessionID == sessionID else { return false }
             let failure = Self.failure(error)
-            liveFailure = failure
             consecutiveReadFailures += 1
             let action = RideReadFailurePolicy.action(for: failure, consecutiveFailures: consecutiveReadFailures)
+            // A store hiccup being retried mid-ride reads as a passing server problem ("잠시 후 다시
+            // 확인할게요"), not as setup copy that asks the rider to start again. The trace keeps the real one.
+            liveFailure = action == .retry && !failure.isTransient ? .server : failure
             trace("poll_failed", detail: "\(failure.name) consecutive=\(consecutiveReadFailures) action=\(action.rawValue) net=\(networkMonitor.context.rawValue)")
             traceReadTiming(requestedAt: requestedAt, receivedAt: Date(), evidenceAt: nil, failure: failure)
             if action == .endSession {

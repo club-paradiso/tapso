@@ -30,6 +30,23 @@ def enum_cases(path: pathlib.Path, name: str) -> list[str]:
     return re.findall(r"^\s*case (\w+)", body, re.M)
 
 
+SPECIFIER = re.compile(r"%(?:(\d+)\$)?[-+ 0#]*\d*(?:\.\d+)?(hh|h|ll|l|q|z|t|j)?([@dDuUxXoOfeEgGcCsSp%])")
+
+
+def placeholders(value: str) -> list[str]:
+    """The argument types a format string consumes, in argument order (`%1$@` counts as `@` in slot 1).
+    A translation may reorder positional arguments but never change their number or types."""
+    slots: dict[int, str] = {}
+    position = 0
+    for index, length, kind in SPECIFIER.findall(value):
+        if kind == "%":
+            continue
+        position = int(index) if index else position + 1
+        kind = {"D": "d", "u": "d", "U": "d", "i": "d"}.get(kind, kind)
+        slots[position] = kind
+    return [slots[slot] for slot in sorted(slots)]
+
+
 def load(table: pathlib.Path) -> dict[str, str]:
     entries = {}
     for number, line in enumerate(table.read_text().splitlines(), 1):
@@ -96,8 +113,17 @@ def main() -> int:
     for key in sorted(set(ko) ^ set(en)):
         problems.append(f"only in {'ko' if key in ko else 'en'}: {key}")
     for key in sorted(set(ko) & set(en)):
-        if ko[key].count("%") != en[key].count("%"):
-            problems.append(f"format arguments differ: {key}")
+        if placeholders(ko[key]) != placeholders(en[key]):
+            problems.append(f"format arguments differ: {key}: ko {placeholders(ko[key])} en {placeholders(en[key])}")
+    # The permission prompts iOS shows: same keys in both languages, none empty.
+    info_ko = load(IOS / "Resources/ko.lproj/InfoPlist.strings")
+    info_en = load(IOS / "Resources/en.lproj/InfoPlist.strings")
+    for key in sorted(set(info_ko) ^ set(info_en)):
+        problems.append(f"InfoPlist.strings only in {'ko' if key in info_ko else 'en'}: {key}")
+    for name, table in (("ko", ko), ("en", en), ("ko InfoPlist", info_ko), ("en InfoPlist", info_en)):
+        for key, value in table.items():
+            if not value.strip():
+                problems.append(f"empty in {name}: {key}")
     unused = sorted(set(ko) - used)
     if problems:
         print("\n".join(problems))

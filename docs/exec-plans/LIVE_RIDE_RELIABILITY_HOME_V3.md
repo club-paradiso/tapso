@@ -128,6 +128,152 @@ Zero owner occurs only in "suspended without KeepAlive or APNs", which is surfac
 8. Korean copy review (kolint + humanize-korean contract), privacy/background copy made accurate.
 9. Red team, tests, device install, PR.
 
-## 6. Progress log
+## 6. Reliability changes (milestone 1, `8fa7f72`, `7668530`)
 
-(Filled in as milestones land.)
+### 6.1 Scheduling — `RideReadScheduler` (transit-core)
+
+- The `LivePollingPolicy` interval is now **request start to request start**. Measured deterministically: 15 s policy + 3 s read → reads at 0, 15, 30, 45 s (was 0, 18, 36, 54). A read longer than the interval is followed at once, never overlapped.
+- One read at a time. `request(_:)` returns `scheduled` (nothing in flight), `queued` (runs right after the read in flight) or `coalesced` (joins a refresh already waiting). Twenty taps during one read cost one extra read.
+- An asked-for read (`foreground`, `manual`, `networkRestored`, `resume`) runs at once but never closer than 2 s (`minimumGap`) to the previous start, so active/inactive flapping cannot burst. The server shares route reads within 5 s, so the gap costs no extra upstream request.
+- Monotonic clock (`ContinuousClock`), so a wall-clock change cannot stretch a wait.
+- The loop sleeps on `RidePollWaker`, which a refresh request wakes early.
+
+### 6.2 Ownership
+
+`demoPlaybackTask` (demo script only) and `livePollingTask` (the ride's one loop) are separate. A refresh request restarts the loop if it has ended while the ride is still tracked (P6). `finishRide`/`cancelRide` stop the loop, the network monitor and answer any waiting refresh.
+
+### 6.3 Foreground, manual refresh, network
+
+- Return to the app → `requestRideRefresh(.foreground)`, Hybrid on **or off** (P3).
+- `recheckRidePosition()` is never dropped (P4). It returns when a read that *began after the tap* has ended, so the pull-to-refresh spinner means what it shows.
+- `RideNetworkMonitor` (`NWPathMonitor`) is context only: it labels failures in the trace and asks for one read when the path comes back. A satisfied path is never taken as proof that tracking works.
+
+### 6.4 Ordering and evidence time
+
+- `RideEvidenceOrder`: an answer is applied only if its read began no earlier than the one on screen **and** its evidence is not older. A late, older answer is dropped and traced as `poll_out_of_order`.
+- `RideEvidenceClock`: evidence time = phone receipt − (server `updatedAt` − server `progress.evidenceAt`). Both server stamps share one clock, so phone clock skew neither ages fresh data nor freshens old data. `lastObservedAt` now means "when the bus was last observed", in both paths. The Hybrid path no longer stamps evaluation time (P9); a failed or out-of-order Hybrid read leaves it unchanged.
+- A retained row keeps its age on screen: a successful read of 40 s old evidence shows `aging`, not `fresh`.
+- Server: a Live Activity push is still *ordered* by when its state became true (ActivityKit drops a push whose `timestamp` is not newer), but its `staleDateMs` now counts from the evidence time (`liveActivityContent.ts`).
+
+### 6.5 Failures (`RideReadFailurePolicy`)
+
+| Failure mid-ride | Before | After |
+|---|---|---|
+| `sessionNotFound`, `sessionExpired`, `rejected` | ride ended | ride ended (unchanged) |
+| `sessionsUnavailable` (`SESSION_STORE_UNAVAILABLE`), `serviceUnavailable` | **ride ended on the first one** | retried; ended after 5 consecutive (≈ 1 min at the recovery cadence). Shown as the passing "잠시 후 다시 확인할게요" notice, not as setup copy |
+| offline, timeouts, provider errors, rate limit, 5xx | retried | retried (unchanged); offline also sets `isOffline` |
+
+### 6.6 Watchdog
+
+Each loop wake ages a ride whose last evidence is older than `FreshnessPolicy.conservativeDefault` (30 s fresh / 120 s aging): a ride is never drawn as current just because no read has failed. Thresholds: TAGO changes a row every ~28 s median, the client reads every 10–15 s, and a read takes ≤ 1.3 s cold (§3), so a healthy ride's evidence is ≤ ~20 s old; 30 s means at least one read has been missed. The Live Activity's `staleDate` stays evidence + 120 s: the Lock Screen cannot be corrected by an app that is not running, so it waits longer before saying "stale".
+
+User-facing states stay simple: live → 확인 중 (rechecking) → 위치 확인 필요 (unavailable), with offline separate.
+
+### 6.7 Authority after the change
+
+| Mode | Owner | Changed |
+|---|---|---|
+| Foreground, Hybrid off/on | `livePollingTask` | foreground return now reads at once for both |
+| Background + KeepAlive, Hybrid off | `livePollingTask` | — |
+| Background + KeepAlive, Hybrid on | `livePollingTask` via `reconcileRidePosition`, official evidence only (no background location sample) | **was zero owner**: `reconcileRidePosition` returned when not in the foreground, so nothing read |
+| Suspended, no KeepAlive/APNs | none by design; stale date + immediate read on return | — |
+
+Every model write goes through the one loop on the main actor; APNs updates the Live Activity directly and never writes the app's ride state.
+
+## 7. 돌이 diagnosis and tuning (`b214423`, `a517c64`)
+
+Evidence (simulator, iPhone 16, Debug, Reduce Motion **off** — `defaults read com.apple.Accessibility ReduceMotionEnabled` = 0):
+
+- Hosted test (`DolLivenessTests.testTheRideScreensDolIsRedrawnOverTime`): the real `RideView` in a window, riding state, two captures 1.7 s apart differ → the timeline ticks (cause **A rejected** in the test host).
+- Live app, restored delayed ride: 10 screenshots ~1 s apart, the 돌이 crop differed in **all 10** → the timeline ticks in the running app, and a *stale* ride's 돌이 was breathing.
+- Live app, a fresh riding ride: one run of 16 screenshots showed an identical crop throughout. Not reproduced; recorded as an open observation, `DEVICE_REQUIRED` (screen recording on the iPhone).
+- From the code: riding breath was 0.7 pt peak-to-peak at 34 pt and the eyes are shut except a 1 s peek every 7 s → causes **D (too subtle) and E (rare by design)**.
+
+Tuning: breath 4.5 % (~1.5 pt), peek 1.4 s, 24 fps on the small view only; delayed/lost/offline/ended completely still. Tests: `DolMotionTests.testRidingBreathIsVisibleAtRideCardSize`, stale states equal `.still` at every sampled instant.
+
+Live Activity: no continuous motion. A new moment swaps the pose by identity (`dolPoseTransition`: scale 0.8 + fade); unchanged content keeps its identity and does not animate. Counts keep `.contentTransition(.numericText())`.
+
+## 8. Journey rail marker
+
+- `DolRailMarker` replaces the bus tile on `JourneyRail` (app ride card, Lock Screen, expanded island). Compact face: pebble, role rim, two bold eyes (squint when degraded), tangerine pin; sheen, pores and cheeks dropped below 20 pt.
+- Position = `JourneyRail.progress(remaining:total:)`, the one function every surface uses. It changes only when an answer changes the count; the move is a 0.7 s smooth slide (none under Reduce Motion; within ActivityKit's 2 s). 12 → 10 is one slide to exactly the 10-stops position; no 11 is ever shown or stored.
+- An unknown count (`-1`) is now progress 0, never the destination. (No surface showed this: an unknown count is the `checking` moment, which hides the rail. Defence in depth.)
+- A scalar `railProgress` on the wire was not added: only stop-level evidence exists in production (Hybrid off, no road geometry), so a finer scalar would have no honest source.
+- Tests: `testTheRailMarkerIsDolNotABus` (rendered centre pixel is basalt), `testTheMarkerAdvancesOnlyWithEvidenceAndJumpsWithoutInventedStops`.
+
+## 9. Physical-device validation kit
+
+Debug only: ride menu → **Bus passed a stop now** records `ground_truth_stop` with the count on screen. With `poll_start`, `read_timing` (request duration in 250 ms buckets, evidence age in 5 s buckets, network context), `poll`, `guidance`, `live_activity` and `lifecycle`, the exported trace separates:
+
+physical stop (tap) → provider row (`evidenceAge`) → server answer (`read_timing.request`) → app state (`guidance`) → Live Activity update request (`live_activity`).
+
+What it cannot measure: when iOS actually redraws the Lock Screen or island (no API reports it) — that needs a screen recording.
+
+## 10. Home (`07585ae`)
+
+| | Before | After |
+|---|---|---|
+| Returning rider, top | 최근 여정 card (big, primary button) | 어디서 내릴까요? + search + recent stops |
+| Repeat ride | card button | compact `RideAgainRow`, last ride first (tag 최근), favourites below in the same list |
+| Taps: new destination | 1 | 1 |
+| Taps: repeat last ride | 1 to bus check | 1 to bus check |
+| Structure | hard-coded `VStack` branches | `HomeSection` + `HomeLayout.sections` (pure, tested) |
+
+No new modules, feeds or stats. `HomeLayoutTests`: first ride, returning rider (destination first, ride-again before other ways, no sample), 12 favourites do not push the search down, one-tap repeat.
+
+## 11. Localization and Korean copy
+
+### 11.1 Infrastructure
+
+- Locales: `ko`, `en` (`Localizable.strings`, now 502 keys each) plus new `InfoPlist.strings` for the three permission prompts, which were Korean-only for English users. Same tables for the app, Live Activity and share extension.
+- `check_localization.py` now compares **placeholder types in argument order** (`%@` vs `%ld`, positional `%1$@` allowed to reorder), checks `InfoPlist.strings` parity and rejects empty values. It previously counted `%` signs only.
+- Share extension: `number + "번"` concatenated the Korean unit into every language → `share.screenshot.busNumber` (`%@번` / `%@`) and a locale list format.
+- No format migration (`.xcstrings`): the `.strings` tables work, the check covers them, and a migration would touch every key for no rider benefit.
+
+### 11.2 Language roadmap
+
+| Locale | State | Before it may ship |
+|---|---|---|
+| ko | TRANSLATION_REVIEWED_READY_TO_SHIP | — |
+| en | TRANSLATION_REVIEWED_READY_TO_SHIP (developer-reviewed) | native review recommended |
+| zh-Hans | INFRASTRUCTURE_READY, **NOT_READY_TO_SHIP** | full key coverage, placeholder parity (checked), terminology review by a fluent reviewer, layout QA (Home, ride card, Lock Screen, island), VoiceOver QA |
+| ja | INFRASTRUCTURE_READY, **NOT_READY_TO_SHIP** | same |
+| id | INFRASTRUCTURE_READY, **NOT_READY_TO_SHIP** | same |
+
+No locale is added because a model can translate it. Stop, route, direction and service names (`제원아파트[동]`, `제주시청(광양방면)`, `교통약자승차예약`) are provider data and are shown as published; there is no official translation feed, so they stay in Korean in every locale.
+
+### 11.3 Korean copy review
+
+Tools: `kolint --genre ux` over all 505 Korean units (via `--stdin`, because the file reader does not parse `.strings`): **0 findings** — the rules do fire (a probe with a double passive was caught), but they did not catch "~하는 것이 가능합니다" or emoji cuteness, so a clean run is narrow evidence. `humanize-korean` 2.3.2 shim on the rewritten strings: risk band **low**, route **light**; one outlier (sentence-ending comma rate, z = 12) against an `essay` baseline because no `ux` baseline exists — taken as a pointer, and it did point at a three-clause "~하고, ~하고" chain in the location prompt, which was split into a noun list.
+
+| Key | Before | After | Why |
+|---|---|---|---|
+| `home.privacy` | 탑서는 버스를 따라가요. 내 위치 권한은 필요 없어요. | 버스를 따라가는 데는 위치가 필요 없어요. 위치를 허용해도 iPhone 안에서만 써요. | was false: KeepAlive, the stop nudge and Hybrid ask for location |
+| `ride.keepAlive.title` | 앱을 닫아도 계속 알려 주기 | 앱을 나가도 계속 알려 주기 | "닫아도" promised survival of a swipe-up force quit, which stops it |
+| `ride.keepAlive.on` | 앱을 닫아도 내릴 때까지 …갱신해요. 그동안 iPhone 위치 서비스가 켜져 있지만, 탑서는 위치를 쓰지도 보내지도 않아요. | 다른 앱을 쓰거나 화면을 꺼도 내릴 때까지 …갱신해요. 앱 전환 화면에서 탑서를 위로 밀어 닫으면 멈춰요. 이 기능을 쓰는 동안 위치 서비스 표시가 보이지만, 위치를 쓰지도 보내지도 않아요. | names what stops it; scopes "쓰지도 보내지도" to this feature |
+| `ride.closeApp.live` | TAPSO를 열어 두는 동안 … 앱을 닫으면 … | 탑서를 열어 두는 동안 … 앱을 나가면 … | Korean prose uses 탑서; same "나가다" as the toggle |
+| `live.ride.ended.body` | 서버가 이 여정을 더는 따라가지 않아요. … | 탑서가 이 여정을 더는 따라갈 수 없어요. … | engineering word ("서버") in a rider moment |
+| Location prompts (`InfoPlist.strings`, `project.yml`) | …사용합니다. 위치는 탑서 서버로 보내지 않습니다. (ko only) | 버스를 따라가는 데는 위치가 필요 없어요. 허용하면 승차 중 위치 확인, 정류장 알림, ‘앱을 나가도 계속 알려 주기’에만 iPhone 안에서 써요. 위치는 탑서 서버로 보내지 않아요. (+ en) | 해요체 like the app; accurate; English users no longer get Korean |
+
+Checked and kept: the ride moments (riding/prepare/next/arrived, plain and calm), the uncertainty states ("현재 위치를 정확히 확인하기 어려워요" — serious, no 돌이 voice), the 교통약자승차예약 card (names 제주버스 as the service, says TAPSO opens it, claims no outcome), error copy. "확인해주세요"/"확인해 주세요" spacing varies; both are permitted (보조용언 붙여쓰기) and changing them is churn, not a fix. Every "never sent to TAPSO's server" claim was checked against `TapsoAPIClient`, the only network client: no request carries a coordinate.
+
+Terminology kept deliberately: 정류장 (rider) vs 정류소 (never used); 내릴 곳 in setup, 목적지 in ride states; 버스 to riders, 차량 only in the trust badge (`차량 확인됨`).
+
+## 12. Discovery seam ("오늘 뭐하젠?")
+
+Not implemented, and nothing is shown. The seam is two existing pieces:
+
+1. **Home**: a future entry is one `HomeSection` case and one rule in `HomeLayout.sections` (e.g. after `.destination`, only when a feature flag and a real engine exist).
+2. **Handoff**: a recommended place enters the existing destination-first flow as a `SharedPlace` — the same path a map-app place takes (nearest valid stop → route → exact boarding pole → rider-confirmed bus → live ride). No second ride engine.
+
+Deliberately absent: the intent picker (바다/숲/카페/…), any recommendation logic, opening hours, last-bus/Safe Return coupling.
+
+## 13. ActivityKit update frequency
+
+Apple's documentation (fetched 2026-10-12): `NSSupportsLiveActivitiesFrequentUpdates` "enable[s] your Live Activities to receive frequent updates with **remote push notifications**"; push updates have an hourly budget, priority 5 does not count against it. It does not govern updates made by the running app. TAPSO updates locally (push is disabled), so the key is not added; reconsider with APNs, where priority 5 for unchanged-progress refreshes and 10 for milestones is the documented pattern.
+
+## 14. Progress log
+
+- 2026-10-07: audit, baseline, reliability core (`8fa7f72`), server stale date + ground-truth mark (`7668530`), 돌이 (`b214423`, `a517c64`), Home (`07585ae`).
+- 2026-10-07: disk ran out mid-test (0 bytes; even the shell's output file failed). The owner approved deleting the Codex cache, Playwright browsers and simulator data (7.6 GB freed).
+- 2026-10-12: localization infrastructure, Korean copy, docs.

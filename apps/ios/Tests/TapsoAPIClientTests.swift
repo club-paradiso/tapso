@@ -274,7 +274,7 @@ final class TapsoAPIClientTests: XCTestCase {
                 : (200, Payload.session(state: "tracking", selected: true, at: 6))
         }
         await model.recheckRidePosition()
-        XCTAssertEqual(model.liveFailure, .sessionsUnavailable)
+        XCTAssertEqual(model.liveFailure, .server, "said as a passing problem, never as 'start again'")
         XCTAssertFalse(model.liveRideEndedByServer, "one store hiccup does not end the ride")
         XCTAssertEqual(model.remainingStops, 5, "the last confirmed progress is kept")
         await model.recheckRidePosition()

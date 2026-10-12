@@ -28,7 +28,7 @@ Sources: `jihaseom.app`, App Store `id6792708146` (both REPORTED-OFFICIAL).
 
 1. **Start in one tap.** Saved routes and home/work chips beat forms. → TAPSO: recent ride "다시 타기", favourites, recent destinations, App Shortcut.
 2. **Two escalations are enough, and the one-before must be bigger.** → TAPSO keeps three steps because a bus rider needs time to stand and press the stop button (two stops = prepare), and makes the next stop the loudest surface: the whole Lock Screen turns coral and names the destination.
-3. **No location permission is a selling point.** → TAPSO says so on Home ("내 위치 권한은 필요 없어요").
+3. **No location permission is a selling point.** → Following the bus needs none, and Home says so; optional features that do use location (KeepAlive, the stop nudge, Hybrid) keep it on the iPhone. The V3 copy no longer says "권한은 필요 없어요", which stopped being true when those features shipped (`LIVE_RIDE_RELIABILITY_HOME_V3.md` §11).
 4. **Stop-count drift destroys trust fastest.** Jihaseom's own complaint pattern. → TAPSO's structural answer is below.
 
 ### Where TAPSO differs structurally

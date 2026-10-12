@@ -16,7 +16,7 @@ Home ──▶ Setup (pushed) ──▶ Ride (replaces setup) ──▶ End (rep
 
 ## Home — "어디서 내릴까요?"
 
-Priority order (`HomeContent`). A first-run question with no context ("어디서 내릴까요?" as the first thing a new rider sees) read as a quiz on a device, so Home now differs by whether the rider has ridden before:
+Priority order (`HomeLayout.sections`, tested in `HomeLayoutTests`). Destination search comes before every shortcut for every rider (V3, `docs/exec-plans/LIVE_RIDE_RELIABILITY_HOME_V3.md` §10). A first-run question with no context read as a quiz, so a first ride opens with what TAPSO does; a returning rider is asked the question first, because the last ride as the headline made TAPSO look like a repeat-trip app.
 
 First ride (no recent journey):
 
@@ -25,15 +25,17 @@ First ride (no recent journey):
 
 Returning rider:
 
-1. **최근 여정**: the most recent ride with **다시 타기**, which goes straight to the bus check. The star saves it as a favourite.
-2. The question **어디서 내릴까요?**, the search field and recent destinations as chips; one tap starts destination-first setup at that stop.
+1. The question **어디서 내릴까요?**, the search field and recent destinations as chips; one tap starts destination-first setup at that stop.
+2. **다시 타기**: compact one-tap rows (`RideAgainRow`), the last ride first (tagged 최근, with its favourite star beside it), then favourites. One tap goes straight to the bus check, as before.
+3. **자동 시작** guide entry.
 
 Both:
 
-3. **즐겨찾기**: other favourites, one tap each.
 4. **다른 방법으로 시작**: **버스 번호로 타기** (live, beta) and **지도 앱에서 가져오기** (paste intake), grouped as alternatives to the search rather than peers of it.
 5. Demo builds, first run only: **처음이라면**, the sample ride.
-6. The privacy promise: no location permission.
+6. The privacy line: following the bus needs no location; if allowed, location stays on the iPhone.
+
+Taps from launch: a new destination is 1 tap (search field or a chip); repeating the last ride is 1 tap to the bus check, 2 to a tracked ride.
 
 Not on Home: news, promotions, a map, nearby stops, dashboards.
 
