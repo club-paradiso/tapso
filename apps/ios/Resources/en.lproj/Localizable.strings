@@ -7,10 +7,9 @@
 "home.search.hint" = "Search for the stop you'll get off at";
 "home.recentDestinations" = "Recent stops";
 "home.destinationChip.hint" = "Starts a ride to this stop";
-"home.recentJourney" = "Recent ride";
 "home.rideAgain" = "Ride again";
 "home.rideAgain.hint" = "Starts finding your bus for this ride";
-"home.favorites" = "Favorites";
+"home.rideAgain.latest" = "Last ride";
 "home.mapImport.title" = "Import from a map app";
 "home.mapImport.body" = "Start from a screenshot or a place shared from a map app";
 "home.sample.title" = "New to TAPSO?";

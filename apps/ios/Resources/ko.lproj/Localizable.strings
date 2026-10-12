@@ -7,10 +7,9 @@
 "home.search.hint" = "내릴 정류장을 검색해요";
 "home.recentDestinations" = "최근 내린 곳";
 "home.destinationChip.hint" = "이 정류장에서 내리는 여정을 시작해요";
-"home.recentJourney" = "최근 여정";
 "home.rideAgain" = "다시 타기";
 "home.rideAgain.hint" = "이 여정으로 버스 확인을 시작해요";
-"home.favorites" = "즐겨찾기";
+"home.rideAgain.latest" = "최근";
 "home.mapImport.title" = "지도 앱에서 가져오기";
 "home.mapImport.body" = "스크린샷이나 공유한 장소로 시작";
 "home.sample.title" = "처음이라면";
