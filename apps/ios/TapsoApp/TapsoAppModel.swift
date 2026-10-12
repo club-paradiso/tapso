@@ -371,7 +371,7 @@ final class TapsoAppModel {
     /// The live ride's field trace (`RideTrace`): recorded automatically, exported from the ride screen.
     private(set) var rideTrace = RideTrace()
     #endif
-    @ObservationIgnored private let locationSampler = RideLocationSampler()
+    @ObservationIgnored private let locationSampler: RideLocationSampler
     @ObservationIgnored private var hybridEngine: HybridPositionEngine?
     @ObservationIgnored private var hybridSessionID: String?
     @ObservationIgnored private var lastManualRefresh: Date?
@@ -401,9 +401,11 @@ final class TapsoAppModel {
         routeCatalog: LiveRouteImportCatalog? = nil,
         screenshotImporter: ScreenshotRouteImporter? = nil,
         originalEraser: (any ScreenshotOriginalEraser)? = nil,
-        catalogFile: TransitCatalogFile? = nil
+        catalogFile: TransitCatalogFile? = nil,
+        locationSampler: RideLocationSampler? = nil
     ) {
         self.store = store
+        self.locationSampler = locationSampler ?? RideLocationSampler()
         self.catalogFile = catalogFile ?? .standard
         self.liveActivity = liveActivity
         self.returnReminders = returnReminders
@@ -453,10 +455,18 @@ final class TapsoAppModel {
 
     var currentStopName: String {
         if let ride = activeRide, ride.isLive {
-            let sequence = ride.hybridPosition?.currentStopSequence ?? ride.live?.currentStopSequence
+            let sequence = Self.liveStopSequence(of: ride)
             return sequence.flatMap { ride.draft.route?.routeStop(sequence: $0)?.stop.name } ?? ride.draft.boarding?.name ?? ""
         }
         return activeRide?.session.latestProgress?.currentStop.stop.name ?? activeRide?.draft.boarding?.name ?? ""
+    }
+
+    /// The stop a live ride's surfaces may name. With a hybrid result only what the engine accepted
+    /// (`usableStopSequence`), else the boarding pole: `live.currentStopSequence` is the latest read,
+    /// written before the engine judges it, so it may be the very read the engine refused.
+    private static func liveStopSequence(of ride: ActiveRide) -> Int? {
+        if let hybrid = ride.hybridPosition { return hybrid.usableStopSequence ?? ride.draft.boardingRouteStop?.sequence }
+        return ride.live?.currentStopSequence
     }
 
     var isLiveRide: Bool { activeRide?.isLive ?? false }
@@ -470,7 +480,7 @@ final class TapsoAppModel {
             let route = ride.draft.route,
             let destination = ride.draft.destinationRouteStop?.sequence
         else { return [] }
-        let current = ride.hybridPosition?.currentStopSequence ?? ride.live?.currentStopSequence
+        let current = Self.liveStopSequence(of: ride)
             ?? ride.session.latestProgress?.currentStop.sequence
             ?? ride.draft.boardingRouteStop?.sequence
             ?? destination
@@ -1737,8 +1747,11 @@ final class TapsoAppModel {
         lastManualRefresh = nil
     }
 
+    /// One official read, evaluated by the hybrid engine. Only device sampling needs the ride on
+    /// screen: in the background (`RideKeepAlive`) the read still happens and the engine sees no
+    /// device evidence, so the Live Activity keeps following official progress.
     private func reconcileRidePosition(manual: Bool) async {
-        guard !readInFlight, rideInForeground, let ride = activeRide, let live = ride.live,
+        guard !readInFlight, let ride = activeRide, let live = ride.live,
               !live.endedByServer, let route = ride.draft.route,
               let destination = ride.draft.destinationRouteStop?.sequence else { return }
         readInFlight = true
@@ -1757,20 +1770,27 @@ final class TapsoAppModel {
         let samplingMode = LocationSamplingPolicy.rideMode(
             remainingStops: ride.signal.remainingStops, hybridState: ride.hybridPosition?.state, manual: manual,
             officialSequence: live.currentStopSequence, boardingSequence: boardingSequence)
-        let requestPermission = !hybridPermissionRequested
-        hybridPermissionRequested = true
-        async let sample = locationSampler.sample(samplingMode, requestPermission: requestPermission)
+        let sampling = RideDeviceEvidencePolicy.maySample(foreground: rideInForeground)
+        let requestPermission = sampling && !hybridPermissionRequested
+        if sampling { hybridPermissionRequested = true }
+        async let sample = rideSample(samplingMode, requestPermission: requestPermission, enabled: sampling)
         var snapshot: JourneySessionSnapshot?
         var failure: TransitAPIFailure?
         do { snapshot = try await api.session(id: sessionID) }
-        catch is CancellationError { return }
+        catch is CancellationError {
+            // End the window now rather than wait it out with `readInFlight` held.
+            if sampling { locationSampler.stop() }
+            return
+        }
         catch { failure = Self.failure(error) }
         let sampleOutcome = await sample
         ridePrecision = locationSampler.permission
         guard var current = activeRide, current.live?.sessionID == sessionID else { return }
-        if let freshDevice = sampleOutcome.sample { retainedDeviceSample = freshDevice }
-        // Without Precise Location no earlier precise fix may linger as evidence either.
-        if !ridePrecision.allowsPreciseRideEvidence { retainedDeviceSample = nil }
+        // Decided after the awaits: a scene that went inactive meanwhile keeps no fix, and without
+        // Precise Location no earlier precise fix may linger as evidence either.
+        retainedDeviceSample = RideDeviceEvidencePolicy.retained(
+            previous: retainedDeviceSample, outcome: sampleOutcome,
+            permission: ridePrecision, foreground: rideInForeground)
         if let failure, !failure.isTransient { current.live?.endedByServer = true }
         if let snapshot {
             current.live?.signal = LiveSessionInterpreter.rideSignal(for: snapshot)
@@ -1800,6 +1820,7 @@ final class TapsoAppModel {
             let sampled: String = switch sampleOutcome {
             case .fix: "fix"
             case .unavailable(let reason): reason.rawValue
+            case nil: "background"
             }
             let line = "\(Int(result.evaluatedAt.timeIntervalSince1970)) mode=\(samplingMode.rawValue) sample=\(sampled) route=\(route.number) variant=\(route.id.rawValue) direction=\(route.direction.rawValue) vehicle=\(current.plate) state=\(result.state.rawValue) source=\(result.source) category=\(result.confidenceCategory) confidence=\(Int(result.confidence * 100)) reason=\(result.reason) route100m=\(result.routeDistanceBucket ?? -1) stop=\(result.currentStopSequence ?? -1) remaining=\(result.remainingStops) officialAge5s=\(officialAge) gpsAge5s=\(deviceAge) accuracy10m=\(accuracy) legacy=\(current.live?.signal.freshness.rawValue ?? "unknown") legacyRemaining=\(current.live?.signal.remainingStops ?? -1) officialSequence=\(snapshot?.progress?.currentStopSequence ?? -1)"
             hybridDiagnosticLines.append(line)
@@ -1809,6 +1830,12 @@ final class TapsoAppModel {
         #endif
         store.saveActiveRide(activeRide)
         await rideDidChange()
+    }
+
+    /// A ride sample, or none while the ride is in the background.
+    private func rideSample(_ mode: LocationSamplingMode, requestPermission: Bool, enabled: Bool) async -> LocationSampleOutcome? {
+        guard enabled else { return nil }
+        return await locationSampler.sample(mode, requestPermission: requestPermission)
     }
 
     /// Records one trace event for the active live ride (Debug builds only; a no-op otherwise).
