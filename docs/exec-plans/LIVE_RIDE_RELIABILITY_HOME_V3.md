@@ -318,6 +318,18 @@ Recommendation: **READY_FOR_MORE_DEVICE_TESTING**. `HYBRID_TRACKING: KEEP_OFF` �
 
 Each milestone is its own commit; revert in reverse order. The server change is one line of stale-date arithmetic (`liveActivityContent.ts`) with no stored state. No schema, data or protected-file change; `JejuStopCrosswalk` untouched; no feature flag changed.
 
+## 18b. Figma (2026-10-13)
+
+File `kkx04GvqOzHje7Dw5ikO9X`:
+- 02F: `RideAgainRow / V3` (`295:6024`), `돌이 RailMarker / V3` (`295:1109`, live/degraded), swapped into all `JourneyRail / V2` variants with the rail's role colour on the rim; `RecentJourneyCard / V2` described as retired.
+- 03 GO: `V3 / 02 Home · returning rider` light (`296:527`), dark (`297:598`), EN (`297:656`). V2 boards kept as history.
+- New page `06 Roadmap · Future Workspaces`: scope order 1–9 with status, how to start a feature, kit `Workspace / StatusChip · GateRow · Slot · FlowStep`.
+- Workspaces beside the existing status notes: 07 Discover (`306:2`), 08 Eat (`307:87`), 10 Passport / Share (`307:182`). Wireframe level only; the "don't draw until the data exists" rule stands. The operating-session gate is READY (production `/health`).
+
+## 18c. Hybrid decision (2026-10-13)
+
+`HYBRID_TRACKING` stays **OFF** in production. No field ride has been measured, so the zero-false-early gate has no evidence; turning it on would put an unmeasured GPS path between the rider and the stop count. Revisit after the first physical rides with the Debug trace.
+
 ## 19. Progress log
 
 - 2026-10-07: audit, baseline, reliability core (`8fa7f72`), server stale date + ground-truth mark (`7668530`), 돌이 (`b214423`, `a517c64`), Home (`07585ae`).
