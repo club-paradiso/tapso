@@ -28,9 +28,13 @@
  * the current matcher and evaluation sources (`sourceDigest.ts`); CI cannot
  * recompute them, because the raw collections are private, so the digest and
  * the per-collection raw tree hashes are what tie them to their inputs.
+ *
+ * Every run prints one `::warning` per FAIL criterion and, when
+ * `GITHUB_STEP_SUMMARY` is set, appends the full criterion table to it
+ * (`gateSummary.ts`). A green run is not a domain-quality pass.
  */
 
-import { existsSync, readdirSync, readFileSync, statSync } from "node:fs";
+import { appendFileSync, existsSync, readdirSync, readFileSync, statSync } from "node:fs";
 import { mkdir, writeFile } from "node:fs/promises";
 import path from "node:path";
 
@@ -46,6 +50,7 @@ import {
   type MitigationKey,
 } from "../../services/api/src/matcherSafetyGate.ts";
 import { automaticMatchingPermitted, DEMONSTRATED_MATCHING_READINESS } from "../../services/api/src/matchingReadiness.ts";
+import { renderGateSummary } from "./gateSummary.ts";
 import { matcherSourceDigest } from "./sourceDigest.ts";
 
 const options = new Map(process.argv.slice(2).map((arg) => {
@@ -132,6 +137,13 @@ const evidence: GateEvidence = {
 
 const result = evaluateGate(evidence);
 const outPath = file("out", "artifacts/matcher-passive-safety-v4/gate-result.json");
+
+// Visibility only: a FAIL above the awarded level never changes the exit code
+// here (`--fail-below-claim` and `--check` below decide that), but it is shown
+// on the run page instead of only inside the JSON in the log (issue #74).
+const summary = renderGateSummary(result);
+for (const warning of summary.warnings) console.log(warning);
+if (process.env.GITHUB_STEP_SUMMARY) appendFileSync(process.env.GITHUB_STEP_SUMMARY, summary.markdown);
 
 if (options.get("check") === "true") {
   const committed = readJson<typeof result>(outPath);

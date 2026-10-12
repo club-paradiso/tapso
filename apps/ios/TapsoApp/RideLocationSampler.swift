@@ -2,6 +2,23 @@ import CoreLocation
 import Foundation
 import TapsoTransit
 
+/// The slice of `CLLocationManager` the sampler uses, so tests can drive it without Core Location.
+@MainActor
+protocol LocationManaging: AnyObject {
+    var delegate: (any CLLocationManagerDelegate)? { get set }
+    var authorizationStatus: CLAuthorizationStatus { get }
+    var accuracyAuthorization: CLAccuracyAuthorization { get }
+    var desiredAccuracy: CLLocationAccuracy { get set }
+    var activityType: CLActivityType { get set }
+    var pausesLocationUpdatesAutomatically: Bool { get set }
+    var distanceFilter: CLLocationDistance { get set }
+    func requestWhenInUseAuthorization()
+    func startUpdatingLocation()
+    func stopUpdatingLocation()
+}
+
+extension CLLocationManager: LocationManaging {}
+
 /// Foreground, bounded sampling. Never enables background GPS or Always permission.
 ///
 /// Policy lives in `LocationSamplingPolicy` / `LocationFixSelector` (transit-core,
@@ -17,20 +34,28 @@ import TapsoTransit
 /// (`BOARDING_ANCHOR_POSITION_V2.md` §9).
 @MainActor
 final class RideLocationSampler: NSObject, @preconcurrency CLLocationManagerDelegate {
-    private let manager = CLLocationManager()
+    /// Waits out one window. Tests pass a clock they release by hand.
+    typealias Sleep = @MainActor @Sendable (TimeInterval) async -> Void
+
+    private let manager: any LocationManaging
+    private let sleep: Sleep
     private var continuation: CheckedContinuation<LocationSampleOutcome, Never>?
     private var selector: LocationFixSelector?
     private var deadline: Task<Void, Never>?
     private var throttle = LocationSampleThrottle()
     private var generation = 0
 
-    override init() {
+    /// `nil` arguments: a real `CLLocationManager` and the task clock. (Not default arguments:
+    /// Xcode 16.4's SILGen crashes on an existential default.)
+    init(manager: (any LocationManaging)? = nil, sleep: Sleep? = nil) {
+        self.manager = manager ?? CLLocationManager()
+        self.sleep = sleep ?? { seconds in try? await Task.sleep(for: .seconds(seconds)) }
         super.init()
-        manager.delegate = self
-        manager.activityType = .automotiveNavigation
+        self.manager.delegate = self
+        self.manager.activityType = .automotiveNavigation
         // The window is already bounded; an automatic pause would only end it early without a fix.
-        manager.pausesLocationUpdatesAutomatically = false
-        manager.distanceFilter = kCLDistanceFilterNone
+        self.manager.pausesLocationUpdatesAutomatically = false
+        self.manager.distanceFilter = kCLDistanceFilterNone
     }
 
     /// What the rider has granted, including Precise Location (`accuracyAuthorization`).
@@ -65,10 +90,11 @@ final class RideLocationSampler: NSObject, @preconcurrency CLLocationManagerDele
         let current = generation
         selector = LocationFixSelector(policy: policy, startedAt: now)
         manager.desiredAccuracy = Self.coreLocationAccuracy(metres: policy.requestedAccuracy)
+        let sleep = self.sleep
         return await withCheckedContinuation { continuation in
             self.continuation = continuation
             deadline = Task { [weak self] in
-                try? await Task.sleep(for: .seconds(policy.window))
+                await sleep(policy.window)
                 guard !Task.isCancelled, let self, self.generation == current else { return }
                 self.finish(nil)
             }
@@ -76,13 +102,28 @@ final class RideLocationSampler: NSObject, @preconcurrency CLLocationManagerDele
         }
     }
 
-    /// Ends any window in progress (the ride left the foreground or ended).
-    func stop() { finish(.failed) }
+    /// Ends any window in progress (the ride left the foreground or ended). The window gives its
+    /// spacing slot back: it never had the chance to deliver (`LocationSampleThrottle.release`).
+    func stop() { finish(.cancelled) }
 
     /// A new ride starts with no spacing carried over from the last one.
     func resetThrottle() { throttle.reset() }
 
     func locationManager(_ manager: CLLocationManager, didUpdateLocations locations: [CLLocation]) {
+        receive(locations)
+    }
+
+    func locationManager(_ manager: CLLocationManager, didFailWithError error: Error) {
+        fail(error)
+    }
+
+    func locationManagerDidChangeAuthorization(_ manager: CLLocationManager) {
+        authorizationChanged()
+    }
+
+    // The delegate callbacks' bodies, which tests call with a fake manager.
+
+    func receive(_ locations: [CLLocation]) {
         guard var selector else { return }
         let now = Date()
         var decision = LocationFixSelector.Decision.keepListening
@@ -99,13 +140,13 @@ final class RideLocationSampler: NSObject, @preconcurrency CLLocationManagerDele
         if decision == .finish { finish(nil) }
     }
 
-    func locationManager(_ manager: CLLocationManager, didFailWithError error: Error) {
+    func fail(_ error: Error) {
         // `locationUnknown` is transient: Core Location keeps trying inside the window.
         if (error as? CLError)?.code == .locationUnknown { return }
         finish(.failed)
     }
 
-    func locationManagerDidChangeAuthorization(_ manager: CLLocationManager) {
+    func authorizationChanged() {
         guard continuation != nil else { return }
         switch permission {
         case .fullAccuracy: return
@@ -121,6 +162,9 @@ final class RideLocationSampler: NSObject, @preconcurrency CLLocationManagerDele
         deadline?.cancel()
         deadline = nil
         manager.stopUpdatingLocation()
+        if let reason, reason.releasesThrottleSlot, let selector {
+            throttle.release(selector.policy, startedAt: selector.startedAt)
+        }
         let outcome: LocationSampleOutcome
         if let reason {
             outcome = .unavailable(reason)

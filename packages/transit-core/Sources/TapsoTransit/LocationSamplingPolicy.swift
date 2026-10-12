@@ -96,7 +96,13 @@ public struct LocationSamplingPolicy: Hashable, Sendable {
 
 /// Why a sample produced no usable fix. Diagnostics only; never shown verbatim.
 public enum LocationUnavailableReason: String, Codable, Hashable, Sendable {
-    case permissionNotDetermined, denied, restricted, reducedAccuracy, throttled, busy, noAcceptableFix, failed
+    /// `cancelled`: the app ended the window itself (the ride left the foreground or ended).
+    case permissionNotDetermined, denied, restricted, reducedAccuracy, throttled, busy, noAcceptableFix, failed, cancelled
+
+    /// Only a window the app cancelled gives its spacing slot back: it never had the chance to
+    /// deliver, so returning to the foreground may sample at once. A window that ran and found
+    /// nothing, or failed, keeps the slot (`LocationSampleThrottle.release`).
+    public var releasesThrottleSlot: Bool { self == .cancelled }
 }
 
 public enum LocationSampleOutcome: Hashable, Sendable {
@@ -172,6 +178,8 @@ public struct LocationFixSelector: Sendable {
 public struct LocationSampleThrottle: Sendable {
     private var lastStartedAt: [LocationSamplingMode: Date] = [:]
     private var lastRideStartedAt: Date?
+    /// The latest window's start and the clock it replaced, so a cancelled window can be undone.
+    private var latest: (mode: LocationSamplingMode, startedAt: Date, previous: Date?)?
 
     public init() {}
 
@@ -181,11 +189,43 @@ public struct LocationSampleThrottle: Sendable {
         let last = policy.mode.isRide ? lastRideStartedAt : lastStartedAt[policy.mode]
         if let last, now.timeIntervalSince(last) >= 0, now.timeIntervalSince(last) < policy.minimumInterval { return false }
         if policy.mode.isRide { lastRideStartedAt = now } else { lastStartedAt[policy.mode] = now }
+        latest = (policy.mode, now, last)
         return true
+    }
+
+    /// Gives back the slot of the window that `begin` started at `startedAt`, restoring the clock
+    /// it replaced. Only the latest window can be released; anything else is ignored, so the shared
+    /// spacing clock is otherwise unchanged.
+    public mutating func release(_ policy: LocationSamplingPolicy, startedAt: Date) {
+        guard let latest, latest.mode == policy.mode, latest.startedAt == startedAt else { return }
+        if policy.mode.isRide { lastRideStartedAt = latest.previous } else { lastStartedAt[policy.mode] = latest.previous }
+        self.latest = nil
     }
 
     public mutating func reset() {
         lastStartedAt = [:]
         lastRideStartedAt = nil
+        latest = nil
+    }
+}
+
+/// Which device fix a ride evaluation may see (`BOARDING_ANCHOR_POSITION_V2.md` §9). Pure, so the
+/// app's foreground and background handling is tested without Core Location.
+public enum RideDeviceEvidencePolicy {
+    /// Device sampling runs only while the ride is on screen. A ride in the background still reads
+    /// official progress and is evaluated with no device evidence.
+    public static func maySample(foreground: Bool) -> Bool { foreground }
+
+    /// The fix the engine may use, decided after a reconcile's awaits. `foreground` is read then:
+    /// a scene that went inactive in the meantime drops even a fix taken while it was active, and
+    /// without Precise Location no earlier fix may linger either.
+    public static func retained(
+        previous: DevicePositionSample?,
+        outcome: LocationSampleOutcome?,
+        permission: LocationPermission,
+        foreground: Bool
+    ) -> DevicePositionSample? {
+        guard foreground, permission.allowsPreciseRideEvidence else { return nil }
+        return outcome?.sample ?? previous
     }
 }

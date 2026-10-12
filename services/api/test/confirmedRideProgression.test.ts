@@ -137,6 +137,36 @@ test("the automatic matcher's gate is unchanged: an automatically selected bus s
   assert.match(aged.explanation, /cadence evidence/);
 });
 
+test("PINNED CURRENT BEHAVIOUR, not a policy: a confirmed ride on a frozen feed (300 s of identical rows) stays live and reports 'unchanged' throughout", async () => {
+  // A TAGO freeze looks like this from the server: every read answers, each
+  // gets a new TAPSO receipt, and the content never changes. The server cannot
+  // tell it apart from a bus dwelling at a light, and today it does not try.
+  // This test records that behaviour so a change to it is deliberate.
+  // ASSUMPTION / DEVICE_REQUIRED: whether a long freeze should become
+  // rechecking, and after how long, is a product decision that needs device
+  // evidence (device protocol §12 case 6). No freeze threshold exists here and
+  // none is invented.
+  const { provider, sessions, id, advance, confirmed } = await confirmedRide();
+  assert.equal(confirmed.progress?.currentStopSequence, 2);
+  for (let elapsed = 10; elapsed <= 300; elapsed += 10) {
+    const receipt = advance(10);
+    provider.rows = [row("BUS-3913", receipt, 2)];
+    const view = await sessions.refresh(id);
+    assert.equal(view.state, "tracking", `${elapsed} s`);
+    // Progress never advances on unchanged content.
+    assert.equal(view.progress?.currentStopSequence, 2, `${elapsed} s`);
+    assert.equal(view.progress?.remainingStops, 6, `${elapsed} s`);
+    // The only freeze signals: the row is unchanged, and the matcher's cadence is not fresh.
+    assert.equal(view.reliability?.observation, "unchanged", `${elapsed} s`);
+    assert.equal(view.reliability?.matcherCadence, elapsed < 20 ? "unknown" : "aging", `${elapsed} s`);
+    // Recorded as it is today: trust stays 'live' and evidenceAt follows each new receipt,
+    // so a 300 s freeze is not bounded by the server.
+    assert.equal(view.reliability?.trust, "live", `${elapsed} s`);
+    assert.equal(view.reliability?.position, "official", `${elapsed} s`);
+    assert.equal(view.progress?.evidenceAt, receipt.toISOString(), `${elapsed} s`);
+  }
+});
+
 /* -------------------------------------------------------------- rejections */
 
 test("a route mismatch is rejected and the count retained", async () => {
