@@ -17,7 +17,6 @@ final class ScreenshotImportFlowTests: XCTestCase {
     private let kakaoLight = ["9:41", "LTE", "경로", "도보 5분", "440번", "고산동산(아라방면)", "용담어린이집", "대학동", "사대부고", "국립제주트라우마치유센터", "안내 시작"]
 
     override func setUp() async throws {
-        try await super.setUp()
         StubURLProtocol.beginTest()
     }
 

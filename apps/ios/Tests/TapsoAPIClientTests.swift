@@ -12,7 +12,6 @@ final class TapsoAPIClientTests: XCTestCase {
     // Every test starts with `StubURLProtocol.respond` or `.fail`, which also clears what earlier tests recorded.
 
     override func setUp() async throws {
-        try await super.setUp()
         StubURLProtocol.beginTest()
     }
 
