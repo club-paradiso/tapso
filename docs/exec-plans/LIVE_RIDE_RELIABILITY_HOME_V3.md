@@ -340,6 +340,16 @@ A Redis call costing ~190 ms from iad1 means the Upstash database is not in US E
 
 Kept: a live read's server time fell by ~230 ms. Still open: one Redis call costs ~166 ms from icn1 (221 − 55), so the Upstash database is not beside Seoul either, or every REST call pays a fresh connection. Next step: read the database region in the Upstash console (owner) and, if it is not `ap-northeast`, move it or add a read replica near Seoul; separately check whether the client reuses its HTTPS connection.
 
+**Redis moved (2026-10-13, owner, Upstash console; same endpoint, Vercel env unchanged):** measured a few minutes after the change, same probe, production still `e309efc` on `icn1`:
+
+| Request | iad1 | icn1 | icn1 + Redis near Seoul |
+|---|---|---|---|
+| `/health` (no I/O) | 264 ms | 55 ms | 49 ms |
+| `GET /v1/sessions/<unknown>` (one Upstash read) | 455 ms | 221 ms | 76 ms |
+| `/v1/vehicles` (edge-cached) | 63 ms | 25 ms | 26 ms |
+
+One Redis call fell from ~166 ms to ~27 ms; a live read's server time is ~380 ms shorter than on day one. The first probe right after the change still showed 215 ms: the move took a few minutes to take effect. Data continuity (field-validation and beta-tester keys have no TTL) was not verified from here; the owner checks key counts in the console.
+
 ## 18b. Figma (2026-10-13)
 
 File `kkx04GvqOzHje7Dw5ikO9X`:
