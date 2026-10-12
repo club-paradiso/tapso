@@ -165,10 +165,13 @@ struct RideAgainRow: View {
                     }
                     .multilineTextAlignment(.leading)
                     Spacer(minLength: 0)
-                    Image(systemName: "arrow.forward.circle.fill")
-                        .font(.title2)
-                        .foregroundStyle(TapsoColor.journeyActive)
-                        .accessibilityHidden(true)
+                    // At accessibility sizes the names need the width; the whole row is still the button.
+                    if !typeSize.isAccessibilitySize {
+                        Image(systemName: "arrow.forward.circle.fill")
+                            .font(.title2)
+                            .foregroundStyle(TapsoColor.journeyActive)
+                            .accessibilityHidden(true)
+                    }
                 }
                 .padding(.vertical, TapsoSpace.sm)
                 .frame(minHeight: TapsoSize.minimumTouch)

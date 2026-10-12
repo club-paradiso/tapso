@@ -75,7 +75,8 @@ struct LockScreenRideView: View {
                     .lineLimit(1)
                     .truncationMode(.middle)
                 Spacer(minLength: 4)
-                if moment == .riding {
+                // A riding Lock Screen shows 돌이 once, as the rail marker that moves with the ride.
+                if moment == .riding, !showsRail {
                     DolBuddy(moment: moment, size: 22)
                 }
             }
