@@ -15,6 +15,9 @@ struct CatalogDestinationSearchContent: View {
     /// The catalog's build date, shown: the network is official data as of that day, not live.
     let generatedAt: String
     var refreshFailed = false
+    /// Also look the query up as a place or address (Apple Maps) and offer the stops near it.
+    /// Off in snapshots, which must not reach the network.
+    var lookupPlaces = true
     let onChoose: (DestinationPlace) -> Void
 
     private var trimmed: String { query.trimmingCharacters(in: .whitespacesAndNewlines) }
@@ -47,8 +50,14 @@ struct CatalogDestinationSearchContent: View {
                     message: "search.catalog.empty",
                     tint: TapsoColor.textTertiary
                 )
+                if lookupPlaces {
+                    PlaceLookupSection(query: query, index: index, stopsMatched: false, onChoose: onChoose)
+                }
             } else {
                 section("search.results", places: results, symbol: "mappin")
+                if lookupPlaces {
+                    PlaceLookupSection(query: query, index: index, stopsMatched: true, onChoose: onChoose)
+                }
             }
             Label {
                 Text(String(format: RideText.string(refreshFailed ? "search.catalog.asOfStale" : "search.catalog.asOf"), Self.day(generatedAt)))
