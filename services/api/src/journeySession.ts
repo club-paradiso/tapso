@@ -520,6 +520,15 @@ export class JourneySessionCoordinator {
     const observation = vehicles.find((candidate) => candidate.vehicleId === vehicleId);
     if (!observation) throw new SessionInputError("vehicleId is not present in the current route snapshot");
 
+    // A manual switch to a different vehicle must not inherit another bus's
+    // accepted stops, observation time or jump timer. Otherwise the newly
+    // confirmed bus can use the previous bus's long wait to pass the jump guard.
+    if (record.selectedVehicleId !== vehicleId) {
+      delete record.lastObservation;
+      delete record.lastProgress;
+      delete record.stepSinceMs;
+      delete record.pendingPassage;
+    }
     record.selectedVehicleId = vehicleId;
     record.selectionMode = "explicit";
     // The rider says which bus they are on: nothing is left to watch for.
