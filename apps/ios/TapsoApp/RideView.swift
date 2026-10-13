@@ -80,11 +80,11 @@ struct RideView: View {
                             }
                             .disabled(model.isRecheckingPosition)
                         }
-                        #if DEBUG
+                        #if DEBUG || TAPSO_FIELD_TOOLS
                         if model.isLiveRide {
-                            Button("Ride trace", systemImage: "waveform.path") { showingDiagnostics = true }
+                            Button("ride.menu.trace", systemImage: "waveform.path") { showingDiagnostics = true }
                             // Field validation: tap the moment the bus passes a stop (RideTrace `ground_truth_stop`).
-                            Button("Bus passed a stop now", systemImage: "mappin.and.ellipse") { model.markPhysicalStopPassage() }
+                            Button("ride.menu.markStop", systemImage: "mappin.and.ellipse") { model.markPhysicalStopPassage() }
                         }
                         #endif
                         if !model.isLiveRide {
@@ -115,7 +115,7 @@ struct RideView: View {
                 }
             }
             .sheet(isPresented: $showingDiagnostics) {
-                #if DEBUG
+                #if DEBUG || TAPSO_FIELD_TOOLS
                 NavigationStack {
                     ScrollView {
                         VStack(alignment: .leading, spacing: TapsoSpace.md) {
@@ -132,11 +132,11 @@ struct RideView: View {
                         }
                         .padding()
                     }
-                    .navigationTitle("Ride trace")
+                    .navigationTitle("ride.trace.title")
                     .toolbar {
                         ToolbarItem(placement: .confirmationAction) {
                             ShareLink(item: model.rideTrace.text, preview: SharePreview("TAPSO ride trace")) {
-                                Label("Share", systemImage: "square.and.arrow.up")
+                                Label("ride.trace.share", systemImage: "square.and.arrow.up")
                             }
                         }
                     }

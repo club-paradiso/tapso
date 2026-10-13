@@ -87,7 +87,12 @@ const gates: Gate[] = [];
     && /case \.sample:\s+firstRideCard\b/.test(home)
     && (home.match(/^\s+firstRideCard\s*$/gm) ?? []).length === 1;
   if (!sampleGated) failures.push("Home's sample ride is not behind showsDemo");
-  if ((home.match(/if showsDemo \{ demoChip \}/g) ?? []).length !== 2) failures.push("Home's demo chip is not behind showsDemo");
+  // Home never labels the rider's data as synthetic; the sample-ride settings open from a long press on
+  // the wordmark, and only in a demo build.
+  if (/DemoDataChip|demoChip/.test(home)) failures.push("Home shows a synthetic-data chip");
+  const brandEntry = home.slice(home.indexOf("private var brand: some View"), home.indexOf("private var recentDestinations"));
+  if (!/if showsDemo \{[\s\S]*onLongPressGesture[\s\S]*onDemoSettings[\s\S]*\} else \{\s+BrandWordmark\(\)\s+\}/.test(brandEntry)
+    || (home.match(/onDemoSettings\)/g) ?? []).length !== 2) failures.push("Home's sample-ride settings entry is not behind showsDemo");
   const setup = text("apps/ios/TapsoApp/SetupViews.swift");
   const search = setup.slice(setup.indexOf("struct DestinationSearchView"), setup.indexOf("struct DestinationSearchContent"));
   if (!/if let index = model\.catalogIndex \{\s+CatalogDestinationSearchContent/.test(search)) failures.push("destination search does not run on the catalog first");
@@ -101,7 +106,7 @@ const gates: Gate[] = [];
     if (!name.endsWith(".swift")) continue;
     if (/\bDemo(Catalog|Fixtures|RideScript)\b/.test(text(relative)) && !allowed.has(relative)) failures.push(`${relative} names the synthetic catalog`);
   }
-  evidence.push(failures.length === 0 ? "source checks: catalog-first search; sample ride, demo chip, demo search and demo replay are Debug-only" : `source checks failed: ${failures.join("; ")}`);
+  evidence.push(failures.length === 0 ? "source checks: catalog-first search; sample ride, sample-ride settings entry, demo search and demo replay are Debug-only; Home has no synthetic-data chip" : `source checks failed: ${failures.join("; ")}`);
   gates.push({ id: "GATE 2 — SEARCH", requirement: "Production search uses the real catalog; no DemoCatalog in the Release journey path", status: failures.length === 0 ? "PASS" : "FAIL", evidence });
 }
 

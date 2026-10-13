@@ -381,7 +381,7 @@ final class TapsoAppModel {
     private(set) var hybridTrackingEnabled = ProcessInfo.processInfo.arguments.contains("-tapsoHybridTracking")
     private(set) var isRecheckingPosition = false
     private(set) var hybridDiagnosticLines: [String] = []
-    #if DEBUG
+    #if DEBUG || TAPSO_FIELD_TOOLS
     /// The live ride's field trace (`RideTrace`): recorded automatically, exported from the ride screen.
     private(set) var rideTrace = RideTrace()
     #endif
@@ -1840,8 +1840,8 @@ final class TapsoAppModel {
         await withCheckedContinuation { refreshWaiters.append($0) }
     }
 
-    #if DEBUG
-    /// Debug field validation (`LIVE_RIDE_RELIABILITY_HOME_V3.md` §9): the tester marks the
+    #if DEBUG || TAPSO_FIELD_TOOLS
+    /// Field validation in Debug and Beta builds (`LIVE_RIDE_RELIABILITY_HOME_V3.md` §9): the tester marks the
     /// moment the bus physically passes a stop, so the trace can separate provider, server,
     /// app and Live Activity lateness.
     func markPhysicalStopPassage() {
@@ -1856,7 +1856,7 @@ final class TapsoAppModel {
         hybridSessionID = nil
         retainedDeviceSample = nil
         hybridDiagnosticLines = []
-        #if DEBUG
+        #if DEBUG || TAPSO_FIELD_TOOLS
         rideTrace.reset()
         #endif
         hybridPermissionRequested = false
@@ -1954,7 +1954,7 @@ final class TapsoAppModel {
         activeRide = current
         liveFailure = current.live?.endedByServer == true ? failure : nil
         traceReadTiming(requestedAt: requestedAt, receivedAt: receivedAt, evidenceAt: evidenceAt, failure: failure)
-        #if DEBUG
+        #if DEBUG || TAPSO_FIELD_TOOLS
         if let result {
             let deviceAge = retainedDeviceSample.map { Int(Date().timeIntervalSince($0.timestamp) / 5) * 5 } ?? -1
             let accuracy = retainedDeviceSample.map { Int($0.accuracy / 10) * 10 } ?? -1
@@ -1980,9 +1980,9 @@ final class TapsoAppModel {
         return await locationSampler.sample(mode, requestPermission: requestPermission)
     }
 
-    /// Records one trace event for the active live ride (Debug builds only; a no-op otherwise).
+    /// Records one trace event for the active live ride (Debug and Beta builds; a no-op in Release).
     private func trace(_ event: String, snapshot: JourneySessionSnapshot? = nil, milestone: RideMilestone? = nil, detail: String? = nil) {
-        #if DEBUG
+        #if DEBUG || TAPSO_FIELD_TOOLS
         guard let ride = activeRide, let live = ride.live, let route = ride.draft.route else { return }
         let guidance = ride.guidance
         rideTrace.record(RideTraceEvent(
@@ -2081,7 +2081,7 @@ final class TapsoAppModel {
 
     /// Request duration and evidence age, bucketed (`RideTrace`): which part of the chain was late.
     private func traceReadTiming(requestedAt: Date, receivedAt: Date, evidenceAt: Date?, failure: TransitAPIFailure?) {
-        #if DEBUG
+        #if DEBUG || TAPSO_FIELD_TOOLS
         let durationMs = Int(receivedAt.timeIntervalSince(requestedAt) * 1000) / 250 * 250
         let evidenceAge = evidenceAt.map { String(Int(receivedAt.timeIntervalSince($0)) / 5 * 5) } ?? "-"
         trace("read_timing", detail: "request250ms=\(durationMs) evidenceAge5s=\(evidenceAge) failure=\(failure?.name ?? "-") net=\(networkMonitor.context.rawValue)")

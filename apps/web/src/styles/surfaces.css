@@ -333,16 +333,6 @@
   line-height: 1.35;
 }
 
-.app-demo-chip {
-  align-self: flex-start;
-  padding: 0.2em 0.6em;
-  border-radius: var(--radius-pill);
-  color: var(--text-secondary);
-  background: var(--mist);
-  font-size: 0.72em;
-  font-weight: 700;
-}
-
 .app-question {
   font-size: 1.65em;
   font-weight: 800;

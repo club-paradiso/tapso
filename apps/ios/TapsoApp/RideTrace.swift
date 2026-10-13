@@ -1,8 +1,8 @@
 import Foundation
 import TapsoTransit
 
-#if DEBUG
-/// A privacy-safe field trace of a live ride, kept only in Debug builds
+#if DEBUG || TAPSO_FIELD_TOOLS
+/// A privacy-safe field trace of a live ride, kept only in Debug and Beta builds
 /// (`TAPSO_V1_RELEASE_CLOSURE.md`, workstream L). The tester never transcribes
 /// logs: every poll, guidance change, lifecycle change and Live Activity
 /// update is recorded automatically and exported as text from the ride

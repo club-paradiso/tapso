@@ -36,7 +36,6 @@ function NavTitle({ title, step }: { title: string; step?: string }) {
 function SearchScreen() {
   return (
     <div className="app-screen">
-      <span className="app-demo-chip">{IOS_COPY["demo.chip"]}</span>
       <h4 className="app-question">{IOS_COPY["home.question"]}</h4>
       <div className="app-search">
         <SearchIcon />

@@ -121,34 +121,28 @@ struct HomeContent: View {
         }
     }
 
+    /// Home shows only the brand. The sample-ride settings are a development tool, so a
+    /// Debug build opens them from a long press on the wordmark instead of a "synthetic data"
+    /// chip: a tester riding real Jeju buses must never be told their data is fake.
     private var header: some View {
-        ViewThatFits(in: .horizontal) {
-            HStack(alignment: .center) {
-                brand
-                Spacer()
-                if showsDemo { demoChip }
-            }
-            VStack(alignment: .leading, spacing: TapsoSpace.xs) {
-                brand
-                if showsDemo { demoChip }
-            }
+        HStack(alignment: .center) {
+            brand
+            Spacer()
         }
     }
 
     /// The canonical wordmark (`BrandWordmark`); never a string literal here.
+    @ViewBuilder
     private var brand: some View {
-        BrandWordmark()
-    }
-
-    /// The synthetic-data label doubles as the way into the demo settings.
-    private var demoChip: some View {
-        Button(action: onDemoSettings) {
-            DemoDataChip()
+        if showsDemo {
+            BrandWordmark()
+                .contentShape(Rectangle())
+                .onLongPressGesture(minimumDuration: 0.6, perform: onDemoSettings)
+                .accessibilityAction(named: Text("demo.chip.hint"), onDemoSettings)
+                .accessibilityIdentifier("demo-settings")
+        } else {
+            BrandWordmark()
         }
-        .buttonStyle(.plain)
-        .frame(minHeight: TapsoSize.minimumTouch)
-        .accessibilityHint(Text("demo.chip.hint"))
-        .accessibilityIdentifier("demo-settings")
     }
 
     private var recentDestinations: some View {
