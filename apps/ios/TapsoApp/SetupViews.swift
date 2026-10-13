@@ -94,7 +94,7 @@ struct DestinationSearchContent: View {
                     .font(.footnote)
                     .foregroundStyle(TapsoColor.textSecondary)
                     .fixedSize(horizontal: false, vertical: true)
-            } else if results.isEmpty {
+            } else if results.isEmpty && DemoCatalog.searchPlaces(query).isEmpty {
                 NoticeCard(
                     systemImage: "magnifyingglass",
                     title: "search.empty.title",
@@ -102,7 +102,11 @@ struct DestinationSearchContent: View {
                     tint: TapsoColor.textTertiary
                 )
             } else {
-                section("search.results", names: results, symbol: "mappin")
+                if !results.isEmpty {
+                    section("search.results", names: results, symbol: "mappin")
+                }
+                // The demo's own place lookup: synthetic places, no network.
+                DemoPlaceLookupSection(query: query, onChoose: onChoose)
             }
         }
         .padding(.horizontal, TapsoSpace.gutter)
