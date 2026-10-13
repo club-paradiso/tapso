@@ -72,6 +72,24 @@ final class TripApproachTests: XCTestCase {
         XCTAssertEqual(TripApproach.nearestFirst(all, approaches: [sparse.id: far, dense.id: near]).first?.route.routeId, "SYN111", "without a distance, fewer stops decides")
     }
 
+    func testRankingIsATotalOrderWhenSomeDistancesAreMissing() throws {
+        // Three variants; one distance unknown. Pairwise mixing would cycle; one rule must hold.
+        let all = try trips(index())
+        XCTAssertEqual(all.count, 3)
+        let approaches = [
+            all[0].id: TripApproach(stopsAway: 1, metersAway: 10_000),
+            all[1].id: TripApproach(stopsAway: 2, metersAway: nil),
+            all[2].id: TripApproach(stopsAway: 3, metersAway: 1_000),
+        ]
+        let expected = [all[0].id, all[1].id, all[2].id]
+        for order in [[0, 1, 2], [2, 1, 0], [1, 2, 0], [2, 0, 1]] {
+            let ranked = TripApproach.nearestFirst(order.map { all[$0] }, approaches: approaches)
+            XCTAssertEqual(ranked.map(\.id), expected, "by stops for all, whatever the input order")
+        }
+        let allKnown = [all[0].id: TripApproach(stopsAway: 1, metersAway: 10_000), all[2].id: TripApproach(stopsAway: 3, metersAway: 1_000)]
+        XCTAssertEqual(TripApproach.nearestFirst(all, approaches: allKnown).first?.id, all[2].id, "with every distance known, distance decides")
+    }
+
     func testCheckOrderGivesEveryRouteNumberATurnFirst() throws {
         let all = try trips(index())
         let order = DestinationSearchIndex.arrivalCheckOrder(all, budget: 2)

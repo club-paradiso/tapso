@@ -45,7 +45,7 @@ extension DestinationSearchIndex {
     /// provider stop sequences its buses report. A bus past the stop, beyond
     /// `horizonStops`, or on a sequence the variant does not list is ignored.
     /// Nearest means least distance along the route when every candidate has
-    /// one, else fewest stops.
+    /// one, else fewest stops (one rule for the whole set: see `nearestFirst`).
     public func approach(of trip: TripOption, vehicleSequences: [Int?], horizonStops: Int = StopNudge.horizonStops) -> TripApproach? {
         let route = trip.route
         var positionBySequence: [Int: Int] = [:]
@@ -59,7 +59,8 @@ extension DestinationSearchIndex {
             let meters = metersAlong(route, from: position, to: trip.boardingPosition).map { Int($0.rounded()) }
             return TripApproach(stopsAway: stops, metersAway: meters)
         }
-        return candidates.min(by: TripApproach.nearer)
+        let byMeters = candidates.allSatisfy { $0.metersAway != nil }
+        return candidates.min { TripApproach.key($0, byMeters: byMeters) < TripApproach.key($1, byMeters: byMeters) }
     }
 
     /// Which variants to ask about first when only `budget` reads are allowed:
@@ -91,21 +92,24 @@ extension DestinationSearchIndex {
 }
 
 extension TripApproach {
-    /// True when `left` is nearer the boarding stop than `right`.
-    public static func nearer(_ left: TripApproach, _ right: TripApproach) -> Bool {
-        if let l = left.metersAway, let r = right.metersAway, l != r { return l < r }
-        return left.stopsAway < right.stopsAway
+    /// The sort key under one rule for a whole set: metres when every member has
+    /// them, otherwise stops for all. Mixing the two pair by pair is not a total
+    /// order (1 stop/10 km < 2 stops/? < 3 stops/1 km < 1 stop/10 km).
+    static func key(_ approach: TripApproach, byMeters: Bool) -> Int {
+        byMeters ? approach.metersAway ?? Int.max : approach.stopsAway
     }
 
-    /// Trips with an approaching bus first, nearest first; the rest keep their
-    /// given order (ride length). Ties keep the given order too.
+    /// Trips with an approaching bus first, nearest first: by distance along the
+    /// route when every approaching bus has one, else by stops for all. The rest,
+    /// and ties, keep their given order (ride length).
     public static func nearestFirst(_ trips: [TripOption], approaches: [String: TripApproach]) -> [TripOption] {
-        trips.enumerated().sorted { left, right in
+        let present = trips.compactMap { approaches[$0.id] }
+        let byMeters = present.allSatisfy { $0.metersAway != nil }
+        return trips.enumerated().sorted { left, right in
             switch (approaches[left.element.id], approaches[right.element.id]) {
             case let (l?, r?):
-                if nearer(l, r) { return true }
-                if nearer(r, l) { return false }
-                return left.offset < right.offset
+                let lk = key(l, byMeters: byMeters), rk = key(r, byMeters: byMeters)
+                return lk != rk ? lk < rk : left.offset < right.offset
             case (.some, .none): return true
             case (.none, .some): return false
             case (.none, .none): return left.offset < right.offset

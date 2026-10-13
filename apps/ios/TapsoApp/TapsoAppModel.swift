@@ -913,9 +913,17 @@ final class TapsoAppModel {
         nearbyBoarding = .found(DestinationSearchIndex.nearest(places, latitude: sample.coordinate.latitude, longitude: sample.coordinate.longitude))
     }
 
-    /// `/v1/vehicles` reads per trips screen. The API allows 120 requests a minute per
-    /// rider (shared with everything else), and one place pair can have 75 variants.
-    static let tripArrivalBudget = 24
+    /// `/v1/vehicles` reads per trips screen: at least one per route number, never
+    /// fewer than the floor nor more than the ceiling. The API allows 120 requests a
+    /// minute per rider (shared with everything else); one place pair has 75
+    /// variants, and another 40 route numbers (2026-10-03 catalog).
+    static let tripArrivalBudgetFloor = 24
+    static let tripArrivalBudgetCeiling = 48
+
+    static func tripArrivalBudget(for trips: [TripOption]) -> Int {
+        let numbers = Set(trips.map(\.route.routeNo)).count
+        return min(tripArrivalBudgetCeiling, max(tripArrivalBudgetFloor, numbers))
+    }
     /// Reads in flight at once.
     static let tripArrivalConcurrency = 4
 
@@ -924,7 +932,7 @@ final class TapsoAppModel {
     /// rest are marked not checked rather than left loading.
     func loadTripArrivals(_ trips: [TripOption]) async {
         guard let index = catalogIndex else { return }
-        let wanted = DestinationSearchIndex.arrivalCheckOrder(trips, budget: Self.tripArrivalBudget)
+        let wanted = DestinationSearchIndex.arrivalCheckOrder(trips, budget: Self.tripArrivalBudget(for: trips))
         let wantedIDs = Set(wanted.map(\.id))
         for trip in trips where !wantedIDs.contains(trip.id) { tripArrivals[trip.id] = .notChecked }
         for trip in wanted { tripArrivals[trip.id] = .loading }
@@ -2325,7 +2333,7 @@ enum TripArrival: Equatable {
     /// No bus of this variant within `StopNudge.horizonStops` before the stop.
     case noneNearby
     case unavailable
-    /// Not asked: beyond the per-screen read budget (`TapsoAppModel.tripArrivalBudget`).
+    /// Not asked: beyond the per-screen read budget (`TapsoAppModel.tripArrivalBudget(for:)`).
     case notChecked
 
     var approach: TripApproach? {
