@@ -9,7 +9,7 @@
 
 export const IOS_COPY = {
   "home.question": "어디서 내릴까요?",
-  "home.search.placeholder": "내릴 정류장 검색",
+  "home.search.placeholder": "내릴 정류장·장소·주소 검색",
   "home.privacy": "버스를 따라가는 데는 위치가 필요 없어요. 위치를 허용해도 iPhone 안에서만 써요.",
   "demo.chip": "체험판 · 합성 데이터",
   "home.recentDestinations": "최근 내린 곳",
