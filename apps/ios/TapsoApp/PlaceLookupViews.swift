@@ -294,3 +294,111 @@ struct PlaceLookupSection: View {
         .padding(.bottom, TapsoSpace.xs)
     }
 }
+
+/// The demo's place lookup: the same "place → stops near it" flow on SYNTHETIC
+/// places (`DemoCatalog.places`), so it can be rehearsed with no network and no key.
+struct DemoPlaceLookupSection: View {
+    let query: String
+    let onChoose: (String) -> Void
+
+    @State private var opened: DemoPlace.ID?
+
+    private static let farRadius: Double = 2000
+
+    private var places: [DemoPlace] { DemoCatalog.searchPlaces(query) }
+
+    var body: some View {
+        if !places.isEmpty {
+            VStack(alignment: .leading, spacing: 0) {
+                SectionTitle("search.place.title")
+                    .padding(.bottom, TapsoSpace.xxs)
+                ForEach(places) { place in
+                    row(place)
+                    Divider().overlay(TapsoColor.separator)
+                }
+                Label("search.place.demoNote", systemImage: "testtube.2")
+                    .font(.caption)
+                    .foregroundStyle(TapsoColor.textTertiary)
+                    .fixedSize(horizontal: false, vertical: true)
+                    .padding(.top, TapsoSpace.xs)
+            }
+            .onChange(of: query) { opened = nil }
+        }
+    }
+
+    @ViewBuilder private func row(_ place: DemoPlace) -> some View {
+        let isOpen = opened == place.id || places.count == 1
+        Button {
+            withAnimation(.snappy) { opened = isOpen ? nil : place.id }
+        } label: {
+            HStack(spacing: TapsoSpace.sm) {
+                Image(systemName: "building.2.crop.circle")
+                    .font(.title3)
+                    .foregroundStyle(TapsoColor.mintDeep)
+                    .frame(width: 28)
+                VStack(alignment: .leading, spacing: 2) {
+                    Text(verbatim: place.name)
+                        .font(.body.weight(.medium))
+                        .foregroundStyle(TapsoColor.textPrimary)
+                    if let address = place.address {
+                        Text(verbatim: address)
+                            .font(.footnote)
+                            .foregroundStyle(TapsoColor.textSecondary)
+                    }
+                }
+                .multilineTextAlignment(.leading)
+                Spacer(minLength: 0)
+                Image(systemName: isOpen ? "chevron.up" : "chevron.down")
+                    .font(.footnote.weight(.bold))
+                    .foregroundStyle(TapsoColor.textTertiary)
+            }
+            .padding(.vertical, TapsoSpace.sm)
+            .frame(minHeight: TapsoSize.minimumTouch)
+            .contentShape(Rectangle())
+        }
+        .buttonStyle(.plain)
+        .accessibilityHint(Text("search.place.a11y.open"))
+        if isOpen {
+            nearby(place)
+                .padding(.leading, TapsoSpace.lg)
+                .transition(.opacity)
+        }
+    }
+
+    @ViewBuilder private func nearby(_ place: DemoPlace) -> some View {
+        let near = DemoCatalog.nearbyDestinations(latitude: place.latitude, longitude: place.longitude)
+        let stops = near.isEmpty
+            ? DemoCatalog.nearbyDestinations(latitude: place.latitude, longitude: place.longitude, radiusMeters: Self.farRadius, limit: 3)
+            : near
+        VStack(alignment: .leading, spacing: 0) {
+            Text(String(format: RideText.string("search.place.nearby"), place.name))
+                .font(.footnote.weight(.semibold))
+                .foregroundStyle(TapsoColor.textSecondary)
+                .padding(.top, TapsoSpace.xxs)
+            if stops.isEmpty {
+                Text("search.place.noStops")
+                    .font(.footnote)
+                    .foregroundStyle(TapsoColor.textSecondary)
+                    .fixedSize(horizontal: false, vertical: true)
+                    .padding(.vertical, TapsoSpace.xs)
+            } else {
+                if near.isEmpty {
+                    Text("search.place.far")
+                        .font(.caption)
+                        .foregroundStyle(TapsoColor.textTertiary)
+                        .fixedSize(horizontal: false, vertical: true)
+                        .padding(.top, TapsoSpace.xxs)
+                }
+                ForEach(stops) { stop in
+                    StopRow(
+                        name: stop.name,
+                        detail: String(format: RideText.string("search.place.stopDetail"), stop.walkMinutes, stop.distanceMeters),
+                        systemImage: "mappin",
+                        tint: TapsoColor.tangerine
+                    ) { onChoose(stop.name) }
+                }
+            }
+        }
+        .padding(.bottom, TapsoSpace.xs)
+    }
+}

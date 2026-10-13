@@ -32,6 +32,7 @@ final class SnapshotEvidenceTests: XCTestCase {
             ("02-home-recent-favorites", AnyView(HomeContent(library: library, onSearch: {}, onDestination: { _ in }, onRideAgain: { _ in }, onToggleFavorite: { _ in }, onMapImport: {}, onSample: {}))),
             ("03-destination-search", AnyView(DestinationSearchContent(query: "", recentNames: library.recentDestinationNames, onChoose: { _ in }))),
             ("04-destination-results", AnyView(DestinationSearchContent(query: "제주", recentNames: [], onChoose: { _ in }))),
+            ("04b-destination-place-lookup", AnyView(DestinationSearchContent(query: "동문시장", recentNames: [], onChoose: { _ in }))),
             ("05-route-select", AnyView(RouteSelectContent(destinationName: "관덕정", options: DemoCatalog.routeOptions(toDestinationNamed: "관덕정"), onChoose: { _ in }))),
             ("06-boarding-stop", AnyView(BoardingStopContent(route: DemoCatalog.outbound, destination: DemoCatalog.outbound.stops[8], onChoose: { _ in }))),
             ("07-map-import", AnyView(MapImportContent(place: nil, paste: AnyView(pastePlaceholder), onChooseDemo: { _ in }, onSearch: {}))),

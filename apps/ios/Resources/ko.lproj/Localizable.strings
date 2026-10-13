@@ -32,7 +32,7 @@
 "search.results" = "정류장";
 "search.demoNote" = "샘플 여정에는 예시로 만든 365번 두 방향만 있어요.";
 "search.empty.title" = "찾는 정류장이 없어요";
-"search.empty.body" = "샘플 여정에는 없는 정류장이에요. 다른 이름으로 검색해 보세요.";
+"search.empty.body" = "샘플 여정에 없는 정류장이에요. 정류장 이름이나 동문시장·목관아 같은 장소 이름으로 찾아보세요.";
 "setup.step.route" = "버스 선택";
 "setup.step.boarding" = "타는 정류장";
 "recap.getOffAt" = "내릴 곳";
@@ -530,3 +530,4 @@
 "search.place.source" = "장소 검색은 Apple 지도로 해요. 거리는 직선거리로 어림한 값이에요.";
 "search.place.a11y.open" = "근처 정류장을 펼쳐요";
 "search.place.source.kakao" = "장소 검색은 카카오맵 정보로 해요. 거리는 직선거리로 어림한 값이에요.";
+"search.place.demoNote" = "샘플 장소예요. 이름은 제주 장소를 닮았지만 위치는 예시로 만든 거예요.";

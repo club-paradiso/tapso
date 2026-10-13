@@ -99,8 +99,14 @@ const gates: Gate[] = [];
   if (!/if TapsoBuild\.showsDemo \{[\s\S]*DestinationSearchContent\(/.test(search)) failures.push("the demo search is reachable outside a demo build");
   const model = text("apps/ios/TapsoApp/TapsoAppModel.swift");
   if (!/guard TapsoBuild\.showsDemo else \{\s+openSearch\(\)/.test(model)) failures.push("a saved demo journey can replay in Release");
+  // The demo-only place lookup lives in a shared view file; its sole caller must
+  // remain inside DestinationSearchContent, which is only mounted behind showsDemo.
+  if (!/struct DemoPlaceLookupSection: View/.test(text("apps/ios/TapsoApp/PlaceLookupViews.swift"))
+    || !/DemoPlaceLookupSection\(query: query, onChoose: onChoose\)/.test(setup)) {
+    failures.push("demo place lookup is not confined to the demo destination search");
+  }
   // Where the synthetic catalog may still be named in app code, and nowhere else.
-  const allowed = new Set(["apps/ios/TapsoApp/SetupViews.swift", "apps/ios/TapsoApp/TapsoAppModel.swift", "apps/ios/TapsoApp/DemoControlsView.swift", "apps/ios/TapsoApp/HomeView.swift"]);
+  const allowed = new Set(["apps/ios/TapsoApp/SetupViews.swift", "apps/ios/TapsoApp/TapsoAppModel.swift", "apps/ios/TapsoApp/DemoControlsView.swift", "apps/ios/TapsoApp/HomeView.swift", "apps/ios/TapsoApp/PlaceLookupViews.swift"]);
   for (const name of readdirSync(file("apps/ios/TapsoApp"))) {
     const relative = `apps/ios/TapsoApp/${name}`;
     if (!name.endsWith(".swift")) continue;

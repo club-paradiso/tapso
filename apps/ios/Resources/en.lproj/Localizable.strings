@@ -32,7 +32,7 @@
 "search.results" = "Stops";
 "search.demoNote" = "The sample ride has only route 365, both directions, made up as an example.";
 "search.empty.title" = "No matching stop";
-"search.empty.body" = "That stop isn't in the sample ride. Try another name.";
+"search.empty.body" = "That stop isn't in the sample trip. Try a stop name, or a place like 동문시장 or 목관아.";
 "setup.step.route" = "Choose bus";
 "setup.step.boarding" = "Boarding stop";
 "recap.getOffAt" = "Getting off at";
@@ -530,3 +530,4 @@
 "search.place.source" = "Places are looked up with Apple Maps. Distances are straight-line estimates.";
 "search.place.a11y.open" = "Shows the stops nearby";
 "search.place.source.kakao" = "Places are looked up with Kakao Map data. Distances are straight-line estimates.";
+"search.place.demoNote" = "Sample places. The names echo Jeju places, but the positions are made up.";
