@@ -75,11 +75,6 @@ function ChapterBlock({ chapter, active, children }: { chapter: (typeof CHAPTERS
       aria-labelledby={`chapter-${chapter.id}`}
     >
       <header className="chapter-head">
-        <p className="eyebrow">
-          <span className="eyebrow-index">{chapter.index}</span>
-          <span className="eyebrow-rail" aria-hidden="true" />
-          {chapter.eyebrow}
-        </p>
         <h2 id={`chapter-${chapter.id}`}>{copy.title}</h2>
         <p className="chapter-lede">{copy.lede}</p>
       </header>
@@ -100,7 +95,6 @@ function Stage() {
   const role = activity ? ` role-${presentMoment(activity.moment).colorRole}` : "";
   return (
     <div className={`stage${role} stage-${stage.kind}`}>
-      <span className="stage-glow" />
       <div className="stage-device" key={stage.kind}>
         <BeatDevice stage={stage} activity={activity} />
       </div>

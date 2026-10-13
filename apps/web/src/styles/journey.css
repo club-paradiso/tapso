@@ -175,24 +175,6 @@
   z-index: 2;
 }
 
-/* The glow is the moment's own colour: it changes only when the state does. */
-.hero-glow,
-.stage-glow {
-  position: absolute;
-  z-index: 0;
-  border-radius: 50%;
-  background-color: var(--role, var(--mint));
-  opacity: 0.22;
-  -webkit-mask-image: radial-gradient(closest-side, #000, transparent);
-  mask-image: radial-gradient(closest-side, #000, transparent);
-  transition: background-color 700ms var(--ease-standard);
-  pointer-events: none;
-}
-
-.hero-glow {
-  inset: 12% -6% -4% 8%;
-}
-
 .hero-rail {
   display: flex;
   align-items: center;
@@ -696,10 +678,6 @@
   min-height: 560px;
 }
 
-.stage-glow {
-  inset: 18% 6% 22%;
-}
-
 .stage-device {
   position: relative;
   z-index: 1;
@@ -914,8 +892,6 @@
     animation: none;
   }
 
-  .hero-glow,
-  .stage-glow,
   .step-stop,
   .la-lock {
     transition: none;

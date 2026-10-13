@@ -56,43 +56,6 @@
   color: var(--bg);
 }
 
-.eyebrow {
-  display: inline-flex;
-  align-items: center;
-  gap: var(--space-3);
-  color: var(--mint-ink);
-  font-size: var(--fs-small);
-  font-weight: 800;
-}
-
-.on-dark .eyebrow {
-  color: var(--mint);
-}
-
-.eyebrow-index {
-  font-variant-numeric: tabular-nums;
-}
-
-.eyebrow-rail {
-  position: relative;
-  width: 36px;
-  height: 3px;
-  border-radius: var(--radius-pill);
-  background: currentColor;
-}
-
-.eyebrow-rail::after {
-  content: "";
-  position: absolute;
-  top: 50%;
-  right: -5px;
-  width: 8px;
-  height: 8px;
-  border-radius: 50%;
-  background: var(--tangerine);
-  transform: translateY(-50%);
-}
-
 /* Header ----------------------------------------------------------------- */
 
 .site-header {
@@ -216,7 +179,6 @@
   padding: clamp(20px, 3vw, 40px);
   border-radius: var(--radius-hero);
   background: var(--bg);
-  box-shadow: var(--shadow-card);
 }
 
 .scene-road {
@@ -889,10 +851,7 @@
 /* Waitlist --------------------------------------------------------------- */
 
 .waitlist {
-  background:
-    radial-gradient(50% 60% at 0% 100%, var(--mint-14), transparent 70%),
-    radial-gradient(40% 50% at 100% 0%, var(--tangerine-16), transparent 70%),
-    var(--sand);
+  background: var(--sand);
 }
 
 .waitlist-grid {

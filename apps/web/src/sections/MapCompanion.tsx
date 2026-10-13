@@ -36,8 +36,6 @@ export function MapCompanion() {
     <section className="section maps" id="maps" aria-labelledby="maps-title">
       <div className="container">
         <SectionHead
-          index="06"
-          eyebrow="지도 앱과 함께"
           title={
             <>
               지도 앱은 길을 찾고,

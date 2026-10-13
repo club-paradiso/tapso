@@ -169,12 +169,11 @@ main:focus {
 .btn-primary {
   color: var(--ink);
   background: var(--mint);
-  box-shadow: 0 8px 24px -10px var(--mint-28);
 }
 
+/* No glow and no lift: the button darkens a step, like the app's pressed state. */
 .btn-primary:hover {
-  transform: translateY(-1px);
-  box-shadow: 0 12px 28px -10px rgb(47 199 170 / 55%);
+  background: color-mix(in srgb, var(--mint) 88%, var(--ink));
 }
 
 .btn-primary:active {

@@ -5,7 +5,7 @@ export function Status() {
   return (
     <section className="section status" id="status" aria-labelledby="status-title">
       <div className="container status-grid">
-        <SectionHead index="08" eyebrow="개발 현황" title="지금은 여기까지 만들었어요." titleId="status-title">
+        <SectionHead title="지금은 여기까지 만들었어요." titleId="status-title">
           <p>
             아직 출시 전입니다. 끝난 것, 만드는 중인 것, 아직 남은 일을 나눠서 적어뒀어요. 출시일은 아직 정하지 않았습니다.
           </p>

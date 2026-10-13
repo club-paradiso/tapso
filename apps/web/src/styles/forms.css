@@ -8,7 +8,7 @@
   padding: clamp(20px, 3vw, 32px);
   border-radius: var(--radius-hero);
   background: var(--bg);
-  box-shadow: var(--shadow-card), 0 0 0 1px var(--separator);
+  box-shadow: 0 0 0 1px var(--separator);
 }
 
 .waitlist-form-card form {
