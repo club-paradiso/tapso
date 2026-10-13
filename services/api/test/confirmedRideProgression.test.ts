@@ -230,6 +230,39 @@ test("an impossible forward jump is rejected: five stops (≈2 km) in 15 s", asy
   assert.equal(later.progress?.currentStopSequence, 7);
 });
 
+test("a bus that waited at a stop and then catches up is accepted: the clock runs from its first sighting there, not the last poll", async () => {
+  // Field shape, 2026-10-13 production: TAGO moves a bus a stop at a time and lags it, so a
+  // rider polling every few seconds sees the same stop many times and then a jump. Measuring
+  // the jump against the gap since the last poll (6 s) rejected an ordinary advance as
+  // "546 m in 6 s" and flashed the ride to degraded for one read.
+  const { provider, sessions, id, advance } = await confirmedRide();
+  for (let poll = 0; poll < 10; poll++) {
+    provider.rows = [row("BUS-3913", advance(6), 2)];
+    assert.equal((await sessions.refresh(id)).state, "tracking", `still at stop 2, poll ${poll}`);
+  }
+  provider.rows = [row("BUS-3913", advance(6), 4)]; // two stops (≈1 km) after ~66 s at stop 2
+  const caughtUp = await sessions.refresh(id);
+  assert.equal(caughtUp.state, "tracking");
+  assert.equal(caughtUp.trackingIntegrity, undefined);
+  assert.equal(caughtUp.progress?.currentStopSequence, 4);
+});
+
+test("the waiting clock restarts at each new stop: a real teleport right after arriving is still refused", async () => {
+  const { provider, sessions, id, advance } = await confirmedRide();
+  for (let poll = 0; poll < 10; poll++) {
+    provider.rows = [row("BUS-3913", advance(6), 2)];
+    await sessions.refresh(id);
+  }
+  provider.rows = [row("BUS-3913", advance(6), 3)];
+  assert.equal((await sessions.refresh(id)).progress?.currentStopSequence, 3);
+  // Five stops (≈2.5 km) only 6 s after first being seen at stop 3.
+  provider.rows = [row("BUS-3913", advance(6), 8)];
+  const jump = await sessions.refresh(id);
+  assert.equal(jump.state, "degraded");
+  assert.equal(jump.trackingIntegrity, "implausible_jump");
+  assert.equal(jump.progress?.currentStopSequence, 3);
+});
+
 test("a corrupt sequence is rejected", async () => {
   const { provider, sessions, id, advance } = await confirmedRide();
   provider.rows = [row("BUS-3913", advance(15), 3, { stopSequence: 2.5 })];

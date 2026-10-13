@@ -382,6 +382,8 @@ type SessionRecord = SessionInput & {
   consecutiveProviderFailures: number;
   /** A destination passage seen once on a confirmed ride, awaiting a second sighting. */
   pendingPassage?: PendingPassage;
+  /** When the confirmed bus was first accepted at its current stop (`AcceptedStep.sinceMs`). */
+  stepSinceMs?: number;
   /** What the matcher has seen pass the boarding stop during this session. */
   passage?: PassageMemory;
   /** Present from an automatic selection for a waiting rider on. */
@@ -1114,6 +1116,10 @@ export class JourneySessionCoordinator {
       evidenceAt: new Date(evidenceAtMs).toISOString(),
       evidenceAtIs,
     };
+    // Same waiting clock as a confirmed ride, so a later confirmation measures jumps from here.
+    if (record.lastProgress?.currentStopSequence !== resolved.stop.sequence || record.stepSinceMs === undefined) {
+      record.stepSinceMs = evidenceAtMs;
+    }
     record.lastProgress = progress;
     return this.view(record, {
       ...evidence,
@@ -1164,7 +1170,11 @@ export class JourneySessionCoordinator {
     const lastStep = record.lastProgress && record.lastObservation
       ? (() => {
           const at = evidenceTimeMs(record.lastObservation!);
-          return at === undefined ? undefined : { stopSequence: record.lastProgress!.currentStopSequence, evidenceAtMs: at };
+          return at === undefined ? undefined : {
+            stopSequence: record.lastProgress!.currentStopSequence,
+            evidenceAtMs: at,
+            ...(record.stepSinceMs === undefined ? {} : { sinceMs: record.stepSinceMs }),
+          };
         })()
       : undefined;
     const verdict = evaluateConfirmedProgression({
@@ -1218,6 +1228,8 @@ export class JourneySessionCoordinator {
       case "accept": {
         record.lastObservation = { ...observation };
         delete record.pendingPassage;
+        // The waiting clock restarts only when the bus reaches a new stop.
+        if (verdict.observation === "changing" || record.stepSinceMs === undefined) record.stepSinceMs = evidenceAtMs;
         const delta = record.destinationStop.sequence - verdict.stop.sequence;
         const progress: JourneyProgressView = {
           currentStopSequence: verdict.stop.sequence,
@@ -1396,6 +1408,7 @@ function toStored(record: SessionRecord): StoredJourneySession {
     cadenceHistory: [...record.cadenceHistory],
     consecutiveProviderFailures: record.consecutiveProviderFailures,
     ...(record.pendingPassage === undefined ? {} : { pendingPassage: record.pendingPassage }),
+    ...(record.stepSinceMs === undefined ? {} : { stepSinceMs: record.stepSinceMs }),
     ...(record.passage === undefined ? {} : { passage: record.passage }),
     ...(record.boardingWatch === undefined ? {} : { boardingWatch: record.boardingWatch }),
     ...(record.liveActivityPush === undefined ? {} : { liveActivityPush: record.liveActivityPush }),
@@ -1425,6 +1438,7 @@ function toRecord(session: StoredJourneySession): SessionRecord {
     cadenceHistory: new Map(session.cadenceHistory),
     consecutiveProviderFailures: session.consecutiveProviderFailures,
     ...(session.pendingPassage === undefined ? {} : { pendingPassage: session.pendingPassage }),
+    ...(session.stepSinceMs === undefined ? {} : { stepSinceMs: session.stepSinceMs }),
     ...(session.passage !== undefined
       ? { passage: session.passage }
       // Every decision since the directed matcher stores its memory, so a row

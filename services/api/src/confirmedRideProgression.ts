@@ -52,6 +52,13 @@ export interface AcceptedStep {
   stopSequence: number;
   /** The instant the step's evidence was ordered by (TAPSO receipt for TAGO). */
   evidenceAtMs: number;
+  /**
+   * When the bus was first accepted at this stop. A provider that moves buses a stop at a
+   * time reports the same stop on many reads, then a jump; the bus has been free to travel
+   * since it reached the stop, not since the last read. Absent on rows stored before the
+   * field existed, which keep measuring from `evidenceAtMs`.
+   */
+  sinceMs?: number;
 }
 
 /** A passage of the destination seen once, awaiting a second sighting. */
@@ -152,7 +159,7 @@ export function evaluateConfirmedProgression(input: ConfirmedProgressionInput): 
     if (resolved.stop.sequence === lastStep.stopSequence) {
       return { kind: "accept", stop: resolved.stop, source: resolved.source, observation: "unchanged", explanation: "Confirmed vehicle is still at the last accepted stop." };
     }
-    const elapsedSeconds = (input.evidenceAtMs - lastStep.evidenceAtMs) / 1_000;
+    const elapsedSeconds = (input.evidenceAtMs - (lastStep.sinceMs ?? lastStep.evidenceAtMs)) / 1_000;
     const travelled = chordDistanceMeters(stops, lastStep.stopSequence, resolved.stop.sequence);
     if (travelled !== undefined && travelled > policy.maxSpeedMetersPerSecond * elapsedSeconds + policy.jumpSlackMeters) {
       return {
