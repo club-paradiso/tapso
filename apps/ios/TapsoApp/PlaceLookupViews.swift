@@ -3,12 +3,13 @@ import SwiftUI
 import TapsoTransit
 
 // "정류장 이름은 모르는데 어디 가는지는 안다": the rider types a place or an
-// address, Apple Maps (MapKit, on the phone, no TAPSO request and no key)
-// turns it into a coordinate inside Jeju, and the catalog's own stops near it
-// become destinations (`DestinationSearchIndex.places(near…)`). TAPSO never
-// plans the walk or the trip here: it only answers which stop to get off at.
+// address, Kakao Local (through TAPSO's server, which holds the key) or else
+// Apple Maps (MapKit, on the phone) turns it into a coordinate inside Jeju,
+// and the catalog's own stops near it become destinations
+// (`DestinationSearchIndex.places(near…)`). TAPSO never plans the walk or the
+// trip here: it only answers which stop to get off at.
 
-/// A place Apple Maps found for the query, inside Jeju.
+/// A place the lookup found for the query, inside Jeju.
 struct PlaceCandidate: Identifiable, Hashable, Sendable {
     var id: String { "\(name)|\(latitude)|\(longitude)" }
     let name: String
@@ -18,6 +19,28 @@ struct PlaceCandidate: Identifiable, Hashable, Sendable {
 }
 
 enum PlaceLookup {
+    /// Who answered: shown under the results, since each names places its own way.
+    enum Source: Equatable, Sendable {
+        case kakao
+        case apple
+    }
+
+    /// Kakao Local through TAPSO's server first (best Korean place names); Apple Maps
+    /// on the phone when the server has no key, fails, or finds nothing.
+    static func search(_ query: String, api: TapsoAPIClient = TapsoAPIClient()) async throws -> (places: [PlaceCandidate], source: Source) {
+        do {
+            let found = try await api.places(query: query)
+                .map { PlaceCandidate(name: $0.name, address: $0.address, latitude: $0.lat, longitude: $0.lng) }
+                .filter { NearbyStops.isInJeju(latitude: $0.latitude, longitude: $0.longitude) }
+            if !found.isEmpty { return (found, .kakao) }
+        } catch is CancellationError {
+            throw CancellationError()
+        } catch {
+            // Fall through to Apple Maps: the server's lookup is a better answer, not the only one.
+        }
+        return (try await appleSearch(query), .apple)
+    }
+
     /// The same box `NearbyStops` accepts (Jeju, Udo, Gapado, Marado, Chujado), for Apple Maps
     /// to search in: with `.required` (iOS 18+) a narrower region would hide Chujado's stops.
     private static let jejuRegion = MKCoordinateRegion(
@@ -32,7 +55,7 @@ enum PlaceLookup {
     )
 
     /// Places and addresses for the query, Jeju only, duplicates dropped, at most `limit`.
-    static func search(_ query: String, limit: Int = 6) async throws -> [PlaceCandidate] {
+    static func appleSearch(_ query: String, limit: Int = 6) async throws -> [PlaceCandidate] {
         let request = MKLocalSearch.Request()
         request.naturalLanguageQuery = query
         request.region = jejuRegion
@@ -87,7 +110,7 @@ struct PlaceLookupSection: View {
     private enum Phase: Equatable {
         case idle
         case loading
-        case found([PlaceCandidate])
+        case found([PlaceCandidate], PlaceLookup.Source)
         case failed
     }
 
@@ -141,9 +164,9 @@ struct PlaceLookupSection: View {
             guard !Task.isCancelled else { return }
             phase = .loading
             do {
-                let places = try await PlaceLookup.search(trimmed)
+                let (places, source) = try await PlaceLookup.search(trimmed)
                 guard !Task.isCancelled else { return }
-                phase = .found(places)
+                phase = .found(places, source)
                 if places.count == 1 { opened = places[0].id }
             } catch {
                 guard !Task.isCancelled else { return }
@@ -173,7 +196,7 @@ struct PlaceLookupSection: View {
                     .foregroundStyle(TapsoColor.mintDeep)
                     .frame(minHeight: TapsoSize.minimumTouch)
             }
-        case let .found(places):
+        case let .found(places, source):
             if places.isEmpty {
                 Text("search.place.empty")
                     .font(.footnote)
@@ -186,7 +209,7 @@ struct PlaceLookupSection: View {
                     Divider().overlay(TapsoColor.separator)
                 }
             }
-            Text("search.place.source")
+            Text(source == .kakao ? LocalizedStringKey("search.place.source.kakao") : LocalizedStringKey("search.place.source"))
                 .font(.caption)
                 .foregroundStyle(TapsoColor.textTertiary)
                 .fixedSize(horizontal: false, vertical: true)

@@ -20,6 +20,7 @@ import { resolveTagoServiceKey, serviceKeyWarning } from "./serviceKey.ts";
 import { readSessionKeyPrefix } from "./sessionKeyPrefix.ts";
 import { MemoryJourneySessionStore, type JourneySessionStore } from "./sessionStore.ts";
 import { fileStaticTransitData } from "./staticTransitData.ts";
+import { KakaoPlaceSearch, readKakaoApiKey } from "./placeSearch.ts";
 import { TagoTransitProvider } from "./tagoProvider.ts";
 import { UpstashJourneySessionStore } from "./upstashSessionStore.ts";
 
@@ -135,6 +136,8 @@ export function createTransitApi(env: ServerEnv = process.env as ServerEnv): Tra
         : {}),
       providerHealth,
       staticData: fileStaticTransitData(),
+      // The Kakao key never leaves the server; without it `/v1/places` fails closed.
+      places: new KakaoPlaceSearch({ apiKey: readKakaoApiKey(env) }),
       ...(limiter ? { limiter } : {}),
       ...(operatorLimiter ? { operatorLimiter } : {}),
       ...(operator.configured ? { operatorToken: operator.token } : {}),

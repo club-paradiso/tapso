@@ -84,6 +84,29 @@ struct TapsoAPIClient: Sendable {
         return try await send(request, as: TransitAPITimetableResponse.self).item
     }
 
+    // MARK: Places
+
+    /// One place or address the server's Kakao Local lookup found, inside Jeju.
+    struct Place: Decodable, Sendable {
+        let name: String
+        let address: String?
+        let lat: Double
+        let lng: Double
+    }
+
+    private struct PlacesResponse: Decodable {
+        let items: [Place]
+    }
+
+    /// Places and addresses for a query, through TAPSO's server (the Kakao key never
+    /// reaches the phone). A deployment without the key answers 503, and the caller
+    /// falls back to Apple Maps. Shorter deadline than transit reads: it is typed live.
+    func places(query: String) async throws -> [Place] {
+        var request = makeRequest(path: "/v1/places", query: [("q", query)])
+        request.timeoutInterval = 6
+        return try await send(request, as: PlacesResponse.self).items
+    }
+
     // MARK: Journey sessions
 
     /// Starts a session for a rider waiting at the boarding stop.

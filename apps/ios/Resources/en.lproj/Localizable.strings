@@ -525,3 +525,4 @@
 "search.place.far" = "No stop within walking distance (800 m), so we looked a little farther.";
 "search.place.source" = "Places are looked up with Apple Maps. Distances are straight-line estimates.";
 "search.place.a11y.open" = "Shows the stops nearby";
+"search.place.source.kakao" = "Places are looked up with Kakao Map data. Distances are straight-line estimates.";

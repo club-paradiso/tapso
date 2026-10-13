@@ -525,3 +525,4 @@
 "search.place.far" = "걸어갈 만한 거리(800m) 안에는 정류장이 없어 조금 멀리까지 찾았어요.";
 "search.place.source" = "장소 검색은 Apple 지도로 해요. 거리는 직선거리로 어림한 값이에요.";
 "search.place.a11y.open" = "근처 정류장을 펼쳐요";
+"search.place.source.kakao" = "장소 검색은 카카오맵 정보로 해요. 거리는 직선거리로 어림한 값이에요.";

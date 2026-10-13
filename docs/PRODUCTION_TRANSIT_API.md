@@ -125,6 +125,7 @@ accepts both so local and production paths are identical.
 | GET | `/v1/catalog` | The canonical Jeju transit catalog (`tapso-jeju-catalog-v1`, `OFFICIAL_DERIVED`): every TAGO route variant for Jeju with ordered stops, served as the reviewed file `data/jeju-transit-catalog.json`. `ETag` is the content version; `If-None-Match` with it answers `304`. `503 CATALOG_UNAVAILABLE` when no valid file is deployed. CDN `s-maxage` one day |
 | GET | `/v1/timetables` | Every route number the official BIS census answers for, with its status (`available`, `source_conflict`, `no_timetable`); `meta.asOf` is the download date and `meta.freshness` its age class |
 | GET | `/v1/timetables?routeNo=&date=` | One route number's official timetables read for `date` (default: today in Korea): per service its day label and whether it applies (`applies`, `does_not_apply`, `uncertain`, `unstated`), 시행일, timepoints, trips, first and last bus over unconditional trips, later conditional trips; `today` only from a fresh or aging bundle where exactly one service per direction applies. A `source_conflict` service is listed with its reasons and no trips. `OFFICIAL_DATED`, never live. `503 TIMETABLES_UNAVAILABLE` when the bundle or holiday calendar is missing |
+| GET | `/v1/places?q=` | Places and addresses for a 2–60 character query, Jeju only (33.08–34.05°N, 126.08–127.0°E): `items[]` of `name`, `address?`, `lat`, `lng`, `kind` (`place` or `address`), at most 8, address matches first. Kakao Local through the server-held `KAKAO_REST_API_KEY`; `THIRD_PARTY_LOOKUP`, not transit data. `cache-control: private, max-age=300`; the query is never logged. `503 PLACES_UNAVAILABLE` without the key, `502 PLACES_UPSTREAM_FAILED`, `504 PLACES_TIMEOUT`. Its own per-caller rate-limit bucket |
 | POST | `/v1/matches` | Rank caller-supplied candidates; no upstream call |
 | POST | `/v1/sessions` | Create a ride session |
 | GET | `/v1/sessions/:id` | Refresh a ride session |
@@ -212,6 +213,9 @@ stay disabled unless that token is configured. They are documented in full in
 | `PROVIDER_TIMEOUT` | 504 | TAGO did not answer within the 8-second deadline, twice |
 | `BLOCKED_BY_CREDENTIALS` | 503 | No TAGO service key is configured |
 | `SESSIONS_UNAVAILABLE` | 503 | Ride sessions are disabled on this deployment |
+| `PLACES_UNAVAILABLE` | 503 | No `KAKAO_REST_API_KEY` on this deployment; the app falls back to Apple Maps |
+| `PLACES_UPSTREAM_FAILED` | 502 | Kakao Local could not be reached, answered with an HTTP error, or sent an unusable body (never relayed) |
+| `PLACES_TIMEOUT` | 504 | Kakao Local did not answer within 4 seconds |
 | `INTERNAL_ERROR` | 500 | Unexpected failure; the message is always `internal error` |
 
 An unmapped failure never echoes its thrown message to the caller. It is logged
@@ -248,6 +252,7 @@ ever returned, logged, or placed in a URL a client can see.
 | `UPSTASH_REDIS_REST_TOKEN` | with `redis` | — | Upstash REST token. Like the TAGO key it never reaches `/health`; `sessions.durableStoreConfigured` reports presence only |
 | `TRANSIT_AUTOMATIC_MATCHING_ENABLED` | no | `false` | Operator opt-in to automatic vehicle selection (`true`/`1`/`false`/`0`; anything else fails at boot). Refused below `READY_FOR_BOUNDED_AUTOMATION`; the demonstrated readiness is `READY_FOR_SHADOW` (`src/matchingReadiness.ts`, never read from the environment). When refused, `/health` reports `matching.automaticMatchingRequested: true`, `automaticMatchingEnabled: false` and `withheldReason: "matching_readiness_below_bounded_automation"`, and the runtime logs `automatic_matching_refused` once per process |
 | `PORT` | no | `8787` | Local Node server (`src/server.ts`) only |
+| `KAKAO_REST_API_KEY` | no | unset → `/v1/places` answers 503 | Kakao Developers **REST API key** for place and address search. Store it on Vercel as a **Sensitive** variable; `/health` reports only `places.available` |
 | `RIDE_CAPTURE_OPERATOR_TOKEN` | no | unset → `/operator/*` disabled | Shared secret for the ride-capture endpoints and the mobile controller. Minimum 24 characters; a shorter value is refused. Store it on Vercel as a **Sensitive** variable |
 | `RIDE_CAPTURE_OPERATOR_RATE_LIMIT_PER_MINUTE` | no | `30` | Per-caller ceiling on the operator budget, kept separate from the public one; `0` disables |
 
