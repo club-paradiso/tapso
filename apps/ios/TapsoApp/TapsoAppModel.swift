@@ -876,7 +876,7 @@ final class TapsoAppModel {
         guard let index = catalogIndex, let destination = catalogPlace(named: placeName),
               let boarding = index.boardingPlaces(toward: destination).first(where: { $0.name == boardingName })
         else { return [] }
-        return TripArrival.soonestFirst(index.trips(from: boarding, to: destination), arrivals: tripArrivals)
+        return TripArrival.nearestFirst(index.trips(from: boarding, to: destination), arrivals: tripArrivals)
     }
 
     /// The official 제주버스 "교통약자 승차예약" page for the exact pole being set up, only when that
@@ -913,24 +913,50 @@ final class TapsoAppModel {
         nearbyBoarding = .found(DestinationSearchIndex.nearest(places, latitude: sample.coordinate.latitude, longitude: sample.coordinate.longitude))
     }
 
-    /// Where each trip's nearest bus is now. Reads `/v1/vehicles` per variant, at most eight.
+    /// `/v1/vehicles` reads per trips screen: at least one per route number, never
+    /// fewer than the floor nor more than the ceiling. The API allows 120 requests a
+    /// minute per rider (shared with everything else); one place pair has 75
+    /// variants, and another 40 route numbers (2026-10-03 catalog).
+    static let tripArrivalBudgetFloor = 24
+    static let tripArrivalBudgetCeiling = 48
+
+    static func tripArrivalBudget(for trips: [TripOption]) -> Int {
+        let numbers = Set(trips.map(\.route.routeNo)).count
+        return min(tripArrivalBudgetCeiling, max(tripArrivalBudgetFloor, numbers))
+    }
+    /// Reads in flight at once.
+    static let tripArrivalConcurrency = 4
+
+    /// Where each trip's nearest bus is now. Reads `/v1/vehicles` per variant, one
+    /// variant of every route number before a second of any, up to the budget; the
+    /// rest are marked not checked rather than left loading.
     func loadTripArrivals(_ trips: [TripOption]) async {
-        let wanted = Array(trips.prefix(8))
+        guard let index = catalogIndex else { return }
+        let wanted = DestinationSearchIndex.arrivalCheckOrder(trips, budget: Self.tripArrivalBudget(for: trips))
+        let wantedIDs = Set(wanted.map(\.id))
+        for trip in trips where !wantedIDs.contains(trip.id) { tripArrivals[trip.id] = .notChecked }
         for trip in wanted { tripArrivals[trip.id] = .loading }
+        let api = self.api
         await withTaskGroup(of: (String, TripArrival).self) { group in
-            for trip in wanted {
-                let api = self.api
+            var pending = wanted[...]
+            func start(_ trip: TripOption) {
                 group.addTask {
                     do {
                         let sequences = try await api.vehicleStopSequences(routeID: trip.route.routeId)
-                        let away = StopNudge.nearestStopsAway(boardingSequence: trip.boardingSequence, vehicleSequences: sequences)
-                        return (trip.id, away.map(TripArrival.stopsAway) ?? .noneNearby)
+                        return (trip.id, index.approach(of: trip, vehicleSequences: sequences).map(TripArrival.approaching) ?? .noneNearby)
                     } catch {
                         return (trip.id, .unavailable)
                     }
                 }
             }
-            for await (id, arrival) in group { tripArrivals[id] = arrival }
+            for _ in 0..<Self.tripArrivalConcurrency {
+                guard let next = pending.popFirst() else { break }
+                start(next)
+            }
+            for await (id, arrival) in group {
+                tripArrivals[id] = arrival
+                if let next = pending.popFirst() { start(next) }
+            }
         }
     }
 
@@ -2302,27 +2328,25 @@ enum NearbyBoarding: Equatable {
 /// Where a trip's nearest bus is, from `/v1/vehicles`.
 enum TripArrival: Equatable {
     case loading
-    case stopsAway(Int)
+    /// The nearest bus coming to the boarding stop: stops and distance along its route.
+    case approaching(TripApproach)
     /// No bus of this variant within `StopNudge.horizonStops` before the stop.
     case noneNearby
     case unavailable
+    /// Not asked: beyond the per-screen read budget (`TapsoAppModel.tripArrivalBudget(for:)`).
+    case notChecked
 
-    var stops: Int? {
-        if case let .stopsAway(count) = self { return count }
+    var approach: TripApproach? {
+        if case let .approaching(approach) = self { return approach }
         return nil
     }
 
-    /// Buses that are coming first, nearest first; then the rest by ride length.
-    static func soonestFirst(_ trips: [TripOption], arrivals: [String: TripArrival]) -> [TripOption] {
-        trips.enumerated().sorted { left, right in
-            let l = arrivals[left.element.id]?.stops, r = arrivals[right.element.id]?.stops
-            switch (l, r) {
-            case let (l?, r?) where l != r: return l < r
-            case (.some, .none): return true
-            case (.none, .some): return false
-            default: return left.offset < right.offset
-            }
-        }.map(\.element)
+    var stops: Int? { approach?.stopsAway }
+
+    /// Variants with a bus coming first, nearest along its own route first (a stop
+    /// count is not comparable across routes); then the rest by ride length.
+    static func nearestFirst(_ trips: [TripOption], arrivals: [String: TripArrival]) -> [TripOption] {
+        TripApproach.nearestFirst(trips, approaches: arrivals.compactMapValues(\.approach))
     }
 }
 

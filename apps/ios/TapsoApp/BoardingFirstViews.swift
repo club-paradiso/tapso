@@ -180,7 +180,7 @@ struct CatalogBoardingContent: View {
 }
 
 /// "어떤 버스를 탈까요?" with both ends fixed: only the buses from here to there,
-/// the one coming soonest first.
+/// the one nearest along its own route first.
 struct CatalogTripsView: View {
     @Bindable var model: TapsoAppModel
     let placeName: String
@@ -220,7 +220,7 @@ struct CatalogTripsContent: View {
             VStack(spacing: TapsoSpace.sm) {
                 ForEach(Array(trips.enumerated()), id: \.element.id) { offset, trip in
                     Button { onChoose(trip) } label: {
-                        card(trip, soonest: offset == 0 && arrivals[trip.id]?.stops != nil)
+                        card(trip, soonest: offset == 0 && arrivals[trip.id]?.approach != nil)
                     }
                     .buttonStyle(.plain)
                     .accessibilityIdentifier("trip-\(trip.id)")
@@ -293,7 +293,8 @@ struct CatalogTripsContent: View {
         case .loading, .none:
             ProgressView()
                 .accessibilityLabel(Text("boardFirst.arrival.loading"))
-        case let .stopsAway(count):
+        case let .approaching(approach):
+            let count = approach.stopsAway
             VStack(alignment: .trailing, spacing: 0) {
                 if count == 0 {
                     Text("boardFirst.arrival.atStop")
@@ -309,6 +310,11 @@ struct CatalogTripsContent: View {
             .foregroundStyle(TapsoColor.mintDeep)
         case .noneNearby:
             Text("boardFirst.arrival.none")
+                .font(.caption.weight(.semibold))
+                .foregroundStyle(TapsoColor.textTertiary)
+                .multilineTextAlignment(.trailing)
+        case .notChecked:
+            Text("boardFirst.arrival.notChecked")
                 .font(.caption.weight(.semibold))
                 .foregroundStyle(TapsoColor.textTertiary)
                 .multilineTextAlignment(.trailing)

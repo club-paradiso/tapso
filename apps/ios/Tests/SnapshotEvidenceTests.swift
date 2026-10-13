@@ -258,11 +258,11 @@ final class SnapshotEvidenceTests: XCTestCase {
         let trips = index.trips(from: boarding, to: destination)
         var arrivals: [String: TripArrival] = [:]
         for (offset, trip) in trips.enumerated() {
-            arrivals[trip.id] = [TripArrival.stopsAway(3), .noneNearby, .loading, .stopsAway(0)][offset % 4]
+            arrivals[trip.id] = [TripArrival.approaching(TripApproach(stopsAway: 3, metersAway: 1_400)), .noneNearby, .notChecked, .approaching(TripApproach(stopsAway: 0, metersAway: 0))][offset % 4]
         }
         return AnyView(CatalogTripsContent(
             boardingName: boarding.name, placeName: destination.name,
-            trips: TripArrival.soonestFirst(trips, arrivals: arrivals), arrivals: arrivals, onChoose: { _ in }
+            trips: TripArrival.nearestFirst(trips, arrivals: arrivals), arrivals: arrivals, onChoose: { _ in }
         ))
     }
 

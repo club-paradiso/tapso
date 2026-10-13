@@ -557,7 +557,7 @@ final class TapsoAPIClientTests: XCTestCase {
         let trip = try XCTUnwrap(model.trips(fromBoardingNamed: "합성 정류장 4", toPlaceNamed: place.name).first)
         XCTAssertEqual(trip.stopCount, 6)
         try await waitUntil { model.tripArrivals[trip.id].map { $0 != .loading } ?? false }
-        XCTAssertEqual(model.tripArrivals[trip.id], .stopsAway(2), "the bus at 2 is two stops before 4; the one at 9 has passed")
+        XCTAssertEqual(model.tripArrivals[trip.id]?.stops, 2, "the bus at 2 is two stops before 4; the one at 9 has passed")
 
         await model.chooseTrip(trip, placeName: place.name)
         try await waitUntil { model.path.last == .vehicleCheck }

@@ -496,9 +496,9 @@
 "boardFirst.nearby.unavailable" = "지금 위치를 확인하지 못했어요. 위치 권한을 허용했다면 다시 눌러 주시고 아니면 이름으로 찾아 주세요.";
 "boardFirst.nearby.retry" = "다시 찾기";
 "boardFirst.nearby.title" = "내 근처";
-"boardFirst.trips.soonest" = "가장 빨리 와요";
+"boardFirst.trips.soonest" = "가장 가까이 있어요";
 "boardFirst.trips.rideLength" = "내릴 곳까지 %d정거장";
-"boardFirst.trips.note" = "버스 위치는 실시간이에요. 고른 다음 탈 버스를 한 번 더 확인해요.";
+"boardFirst.trips.note" = "버스 위치는 실시간이에요. 순서는 버스가 내 정류장까지 남은 거리 기준이라 도착 시간과는 다를 수 있어요. 고른 다음 탈 버스를 한 번 더 확인해요.";
 "boardFirst.arrival.loading" = "버스 위치 확인 중";
 "boardFirst.arrival.atStop" = "곧 도착";
 "boardFirst.arrival.stopsAway" = "정거장 전";
@@ -531,3 +531,4 @@
 "search.place.a11y.open" = "근처 정류장을 펼쳐요";
 "search.place.source.kakao" = "장소 검색은 카카오맵 정보로 해요. 거리는 직선거리로 어림한 값이에요.";
 "search.place.demoNote" = "샘플 장소예요. 이름은 제주 장소를 닮았지만 위치는 예시로 만든 거예요.";
+"boardFirst.arrival.notChecked" = "확인 전";
