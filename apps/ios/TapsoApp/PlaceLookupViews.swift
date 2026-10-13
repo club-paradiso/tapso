@@ -18,10 +18,17 @@ struct PlaceCandidate: Identifiable, Hashable, Sendable {
 }
 
 enum PlaceLookup {
-    /// Jeju Island and its islets, for Apple Maps to search in.
+    /// The same box `NearbyStops` accepts (Jeju, Udo, Gapado, Marado, Chujado), for Apple Maps
+    /// to search in: with `.required` (iOS 18+) a narrower region would hide Chujado's stops.
     private static let jejuRegion = MKCoordinateRegion(
-        center: CLLocationCoordinate2D(latitude: 33.38, longitude: 126.55),
-        span: MKCoordinateSpan(latitudeDelta: 0.95, longitudeDelta: 0.95)
+        center: CLLocationCoordinate2D(
+            latitude: (NearbyStops.jejuLatitude.lowerBound + NearbyStops.jejuLatitude.upperBound) / 2,
+            longitude: (NearbyStops.jejuLongitude.lowerBound + NearbyStops.jejuLongitude.upperBound) / 2
+        ),
+        span: MKCoordinateSpan(
+            latitudeDelta: NearbyStops.jejuLatitude.upperBound - NearbyStops.jejuLatitude.lowerBound,
+            longitudeDelta: NearbyStops.jejuLongitude.upperBound - NearbyStops.jejuLongitude.lowerBound
+        )
     )
 
     /// Places and addresses for the query, Jeju only, duplicates dropped, at most `limit`.

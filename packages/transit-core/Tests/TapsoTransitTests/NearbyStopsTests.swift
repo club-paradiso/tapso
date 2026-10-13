@@ -61,4 +61,20 @@ final class NearbyStopsTests: XCTestCase {
         XCTAssertEqual(index.places(nearLatitude: 33.500, longitude: 126.500, limit: 1).count, 1)
         XCTAssertTrue(index.places(nearLatitude: 33.500, longitude: 126.500, radiusMeters: 0).isEmpty)
     }
+
+    /// The published catalog (`services/api/data`), not synthetic: every stop it serves,
+    /// Chujado's included, must sit inside the box the place lookup searches.
+    func testEveryCatalogStopIsInsideTheJejuBox() throws {
+        let repository = URL(fileURLWithPath: #filePath)
+            .deletingLastPathComponent().deletingLastPathComponent().deletingLastPathComponent()
+            .deletingLastPathComponent().deletingLastPathComponent()
+        let data = try Data(contentsOf: repository.appendingPathComponent("services/api/data/jeju-transit-catalog.json"))
+        let catalog = try JejuTransitCatalog.decode(data)
+        let outside = catalog.stops.filter { stop in
+            guard let lat = stop.lat, let lng = stop.lng else { return false }
+            return !NearbyStops.isInJeju(latitude: lat, longitude: lng)
+        }
+        XCTAssertGreaterThan(catalog.stops.count, 1000)
+        XCTAssertEqual(outside.map(\.name), [])
+    }
 }
