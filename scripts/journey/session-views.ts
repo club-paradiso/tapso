@@ -94,9 +94,13 @@ async function waitingRide(): Promise<void> {
     record(id, why, await sessions.refresh("syn-session-ride"));
   }
 
+  // One failed read 10 s after good evidence is a blip: the confirmed ride keeps its last step.
   now = new Date(now.getTime() + 10_000);
   provider.failure = new ProviderTimeoutError("TAGO request timed out");
-  record("degraded-provider-timeout", "the bus feed timed out once; last progress retained", await sessions.refresh("syn-session-ride"));
+  record("tracking-provider-blip", "the bus feed timed out once, 10 s after the last accepted evidence; the ride keeps its last step and says the read failed", await sessions.refresh("syn-session-ride"));
+  // Still failing once that evidence is 40 s old: now the ride is rechecking.
+  now = new Date(now.getTime() + 30_000);
+  record("degraded-provider-timeout", "the bus feed kept timing out past the 30 s grace window; last progress retained", await sessions.refresh("syn-session-ride"));
 }
 
 async function earlyConfirmation(): Promise<void> {

@@ -337,11 +337,34 @@ test("an unseen destination passage needs a second sighting; seen from two stops
   assert.equal(passed.state, "passed_destination");
 });
 
-test("a transient provider failure keeps the confirmed ride's count and says the provider, not the bus, is the problem", async () => {
+test("a provider blip moments after a good read leaves the confirmed ride tracking, and says the read failed", async () => {
+  // Production 2026-10-13: 7 of 180 reads failed, every rider at the same instant. Each one flashed
+  // the ride to "checking" although the bus had been seen seconds earlier.
   const { sessions, id, advance } = await confirmedRide();
   const provider = (sessions as unknown as { provider: Provider }).provider;
   provider.vehicles = async () => { throw new Error("TAGO payload has no body object"); };
   advance(15);
+  const view = await sessions.refresh(id);
+  assert.equal(view.state, "tracking");
+  assert.equal(view.progress?.currentStopSequence, 2, "nothing advances on a failed read");
+  assert.equal(view.progress?.remainingStops, 6);
+  assert.deepEqual(view.providerRead, { state: "failed", consecutiveFailures: 1 });
+  assert.deepEqual(view.reliability, {
+    provider: "temporarily_unavailable",
+    observation: "unknown_timestamp",
+    position: "official",
+    vehicle: "confirmed",
+    trust: "live",
+  });
+});
+
+test("a provider failure that outlasts the grace window degrades the confirmed ride and says the provider, not the bus, is the problem", async () => {
+  const { sessions, id, advance } = await confirmedRide();
+  const provider = (sessions as unknown as { provider: Provider }).provider;
+  provider.vehicles = async () => { throw new Error("TAGO payload has no body object"); };
+  advance(15);
+  assert.equal((await sessions.refresh(id)).state, "tracking");
+  advance(20); // the last accepted evidence is now 35 s old
   const view = await sessions.refresh(id);
   assert.equal(view.state, "degraded");
   assert.equal(view.progress?.currentStopSequence, 2);

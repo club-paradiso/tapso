@@ -49,6 +49,8 @@ const DEFAULT_NEAR_STOP_RADIUS_METERS = 120;
  * dressed up as a healthy session. Persistent failure is never success.
  */
 const DEFAULT_MAX_CONSECUTIVE_PROVIDER_FAILURES = 3;
+/** The client's fresh window (`FreshnessPolicy.conservativeDefault`). */
+const DEFAULT_PROVIDER_FAILURE_GRACE_MS = 30_000;
 
 /**
  * What shows that a bus other than the selected one reached the boarding stop:
@@ -290,6 +292,11 @@ export interface JourneySessionCoordinatorOptions {
   automaticMatchingEnabled?: boolean;
   /** How many consecutive failed provider reads a session tolerates. */
   maxConsecutiveProviderFailures?: number;
+  /**
+   * How old a confirmed ride's last accepted evidence may be for a failed provider read to leave
+   * the ride tracking. Defaults to the 30 s the client also calls fresh (`FreshnessPolicy`).
+   */
+  providerFailureGraceMs?: number;
   /** The confirmed-ride progression policy (`confirmedRideProgression.ts`). */
   confirmedProgressionPolicy?: ConfirmedProgressionPolicy;
   /** Defaults to an in-process store. See `sessionStore.ts`. */
@@ -401,6 +408,7 @@ export class JourneySessionCoordinator {
   private readonly nearStopRadiusMeters: number;
   private readonly automaticMatchingEnabled: boolean;
   private readonly maxConsecutiveProviderFailures: number;
+  private readonly providerFailureGraceMs: number;
   private readonly confirmedProgressionPolicy: ConfirmedProgressionPolicy;
   private readonly store: JourneySessionStore;
   private readonly matchingReadiness: ReadinessLevel;
@@ -435,6 +443,7 @@ export class JourneySessionCoordinator {
       "maxConsecutiveProviderFailures",
     );
     this.confirmedProgressionPolicy = options.confirmedProgressionPolicy ?? CONFIRMED_PROGRESSION_POLICY_V1;
+    this.providerFailureGraceMs = positiveDuration(options.providerFailureGraceMs, DEFAULT_PROVIDER_FAILURE_GRACE_MS, "providerFailureGraceMs");
   }
 
   /** Shadow mode ranks and publishes; it never assigns `selectedVehicleId`. */
@@ -812,6 +821,34 @@ export class JourneySessionCoordinator {
     record.consecutiveProviderFailures += 1;
     record.updatedAtMs = now.getTime();
     if (record.consecutiveProviderFailures > this.maxConsecutiveProviderFailures) throw error;
+    // A confirmed bus seen moments ago is still where it was seen: a single failed read
+    // (production 2026-10-13: 3.9 % of reads, all riders at once) must not flash the ride to
+    // "checking". The ride stays on its last accepted step until that evidence is older than the
+    // grace window, the same age the client stops calling fresh. Nothing advances, nothing is
+    // inferred, and the response still says the read failed.
+    const lastEvidenceMs = record.lastProgress ? Date.parse(record.lastProgress.evidenceAt ?? "") : Number.NaN;
+    if (
+      record.selectionMode === "explicit"
+      && record.lastProgress
+      && Number.isFinite(lastEvidenceMs)
+      && now.getTime() - lastEvidenceMs <= this.providerFailureGraceMs
+    ) {
+      return this.view(record, {
+        state: stateFromProgress(record.lastProgress),
+        progress: record.lastProgress,
+        explanation:
+          "The provider read failed, but the confirmed bus's last accepted evidence is within the grace "
+          + "window; the ride keeps its last step and nothing is advanced or inferred.",
+        providerRead: { state: "failed", consecutiveFailures: record.consecutiveProviderFailures },
+        reliability: {
+          provider: "temporarily_unavailable",
+          observation: "unknown_timestamp",
+          position: "official",
+          vehicle: "confirmed",
+          trust: "live",
+        },
+      });
+    }
     return this.view(record, {
       state: "degraded",
       progress: retainedProgress(record.lastProgress),

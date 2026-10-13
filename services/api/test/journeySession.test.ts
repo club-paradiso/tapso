@@ -497,7 +497,7 @@ class FlakyProvider implements TransitProvider {
   }
 }
 
-test("a transient provider failure degrades without corrupting cadence or progress", async () => {
+test("a transient provider failure keeps a fresh confirmed ride tracking without corrupting cadence or progress", async () => {
   const provider = new FlakyProvider();
   let now = new Date("2026-09-22T08:00:00Z");
   provider.vehiclesValue = [tagoRow("TAGO-A", now, 2, 33.5010)];
@@ -514,18 +514,19 @@ test("a transient provider failure degrades without corrupting cadence or progre
   assert.equal(tracking.state, "tracking");
   assert.equal(tracking.progress?.currentStopSequence, 3);
 
-  // One failed read.
+  // One failed read, 5 s after the last accepted evidence: inside the grace window the confirmed
+  // ride keeps tracking on its last step, and the response still says the read failed.
   now = new Date("2026-09-22T08:00:15Z");
   provider.failuresRemaining = 1;
-  const degraded = await sessions.refresh(created.id);
-  assert.equal(degraded.state, "degraded");
-  assert.equal(degraded.providerRead?.state, "failed");
-  assert.equal(degraded.providerRead?.consecutiveFailures, 1);
-  assert.equal(degraded.selectedVehicleId, "TAGO-A", "a failed read never rematches");
-  assert.equal(degraded.progress?.currentStopSequence, 3, "progress never moves backward on a failure");
-  assert.equal(degraded.progress?.source, "retained_last_known");
-  assert.equal(degraded.sourceFreshness, undefined, "a failure produces no freshness evidence");
-  assert.equal(degraded.progress?.observedAt, new Date(0).toISOString(), "no provider timestamp is manufactured");
+  const blip = await sessions.refresh(created.id);
+  assert.equal(blip.state, "tracking");
+  assert.equal(blip.providerRead?.state, "failed");
+  assert.equal(blip.providerRead?.consecutiveFailures, 1);
+  assert.equal(blip.selectedVehicleId, "TAGO-A", "a failed read never rematches");
+  assert.equal(blip.progress?.currentStopSequence, 3, "progress never moves backward on a failure");
+  assert.equal(blip.progress?.evidenceAt, tracking.progress?.evidenceAt, "the evidence time is not refreshed by a failure");
+  assert.equal(blip.sourceFreshness, undefined, "a failure produces no freshness evidence");
+  assert.equal(blip.progress?.observedAt, new Date(0).toISOString(), "no provider timestamp is manufactured");
 
   // The next successful read resumes from the retained state with its cadence
   // history intact: one failure did not erase the receipts before it.

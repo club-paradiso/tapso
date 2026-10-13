@@ -133,6 +133,7 @@ final class LiveSessionInterpreterTests: XCTestCase {
             "tracking-next-stop": .nextStop,
             "arrived": .arrived,
             "passed-destination": .passedDestination,
+            "tracking-provider-blip": .arrived,
             "degraded-provider-timeout": .delayed,
             "degraded-missing": .delayed,
             "lost": .vehicleLost,
@@ -205,8 +206,16 @@ final class LiveSessionInterpreterTests: XCTestCase {
             default: XCTFail("\(id): unknown trust \(reliability.trust)")
             }
             if reliability.provider == "temporarily_unavailable" {
-                XCTAssertEqual(view.sessionState, .degraded, "\(id): a provider failure is rechecking, never a lost bus")
-                XCTAssertEqual(trust, .rechecking, id)
+                // A provider failure is never a lost bus. Within the server's grace window (the last
+                // evidence is still fresh) the ride keeps its step and stays live; past it, rechecking.
+                XCTAssertNotEqual(trust, .unavailable, "\(id): a provider failure is never a lost bus")
+                if reliability.trust == "live" {
+                    XCTAssertNotEqual(view.sessionState, .degraded, "\(id): a blip inside the grace window keeps the ride's state")
+                    XCTAssertEqual(view.providerRead?.state, "failed", "\(id): the failed read is still reported")
+                } else {
+                    XCTAssertEqual(view.sessionState, .degraded, "\(id): past the grace window a provider failure is rechecking")
+                    XCTAssertEqual(trust, .rechecking, id)
+                }
             }
         }
         XCTAssertGreaterThanOrEqual(seen, 8)
