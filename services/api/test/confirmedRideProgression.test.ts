@@ -230,6 +230,25 @@ test("an impossible forward jump is rejected: five stops (≈2 km) in 15 s", asy
   assert.equal(later.progress?.currentStopSequence, 7);
 });
 
+test("switching to a different confirmed vehicle discards the old bus's stop timer and progress", async () => {
+  const { provider, sessions, id, advance } = await confirmedRide();
+  // The first bus has sat at stop 2 for two minutes. Its clock must not justify
+  // an impossible jump by a DIFFERENT bus confirmed immediately afterwards.
+  for (let i = 0; i < 12; i++) {
+    provider.rows = [row("BUS-3913", advance(10), 2)];
+    assert.equal((await sessions.refresh(id)).state, "tracking");
+  }
+  provider.rows = [row("BUS-OTHER", advance(5), 2)];
+  const switched = await sessions.confirm(id, { vehicleId: "BUS-OTHER" });
+  assert.equal(switched.selectedVehicleId, "BUS-OTHER");
+  assert.equal(switched.progress?.currentStopSequence, 2);
+  provider.rows = [row("BUS-OTHER", advance(6), 8)];
+  const jump = await sessions.refresh(id);
+  assert.equal(jump.state, "degraded");
+  assert.equal(jump.trackingIntegrity, "implausible_jump");
+  assert.equal(jump.progress?.currentStopSequence, 2);
+});
+
 test("a bus that waited at a stop and then catches up is accepted: the clock runs from its first sighting there, not the last poll", async () => {
   // Field shape, 2026-10-13 production: TAGO moves a bus a stop at a time and lags it, so a
   // rider polling every few seconds sees the same stop many times and then a jump. Measuring
