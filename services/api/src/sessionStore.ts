@@ -60,6 +60,8 @@ export interface StoredJourneySession {
   consecutiveProviderFailures: number;
   /** A destination passage seen once on a rider-confirmed ride, awaiting a second sighting. */
   pendingPassage?: { stopSequence: number; evidenceAtMs: number };
+  /** When the confirmed bus was first accepted at its current stop. Optional: older rows lack it. */
+  stepSinceMs?: number;
   /** Matcher memory of passages past the boarding stop. Absent on older rows: an empty memory. */
   passage?: PassageMemory;
   /** After an automatic selection for a waiting rider (finding F20). See `BoardingWatch`. */
