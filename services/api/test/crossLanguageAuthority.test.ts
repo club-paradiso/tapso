@@ -85,6 +85,8 @@ test("the network client talks only to TAPSO's own API, through documented endpo
     "/v1/vehicles",
     "/v1/catalog",
     "/v1/timetables",
+    // Place and address search for riders who don't know a stop's name; the Kakao key stays server-side.
+    "/v1/places",
     "/v1/sessions",
     "/v1/sessions/:id",
     "/v1/sessions/:id/confirm",

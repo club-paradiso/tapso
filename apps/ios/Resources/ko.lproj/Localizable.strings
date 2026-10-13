@@ -3,7 +3,7 @@
 "brand.name" = "탑서";
 "demo.chip" = "샘플 정류장";
 "home.question" = "어디서 내릴까요?";
-"home.search.placeholder" = "내릴 정류장 검색";
+"home.search.placeholder" = "내릴 정류장·장소·주소 검색";
 "home.search.hint" = "내릴 정류장을 검색해요";
 "home.recentDestinations" = "최근 내린 곳";
 "home.destinationChip.hint" = "이 정류장에서 내리는 여정을 시작해요";
@@ -408,9 +408,9 @@
 "mapImport.shot.deleteFailed" = "지우지 못했어요. 사진 앱에서 직접 지워 주세요.";
 
 // Real Jeju data: catalog search, official timetables (docs/exec-plans/JEJU_PRODUCTION_V1.md)
-"search.catalog.hint" = "제주 버스 정류장 %ld곳에서 찾아요. 이름 일부나 초성(ㅈㅅㅊ)으로도 돼요.";
+"search.catalog.hint" = "제주 버스 정류장 %ld곳에서 찾아요. 이름 일부나 초성(ㅈㅅㅊ)으로도 돼요. 정류장 이름을 모르면 가려는 장소나 주소를 쳐 보세요.";
 "search.catalog.loading" = "제주 버스 노선 정보를 불러오는 중이에요";
-"search.catalog.empty" = "제주 버스가 서는 정류장 중에 없어요. 다른 이름으로 찾아보거나 버스 번호로 타 보세요.";
+"search.catalog.empty" = "이 이름의 버스 정류장은 없어요. 아래에서 장소·주소로 근처 정류장을 찾아볼게요.";
 "search.catalog.routes" = "%ld개 노선";
 "search.catalog.routes.one" = "%ld개 노선";
 "search.catalog.asOf" = "공식 노선 정보 기준 %@";
@@ -518,3 +518,15 @@
 "check.accessibility.external" = "제주버스 웹사이트가 열려요";
 "check.accessibility.failed" = "제주버스 페이지를 열지 못했어요.";
 "ride.location.approximate" = "정확한 위치가 꺼져 있어 버스 정보로만 안내해요.";
+"search.place.title" = "장소·주소 근처 정류장";
+"search.place.offer" = "‘%@’ 장소·주소로 근처 정류장 찾기";
+"search.place.loading" = "장소를 찾는 중이에요";
+"search.place.empty" = "제주에서 이 이름의 장소나 주소를 찾지 못했어요. 다른 이름이나 도로명 주소로 찾아보세요.";
+"search.place.failed" = "장소를 찾지 못했어요. 인터넷 연결을 확인하고 다시 시도해 주세요.";
+"search.place.nearby" = "%@ 근처 정류장";
+"search.place.stopDetail" = "걸어서 약 %ld분 · 약 %ldm";
+"search.place.noStops" = "2km 안에 버스 정류장이 없어요. 버스 번호로 타 보세요.";
+"search.place.far" = "걸어갈 만한 거리(800m) 안에는 정류장이 없어 조금 멀리까지 찾았어요.";
+"search.place.source" = "장소 검색은 Apple 지도로 해요. 거리는 직선거리로 어림한 값이에요.";
+"search.place.a11y.open" = "근처 정류장을 펼쳐요";
+"search.place.source.kakao" = "장소 검색은 카카오맵 정보로 해요. 거리는 직선거리로 어림한 값이에요.";

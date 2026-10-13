@@ -96,6 +96,7 @@
 		18663C4A2F8795B643DDD18D /* HomeLayoutTests.swift in Sources */ = {isa = PBXBuildFile; fileRef = BE2000063775934C20DB408B /* HomeLayoutTests.swift */; };
 		522C090B8191DE45D0C20C8D /* HybridRideReconcileTests.swift in Sources */ = {isa = PBXBuildFile; fileRef = 12873EA81968F53A1B70B049 /* HybridRideReconcileTests.swift */; };
 		753B05637D7A255F05962663 /* RideLocationSamplerTests.swift in Sources */ = {isa = PBXBuildFile; fileRef = E3ECAC8A2E99BE066DF83D63 /* RideLocationSamplerTests.swift */; };
+		4CCE643CFCC5C082AD3EDB27 /* PlaceLookupViews.swift in Sources */ = {isa = PBXBuildFile; fileRef = 08A7A38C2F81F25CC44EA4DB /* PlaceLookupViews.swift */; };
 /* End PBXBuildFile section */
 
 /* Begin PBXContainerItemProxy section */
@@ -213,6 +214,7 @@
 		BE2000063775934C20DB408B /* HomeLayoutTests.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = HomeLayoutTests.swift; sourceTree = "<group>"; };
 		12873EA81968F53A1B70B049 /* HybridRideReconcileTests.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = HybridRideReconcileTests.swift; sourceTree = "<group>"; };
 		E3ECAC8A2E99BE066DF83D63 /* RideLocationSamplerTests.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = RideLocationSamplerTests.swift; sourceTree = "<group>"; };
+		08A7A38C2F81F25CC44EA4DB /* PlaceLookupViews.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = PlaceLookupViews.swift; sourceTree = "<group>"; };
 /* End PBXFileReference section */
 
 /* Begin PBXFrameworksBuildPhase section */
@@ -339,6 +341,7 @@
 				01DE7451FA463336C39A13CA /* LiveRideSetupViews.swift */,
 				8B023AAD9EC6D00AFF13C829 /* LiveRouteImportCatalog.swift */,
 				85623FA1F6C3B0EE2F9DC99A /* PhotoLibraryScreenshotEraser.swift */,
+				08A7A38C2F81F25CC44EA4DB /* PlaceLookupViews.swift */,
 				1BA1E189F8D5241F18ABD214 /* RideEndView.swift */,
 				857A4229A2F4867FB62DD336 /* RideFeedback.swift */,
 				13198596FFB79BF6CE328491 /* RideKeepAlive.swift */,
@@ -606,6 +609,7 @@
 				16CBA37E2A09BAAB0168A223 /* LiveRideSetupViews.swift in Sources */,
 				15C8BE959913FD7DC74C90BC /* LiveRouteImportCatalog.swift in Sources */,
 				5511485E8DD9FA463D1FB2A9 /* PhotoLibraryScreenshotEraser.swift in Sources */,
+				4CCE643CFCC5C082AD3EDB27 /* PlaceLookupViews.swift in Sources */,
 				9E47BA264E7738D256848D31 /* ReturnActivitySurfaces.swift in Sources */,
 				499B6807EDD8F3BA8C1EAAA7 /* RideAgainOpenIntent.swift in Sources */,
 				E90C569F723A43A0F30ED146 /* RideEndView.swift in Sources */,

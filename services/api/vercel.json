@@ -48,6 +48,10 @@
       "destination": "/api/v1/catalog"
     },
     {
+      "source": "/v1/places",
+      "destination": "/api/v1/places"
+    },
+    {
       "source": "/v1/matches",
       "destination": "/api/v1/matches"
     },

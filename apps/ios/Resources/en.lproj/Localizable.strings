@@ -3,7 +3,7 @@
 "brand.name" = "TAPSO";
 "demo.chip" = "Sample stops";
 "home.question" = "Where are you getting off?";
-"home.search.placeholder" = "Search your stop";
+"home.search.placeholder" = "Search a stop, place or address";
 "home.search.hint" = "Search for the stop you'll get off at";
 "home.recentDestinations" = "Recent stops";
 "home.destinationChip.hint" = "Starts a ride to this stop";
@@ -408,9 +408,9 @@
 "mapImport.shot.deleteFailed" = "Couldn't delete it. Delete it in Photos.";
 
 // Real Jeju data: catalog search, official timetables (docs/exec-plans/JEJU_PRODUCTION_V1.md)
-"search.catalog.hint" = "Search %ld Jeju bus stops. Part of a name works too.";
+"search.catalog.hint" = "Search %ld Jeju bus stops. Part of a name works too. Don't know the stop? Type the place or address you're going to.";
 "search.catalog.loading" = "Loading Jeju bus routes";
-"search.catalog.empty" = "No Jeju bus stops by that name. Try another name, or ride by bus number.";
+"search.catalog.empty" = "No Jeju bus stops by that name. Below, we'll look it up as a place or address and find the stops near it.";
 "search.catalog.routes" = "%ld routes";
 "search.catalog.routes.one" = "%ld route";
 "search.catalog.asOf" = "Official route data as of %@";
@@ -518,3 +518,15 @@
 "check.accessibility.external" = "Opens the Jeju Bus website";
 "check.accessibility.failed" = "Couldn't open the Jeju Bus page.";
 "ride.location.approximate" = "Precise Location is off, so guidance uses bus data only.";
+"search.place.title" = "Stops near a place or address";
+"search.place.offer" = "Find stops near “%@” as a place or address";
+"search.place.loading" = "Looking up the place";
+"search.place.empty" = "Couldn't find that place or address in Jeju. Try another name or a street address.";
+"search.place.failed" = "Couldn't look up places. Check your connection and try again.";
+"search.place.nearby" = "Stops near %@";
+"search.place.stopDetail" = "About %ld min walk · about %ld m";
+"search.place.noStops" = "No bus stops within 2 km. Try riding by bus number.";
+"search.place.far" = "No stop within walking distance (800 m), so we looked a little farther.";
+"search.place.source" = "Places are looked up with Apple Maps. Distances are straight-line estimates.";
+"search.place.a11y.open" = "Shows the stops nearby";
+"search.place.source.kakao" = "Places are looked up with Kakao Map data. Distances are straight-line estimates.";

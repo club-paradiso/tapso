@@ -89,6 +89,10 @@ Decision:
 
 First committed build, 2026-10-03 (run 37109317794): version `794f3bcb831d783e`, 989 variants with ordered stops, 4,338 stops (all with a position), 3 variants with a one-stop list under `unavailable`, 252 route numbers. The unfiltered query answered HTTP 504; the 265 other queries answered. 32 stop lists appear twice under one number with two route IDs (`OBSERVED`; the provider does not say why).
 
+## Place and address search
+
+`GET /v1/places?q=` (`services/api/src/placeSearch.ts`, label `THIRD_PARTY_LOOKUP`): when a rider does not know a stop's name, the destination search looks the query up as a place or address and offers the catalog's own stops near it (`NearbyStops` in transit-core). The server calls the Kakao Local REST API (keyword search bounded to the Jeju box, plus address search) with `KAKAO_REST_API_KEY`, which stays server-side and is set on the `tapso-api` Vercel project as a Sensitive variable. Without the key the endpoint answers `503 PLACES_UNAVAILABLE` and `/health` reports `places.available: false`; the app then uses Apple Maps (`MKLocalSearch`) on the phone, which needs no key. Only coordinates inside 33.08–34.05°N, 126.08–127.0°E (Jeju, Udo, Gapado, Marado, Chujado) are returned. Results are cached per query for a day per instance, answered with `cache-control: private`, and the query is never logged. Free quota (Kakao developer quota page, read 2026-10-13): 100,000 keyword and 100,000 address calls a day for the account's first activated Map API app; each lookup spends one of each.
+
 ## Runtime provider
 
 Government-specific DTOs stop inside the TAGO provider adapter:

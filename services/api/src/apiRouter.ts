@@ -32,6 +32,7 @@ import { TAGO_CADENCE_POLICY_V1 } from "./sourceFreshness.ts";
 import { routeTimetableView, timetableFreshness, timetableIndex } from "./officialTimetable.ts";
 import { koreanDate } from "./serviceDay.ts";
 import type { StaticTransitData } from "./staticTransitData.ts";
+import { normalizePlaceQuery, PLACE_QUERY_MAX, PLACE_QUERY_MIN, PlaceSearchError, type KakaoPlaceSearch } from "./placeSearch.ts";
 
 /**
  * The single source of the freshness posture every surface publishes.
@@ -157,6 +158,11 @@ export interface TransitApiDependencies {
    * timetable bundle and the holiday calendar. Absent reads as none deployed.
    */
   staticData?: StaticTransitData;
+  /**
+   * Place and address search (`placeSearch.ts`, Kakao Local). Absent or
+   * unconfigured reads as off: `/v1/places` answers `PLACES_UNAVAILABLE`.
+   */
+  places?: Pick<KakaoPlaceSearch, "configured" | "search">;
   /** The shared operator secret. Deliberately not part of `config`, which `/health` echoes. */
   operatorToken?: string;
   now?: () => Date;
@@ -175,6 +181,7 @@ type Route =
   | "matches"
   | "catalog"
   | "timetables"
+  | "places"
   | "session_create"
   | "session_read"
   | "session_end"
@@ -275,6 +282,7 @@ function resolvePath(path: string): Resolved | undefined {
   if (path === "/v1/matches") return { route: "matches", methods: ["POST"] };
   if (path === "/v1/catalog") return { route: "catalog", methods: ["GET"] };
   if (path === "/v1/timetables") return { route: "timetables", methods: ["GET"] };
+  if (path === "/v1/places") return { route: "places", methods: ["GET"] };
   if (path === "/v1/sessions") return { route: "session_create", methods: ["POST"] };
 
   // Operator-only ride capture. Authenticated, uncached, and never linked from
@@ -331,7 +339,36 @@ async function dispatch(
   const { config, provider, discovery } = dependencies;
 
   if (resolved.route === "health") {
-    return { response: json(healthPayload(config, support.now(), dependencies.sessions, dependencies.liveActivityPush, dependencies.providerHealth, dependencies.staticData, dependencies.activeRideReads), 200, { "cache-control": "no-store" }) };
+    const payload = healthPayload(config, support.now(), dependencies.sessions, dependencies.liveActivityPush, dependencies.providerHealth, dependencies.staticData, dependencies.activeRideReads);
+    // Whether a key is set, never which.
+    return { response: json({ ...payload, places: { available: Boolean(dependencies.places?.configured), source: "kakao-local" } }, 200, { "cache-control": "no-store" }) };
+  }
+
+  if (resolved.route === "places") {
+    const places = dependencies.places;
+    if (!places?.configured) throw apiError("PLACES_UNAVAILABLE", "place search is not configured on this deployment");
+    const query = normalizePlaceQuery(url.searchParams.get("q") ?? "");
+    const length = [...query].length;
+    if (length < PLACE_QUERY_MIN || length > PLACE_QUERY_MAX) {
+      throw apiError("INVALID_INPUT", `q must be ${PLACE_QUERY_MIN} to ${PLACE_QUERY_MAX} characters`);
+    }
+    try {
+      const found = await places.search(query);
+      return {
+        response: json(
+          { items: found.items, meta: { source: "kakao-local", label: "THIRD_PARTY_LOOKUP", area: "jeju" } },
+          200,
+          // Per rider: what someone searched for is not a shared-cache key.
+          { "cache-control": "private, max-age=300" },
+        ),
+        cache: found.cache,
+      };
+    } catch (error) {
+      if (!(error instanceof PlaceSearchError)) throw error;
+      if (error.reason === "unconfigured") throw apiError("PLACES_UNAVAILABLE", "place search is not configured on this deployment");
+      if (error.reason === "timeout") throw apiError("PLACES_TIMEOUT", "place search did not answer in time");
+      throw apiError("PLACES_UPSTREAM_FAILED", "place search failed upstream");
+    }
   }
 
   if (resolved.route === "catalog") {
@@ -977,6 +1014,7 @@ function enforceRateLimit(dependencies: TransitApiDependencies, address: string,
 
 function bucketFor(route: Route): string {
   if (isOperatorRoute(route)) return "operator";
+  if (route === "places") return "places";
   return route === "health" ? "health" : "api";
 }
 
@@ -1152,6 +1190,9 @@ const STATUS_BY_CODE: Record<string, number> = {
   OPERATOR_DISABLED: 503,
   CATALOG_UNAVAILABLE: 503,
   TIMETABLES_UNAVAILABLE: 503,
+  PLACES_UNAVAILABLE: 503,
+  PLACES_UPSTREAM_FAILED: 502,
+  PLACES_TIMEOUT: 504,
 };
 
 function errorResponse(
