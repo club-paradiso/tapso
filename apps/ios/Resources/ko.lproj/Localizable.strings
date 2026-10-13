@@ -1,7 +1,7 @@
 /* TAPSO Product V2 strings. Keys are checked by scripts/ios/check_localization.py. */
 
 "brand.name" = "탑서";
-"demo.chip" = "체험판 · 합성 데이터";
+"demo.chip" = "샘플 정류장";
 "home.question" = "어디서 내릴까요?";
 "home.search.placeholder" = "내릴 정류장 검색";
 "home.search.hint" = "내릴 정류장을 검색해요";
@@ -14,7 +14,7 @@
 "home.mapImport.body" = "스크린샷이나 공유한 장소로 시작";
 "home.sample.title" = "처음이라면";
 "home.sample.body" = "제주버스터미널에서 제주시청(아라방면)까지, 버스 확인부터 하차까지 그대로 따라가 보세요.";
-"home.sample.action" = "샘플 여정 체험하기";
+"home.sample.action" = "샘플 여정으로 둘러보기";
 "home.privacy" = "버스를 따라가는 데는 위치가 필요 없어요. 위치를 허용해도 iPhone 안에서만 써요.";
 "home.intro.title" = "내릴 곳만 알려 주세요";
 "home.intro.body" = "버스를 확인하고 나면 내릴 때까지 돌이가 대신 볼게요.";
@@ -28,11 +28,11 @@
 "search.title" = "내릴 곳";
 "search.clear" = "지우기";
 "search.recent" = "최근";
-"search.allStops" = "체험판 정류장";
+"search.allStops" = "샘플 정류장";
 "search.results" = "정류장";
-"search.demoNote" = "체험판에는 합성 데이터로 만든 365번 두 방향만 있어요.";
+"search.demoNote" = "샘플 여정에는 예시로 만든 365번 두 방향만 있어요.";
 "search.empty.title" = "찾는 정류장이 없어요";
-"search.empty.body" = "체험판에 없는 정류장이에요. 다른 이름으로 검색해 보세요.";
+"search.empty.body" = "샘플 여정에는 없는 정류장이에요. 다른 이름으로 검색해 보세요.";
 "setup.step.route" = "버스 선택";
 "setup.step.boarding" = "타는 정류장";
 "recap.getOffAt" = "내릴 곳";
@@ -45,7 +45,7 @@
 "boarding.stopsToDestination.one" = "내릴 곳까지 %ld정거장";
 "mapImport.title" = "경로 가져오기";
 "mapImport.question" = "지도 앱에서 본 경로를 가져와요";
-"mapImport.found" = "체험판 정류장 중에서 찾았어요";
+"mapImport.found" = "샘플 정류장 중에서 찾았어요";
 "mapImport.none.title" = "장소를 찾지 못했어요";
 "mapImport.none.body" = "붙여넣은 내용에 장소 이름이나 위치가 없어요. 지도 앱에서 장소를 연 다음 다시 공유하거나, 직접 검색해 주세요.";
 "mapImport.none.action" = "정류장 직접 검색";
@@ -130,7 +130,7 @@
 "rescue.walk.tooFar" = "목적지 정류장까지 직선으로도 %ld m라 걸어가기엔 멀어요.";
 "rescue.mapApp.title" = "지도 앱에서 길 찾기";
 "rescue.mapApp.detail" = "돌아가는 버스와 걷는 길은 지도 앱이 더 잘 알려줘요";
-"ride.closeApp" = "체험판은 앱을 켜 둔 동안 진행돼요. 잠금 화면과 다이나믹 아일랜드에도 같은 안내가 보여요.";
+"ride.closeApp" = "샘플 여정은 앱을 켜 둔 동안만 진행돼요. 잠금 화면과 다이나믹 아일랜드에도 같은 안내가 보여요.";
 "ride.liveActivityOff.title" = "잠금 화면 안내가 꺼져 있어요";
 "ride.liveActivityOff.body" = "설정 › 탑서에서 실시간 현황을 켜면 잠금 화면과 다이나믹 아일랜드에서도 볼 수 있어요. 앱 안에서는 계속 안내해요.";
 "ride.resumed.title" = "여정을 이어가요";
@@ -139,7 +139,7 @@
 "ride.end.confirm" = "여정을 끝낼까요? 하차 알림도 멈춰요.";
 "ride.end.action" = "여정 끝내기";
 "ride.menu" = "여정 메뉴";
-"ride.menu.demo" = "체험 설정";
+"ride.menu.demo" = "샘플 여정 설정";
 "ride.menu.end" = "여정 끝내기";
 "count.unit" = "정거장";
 "count.unit.one" = "정거장";
@@ -175,23 +175,23 @@
 "alert.arrived.title" = "여기서 내려요";
 "alert.arrived.body" = "목적지에 도착했어요";
 "live_activity.disabled" = "실시간 현황이 꺼져 있어요.";
-"demo.title" = "체험 설정";
-"demo.scenario" = "시나리오";
-"demo.scenario.footer" = "체험판은 실시간 데이터에 연결하지 않아요. 모든 버스와 번호판은 합성 데이터예요. 시나리오는 다음 버스 확인부터 적용돼요.";
-"demo.scenario.smooth" = "순조로운 여정";
+"demo.title" = "샘플 여정 설정";
+"demo.scenario" = "상황";
+"demo.scenario.footer" = "샘플 여정은 실시간 데이터에 연결하지 않아요. 버스와 번호판은 모두 예시예요. 바꾼 상황은 다음 버스 확인부터 반영돼요.";
+"demo.scenario.smooth" = "문제 없이 도착";
 "demo.scenario.similarBuses" = "비슷한 버스 두 대";
 "demo.scenario.noBusYet" = "아직 오는 버스 없음";
 "demo.scenario.delayedData" = "실시간 정보 지연";
 "demo.scenario.vehicleLost" = "버스 잠시 놓침";
 "demo.scenario.offline" = "인터넷 끊김";
 "demo.scenario.passedDestination" = "목적지 지나침";
-"demo.playback" = "재생";
-"demo.build" = "이 빌드";
-"demo.build.footer" = "테스트 폰이 어떤 커밋을 실행 중인지 여기서 확인해요.";
+"demo.playback" = "진행 속도";
+"demo.build" = "앱 정보";
+"demo.build.footer" = "이 휴대폰에서 실행 중인 앱 버전을 여기서 확인해요.";
 "demo.speed" = "속도";
-"demo.chip.hint" = "체험 설정을 열어요";
-"demo.speed.manual" = "단계별";
-"demo.step" = "한 단계 진행";
+"demo.chip.hint" = "샘플 여정 설정을 열어요";
+"demo.speed.manual" = "직접 넘기기";
+"demo.step" = "다음 단계로";
 "common.cancel" = "취소";
 "common.done" = "완료";
 "common.ok" = "확인";

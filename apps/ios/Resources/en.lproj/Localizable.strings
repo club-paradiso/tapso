@@ -1,7 +1,7 @@
 /* TAPSO Product V2 strings. Keys are checked by scripts/ios/check_localization.py. */
 
 "brand.name" = "TAPSO";
-"demo.chip" = "Preview · synthetic data";
+"demo.chip" = "Sample stops";
 "home.question" = "Where are you getting off?";
 "home.search.placeholder" = "Search your stop";
 "home.search.hint" = "Search for the stop you'll get off at";
@@ -14,7 +14,7 @@
 "home.mapImport.body" = "Start from a screenshot or a place shared from a map app";
 "home.sample.title" = "New to TAPSO?";
 "home.sample.body" = "Ride from 제주버스터미널 to 제주시청(아라방면) and follow every step, from finding the bus to getting off.";
-"home.sample.action" = "Try the sample ride";
+"home.sample.action" = "Look around with a sample ride";
 "home.privacy" = "TAPSO follows the bus without your location. If you allow location, it stays on your iPhone.";
 "home.intro.title" = "Just tell us where you get off";
 "home.intro.body" = "Once your bus is confirmed, 돌이 watches the stops until you get off.";
@@ -28,11 +28,11 @@
 "search.title" = "Get off at";
 "search.clear" = "Clear";
 "search.recent" = "Recent";
-"search.allStops" = "Preview stops";
+"search.allStops" = "Sample stops";
 "search.results" = "Stops";
-"search.demoNote" = "The preview holds only route 365, both directions, built from synthetic data.";
+"search.demoNote" = "The sample ride has only route 365, both directions, made up as an example.";
 "search.empty.title" = "No matching stop";
-"search.empty.body" = "That stop isn't in the preview. Try another name.";
+"search.empty.body" = "That stop isn't in the sample ride. Try another name.";
 "setup.step.route" = "Choose bus";
 "setup.step.boarding" = "Boarding stop";
 "recap.getOffAt" = "Getting off at";
@@ -45,7 +45,7 @@
 "boarding.stopsToDestination.one" = "%ld stop to your stop";
 "mapImport.title" = "Import a route";
 "mapImport.question" = "Bring in a route from your map app";
-"mapImport.found" = "Found among the preview stops";
+"mapImport.found" = "Found among the sample stops";
 "mapImport.none.title" = "No place found";
 "mapImport.none.body" = "What you pasted has no place name or location. Open the place in your map app and share it again, or search directly.";
 "mapImport.none.action" = "Search for the stop";
@@ -130,7 +130,7 @@
 "rescue.walk.tooFar" = "Even in a straight line your stop is %ld m away, too far to walk.";
 "rescue.mapApp.title" = "Find the way in a map app";
 "rescue.mapApp.detail" = "A map app knows the buses back and the walk better than TAPSO";
-"ride.closeApp" = "The preview plays while TAPSO is open. The Lock Screen and Dynamic Island show the same guidance.";
+"ride.closeApp" = "The sample ride runs only while TAPSO is open. The Lock Screen and Dynamic Island show the same guidance.";
 "ride.liveActivityOff.title" = "Lock Screen updates are off";
 "ride.liveActivityOff.body" = "Turn on Live Activities in Settings › TAPSO to follow along on the Lock Screen and Dynamic Island. The app keeps guiding you.";
 "ride.resumed.title" = "Ride resumed";
@@ -139,7 +139,7 @@
 "ride.end.confirm" = "End this ride? Get-off alerts stop too.";
 "ride.end.action" = "End ride";
 "ride.menu" = "Ride menu";
-"ride.menu.demo" = "Preview settings";
+"ride.menu.demo" = "Sample ride settings";
 "ride.menu.end" = "End ride";
 "count.unit" = "stops";
 "count.unit.one" = "stop";
@@ -175,23 +175,23 @@
 "alert.arrived.title" = "Get off here";
 "alert.arrived.body" = "You've reached your stop";
 "live_activity.disabled" = "Live Activities are off.";
-"demo.title" = "Preview settings";
-"demo.scenario" = "Scenario";
-"demo.scenario.footer" = "The preview doesn't use live data. Every bus and plate is synthetic. A scenario applies from the next bus check.";
-"demo.scenario.smooth" = "Smooth ride";
+"demo.title" = "Sample ride settings";
+"demo.scenario" = "Situation";
+"demo.scenario.footer" = "The sample ride doesn't use live data. Every bus and plate is an example. A change takes effect from the next bus check.";
+"demo.scenario.smooth" = "Arrives without a hitch";
 "demo.scenario.similarBuses" = "Two similar buses";
 "demo.scenario.noBusYet" = "No bus yet";
 "demo.scenario.delayedData" = "Delayed live data";
 "demo.scenario.vehicleLost" = "Bus briefly lost";
 "demo.scenario.offline" = "Offline";
 "demo.scenario.passedDestination" = "Passed destination";
-"demo.playback" = "Playback";
-"demo.build" = "This build";
-"demo.build.footer" = "Proves which commit this test phone is running.";
+"demo.playback" = "Pace";
+"demo.build" = "App info";
+"demo.build.footer" = "Shows which app version this phone is running.";
 "demo.speed" = "Speed";
-"demo.chip.hint" = "Opens preview settings";
-"demo.speed.manual" = "Step";
-"demo.step" = "Advance one step";
+"demo.chip.hint" = "Opens the sample ride settings";
+"demo.speed.manual" = "Step by hand";
+"demo.step" = "Next step";
 "common.cancel" = "Cancel";
 "common.done" = "Done";
 "common.ok" = "OK";
