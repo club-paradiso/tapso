@@ -532,3 +532,9 @@
 "search.place.source.kakao" = "장소 검색은 카카오맵 정보로 해요. 거리는 직선거리로 어림한 값이에요.";
 "search.place.demoNote" = "샘플 장소예요. 이름은 제주 장소를 닮았지만 위치는 예시로 만든 거예요.";
 "boardFirst.arrival.notChecked" = "확인 전";
+"ride.waiting.eyebrow" = "버스 오는 중";
+"ride.waiting.headline" = "버스가 오고 있어요";
+"ride.waiting.detail" = "탈 정류장에 버스가 오면 그때부터 안내해요";
+"boardFirst.trips.via" = "%@ 경유";
+"boardFirst.trips.skips" = "%@ 미경유";
+"boardFirst.trips.variant" = "다른 경로 %1$d/%2$d";

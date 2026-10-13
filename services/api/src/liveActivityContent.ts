@@ -142,6 +142,17 @@ export function rideMoment(signal: RideSignal): RideMoment {
   return "checking";
 }
 
+/**
+ * Port of `RideGuidancePolicy.stopsBeforeBoarding`: the confirmed bus has not
+ * reached the boarding stop yet. The rider is waiting, not riding, so no get-off
+ * alert may fire (a 1-stop ride whose bus is 1 stop out would otherwise read
+ * "2 stops left").
+ */
+export function busBeforeBoarding(view: JourneySessionView): boolean {
+  const current = view.progress?.currentStopSequence;
+  return current !== undefined && current < view.boardingStop.sequence;
+}
+
 /** Port of `RideGuidancePolicy.milestone`. */
 export function rideMilestone(moment: RideMoment): LiveActivityMilestone | undefined {
   return moment === "prepare" || moment === "nextStop" || moment === "arrived" ? moment : undefined;
@@ -231,7 +242,7 @@ export function planLiveActivityPush(
   const contentState = liveActivityContentState(view, stops, timestampMs);
   const { updatedAt: _updatedAt, ...comparable } = contentState;
   const contentKey = JSON.stringify(comparable);
-  const milestone = rideMilestone(rideMoment(rideSignalFromSession(view)));
+  const milestone = busBeforeBoarding(view) ? undefined : rideMilestone(rideMoment(rideSignalFromSession(view)));
   const alert = milestone !== undefined && !(delivery?.alerted ?? []).includes(milestone) ? milestone : undefined;
   if (delivery && alert === undefined && contentKey === delivery.lastContentKey
     && timestampMs - delivery.lastTimestampMs < LIVE_ACTIVITY_REFRESH_INTERVAL_MS) {

@@ -8,7 +8,7 @@ import WidgetKit
 struct TapsoLiveActivityWidget: Widget {
     var body: some WidgetConfiguration {
         ActivityConfiguration(for: TapsoActivityAttributes.self) { context in
-            let moment = guidanceAccountingForStaleness(context.state, isStale: context.isStale).moment
+            let moment = guidanceAccountingForStaleness(context.state, isStale: context.isStale, rideLength: context.attributes.totalStops).moment
             LockScreenRideView(
                 attributes: context.attributes,
                 state: context.state,
@@ -22,10 +22,10 @@ struct TapsoLiveActivityWidget: Widget {
                     IslandExpandedLeading(attributes: context.attributes, state: context.state, isStale: context.isStale)
                 }
                 DynamicIslandExpandedRegion(.trailing) {
-                    IslandExpandedTrailing(state: context.state, isStale: context.isStale)
+                    IslandExpandedTrailing(state: context.state, isStale: context.isStale, rideLength: context.attributes.totalStops)
                 }
                 DynamicIslandExpandedRegion(.center) {
-                    IslandExpandedCenter(state: context.state, isStale: context.isStale)
+                    IslandExpandedCenter(state: context.state, isStale: context.isStale, rideLength: context.attributes.totalStops)
                 }
                 DynamicIslandExpandedRegion(.bottom, priority: 1) {
                     IslandExpandedBottom(attributes: context.attributes, state: context.state, isStale: context.isStale)
@@ -33,11 +33,11 @@ struct TapsoLiveActivityWidget: Widget {
             } compactLeading: {
                 IslandCompactLeading(attributes: context.attributes, state: context.state, isStale: context.isStale)
             } compactTrailing: {
-                IslandCompactTrailing(state: context.state, isStale: context.isStale)
+                IslandCompactTrailing(state: context.state, isStale: context.isStale, rideLength: context.attributes.totalStops)
             } minimal: {
                 IslandMinimal(attributes: context.attributes, state: context.state, isStale: context.isStale)
             }
-            .keylineTint(TapsoColor.journey(guidanceAccountingForStaleness(context.state, isStale: context.isStale).colorRole))
+            .keylineTint(TapsoColor.journey(guidanceAccountingForStaleness(context.state, isStale: context.isStale, rideLength: context.attributes.totalStops).colorRole))
             .widgetURL(URL(string: "tapso://ride"))
         }
     }

@@ -265,6 +265,40 @@ public enum RideGuidancePolicy {
         )
     }
 
+    /// Stops the confirmed bus still has to travel before it reaches the boarding
+    /// stop, or `nil` once it is there (or the count is unknown). `remaining` is
+    /// counted from the bus to the destination; `rideLength` from boarding to the
+    /// destination, so any excess is road the rider is not on yet.
+    public static func stopsBeforeBoarding(remaining: Int, rideLength: Int) -> Int? {
+        guard rideLength > 0, remaining > rideLength else { return nil }
+        return remaining - rideLength
+    }
+
+    /// `guidance(for:)` for a ride of `rideLength` stops. While the confirmed bus has
+    /// not reached the boarding stop the rider is waiting, not riding: a counting
+    /// moment becomes `.riding` with "the bus is coming" copy, and nothing alerts or
+    /// buzzes. A 1-stop ride whose bus is 1 stop out would otherwise read
+    /// "2 stops left, get ready" before the rider is even aboard.
+    public static func guidance(for signal: RideSignal, rideLength: Int) -> RideGuidance {
+        let base = guidance(for: signal)
+        guard stopsBeforeBoarding(remaining: signal.remainingStops, rideLength: rideLength) != nil,
+              [.riding, .prepare, .nextStop].contains(base.moment)
+        else { return base }
+        return RideGuidance(
+            moment: .riding,
+            vehicle: base.vehicle,
+            data: base.data,
+            milestone: nil,
+            haptic: .none,
+            colorRole: colorRole(for: .riding),
+            symbolName: symbolName(for: .riding),
+            recovery: recovery(for: .riding),
+            copy: RideCopy(headline: "ride.waiting.headline", detail: "ride.waiting.detail", compact: nil, eyebrow: "ride.waiting.eyebrow"),
+            relevanceScore: relevanceScore(for: .riding),
+            count: .live
+        )
+    }
+
     /// One trust word per moment. `estimated` only for a predicted count that is still riding.
     public static func trust(for moment: RideMoment, estimated: Bool = false) -> RideTrust {
         switch moment {

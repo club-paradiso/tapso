@@ -117,3 +117,42 @@ extension TripApproach {
         }.map(\.element)
     }
 }
+
+/// How one trip's variant differs from others with the same number and terminus.
+public enum TripDistinction: Hashable, Sendable {
+    /// It serves a stop none of the others does ("송당로타리 경유").
+    case via(String)
+    /// It skips a stop every other one serves ("송당로타리 미경유").
+    case skips(String)
+    /// No single stop tells it apart from all the others: its place among them,
+    /// in provider route ID order ("다른 경로 2/3").
+    case ordinal(Int, of: Int)
+}
+
+extension DestinationSearchIndex {
+    /// What tells this trip's variant apart from other trips with the same route
+    /// number and terminus but a different stop list ("111 … 방면" twice on one
+    /// screen, 2026-10-13). Every label separates it from every sibling: a stop
+    /// no sibling serves, else a stop every sibling serves and it skips, else its
+    /// ordinal. `nil` when nothing needs telling apart, or when the stop lists
+    /// are the same (those are twins, labelled separately).
+    public func tripDistinction(_ trip: TripOption, among trips: [TripOption]) -> TripDistinction? {
+        let siblings = trips.filter {
+            $0.id != trip.id && $0.route.routeNo == trip.route.routeNo && $0.terminus == trip.terminus && $0.route.stops != trip.route.stops
+        }
+        guard !siblings.isEmpty else { return nil }
+        let name = { (index: Int) in DestinationSearchIndex.placeName(self.catalog.stops[index].name) }
+        let mine = trip.route.stops.map(name)
+        let mineSet = Set(mine)
+        let siblingSets = siblings.map { Set($0.route.stops.map(name)) }
+        let anySibling = siblingSets.reduce(into: Set<String>()) { $0.formUnion($1) }
+        if let own = mine.first(where: { !anySibling.contains($0) }) { return .via(own) }
+        // In route order of the first sibling, so the label is stable across builds.
+        let everySibling = siblingSets.dropFirst().reduce(siblingSets[0]) { $0.intersection($1) }
+        if let skipped = siblings[0].route.stops.map(name).first(where: { everySibling.contains($0) && !mineSet.contains($0) }) {
+            return .skips(skipped)
+        }
+        let group = (siblings + [trip]).map(\.route.routeId).sorted()
+        return .ordinal((group.firstIndex(of: trip.route.routeId) ?? 0) + 1, of: group.count)
+    }
+}

@@ -194,6 +194,7 @@ struct CatalogTripsView: View {
                 placeName: placeName,
                 trips: trips,
                 arrivals: model.tripArrivals,
+                distinctions: model.tripDistinctions(trips),
                 onChoose: { trip in Task { await model.chooseTrip(trip, placeName: placeName) } }
             )
         }
@@ -209,6 +210,8 @@ struct CatalogTripsContent: View {
     let placeName: String
     let trips: [TripOption]
     let arrivals: [String: TripArrival]
+    /// Same number, same terminus, different stops: what tells each apart (by trip id).
+    var distinctions: [String: TripDistinction] = [:]
     let onChoose: (TripOption) -> Void
 
     var body: some View {
@@ -283,8 +286,15 @@ struct CatalogTripsContent: View {
         let twins = trips
             .filter { $0.route.routeNo == trip.route.routeNo && $0.route.stops == trip.route.stops }
             .sorted { $0.route.routeId < $1.route.routeId }
-        guard twins.count > 1, let ordinal = twins.firstIndex(where: { $0.id == trip.id }) else { return length }
-        return length + " · " + String(format: RideText.string("boardFirst.trips.twin"), ordinal + 1, twins.count)
+        if twins.count > 1, let ordinal = twins.firstIndex(where: { $0.id == trip.id }) {
+            return length + " · " + String(format: RideText.string("boardFirst.trips.twin"), ordinal + 1, twins.count)
+        }
+        switch distinctions[trip.id] {
+        case let .via(stop)?: return length + " · " + String(format: RideText.string("boardFirst.trips.via"), stop)
+        case let .skips(stop)?: return length + " · " + String(format: RideText.string("boardFirst.trips.skips"), stop)
+        case let .ordinal(position, of: count)?: return length + " · " + String(format: RideText.string("boardFirst.trips.variant"), position, count)
+        case nil: return length
+        }
     }
 
     @ViewBuilder
