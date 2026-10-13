@@ -292,6 +292,7 @@ struct CatalogTripsContent: View {
         switch distinctions[trip.id] {
         case let .via(stop)?: return length + " · " + String(format: RideText.string("boardFirst.trips.via"), stop)
         case let .skips(stop)?: return length + " · " + String(format: RideText.string("boardFirst.trips.skips"), stop)
+        case let .ordinal(position, of: count)?: return length + " · " + String(format: RideText.string("boardFirst.trips.variant"), position, count)
         case nil: return length
         }
     }

@@ -537,3 +537,4 @@
 "ride.waiting.detail" = "Guidance starts once it reaches your stop";
 "boardFirst.trips.via" = "via %@";
 "boardFirst.trips.skips" = "skips %@";
+"boardFirst.trips.variant" = "route variant %1$d/%2$d";

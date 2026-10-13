@@ -43,4 +43,26 @@ final class RecentsAndViaTests: XCTestCase {
         XCTAssertEqual(index.tripDistinction(c, among: subset), .via("합성경유B"))
         XCTAssertEqual(index.tripDistinction(a, among: subset), .skips("합성경유B"), "no stop of its own: name the one it skips")
     }
+
+    func testEveryLabelSeparatesFromEverySiblingOrFallsBackToAnOrdinal() throws {
+        // Review case: {base}, {base,X}, {base,Y}, {base,X,Y}.
+        let names = ["합성탑승", "합성하차", "합성공항", "합성X", "합성Y"]
+        let stops = names.enumerated().map { JejuTransitCatalog.Stop(id: "SYN-\($0.offset)", name: $0.element, lat: 33.4 + Double($0.offset) / 1000, lng: 126.5) }
+        let catalog = JejuTransitCatalog(catalogVersion: "0123456789abcdef", generatedAt: "2026-10-13T00:00:00.000Z", stops: stops, routes: [
+            .init(routeId: "SYN1", routeNo: "111", end: "합성공항", stops: [0, 1, 2]),
+            .init(routeId: "SYN2", routeNo: "111", end: "합성공항", stops: [3, 0, 1, 2]),
+            .init(routeId: "SYN3", routeNo: "111", end: "합성공항", stops: [4, 0, 1, 2]),
+            .init(routeId: "SYN4", routeNo: "111", end: "합성공항", stops: [3, 4, 0, 1, 2]),
+        ])
+        let index = DestinationSearchIndex(catalog: catalog)
+        let destination = try XCTUnwrap(index.places.first { $0.name == "합성하차" })
+        let boarding = try XCTUnwrap(index.boardingPlaces(toward: destination).first { $0.name == "합성탑승" })
+        let trips = index.trips(from: boarding, to: destination)
+        XCTAssertEqual(trips.count, 4)
+        let labels = trips.map { index.tripDistinction($0, among: trips) }
+        XCTAssertTrue(labels.allSatisfy { $0 != nil })
+        XCTAssertEqual(Set(labels.compactMap { $0 }).count, 4, "no two trips share a label")
+        let byID = Dictionary(uniqueKeysWithValues: zip(trips.map(\.route.routeId), labels))
+        XCTAssertEqual(byID["SYN1"], .ordinal(1, of: 4), "skips X and Y, but neither is served by every sibling")
+    }
 }

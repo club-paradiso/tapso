@@ -406,6 +406,24 @@ struct RideHeroCard: View {
                     .font(.caption)
                     .foregroundStyle(TapsoColor.textSecondary)
             }
+            if guidance.copy.eyebrow == "ride.waiting.eyebrow" {
+                // The confirmed bus has not reached the boarding stop: the count is to
+                // the destination from where the bus is, not a ride already under way.
+                VStack(alignment: .leading, spacing: 2) {
+                    Label {
+                        Text("ride.waiting.headline")
+                    } icon: {
+                        Image(systemName: "bus")
+                    }
+                    .font(.headline)
+                    .foregroundStyle(TapsoColor.mintDeep)
+                    Text("ride.waiting.detail")
+                        .font(.footnote)
+                        .foregroundStyle(TapsoColor.textSecondary)
+                        .fixedSize(horizontal: false, vertical: true)
+                }
+                .accessibilityIdentifier("ride-waiting")
+            }
             if guidance.count == .hidden {
                 // Signals disagree: no number to act on until they agree again.
                 Text(String(format: RideText.string("ride.toDestination"), snapshot.destinationName))
