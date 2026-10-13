@@ -141,6 +141,10 @@
 "ride.menu" = "Ride menu";
 "ride.menu.demo" = "Sample ride settings";
 "ride.menu.end" = "End ride";
+"ride.menu.trace" = "Ride record";
+"ride.menu.markStop" = "Bus just passed a stop";
+"ride.trace.title" = "Ride record";
+"ride.trace.share" = "Send";
 "count.unit" = "stops";
 "count.unit.one" = "stop";
 "count.unit.long" = "stops to go";

@@ -203,7 +203,7 @@ Live Activity: no continuous motion. A new moment swaps the pose by identity (`d
 
 ## 9. Physical-device validation kit
 
-Debug only: ride menu → **Bus passed a stop now** records `ground_truth_stop` with the count on screen. With `poll_start`, `read_timing` (request duration in 250 ms buckets, evidence age in 5 s buckets, network context), `poll`, `guidance`, `live_activity` and `lifecycle`, the exported trace separates:
+Debug and Beta builds (`TAPSO_FIELD_TOOLS`): ride menu → **방금 정류장을 지났어요** (Bus just passed a stop) records `ground_truth_stop` with the count on screen. With `poll_start`, `read_timing` (request duration in 250 ms buckets, evidence age in 5 s buckets, network context), `poll`, `guidance`, `live_activity` and `lifecycle`, the exported trace separates:
 
 physical stop (tap) → provider row (`evidenceAge`) → server answer (`read_timing.request`) → app state (`guidance`) → Live Activity update request (`live_activity`).
 
@@ -302,7 +302,7 @@ Device: iPhone 15, iOS 26.6.1. This session had no rider on a bus and no view of
 | X–Y | reservation handoff; opposite-side stop | NOT_TESTED (unchanged from #130) |
 | Z | Hybrid with a far confirmed bus | NOT_TESTED |
 
-How to run it: Debug build, start a live ride, tap **Bus passed a stop now** at each physical stop passage, lock/unlock and toggle airplane mode as the matrix says, then export the trace (ride menu → Ride trace) and screen-record the Lock Screen for the visible-update times.
+How to run it: **Beta** build (Release behaviour, no sample ride or synthetic data, field tools in the ride menu; `xcodebuild -configuration Beta`), start a live ride, tap **방금 정류장을 지났어요** at each physical stop passage, lock/unlock and toggle airplane mode as the matrix says, then send the record (ride menu → 여정 기록 보기 → 보내기) and screen-record the Lock Screen for the visible-update times. The Debug build is for development only: it carries the synthetic sample ride.
 
 ## 16. Energy
 

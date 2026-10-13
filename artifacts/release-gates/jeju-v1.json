@@ -17,7 +17,7 @@
    "requirement": "Production search uses the real catalog; no DemoCatalog in the Release journey path",
    "status": "PASS",
    "evidence": [
-    "source checks: catalog-first search; sample ride, demo chip, demo search and demo replay are Debug-only"
+    "source checks: catalog-first search; sample ride, sample-ride settings entry, demo search and demo replay are Debug-only; Home has no synthetic-data chip"
    ]
   },
   {

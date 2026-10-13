@@ -1,8 +1,10 @@
 import Foundation
 
-/// What a build may show. The synthetic demo (sample ride, scenario controls,
-/// the "체험판" chip) exists for development and tests only: a Release build
-/// shows riders real Jeju data and nothing else.
+/// What a build may show. Three configurations:
+/// - Debug: development and tests. The synthetic sample ride and its settings exist only here.
+/// - Beta (`TAPSO_FIELD_TOOLS`): what a pre-release tester rides with. Release behaviour and
+///   real Jeju data only, plus the field tools (ride record, stop-passage mark) in the ride menu.
+/// - Release: riders. Real Jeju data and nothing else.
 enum TapsoBuild {
     #if DEBUG
     static let showsDemo = true
@@ -13,6 +15,8 @@ enum TapsoBuild {
     /// The configuration the binary was built with, for the identity line below.
     #if DEBUG
     static let configuration = "DEBUG"
+    #elseif TAPSO_FIELD_TOOLS
+    static let configuration = "BETA"
     #else
     static let configuration = "RELEASE"
     #endif

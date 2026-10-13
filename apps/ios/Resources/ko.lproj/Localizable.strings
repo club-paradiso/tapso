@@ -141,6 +141,10 @@
 "ride.menu" = "여정 메뉴";
 "ride.menu.demo" = "샘플 여정 설정";
 "ride.menu.end" = "여정 끝내기";
+"ride.menu.trace" = "여정 기록 보기";
+"ride.menu.markStop" = "방금 정류장을 지났어요";
+"ride.trace.title" = "여정 기록";
+"ride.trace.share" = "보내기";
 "count.unit" = "정거장";
 "count.unit.one" = "정거장";
 "count.unit.long" = "정거장 남았어요";
