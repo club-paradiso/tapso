@@ -48,6 +48,7 @@ The existing `TAPSO Color`, `TAPSO Dimensions` and web components are unchanged;
 | on-accent on journey.arrival | 8.0:1 | 8.0:1 |
 | on-accent on journey.checking | 5.2:1 | 6.5:1 |
 | on-accent on journey.degraded | 6.2:1 | 8.0:1 |
+| ride card last-known count, text.primary at 55 % on background.secondary (large text) | 4.0:1 | 5.9:1 |
 
 | Dark surfaces | Ratio |
 |---|---|
@@ -92,10 +93,13 @@ Motion lives in code only (Figma has no motion variables).
 |---|---|---|
 | standard | `TapsoMotion.standard` easeInOut 0.25 s | Root transitions |
 | emphasis | `TapsoMotion.emphasis` spring 0.38 / 0.82 | Moment change on the ride hero |
-| numeric | `.contentTransition(.numericText())` | The count (also honoured by Live Activities) |
+| numeric | `.countTransition()` (`numericText`) | The count (also honoured by Live Activities) |
 | bell | `.symbolEffect(.bounce)` once at next stop | |
+| press | scale 0.98, easeOut 0.12 s, with the 82 % dimming | `PrimaryButtonStyle`, `SecondaryButtonStyle` |
 
-`TapsoMotion.animation(_:reduceMotion:)` returns `nil` under Reduce Motion; the searching pulse stops too. Haptics come from `RideGuidance.haptic` (`RideFeedback`): soft impact (prepare), warning (next stop), success (arrival), error (passed destination), none otherwise. They play only while the app runs.
+`TapsoMotion.animation(_:reduceMotion:)` returns `nil` under Reduce Motion; the searching pulse stops too. Under Reduce Motion the count is replaced without rolling, 돌이's pose on a Live Activity only cross-fades (no scale), the bell does not bounce, buttons only dim, and expanding rows open without animation.
+
+**Text colour.** Journey and identity colours are fills, rims and symbols, not small text on light surfaces: tangerine text reads 2.0–2.1:1 on mist and slate 2.7:1. Where a label belongs to one of them ("내릴 곳", a return-trip level), the words stay in ink or `text/secondary` and a dot or symbol carries the colour. Haptics come from `RideGuidance.haptic` (`RideFeedback`): soft impact (prepare), warning (next stop), success (arrival), error (passed destination), none otherwise. They play only while the app runs.
 
 ## Components (02F iOS Ride V2)
 
@@ -140,7 +144,7 @@ The basalt companion stays, smaller: 18–36 pt on ride surfaces, one expression
 
 Off the ride (Home, the wordmark, a proposed bus to check) 돌이 is **awake**: open eyes, looking at the rider.
 
-In the app 돌이 moves (`DolBuddy(animated: true)`, timings in `DolMotion`, 24 fps on its own small view): open eyes blink every 4.2 s with a double blink every third time, checking glances side to side, resting eyes peek open for 1.4 s every 7 s ("still watching"), arrival hops, and the pebble breathes by 4.5 % of its height (about 1.5 pt on the 34 pt ride card; the earlier 2 % was under a point and read as a still picture). Delayed, lost, offline and ended are drawn completely still, so stale data never looks alive. Live Activities draw the same face without continuous motion, because ActivityKit animates only the change between two contents: a new moment swaps the pose with a short scale-and-fade (`dolPoseTransition`), and unchanged content does not animate. On the journey rail 돌이 is the position marker (`DolRailMarker`: pebble, rim, two eyes, tangerine pin; squinting when degraded), moving to a new position over 0.7 s only when a new answer changes the count. Reduce Motion stills it everywhere.
+In the app 돌이 moves (`DolBuddy(animated: true)`, timings in `DolMotion`, 24 fps on its own small view): open eyes blink every 4.2 s with a double blink every third time, checking glances side to side, resting eyes peek open for 1.4 s every 7 s ("still watching"), arrival hops, and the pebble breathes by 4.5 % of its height (about 1.5 pt on the 34 pt ride card; the earlier 2 % was under a point and read as a still picture). Delayed, lost, offline and ended are drawn completely still, so stale data never looks alive; on the ride card the checking moment is still too (`RideHeroCard.animatesDol`), so nothing looks as if TAPSO were following the bus while the signals disagree. The vehicle check before boarding keeps the checking glance: there it means "looking for your bus". Live Activities draw the same face without continuous motion, because ActivityKit animates only the change between two contents: a new moment swaps the pose with a short scale-and-fade (`dolPoseTransition`), and unchanged content does not animate. On the journey rail 돌이 is the position marker (`DolRailMarker`: pebble, rim, two eyes, tangerine pin; squinting when degraded), moving to a new position over 0.7 s only when a new answer changes the count. Reduce Motion stills it everywhere.
 
 It is always decorative (`accessibilityHidden`), never larger than the count, never on its own screen, and never the only carrier of meaning. The app icon is 돌이 looking up at the tangerine destination dot (Figma `App Icon / B`, `289:36`), drawn as flat vectors in Figma: no texture, no generated imagery.
 

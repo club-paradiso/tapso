@@ -208,8 +208,34 @@ extension View {
     /// change between two pushed or updated contents. A new moment is a new identity,
     /// so the pose swaps with a short scale-and-fade; the same moment keeps its identity
     /// and an unchanged (or stale, re-sent) content does not animate at all.
+    /// Under Reduce Motion the pose only cross-fades: no scale.
     func dolPoseTransition(_ moment: RideMoment) -> some View {
-        id(moment).transition(.opacity.combined(with: .scale(scale: 0.8)))
+        modifier(DolPoseTransition(moment: moment))
+    }
+
+    /// The count's rolling digits (`numericText`, also honoured by Live Activities).
+    /// Under Reduce Motion the new number replaces the old one without rolling.
+    func countTransition() -> some View {
+        modifier(CountTransition())
+    }
+}
+
+private struct DolPoseTransition: ViewModifier {
+    let moment: RideMoment
+    @Environment(\.accessibilityReduceMotion) private var reduceMotion
+
+    func body(content: Content) -> some View {
+        content
+            .id(moment)
+            .transition(reduceMotion ? .opacity : .opacity.combined(with: .scale(scale: 0.8)))
+    }
+}
+
+private struct CountTransition: ViewModifier {
+    @Environment(\.accessibilityReduceMotion) private var reduceMotion
+
+    func body(content: Content) -> some View {
+        content.contentTransition(reduceMotion ? .identity : .numericText())
     }
 }
 

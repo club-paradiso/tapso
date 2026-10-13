@@ -84,7 +84,8 @@ struct TimetableCard: View {
         }
         Text(String(format: RideText.string(summary.isStale ? "route.timetable.stale" : "route.timetable.asOf"), summary.asOf))
             .font(.caption)
-            .foregroundStyle(summary.isStale ? TapsoColor.journeyDegraded : TapsoColor.textTertiary)
+            // Slate text read 2.7:1 on the card; the stale wording carries the warning.
+            .foregroundStyle(summary.isStale ? TapsoColor.textSecondary : TapsoColor.textTertiary)
             .fixedSize(horizontal: false, vertical: true)
         if view.services.contains(where: { $0.status == "ok" && !$0.trips.isEmpty }) {
             Button("route.timetable.showAll") { onShowAll(view) }
