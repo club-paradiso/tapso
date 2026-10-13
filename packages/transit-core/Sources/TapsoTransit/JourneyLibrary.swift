@@ -124,10 +124,14 @@ public struct JourneyLibrary: Codable, Hashable, Sendable {
     }
 
     /// Where the rider recently got off, newest first, one entry per stop name.
+    /// Places, not poles: "제원아파트[동]" and "제원아파트[서]" are one place to get off,
+    /// shown once and without the provider's compass marker, as search names it
+    /// (`DestinationSearchIndex.placeName`).
     public var recentDestinationNames: [String] {
         var seen = Set<String>()
         return journeys.sorted(by: Self.newestFirst).compactMap { journey in
-            seen.insert(journey.destinationStopName).inserted ? journey.destinationStopName : nil
+            let place = DestinationSearchIndex.placeName(journey.destinationStopName)
+            return seen.insert(place).inserted ? place : nil
         }
         .prefix(Self.destinationLimit)
         .map { $0 }

@@ -117,3 +117,31 @@ extension TripApproach {
         }.map(\.element)
     }
 }
+
+/// How one trip's variant differs from others with the same number and terminus.
+public enum TripDistinction: Hashable, Sendable {
+    /// It serves a stop none of the others does ("송당로타리 경유").
+    case via(String)
+    /// It skips a stop the others serve ("송당로타리 미경유").
+    case skips(String)
+}
+
+extension DestinationSearchIndex {
+    /// What tells this trip's variant apart from other trips with the same route
+    /// number and terminus but a different stop list ("111 … 방면" twice on one
+    /// screen, 2026-10-13): first a stop only it serves, else a stop it skips.
+    /// `nil` when nothing needs telling apart, or when the stop lists are the same
+    /// (those are twins, labelled separately).
+    public func tripDistinction(_ trip: TripOption, among trips: [TripOption]) -> TripDistinction? {
+        let siblings = trips.filter {
+            $0.id != trip.id && $0.route.routeNo == trip.route.routeNo && $0.terminus == trip.terminus && $0.route.stops != trip.route.stops
+        }
+        guard !siblings.isEmpty else { return nil }
+        let name = { (index: Int) in DestinationSearchIndex.placeName(self.catalog.stops[index].name) }
+        let mine = trip.route.stops.map(name)
+        let theirs = siblings.flatMap { $0.route.stops.map(name) }
+        if let own = mine.first(where: { !Set(theirs).contains($0) }) { return .via(own) }
+        if let skipped = theirs.first(where: { !Set(mine).contains($0) }) { return .skips(skipped) }
+        return nil
+    }
+}

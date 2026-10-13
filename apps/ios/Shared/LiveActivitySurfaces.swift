@@ -59,7 +59,7 @@ struct LockScreenRideView: View {
     /// The widget draws its background with `activityBackgroundTint`; previews and tests draw it here.
     var drawsBackground = false
 
-    private var guidance: RideGuidance { guidanceAccountingForStaleness(state, isStale: isStale) }
+    private var guidance: RideGuidance { guidanceAccountingForStaleness(state, isStale: isStale, rideLength: attributes.totalStops) }
     private var moment: RideMoment { guidance.moment }
     private var primary: Color { RideSurfacePalette.primaryText(for: moment) }
     private var secondary: Color { RideSurfacePalette.secondaryText(for: moment) }
@@ -186,7 +186,7 @@ struct IslandCompactLeading: View {
     /// ActivityKit's `context.isStale`: past the stale date, the island shows aged data like the Lock Screen.
     var isStale = false
 
-    private var guidance: RideGuidance { guidanceAccountingForStaleness(state, isStale: isStale) }
+    private var guidance: RideGuidance { guidanceAccountingForStaleness(state, isStale: isStale, rideLength: attributes.totalStops) }
 
     var body: some View {
         HStack(spacing: 4) {
@@ -210,7 +210,9 @@ struct IslandCompactTrailing: View {
     /// ActivityKit's `context.isStale`: past the stale date, the island shows aged data like the Lock Screen.
     var isStale = false
 
-    private var guidance: RideGuidance { guidanceAccountingForStaleness(state, isStale: isStale) }
+    /// `attributes.totalStops`, for "the bus is coming" before boarding; `nil` where unknown.
+    var rideLength: Int? = nil
+    private var guidance: RideGuidance { guidanceAccountingForStaleness(state, isStale: isStale, rideLength: rideLength) }
 
     var body: some View {
         let color = TapsoColor.journey(guidance.colorRole)
@@ -307,7 +309,7 @@ struct IslandMinimal: View {
     /// ActivityKit's `context.isStale`: past the stale date, the island shows aged data like the Lock Screen.
     var isStale = false
 
-    private var guidance: RideGuidance { guidanceAccountingForStaleness(state, isStale: isStale) }
+    private var guidance: RideGuidance { guidanceAccountingForStaleness(state, isStale: isStale, rideLength: attributes.totalStops) }
     private var style: IslandMinimalStyle { IslandMinimalStyle.style(for: guidance, remainingStops: state.remainingStops) }
 
     var body: some View {
@@ -362,7 +364,7 @@ struct IslandExpandedLeading: View {
     /// ActivityKit's `context.isStale`: past the stale date, the island shows aged data like the Lock Screen.
     var isStale = false
 
-    private var guidance: RideGuidance { guidanceAccountingForStaleness(state, isStale: isStale) }
+    private var guidance: RideGuidance { guidanceAccountingForStaleness(state, isStale: isStale, rideLength: attributes.totalStops) }
 
     var body: some View {
         HStack(spacing: 6) {
@@ -379,7 +381,9 @@ struct IslandExpandedTrailing: View {
     /// ActivityKit's `context.isStale`: past the stale date, the island shows aged data like the Lock Screen.
     var isStale = false
 
-    private var guidance: RideGuidance { guidanceAccountingForStaleness(state, isStale: isStale) }
+    /// `attributes.totalStops`, for "the bus is coming" before boarding; `nil` where unknown.
+    var rideLength: Int? = nil
+    private var guidance: RideGuidance { guidanceAccountingForStaleness(state, isStale: isStale, rideLength: rideLength) }
 
     var body: some View {
         RemainingOrSymbol(
@@ -396,7 +400,9 @@ struct IslandExpandedCenter: View {
     /// ActivityKit's `context.isStale`: past the stale date, the island shows aged data like the Lock Screen.
     var isStale = false
 
-    private var guidance: RideGuidance { guidanceAccountingForStaleness(state, isStale: isStale) }
+    /// `attributes.totalStops`, for "the bus is coming" before boarding; `nil` where unknown.
+    var rideLength: Int? = nil
+    private var guidance: RideGuidance { guidanceAccountingForStaleness(state, isStale: isStale, rideLength: rideLength) }
 
     var body: some View {
         Text(LocalizedStringKey(guidance.copy.eyebrow))
@@ -412,7 +418,7 @@ struct IslandExpandedBottom: View {
     /// ActivityKit's `context.isStale`: past the stale date, the island shows aged data like the Lock Screen.
     var isStale = false
 
-    private var guidance: RideGuidance { guidanceAccountingForStaleness(state, isStale: isStale) }
+    private var guidance: RideGuidance { guidanceAccountingForStaleness(state, isStale: isStale, rideLength: attributes.totalStops) }
 
     var body: some View {
         VStack(alignment: .leading, spacing: 8) {
@@ -497,16 +503,22 @@ func minimalAccessibilityLabel(_ attributes: TapsoActivityAttributes, _ state: T
 
 /// ActivityKit marks content stale after its stale date even if no update arrives.
 /// A stale activity is treated as aged data, never as a fresh milestone.
+/// `rideLength` (`attributes.totalStops`) lets a bus still on its way to the boarding
+/// stop read as coming, not riding (`RideGuidancePolicy.guidance(for:rideLength:)`).
 func guidanceAccountingForStaleness(
     _ state: TapsoActivityAttributes.ContentState,
-    isStale: Bool
+    isStale: Bool,
+    rideLength: Int? = nil
 ) -> RideGuidance {
+    func guidance(_ signal: RideSignal) -> RideGuidance {
+        rideLength.map { RideGuidancePolicy.guidance(for: signal, rideLength: $0) } ?? RideGuidancePolicy.guidance(for: signal)
+    }
     if let expiry = state.trackingValidUntil, Date() > expiry {
         return RideGuidancePolicy.guidance(for: RideSignal(phase: .vehicleRecovery, remainingStops: -1, freshness: .unknown))
     }
-    guard isStale, state.freshness == .fresh else { return state.guidance }
+    guard isStale, state.freshness == .fresh else { return guidance(state.signal) }
     let signal = state.signal
-    return RideGuidancePolicy.guidance(for: RideSignal(
+    return guidance(RideSignal(
         phase: signal.phase,
         remainingStops: signal.remainingStops,
         freshness: .stale,

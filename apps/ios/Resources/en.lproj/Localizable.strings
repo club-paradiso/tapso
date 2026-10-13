@@ -532,3 +532,8 @@
 "search.place.source.kakao" = "Places are looked up with Kakao Map data. Distances are straight-line estimates.";
 "search.place.demoNote" = "Sample places. The names echo Jeju places, but the positions are made up.";
 "boardFirst.arrival.notChecked" = "Not checked";
+"ride.waiting.eyebrow" = "Bus on its way";
+"ride.waiting.headline" = "Your bus is coming";
+"ride.waiting.detail" = "Guidance starts once it reaches your stop";
+"boardFirst.trips.via" = "via %@";
+"boardFirst.trips.skips" = "skips %@";

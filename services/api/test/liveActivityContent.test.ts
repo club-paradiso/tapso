@@ -88,6 +88,19 @@ test("each milestone alerts once per ride; quiet changes go at low priority; old
   assert.equal(arrived.push.staleDateMs, undefined, "arrival does not go stale");
 });
 
+test("a bus still on its way to the boarding stop never raises a get-off alert", () => {
+  // A 1-stop ride (boarding 9, destination 10) whose bus is at 8: remaining 2 reads as
+  // "prepare" to the plain policy, but the rider is not aboard yet.
+  const waiting = view("tracking-prepare");
+  waiting.boardingStop = { ...waiting.boardingStop, sequence: 9, stopId: "SYN-STOP-9", name: "합성 정류장 9" };
+  const planned = planLiveActivityPush(waiting, stops, undefined);
+  assert.ok(planned.send, "the content still goes, so the Lock Screen shows the bus coming");
+  assert.equal(planned.push.alert, undefined);
+  assert.deepEqual(planned.next.alerted, []);
+  // The same bus at the boarding stop and beyond alerts as before.
+  assert.deepEqual(planLiveActivityPush(view("tracking-prepare"), stops, undefined).push?.alert, MILESTONE_ALERTS.prepare);
+});
+
 test("unchanged content within the refresh interval is not pushed again", () => {
   const first = planLiveActivityPush(view("tracking-riding"), stops, undefined);
   assert.ok(first.send);

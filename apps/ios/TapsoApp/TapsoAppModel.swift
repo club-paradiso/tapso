@@ -234,7 +234,9 @@ struct ActiveRide: Codable, Hashable {
         return rank(local) > rank(server) ? local : server
     }
 
-    var guidance: RideGuidance { RideGuidancePolicy.guidance(for: signal) }
+    /// A bus confirmed before it reached the boarding stop reads as coming, not riding,
+    /// and never raises a get-off alert (`RideGuidancePolicy.guidance(for:rideLength:)`).
+    var guidance: RideGuidance { RideGuidancePolicy.guidance(for: signal, rideLength: draft.totalStops) }
 }
 
 /// How the last ride ended, for the end screen.
@@ -877,6 +879,16 @@ final class TapsoAppModel {
               let boarding = index.boardingPlaces(toward: destination).first(where: { $0.name == boardingName })
         else { return [] }
         return TripArrival.nearestFirst(index.trips(from: boarding, to: destination), arrivals: tripArrivals)
+    }
+
+    /// What tells same-number trips apart on the trips screen, by trip id.
+    func tripDistinctions(_ trips: [TripOption]) -> [String: TripDistinction] {
+        guard let index = catalogIndex else { return [:] }
+        var out: [String: TripDistinction] = [:]
+        for trip in trips {
+            if let distinction = index.tripDistinction(trip, among: trips) { out[trip.id] = distinction }
+        }
+        return out
     }
 
     /// The official 제주버스 "교통약자 승차예약" page for the exact pole being set up, only when that
