@@ -653,8 +653,62 @@
       }
     },
     {
+      "id": "tracking-provider-blip",
+      "why": "the bus feed timed out once, 10 s after the last accepted evidence; the ride keeps its last step and says the read failed",
+      "view": {
+        "id": "syn-session-ride",
+        "routeId": "SYN-ROUTE-202",
+        "cityCode": "999",
+        "boardingStop": {
+          "stopId": "SYN-STOP-4",
+          "name": "합성 정류장 4",
+          "sequence": 4,
+          "latitude": 33.456,
+          "longitude": 126.306
+        },
+        "destinationStop": {
+          "stopId": "SYN-STOP-10",
+          "name": "합성 정류장 10",
+          "sequence": 10,
+          "latitude": 33.468,
+          "longitude": 126.318
+        },
+        "riderState": "waiting_at_stop",
+        "selectedVehicleId": "SYN70가0412",
+        "selectionMode": "explicit",
+        "matchConfidence": "low",
+        "state": "arrived",
+        "progress": {
+          "currentStopSequence": 10,
+          "currentStopId": "SYN-STOP-10",
+          "remainingStops": 0,
+          "phase": "arrived",
+          "source": "provider_stop_sequence",
+          "observedAt": "1970-01-01T00:00:00.000Z",
+          "evidenceAt": "2026-10-01T06:01:20.000Z",
+          "evidenceAtIs": "tapso_server_receipt"
+        },
+        "explanation": "The provider read failed, but the confirmed bus's last accepted evidence is within the grace window; the ride keeps its last step and nothing is advanced or inferred.",
+        "matchingMode": "shadow",
+        "providerRead": {
+          "state": "failed",
+          "consecutiveFailures": 1
+        },
+        "reliability": {
+          "provider": "temporarily_unavailable",
+          "observation": "unknown_timestamp",
+          "position": "official",
+          "vehicle": "confirmed",
+          "trust": "live"
+        },
+        "createdAt": "2026-10-01T06:00:00.000Z",
+        "updatedAt": "2026-10-01T06:01:30.000Z",
+        "expiresAt": "2026-10-01T10:00:00.000Z"
+      }
+    },
+    {
       "id": "degraded-provider-timeout",
-      "why": "the bus feed timed out once; last progress retained",
+      "why": "the bus feed kept timing out past the 30 s grace window; last progress retained",
       "view": {
         "id": "syn-session-ride",
         "routeId": "SYN-ROUTE-202",
@@ -692,7 +746,7 @@
         "matchingMode": "shadow",
         "providerRead": {
           "state": "failed",
-          "consecutiveFailures": 1
+          "consecutiveFailures": 2
         },
         "reliability": {
           "provider": "temporarily_unavailable",
@@ -702,7 +756,7 @@
           "trust": "rechecking"
         },
         "createdAt": "2026-10-01T06:00:00.000Z",
-        "updatedAt": "2026-10-01T06:01:30.000Z",
+        "updatedAt": "2026-10-01T06:02:00.000Z",
         "expiresAt": "2026-10-01T10:00:00.000Z"
       }
     },

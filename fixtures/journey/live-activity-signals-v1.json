@@ -104,6 +104,18 @@
       "milestone": "arrived"
     },
     {
+      "id": "tracking-provider-blip",
+      "signal": {
+        "phase": "arrived",
+        "remainingStops": 0,
+        "freshness": "fresh",
+        "destinationPassed": false,
+        "isOffline": false
+      },
+      "moment": "arrived",
+      "milestone": "arrived"
+    },
+    {
       "id": "degraded-provider-timeout",
       "signal": {
         "phase": "arrived",
