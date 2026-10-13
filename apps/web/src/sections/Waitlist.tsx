@@ -7,11 +7,6 @@ export function Waitlist() {
     <section className="section waitlist" id="waitlist" aria-labelledby="waitlist-title">
       <div className="container waitlist-grid">
         <div className="waitlist-copy">
-          <p className="eyebrow">
-            <span className="eyebrow-index">09</span>
-            <span className="eyebrow-rail" aria-hidden="true" />
-            TestFlight 사전예약
-          </p>
           <h2 id="waitlist-title">
             혼저 탑서.
             <br />

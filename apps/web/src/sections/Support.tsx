@@ -43,8 +43,6 @@ export function Support({ onOpen }: { onOpen: () => void }) {
     <section className="section support" id="support" aria-labelledby="support-title" ref={ref}>
       <div className="container">
         <SectionHead
-          index="10"
-          eyebrow="개발 후원"
           title="탑서 개발을 후원하고 싶다면"
           titleId="support-title"
         >

@@ -256,9 +256,10 @@ struct ConfirmationCard: View {
     }
 }
 
+/// Waiting for the bus: one quiet signal (the symbol's own pulse, off under Reduce Motion).
+/// The card itself stays still; two pulsing layers read as alarm, not as "still looking".
 private struct SearchingIndicator: View {
     let reduceMotion: Bool
-    @State private var pulse = false
 
     var body: some View {
         HStack(spacing: TapsoSpace.sm) {
@@ -272,11 +273,7 @@ private struct SearchingIndicator: View {
         }
         .padding(TapsoSpace.md)
         .frame(maxWidth: .infinity, alignment: .leading)
-        .background(TapsoColor.journeyChecking.opacity(pulse ? 0.16 : 0.08), in: RoundedRectangle(cornerRadius: TapsoRadius.md, style: .continuous))
-        .onAppear {
-            guard !reduceMotion else { return }
-            withAnimation(.easeInOut(duration: 1.2).repeatForever(autoreverses: true)) { pulse = true }
-        }
+        .background(TapsoColor.journeyChecking.opacity(0.1), in: RoundedRectangle(cornerRadius: TapsoRadius.md, style: .continuous))
         .accessibilityElement(children: .combine)
     }
 }

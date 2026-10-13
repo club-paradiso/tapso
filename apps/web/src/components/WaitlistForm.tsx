@@ -1,3 +1,4 @@
+import { CitrusDot } from "./RideParts";
 import { useId, useRef, useState, type FormEvent } from "react";
 import {
   RIDER_TYPE_LABELS,
@@ -90,7 +91,7 @@ export default function WaitlistForm() {
       <div className="waitlist-form-card" data-figma-node-id="9:51">
         <div className="waitlist-result waitlist-result-success" data-figma-node-id="9:64">
           <p className="waitlist-result-mark" aria-hidden="true">
-            🍊
+            <CitrusDot size={28} />
           </p>
           <strong role="status">첫 탑승 명단에 올라갔어요.</strong>
           <p>

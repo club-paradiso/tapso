@@ -25,12 +25,12 @@ import type { StoryScreen } from "../demo/rideStory.ts";
 
 export type Chapter = "plan" | "confirm" | "ride" | "trust" | "arrive";
 
-export const CHAPTERS: readonly { id: Chapter; index: string; eyebrow: string }[] = [
-  { id: "plan", index: "01", eyebrow: "정하기" },
-  { id: "confirm", index: "02", eyebrow: "확인하기" },
-  { id: "ride", index: "03", eyebrow: "타고 가기" },
-  { id: "trust", index: "04", eyebrow: "흔들릴 때" },
-  { id: "arrive", index: "05", eyebrow: "내릴 때" },
+export const CHAPTERS: readonly { id: Chapter }[] = [
+  { id: "plan" },
+  { id: "confirm" },
+  { id: "ride" },
+  { id: "trust" },
+  { id: "arrive" },
 ];
 
 export type IslandForm = "compact" | "expanded" | "minimal";

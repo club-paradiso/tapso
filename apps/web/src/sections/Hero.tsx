@@ -96,7 +96,6 @@ export function Hero() {
 
         <div className={`hero-visual role-${p.colorRole}`}>
           <div className="hero-devices">
-            <span className="hero-glow" aria-hidden="true" />
             <HomeScreenPhone activity={activity} form="compact" className="hero-phone-back" />
             <LockScreenPhone moment={activity.moment} remaining={activity.remaining} className="hero-phone-front" />
           </div>
