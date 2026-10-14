@@ -306,9 +306,16 @@ struct ReturnTripRow: View {
                         .background(TapsoColor.backgroundElevated, in: Capsule())
                 }
             }
-            Text(verbatim: levelText)
-                .font(.subheadline.weight(.bold))
-                .foregroundStyle(levelColor)
+            // The level's colour sits on its symbol; the words stay in ink, so the tangerine
+            // "be at the stop by" (2.1:1 as text) reads, and no level is told by colour alone.
+            Label {
+                Text(verbatim: levelText)
+                    .foregroundStyle(TapsoColor.textPrimary)
+            } icon: {
+                Image(systemName: levelSymbol)
+                    .foregroundStyle(levelColor)
+            }
+            .font(.subheadline.weight(.bold))
             if let detail = detailText {
                 Text(verbatim: detail)
                     .font(.footnote)
@@ -328,6 +335,15 @@ struct ReturnTripRow: View {
         case .notRecommended:
             return RideText.string(advice.isGone ? "returnTrip.level.gone" : "returnTrip.level.now")
         case .unknown: return RideText.string("returnTrip.level.unknown")
+        }
+    }
+
+    private var levelSymbol: String {
+        switch advice.level {
+        case .comfortable: "checkmark.circle.fill"
+        case .leaveBy: "clock.fill"
+        case .tight, .notRecommended: "exclamationmark.circle.fill"
+        case .unknown: "questionmark.circle"
         }
     }
 

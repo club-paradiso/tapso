@@ -163,7 +163,7 @@ struct RemainingOrSymbol: View {
                     .monospacedDigit()
                     .foregroundStyle(color)
                     .opacity(guidance.count == .lastKnown ? Self.lastKnownOpacity : 1)
-                    .contentTransition(.numericText())
+                    .countTransition()
                 Text(guidance.count == .lastKnown ? LocalizedStringKey("count.lastKnown") : LocalizedStringKey(RideText.countKey("count.unit", remaining)))
                     .font(.caption2.weight(.bold))
                     .foregroundStyle(color.opacity(labelOpacity))
@@ -243,7 +243,7 @@ struct IslandCompactTrailing: View {
                     Text(verbatim: (guidance.trust == .estimated ? "~" : "") + String(state.remainingStops))
                         .font(.system(.subheadline, design: .rounded, weight: .black))
                         .monospacedDigit()
-                        .contentTransition(.numericText())
+                        .countTransition()
                     Text(LocalizedStringKey(RideText.countKey("count.unit", state.remainingStops)))
                         .font(.caption2.weight(.bold))
                 }
@@ -354,7 +354,7 @@ struct IslandMinimal: View {
             .lineLimit(1)
             .minimumScaleFactor(0.6)
             .opacity(style.dimmed ? RemainingOrSymbol.lastKnownOpacity : 1)
-            .contentTransition(.numericText())
+            .countTransition()
     }
 }
 

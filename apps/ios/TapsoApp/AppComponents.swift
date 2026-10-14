@@ -7,6 +7,7 @@ import TapsoTransit
 struct PrimaryButtonStyle: ButtonStyle {
     var fill: Color = TapsoColor.journeyActive
     var foreground: Color = TapsoColor.textOnAccent
+    @Environment(\.accessibilityReduceMotion) private var reduceMotion
 
     func makeBody(configuration: Configuration) -> some View {
         configuration.label
@@ -16,6 +17,7 @@ struct PrimaryButtonStyle: ButtonStyle {
             .padding(.horizontal, TapsoSpace.md)
             .background(fill, in: RoundedRectangle(cornerRadius: TapsoRadius.md, style: .continuous))
             .opacity(configuration.isPressed ? 0.82 : 1)
+            .pressFeedback(configuration.isPressed, reduceMotion: reduceMotion)
             .contentShape(Rectangle())
     }
 }
@@ -23,6 +25,7 @@ struct PrimaryButtonStyle: ButtonStyle {
 /// Figma: `Button / V2` (`kind=secondary`).
 struct SecondaryButtonStyle: ButtonStyle {
     var foreground: Color = TapsoColor.textPrimary
+    @Environment(\.accessibilityReduceMotion) private var reduceMotion
 
     func makeBody(configuration: Configuration) -> some View {
         configuration.label
@@ -36,7 +39,17 @@ struct SecondaryButtonStyle: ButtonStyle {
                     .stroke(TapsoColor.separator, lineWidth: 1)
             }
             .opacity(configuration.isPressed ? 0.82 : 1)
+            .pressFeedback(configuration.isPressed, reduceMotion: reduceMotion)
             .contentShape(Rectangle())
+    }
+}
+
+extension View {
+    /// A button settles a little under the finger, so a tap on a moving bus is felt as taken.
+    /// Under Reduce Motion only the dimming remains.
+    fileprivate func pressFeedback(_ isPressed: Bool, reduceMotion: Bool) -> some View {
+        scaleEffect(isPressed && !reduceMotion ? 0.98 : 1)
+            .animation(reduceMotion ? nil : .easeOut(duration: 0.12), value: isPressed)
     }
 }
 

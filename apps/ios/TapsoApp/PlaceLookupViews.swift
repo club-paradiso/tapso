@@ -117,6 +117,7 @@ struct PlaceLookupSection: View {
     @State private var phase: Phase = .idle
     @State private var requested = false
     @State private var opened: PlaceCandidate.ID?
+    @Environment(\.accessibilityReduceMotion) private var reduceMotion
     @State private var attempt = 0
 
     private static let nearRadius = NearbyStops.defaultRadiusMeters
@@ -220,7 +221,7 @@ struct PlaceLookupSection: View {
     @ViewBuilder private func placeRow(_ place: PlaceCandidate) -> some View {
         let isOpen = opened == place.id
         Button {
-            withAnimation(.snappy) { opened = isOpen ? nil : place.id }
+            withAnimation(TapsoMotion.animation(.snappy, reduceMotion: reduceMotion)) { opened = isOpen ? nil : place.id }
         } label: {
             HStack(spacing: TapsoSpace.sm) {
                 Image(systemName: "building.2.crop.circle")
@@ -302,6 +303,7 @@ struct DemoPlaceLookupSection: View {
     let onChoose: (String) -> Void
 
     @State private var opened: DemoPlace.ID?
+    @Environment(\.accessibilityReduceMotion) private var reduceMotion
 
     private static let farRadius: Double = 2000
 
@@ -329,7 +331,7 @@ struct DemoPlaceLookupSection: View {
     @ViewBuilder private func row(_ place: DemoPlace) -> some View {
         let isOpen = opened == place.id || places.count == 1
         Button {
-            withAnimation(.snappy) { opened = isOpen ? nil : place.id }
+            withAnimation(TapsoMotion.animation(.snappy, reduceMotion: reduceMotion)) { opened = isOpen ? nil : place.id }
         } label: {
             HStack(spacing: TapsoSpace.sm) {
                 Image(systemName: "building.2.crop.circle")

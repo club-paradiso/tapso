@@ -430,6 +430,27 @@ final class RidePresentationTests: XCTestCase {
         }
     }
 
+    /// The ride card's dimmed last-known count still reads as large text (3:1) on the card, in both appearances.
+    func testRideCardLastKnownCountReads() throws {
+        for style in [UIUserInterfaceStyle.light, .dark] {
+            let traits = UITraitCollection(userInterfaceStyle: style)
+            let card = try srgb(TapsoColor.backgroundSecondary, traits)
+            let numeral = composite(try srgb(TapsoColor.textPrimary, traits), opacity: RideHeroCard.lastKnownOpacity, over: card)
+            XCTAssertGreaterThanOrEqual(contrast(numeral, on: card), 3, "\(style == .dark ? "dark" : "light")")
+        }
+    }
+
+    /// While the position is being checked or the data is old, nothing on the ride card looks alive.
+    func testRideCardDolIsStillWhenNotFollowingTheBus() {
+        for moment in [RideMoment.checking, .delayed, .vehicleLost, .offline] {
+            for time in stride(from: 0.0, through: 7.0, by: 0.25) {
+                let drawn = RideHeroCard.animatesDol(moment) ? DolMotion(expression: .ride(moment), time: time) : .still
+                XCTAssertEqual(drawn, .still, "\(moment) at \(time)")
+            }
+        }
+        XCTAssertTrue(RideHeroCard.animatesDol(.riding), "a confirmed ride keeps its breathing 돌이")
+    }
+
     // MARK: Helpers
 
     /// A token's sRGB components in an appearance. Tokens are opaque; dimming is applied by `composite`.

@@ -174,6 +174,7 @@ struct CatalogBoardingContent: View {
                     tint: TapsoColor.mintDeep
                 ) { onChoose(place) }
                 .accessibilityIdentifier("boarding-\(place.name)")
+                Divider().overlay(TapsoColor.separator)
             }
         }
     }
@@ -250,7 +251,8 @@ struct CatalogTripsContent: View {
                             .foregroundStyle(TapsoColor.textOnAccent)
                             .padding(.horizontal, 6)
                             .padding(.vertical, 2)
-                            .background(TapsoColor.tangerine, in: Capsule())
+                            // Mint like the card's outline: tangerine belongs to the destination.
+                            .background(TapsoColor.journeyActive, in: Capsule())
                     }
                 }
                 Text(String(format: RideText.string("route.headsign"), trip.terminus))

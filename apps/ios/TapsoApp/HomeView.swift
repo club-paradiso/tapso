@@ -82,7 +82,7 @@ struct HomeContent: View {
             AutoStartEntryRow(action: onAutoStart)
         case .otherWays:
             // The other two ways in are alternatives to the search, not peers of it.
-            VStack(alignment: .leading, spacing: TapsoSpace.sm) {
+            VStack(alignment: .leading, spacing: TapsoSpace.xs) {
                 SectionTitle("home.otherWays")
                 LiveRideEntryCard(action: onLive)
                 MapHandoffIntakeCard(pendingPlaceName: pendingPlaceName, action: onMapImport)
@@ -100,7 +100,7 @@ struct HomeContent: View {
     /// The last ride, then favourites: each one tap from the bus check.
     private var rideAgain: some View {
         let journeys = HomeLayout.rideAgainJourneys(in: library)
-        return VStack(alignment: .leading, spacing: TapsoSpace.xxs) {
+        return VStack(alignment: .leading, spacing: TapsoSpace.xs) {
             SectionTitle("home.rideAgain")
             VStack(spacing: 0) {
                 ForEach(journeys) { journey in
@@ -157,7 +157,7 @@ struct HomeContent: View {
                                 .foregroundStyle(TapsoColor.textPrimary)
                         }
                         .padding(.horizontal, TapsoSpace.sm)
-                        .frame(minHeight: 40)
+                        .frame(minHeight: TapsoSize.minimumTouch)
                         .background(TapsoColor.backgroundSecondary, in: Capsule())
                     }
                     .buttonStyle(.plain)

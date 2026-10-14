@@ -297,9 +297,18 @@ struct RideContent: View {
             RideHeroCard(snapshot: snapshot, onFinish: onFinish, onMapSearch: onMapSearch)
 
             if let plate = snapshot.plate {
-                Text(verbatim: plate)
-                    .font(.caption)
-                    .foregroundStyle(TapsoColor.textSecondary)
+                // The bus the rider confirmed, named as such rather than a loose number between cards.
+                Label {
+                    Text(verbatim: plate)
+                        .monospacedDigit()
+                } icon: {
+                    Image(systemName: "bus")
+                }
+                .font(.footnote.weight(.semibold))
+                .foregroundStyle(TapsoColor.textSecondary)
+                .padding(.leading, TapsoSpace.md)
+                .accessibilityElement(children: .ignore)
+                .accessibilityLabel(Text(String(format: RideText.string("a11y.trust.plate"), plate.filter(\.isNumber))))
             }
 
             if ![.arrived, .passedDestination, .ended].contains(guidance.moment), guidance.count != .hidden {
@@ -380,6 +389,18 @@ struct RideHeroCard: View {
     let onMapSearch: (MapApp) -> Void
 
     @ScaledMetric(relativeTo: .largeTitle) private var numeralSize = TapsoType.heroNumeralBase
+    @Environment(\.accessibilityReduceMotion) private var reduceMotion
+
+    /// A last-known count is dimmed so it never reads as current, and still clears the 3:1
+    /// that large text needs on the ride card: 4.0:1 in light appearance, 5.9:1 in dark.
+    /// At the earlier 45 % the light card read 2.9:1.
+    static let lastKnownOpacity: Double = 0.55
+
+    /// Whether the ride card's 돌이 moves at all. Not while the signals disagree; the
+    /// stale moments are drawn still by `DolMotion` itself.
+    static func animatesDol(_ moment: RideMoment) -> Bool {
+        moment != .checking
+    }
 
     private var guidance: RideGuidance { snapshot.guidance }
     private var fill: Color { TapsoColor.journey(guidance.colorRole) }
@@ -454,7 +475,9 @@ struct RideHeroCard: View {
         .frame(maxWidth: .infinity, alignment: .leading)
         .background(TapsoColor.backgroundSecondary, in: RoundedRectangle(cornerRadius: TapsoRadius.hero, style: .continuous))
         .overlay(alignment: .topTrailing) {
-            DolBuddy(moment: guidance.moment, size: 34, animated: true)
+            // While the signals disagree 돌이 is drawn still: nothing on the ride screen may look
+            // as if TAPSO were following the bus. Delayed, lost and offline are still by `DolMotion`.
+            DolBuddy(moment: guidance.moment, size: 34, animated: Self.animatesDol(guidance.moment))
                 .padding(TapsoSpace.md)
         }
         .accessibilityElement(children: .ignore)
@@ -472,8 +495,8 @@ struct RideHeroCard: View {
             .font(TapsoType.numeral(min(numeralSize, TapsoType.heroNumeralMax)))
             .monospacedDigit()
             .foregroundStyle(TapsoColor.textPrimary)
-            .opacity(guidance.count == .lastKnown ? 0.45 : 1)
-            .contentTransition(.numericText())
+            .opacity(guidance.count == .lastKnown ? Self.lastKnownOpacity : 1)
+            .countTransition()
     }
 
     private var countLabels: some View {
@@ -528,7 +551,7 @@ struct RideHeroCard: View {
             HStack(spacing: TapsoSpace.sm) {
                 Image(systemName: guidance.symbolName)
                     .font(.title.weight(.bold))
-                    .symbolEffect(.bounce, value: guidance.moment)
+                    .symbolEffect(.bounce, value: reduceMotion ? nil : guidance.moment)
                 Text(LocalizedStringKey(guidance.copy.headline))
                     .font(.system(.largeTitle, design: .rounded, weight: .black))
                     .fixedSize(horizontal: false, vertical: true)
@@ -536,9 +559,9 @@ struct RideHeroCard: View {
             Text(verbatim: snapshot.destinationName)
                 .font(.title.weight(.bold))
                 .fixedSize(horizontal: false, vertical: true)
+            // Full strength: dimmed to 90 % the white line read 4.4:1 on the light coral.
             Text(LocalizedStringKey(guidance.copy.detail))
                 .font(.headline)
-                .opacity(0.9)
                 .fixedSize(horizontal: false, vertical: true)
         }
         .foregroundStyle(onFill)
@@ -762,7 +785,8 @@ struct StopLadder: View {
             if kind == .current {
                 Text("ride.now").font(.caption.weight(.bold)).foregroundStyle(TapsoColor.textSecondary)
             } else if kind == .destination {
-                Text("ride.getOffHere").font(.caption.weight(.bold)).foregroundStyle(TapsoColor.tangerine)
+                // The citrus dot carries the destination colour; tangerine text read 2.0:1 on the card.
+                Text("ride.getOffHere").font(.caption.weight(.bold)).foregroundStyle(TapsoColor.textPrimary)
             }
         }
     }

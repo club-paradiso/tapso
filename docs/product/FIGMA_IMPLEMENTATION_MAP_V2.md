@@ -98,6 +98,12 @@ components. Sample data is synthetic and labelled so on the boards.
 | V3 / 26 Passed stop · next stop, walk back (`195:3021`) | `RideHeroCard` › `passed` + `RescueOptionList` | `17-ride-passed` (demo: no distance), `30-ride-passed-walk-back` |
 | V3 / 27 Return countdown · Lock Screen, island, end card (`199:3046`) | `ReturnLockScreenView`, `ReturnIsland*`, `ReturnTripRow` › `pinControl` | `la-lockscreen-return-countdown`, `la-lockscreen-return-late`, `di-*-return-*`, `31-end-return-countdown` |
 
+Design polish 2026-10-14 (`design/ios-polish-pass`): `ReturnTripRow / V3` level rows are a coloured
+level symbol (`symbol · checkmark.circle.fill`, `clock.fill`, `exclamationmark.circle.fill`,
+`questionmark.circle`) beside ink text; `StopLadder / V2` "내릴 곳" is ink (the citrus dot keeps the
+colour); `RideHero / V2` › `moment=lastKnown` numeral is at 55 %; the next-stop detail line is full
+strength on coral in the hero and on the Lock Screen. Screen boards pick these up as instances.
+
 The `RideHero / V2` › `moment=passed` variant (`155:230`) now matches the code:
 `color/journey/next` at 8 % behind a 2 pt `color/journey/next` stroke. It was a
 solid fill, which hid the coral headline on `V2 / 18 Missed stop recovery`.
