@@ -6,11 +6,11 @@
     "dataset": "data.go.kr 3043887",
     "page": "https://bus.jeju.go.kr/publicTrafficInformation/generalBusSchedule",
     "file": "405113.xlsx",
-    "sha256": "cfa0fcb91b2e998f58aa0f19c40ab6f856d92fbee1fdec5acf46fde77b4bdfdb",
+    "sha256": "4abd3a82b8a09fee0366e8d842364e1a65d8030abaea5b29c9c7d550a4187c0c",
     "scheduleId": "405113",
     "listedName": "3008"
   },
-  "retrievedOn": "2026-10-03",
+  "retrievedOn": "2026-10-19",
   "parser": {
     "name": "jeju-bis-xlsx",
     "version": "3"
@@ -20,43 +20,6 @@
   ],
   "status": "parsed",
   "services": [
-    {
-      "sheets": [
-        "3008 (한라도서관-터미널-신제주R-노형중흥S)심야"
-      ],
-      "routeNumbers": [
-        "3008"
-      ],
-      "dayType": "unstated",
-      "direction": "한라도서관-중흥S (심야)",
-      "effectiveNote": "미입력",
-      "summary": "첫차/막차 22:00, 배차간격 1일 1회, 관광지순환버스(064-746-7310)",
-      "timepoints": [
-        "한라도서관",
-        "터미널",
-        "신제주로터리",
-        "제원아파트",
-        "한라병원",
-        "노형오거리",
-        "중흥S클래스아파트(연동)"
-      ],
-      "trips": [
-        {
-          "routeNumber": "3008",
-          "times": [
-            "22:00",
-            "22:07",
-            "22:12",
-            "22:17",
-            "22:20",
-            "22:22",
-            "22:27"
-          ],
-          "firstTime": "22:00"
-        }
-      ],
-      "status": "ok"
-    },
     {
       "sheets": [
         "3008 (한라대-백록초-용담-공항-외도초-한라대)심야"
@@ -115,6 +78,43 @@
         }
       ],
       "crossesMidnight": true,
+      "status": "ok"
+    },
+    {
+      "sheets": [
+        "3008 (한라도서관-터미널-신제주R-노형중흥S)심야"
+      ],
+      "routeNumbers": [
+        "3008"
+      ],
+      "dayType": "unstated",
+      "direction": "한라도서관-중흥S (심야)",
+      "effectiveNote": "미입력",
+      "summary": "첫차/막차 22:00, 배차간격 1일 1회, 관광지순환버스(064-746-7310)",
+      "timepoints": [
+        "한라도서관",
+        "터미널",
+        "신제주로터리",
+        "제원아파트",
+        "한라병원",
+        "노형오거리",
+        "중흥S클래스아파트(연동)"
+      ],
+      "trips": [
+        {
+          "routeNumber": "3008",
+          "times": [
+            "22:00",
+            "22:07",
+            "22:12",
+            "22:17",
+            "22:20",
+            "22:22",
+            "22:27"
+          ],
+          "firstTime": "22:00"
+        }
+      ],
       "status": "ok"
     }
   ]
