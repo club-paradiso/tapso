@@ -22,7 +22,7 @@ A percentage of finished tasks never decides it; one open P0 blocks.
 | P0-5 | A waiting rider saw the bus-to-destination count | Claude | Fixed in #146 (unit tests; device NOT_TESTED) |
 | P1 | RideKeepAlive background-location workaround: App Review 2.5.4 risk for external testers | Owner decision | Open |
 | P1 | zh-Hans/ja machine-translated | Native reviewers | Open |
-| P1 | Live Activity text built with `String(localized:)` follows the extension's language, not the journey language | Device check | NOT_TESTED |
+| P1 | Live Activity text built in code (detail line, VoiceOver) now reads the journey language's `.lproj` (`RideText.string(_:language:)`) | Device check | CODE_IMPLEMENTED; device NOT_TESTED |
 | P2 | Mutations need only the session id (bearer capability); the id is no longer logged | Claude, later | Open |
 | P2 | Session expiry sends no end push (the activity relies on its stale date) | Claude, later | Open |
 | P2 | Live Activity fonts do not follow Dynamic Type | Claude, later | Open |
