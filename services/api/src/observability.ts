@@ -12,6 +12,7 @@ export type TapsoEvent =
   | "journey_session_read"
   | "journey_session_ended"
   | "journey_session_create_refused"
+  | "beta_feedback_received"
   | "live_activity_token_registered"
   | "live_activity_tick"
   | "vehicle_lost"
