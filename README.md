@@ -6,6 +6,28 @@ Riders search where they get off across every Jeju route TAGO names (the canonic
 
 Public product site: [tapso-nu.vercel.app](https://tapso-nu.vercel.app)
 
+## Tourist pivot: a multilingual Jeju bus guide for foreign visitors
+
+TAPSO is pivoting toward the foreign tourist who rides Jeju's buses and can't
+read Korean stop announcements: choose where you get off, and TAPSO watches the
+ride in your language — then taps you (Live Activity / Dynamic Island) before
+your stop, even with the phone away.
+
+- **Guide language (ko/en/zh/ja):** a scoped ~36-key tourist string table with
+  per-key fallback (requested → ko → en), resolved the same way in the app and
+  the Live Activity. The guide language defaults to Automatic (device locale:
+  ko→ko, zh*→zh-Hans, ja→ja, else en) and can be changed from the first-run
+  Home card; the existing ko/en product surface is untouched.
+- **30 curated tourist stop guides:** en/zh/ja one-liners for the stops
+  foreign visitors use most (Jeju International Airport, Hamdeok, Seongsan
+  Ilchulbong, Manjanggul, Hyeopjae, Jungmun, Cheonjiyeon, Seopjikoji, the Udo
+  ferry at Seongsan Port, O'sulloc, Hallasan trailheads, Dongmun & Olle
+  markets, and more), each keyed to the canonical catalog by provider stop ID.
+  Translating all 4,338 stops is explicitly out of scope.
+
+See [docs/tourist-pivot.md](docs/tourist-pivot.md) for positioning, scope, and
+follow-ups. Non-goal: a general-purpose alighting alarm for domestic riders.
+
 ## Current status
 
 | Area | Status | Evidence |
