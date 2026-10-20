@@ -1,5 +1,7 @@
 # Design System V2
 
+> **2026-10-20:** colour and type are superseded by V3 "basalt" (`docs/beta/DESIGN_DIRECTION.md`, `apps/ios/Shared/TapsoTokens.swift`). Journey colours and their meanings are unchanged; the hex table below is kept as V2 history.
+
 Calm transit instrument, warm Jeju mobility product. Source of truth: Figma `TAPSO — Product / Marketing Design System` (`kkx04GvqOzHje7Dw5ikO9X`), variable collection **TAPSO V2 Semantic** (`VariableCollectionId:151:14`, modes Light/Dark) and page **02F iOS Ride V2** (`152:2`). Code: `apps/ios/Shared/TapsoTokens.swift`, compiled into both the app and the Live Activity extension, so no screen or surface defines its own colour.
 
 The existing `TAPSO Color`, `TAPSO Dimensions` and web components are unchanged; V2 adds primitives to `TAPSO Primitives` and a new semantic collection that aliases them.
