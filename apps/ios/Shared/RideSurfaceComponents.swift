@@ -436,18 +436,28 @@ private struct DolShape: Shape {
     }
 }
 
-/// Progress from boarding to destination: 돌이 travelling along the rail to the
-/// tangerine destination. Figma: `JourneyRail / V2`, marker per
-/// `LIVE_RIDE_RELIABILITY_HOME_V3.md` §8.
+/// The stop rail: TAPSO's one signature device. Figma: `JourneyRail / V2`, marker per
+/// `LIVE_RIDE_RELIABILITY_HOME_V3.md` §8, waiting zone per `docs/beta/DESIGN_DIRECTION.md`.
 ///
-/// The marker sits where the evidence puts the ride (`progress(remaining:total:)`)
-/// and moves only when that changes: a new answer slides it from the old place to
-/// the new one. Nothing advances it between answers, and a jump of two stops is
-/// one slide, not an invented stop in between.
+/// Every part is a fact, not decoration:
+/// - each bead on the track is a real stop of the rider's ride (up to `maxBeads`);
+/// - 돌이 is the confirmed bus, placed where the evidence puts it
+///   (`progress(remaining:total:)`), moving only when a new answer arrives;
+/// - while the bus has not reached the boarding stop (`stopsBeforeBoarding`), 돌이
+///   waits in a dashed zone *before* the boarding ring, so "coming" and "aboard"
+///   are two different pictures, not one number with two meanings;
+/// - the tangerine dot is the destination.
+///
+/// Nothing advances the marker between answers, and a jump of two stops is one
+/// slide, not an invented stop in between. With Reduce Motion it jumps.
 struct JourneyRail: View {
     /// 0 at boarding, 1 at the destination.
     let progress: Double
     let role: RideColorRole
+    /// Stops the bus still has to travel to reach the boarding stop; `nil` once the rider can be aboard.
+    var stopsBeforeBoarding: Int? = nil
+    /// Stops in the ride, for the beads; `0` draws none.
+    var totalStops: Int = 0
     var trackColor: Color = TapsoColor.separator
     var height: CGFloat = 10
 
@@ -455,27 +465,77 @@ struct JourneyRail: View {
 
     /// How long the marker takes to reach a new position.
     static let moveDuration: Double = 0.7
+    /// Beyond this many stops the beads would crowd; the track is drawn plain.
+    static let maxBeads = 16
+    /// The waiting zone never takes more than this share of the rail.
+    static let waitingShare: CGFloat = 0.26
 
     var body: some View {
         GeometryReader { proxy in
             let marker = height + 8
-            let clamped = min(max(progress, 0), 1)
-            let travel = max(0, proxy.size.width - marker)
+            let track = height / 2.5
+            let waitingWidth = stopsBeforeBoarding == nil ? 0 : min(proxy.size.width * Self.waitingShare, 84)
+            let rideStart = waitingWidth
+            let rideWidth = max(0, proxy.size.width - rideStart)
+            let clamped = stopsBeforeBoarding == nil ? min(max(progress, 0), 1) : 0
+            let travel = max(0, rideWidth - marker)
             ZStack(alignment: .leading) {
+                if waitingWidth > 0 {
+                    // Road the rider is not on yet: dashed, never filled.
+                    Path { path in
+                        path.move(to: CGPoint(x: track / 2, y: track / 2))
+                        path.addLine(to: CGPoint(x: waitingWidth, y: track / 2))
+                    }
+                    .stroke(trackColor, style: StrokeStyle(lineWidth: track, lineCap: .round, dash: [track * 1.2, track * 1.4]))
+                    .frame(width: waitingWidth, height: track)
+                    Circle()
+                        .strokeBorder(TapsoColor.journey(role), lineWidth: max(1.5, track / 2))
+                        .frame(width: track * 2.6, height: track * 2.6)
+                        .offset(x: rideStart - track * 1.3)
+                }
                 Capsule().fill(trackColor)
-                    .frame(height: height / 2.5)
-                Capsule().fill(TapsoColor.journey(role))
-                    .frame(width: max(marker / 2, travel * clamped + marker / 2), height: height / 2.5)
+                    .frame(width: rideWidth, height: track)
+                    .offset(x: rideStart)
+                if stopsBeforeBoarding == nil {
+                    Capsule().fill(TapsoColor.journey(role))
+                        .frame(width: max(marker / 2, travel * clamped + marker / 2), height: track)
+                        .offset(x: rideStart)
+                }
+                beads(rideStart: rideStart, travel: travel, marker: marker, track: track, progress: clamped)
                 CitrusDot(size: height)
                     .offset(x: proxy.size.width - height)
-                DolRailMarker(size: marker, role: role)
-                    .offset(x: travel * clamped)
+                DolRailMarker(size: marker, role: role, waiting: stopsBeforeBoarding != nil)
+                    .offset(x: markerOffset(waitingWidth: waitingWidth, marker: marker, rideStart: rideStart, travel: travel, progress: clamped))
             }
             .frame(maxHeight: .infinity)
             .animation(reduceMotion ? nil : .smooth(duration: Self.moveDuration), value: clamped)
+            .animation(reduceMotion ? nil : .smooth(duration: Self.moveDuration), value: stopsBeforeBoarding)
         }
         .frame(height: height + 8)
         .accessibilityHidden(true)
+    }
+
+    /// One bead per stop between boarding and destination (the ends are the ring and the dot).
+    @ViewBuilder
+    private func beads(rideStart: CGFloat, travel: CGFloat, marker: CGFloat, track: CGFloat, progress: Double) -> some View {
+        if totalStops > 1, totalStops <= Self.maxBeads {
+            ForEach(1..<totalStops, id: \.self) { index in
+                let fraction = Double(index) / Double(totalStops)
+                Circle()
+                    .fill(stopsBeforeBoarding == nil && fraction <= progress ? TapsoColor.journey(role) : trackColor)
+                    .frame(width: track + 3, height: track + 3)
+                    .offset(x: rideStart + travel * fraction + marker / 2 - (track + 3) / 2)
+            }
+        }
+    }
+
+    private func markerOffset(waitingWidth: CGFloat, marker: CGFloat, rideStart: CGFloat, travel: CGFloat, progress: Double) -> CGFloat {
+        if let ahead = stopsBeforeBoarding {
+            // Closer to the ring as the bus nears the stop; four or more stops out it waits at the start.
+            let nearness = max(0, 1 - Double(ahead) / 4)
+            return max(0, waitingWidth - marker * 1.1) * nearness
+        }
+        return rideStart + travel * progress
     }
 
     /// An unknown count (`-1`) is no progress at all, never "at the destination".
@@ -493,12 +553,17 @@ struct JourneyRail: View {
 struct DolRailMarker: View {
     let size: CGFloat
     let role: RideColorRole
+    /// The bus is still on its way: 돌이 is drawn with a dashed rim, off the ride.
+    var waiting = false
 
     var body: some View {
         let unit = size / 72
         ZStack {
             DolShape(kind: .body).fill(TapsoColor.basalt)
-            DolShape(kind: .body).stroke(TapsoColor.journey(role), lineWidth: max(1.5, 6 * unit))
+            DolShape(kind: .body).stroke(
+                TapsoColor.journey(role),
+                style: StrokeStyle(lineWidth: max(1.5, 6 * unit), dash: waiting ? [max(2, 9 * unit), max(1.5, 6 * unit)] : [])
+            )
             if role == .journeyDegraded {
                 DolShape(kind: .bars(DolFace.markerSquint)).fill(.white)
             } else {
@@ -522,10 +587,10 @@ struct TrustBadge: View {
     var body: some View {
         HStack(spacing: 5) {
             Image(systemName: symbol)
-                .font(.caption2.weight(.bold))
+                .font(.tapso(.caption2, .bold))
                 .foregroundStyle(color)
             Text(label)
-                .font(.caption.weight(.semibold))
+                .font(.tapso(.caption, .semibold))
                 .foregroundStyle(onDark ? Color.white.opacity(0.82) : TapsoColor.textSecondary)
             if case let .vehicle(_, plate?) = kind {
                 Text(verbatim: plate)
@@ -577,8 +642,21 @@ struct TrustBadge: View {
 }
 
 enum RideText {
-    static func string(_ key: String) -> String {
-        String(localized: String.LocalizationValue(key))
+    /// `language` is a journey language (`TapsoActivityAttributes.language`). A Live Activity
+    /// renders in the widget extension's process, whose language can differ from the one the
+    /// ride started in; `.environment(\.locale)` reaches only `Text(LocalizedStringKey)`, so
+    /// strings built here read the matching `.lproj` directly. Without one, or for a language
+    /// the bundle lacks, they follow the process.
+    static func string(_ key: String, language: String? = nil) -> String {
+        if let bundle = bundle(for: language) {
+            return bundle.localizedString(forKey: key, value: nil, table: nil)
+        }
+        return String(localized: String.LocalizationValue(key))
+    }
+
+    private static func bundle(for language: String?) -> Bundle? {
+        guard let language, let path = Bundle.main.path(forResource: language, ofType: "lproj") else { return nil }
+        return Bundle(path: path)
     }
 
     /// The singular variant (`<key>.one`) for a count of one, so English never says "1 stops".
@@ -588,11 +666,11 @@ enum RideText {
 
     /// The moment's detail line. Past the stop it names the stop to get off at when the
     /// ride knows it (`PassedStopRescue`), so the app, Lock Screen and island say the same.
-    static func detail(_ guidance: RideGuidance, exitStopName: String? = nil) -> String {
+    static func detail(_ guidance: RideGuidance, exitStopName: String? = nil, language: String? = nil) -> String {
         if guidance.moment == .passedDestination, let exitStopName, !exitStopName.isEmpty {
-            return String(format: string("rescue.exitAt"), exitStopName)
+            return String(format: string("rescue.exitAt", language: language), exitStopName)
         }
-        return string(guidance.copy.detail)
+        return string(guidance.copy.detail, language: language)
     }
 
     /// VoiceOver sentence for a ride: the count only when it is safe to act on.
@@ -601,10 +679,16 @@ enum RideText {
         routeNumber: String,
         destination: String,
         remainingStops: Int,
-        exitStopName: String? = nil
+        exitStopName: String? = nil,
+        language: String? = nil
     ) -> String {
+        func string(_ key: String) -> String { Self.string(key, language: language) }
         let headline = string(guidance.copy.headline)
-        let detail = Self.detail(guidance, exitStopName: exitStopName)
+        let detail = Self.detail(guidance, exitStopName: exitStopName, language: language)
+        if let ahead = guidance.stopsBeforeBoarding, guidance.count != .hidden {
+            // Waiting: the number is how far the bus is from the rider, never a ride count.
+            return String(format: string(countKey("a11y.ride.waiting", ahead)), routeNumber, destination, ahead, headline, detail)
+        }
         switch guidance.count {
         case .live:
             return String(format: string(countKey("a11y.ride.live", remainingStops)), routeNumber, destination, remainingStops, headline, detail)

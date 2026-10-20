@@ -91,6 +91,8 @@ test("the network client talks only to TAPSO's own API, through documented endpo
     "/v1/sessions/:id",
     "/v1/sessions/:id/confirm",
     "/v1/sessions/:id/live-activity",
+    // Beta tester reports, answered with a receipt (PRODUCTION_TRANSIT_API.md, `feedbackStore.ts`).
+    "/v1/feedback",
   ]);
   for (const path of paths) assert.ok(documented.has(path), `${path} is not a documented TAPSO endpoint`);
 });

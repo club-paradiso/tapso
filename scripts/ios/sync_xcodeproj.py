@@ -29,6 +29,12 @@ GROUPS = {
 }
 
 
+def plist_string(value: str) -> str:
+    """A value as Xcode writes it: bare when it is only letters, digits, `_`, `.` and `/`, quoted
+    otherwise (`JourneyLanguage+Bundle.swift` unquoted made the project unreadable to Xcode)."""
+    return value if re.fullmatch(r"[A-Za-z0-9_./]+", value) else '"' + value.replace("\\", "\\\\").replace('"', '\\"') + '"'
+
+
 def object_id(*parts: str) -> str:
     return hashlib.md5("|".join(parts).encode()).hexdigest()[:24].upper()
 
@@ -86,7 +92,7 @@ def main() -> int:
             text = insert_line(
                 text,
                 "PBXFileReference",
-                f'\t\t{file_ref} /* {name} */ = {{isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = {name}; sourceTree = "<group>"; }};',
+                f'\t\t{file_ref} /* {name} */ = {{isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = {plist_string(name)}; sourceTree = "<group>"; }};',
             )
             members.append((file_ref, name))
             for phase in phases:

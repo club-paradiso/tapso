@@ -33,7 +33,7 @@ struct CatalogBoardingView: View {
                 Image(systemName: "magnifyingglass")
                     .foregroundStyle(TapsoColor.mintDeep)
                 TextField("boardFirst.search.placeholder", text: $query)
-                    .font(.body)
+                    .font(.tapso(.body))
                     .submitLabel(.search)
                     .autocorrectionDisabled()
                     .accessibilityIdentifier("boarding-query")
@@ -87,7 +87,7 @@ struct CatalogBoardingContent: View {
             VStack(alignment: .leading, spacing: TapsoSpace.xs) {
                 QuestionTitle("boardFirst.question")
                 Text("boardFirst.note")
-                    .font(.footnote)
+                    .font(.tapso(.footnote))
                     .foregroundStyle(TapsoColor.textSecondary)
                     .fixedSize(horizontal: false, vertical: true)
             }
@@ -112,7 +112,7 @@ struct CatalogBoardingContent: View {
                     } icon: {
                         Image(systemName: "magnifyingglass")
                     }
-                    .font(.footnote)
+                    .font(.tapso(.footnote))
                     .foregroundStyle(TapsoColor.textSecondary)
                     .fixedSize(horizontal: false, vertical: true)
                 }
@@ -136,23 +136,23 @@ struct CatalogBoardingContent: View {
             HStack(spacing: TapsoSpace.sm) {
                 ProgressView()
                 Text("boardFirst.nearby.locating")
-                    .font(.subheadline)
+                    .font(.tapso(.subheadline))
                     .foregroundStyle(TapsoColor.textSecondary)
             }
             .frame(maxWidth: .infinity, minHeight: 48)
         case .unavailable:
             VStack(alignment: .leading, spacing: TapsoSpace.xs) {
                 Text("boardFirst.nearby.unavailable")
-                    .font(.footnote)
+                    .font(.tapso(.footnote))
                     .foregroundStyle(TapsoColor.textSecondary)
                     .fixedSize(horizontal: false, vertical: true)
                 Button("boardFirst.nearby.retry", action: onNearby)
-                    .font(.footnote.weight(.semibold))
+                    .font(.tapso(.footnote, .semibold))
             }
         case .approximateOnly:
             // Approximate Location cannot tell one pole from the one across the road.
             Text("boardFirst.nearby.approximate")
-                .font(.footnote)
+                .font(.tapso(.footnote))
                 .foregroundStyle(TapsoColor.textSecondary)
                 .fixedSize(horizontal: false, vertical: true)
         case let .found(found):
@@ -231,7 +231,7 @@ struct CatalogTripsContent: View {
                 }
             }
             Label("boardFirst.trips.note", systemImage: "info.circle")
-                .font(.footnote)
+                .font(.tapso(.footnote))
                 .foregroundStyle(TapsoColor.textSecondary)
                 .fixedSize(horizontal: false, vertical: true)
         }
@@ -247,7 +247,7 @@ struct CatalogTripsContent: View {
                     RouteBadge(number: trip.route.routeNo)
                     if soonest {
                         Text("boardFirst.trips.soonest")
-                            .font(.caption2.weight(.bold))
+                            .font(.tapso(.caption2, .bold))
                             .foregroundStyle(TapsoColor.textOnAccent)
                             .padding(.horizontal, 6)
                             .padding(.vertical, 2)
@@ -256,17 +256,17 @@ struct CatalogTripsContent: View {
                     }
                 }
                 Text(String(format: RideText.string("route.headsign"), trip.terminus))
-                    .font(.body.weight(.semibold))
+                    .font(.tapso(.body, .semibold))
                     .foregroundStyle(TapsoColor.textPrimary)
                 Text(detail(trip))
-                    .font(.footnote)
+                    .font(.tapso(.footnote))
                     .foregroundStyle(TapsoColor.textSecondary)
             }
             .multilineTextAlignment(.leading)
             Spacer(minLength: TapsoSpace.xs)
             arrival(arrivals[trip.id])
             Image(systemName: "chevron.forward")
-                .font(.footnote.weight(.bold))
+                .font(.tapso(.footnote, .bold))
                 .foregroundStyle(TapsoColor.textTertiary)
         }
         .padding(TapsoSpace.md)
@@ -310,24 +310,24 @@ struct CatalogTripsContent: View {
             VStack(alignment: .trailing, spacing: 0) {
                 if count == 0 {
                     Text("boardFirst.arrival.atStop")
-                        .font(.subheadline.weight(.heavy))
+                        .font(.tapso(.subheadline, .heavy))
                 } else {
                     Text(verbatim: String(count))
-                        .font(.system(.title2, design: .rounded, weight: .black))
+                        .font(.tapso(.title2, .black))
                         .monospacedDigit()
                     Text("boardFirst.arrival.stopsAway")
-                        .font(.caption2.weight(.bold))
+                        .font(.tapso(.caption2, .bold))
                 }
             }
             .foregroundStyle(TapsoColor.mintDeep)
         case .noneNearby:
             Text("boardFirst.arrival.none")
-                .font(.caption.weight(.semibold))
+                .font(.tapso(.caption, .semibold))
                 .foregroundStyle(TapsoColor.textTertiary)
                 .multilineTextAlignment(.trailing)
         case .notChecked:
             Text("boardFirst.arrival.notChecked")
-                .font(.caption.weight(.semibold))
+                .font(.tapso(.caption, .semibold))
                 .foregroundStyle(TapsoColor.textTertiary)
                 .multilineTextAlignment(.trailing)
         case .unavailable:

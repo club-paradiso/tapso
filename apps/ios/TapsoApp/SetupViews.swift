@@ -45,7 +45,7 @@ struct DestinationSearchView: View {
                 Image(systemName: "magnifyingglass")
                     .foregroundStyle(TapsoColor.mintDeep)
                 TextField("home.search.placeholder", text: $query)
-                    .font(.body)
+                    .font(.tapso(.body))
                     .focused($focused)
                     .submitLabel(.search)
                     .autocorrectionDisabled()
@@ -91,7 +91,7 @@ struct DestinationSearchContent: View {
                 }
                 section("search.allStops", names: DemoCatalog.destinationNames, symbol: "mappin")
                 Label("search.demoNote", systemImage: "testtube.2")
-                    .font(.footnote)
+                    .font(.tapso(.footnote))
                     .foregroundStyle(TapsoColor.textSecondary)
                     .fixedSize(horizontal: false, vertical: true)
             } else if results.isEmpty && DemoCatalog.searchPlaces(query).isEmpty {
@@ -162,16 +162,16 @@ struct RouteSelectContent: View {
                             RouteBadge(number: option.route.number)
                             VStack(alignment: .leading, spacing: 2) {
                                 Text(String(format: RideText.string("route.headsign"), option.route.destinationName))
-                                    .font(.body.weight(.semibold))
+                                    .font(.tapso(.body, .semibold))
                                     .foregroundStyle(TapsoColor.textPrimary)
                                 Text(String(format: RideText.string("route.boardingCount"), option.boardingStops.count))
-                                    .font(.footnote)
+                                    .font(.tapso(.footnote))
                                     .foregroundStyle(TapsoColor.textSecondary)
                             }
                             .multilineTextAlignment(.leading)
                             Spacer(minLength: 0)
                             Image(systemName: "chevron.forward")
-                                .font(.footnote.weight(.bold))
+                                .font(.tapso(.footnote, .bold))
                                 .foregroundStyle(TapsoColor.textTertiary)
                         }
                         .padding(TapsoSpace.md)
@@ -219,13 +219,13 @@ struct BoardingStopContent: View {
             HStack(spacing: TapsoSpace.xs) {
                 RouteBadge(number: route.number)
                 Text(String(format: RideText.string("route.headsign"), route.destinationName))
-                    .font(.subheadline)
+                    .font(.tapso(.subheadline))
                     .foregroundStyle(TapsoColor.textSecondary)
             }
             DestinationRecap(destinationName: destination.stop.name)
             QuestionTitle("boarding.question")
             Text("boarding.explain")
-                .font(.subheadline)
+                .font(.tapso(.subheadline))
                 .foregroundStyle(TapsoColor.textSecondary)
                 .fixedSize(horizontal: false, vertical: true)
             VStack(spacing: 0) {
@@ -254,10 +254,10 @@ struct DestinationRecap: View {
         HStack(spacing: TapsoSpace.xs) {
             CitrusDot(size: 10)
             Text("recap.getOffAt")
-                .font(.footnote.weight(.semibold))
+                .font(.tapso(.footnote, .semibold))
                 .foregroundStyle(TapsoColor.textSecondary)
             Text(verbatim: destinationName)
-                .font(.subheadline.weight(.bold))
+                .font(.tapso(.subheadline, .bold))
                 .foregroundStyle(TapsoColor.textPrimary)
         }
         .padding(.horizontal, TapsoSpace.sm)
@@ -351,7 +351,7 @@ struct MapImportContent: View {
                             SectionTitle("mapImport.other")
                         }
                         Text("mapImport.other.hint")
-                            .font(.footnote)
+                            .font(.tapso(.footnote))
                             .foregroundStyle(TapsoColor.textSecondary)
                             .fixedSize(horizontal: false, vertical: true)
                         paste
@@ -372,7 +372,7 @@ struct MapImportContent: View {
                 }
             }
             Label("mapImport.privacy", systemImage: "hand.raised")
-                .font(.footnote)
+                .font(.tapso(.footnote))
                 .foregroundStyle(TapsoColor.textSecondary)
                 .fixedSize(horizontal: false, vertical: true)
         }
@@ -404,10 +404,10 @@ struct MapImportContent: View {
         } else {
             VStack(alignment: .leading, spacing: TapsoSpace.sm) {
                 Text("mapImport.live.title")
-                    .font(.headline)
+                    .font(.tapso(.headline))
                     .foregroundStyle(TapsoColor.textPrimary)
                 Text("mapImport.live.body")
-                    .font(.subheadline)
+                    .font(.tapso(.subheadline))
                     .foregroundStyle(TapsoColor.textSecondary)
                     .fixedSize(horizontal: false, vertical: true)
                 Button(action: onLive) {
@@ -445,25 +445,25 @@ struct SharedPlaceCard: View {
             VStack(alignment: .leading, spacing: TapsoSpace.xs) {
                 HStack(spacing: TapsoSpace.xs) {
                     Label(LocalizedStringKey("mapImport.source." + place.source.rawValue), systemImage: "square.and.arrow.down")
-                        .font(.footnote.weight(.semibold))
+                        .font(.tapso(.footnote, .semibold))
                         .foregroundStyle(TapsoColor.textSecondary)
                     Spacer(minLength: 0)
                     if let onClear {
                         Button("mapImport.clear", action: onClear)
-                            .font(.footnote.weight(.semibold))
+                            .font(.tapso(.footnote, .semibold))
                             .accessibilityIdentifier("map-import-clear")
                     }
                 }
                 Text(verbatim: place.name ?? place.address ?? RideText.string("mapImport.unnamed"))
-                    .font(.title3.weight(.bold))
+                    .font(.tapso(.title3, .bold))
                     .foregroundStyle(TapsoColor.textPrimary)
                 if place.name != nil, let address = place.address {
                     Text(verbatim: address)
-                        .font(.subheadline)
+                        .font(.tapso(.subheadline))
                         .foregroundStyle(TapsoColor.textSecondary)
                 }
                 Label(locationKey, systemImage: locationSymbol)
-                    .font(.footnote)
+                    .font(.tapso(.footnote))
                     .foregroundStyle(TapsoColor.textSecondary)
             }
             .fixedSize(horizontal: false, vertical: true)

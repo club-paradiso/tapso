@@ -27,7 +27,8 @@ python3 scripts/ios/check_brand.py
 python3 scripts/ios/sync_xcodeproj.py --check
 npm --prefix apps/web test
 npm --prefix apps/web run typecheck:vercel
-# The transit API ships no dependencies, so it borrows the one TypeScript install.
+# The transit API's only runtime dependency is web-push; run `npm --prefix services/api install --omit=optional` before its tests.
+# Its typecheck borrows the web app's TypeScript install.
 (cd apps/web && npx tsc --project ../../services/api/tsconfig.json --typeRoots node_modules/@types)
 npm --prefix apps/web run build
 xcodegen generate --spec apps/ios/project.yml --project apps/ios

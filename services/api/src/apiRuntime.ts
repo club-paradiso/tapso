@@ -18,6 +18,8 @@ import { logProviderRequest, ProviderHealth } from "./providerHealth.ts";
 import { createBurstLimiter } from "./rateLimit.ts";
 import { resolveTagoServiceKey, serviceKeyWarning } from "./serviceKey.ts";
 import { readSessionKeyPrefix } from "./sessionKeyPrefix.ts";
+import { MemoryFeedbackStore, UpstashFeedbackStore, type FeedbackStore } from "./feedbackStore.ts";
+import { MemorySessionCreateBudget, readSessionCreateLimit, UpstashSessionCreateBudget, type SessionCreateBudget } from "./sessionCreateBudget.ts";
 import { MemoryJourneySessionStore, type JourneySessionStore } from "./sessionStore.ts";
 import { fileStaticTransitData } from "./staticTransitData.ts";
 import { KakaoPlaceSearch, readKakaoApiKey } from "./placeSearch.ts";
@@ -83,6 +85,8 @@ export function createTransitApi(env: ServerEnv = process.env as ServerEnv): Tra
   // rather than asserted: wiring that silently produced a store with an empty
   // token would fail on every request instead of at boot.
   const sessionStore = createSessionStore(config, env);
+  const sessionCreateBudget = createSessionCreateBudget(config, env);
+  const feedback = createFeedbackStore(config, env);
   // Journey sessions never read the shared 20 s vehicle cache. Server-observed
   // cadence is only evidence if consecutive reads are genuinely consecutive;
   // that cache would hand one rider the same receipt on several polls. Their
@@ -139,10 +143,36 @@ export function createTransitApi(env: ServerEnv = process.env as ServerEnv): Tra
       // The Kakao key never leaves the server; without it `/v1/places` fails closed.
       places: new KakaoPlaceSearch({ apiKey: readKakaoApiKey(env) }),
       ...(limiter ? { limiter } : {}),
+      ...(sessionCreateBudget ? { sessionCreateBudget } : {}),
+      ...(feedback ? { feedback, feedbackLimiter: createBurstLimiter(FEEDBACK_PER_CALLER_PER_MINUTE, 60) } : {}),
       ...(operatorLimiter ? { operatorLimiter } : {}),
       ...(operator.configured ? { operatorToken: operator.token } : {}),
     }),
   };
+}
+
+/** A tester sends a report or two after a ride; five a minute per caller leaves room for a retry. */
+const FEEDBACK_PER_CALLER_PER_MINUTE = 5;
+
+/**
+ * Feedback is kept only where it survives: the Redis store in a deployment. On Vercel without
+ * Redis there is no store, so the route answers 503 and the app never claims a report was sent.
+ * A local Node server keeps it in memory for development.
+ */
+function createFeedbackStore(config: TransitApiConfig, env: ServerEnv): FeedbackStore | undefined {
+  const credentials = config.sessions.store === "redis" ? readUpstashCredentials(env) : undefined;
+  if (credentials) return new UpstashFeedbackStore(credentials, readSessionKeyPrefix(env));
+  return config.runtime.platform === "vercel" ? undefined : new MemoryFeedbackStore();
+}
+
+/** One shared counter with the Redis store; one per process with the memory store, which is one process too. */
+function createSessionCreateBudget(config: TransitApiConfig, env: ServerEnv): SessionCreateBudget | undefined {
+  const limit = readSessionCreateLimit(env);
+  if (limit === 0) return undefined;
+  if (config.sessions.store !== "redis") return new MemorySessionCreateBudget(limit);
+  const credentials = readUpstashCredentials(env);
+  if (!credentials) return new MemorySessionCreateBudget(limit);
+  return new UpstashSessionCreateBudget(credentials, readSessionKeyPrefix(env), limit);
 }
 
 function createSessionStore(config: TransitApiConfig, env: ServerEnv): JourneySessionStore {

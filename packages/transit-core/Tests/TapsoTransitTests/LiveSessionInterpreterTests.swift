@@ -155,8 +155,10 @@ final class LiveSessionInterpreterTests: XCTestCase {
         struct Entry: Decodable {
             let id: String
             let signal: RideSignal
+            let rideLength: Int
             let moment: RideMoment
             let milestone: RideMilestone?
+            let stopsBeforeBoarding: Int?
         }
         struct File: Decodable { let signals: [Entry] }
         let repository = URL(fileURLWithPath: #filePath)
@@ -170,10 +172,17 @@ final class LiveSessionInterpreterTests: XCTestCase {
             let view = try XCTUnwrap(views[entry.id])
             let signal = LiveSessionInterpreter.rideSignal(for: view)
             XCTAssertEqual(signal, entry.signal, entry.id)
-            let guidance = RideGuidancePolicy.guidance(for: signal)
+            // The app calls the boarding-aware policy with the draft's ride length; so must the parity check.
+            let guidance = RideGuidancePolicy.guidance(for: signal, rideLength: entry.rideLength)
             XCTAssertEqual(guidance.moment, entry.moment, entry.id)
             XCTAssertEqual(guidance.milestone, entry.milestone, entry.id)
+            XCTAssertEqual(guidance.stopsBeforeBoarding, entry.stopsBeforeBoarding, entry.id)
         }
+        // The fixture must keep exercising the boarding gate on both sides.
+        XCTAssertTrue(entries.contains { $0.stopsBeforeBoarding != nil && $0.milestone == nil })
+        let short = try XCTUnwrap(entries.first { $0.id == "short-ride-before-boarding" })
+        XCTAssertEqual(RideGuidancePolicy.guidance(for: short.signal).milestone, .prepare, "without the ride length this would alert")
+        XCTAssertNil(short.milestone)
     }
 
     /// The 3001 / 3913 false-delay case (`docs/validation/RIDE_3001_FALSE_DELAY_2026-10-04.md`):

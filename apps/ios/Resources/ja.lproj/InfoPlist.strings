@@ -1,0 +1,5 @@
+/* Machine-translated from en/ko; not reviewed by a native speaker. */
+/* iOS permission prompts (Info.plist keys), localized. `project.yml` holds the Korean fallback. */
+"NSLocationWhenInUseUsageDescription" = "TAPSOはあなたの位置情報なしでバスを追跡します。許可すると、iPhoneは端末内でのみ位置情報を使います。乗車中の位置の確認、通知を設定した停留所への接近の検知、「バックグラウンドで更新を続ける」がオンのときにTAPSOを動かし続けるためです。位置情報がTAPSOのサーバーに送られることはありません。";
+"NSLocationAlwaysAndWhenInUseUsageDescription" = "通知を設定した停留所に近づくと、アプリを開かなくてもTAPSOがバスの位置をお知らせします。停留所の近くかどうかはiPhone内で判断し、位置情報がTAPSOのサーバーに送られることはありません。";
+"NSPhotoLibraryUsageDescription" = "ご依頼があったときに、スクリーンショットの元の画像を「写真」から削除するためだけに使います。";

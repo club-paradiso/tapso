@@ -79,18 +79,18 @@ struct RideEndContent: View {
             VStack(alignment: .leading, spacing: TapsoSpace.sm) {
                 DolBuddy(moment: passed ? .passedDestination : .arrived, size: 56, animated: true)
                 Text(passed ? LocalizedStringKey("end.passed.title") : LocalizedStringKey("end.title"))
-                    .font(.largeTitle.weight(.bold))
+                    .font(.tapso(.largeTitle, .bold))
                     .foregroundStyle(TapsoColor.textPrimary)
                     .fixedSize(horizontal: false, vertical: true)
                     .accessibilityAddTraits(.isHeader)
                 HStack(spacing: TapsoSpace.xs) {
                     RouteBadge(number: outcome.routeNumber)
                     Text(verbatim: outcome.destination.name)
-                        .font(.headline)
+                        .font(.tapso(.headline))
                         .foregroundStyle(TapsoColor.textPrimary)
                 }
                 Text(passed ? LocalizedStringKey("end.passed.body") : LocalizedStringKey("end.body"))
-                    .font(.subheadline)
+                    .font(.tapso(.subheadline))
                     .foregroundStyle(TapsoColor.textSecondary)
                     .fixedSize(horizontal: false, vertical: true)
             }
@@ -103,18 +103,18 @@ struct RideEndContent: View {
                         } icon: {
                             Image(systemName: "figure.walk")
                         }
-                        .font(.headline)
+                        .font(.tapso(.headline))
                         .foregroundStyle(TapsoColor.textPrimary)
                         Text("handoff.place.body")
-                            .font(.subheadline)
+                            .font(.tapso(.subheadline))
                             .foregroundStyle(TapsoColor.textSecondary)
                             .fixedSize(horizontal: false, vertical: true)
                     } else {
                         Label("handoff.title", systemImage: "figure.walk")
-                            .font(.headline)
+                            .font(.tapso(.headline))
                             .foregroundStyle(TapsoColor.textPrimary)
                         Text("handoff.body")
-                            .font(.subheadline)
+                            .font(.tapso(.subheadline))
                             .foregroundStyle(TapsoColor.textSecondary)
                             .fixedSize(horizontal: false, vertical: true)
                     }
@@ -138,25 +138,25 @@ struct RideEndContent: View {
                     }
                     if outcome.place == nil && !kakaoAvailable {
                         Text("handoff.kakao.unavailable")
-                            .font(.footnote)
+                            .font(.tapso(.footnote))
                             .foregroundStyle(TapsoColor.textTertiary)
                             .fixedSize(horizontal: false, vertical: true)
                     }
                     if let place = outcome.place, place.coordinate == nil {
                         Text("handoff.place.nameOnly")
-                            .font(.footnote)
+                            .font(.tapso(.footnote))
                             .foregroundStyle(TapsoColor.textTertiary)
                             .fixedSize(horizontal: false, vertical: true)
                     }
                     if let handoffFailed {
                         Text(LocalizedStringKey("handoff.failed." + handoffFailed.rawValue))
-                            .font(.footnote)
+                            .font(.tapso(.footnote))
                             .foregroundStyle(TapsoColor.journeyNext)
                             .fixedSize(horizontal: false, vertical: true)
                     }
                     if appleMapsFailed {
                         Text("handoff.failed.appleMaps")
-                            .font(.footnote)
+                            .font(.tapso(.footnote))
                             .foregroundStyle(TapsoColor.journeyNext)
                             .fixedSize(horizontal: false, vertical: true)
                     }
@@ -207,7 +207,7 @@ struct ReturnTripCard: View {
                 HStack(spacing: TapsoSpace.sm) {
                     ProgressView()
                     Text("returnTrip.loading")
-                        .font(.subheadline)
+                        .font(.tapso(.subheadline))
                         .foregroundStyle(TapsoColor.textSecondary)
                 }
             }
@@ -217,7 +217,7 @@ struct ReturnTripCard: View {
             TapsoCard {
                 VStack(alignment: .leading, spacing: TapsoSpace.sm) {
                     Label("returnTrip.title", systemImage: "moon.stars")
-                        .font(.headline)
+                        .font(.tapso(.headline))
                         .foregroundStyle(TapsoColor.textPrimary)
                     ForEach(rows) { row in
                         ReturnTripRow(row: row, pin: pin(row), onPin: { onPin(row) }, onUnpin: onUnpin)
@@ -227,18 +227,18 @@ struct ReturnTripCard: View {
                     }
                     if unavailable {
                         Text("returnTrip.pin.unavailable")
-                            .font(.footnote)
+                            .font(.tapso(.footnote))
                             .foregroundStyle(TapsoColor.journeyNext)
                             .fixedSize(horizontal: false, vertical: true)
                     }
                     if rows.contains(where: { pin($0) == .tooEarly }) {
                         Text("returnTrip.pin.window")
-                            .font(.footnote)
+                            .font(.tapso(.footnote))
                             .foregroundStyle(TapsoColor.textTertiary)
                             .fixedSize(horizontal: false, vertical: true)
                     }
                     Text("returnTrip.note")
-                        .font(.footnote)
+                        .font(.tapso(.footnote))
                         .foregroundStyle(TapsoColor.textTertiary)
                         .fixedSize(horizontal: false, vertical: true)
                 }
@@ -270,17 +270,17 @@ struct ReturnTripRow: View {
         case .pinned:
             HStack(spacing: TapsoSpace.xs) {
                 Label("returnTrip.pinned", systemImage: "lock.fill")
-                    .font(.footnote.weight(.semibold))
+                    .font(.tapso(.footnote, .semibold))
                     .foregroundStyle(TapsoColor.mintDeep)
                 Spacer(minLength: 0)
                 Button("returnTrip.unpin", action: onUnpin)
-                    .font(.footnote.weight(.semibold))
+                    .font(.tapso(.footnote, .semibold))
                     .frame(minHeight: TapsoSize.minimumTouch)
             }
         case .available:
             Button(action: onPin) {
                 Label("returnTrip.pin", systemImage: "moon.stars")
-                    .font(.footnote.weight(.semibold))
+                    .font(.tapso(.footnote, .semibold))
                     .frame(minHeight: TapsoSize.minimumTouch)
             }
             .foregroundStyle(TapsoColor.mintDeep)
@@ -294,12 +294,12 @@ struct ReturnTripRow: View {
             HStack(spacing: TapsoSpace.xs) {
                 RouteBadge(number: row.route.routeNumber)
                 Text(String(format: RideText.string("returnTrip.direction"), row.route.startStopName ?? "—", row.route.endStopName ?? "—"))
-                    .font(.subheadline.weight(.semibold))
+                    .font(.tapso(.subheadline, .semibold))
                     .foregroundStyle(TapsoColor.textPrimary)
                     .lineLimit(2)
                 if row.ridden {
                     Text("returnTrip.ridden")
-                        .font(.caption2.weight(.bold))
+                        .font(.tapso(.caption2, .bold))
                         .foregroundStyle(TapsoColor.textSecondary)
                         .padding(.horizontal, 6)
                         .padding(.vertical, 2)
@@ -315,10 +315,10 @@ struct ReturnTripRow: View {
                 Image(systemName: levelSymbol)
                     .foregroundStyle(levelColor)
             }
-            .font(.subheadline.weight(.bold))
+            .font(.tapso(.subheadline, .bold))
             if let detail = detailText {
                 Text(verbatim: detail)
-                    .font(.footnote)
+                    .font(.tapso(.footnote))
                     .foregroundStyle(TapsoColor.textSecondary)
             }
         }

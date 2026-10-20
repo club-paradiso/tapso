@@ -20,12 +20,14 @@ import type { ActiveRideSnapshotProvider } from "./activeRideSnapshot.ts";
 import type { CachedTransitProvider } from "./cachedTransitProvider.ts";
 import type { TransitProvider } from "./provider.ts";
 import type { TagoCity, TagoRoute, TagoRouteServiceHours, TagoTransitProvider } from "./tagoProvider.ts";
-import type { JourneySessionCoordinator } from "./journeySession.ts";
+import { validateSessionInput, type JourneySessionCoordinator } from "./journeySession.ts";
 import type { TransitApiConfig } from "./apiConfig.ts";
 import type { BurstLimiter } from "./rateLimit.ts";
+import { SessionCreateBudgetError, type SessionCreateBudget } from "./sessionCreateBudget.ts";
+import { parseFeedback, type FeedbackStore } from "./feedbackStore.ts";
 import { maskClientAddress } from "./rateLimit.ts";
 import { TtlCache } from "./ttlCache.ts";
-import { logEvent } from "./observability.ts";
+import { logEvent, sessionRef } from "./observability.ts";
 import type { LiveActivityPusher } from "./liveActivityPusher.ts";
 import type { ProviderHealth } from "./providerHealth.ts";
 import { TAGO_CADENCE_POLICY_V1 } from "./sourceFreshness.ts";
@@ -138,6 +140,15 @@ export interface TransitApiDependencies {
    */
   activeRideReads?: Pick<ActiveRideSnapshotProvider, "policy" | "stats">;
   limiter?: BurstLimiter;
+  /**
+   * The deployment-wide ceiling on new rides per minute (`sessionCreateBudget.ts`).
+   * Absent means unlimited.
+   */
+  sessionCreateBudget?: SessionCreateBudget;
+  /** Where beta feedback is kept. Absent: `POST /v1/feedback` answers 503 and nothing is claimed as sent. */
+  feedback?: FeedbackStore;
+  /** A tighter per-caller allowance for feedback submissions. */
+  feedbackLimiter?: BurstLimiter;
   /** Separate budget so a ride never spends the public API's burst allowance. */
   operatorLimiter?: BurstLimiter;
   /**
@@ -187,6 +198,8 @@ type Route =
   | "session_end"
   | "session_confirm"
   | "session_live_activity"
+  | "feedback_submit"
+  | "operator_feedback"
   | "operator_snapshot"
   | "operator_analyze"
   | "operator_live_activity_tick";
@@ -224,6 +237,7 @@ export function createTransitApiHandler(dependencies: TransitApiDependencies): T
       }
 
       enforceRateLimit(dependencies, clientAddress(request, context), resolved.route);
+      if (resolved.route === "feedback_submit") enforceFeedbackLimit(dependencies, clientAddress(request, context));
       if (isOperatorRoute(resolved.route)) requireOperator(dependencies, request);
 
       const result = await dispatch(dependencies, { cityCache, routeCache, routeInfoCache, now }, resolved, request, url);
@@ -284,11 +298,14 @@ function resolvePath(path: string): Resolved | undefined {
   if (path === "/v1/timetables") return { route: "timetables", methods: ["GET"] };
   if (path === "/v1/places") return { route: "places", methods: ["GET"] };
   if (path === "/v1/sessions") return { route: "session_create", methods: ["POST"] };
+  if (path === "/v1/feedback") return { route: "feedback_submit", methods: ["POST"] };
 
   // Operator-only ride capture. Authenticated, uncached, and never linked from
   // anything public; see `docs/RIDE_CAPTURE_CONTROLLER.md`.
   if (path === "/operator/snapshot") return { route: "operator_snapshot", methods: ["GET"] };
   if (path === "/operator/analyze") return { route: "operator_analyze", methods: ["POST"] };
+  // Beta tester feedback, newest first (`feedbackStore.ts`).
+  if (path === "/operator/feedback") return { route: "operator_feedback", methods: ["GET"] };
   // The Live Activity scheduler (`LIVE_ACTIVITY_PUSH.md` milestone 5), called by the Railway collector.
   if (path === "/operator/live-activity/tick") return { route: "operator_live_activity_tick", methods: ["POST"] };
 
@@ -587,6 +604,24 @@ async function dispatch(
     };
   }
 
+  if (resolved.route === "feedback_submit") {
+    const store = dependencies.feedback;
+    if (!store) throw apiError("FEEDBACK_UNAVAILABLE", "feedback is not collected on this deployment");
+    const input = parseFeedback(await readJsonBody(request));
+    const saved = await store.add(input);
+    // Counts only: the text and diagnostics stay in the store, never in a log line.
+    logEvent("beta_feedback_received", { category: saved.category, diagnostics: saved.diagnostics !== undefined, durable: store.durable });
+    return { response: json({ id: saved.id, receivedAt: saved.receivedAt, durable: store.durable }, 201, { "cache-control": "no-store" }) };
+  }
+
+  if (resolved.route === "operator_feedback") {
+    const store = dependencies.feedback;
+    if (!store) throw apiError("FEEDBACK_UNAVAILABLE", "feedback is not collected on this deployment");
+    const requested = Number(url.searchParams.get("limit") ?? "50");
+    const limit = Number.isInteger(requested) ? Math.min(Math.max(requested, 1), 200) : 50;
+    return { response: json({ items: await store.recent(limit) }, 200, { "cache-control": "no-store" }) };
+  }
+
   if (resolved.route === "operator_snapshot") {
     const route = routeRequestFrom(url);
     const direct = dependencies.directProvider;
@@ -640,9 +675,13 @@ async function dispatch(
   }
 
   if (resolved.route === "session_create") {
-    const session = await sessions.create(await readJsonBody(request));
+    const input = await readJsonBody(request);
+    // A body the coordinator would refuse never spends the deployment's ride budget.
+    validateSessionInput(input);
+    await takeSessionCreateBudget(dependencies.sessionCreateBudget);
+    const session = await sessions.create(input);
     logEvent("journey_session_created", {
-      sessionId: session.id,
+      sessionRef: sessionRef(session.id),
       routeId: session.routeId,
       state: session.state,
       selectedVehicleId: session.selectedVehicleId,
@@ -658,7 +697,7 @@ async function dispatch(
     // One line per read, by dimension (TAPSO_V1_RELEASE_CLOSURE.md, workstream L):
     // how many rides are live, rechecking or unavailable, and why, is a count over these.
     logEvent("journey_session_read", {
-      sessionId: session.id,
+      sessionRef: sessionRef(session.id),
       routeId: session.routeId,
       state: session.state,
       selected: session.selectedVehicleId !== undefined,
@@ -679,7 +718,7 @@ async function dispatch(
     await dependencies.liveActivityPusher?.beforeEnd(sessionId);
     const ended = await sessions.end(sessionId);
     logEvent("journey_session_ended", {
-      sessionId: ended.id,
+      sessionRef: sessionRef(ended.id),
       routeId: ended.routeId,
       expired: ended.expired,
       selectionMode: ended.selectionMode,
@@ -697,7 +736,7 @@ async function dispatch(
     }
     const registration = await sessions.registerLiveActivityToken(sessionId, await readJsonBody(request));
     logEvent("live_activity_token_registered", {
-      sessionId: registration.sessionId,
+      sessionRef: sessionRef(registration.sessionId),
       tokenFingerprint: registration.liveActivityPush.fingerprint,
     });
     return { response: json(registration, 200, { "cache-control": "no-store" }) };
@@ -706,7 +745,7 @@ async function dispatch(
   const session = await sessions.confirm(sessionId, await readJsonBody(request));
   await dependencies.liveActivityPusher?.afterRead(session);
   logEvent("vehicle_match_confirmed", {
-    sessionId: session.id,
+    sessionRef: sessionRef(session.id),
     routeId: session.routeId,
     selectedVehicleId: session.selectedVehicleId,
   });
@@ -883,6 +922,22 @@ function requiredParam(url: URL, name: string, pattern: RegExp): string {
   return value;
 }
 
+async function takeSessionCreateBudget(budget: SessionCreateBudget | undefined): Promise<void> {
+  if (!budget) return;
+  let verdict;
+  try {
+    verdict = await budget.take();
+  } catch (error) {
+    if (error instanceof SessionCreateBudgetError) throw apiError("SESSION_STORE_UNAVAILABLE", "the session store could not be reached");
+    throw error;
+  }
+  if (verdict.allowed) return;
+  logEvent("journey_session_create_refused", { reason: "deployment_budget", limitPerMinute: budget.limitPerMinute });
+  throw Object.assign(apiError("RATE_LIMITED", "too many new rides right now; try again shortly"), {
+    retryAfterSeconds: verdict.retryAfterSeconds,
+  });
+}
+
 function sessionIdentifier(resolved: Resolved, url: URL): string {
   const value = resolved.sessionId ?? url.searchParams.get("sessionId") ?? url.searchParams.get("id") ?? "";
   const trimmedValue = value.trim();
@@ -995,7 +1050,7 @@ function parseMatchRequest(value: unknown): MatchRequest {
 /* ------------------------------------------------------------------- limits */
 
 function isOperatorRoute(route: Route): boolean {
-  return route === "operator_snapshot" || route === "operator_analyze" || route === "operator_live_activity_tick";
+  return route === "operator_snapshot" || route === "operator_analyze" || route === "operator_live_activity_tick" || route === "operator_feedback";
 }
 
 function enforceRateLimit(dependencies: TransitApiDependencies, address: string, route: Route): void {
@@ -1012,9 +1067,18 @@ function enforceRateLimit(dependencies: TransitApiDependencies, address: string,
   });
 }
 
+function enforceFeedbackLimit(dependencies: TransitApiDependencies, address: string): void {
+  const verdict = dependencies.feedbackLimiter?.consume(`${address}:feedback`);
+  if (!verdict || verdict.allowed) return;
+  throw Object.assign(apiError("RATE_LIMITED", "too many reports right now; try again shortly"), {
+    retryAfterSeconds: verdict.retryAfterSeconds,
+  });
+}
+
 function bucketFor(route: Route): string {
   if (isOperatorRoute(route)) return "operator";
   if (route === "places") return "places";
+  if (route === "feedback_submit") return "feedback";
   return route === "health" ? "health" : "api";
 }
 
@@ -1187,6 +1251,7 @@ const STATUS_BY_CODE: Record<string, number> = {
   // The store is reachable or it is not. A session that cannot be read is
   // never reported as a session that does not exist.
   SESSION_STORE_UNAVAILABLE: 503,
+  FEEDBACK_UNAVAILABLE: 503,
   OPERATOR_DISABLED: 503,
   CATALOG_UNAVAILABLE: 503,
   TIMETABLES_UNAVAILABLE: 503,

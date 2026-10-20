@@ -16,6 +16,7 @@
 import type { ApnsOutcome, LiveActivityPush } from "./apns.ts";
 import type { JourneySessionCoordinator, JourneySessionView } from "./journeySession.ts";
 import { planLiveActivityEnd, planLiveActivityPush } from "./liveActivityContent.ts";
+import { sessionRef } from "./observability.ts";
 
 type Sessions = Pick<JourneySessionCoordinator, "liveActivityTarget" | "recordLiveActivityDelivery" | "dropLiveActivityToken">;
 
@@ -63,7 +64,7 @@ export class LiveActivityPusher {
         await this.sessions.dropLiveActivityToken(view.id, target.fingerprint);
       }
     } catch (error) {
-      this.log({ level: "warn", event: "live_activity_push_skipped", sessionId: view.id, reason: error instanceof Error ? error.name : "unknown" });
+      this.log({ level: "warn", event: "live_activity_push_skipped", sessionRef: sessionRef(view.id), reason: error instanceof Error ? error.name : "unknown" });
     }
   }
 
@@ -74,7 +75,7 @@ export class LiveActivityPusher {
       if (!target) return;
       await this.withinBudget(this.sender.send({ ...planLiveActivityEnd(target, target.delivery, this.now()), token: target.token }));
     } catch (error) {
-      this.log({ level: "warn", event: "live_activity_end_skipped", sessionId: id, reason: error instanceof Error ? error.name : "unknown" });
+      this.log({ level: "warn", event: "live_activity_end_skipped", sessionRef: sessionRef(id), reason: error instanceof Error ? error.name : "unknown" });
     }
   }
 

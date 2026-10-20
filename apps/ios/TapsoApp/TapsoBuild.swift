@@ -12,6 +12,13 @@ enum TapsoBuild {
     static let showsDemo = false
     #endif
 
+    /// Field tools for testers: the ride record, the stop-passage mark and beta feedback.
+    #if DEBUG || TAPSO_FIELD_TOOLS
+    static let showsFieldTools = true
+    #else
+    static let showsFieldTools = false
+    #endif
+
     /// The configuration the binary was built with, for the identity line below.
     #if DEBUG
     static let configuration = "DEBUG"

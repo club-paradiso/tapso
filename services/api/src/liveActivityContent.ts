@@ -20,7 +20,7 @@
 import type { LiveActivityContentState, LiveActivityMilestone, LiveActivityPush } from "./apns.ts";
 import { swiftDate } from "./apns.ts";
 import type { StopOnRoute } from "./domain.ts";
-import type { JourneySessionView } from "./journeySession.ts";
+import type { JourneyLanguage, JourneySessionView } from "./journeySession.ts";
 
 /** Swift `JourneyState` raw values this module can produce. */
 export type RidePhase =
@@ -69,15 +69,36 @@ export const LIVE_ACTIVITY_REFRESH_INTERVAL_MS = 60_000;
 export const LIVE_ACTIVITY_END_DISMISSAL_MS = 60_000;
 
 /**
- * The milestone alerts, in the app's own words (`ride.<milestone>.headline` /
- * `.detail` in `apps/ios/Resources/ko.lproj/Localizable.strings`;
- * `liveActivityContent.test.ts` fails if they drift).
+ * The milestone alerts in every journey language, in the app's own words
+ * (`alert.<milestone>.title` / `.body` in `apps/ios/Resources/<lang>.lproj/Localizable.strings`;
+ * `liveActivityContent.test.ts` fails if they drift). The session carries the
+ * rider's language (`JourneySessionView.language`) and nothing else about them.
  */
-export const MILESTONE_ALERTS: Readonly<Record<LiveActivityMilestone, { title: string; body: string }>> = {
-  prepare: { title: "2정거장 남았어요", body: "내릴 준비를 해주세요" },
-  nextStop: { title: "다음에 내려요", body: "다음 정류장이 목적지예요. 하차벨을 눌러주세요" },
-  arrived: { title: "여기서 내려요", body: "목적지에 도착했어요" },
+export const MILESTONE_ALERTS_BY_LANGUAGE: Readonly<Record<JourneyLanguage, Readonly<Record<LiveActivityMilestone, { title: string; body: string }>>>> = {
+  ko: {
+    prepare: { title: "2정거장 남았어요", body: "내릴 준비를 해주세요" },
+    nextStop: { title: "다음에 내려요", body: "다음 정류장이 목적지예요. 하차벨을 눌러주세요" },
+    arrived: { title: "여기서 내려요", body: "목적지에 도착했어요" },
+  },
+  en: {
+    prepare: { title: "2 stops to go", body: "Get ready to get off" },
+    nextStop: { title: "Get off next", body: "Your stop is next. Press the stop button" },
+    arrived: { title: "Get off here", body: "You've reached your stop" },
+  },
+  "zh-Hans": {
+    prepare: { title: "还有2站", body: "请准备下车" },
+    nextStop: { title: "下一站下车", body: "下一站就是目的地，请按下车铃" },
+    arrived: { title: "在这里下车", body: "已到达目的地" },
+  },
+  ja: {
+    prepare: { title: "あと2停留所", body: "降りる準備をしてください" },
+    nextStop: { title: "次で降ります", body: "次の停留所が目的地です。降車ボタンを押してください" },
+    arrived: { title: "ここで降ります", body: "目的地に着きました" },
+  },
 };
+
+/** The Korean alerts; kept for callers that predate journey languages. */
+export const MILESTONE_ALERTS = MILESTONE_ALERTS_BY_LANGUAGE.ko;
 
 /** Port of `LiveSessionInterpreter.rideSignal`. The server is never offline to itself. */
 export function rideSignalFromSession(view: JourneySessionView): RideSignal {
@@ -142,15 +163,45 @@ export function rideMoment(signal: RideSignal): RideMoment {
   return "checking";
 }
 
+/** Stops from boarding to destination: the app's `draft.totalStops` (`attributes.totalStops`). */
+export function rideLengthOf(view: JourneySessionView): number {
+  return view.destinationStop.sequence - view.boardingStop.sequence;
+}
+
 /**
- * Port of `RideGuidancePolicy.stopsBeforeBoarding`: the confirmed bus has not
- * reached the boarding stop yet. The rider is waiting, not riding, so no get-off
- * alert may fire (a 1-stop ride whose bus is 1 stop out would otherwise read
- * "2 stops left").
+ * Port of `RideGuidancePolicy.stopsBeforeBoarding`: stops the confirmed bus still
+ * has to travel to reach the boarding stop, or `undefined` once it is there (or
+ * the count is unknown). `remaining` is counted from the bus to the destination,
+ * `rideLength` from boarding to the destination.
  */
+export function stopsBeforeBoarding(remaining: number, rideLength: number): number | undefined {
+  return rideLength > 0 && remaining > rideLength ? remaining - rideLength : undefined;
+}
+
+/**
+ * Port of `RideGuidancePolicy.guidance(for:rideLength:)`, reduced to what a push
+ * carries. While the bus has not reached the boarding stop the rider is waiting:
+ * a counting moment reads as riding, and no get-off milestone exists (a 1-stop
+ * ride whose bus is 1 stop out would otherwise read "2 stops left").
+ */
+export function boardingAwareGuidance(signal: RideSignal, rideLength: number): {
+  moment: RideMoment;
+  milestone?: LiveActivityMilestone;
+  stopsBeforeBoarding?: number;
+} {
+  const base = rideMoment(signal);
+  const ahead = stopsBeforeBoarding(signal.remainingStops, rideLength);
+  if (ahead === undefined) {
+    const milestone = rideMilestone(base);
+    return { moment: base, ...(milestone ? { milestone } : {}) };
+  }
+  const counting = base === "riding" || base === "prepare" || base === "nextStop";
+  return { moment: counting ? "riding" : base, stopsBeforeBoarding: ahead };
+}
+
+/** The confirmed bus has not reached the boarding stop yet (`boardingAwareGuidance`). */
 export function busBeforeBoarding(view: JourneySessionView): boolean {
-  const current = view.progress?.currentStopSequence;
-  return current !== undefined && current < view.boardingStop.sequence;
+  return stopsBeforeBoarding(rideSignalFromSession(view).remainingStops, rideLengthOf(view)) !== undefined;
 }
 
 /** Port of `RideGuidancePolicy.milestone`. */
@@ -242,7 +293,7 @@ export function planLiveActivityPush(
   const contentState = liveActivityContentState(view, stops, timestampMs);
   const { updatedAt: _updatedAt, ...comparable } = contentState;
   const contentKey = JSON.stringify(comparable);
-  const milestone = busBeforeBoarding(view) ? undefined : rideMilestone(rideMoment(rideSignalFromSession(view)));
+  const milestone = boardingAwareGuidance(rideSignalFromSession(view), rideLengthOf(view)).milestone;
   const alert = milestone !== undefined && !(delivery?.alerted ?? []).includes(milestone) ? milestone : undefined;
   if (delivery && alert === undefined && contentKey === delivery.lastContentKey
     && timestampMs - delivery.lastTimestampMs < LIVE_ACTIVITY_REFRESH_INTERVAL_MS) {
@@ -260,7 +311,7 @@ export function planLiveActivityPush(
       contentState,
       timestampMs,
       ...(terminal ? {} : { staleDateMs: staleBaseMs + LIVE_ACTIVITY_STALE_INTERVAL_MS }),
-      ...(alert ? { alert: MILESTONE_ALERTS[alert] } : {}),
+      ...(alert ? { alert: MILESTONE_ALERTS_BY_LANGUAGE[view.language ?? "ko"][alert] } : {}),
     },
     next: {
       lastTimestampMs: timestampMs,

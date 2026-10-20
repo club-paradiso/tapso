@@ -12,7 +12,7 @@
 - SKU: `tapso-ios-demo-2026`
 - Version: `0.1.0`
 - Build: increment `CURRENT_PROJECT_VERSION` for every upload
-- Privacy policy URL: `https://github.com/lucanomics/tapso/blob/main/docs/PRIVACY.md`
+- Privacy policy URL: to be published at a stable public URL before external testing (`docs/beta/HUMAN_ACTION_REQUIRED.md` step 7). Source: `docs/PRIVACY.md`.
 
 The bundle identifiers must be registered under a paid Apple Developer Program team that owns the App Store Connect record. Automatic signing is enabled.
 
@@ -40,23 +40,26 @@ The build host must also have several GB of free disk before archiving; see `KNO
 
 ### Beta description
 
-TAPSO는 제주 버스 탑승 중 남은 정거장과 하차 타이밍을 Dynamic Island와 잠금 화면에서 한눈에 보여주는 iPhone 우선 데모입니다. 현재 빌드는 실제 승객 위치를 지속 추적하지 않으며, 제주 노선을 본뜬 명시적 합성 시나리오로 핵심 UX를 검증합니다.
+탑서는 제주 버스에서 내릴 곳을 고르고 탈 버스를 직접 확인하면, 남은 정류장과 내릴 준비 시점을 앱·잠금 화면·Dynamic Island에서 알려 주는 iPhone 앱입니다. 승객 위치를 계속 추적하지 않고, 승객이 확인한 버스를 따라갑니다. 이 베타는 제주 공공 버스 정보를 씁니다.
 
 ### What to test
 
-1. `데모 여정 시작`을 누르고 Live Activities 사용을 허용합니다.
-2. 홈 화면에서 8정거장 컴팩트 Island의 노선, 돌이 캐릭터, 진행 게이지를 확인합니다.
-3. 앱의 `한 정류장 이동`으로 2·1·0정거장 상태를 만든 뒤 각각 `준비 2`, `다음 하차`, `내려요`가 잘 보이는지 확인합니다.
-4. Dynamic Island를 길게 눌러 목적지, 데이터 상태, 진행 레일이 잘 보이는지 확인합니다.
-5. 잠금 화면 카드, 한국어/영어, VoiceOver, 큰 글자에서 정보가 잘리지 않는지 확인합니다.
+1. 정류장·장소 이름으로 내릴 곳을 찾습니다. 주요 관광지 30곳은 영어·중국어·일본어 이름으로도 찾을 수 있습니다.
+2. 탈 정류장과 방향을 고르고, 다가오는 버스의 번호판 끝자리를 보고 `이 버스 확인하기`를 누릅니다.
+3. 버스가 오는 동안 화면과 잠금 화면이 `버스가 오고 있어요`와 `N정거장 전`을 보여주는지, 탄 뒤에는 남은 정거장이 맞게 줄어드는지 확인합니다.
+4. 2정거장 전(`내릴 준비`), 다음 정류장(`다음에 내려요`), 도착이 서로 다른 화면과 알림으로 오는지 확인합니다.
+5. 문제가 있으면 홈 아래 또는 여정 메뉴의 `의견 보내기 (베타)`로 알려 주세요. 접수 번호가 보이면 전송된 것입니다.
+
+알아 두실 점: 앱을 완전히 닫으면 Apple 푸시가 켜지기 전까지 잠금 화면이 갱신되지 않을 수 있습니다. 앱을 열어 두거나 `앱을 나가도 계속 알려 주기`를 켜 주세요. 하차는 항상 차내 안내방송과 정류장 표시로 함께 확인해 주세요.
 
 ### Beta review notes
 
 - No account or test credentials are required.
-- The demo makes no network request and collects no user data. Live rides (beta) talk only to TAPSO's API and send no location or identity; they need production journey sessions enabled.
-- Route, stop, and vehicle observations are synthetic and labeled as demo behavior.
-- Live Activity updates are local in this build. Automatic background progression and real Jeju data are not claimed.
+- TAPSO follows the bus the rider confirms. It does not send the rider's location to TAPSO's servers. Location is optional, When-In-Use, and used on the device only (`docs/PRIVACY.md`). The opt-in "keep going when closed" mode uses the background location capability to stay running and discards every fix (`RideKeepAlive`).
+- Live rides talk only to TAPSO's API, using Jeju public bus data (TAGO). Automatic bus selection is off; the rider confirms the bus.
+- Beta builds include an in-app feedback form. A report is stored for 30 days with app version, device model and language; the ride record is attached only if the tester ticks the box.
 - A Dynamic Island-capable iPhone provides the intended experience; other supported iPhones show the Lock Screen Live Activity.
+- The Debug-only synthetic sample ride is not in Beta or Release builds (release gate 2).
 
 ### Feedback email
 

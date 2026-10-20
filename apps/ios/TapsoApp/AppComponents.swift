@@ -11,7 +11,7 @@ struct PrimaryButtonStyle: ButtonStyle {
 
     func makeBody(configuration: Configuration) -> some View {
         configuration.label
-            .font(.headline)
+            .font(.tapso(.headline))
             .foregroundStyle(foreground)
             .frame(maxWidth: .infinity, minHeight: TapsoSize.primaryButtonHeight)
             .padding(.horizontal, TapsoSpace.md)
@@ -29,7 +29,7 @@ struct SecondaryButtonStyle: ButtonStyle {
 
     func makeBody(configuration: Configuration) -> some View {
         configuration.label
-            .font(.headline)
+            .font(.tapso(.headline))
             .foregroundStyle(foreground)
             .frame(maxWidth: .infinity, minHeight: TapsoSize.primaryButtonHeight - 8)
             .padding(.horizontal, TapsoSpace.md)
@@ -75,7 +75,7 @@ struct SectionTitle: View {
 
     var body: some View {
         Text(key)
-            .font(.subheadline.weight(.bold))
+            .font(.tapso(.subheadline, .bold))
             .foregroundStyle(TapsoColor.textSecondary)
             .accessibilityAddTraits(.isHeader)
     }
@@ -91,7 +91,7 @@ struct QuestionTitle: View {
 
     var body: some View {
         Text(key)
-            .font(.title.weight(.bold))
+            .font(.tapso(.title, .bold))
             .foregroundStyle(TapsoColor.textPrimary)
             .fixedSize(horizontal: false, vertical: true)
             .accessibilityAddTraits(.isHeader)
@@ -102,7 +102,7 @@ struct QuestionTitle: View {
 struct DemoDataChip: View {
     var body: some View {
         Label("demo.chip", systemImage: "testtube.2")
-            .font(.caption.weight(.semibold))
+            .font(.tapso(.caption, .semibold))
             .foregroundStyle(TapsoColor.textSecondary)
             .padding(.horizontal, 10)
             .padding(.vertical, 5)
@@ -126,10 +126,10 @@ struct StopPair: View {
             .padding(.top, 5)
             VStack(alignment: .leading, spacing: TapsoSpace.xs) {
                 Text(verbatim: boarding)
-                    .font(.subheadline)
+                    .font(.tapso(.subheadline))
                     .foregroundStyle(TapsoColor.textSecondary)
                 Text(verbatim: destination)
-                    .font(.headline)
+                    .font(.tapso(.headline))
                     .foregroundStyle(TapsoColor.textPrimary)
             }
             .fixedSize(horizontal: false, vertical: true)
@@ -166,14 +166,14 @@ struct RideAgainRow: View {
                         }
                         if isLatest {
                             Text("home.rideAgain.latest")
-                                .font(.caption.weight(.semibold))
+                                .font(.tapso(.caption, .semibold))
                                 .foregroundStyle(TapsoColor.textSecondary)
                         }
                         Text(verbatim: journey.destinationStopName)
-                            .font(.body.weight(.semibold))
+                            .font(.tapso(.body, .semibold))
                             .foregroundStyle(TapsoColor.textPrimary)
                         Text(String(format: RideText.string("favorite.from"), journey.boardingStopName))
-                            .font(.footnote)
+                            .font(.tapso(.footnote))
                             .foregroundStyle(TapsoColor.textSecondary)
                     }
                     .multilineTextAlignment(.leading)
@@ -181,7 +181,7 @@ struct RideAgainRow: View {
                     // At accessibility sizes the names need the width; the whole row is still the button.
                     if !typeSize.isAccessibilitySize {
                         Image(systemName: "arrow.forward.circle.fill")
-                            .font(.title2)
+                            .font(.tapso(.title2))
                             .foregroundStyle(TapsoColor.journeyActive)
                             .accessibilityHidden(true)
                     }
@@ -198,7 +198,7 @@ struct RideAgainRow: View {
             if let onToggleFavorite {
                 Button(action: onToggleFavorite) {
                     Image(systemName: journey.isFavorite ? "star.fill" : "star")
-                        .font(.body.weight(.semibold))
+                        .font(.tapso(.body, .semibold))
                         .foregroundStyle(journey.isFavorite ? TapsoColor.tangerine : TapsoColor.textTertiary)
                         .frame(width: TapsoSize.minimumTouch, height: TapsoSize.minimumTouch)
                 }
@@ -221,23 +221,23 @@ struct StopRow: View {
         Button(action: action) {
             HStack(spacing: TapsoSpace.sm) {
                 Image(systemName: systemImage)
-                    .font(.title3)
+                    .font(.tapso(.title3))
                     .foregroundStyle(tint)
                     .frame(width: 28)
                 VStack(alignment: .leading, spacing: 2) {
                     Text(verbatim: name)
-                        .font(.body.weight(.medium))
+                        .font(.tapso(.body, .medium))
                         .foregroundStyle(TapsoColor.textPrimary)
                     if let detail {
                         Text(verbatim: detail)
-                            .font(.footnote)
+                            .font(.tapso(.footnote))
                             .foregroundStyle(TapsoColor.textSecondary)
                     }
                 }
                 .multilineTextAlignment(.leading)
                 Spacer(minLength: 0)
                 Image(systemName: "chevron.forward")
-                    .font(.footnote.weight(.bold))
+                    .font(.tapso(.footnote, .bold))
                     .foregroundStyle(TapsoColor.textTertiary)
             }
             .padding(.vertical, TapsoSpace.sm)
@@ -257,15 +257,15 @@ struct StatusBanner: View {
         let color = TapsoColor.journey(guidance.colorRole)
         HStack(alignment: .top, spacing: TapsoSpace.sm) {
             Image(systemName: guidance.symbolName)
-                .font(.headline)
+                .font(.tapso(.headline))
                 .foregroundStyle(color)
                 .frame(width: 24)
             VStack(alignment: .leading, spacing: 4) {
                 Text(LocalizedStringKey(guidance.copy.headline))
-                    .font(.headline)
+                    .font(.tapso(.headline))
                     .foregroundStyle(TapsoColor.textPrimary)
                 Text(LocalizedStringKey(guidance.copy.detail))
-                    .font(.subheadline)
+                    .font(.tapso(.subheadline))
                     .foregroundStyle(TapsoColor.textSecondary)
             }
             .fixedSize(horizontal: false, vertical: true)
@@ -294,15 +294,15 @@ struct NoticeCard: View {
         VStack(alignment: .leading, spacing: TapsoSpace.sm) {
             HStack(alignment: .top, spacing: TapsoSpace.sm) {
                 Image(systemName: systemImage)
-                    .font(.headline)
+                    .font(.tapso(.headline))
                     .foregroundStyle(tint)
                     .frame(width: 24)
                 VStack(alignment: .leading, spacing: 4) {
                     Text(title)
-                        .font(.headline)
+                        .font(.tapso(.headline))
                         .foregroundStyle(TapsoColor.textPrimary)
                     Text(message)
-                        .font(.subheadline)
+                        .font(.tapso(.subheadline))
                         .foregroundStyle(TapsoColor.textSecondary)
                 }
                 .fixedSize(horizontal: false, vertical: true)

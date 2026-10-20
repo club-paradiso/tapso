@@ -77,3 +77,58 @@
 - APNs and local updates are idempotent; stale data is visible within the configured threshold.
 
 Current result: iOS 26.3 iPhone 17 Pro Simulator verifies the app build, 8 iOS tests, compact states at 8/2/1/0, expanded Island, and Lock Screen card. Important-update sound/banner behavior and the rest of the physical-device matrix remain `UNVERIFIED` until a signed real-device run.
+
+## Beta field protocol (2026-10-20, `docs/exec-plans/TAPSO_BETA_READINESS.md`)
+
+Every case starts as **NOT_TESTED**. A case passes only on a physical iPhone, with the evidence listed. A simulator
+run, a CI screenshot or "the code handles it" is never a pass.
+
+**Before each session**
+- Record the build identity line from the feedback sheet (version · build · git SHA · BETA).
+- Record the device model, iOS version, appearance (light/dark), text size, Reduce Motion, Low Power Mode and
+  network (Wi-Fi or cellular).
+- The tester agrees, in writing, to what is recorded: the planned journey, timestamps and the app's ride record
+  (it contains no location history).
+
+**Evidence per case**
+- Planned route variant (route id) and boarding/destination stops.
+- Expected and observed outcome, with timestamps.
+- Screen recordings or photos of the app, Lock Screen and Dynamic Island.
+- The feedback receipt number if a report was sent.
+
+Commit sanitized evidence as `artifacts/device-validation/<date>-<case>.md`. Never include plates in full,
+faces, personal phone numbers or tokens.
+
+### Device and background cases
+
+| ID | Case | Pass when |
+|---|---|---|
+| B-1 | Dynamic Island iPhone: compact, minimal (with music playing), expanded, during waiting → riding → 2 stops → next → arrival | Each state shows the same decision as the app; waiting shows "N정거장 전", never the bus-to-destination count |
+| B-2 | Non-Dynamic Island iPhone, Lock Screen only | Same as B-1 on the Lock Screen |
+| B-3 | Largest accessibility text size | No hero numeral, stop name or button is clipped in the app; Lock Screen truncation recorded (its fonts are fixed sizes) |
+| B-4 | VoiceOver through one full ride | Reading order: state → count → destination → action; waiting reads "탈 정류장에서 N정거장 전" |
+| B-5 | Reduce Motion on | Rail marker jumps; no animation is needed to understand a state |
+| B-6 | App in foreground, then another app, then screen locked, 10 min each | Lock Screen updates while TAPSO is open; with keep-alive on, while backgrounded; stale marking appears after 120 s without updates |
+| B-7 | APNs configured, app force-quit mid-ride | Lock Screen keeps advancing; the 2-stop and next-stop alerts arrive once each (record time vs the physical stop) |
+| B-8 | APNs configured, phone offline 2 min then reconnected | The Lock Screen shows the offline/delayed state, then recovers without a duplicate alert |
+| B-9 | Live Activities switched off in Settings | The ride screen says so and how to switch them back on |
+| B-10 | Device restarted mid-ride | The app reopens to "여정을 이어가요" with the state re-aged; no old milestone shows as fresh |
+| B-11 | Journey language: device set to English, Chinese, then Japanese, one ride each | App, Lock Screen, island and alert text in that language; stop names in Korean |
+| B-12 | Low Power Mode | Same outcome as B-6; record any difference |
+
+### Real ride cases (verified Jeju routes from the committed catalog)
+
+| ID | Ride | What it proves |
+|---|---|---|
+| R-1 | Short, 1–3 stops, confirmed while the bus is still 1–2 stops away | Waiting is shown as waiting; no prepare alert before boarding; correct alerts after |
+| R-2 | Medium, 4–10 stops, high-frequency city bus | Count advances stop by stop; 2-stop, next-stop and arrival are three different screens |
+| R-3 | Longer ride (> 10 stops), express or limited-stop | Rail compresses (no beads above 16); alerts on time |
+| R-4 | A route number with several variants | The rider can tell the direction before boarding |
+| R-5 | Two buses of the same route approaching | The rider can tell them apart by plate; no automatic switch |
+| R-6 | Delayed public data, or a bus disappearing | Each degraded headline matches what happened; the count is labelled last-known |
+| R-7 | Relaunch mid-ride | Resumes without a fresh-looking stale state |
+| R-8 | Arrival with the phone locked | Arrival shown and alerted once; "내렸어요" ends it |
+| R-9 | Intentionally confirm the wrong bus (tester aware) | The ride does not silently switch buses; "다른 버스예요" and feedback "다른 버스가 선택됐어요" work |
+| R-10 | Missed stop | "안내 마치기" and the way-back help appear; nothing claims the rider got off |
+
+Results feed `docs/beta/RELEASE_DECISION.md` and release gates 4 and 5. Gates move on evidence files only. The gate reads B-7/B-8 evidence as `artifacts/device-validation/live-activity-push-<date>.md` (gate 5) and hybrid-tracking evidence as `artifacts/device-validation/hybrid-<date>.md` (gate 4); other cases use `<date>-<case>.md`.

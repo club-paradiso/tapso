@@ -81,7 +81,7 @@ struct AutoStartGuideContent: View {
             VStack(alignment: .leading, spacing: TapsoSpace.xs) {
                 QuestionTitle("autoStart.title")
                 Text("autoStart.intro")
-                    .font(.body)
+                    .font(.tapso(.body))
                     .foregroundStyle(TapsoColor.textSecondary)
                     .fixedSize(horizontal: false, vertical: true)
             }
@@ -108,7 +108,7 @@ struct AutoStartGuideContent: View {
                 .accessibilityIdentifier("open-shortcuts")
                 if openFailed {
                     Text("autoStart.openFailed")
-                        .font(.footnote.weight(.semibold))
+                        .font(.tapso(.footnote, .semibold))
                         .foregroundStyle(TapsoColor.journeyNext)
                         .fixedSize(horizontal: false, vertical: true)
                 }
@@ -118,7 +118,7 @@ struct AutoStartGuideContent: View {
                 Label("autoStart.privacy", systemImage: "location.slash")
                 Label("autoStart.limit", systemImage: "info.circle")
             }
-            .font(.footnote)
+            .font(.tapso(.footnote))
             .foregroundStyle(TapsoColor.textSecondary)
             .fixedSize(horizontal: false, vertical: true)
         }
@@ -132,21 +132,21 @@ struct AutoStartGuideContent: View {
         TapsoCard {
             VStack(alignment: .leading, spacing: TapsoSpace.sm) {
                 Label("stopNudge.section.title", systemImage: "bell.badge")
-                    .font(.headline)
+                    .font(.tapso(.headline))
                     .foregroundStyle(TapsoColor.textPrimary)
                     .accessibilityAddTraits(.isHeader)
                 Text("stopNudge.section.body")
-                    .font(.subheadline)
+                    .font(.tapso(.subheadline))
                     .foregroundStyle(TapsoColor.textSecondary)
                     .fixedSize(horizontal: false, vertical: true)
                 ForEach(nudgeRows) { row in
                     Toggle(isOn: Binding(get: { row.isOn }, set: { onToggleNudge(row.id, $0) })) {
                         VStack(alignment: .leading, spacing: 2) {
                             Text(verbatim: "\(row.routeNumber) · \(row.boardingStopName)")
-                                .font(.body.weight(.semibold))
+                                .font(.tapso(.body, .semibold))
                                 .foregroundStyle(TapsoColor.textPrimary)
                             Text(verbatim: "→ \(row.destinationStopName)")
-                                .font(.footnote)
+                                .font(.tapso(.footnote))
                                 .foregroundStyle(TapsoColor.textSecondary)
                         }
                     }
@@ -155,17 +155,17 @@ struct AutoStartGuideContent: View {
                 }
                 if let key = failureKey {
                     Text(key)
-                        .font(.footnote.weight(.semibold))
+                        .font(.tapso(.footnote, .semibold))
                         .foregroundStyle(TapsoColor.journeyNext)
                         .fixedSize(horizontal: false, vertical: true)
                 } else if nudgeNeedsAlways {
                     Text("stopNudge.needsAlways")
-                        .font(.footnote.weight(.semibold))
+                        .font(.tapso(.footnote, .semibold))
                         .foregroundStyle(TapsoColor.textSecondary)
                         .fixedSize(horizontal: false, vertical: true)
                 }
                 Label("stopNudge.privacy", systemImage: "iphone")
-                    .font(.footnote)
+                    .font(.tapso(.footnote))
                     .foregroundStyle(TapsoColor.textSecondary)
                     .fixedSize(horizontal: false, vertical: true)
             }
@@ -187,19 +187,19 @@ struct AutoStartGuideContent: View {
         TapsoCard {
             VStack(alignment: .leading, spacing: TapsoSpace.sm) {
                 Label(title, systemImage: symbol)
-                    .font(.headline)
+                    .font(.tapso(.headline))
                     .foregroundStyle(TapsoColor.textPrimary)
                     .accessibilityAddTraits(.isHeader)
                 ForEach(Array(steps.enumerated()), id: \.offset) { index, step in
                     HStack(alignment: .firstTextBaseline, spacing: TapsoSpace.sm) {
                         Text(verbatim: String(index + 1))
-                            .font(.system(.caption, design: .rounded, weight: .black))
+                            .font(.tapso(.caption, .black))
                             .foregroundStyle(TapsoColor.textOnAccent)
                             .frame(width: 20, height: 20)
                             .background(TapsoColor.journeyActive, in: Circle())
                             .alignmentGuide(.firstTextBaseline) { $0[VerticalAlignment.center] + 5 }
                         Text(step)
-                            .font(.subheadline)
+                            .font(.tapso(.subheadline))
                             .foregroundStyle(TapsoColor.textPrimary)
                             .fixedSize(horizontal: false, vertical: true)
                     }
@@ -219,23 +219,23 @@ struct AutoStartEntryRow: View {
         Button(action: action) {
             HStack(spacing: TapsoSpace.sm) {
                 Image(systemName: "wand.and.stars")
-                    .font(.title3)
+                    .font(.tapso(.title3))
                     .foregroundStyle(TapsoColor.mintDeep)
                     .frame(width: 40, height: 40)
                     .background(TapsoColor.journeyActive.opacity(0.14), in: RoundedRectangle(cornerRadius: TapsoRadius.sm, style: .continuous))
                 VStack(alignment: .leading, spacing: 2) {
                     Text("autoStart.entry.title")
-                        .font(.body.weight(.semibold))
+                        .font(.tapso(.body, .semibold))
                         .foregroundStyle(TapsoColor.textPrimary)
                     Text("autoStart.entry.body")
-                        .font(.footnote)
+                        .font(.tapso(.footnote))
                         .foregroundStyle(TapsoColor.textSecondary)
                 }
                 .multilineTextAlignment(.leading)
                 .fixedSize(horizontal: false, vertical: true)
                 Spacer(minLength: 0)
                 Image(systemName: "chevron.forward")
-                    .font(.footnote.weight(.bold))
+                    .font(.tapso(.footnote, .bold))
                     .foregroundStyle(TapsoColor.textTertiary)
             }
             .padding(TapsoSpace.md)

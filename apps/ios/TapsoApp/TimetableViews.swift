@@ -21,18 +21,18 @@ struct TimetableCard: View {
                 HStack(spacing: TapsoSpace.xs) {
                     ProgressView()
                     Text("route.timetable.loading")
-                        .font(.footnote)
+                        .font(.tapso(.footnote))
                         .foregroundStyle(TapsoColor.textSecondary)
                 }
             case .failed?:
                 HStack(spacing: TapsoSpace.xs) {
                     Text("route.timetable.failed")
-                        .font(.footnote)
+                        .font(.tapso(.footnote))
                         .foregroundStyle(TapsoColor.textSecondary)
                         .fixedSize(horizontal: false, vertical: true)
                     Spacer(minLength: 0)
                     Button("common.retry", action: onLoad)
-                        .font(.footnote.weight(.semibold))
+                        .font(.tapso(.footnote, .semibold))
                 }
             case let .loaded(view)?:
                 loaded(view, TimetableSummary.make(view))
@@ -48,23 +48,23 @@ struct TimetableCard: View {
     @ViewBuilder
     private func loaded(_ view: TransitAPITimetable, _ summary: TimetableSummary) -> some View {
         Label(title(summary), systemImage: "calendar")
-            .font(.subheadline.weight(.semibold))
+            .font(.tapso(.subheadline, .semibold))
             .foregroundStyle(TapsoColor.textPrimary)
         if summary.kind == .today, let holiday = summary.holidayName {
             Text(String(format: RideText.string("route.timetable.holiday"), holiday))
-                .font(.footnote)
+                .font(.tapso(.footnote))
                 .foregroundStyle(TapsoColor.textSecondary)
         }
         ForEach(Array(summary.lines.enumerated()), id: \.offset) { _, line in
             VStack(alignment: .leading, spacing: 2) {
                 HStack(spacing: TapsoSpace.xs) {
                     Text(verbatim: line.direction)
-                        .font(.footnote.weight(.semibold))
+                        .font(.tapso(.footnote, .semibold))
                         .foregroundStyle(TapsoColor.textPrimary)
                         .lineLimit(2)
                     if let label = line.dayLabel {
                         Text(verbatim: label)
-                            .font(.caption2.weight(.semibold))
+                            .font(.tapso(.caption2, .semibold))
                             .foregroundStyle(TapsoColor.textSecondary)
                             .padding(.horizontal, 6)
                             .padding(.vertical, 1)
@@ -72,24 +72,24 @@ struct TimetableCard: View {
                     }
                 }
                 Text(Self.firstLast(line))
-                    .font(.footnote.monospacedDigit())
+                    .font(.tapso(.footnote).monospacedDigit())
                     .foregroundStyle(TapsoColor.textSecondary)
                 if line.hasLaterConditional {
                     Text("route.timetable.laterConditional")
-                        .font(.caption)
+                        .font(.tapso(.caption))
                         .foregroundStyle(TapsoColor.textTertiary)
                 }
             }
             .accessibilityElement(children: .combine)
         }
         Text(String(format: RideText.string(summary.isStale ? "route.timetable.stale" : "route.timetable.asOf"), summary.asOf))
-            .font(.caption)
+            .font(.tapso(.caption))
             // Slate text read 2.7:1 on the card; the stale wording carries the warning.
             .foregroundStyle(summary.isStale ? TapsoColor.textSecondary : TapsoColor.textTertiary)
             .fixedSize(horizontal: false, vertical: true)
         if view.services.contains(where: { $0.status == "ok" && !$0.trips.isEmpty }) {
             Button("route.timetable.showAll") { onShowAll(view) }
-                .font(.footnote.weight(.semibold))
+                .font(.tapso(.footnote, .semibold))
                 .accessibilityIdentifier("timetable-show-all")
         }
     }
@@ -151,7 +151,7 @@ struct TimetableSheetContent: View {
     var body: some View {
         VStack(alignment: .leading, spacing: TapsoSpace.lg) {
             Text(String(format: RideText.string("route.timetable.sheet.source"), view.asOf))
-                .font(.footnote)
+                .font(.tapso(.footnote))
                 .foregroundStyle(TapsoColor.textSecondary)
                 .fixedSize(horizontal: false, vertical: true)
             ForEach(Array(services.enumerated()), id: \.offset) { position, service in
@@ -171,10 +171,10 @@ struct TimetableSheetContent: View {
         }
         return VStack(alignment: .leading, spacing: TapsoSpace.sm) {
             Text(verbatim: service.direction)
-                .font(.headline)
+                .font(.tapso(.headline))
                 .foregroundStyle(TapsoColor.textPrimary)
             Text(verbatim: dayText(service))
-                .font(.footnote)
+                .font(.tapso(.footnote))
                 .foregroundStyle(TapsoColor.textSecondary)
             Picker(selection: Binding(get: { column }, set: { selection[key] = $0 })) {
                 ForEach(Array(service.timepoints.enumerated()), id: \.offset) { index, name in
@@ -186,20 +186,20 @@ struct TimetableSheetContent: View {
             .pickerStyle(.menu)
             if times.isEmpty {
                 Text("route.timetable.sheet.none")
-                    .font(.footnote)
+                    .font(.tapso(.footnote))
                     .foregroundStyle(TapsoColor.textSecondary)
             } else {
                 LazyVGrid(columns: Array(repeating: GridItem(.flexible(), spacing: TapsoSpace.xs), count: 4), alignment: .leading, spacing: TapsoSpace.xs) {
                     ForEach(Array(times.enumerated()), id: \.offset) { _, entry in
                         Text(verbatim: TimetableCard.clock(entry.0) + (entry.1 ? " *" : ""))
-                            .font(.footnote.monospacedDigit())
+                            .font(.tapso(.footnote).monospacedDigit())
                             .foregroundStyle(entry.1 ? TapsoColor.textTertiary : TapsoColor.textPrimary)
                     }
                 }
             }
             if service.hasConditionalTrips {
                 Text("route.timetable.sheet.conditional")
-                    .font(.caption)
+                    .font(.tapso(.caption))
                     .foregroundStyle(TapsoColor.textTertiary)
                     .fixedSize(horizontal: false, vertical: true)
             }

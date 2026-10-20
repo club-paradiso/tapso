@@ -51,7 +51,7 @@ struct DemoControlsView: View {
 
                 Section {
                     Text(verbatim: TapsoBuild.identity().line)
-                        .font(.footnote.monospacedDigit())
+                        .font(.tapso(.footnote).monospacedDigit())
                         .textSelection(.enabled)
                         .accessibilityIdentifier("build-identity")
                 } header: {

@@ -184,6 +184,11 @@ struct ActiveRide: Codable, Hashable {
 
     var hybridPosition: HybridRidePosition?
 
+    /// The journey language the server session was created in. Changing TAPSO's language
+    /// mid-ride relaunches the app; a recreated Live Activity keeps this language so it
+    /// matches the server's alerts. Absent on rides saved before it existed.
+    var language: JourneyLanguage?
+
     var isLive: Bool { live != nil }
 
     /// When the ride's data last reached the app, in real time.
@@ -283,6 +288,8 @@ final class TapsoAppModel {
     var scenario: DemoRideScenario = .smooth
     var speed: DemoSpeed = .one
     var isDemoPanelPresented = false
+    /// The beta feedback sheet (`FeedbackView`), from Home or the ride menu in Debug and Beta builds.
+    var isFeedbackPresented = false
 
     private(set) var library: JourneyLibrary
     private(set) var draft: RideDraft?
@@ -375,6 +382,8 @@ final class TapsoAppModel {
     @ObservationIgnored private var lastMoment: RideMoment?
     /// The live session being set up, before a bus is confirmed.
     @ObservationIgnored private var liveSetupSession: JourneySessionSnapshot?
+    /// The language `liveSetupSession` was created in; the ride keeps it (`ActiveRide.language`).
+    @ObservationIgnored private var liveSetupLanguage: JourneyLanguage = .current
     /// The development opt-in; no debug surfaces in release builds.
     private let hybridLaunchArgument = ProcessInfo.processInfo.arguments.contains("-tapsoHybridTracking")
     /// Whether this ride fuses device evidence: the launch argument, or the server's rollout switch
@@ -1620,12 +1629,15 @@ final class TapsoAppModel {
                 if let existing = liveSetupSession {
                     snapshot = try await api.session(id: existing.id)
                 } else {
+                    let language = JourneyLanguage.current
                     snapshot = try await api.createSession(
                         routeID: draft.routeID.rawValue,
                         cityCode: cityCode,
                         boardingSequence: boarding,
-                        destinationSequence: destination
+                        destinationSequence: destination,
+                        language: language
                     )
+                    liveSetupLanguage = language
                 }
                 if Task.isCancelled {
                     // The rider left while this was in flight; a session nobody reads must not linger.
@@ -1702,7 +1714,8 @@ final class TapsoAppModel {
                 currentStopSequence: LiveSessionInterpreter.currentStopSequence(for: snapshot),
                 endedByServer: false,
                 hybridTracking: hybridForThisRide
-            )
+            ),
+            language: liveSetupLanguage
         )
         outcome = nil
         resumedAfterRelaunch = false
@@ -2222,6 +2235,27 @@ final class TapsoAppModel {
         }
     }
 
+    // MARK: Beta feedback
+
+    /// What a tester may attach, with consent: the build identity and the ride's privacy-scrubbed
+    /// trace (`RideTrace`, Debug and Beta builds only). Never a location history.
+    func feedbackDiagnostics() -> String {
+        var parts = [TapsoBuild.identity().line]
+        #if DEBUG || TAPSO_FIELD_TOOLS
+        if !rideTrace.events.isEmpty { parts.append(rideTrace.text) }
+        #endif
+        return parts.joined(separator: "\n")
+    }
+
+    /// The server's receipt, or `nil` when the report was not confirmed as kept.
+    func sendFeedback(_ report: FeedbackReport) async -> FeedbackReceipt? {
+        do {
+            return try await api.sendFeedback(report)
+        } catch {
+            return nil
+        }
+    }
+
     private func startLiveActivity() async {
         guard let liveActivity, let ride = activeRide, let route = ride.draft.route, let state = contentState() else { return }
         let attributes = TapsoActivityAttributes(
@@ -2230,7 +2264,8 @@ final class TapsoAppModel {
             boardingStopName: ride.draft.boarding?.name ?? "",
             destinationName: ride.draft.destination?.name ?? "",
             totalStops: ride.draft.totalStops,
-            vehiclePlate: ride.plate
+            vehiclePlate: ride.plate,
+            language: ride.language ?? .current
         )
         // Only a live ride has a server session to push to; a demo ride never asks for a token.
         let push = ride.live != nil && !hybridTrackingEnabled ? await api.liveActivityPushEnabled() : false

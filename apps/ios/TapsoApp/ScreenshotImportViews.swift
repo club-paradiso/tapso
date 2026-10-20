@@ -48,14 +48,14 @@ struct ScreenshotImportSection: View {
         PhotosPicker(selection: $picked, matching: .screenshots, photoLibrary: .shared()) {
             if prominent {
                 Label("mapImport.shot.action", systemImage: "photo.on.rectangle")
-                    .font(.headline)
+                    .font(.tapso(.headline))
                     .foregroundStyle(TapsoColor.textOnAccent)
                     .frame(maxWidth: .infinity, minHeight: TapsoSize.primaryButtonHeight)
                     .background(TapsoColor.journeyActive, in: RoundedRectangle(cornerRadius: TapsoRadius.md, style: .continuous))
                     .contentShape(Rectangle())
             } else {
                 Label("mapImport.shot.another", systemImage: "photo.on.rectangle")
-                    .font(.headline)
+                    .font(.tapso(.headline))
                     .foregroundStyle(TapsoColor.textPrimary)
                     .frame(maxWidth: .infinity, minHeight: TapsoSize.primaryButtonHeight - 8)
                     .background(TapsoColor.backgroundSecondary, in: RoundedRectangle(cornerRadius: TapsoRadius.md, style: .continuous))
@@ -108,7 +108,7 @@ struct ScreenshotImportContent: View {
                 Text("mapImport.shot.kept")
                 Button(action: onDeleteOriginal) {
                     Label("mapImport.shot.delete", systemImage: "trash")
-                        .font(.subheadline.weight(.semibold))
+                        .font(.tapso(.subheadline, .semibold))
                         .frame(minHeight: TapsoSize.minimumTouch, alignment: .leading)
                 }
                 .tint(TapsoColor.journeyDegraded)
@@ -129,13 +129,13 @@ struct ScreenshotImportContent: View {
                 }
                 Button(action: onDeleteOriginal) {
                     Label("mapImport.shot.delete", systemImage: "trash")
-                        .font(.subheadline.weight(.semibold))
+                        .font(.tapso(.subheadline, .semibold))
                         .frame(minHeight: TapsoSize.minimumTouch, alignment: .leading)
                 }
                 .tint(TapsoColor.journeyDegraded)
             }
         }
-        .font(.footnote)
+        .font(.tapso(.footnote))
         .foregroundStyle(TapsoColor.textSecondary)
         .fixedSize(horizontal: false, vertical: true)
         .frame(maxWidth: .infinity, alignment: .leading)
@@ -148,7 +148,7 @@ struct ScreenshotImportContent: View {
             VStack(alignment: .leading, spacing: TapsoSpace.sm) {
                 picker
                 Text("mapImport.shot.hint")
-                    .font(.footnote)
+                    .font(.tapso(.footnote))
                     .foregroundStyle(TapsoColor.textSecondary)
                     .fixedSize(horizontal: false, vertical: true)
             }
@@ -156,7 +156,7 @@ struct ScreenshotImportContent: View {
             HStack(spacing: TapsoSpace.sm) {
                 ProgressView()
                 Text("mapImport.shot.reading")
-                    .font(.body.weight(.medium))
+                    .font(.tapso(.body, .medium))
                     .foregroundStyle(TapsoColor.textPrimary)
             }
             .frame(maxWidth: .infinity, minHeight: TapsoSize.primaryButtonHeight, alignment: .leading)
@@ -182,13 +182,13 @@ struct ScreenshotImportContent: View {
         let startKey: LocalizedStringKey = proposal.boarding == nil ? "mapImport.shot.confirm.boarding" : "mapImport.shot.confirm.start"
         return VStack(alignment: .leading, spacing: TapsoSpace.md) {
             Text("mapImport.shot.confirm.title")
-                .font(.title3.weight(.bold))
+                .font(.tapso(.title3, .bold))
                 .foregroundStyle(TapsoColor.textPrimary)
                 .accessibilityAddTraits(.isHeader)
             ScreenshotRouteSummary(proposal: proposal)
             if proposal.boarding == nil {
                 Text("mapImport.shot.confirm.boardingNote")
-                    .font(.footnote)
+                    .font(.tapso(.footnote))
                     .foregroundStyle(TapsoColor.textSecondary)
                     .fixedSize(horizontal: false, vertical: true)
             }
@@ -206,11 +206,11 @@ struct ScreenshotImportContent: View {
     private func candidates(_ proposals: [RouteImportProposal]) -> some View {
         VStack(alignment: .leading, spacing: TapsoSpace.sm) {
             Text(String(format: RideText.string("mapImport.shot.choose.title"), proposals.count))
-                .font(.title3.weight(.bold))
+                .font(.tapso(.title3, .bold))
                 .foregroundStyle(TapsoColor.textPrimary)
                 .accessibilityAddTraits(.isHeader)
             Text("mapImport.shot.choose.hint")
-                .font(.subheadline)
+                .font(.tapso(.subheadline))
                 .foregroundStyle(TapsoColor.textSecondary)
             ForEach(Array(proposals.enumerated()), id: \.offset) { _, proposal in
                 Button { onStart(proposal) } label: {
@@ -233,7 +233,7 @@ struct ScreenshotRouteSummary: View {
                 HStack(spacing: TapsoSpace.xs) {
                     RouteBadge(number: proposal.route.number)
                     Text(String(format: RideText.string("route.headsign"), proposal.route.destinationName))
-                        .font(.subheadline)
+                        .font(.tapso(.subheadline))
                         .foregroundStyle(TapsoColor.textSecondary)
                 }
                 if let boarding = proposal.boarding {
@@ -241,16 +241,16 @@ struct ScreenshotRouteSummary: View {
                 } else {
                     VStack(alignment: .leading, spacing: 2) {
                         Text("recap.getOffAt")
-                            .font(.footnote)
+                            .font(.tapso(.footnote))
                             .foregroundStyle(TapsoColor.textSecondary)
                         Text(verbatim: proposal.destination.stop.name)
-                            .font(.headline)
+                            .font(.tapso(.headline))
                             .foregroundStyle(TapsoColor.textPrimary)
                     }
                 }
                 if let count = proposal.stopCount {
                     Text(String(format: RideText.string(RideText.countKey("mapImport.shot.stops", count)), count))
-                        .font(.subheadline.weight(.semibold))
+                        .font(.tapso(.subheadline, .semibold))
                         .foregroundStyle(TapsoColor.textSecondary)
                 }
             }
@@ -283,16 +283,16 @@ struct ScreenshotCandidateRow: View {
             RouteBadge(number: proposal.route.number)
             VStack(alignment: .leading, spacing: 2) {
                 Text(verbatim: places)
-                    .font(.body.weight(.semibold))
+                    .font(.tapso(.body, .semibold))
                     .foregroundStyle(TapsoColor.textPrimary)
                 Text(verbatim: detail)
-                    .font(.footnote)
+                    .font(.tapso(.footnote))
                     .foregroundStyle(TapsoColor.textSecondary)
             }
             .multilineTextAlignment(.leading)
             Spacer(minLength: 0)
             Image(systemName: "chevron.forward")
-                .font(.footnote.weight(.bold))
+                .font(.tapso(.footnote, .bold))
                 .foregroundStyle(TapsoColor.textTertiary)
         }
         .padding(TapsoSpace.md)

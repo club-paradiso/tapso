@@ -1,6 +1,6 @@
 #!/usr/bin/env python3
 """Checks that every localization key the iOS app and Live Activity use exists
-in both ko and en, and that the two tables hold the same keys.
+in ko, en, zh-Hans and ja, and that the tables hold the same keys and formats.
 
 Keys are string literals with a known prefix in the Swift sources, plus the
 families the core builds at runtime (ride moments, vehicle-check stages, trust
@@ -16,7 +16,7 @@ CORE = ROOT / "packages/transit-core/Sources/TapsoTransit"
 PREFIXES = (
     "a11y", "brand", "home", "search", "setup", "route", "boarding", "recap", "mapImport",
     "check", "ride", "count", "trust", "favorite", "demo", "end", "handoff", "common",
-    "alert", "live_activity", "shortcut", "live", "share", "returnTrip", "rescue", "control", "autoStart", "stopNudge", "boardFirst",
+    "alert", "live_activity", "shortcut", "live", "share", "returnTrip", "rescue", "control", "autoStart", "stopNudge", "boardFirst", "feedback",
 )
 LITERAL = re.compile(r'"((?:%s)\.[A-Za-z0-9_.]+)"' % "|".join(PREFIXES))
 # `RideText.countKey("<key>", n)` also reads "<key>.one" for a count of one.
@@ -103,32 +103,39 @@ def main() -> int:
     used -= {"trust.vehicle.", "trust.data.", "demo.scenario.", "handoff.failed.", "alert.", "mapImport.source."}
     used = {key for key in used if not key.endswith(".")}
 
-    ko = load(IOS / "Resources/ko.lproj/Localizable.strings")
-    en = load(IOS / "Resources/en.lproj/Localizable.strings")
+    # Korean is the source; every shipped language must carry exactly its keys and formats.
+    languages = ("ko", "en", "zh-Hans", "ja")
+    tables = {name: load(IOS / f"Resources/{name}.lproj/Localizable.strings") for name in languages}
+    infos = {name: load(IOS / f"Resources/{name}.lproj/InfoPlist.strings") for name in languages}
+    ko = tables["ko"]
     problems = []
     for key in sorted(used):
-        for name, table in (("ko", ko), ("en", en)):
+        for name, table in tables.items():
             if key not in table:
                 problems.append(f"missing in {name}: {key}")
-    for key in sorted(set(ko) ^ set(en)):
-        problems.append(f"only in {'ko' if key in ko else 'en'}: {key}")
-    for key in sorted(set(ko) & set(en)):
-        if placeholders(ko[key]) != placeholders(en[key]):
-            problems.append(f"format arguments differ: {key}: ko {placeholders(ko[key])} en {placeholders(en[key])}")
-    # The permission prompts iOS shows: same keys in both languages, none empty.
-    info_ko = load(IOS / "Resources/ko.lproj/InfoPlist.strings")
-    info_en = load(IOS / "Resources/en.lproj/InfoPlist.strings")
-    for key in sorted(set(info_ko) ^ set(info_en)):
-        problems.append(f"InfoPlist.strings only in {'ko' if key in info_ko else 'en'}: {key}")
-    for name, table in (("ko", ko), ("en", en), ("ko InfoPlist", info_ko), ("en InfoPlist", info_en)):
-        for key, value in table.items():
-            if not value.strip():
-                problems.append(f"empty in {name}: {key}")
+    for name, table in tables.items():
+        if name == "ko":
+            continue
+        for key in sorted(set(ko) ^ set(table)):
+            problems.append(f"only in {'ko' if key in ko else name}: {key}")
+        for key in sorted(set(ko) & set(table)):
+            if placeholders(ko[key]) != placeholders(table[key]):
+                problems.append(f"format arguments differ: {key}: ko {placeholders(ko[key])} {name} {placeholders(table[key])}")
+        # The permission prompts iOS shows: same keys in every language.
+        for key in sorted(set(infos["ko"]) ^ set(infos[name])):
+            problems.append(f"InfoPlist.strings only in {'ko' if key in infos['ko'] else name}: {key}")
+    for name in languages:
+        for label, table in ((name, tables[name]), (f"{name} InfoPlist", infos[name])):
+            for key, value in table.items():
+                if not value.strip():
+                    problems.append(f"empty in {label}: {key}")
+                if "\u202f" in value or "\u00a0" in value:
+                    problems.append(f"nonstandard space in {label}: {key}")
     unused = sorted(set(ko) - used)
     if problems:
         print("\n".join(problems))
         return 1
-    print(f"localization ok: {len(used)} keys used, {len(ko)} per table" + (f", unused: {', '.join(unused)}" if unused else ""))
+    print(f"localization ok ({', '.join(languages)}): {len(used)} keys used, {len(ko)} per table" + (f", unused: {', '.join(unused)}" if unused else ""))
     return 0
 
 
