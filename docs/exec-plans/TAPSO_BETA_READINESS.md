@@ -95,6 +95,8 @@ node --experimental-strip-types scripts/journey/live-activity-signals.ts --check
 
 - 2026-10-20: Phase 0 audit and design proposal. Owner approval. Milestones A–J committed on PR #146.
 - Finding: the macOS runners for this repository queued for about 20 minutes per job; at most one ran at a time.
+- Evidence: CI run 39362474415 on `0d356af` (milestone A) passed every job, including `ios`: build and XCTest on the iOS 26.2 iPhone 17 Pro simulator, snapshot evidence rendered, and `transit-core` with `RideBoardingRegressionTests` (SIMULATOR_VERIFIED for the waiting state and `testWaitingIsOneDecisionOnEverySurface`).
+- Incident: `7d35bc8` added `Shared/JourneyLanguage+Bundle.swift`. `sync_xcodeproj.py` wrote its path unquoted, which made the project unreadable to `xcodebuild`, so the iOS jobs of the following commits failed before compiling. Fixed in `6105a7b`: the file was renamed, `-` paths were quoted, and the script now quotes names it cannot write bare.
 - Finding: `AGENTS.md` said the transit API ships no dependencies. It depends on `web-push` 3.6.7, and the
   local test suite needs `npm install` first.
 - Risks:
