@@ -66,7 +66,7 @@ final class LiveActivityClient {
         let rideLength = activity.attributes.totalStops
         var alert: AlertConfiguration?
         if let milestone, milestone == TapsoLiveActivityPolicy.milestone(for: state, rideLength: rideLength) {
-            alert = alertConfiguration(for: milestone)
+            alert = alertConfiguration(for: milestone, locale: activity.attributes.journeyLocale ?? .current)
         }
         await activity.update(content(for: state, rideLength: rideLength), alertConfiguration: alert)
     }
@@ -107,11 +107,13 @@ final class LiveActivityClient {
         )
     }
 
-    private func alertConfiguration(for milestone: TapsoLiveActivityMilestone) -> AlertConfiguration {
+    /// In the activity's journey language, like the server's pushed alerts, even after the
+    /// app relaunched in another language.
+    private func alertConfiguration(for milestone: TapsoLiveActivityMilestone, locale: Locale) -> AlertConfiguration {
         let key = "alert.\(milestone.rawValue)"
         return AlertConfiguration(
-            title: LocalizedStringResource(String.LocalizationValue(key + ".title")),
-            body: LocalizedStringResource(String.LocalizationValue(key + ".body")),
+            title: LocalizedStringResource(String.LocalizationValue(key + ".title"), locale: locale),
+            body: LocalizedStringResource(String.LocalizationValue(key + ".body"), locale: locale),
             sound: .default
         )
     }
