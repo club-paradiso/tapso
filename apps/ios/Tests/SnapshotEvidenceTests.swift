@@ -566,7 +566,7 @@ private struct IslandCompactMock: View {
             IslandCompactLeading(attributes: attributes, state: state, isStale: isStale)
                 .padding(.leading, 10)
             Spacer(minLength: 126)
-            IslandCompactTrailing(state: state, isStale: isStale)
+            IslandCompactTrailing(state: state, isStale: isStale, rideLength: attributes.totalStops)
                 .padding(.trailing, 10)
         }
         .frame(height: 37)
@@ -630,9 +630,9 @@ private struct IslandExpandedMock: View {
             HStack(alignment: .top) {
                 IslandExpandedLeading(attributes: attributes, state: state, isStale: isStale)
                 Spacer()
-                IslandExpandedCenter(state: state, isStale: isStale)
+                IslandExpandedCenter(state: state, isStale: isStale, rideLength: attributes.totalStops)
                 Spacer()
-                IslandExpandedTrailing(state: state, isStale: isStale)
+                IslandExpandedTrailing(state: state, isStale: isStale, rideLength: attributes.totalStops)
             }
             IslandExpandedBottom(attributes: attributes, state: state, isStale: isStale)
         }

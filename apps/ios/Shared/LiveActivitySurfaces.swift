@@ -107,6 +107,8 @@ struct LockScreenRideView: View {
                 JourneyRail(
                     progress: JourneyRail.progress(remaining: state.remainingStops, total: attributes.totalStops),
                     role: guidance.colorRole,
+                    stopsBeforeBoarding: guidance.stopsBeforeBoarding,
+                    totalStops: attributes.totalStops,
                     trackColor: .white.opacity(0.16),
                     height: 9
                 )
@@ -154,17 +156,25 @@ struct RemainingOrSymbol: View {
     /// Dimmed, still at least 3:1 for a numeral this large on every surface (slate on basalt 3.7:1).
     static let lastKnownOpacity: Double = 0.7
 
+    /// "stops away" while waiting, "last seen" for a last-known count, otherwise "stops".
+    static func unitKey(_ guidance: RideGuidance, _ shown: Int) -> String {
+        if guidance.isWaiting { return RideText.countKey("count.beforeBoarding", shown) }
+        return guidance.count == .lastKnown ? "count.lastKnown" : RideText.countKey("count.unit", shown)
+    }
+
     var body: some View {
         switch guidance.count {
         case .live, .lastKnown:
+            // While waiting the number is how far the bus is from the boarding stop.
+            let shown = guidance.displayedCount(remaining: remaining)
             VStack(alignment: .trailing, spacing: -2) {
-                Text(remaining, format: .number)
+                Text(shown, format: .number)
                     .font(TapsoType.numeral(large ? 40 : 24))
                     .monospacedDigit()
                     .foregroundStyle(color)
                     .opacity(guidance.count == .lastKnown ? Self.lastKnownOpacity : 1)
                     .countTransition()
-                Text(guidance.count == .lastKnown ? LocalizedStringKey("count.lastKnown") : LocalizedStringKey(RideText.countKey("count.unit", remaining)))
+                Text(LocalizedStringKey(Self.unitKey(guidance, shown)))
                     .font(.caption2.weight(.bold))
                     .foregroundStyle(color.opacity(labelOpacity))
             }
@@ -210,8 +220,8 @@ struct IslandCompactTrailing: View {
     /// ActivityKit's `context.isStale`: past the stale date, the island shows aged data like the Lock Screen.
     var isStale = false
 
-    /// `attributes.totalStops`, for "the bus is coming" before boarding; `nil` where unknown.
-    var rideLength: Int? = nil
+    /// `attributes.totalStops`, so a bus still on its way to the boarding stop reads as coming.
+    let rideLength: Int
     private var guidance: RideGuidance { guidanceAccountingForStaleness(state, isStale: isStale, rideLength: rideLength) }
 
     var body: some View {
@@ -239,12 +249,18 @@ struct IslandCompactTrailing: View {
                 .background(color.opacity(decision ? 1 : 0.18), in: Capsule())
                 .foregroundStyle(onPill)
             } else {
+                let shown = guidance.displayedCount(remaining: state.remainingStops)
                 HStack(alignment: .firstTextBaseline, spacing: 2) {
-                    Text(verbatim: (guidance.trust == .estimated ? "~" : "") + String(state.remainingStops))
+                    if guidance.isWaiting {
+                        // A bus on its way: the outline bus says "coming", not "aboard".
+                        Image(systemName: "bus")
+                            .font(.system(size: 9, weight: .black))
+                    }
+                    Text(verbatim: (guidance.trust == .estimated ? "~" : "") + String(shown))
                         .font(.system(.subheadline, design: .rounded, weight: .black))
                         .monospacedDigit()
                         .countTransition()
-                    Text(LocalizedStringKey(RideText.countKey("count.unit", state.remainingStops)))
+                    Text(LocalizedStringKey(guidance.isWaiting ? RideText.countKey("count.beforeBoarding", shown) : RideText.countKey("count.unit", shown)))
                         .font(.caption2.weight(.bold))
                 }
                 .foregroundStyle(color)
@@ -282,6 +298,10 @@ struct IslandMinimalStyle: Equatable {
 
     static func style(for guidance: RideGuidance, remainingStops: Int) -> IslandMinimalStyle {
         let color = TapsoColor.journey(guidance.colorRole)
+        if let ahead = guidance.stopsBeforeBoarding, guidance.moment == .riding {
+            // Waiting: an outline bus and how far it still is from the boarding stop.
+            return IslandMinimalStyle(symbol: "bus", shape: .plain, color: color, foreground: color, count: String(ahead), dimmed: false)
+        }
         switch guidance.moment {
         case .riding:
             let estimated = guidance.trust == .estimated
@@ -296,7 +316,8 @@ struct IslandMinimalStyle: Equatable {
             return IslandMinimalStyle(symbol: "arrow.uturn.backward", shape: .filled, color: color, foreground: TapsoColor.textOnUrgent, count: nil, dimmed: false)
         case .delayed:
             // Rechecking with a last-known count: the count stays, dimmed, beside the recheck glyph.
-            return IslandMinimalStyle(symbol: "arrow.clockwise", shape: .plain, color: color, foreground: color, count: remainingStops >= 0 ? String(remainingStops) : nil, dimmed: true)
+            let shown = guidance.displayedCount(remaining: remainingStops)
+            return IslandMinimalStyle(symbol: "arrow.clockwise", shape: .plain, color: color, foreground: color, count: remainingStops >= 0 ? String(shown) : nil, dimmed: true)
         case .checking, .vehicleLost, .offline, .ended:
             return IslandMinimalStyle(symbol: guidance.symbolName, shape: .plain, color: color, foreground: color, count: nil, dimmed: false)
         }
@@ -381,8 +402,8 @@ struct IslandExpandedTrailing: View {
     /// ActivityKit's `context.isStale`: past the stale date, the island shows aged data like the Lock Screen.
     var isStale = false
 
-    /// `attributes.totalStops`, for "the bus is coming" before boarding; `nil` where unknown.
-    var rideLength: Int? = nil
+    /// `attributes.totalStops`, so a bus still on its way to the boarding stop reads as coming.
+    let rideLength: Int
     private var guidance: RideGuidance { guidanceAccountingForStaleness(state, isStale: isStale, rideLength: rideLength) }
 
     var body: some View {
@@ -400,8 +421,8 @@ struct IslandExpandedCenter: View {
     /// ActivityKit's `context.isStale`: past the stale date, the island shows aged data like the Lock Screen.
     var isStale = false
 
-    /// `attributes.totalStops`, for "the bus is coming" before boarding; `nil` where unknown.
-    var rideLength: Int? = nil
+    /// `attributes.totalStops`, so a bus still on its way to the boarding stop reads as coming.
+    let rideLength: Int
     private var guidance: RideGuidance { guidanceAccountingForStaleness(state, isStale: isStale, rideLength: rideLength) }
 
     var body: some View {
@@ -440,6 +461,8 @@ struct IslandExpandedBottom: View {
                 JourneyRail(
                     progress: JourneyRail.progress(remaining: state.remainingStops, total: attributes.totalStops),
                     role: guidance.colorRole,
+                    stopsBeforeBoarding: guidance.stopsBeforeBoarding,
+                    totalStops: attributes.totalStops,
                     trackColor: .white.opacity(0.16),
                     height: 8
                 )
@@ -492,6 +515,9 @@ struct TrustQualifier: View {
 /// VoiceOver for the minimal island: the bus and the count, never the glyphs.
 /// "3001번 버스, 목적지까지 8정거장" from real data; a decision moment reads its headline.
 func minimalAccessibilityLabel(_ attributes: TapsoActivityAttributes, _ state: TapsoActivityAttributes.ContentState, _ guidance: RideGuidance) -> String {
+    if let ahead = guidance.stopsBeforeBoarding, guidance.count == .live, guidance.moment == .riding {
+        return String(format: RideText.string(RideText.countKey("a11y.minimal.waiting", ahead)), attributes.routeNumber, ahead)
+    }
     switch guidance.count {
     case .live where guidance.moment == .riding:
         let key = RideText.countKey(guidance.trust == .estimated ? "a11y.minimal.estimated" : "a11y.minimal.count", state.remainingStops)
@@ -508,10 +534,10 @@ func minimalAccessibilityLabel(_ attributes: TapsoActivityAttributes, _ state: T
 func guidanceAccountingForStaleness(
     _ state: TapsoActivityAttributes.ContentState,
     isStale: Bool,
-    rideLength: Int? = nil
+    rideLength: Int
 ) -> RideGuidance {
     func guidance(_ signal: RideSignal) -> RideGuidance {
-        rideLength.map { RideGuidancePolicy.guidance(for: signal, rideLength: $0) } ?? RideGuidancePolicy.guidance(for: signal)
+        RideGuidancePolicy.guidance(for: signal, rideLength: rideLength)
     }
     if let expiry = state.trackingValidUntil, Date() > expiry {
         return RideGuidancePolicy.guidance(for: RideSignal(phase: .vehicleRecovery, remainingStops: -1, freshness: .unknown))
@@ -529,6 +555,9 @@ func guidanceAccountingForStaleness(
 }
 
 private func compactAccessibilityLabel(_ state: TapsoActivityAttributes.ContentState, _ guidance: RideGuidance) -> String {
+    if let ahead = guidance.stopsBeforeBoarding, guidance.count == .live {
+        return String(format: RideText.string(RideText.countKey("a11y.compact.waiting", ahead)), ahead) + " " + RideText.string(guidance.copy.headline)
+    }
     switch guidance.count {
     case .live:
         return String(format: RideText.string(RideText.countKey("a11y.compact.count", state.remainingStops)), state.remainingStops) + " " + RideText.string(guidance.copy.headline)

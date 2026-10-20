@@ -74,6 +74,7 @@ private func previewState(
 #Preview("Lock Screen", as: .content, using: previewAttributes) {
     TapsoLiveActivityWidget()
 } contentStates: {
+    previewState(.active, 10) // the bus is 2 stops before boarding an 8-stop ride
     previewState(.active, 6)
     previewState(.approachingDestination, 2)
     previewState(.nextStopIsDestination, 1)
@@ -85,6 +86,7 @@ private func previewState(
 #Preview("Island · Compact", as: .dynamicIsland(.compact), using: previewAttributes) {
     TapsoLiveActivityWidget()
 } contentStates: {
+    previewState(.active, 10)
     previewState(.active, 6)
     previewState(.approachingDestination, 2)
     previewState(.nextStopIsDestination, 1)

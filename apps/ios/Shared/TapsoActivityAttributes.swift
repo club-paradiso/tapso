@@ -53,8 +53,11 @@ public struct TapsoActivityAttributes: ActivityAttributes, Sendable {
             )
         }
 
-        public var guidance: RideGuidance {
-            RideGuidancePolicy.guidance(for: signal)
+        /// Guidance for a ride of `rideLength` stops (`TapsoActivityAttributes.totalStops`).
+        /// There is deliberately no variant without the ride length: without it a bus still
+        /// on its way to the boarding stop would read as a ride under way.
+        public func guidance(rideLength: Int) -> RideGuidance {
+            RideGuidancePolicy.guidance(for: signal, rideLength: rideLength)
         }
     }
 

@@ -182,6 +182,20 @@ public struct RideGuidance: Hashable, Sendable {
     public let relevanceScore: Double
     /// How the remaining-stop count may be shown.
     public let count: RideCountPresentation
+    /// Stops the confirmed bus still has to travel to reach the boarding stop, or `nil`
+    /// once the rider can be aboard (or the ride length is unknown). While this is set the
+    /// rider is waiting: every surface shows this number, never the bus-to-destination
+    /// count, and no get-off milestone exists (`RideGuidancePolicy.guidance(for:rideLength:)`).
+    public let stopsBeforeBoarding: Int?
+
+    /// The rider is still at the boarding stop and the bus is on its way.
+    public var isWaiting: Bool { stopsBeforeBoarding != nil }
+
+    /// The number a surface may show: stops until the bus reaches the boarding stop while
+    /// waiting, otherwise stops to the destination.
+    public func displayedCount(remaining: Int) -> Int {
+        stopsBeforeBoarding ?? remaining
+    }
 
     /// The one reliability word this moment carries (`RideTrust`).
     public var trust: RideTrust { RideGuidancePolicy.trust(for: moment, estimated: copy.eyebrow == "ride.predicted.eyebrow") }
@@ -261,7 +275,8 @@ public enum RideGuidancePolicy {
                 ? RideCopy(headline: "ride.predicted.headline", detail: "ride.predicted.detail", compact: nil, eyebrow: "ride.predicted.eyebrow")
                 : copy(for: moment),
             relevanceScore: relevanceScore(for: moment),
-            count: countPresentation(for: moment)
+            count: countPresentation(for: moment),
+            stopsBeforeBoarding: nil
         )
     }
 
@@ -279,11 +294,31 @@ public enum RideGuidancePolicy {
     /// moment becomes `.riding` with "the bus is coming" copy, and nothing alerts or
     /// buzzes. A 1-stop ride whose bus is 1 stop out would otherwise read
     /// "2 stops left, get ready" before the rider is even aboard.
+    ///
+    /// A degraded moment (delayed, lost, offline, checking) keeps its own calm copy but
+    /// still carries `stopsBeforeBoarding`, so a last-known count is never shown as a
+    /// ride already under way.
     public static func guidance(for signal: RideSignal, rideLength: Int) -> RideGuidance {
         let base = guidance(for: signal)
-        guard stopsBeforeBoarding(remaining: signal.remainingStops, rideLength: rideLength) != nil,
-              [.riding, .prepare, .nextStop].contains(base.moment)
-        else { return base }
+        guard let ahead = stopsBeforeBoarding(remaining: signal.remainingStops, rideLength: rideLength) else {
+            return base
+        }
+        guard [.riding, .prepare, .nextStop].contains(base.moment) else {
+            return RideGuidance(
+                moment: base.moment,
+                vehicle: base.vehicle,
+                data: base.data,
+                milestone: nil,
+                haptic: base.haptic,
+                colorRole: base.colorRole,
+                symbolName: base.symbolName,
+                recovery: base.recovery,
+                copy: base.copy,
+                relevanceScore: base.relevanceScore,
+                count: base.count,
+                stopsBeforeBoarding: ahead
+            )
+        }
         return RideGuidance(
             moment: .riding,
             vehicle: base.vehicle,
@@ -291,11 +326,12 @@ public enum RideGuidancePolicy {
             milestone: nil,
             haptic: .none,
             colorRole: colorRole(for: .riding),
-            symbolName: symbolName(for: .riding),
+            symbolName: "bus",
             recovery: recovery(for: .riding),
             copy: RideCopy(headline: "ride.waiting.headline", detail: "ride.waiting.detail", compact: nil, eyebrow: "ride.waiting.eyebrow"),
             relevanceScore: relevanceScore(for: .riding),
-            count: .live
+            count: .live,
+            stopsBeforeBoarding: ahead
         )
     }
 

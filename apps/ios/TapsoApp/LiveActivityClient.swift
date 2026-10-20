@@ -30,13 +30,14 @@ final class LiveActivityClient {
     ) async throws {
         guard activitiesEnabled else { throw LiveActivityError.disabled }
         await endAll()
-        if push, let pushed = try? Activity.request(attributes: attributes, content: content(for: state), pushType: .token) {
+        let rideLength = attributes.totalStops
+        if push, let pushed = try? Activity.request(attributes: attributes, content: content(for: state, rideLength: rideLength), pushType: .token) {
             activity = pushed
             return
         }
         activity = try Activity.request(
             attributes: attributes,
-            content: content(for: state),
+            content: content(for: state, rideLength: rideLength),
             pushType: nil
         )
     }
@@ -62,11 +63,12 @@ final class LiveActivityClient {
     /// milestone the state does not itself carry is ignored.
     func update(state: TapsoActivityAttributes.ContentState, alerting milestone: TapsoLiveActivityMilestone?) async {
         guard let activity else { return }
+        let rideLength = activity.attributes.totalStops
         var alert: AlertConfiguration?
-        if let milestone, milestone == TapsoLiveActivityPolicy.milestone(for: state) {
+        if let milestone, milestone == TapsoLiveActivityPolicy.milestone(for: state, rideLength: rideLength) {
             alert = alertConfiguration(for: milestone)
         }
-        await activity.update(content(for: state), alertConfiguration: alert)
+        await activity.update(content(for: state, rideLength: rideLength), alertConfiguration: alert)
     }
 
     func end(
@@ -77,7 +79,7 @@ final class LiveActivityClient {
         let content = ActivityContent(
             state: state,
             staleDate: nil,
-            relevanceScore: TapsoLiveActivityPolicy.relevanceScore(for: state)
+            relevanceScore: TapsoLiveActivityPolicy.relevanceScore(for: state, rideLength: activity.attributes.totalStops)
         )
         let policy: ActivityUIDismissalPolicy = immediately
             ? .immediate
@@ -95,12 +97,13 @@ final class LiveActivityClient {
     }
 
     private func content(
-        for state: TapsoActivityAttributes.ContentState
+        for state: TapsoActivityAttributes.ContentState,
+        rideLength: Int
     ) -> ActivityContent<TapsoActivityAttributes.ContentState> {
         ActivityContent(
             state: state,
-            staleDate: TapsoLiveActivityPolicy.staleDate(for: state),
-            relevanceScore: TapsoLiveActivityPolicy.relevanceScore(for: state)
+            staleDate: TapsoLiveActivityPolicy.staleDate(for: state, rideLength: rideLength),
+            relevanceScore: TapsoLiveActivityPolicy.relevanceScore(for: state, rideLength: rideLength)
         )
     }
 

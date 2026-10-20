@@ -427,9 +427,9 @@ struct RideHeroCard: View {
                     .font(.caption)
                     .foregroundStyle(TapsoColor.textSecondary)
             }
-            if guidance.copy.eyebrow == "ride.waiting.eyebrow" {
-                // The confirmed bus has not reached the boarding stop: the count is to
-                // the destination from where the bus is, not a ride already under way.
+            if guidance.isWaiting {
+                // The confirmed bus has not reached the boarding stop: the number below is how
+                // far the bus still is from the rider, never a ride already under way.
                 VStack(alignment: .leading, spacing: 2) {
                     Label {
                         Text("ride.waiting.headline")
@@ -466,7 +466,9 @@ struct RideHeroCard: View {
             if guidance.count != .hidden {
                 JourneyRail(
                     progress: JourneyRail.progress(remaining: snapshot.remainingStops, total: snapshot.totalStops),
-                    role: guidance.colorRole
+                    role: guidance.colorRole,
+                    stopsBeforeBoarding: guidance.stopsBeforeBoarding,
+                    totalStops: snapshot.totalStops
                 )
                 .padding(.top, TapsoSpace.xs)
             }
@@ -490,8 +492,11 @@ struct RideHeroCard: View {
         .accessibilityIdentifier("remaining-stops")
     }
 
+    /// While waiting: stops until the bus reaches the boarding stop. Otherwise stops to the destination.
+    private var shownCount: Int { guidance.displayedCount(remaining: snapshot.remainingStops) }
+
     private var numeral: some View {
-        Text(snapshot.remainingStops, format: .number)
+        Text(shownCount, format: .number)
             .font(TapsoType.numeral(min(numeralSize, TapsoType.heroNumeralMax)))
             .monospacedDigit()
             .foregroundStyle(TapsoColor.textPrimary)
@@ -501,14 +506,26 @@ struct RideHeroCard: View {
 
     private var countLabels: some View {
         VStack(alignment: .leading, spacing: 0) {
-            Text(LocalizedStringKey(RideText.countKey(guidance.count == .lastKnown ? "count.lastKnown.long" : "count.unit.long", snapshot.remainingStops)))
+            Text(LocalizedStringKey(countUnitKey))
                 .font(.title3.weight(.bold))
                 .foregroundStyle(TapsoColor.textSecondary)
+            if guidance.isWaiting {
+                // The ride itself, so the two numbers are never confused.
+                Text(String(format: RideText.string(RideText.countKey("ride.waiting.rideLength", snapshot.totalStops)), snapshot.totalStops))
+                    .font(.subheadline.weight(.semibold))
+                    .foregroundStyle(TapsoColor.textPrimary)
+                    .fixedSize(horizontal: false, vertical: true)
+            }
             Text(String(format: RideText.string("ride.toDestination"), snapshot.destinationName))
                 .font(.subheadline.weight(.semibold))
                 .foregroundStyle(TapsoColor.textPrimary)
                 .fixedSize(horizontal: false, vertical: true)
         }
+    }
+
+    private var countUnitKey: String {
+        if guidance.isWaiting { return RideText.countKey("count.beforeBoarding.long", shownCount) }
+        return RideText.countKey(guidance.count == .lastKnown ? "count.lastKnown.long" : "count.unit.long", shownCount)
     }
 
     /// "Should I start preparing?" Amber, a fixed two, and what comes before your stop.

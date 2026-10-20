@@ -538,3 +538,17 @@
 "boardFirst.trips.via" = "via %@";
 "boardFirst.trips.skips" = "skips %@";
 "boardFirst.trips.variant" = "route variant %1$d/%2$d";
+
+/* Waiting for the bus: counts measured to the boarding stop, never the ride. */
+"count.beforeBoarding" = "stops away";
+"count.beforeBoarding.one" = "stop away";
+"count.beforeBoarding.long" = "stops from your stop";
+"count.beforeBoarding.long.one" = "stop from your stop";
+"ride.waiting.rideLength" = "Then %ld stops on board";
+"ride.waiting.rideLength.one" = "Then %ld stop on board";
+"a11y.ride.waiting" = "Route %1$@ to %2$@. The bus is %3$ld stops from your boarding stop. %4$@. %5$@.";
+"a11y.ride.waiting.one" = "Route %1$@ to %2$@. The bus is %3$ld stop from your boarding stop. %4$@. %5$@.";
+"a11y.compact.waiting" = "Bus %ld stops from your stop.";
+"a11y.compact.waiting.one" = "Bus %ld stop from your stop.";
+"a11y.minimal.waiting" = "Route %1$@, %2$ld stops from your boarding stop";
+"a11y.minimal.waiting.one" = "Route %1$@, %2$ld stop from your boarding stop";

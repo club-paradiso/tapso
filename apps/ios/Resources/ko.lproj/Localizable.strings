@@ -538,3 +538,17 @@
 "boardFirst.trips.via" = "%@ 경유";
 "boardFirst.trips.skips" = "%@ 미경유";
 "boardFirst.trips.variant" = "다른 경로 %1$d/%2$d";
+
+/* Waiting for the bus: counts measured to the boarding stop, never the ride. */
+"count.beforeBoarding" = "정거장 전";
+"count.beforeBoarding.one" = "정거장 전";
+"count.beforeBoarding.long" = "정거장 전에 있어요";
+"count.beforeBoarding.long.one" = "정거장 전에 있어요";
+"ride.waiting.rideLength" = "타고 나서 %ld정거장 가요";
+"ride.waiting.rideLength.one" = "타고 나서 %ld정거장 가요";
+"a11y.ride.waiting" = "%1$@번, %2$@까지. 버스가 탈 정류장에서 %3$ld정거장 전에 있음. %4$@. %5$@.";
+"a11y.ride.waiting.one" = "%1$@번, %2$@까지. 버스가 탈 정류장에서 %3$ld정거장 전에 있음. %4$@. %5$@.";
+"a11y.compact.waiting" = "버스가 탈 정류장에서 %ld정거장 전.";
+"a11y.compact.waiting.one" = "버스가 탈 정류장에서 %ld정거장 전.";
+"a11y.minimal.waiting" = "%1$@번 버스, 탈 정류장에서 %2$ld정거장 전";
+"a11y.minimal.waiting.one" = "%1$@번 버스, 탈 정류장에서 %2$ld정거장 전";

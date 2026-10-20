@@ -3,6 +3,9 @@ import XCTest
 import TapsoTransit
 @testable import Tapso
 
+/// A ride long enough that no state in this file is still waiting for its bus.
+private let testRideLength = 30
+
 /// Product V2: one ride model behind the app, Lock Screen and Dynamic Island.
 @MainActor
 final class RidePresentationTests: XCTestCase {
@@ -140,25 +143,25 @@ final class RidePresentationTests: XCTestCase {
     func testMinimalIslandCarriesIdentityAndCountAndDistinctDecisions() {
         // Riding needs three or more stops; 2 and 1 are the prepare and next-stop decisions below.
         for count in [3, 8, 12, 18] {
-            let riding = IslandMinimalStyle.style(for: makeState(.active, count).guidance, remainingStops: count)
+            let riding = IslandMinimalStyle.style(for: makeState(.active, count).guidance(rideLength: testRideLength), remainingStops: count)
             XCTAssertEqual(riding.symbol, "bus.fill", "count \(count)")
             XCTAssertEqual(riding.count, String(count))
             XCTAssertEqual(riding.shape, .plain)
         }
-        let prepare = IslandMinimalStyle.style(for: makeState(.approachingDestination, 2).guidance, remainingStops: 2)
-        let next = IslandMinimalStyle.style(for: makeState(.nextStopIsDestination, 1).guidance, remainingStops: 1)
-        let arrival = IslandMinimalStyle.style(for: makeState(.arrived, 0).guidance, remainingStops: 0)
+        let prepare = IslandMinimalStyle.style(for: makeState(.approachingDestination, 2).guidance(rideLength: testRideLength), remainingStops: 2)
+        let next = IslandMinimalStyle.style(for: makeState(.nextStopIsDestination, 1).guidance(rideLength: testRideLength), remainingStops: 1)
+        let arrival = IslandMinimalStyle.style(for: makeState(.arrived, 0).guidance(rideLength: testRideLength), remainingStops: 0)
         XCTAssertEqual(prepare.shape, .ring); XCTAssertEqual(prepare.count, "2"); XCTAssertEqual(prepare.symbol, "figure.stand")
         XCTAssertEqual(next.shape, .filled); XCTAssertEqual(next.count, "1"); XCTAssertEqual(next.symbol, "bell.fill")
         XCTAssertEqual(arrival.shape, .filled); XCTAssertNil(arrival.count, "arrival shows no number"); XCTAssertEqual(arrival.symbol, "figure.walk")
         XCTAssertEqual(Set([prepare.symbol, next.symbol, arrival.symbol]).count, 3, "three decisions, three symbols")
         XCTAssertNotEqual(prepare.shape, next.shape)
 
-        let estimated = IslandMinimalStyle.style(for: makeState(.active, 8, estimated: true).guidance, remainingStops: 8)
+        let estimated = IslandMinimalStyle.style(for: makeState(.active, 8, estimated: true).guidance(rideLength: testRideLength), remainingStops: 8)
         XCTAssertEqual(estimated.count, "~8", "an estimate is marked, not disguised")
-        let rechecking = IslandMinimalStyle.style(for: makeState(.active, 8, freshness: .aging).guidance, remainingStops: 8)
+        let rechecking = IslandMinimalStyle.style(for: makeState(.active, 8, freshness: .aging).guidance(rideLength: testRideLength), remainingStops: 8)
         XCTAssertEqual(rechecking.count, "8"); XCTAssertTrue(rechecking.dimmed); XCTAssertEqual(rechecking.symbol, "arrow.clockwise")
-        let lost = IslandMinimalStyle.style(for: makeState(.vehicleTemporarilyLost, 8).guidance, remainingStops: 8)
+        let lost = IslandMinimalStyle.style(for: makeState(.vehicleTemporarilyLost, 8).guidance(rideLength: testRideLength), remainingStops: 8)
         XCTAssertNil(lost.count, "a lost bus shows no count to act on")
     }
 
@@ -166,58 +169,94 @@ final class RidePresentationTests: XCTestCase {
     func testMinimalIslandVoiceOverNamesTheBusAndTheCount() {
         let attributes = TapsoActivityAttributes(routeNumber: "3001", routeID: "JEB405900101", boardingStopName: "제주국제공항", destinationName: "제주시청", totalStops: 20, vehiclePlate: "••3913")
         let riding = makeState(.active, 8)
-        let label = minimalAccessibilityLabel(attributes, riding, riding.guidance)
+        let label = minimalAccessibilityLabel(attributes, riding, riding.guidance(rideLength: testRideLength))
         XCTAssertEqual(label, String(format: RideText.string("a11y.minimal.count"), "3001", 8))
         XCTAssertTrue(label.contains("3001") && label.contains("8"))
         for word in ["bus.fill", "figure", "bell"] { XCTAssertFalse(label.contains(word)) }
         let next = makeState(.nextStopIsDestination, 1)
-        XCTAssertEqual(minimalAccessibilityLabel(attributes, next, next.guidance), String(format: RideText.string("a11y.minimal.state"), "3001", RideText.string("ride.nextStop.headline")))
+        XCTAssertEqual(minimalAccessibilityLabel(attributes, next, next.guidance(rideLength: testRideLength)), String(format: RideText.string("a11y.minimal.state"), "3001", RideText.string("ride.nextStop.headline")))
         let estimated = makeState(.active, 8, estimated: true)
-        XCTAssertEqual(minimalAccessibilityLabel(attributes, estimated, estimated.guidance), String(format: RideText.string("a11y.minimal.estimated"), "3001", 8))
+        XCTAssertEqual(minimalAccessibilityLabel(attributes, estimated, estimated.guidance(rideLength: testRideLength)), String(format: RideText.string("a11y.minimal.estimated"), "3001", 8))
     }
 
     // MARK: One truth for every surface
 
     func testContentStateCarriesTheSameGuidanceAsTheApp() {
         let state = makeState(.arrived, 0, passed: true)
-        XCTAssertEqual(state.guidance.moment, .passedDestination)
-        XCTAssertEqual(TapsoLiveActivityPolicy.displayPhase(for: state), .passedDestination)
-        XCTAssertNil(TapsoLiveActivityPolicy.milestone(for: state), "passing the stop is not an arrival alert")
+        XCTAssertEqual(state.guidance(rideLength: testRideLength).moment, .passedDestination)
+        XCTAssertEqual(TapsoLiveActivityPolicy.displayPhase(for: state, rideLength: testRideLength), .passedDestination)
+        XCTAssertNil(TapsoLiveActivityPolicy.milestone(for: state, rideLength: testRideLength), "passing the stop is not an arrival alert")
+    }
+
+    /// A bus still on its way to the boarding stop is one decision on every surface: the
+    /// app, Lock Screen, compact and minimal island, VoiceOver and the alert gate all read
+    /// "coming", show how far the bus is from the rider, and raise nothing. SYNTHETIC states.
+    func testWaitingIsOneDecisionOnEverySurface() {
+        // 4-stop ride, bus 2 stops before the boarding stop (6 from the destination).
+        let state = makeState(.active, 6)
+        let app = RideGuidancePolicy.guidance(for: state.signal, rideLength: 4)
+        XCTAssertTrue(app.isWaiting)
+        XCTAssertEqual(state.guidance(rideLength: 4), app)
+        XCTAssertEqual(guidanceAccountingForStaleness(state, isStale: false, rideLength: 4), app)
+        XCTAssertNil(TapsoLiveActivityPolicy.milestone(for: state, rideLength: 4))
+        XCTAssertEqual(TapsoLiveActivityPolicy.relevanceScore(for: state, rideLength: 4), app.relevanceScore)
+        XCTAssertEqual(RemainingOrSymbol.unitKey(app, 2), "count.beforeBoarding")
+
+        let minimal = IslandMinimalStyle.style(for: app, remainingStops: 6)
+        XCTAssertEqual(minimal.count, "2", "the island shows how far the bus is, not 6")
+        XCTAssertEqual(minimal.symbol, "bus")
+
+        let attributes = TapsoActivityAttributes(routeNumber: "360", routeID: "JEB405360101", boardingStopName: "제주시청", destinationName: "한라병원", totalStops: 4)
+        XCTAssertEqual(minimalAccessibilityLabel(attributes, state, app), String(format: RideText.string("a11y.minimal.waiting"), "360", 2))
+        let summary = RideText.accessibilitySummary(guidance: app, routeNumber: "202", destination: "한라병원", remainingStops: 6)
+        XCTAssertFalse(summary.contains("6"), "VoiceOver never reads the bus-to-destination count as the ride")
+
+        // A 1-stop ride whose bus is 1 stop out: no prepare ring, no alert, on any surface.
+        let short = makeState(.approachingDestination, 2)
+        let shortGuidance = guidanceAccountingForStaleness(short, isStale: false, rideLength: 1)
+        XCTAssertNotEqual(IslandMinimalStyle.style(for: shortGuidance, remainingStops: 2).shape, .ring)
+        XCTAssertNil(TapsoLiveActivityPolicy.milestone(for: short, rideLength: 1))
+        XCTAssertEqual(TapsoLiveActivityPolicy.displayPhase(for: short, rideLength: 1), .riding)
+
+        // At the boarding stop the same state is a ride, identical to the unguarded policy.
+        let aboard = makeState(.active, 4)
+        XCTAssertFalse(aboard.guidance(rideLength: 4).isWaiting)
+        XCTAssertEqual(aboard.guidance(rideLength: 4), RideGuidancePolicy.guidance(for: aboard.signal))
     }
 
     func testPastTheStopEverySurfaceNamesTheExitWhenTheRideKnowsIt() {
         let passed = makeState(.arrived, 0, passed: true, next: "국립제주박물관")
         XCTAssertEqual(
-            RideText.detail(passed.guidance, exitStopName: passed.nextStopName),
+            RideText.detail(passed.guidance(rideLength: testRideLength), exitStopName: passed.nextStopName),
             String(format: RideText.string("rescue.exitAt"), "국립제주박물관")
         )
         let unknown = makeState(.arrived, 0, passed: true, next: nil)
-        XCTAssertEqual(RideText.detail(unknown.guidance, exitStopName: unknown.nextStopName), RideText.string("ride.passedDestination.detail"))
+        XCTAssertEqual(RideText.detail(unknown.guidance(rideLength: testRideLength), exitStopName: unknown.nextStopName), RideText.string("ride.passedDestination.detail"))
         let riding = makeState(.active, 4)
         XCTAssertEqual(
-            RideText.detail(riding.guidance, exitStopName: riding.nextStopName),
-            RideText.string(riding.guidance.copy.detail),
+            RideText.detail(riding.guidance(rideLength: testRideLength), exitStopName: riding.nextStopName),
+            RideText.string(riding.guidance(rideLength: testRideLength).copy.detail),
             "before the stop, the next stop never replaces the moment's detail"
         )
-        let stale = guidanceAccountingForStaleness(passed, isStale: true)
+        let stale = guidanceAccountingForStaleness(passed, isStale: true, rideLength: testRideLength)
         XCTAssertEqual(RideText.detail(stale, exitStopName: passed.nextStopName), RideText.string(stale.copy.detail), "aged data names no exit")
     }
 
     func testOfflineAndLostAreDistinctQuietStatesOnTheIsland() {
         let offline = makeState(.active, 4, offline: true)
         let lost = makeState(.vehicleTemporarilyLost, 4)
-        XCTAssertEqual(TapsoLiveActivityPolicy.displayPhase(for: offline), .offline)
-        XCTAssertEqual(TapsoLiveActivityPolicy.displayPhase(for: lost), .vehicleLost)
-        XCTAssertNil(TapsoLiveActivityPolicy.milestone(for: offline))
-        XCTAssertNil(TapsoLiveActivityPolicy.milestone(for: lost))
-        XCTAssertNotNil(TapsoLiveActivityPolicy.staleDate(for: lost))
+        XCTAssertEqual(TapsoLiveActivityPolicy.displayPhase(for: offline, rideLength: testRideLength), .offline)
+        XCTAssertEqual(TapsoLiveActivityPolicy.displayPhase(for: lost, rideLength: testRideLength), .vehicleLost)
+        XCTAssertNil(TapsoLiveActivityPolicy.milestone(for: offline, rideLength: testRideLength))
+        XCTAssertNil(TapsoLiveActivityPolicy.milestone(for: lost, rideLength: testRideLength))
+        XCTAssertNotNil(TapsoLiveActivityPolicy.staleDate(for: lost, rideLength: testRideLength))
     }
 
     func testAStaleActivityNeverShowsAFreshMilestone() {
         let next = makeState(.nextStopIsDestination, 1)
-        XCTAssertEqual(guidanceAccountingForStaleness(next, isStale: false).moment, .nextStop)
-        XCTAssertEqual(guidanceAccountingForStaleness(next, isStale: true).moment, .delayed)
-        XCTAssertNil(guidanceAccountingForStaleness(next, isStale: true).milestone)
+        XCTAssertEqual(guidanceAccountingForStaleness(next, isStale: false, rideLength: testRideLength).moment, .nextStop)
+        XCTAssertEqual(guidanceAccountingForStaleness(next, isStale: true, rideLength: testRideLength).moment, .delayed)
+        XCTAssertNil(guidanceAccountingForStaleness(next, isStale: true, rideLength: testRideLength).milestone)
     }
 
     func testPayloadWithVehicleAndNewFieldsStaysUnderActivityKitLimit() throws {
@@ -243,7 +282,7 @@ final class RidePresentationTests: XCTestCase {
         let legacy = #"{"phase":"active","currentStopName":"관덕정","nextStopName":"중앙로","remainingStops":4,"freshness":"fresh","updatedAt":0}"#
         let state = try JSONDecoder().decode(TapsoActivityAttributes.ContentState.self, from: Data(legacy.utf8))
         XCTAssertNil(state.destinationPassed)
-        XCTAssertEqual(state.guidance.moment, .riding)
+        XCTAssertEqual(state.guidance(rideLength: testRideLength).moment, .riding)
     }
 
     // MARK: Model flow

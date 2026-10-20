@@ -11,29 +11,35 @@ enum TapsoLiveActivityPolicy {
     /// Nonterminal content goes stale this long after its observation.
     static let staleInterval: TimeInterval = 120
 
+    /// Every decision takes the ride length (`attributes.totalStops`) so a bus still on its
+    /// way to the boarding stop is waiting here exactly as it is in the app.
     static func displayPhase(
-        for state: TapsoActivityAttributes.ContentState
+        for state: TapsoActivityAttributes.ContentState,
+        rideLength: Int
     ) -> TapsoLiveActivityDisplayPhase {
-        RideGuidancePolicy.moment(for: state.signal)
+        state.guidance(rideLength: rideLength).moment
     }
 
     static func milestone(
-        for state: TapsoActivityAttributes.ContentState
+        for state: TapsoActivityAttributes.ContentState,
+        rideLength: Int
     ) -> TapsoLiveActivityMilestone? {
-        state.guidance.milestone
+        state.guidance(rideLength: rideLength).milestone
     }
 
     static func relevanceScore(
-        for state: TapsoActivityAttributes.ContentState
+        for state: TapsoActivityAttributes.ContentState,
+        rideLength: Int
     ) -> Double {
-        state.guidance.relevanceScore
+        state.guidance(rideLength: rideLength).relevanceScore
     }
 
     static func staleDate(
-        for state: TapsoActivityAttributes.ContentState
+        for state: TapsoActivityAttributes.ContentState,
+        rideLength: Int
     ) -> Date? {
         if let expiry = state.trackingValidUntil { return expiry }
-        return switch displayPhase(for: state) {
+        return switch displayPhase(for: state, rideLength: rideLength) {
         case .arrived, .ended:
             nil
         default:
