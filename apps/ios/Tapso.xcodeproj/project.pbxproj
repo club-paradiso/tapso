@@ -99,6 +99,10 @@
 		4CCE643CFCC5C082AD3EDB27 /* PlaceLookupViews.swift in Sources */ = {isa = PBXBuildFile; fileRef = 08A7A38C2F81F25CC44EA4DB /* PlaceLookupViews.swift */; };
 		B4E12F5C6EDC56079BF11275 /* JourneyLanguage+Bundle.swift in Sources */ = {isa = PBXBuildFile; fileRef = 1588A893BB3A6A84254FD2B3 /* JourneyLanguage+Bundle.swift */; };
 		4A8F21800DA116D2364A2777 /* JourneyLanguage+Bundle.swift in Sources */ = {isa = PBXBuildFile; fileRef = 1588A893BB3A6A84254FD2B3 /* JourneyLanguage+Bundle.swift */; };
+		C50E3B27FBFDAA7874FCC60A /* Pretendard-Regular.otf in Resources */ = {isa = PBXBuildFile; fileRef = 13C486523410E1222F1573B4 /* Pretendard-Regular.otf */; };
+		E85CD98AA83E9165FA9655A4 /* Pretendard-SemiBold.otf in Resources */ = {isa = PBXBuildFile; fileRef = 4153BD3462EE339A124EB3A9 /* Pretendard-SemiBold.otf */; };
+		7A590435D0D80B9CF98D884B /* Pretendard-ExtraBold.otf in Resources */ = {isa = PBXBuildFile; fileRef = AD76A5A1E33DC81E78E2A5FD /* Pretendard-ExtraBold.otf */; };
+		26472BF9C3558F836D60FD2C /* OFL.txt in Resources */ = {isa = PBXBuildFile; fileRef = 884A285C8E7C51970C52AB55 /* OFL.txt */; };
 /* End PBXBuildFile section */
 
 /* Begin PBXContainerItemProxy section */
@@ -218,6 +222,14 @@
 		E3ECAC8A2E99BE066DF83D63 /* RideLocationSamplerTests.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = RideLocationSamplerTests.swift; sourceTree = "<group>"; };
 		08A7A38C2F81F25CC44EA4DB /* PlaceLookupViews.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = PlaceLookupViews.swift; sourceTree = "<group>"; };
 		1588A893BB3A6A84254FD2B3 /* JourneyLanguage+Bundle.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = JourneyLanguage+Bundle.swift; sourceTree = "<group>"; };
+		13C486523410E1222F1573B4 /* Pretendard-Regular.otf */ = {isa = PBXFileReference; lastKnownFileType = file; path = Pretendard-Regular.otf; sourceTree = "<group>"; };
+		4153BD3462EE339A124EB3A9 /* Pretendard-SemiBold.otf */ = {isa = PBXFileReference; lastKnownFileType = file; path = Pretendard-SemiBold.otf; sourceTree = "<group>"; };
+		AD76A5A1E33DC81E78E2A5FD /* Pretendard-ExtraBold.otf */ = {isa = PBXFileReference; lastKnownFileType = file; path = Pretendard-ExtraBold.otf; sourceTree = "<group>"; };
+		884A285C8E7C51970C52AB55 /* OFL.txt */ = {isa = PBXFileReference; lastKnownFileType = text; path = OFL.txt; sourceTree = "<group>"; };
+		CDEE18322166B654E434EBF5 /* ja */ = {isa = PBXFileReference; lastKnownFileType = text.plist.strings; name = ja; path = ja.lproj/Localizable.strings; sourceTree = "<group>"; };
+		B949D6B9C4302E3D0C68412F /* zh-Hans */ = {isa = PBXFileReference; lastKnownFileType = text.plist.strings; name = "zh-Hans"; path = zh-Hans.lproj/Localizable.strings; sourceTree = "<group>"; };
+		100FC5111767E5D298C468E5 /* ja */ = {isa = PBXFileReference; lastKnownFileType = text.plist.strings; name = ja; path = ja.lproj/InfoPlist.strings; sourceTree = "<group>"; };
+		9C07CCC94036A0238FBF00B0 /* zh-Hans */ = {isa = PBXFileReference; lastKnownFileType = text.plist.strings; name = "zh-Hans"; path = zh-Hans.lproj/InfoPlist.strings; sourceTree = "<group>"; };
 /* End PBXFileReference section */
 
 /* Begin PBXFrameworksBuildPhase section */
@@ -275,6 +287,17 @@
 			path = Tests;
 			sourceTree = "<group>";
 		};
+		245E38A9131F3D9B0B936200 /* Fonts */ = {
+			isa = PBXGroup;
+			children = (
+				13C486523410E1222F1573B4 /* Pretendard-Regular.otf */,
+				4153BD3462EE339A124EB3A9 /* Pretendard-SemiBold.otf */,
+				AD76A5A1E33DC81E78E2A5FD /* Pretendard-ExtraBold.otf */,
+				884A285C8E7C51970C52AB55 /* OFL.txt */,
+			);
+			path = Fonts;
+			sourceTree = "<group>";
+		};
 		23C53EF5D72C5A874A2E6E41 /* Resources */ = {
 			isa = PBXGroup;
 			children = (
@@ -308,6 +331,7 @@
 			isa = PBXGroup;
 			children = (
 				B2BE8F29DB0AEF7B3F86029C /* LiveActivity */,
+				245E38A9131F3D9B0B936200 /* Fonts */,
 				D5FE3B55CE102612AAAF3D63 /* Packages */,
 				23C53EF5D72C5A874A2E6E41 /* Resources */,
 				2DD9A96AC488A534FCCDC0DD /* Shared */,
@@ -521,7 +545,9 @@
 			knownRegions = (
 				Base,
 				en,
+				ja,
 				ko,
+				"zh-Hans",
 			);
 			mainGroup = 4E8A354FB950B94C701FAEC0;
 			minimizedProjectReferenceProxies = 1;
@@ -561,6 +587,10 @@
 				9DF797D657D259EB1CC12E82 /* Assets.xcassets in Resources */,
 				DD911FC6501FE330D9D8A2BF /* Localizable.strings in Resources */,
 				85AEE919B98FC2B4F142ADF3 /* PrivacyInfo.xcprivacy in Resources */,
+				C50E3B27FBFDAA7874FCC60A /* Pretendard-Regular.otf in Resources */,
+				E85CD98AA83E9165FA9655A4 /* Pretendard-SemiBold.otf in Resources */,
+				7A590435D0D80B9CF98D884B /* Pretendard-ExtraBold.otf in Resources */,
+				26472BF9C3558F836D60FD2C /* OFL.txt in Resources */,
 			);
 			runOnlyForDeploymentPostprocessing = 0;
 		};
@@ -724,6 +754,8 @@
 			children = (
 				9893879DB2AB27CE93C66F4C /* en */,
 				7BC02BE181B474930126A341 /* ko */,
+				100FC5111767E5D298C468E5 /* ja */,
+				9C07CCC94036A0238FBF00B0 /* zh-Hans */,
 			);
 			name = InfoPlist.strings;
 			sourceTree = "<group>";
@@ -733,6 +765,8 @@
 			children = (
 				D063007C376E3712BDA82A1D /* en */,
 				87BB9D30504F8FC0B5B62E04 /* ko */,
+				CDEE18322166B654E434EBF5 /* ja */,
+				B949D6B9C4302E3D0C68412F /* zh-Hans */,
 			);
 			name = Localizable.strings;
 			sourceTree = "<group>";

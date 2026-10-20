@@ -84,12 +84,12 @@ jobs:
             grep -nE -B3 -A18 "Stack dump:|While (evaluating|type-checking|emitting|silgen|verifying)" work-xcodebuild.log | head -n 120 || true
             exit 1
           fi
-      - name: Render snapshot evidence in Korean and English
+      - name: Render snapshot evidence in every shipped language
         env:
           TEST_RUNNER_TAPSO_SNAPSHOT_DIR: ${{ github.workspace }}/work/snapshots
         run: |
           set -o pipefail
-          for language in ko en; do
+          for language in ko en zh-Hans ja; do
             xcodebuild test-without-building -project apps/ios/Tapso.xcodeproj -scheme Tapso \
               -destination "id=${{ steps.simulator.outputs.udid }}" \
               -derivedDataPath work/DerivedData \
