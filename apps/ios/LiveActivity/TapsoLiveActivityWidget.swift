@@ -39,7 +39,7 @@ struct TapsoLiveActivityWidget: Widget {
                 IslandCompactLeading(attributes: context.attributes, state: context.state, isStale: context.isStale)
                     .journeyLocale(context.attributes)
             } compactTrailing: {
-                IslandCompactTrailing(state: context.state, isStale: context.isStale, rideLength: context.attributes.totalStops)
+                IslandCompactTrailing(state: context.state, isStale: context.isStale, rideLength: context.attributes.totalStops, language: context.attributes.language)
                     .journeyLocale(context.attributes)
             } minimal: {
                 IslandMinimal(attributes: context.attributes, state: context.state, isStale: context.isStale)

@@ -304,6 +304,8 @@ public enum RideGuidancePolicy {
             return base
         }
         guard [.riding, .prepare, .nextStop].contains(base.moment) else {
+            // An ended ride is not waiting, and a withheld count has no number to show.
+            guard base.moment != .ended, base.count != .hidden else { return base }
             return RideGuidance(
                 moment: base.moment,
                 vehicle: base.vehicle,
@@ -328,7 +330,13 @@ public enum RideGuidancePolicy {
             colorRole: colorRole(for: .riding),
             symbolName: "bus",
             recovery: recovery(for: .riding),
-            copy: RideCopy(headline: "ride.waiting.headline", detail: "ride.waiting.detail", compact: nil, eyebrow: "ride.waiting.eyebrow"),
+            // An estimated position stays marked as one while waiting (`trust` reads the eyebrow).
+            copy: RideCopy(
+                headline: "ride.waiting.headline",
+                detail: "ride.waiting.detail",
+                compact: nil,
+                eyebrow: signal.isEstimated == true ? "ride.predicted.eyebrow" : "ride.waiting.eyebrow"
+            ),
             relevanceScore: relevanceScore(for: .riding),
             count: .live,
             stopsBeforeBoarding: ahead

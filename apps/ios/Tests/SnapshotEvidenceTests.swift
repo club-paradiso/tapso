@@ -566,7 +566,7 @@ private struct IslandCompactMock: View {
             IslandCompactLeading(attributes: attributes, state: state, isStale: isStale)
                 .padding(.leading, 10)
             Spacer(minLength: 126)
-            IslandCompactTrailing(state: state, isStale: isStale, rideLength: attributes.totalStops)
+            IslandCompactTrailing(state: state, isStale: isStale, rideLength: attributes.totalStops, language: attributes.language)
                 .padding(.trailing, 10)
         }
         .frame(height: 37)

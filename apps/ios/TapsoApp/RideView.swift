@@ -528,7 +528,9 @@ struct RideHeroCard: View {
     }
 
     private var countUnitKey: String {
-        if guidance.isWaiting { return RideText.countKey("count.beforeBoarding.long", shownCount) }
+        if guidance.isWaiting {
+            return RideText.countKey(guidance.count == .lastKnown ? "count.beforeBoarding.lastKnown.long" : "count.beforeBoarding.long", shownCount)
+        }
         return RideText.countKey(guidance.count == .lastKnown ? "count.lastKnown.long" : "count.unit.long", shownCount)
     }
 

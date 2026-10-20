@@ -544,6 +544,10 @@
 "count.beforeBoarding.one" = "stop away";
 "count.beforeBoarding.long" = "stops from your stop";
 "count.beforeBoarding.long.one" = "stop from your stop";
+"count.beforeBoarding.lastKnown" = "away · last seen";
+"count.beforeBoarding.lastKnown.one" = "away · last seen";
+"count.beforeBoarding.lastKnown.long" = "stops from your stop · last seen";
+"count.beforeBoarding.lastKnown.long.one" = "stop from your stop · last seen";
 "ride.waiting.rideLength" = "Then %ld stops on board";
 "ride.waiting.rideLength.one" = "Then %ld stop on board";
 "a11y.ride.waiting" = "Route %1$@ to %2$@. The bus is %3$ld stops from your boarding stop. %4$@. %5$@.";

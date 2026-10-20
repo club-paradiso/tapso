@@ -88,7 +88,7 @@ struct LockScreenRideView: View {
                         .foregroundStyle(primary)
                         .lineLimit(2)
                         .minimumScaleFactor(0.85)
-                    Text(verbatim: RideText.detail(guidance, exitStopName: state.nextStopName))
+                    Text(verbatim: RideText.detail(guidance, exitStopName: state.nextStopName, language: attributes.language))
                         .font(.footnote.weight(.medium))
                         .foregroundStyle(secondary)
                         .lineLimit(2)
@@ -126,7 +126,8 @@ struct LockScreenRideView: View {
             routeNumber: attributes.routeNumber,
             destination: attributes.destinationName,
             remainingStops: state.remainingStops,
-            exitStopName: state.nextStopName
+            exitStopName: state.nextStopName,
+            language: attributes.language
         )))
     }
 
@@ -157,8 +158,11 @@ struct RemainingOrSymbol: View {
     static let lastKnownOpacity: Double = 0.7
 
     /// "stops away" while waiting, "last seen" for a last-known count, otherwise "stops".
+    /// A last-known count while waiting says both: how far the bus was, and that it is not live.
     static func unitKey(_ guidance: RideGuidance, _ shown: Int) -> String {
-        if guidance.isWaiting { return RideText.countKey("count.beforeBoarding", shown) }
+        if guidance.isWaiting {
+            return RideText.countKey(guidance.count == .lastKnown ? "count.beforeBoarding.lastKnown" : "count.beforeBoarding", shown)
+        }
         return guidance.count == .lastKnown ? "count.lastKnown" : RideText.countKey("count.unit", shown)
     }
 
@@ -210,7 +214,7 @@ struct IslandCompactLeading: View {
                 .foregroundStyle(TapsoColor.journey(guidance.colorRole))
         }
         .accessibilityElement(children: .ignore)
-        .accessibilityLabel(Text(String(format: RideText.string("a11y.route"), attributes.routeNumber)))
+        .accessibilityLabel(Text(String(format: RideText.string("a11y.route", language: attributes.language), attributes.routeNumber)))
         .accessibilityHint(Text("a11y.island.hint"))
     }
 }
@@ -222,6 +226,8 @@ struct IslandCompactTrailing: View {
 
     /// `attributes.totalStops`, so a bus still on its way to the boarding stop reads as coming.
     let rideLength: Int
+    /// `attributes.language`, so VoiceOver speaks the journey language like the rest of the island.
+    var language: String? = nil
     private var guidance: RideGuidance { guidanceAccountingForStaleness(state, isStale: isStale, rideLength: rideLength) }
 
     var body: some View {
@@ -267,7 +273,7 @@ struct IslandCompactTrailing: View {
             }
         }
         .accessibilityElement(children: .ignore)
-        .accessibilityLabel(Text(compactAccessibilityLabel(state, guidance)))
+        .accessibilityLabel(Text(compactAccessibilityLabel(state, guidance, language: language)))
     }
 }
 
@@ -470,7 +476,7 @@ struct IslandExpandedBottom: View {
                     TrustQualifier(guidance: guidance)
                 }
             } else {
-                Text(verbatim: RideText.detail(guidance, exitStopName: state.nextStopName))
+                Text(verbatim: RideText.detail(guidance, exitStopName: state.nextStopName, language: attributes.language))
                     .font(.caption)
                     .foregroundStyle(TapsoColor.textOnDarkSurface.opacity(0.75))
                     .lineLimit(2)
@@ -488,7 +494,8 @@ struct IslandExpandedBottom: View {
             routeNumber: attributes.routeNumber,
             destination: attributes.destinationName,
             remainingStops: state.remainingStops,
-            exitStopName: state.nextStopName
+            exitStopName: state.nextStopName,
+            language: attributes.language
         )))
     }
 }
@@ -515,15 +522,16 @@ struct TrustQualifier: View {
 /// VoiceOver for the minimal island: the bus and the count, never the glyphs.
 /// "3001번 버스, 목적지까지 8정거장" from real data; a decision moment reads its headline.
 func minimalAccessibilityLabel(_ attributes: TapsoActivityAttributes, _ state: TapsoActivityAttributes.ContentState, _ guidance: RideGuidance) -> String {
+    func string(_ key: String) -> String { RideText.string(key, language: attributes.language) }
     if let ahead = guidance.stopsBeforeBoarding, guidance.count == .live, guidance.moment == .riding {
-        return String(format: RideText.string(RideText.countKey("a11y.minimal.waiting", ahead)), attributes.routeNumber, ahead)
+        return String(format: string(RideText.countKey("a11y.minimal.waiting", ahead)), attributes.routeNumber, ahead)
     }
     switch guidance.count {
     case .live where guidance.moment == .riding:
         let key = RideText.countKey(guidance.trust == .estimated ? "a11y.minimal.estimated" : "a11y.minimal.count", state.remainingStops)
-        return String(format: RideText.string(key), attributes.routeNumber, state.remainingStops)
+        return String(format: string(key), attributes.routeNumber, state.remainingStops)
     case .live, .lastKnown, .hidden:
-        return String(format: RideText.string("a11y.minimal.state"), attributes.routeNumber, RideText.string(guidance.copy.headline))
+        return String(format: string("a11y.minimal.state"), attributes.routeNumber, string(guidance.copy.headline))
     }
 }
 
@@ -554,15 +562,16 @@ func guidanceAccountingForStaleness(
     ))
 }
 
-private func compactAccessibilityLabel(_ state: TapsoActivityAttributes.ContentState, _ guidance: RideGuidance) -> String {
+private func compactAccessibilityLabel(_ state: TapsoActivityAttributes.ContentState, _ guidance: RideGuidance, language: String?) -> String {
+    func string(_ key: String) -> String { RideText.string(key, language: language) }
     if let ahead = guidance.stopsBeforeBoarding, guidance.count == .live {
-        return String(format: RideText.string(RideText.countKey("a11y.compact.waiting", ahead)), ahead) + " " + RideText.string(guidance.copy.headline)
+        return String(format: string(RideText.countKey("a11y.compact.waiting", ahead)), ahead) + " " + string(guidance.copy.headline)
     }
     switch guidance.count {
     case .live:
-        return String(format: RideText.string(RideText.countKey("a11y.compact.count", state.remainingStops)), state.remainingStops) + " " + RideText.string(guidance.copy.headline)
+        return String(format: string(RideText.countKey("a11y.compact.count", state.remainingStops)), state.remainingStops) + " " + string(guidance.copy.headline)
     case .lastKnown, .hidden:
-        return RideText.string(guidance.copy.headline)
+        return string(guidance.copy.headline)
     }
 }
 

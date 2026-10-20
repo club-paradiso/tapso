@@ -545,6 +545,10 @@
 "count.beforeBoarding.one" = "站外";
 "count.beforeBoarding.long" = "距上车站的站数";
 "count.beforeBoarding.long.one" = "距上车站的站数";
+"count.beforeBoarding.lastKnown" = "站外 · 最后确认";
+"count.beforeBoarding.lastKnown.one" = "站外 · 最后确认";
+"count.beforeBoarding.lastKnown.long" = "距上车站的站数 · 最后确认";
+"count.beforeBoarding.lastKnown.long.one" = "距上车站的站数 · 最后确认";
 "ride.waiting.rideLength" = "上车后再坐%ld站";
 "ride.waiting.rideLength.one" = "上车后再坐%ld站";
 "a11y.ride.waiting" = "%1$@路，前往%2$@。公交车距您的上车站还有%3$ld站。%4$@。%5$@。";

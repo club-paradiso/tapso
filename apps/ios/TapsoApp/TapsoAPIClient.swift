@@ -109,8 +109,8 @@ struct TapsoAPIClient: Sendable {
 
     // MARK: Beta feedback
 
-    /// Sends a tester's report. Returns only once the server answered 201 with a receipt;
-    /// every other outcome throws, so the app never says "sent" for a report that was not kept.
+    /// Sends a tester's report. Returns only once the server answered 2xx with a decodable
+    /// receipt (the API answers 201); every other outcome throws, so the app never says "sent" for a report that was not kept.
     func sendFeedback(_ report: FeedbackReport) async throws -> FeedbackReceipt {
         var request = try makeRequest(path: "/v1/feedback", method: "POST", body: report)
         request.timeoutInterval = 15

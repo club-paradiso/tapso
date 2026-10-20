@@ -181,6 +181,19 @@ final class RidePresentationTests: XCTestCase {
 
     // MARK: One truth for every surface
 
+    /// The Lock Screen's strings follow the ride's language, not the extension process's.
+    func testLiveActivityStringsFollowTheJourneyLanguage() {
+        XCTAssertEqual(RideText.string("count.unit.one", language: "en"), "stop")
+        XCTAssertEqual(RideText.string("count.unit", language: "ko"), "정거장")
+        XCTAssertEqual(RideText.string("count.unit", language: "ja"), "停留所")
+        XCTAssertEqual(RideText.string("count.unit", language: "xx"), RideText.string("count.unit"), "an unknown language follows the process")
+
+        let state = makeState(.active, 6)
+        let guidance = RideGuidancePolicy.guidance(for: state.signal, rideLength: 4)
+        let english = TapsoActivityAttributes(routeNumber: "360", routeID: "JEB405360101", boardingStopName: "제주시청", destinationName: "한라병원", totalStops: 4, language: .en)
+        XCTAssertEqual(minimalAccessibilityLabel(english, state, guidance), String(format: RideText.string("a11y.minimal.waiting", language: "en"), "360", 2))
+    }
+
     func testContentStateCarriesTheSameGuidanceAsTheApp() {
         let state = makeState(.arrived, 0, passed: true)
         XCTAssertEqual(state.guidance(rideLength: testRideLength).moment, .passedDestination)
@@ -217,6 +230,12 @@ final class RidePresentationTests: XCTestCase {
         XCTAssertNotEqual(IslandMinimalStyle.style(for: shortGuidance, remainingStops: 2).shape, .ring)
         XCTAssertNil(TapsoLiveActivityPolicy.milestone(for: short, rideLength: 1))
         XCTAssertEqual(TapsoLiveActivityPolicy.displayPhase(for: short, rideLength: 1), .riding)
+
+        // An aged count while waiting keeps the waiting unit and says it is not live.
+        let aged = guidanceAccountingForStaleness(state, isStale: true, rideLength: 4)
+        XCTAssertTrue(aged.isWaiting)
+        XCTAssertEqual(aged.count, .lastKnown)
+        XCTAssertEqual(RemainingOrSymbol.unitKey(aged, 2), "count.beforeBoarding.lastKnown")
 
         // At the boarding stop the same state is a ride, identical to the unguarded policy.
         let aboard = makeState(.active, 4)

@@ -130,4 +130,23 @@ final class RideBoardingRegressionTests: XCTestCase {
             }
         }
     }
+
+    func testAnEndedRideOrAWithheldCountIsNeverWaiting() {
+        let ended = RideSignal(phase: .cancelled, remainingStops: 6, freshness: .fresh)
+        XCTAssertEqual(RideGuidancePolicy.guidance(for: ended, rideLength: 4).moment, .ended)
+        XCTAssertFalse(RideGuidancePolicy.guidance(for: ended, rideLength: 4).isWaiting, "an ended ride shows no bus coming")
+        let disagreeing = RideSignal(phase: .nextStopIsDestination, remainingStops: 6, freshness: .fresh)
+        let checking = RideGuidancePolicy.guidance(for: disagreeing, rideLength: 4)
+        XCTAssertEqual(checking.moment, .checking)
+        XCTAssertEqual(checking.count, .hidden)
+        XCTAssertFalse(checking.isWaiting, "a withheld count has no boarding number either")
+    }
+
+    func testAnEstimatedPositionStaysMarkedWhileWaiting() {
+        let estimated = RideSignal(phase: .active, remainingStops: 7, freshness: .fresh, isEstimated: true)
+        let g = RideGuidancePolicy.guidance(for: estimated, rideLength: 4)
+        XCTAssertTrue(g.isWaiting)
+        XCTAssertEqual(g.trust, .estimated, "a predicted bus position is never shown as live")
+        XCTAssertEqual(g.copy.headline, "ride.waiting.headline")
+    }
 }

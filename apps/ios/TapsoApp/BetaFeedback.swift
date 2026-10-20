@@ -47,16 +47,23 @@ struct FeedbackReport: Encodable, Equatable, Sendable {
 
     /// The server keeps at most 24 000 characters of diagnostics; the newest lines matter most.
     static let diagnosticsLimit = 20_000
+    /// `FEEDBACK_MESSAGE_MAX` on the server.
+    static let messageLimit = 2_000
 
     @MainActor
     static func make(category: FeedbackCategory, message: String, diagnostics: String?) -> FeedbackReport {
         let identity = TapsoBuild.identity()
+        // The server counts code points, so the limits are applied to unicode scalars, not
+        // characters: one emoji character can be several scalars.
         let trimmed = diagnostics.map { text in
-            text.count > diagnosticsLimit ? String(text.suffix(diagnosticsLimit)) : text
+            text.unicodeScalars.count > diagnosticsLimit
+                ? String(String.UnicodeScalarView(text.unicodeScalars.suffix(diagnosticsLimit)))
+                : text
         }
+        let body = message.trimmingCharacters(in: .whitespacesAndNewlines)
         return FeedbackReport(
             category: category.rawValue,
-            message: message.trimmingCharacters(in: .whitespacesAndNewlines),
+            message: String(String.UnicodeScalarView(body.unicodeScalars.prefix(messageLimit))),
             appVersion: identity.version,
             build: identity.build,
             gitCommit: identity.gitCommit,

@@ -544,6 +544,10 @@
 "count.beforeBoarding.one" = "정거장 전";
 "count.beforeBoarding.long" = "정거장 전에 있어요";
 "count.beforeBoarding.long.one" = "정거장 전에 있어요";
+"count.beforeBoarding.lastKnown" = "정거장 전 · 마지막 확인";
+"count.beforeBoarding.lastKnown.one" = "정거장 전 · 마지막 확인";
+"count.beforeBoarding.lastKnown.long" = "정거장 전에 있었어요 · 마지막 확인";
+"count.beforeBoarding.lastKnown.long.one" = "정거장 전에 있었어요 · 마지막 확인";
 "ride.waiting.rideLength" = "타고 나서 %ld정거장 가요";
 "ride.waiting.rideLength.one" = "타고 나서 %ld정거장 가요";
 "a11y.ride.waiting" = "%1$@번, %2$@까지. 버스가 탈 정류장에서 %3$ld정거장 전에 있음. %4$@. %5$@.";

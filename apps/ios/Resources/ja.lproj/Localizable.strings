@@ -545,6 +545,10 @@
 "count.beforeBoarding.one" = "停留所前";
 "count.beforeBoarding.long" = "乗る停留所までの停留所数";
 "count.beforeBoarding.long.one" = "乗る停留所までの停留所数";
+"count.beforeBoarding.lastKnown" = "停留所前 · 最終確認";
+"count.beforeBoarding.lastKnown.one" = "停留所前 · 最終確認";
+"count.beforeBoarding.lastKnown.long" = "乗る停留所までの停留所数 · 最終確認";
+"count.beforeBoarding.lastKnown.long.one" = "乗る停留所までの停留所数 · 最終確認";
 "ride.waiting.rideLength" = "乗車後%ld停留所";
 "ride.waiting.rideLength.one" = "乗車後%ld停留所";
 "a11y.ride.waiting" = "%1$@番、%2$@まで。バスは乗る停留所の%3$ld停留所前です。%4$@。%5$@。";

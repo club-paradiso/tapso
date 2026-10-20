@@ -642,8 +642,21 @@ struct TrustBadge: View {
 }
 
 enum RideText {
-    static func string(_ key: String) -> String {
-        String(localized: String.LocalizationValue(key))
+    /// `language` is a journey language (`TapsoActivityAttributes.language`). A Live Activity
+    /// renders in the widget extension's process, whose language can differ from the one the
+    /// ride started in; `.environment(\.locale)` reaches only `Text(LocalizedStringKey)`, so
+    /// strings built here read the matching `.lproj` directly. Without one, or for a language
+    /// the bundle lacks, they follow the process.
+    static func string(_ key: String, language: String? = nil) -> String {
+        if let bundle = bundle(for: language) {
+            return bundle.localizedString(forKey: key, value: nil, table: nil)
+        }
+        return String(localized: String.LocalizationValue(key))
+    }
+
+    private static func bundle(for language: String?) -> Bundle? {
+        guard let language, let path = Bundle.main.path(forResource: language, ofType: "lproj") else { return nil }
+        return Bundle(path: path)
     }
 
     /// The singular variant (`<key>.one`) for a count of one, so English never says "1 stops".
@@ -653,11 +666,11 @@ enum RideText {
 
     /// The moment's detail line. Past the stop it names the stop to get off at when the
     /// ride knows it (`PassedStopRescue`), so the app, Lock Screen and island say the same.
-    static func detail(_ guidance: RideGuidance, exitStopName: String? = nil) -> String {
+    static func detail(_ guidance: RideGuidance, exitStopName: String? = nil, language: String? = nil) -> String {
         if guidance.moment == .passedDestination, let exitStopName, !exitStopName.isEmpty {
-            return String(format: string("rescue.exitAt"), exitStopName)
+            return String(format: string("rescue.exitAt", language: language), exitStopName)
         }
-        return string(guidance.copy.detail)
+        return string(guidance.copy.detail, language: language)
     }
 
     /// VoiceOver sentence for a ride: the count only when it is safe to act on.
@@ -666,10 +679,12 @@ enum RideText {
         routeNumber: String,
         destination: String,
         remainingStops: Int,
-        exitStopName: String? = nil
+        exitStopName: String? = nil,
+        language: String? = nil
     ) -> String {
+        func string(_ key: String) -> String { Self.string(key, language: language) }
         let headline = string(guidance.copy.headline)
-        let detail = Self.detail(guidance, exitStopName: exitStopName)
+        let detail = Self.detail(guidance, exitStopName: exitStopName, language: language)
         if let ahead = guidance.stopsBeforeBoarding, guidance.count != .hidden {
             // Waiting: the number is how far the bus is from the rider, never a ride count.
             return String(format: string(countKey("a11y.ride.waiting", ahead)), routeNumber, destination, ahead, headline, detail)
