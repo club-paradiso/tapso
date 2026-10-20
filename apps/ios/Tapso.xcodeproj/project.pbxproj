@@ -97,13 +97,13 @@
 		522C090B8191DE45D0C20C8D /* HybridRideReconcileTests.swift in Sources */ = {isa = PBXBuildFile; fileRef = 12873EA81968F53A1B70B049 /* HybridRideReconcileTests.swift */; };
 		753B05637D7A255F05962663 /* RideLocationSamplerTests.swift in Sources */ = {isa = PBXBuildFile; fileRef = E3ECAC8A2E99BE066DF83D63 /* RideLocationSamplerTests.swift */; };
 		4CCE643CFCC5C082AD3EDB27 /* PlaceLookupViews.swift in Sources */ = {isa = PBXBuildFile; fileRef = 08A7A38C2F81F25CC44EA4DB /* PlaceLookupViews.swift */; };
-		B4E12F5C6EDC56079BF11275 /* JourneyLanguage+Bundle.swift in Sources */ = {isa = PBXBuildFile; fileRef = 1588A893BB3A6A84254FD2B3 /* JourneyLanguage+Bundle.swift */; };
-		4A8F21800DA116D2364A2777 /* JourneyLanguage+Bundle.swift in Sources */ = {isa = PBXBuildFile; fileRef = 1588A893BB3A6A84254FD2B3 /* JourneyLanguage+Bundle.swift */; };
 		C50E3B27FBFDAA7874FCC60A /* Pretendard-Regular.otf in Resources */ = {isa = PBXBuildFile; fileRef = 13C486523410E1222F1573B4 /* Pretendard-Regular.otf */; };
 		E85CD98AA83E9165FA9655A4 /* Pretendard-SemiBold.otf in Resources */ = {isa = PBXBuildFile; fileRef = 4153BD3462EE339A124EB3A9 /* Pretendard-SemiBold.otf */; };
 		7A590435D0D80B9CF98D884B /* Pretendard-ExtraBold.otf in Resources */ = {isa = PBXBuildFile; fileRef = AD76A5A1E33DC81E78E2A5FD /* Pretendard-ExtraBold.otf */; };
 		26472BF9C3558F836D60FD2C /* OFL.txt in Resources */ = {isa = PBXBuildFile; fileRef = 884A285C8E7C51970C52AB55 /* OFL.txt */; };
 		5B31E77CB28150EF18D52E80 /* BetaFeedback.swift in Sources */ = {isa = PBXBuildFile; fileRef = 62279B0E07ECDFCEBE189D89 /* BetaFeedback.swift */; };
+		49A1F49BD2C022642ACE249C /* JourneyLanguageCurrent.swift in Sources */ = {isa = PBXBuildFile; fileRef = 79C4C1E14730170FDC9798E5 /* JourneyLanguageCurrent.swift */; };
+		9A2AB73087432F4AA9B00C1A /* JourneyLanguageCurrent.swift in Sources */ = {isa = PBXBuildFile; fileRef = 79C4C1E14730170FDC9798E5 /* JourneyLanguageCurrent.swift */; };
 /* End PBXBuildFile section */
 
 /* Begin PBXContainerItemProxy section */
@@ -222,16 +222,16 @@
 		12873EA81968F53A1B70B049 /* HybridRideReconcileTests.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = HybridRideReconcileTests.swift; sourceTree = "<group>"; };
 		E3ECAC8A2E99BE066DF83D63 /* RideLocationSamplerTests.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = RideLocationSamplerTests.swift; sourceTree = "<group>"; };
 		08A7A38C2F81F25CC44EA4DB /* PlaceLookupViews.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = PlaceLookupViews.swift; sourceTree = "<group>"; };
-		1588A893BB3A6A84254FD2B3 /* JourneyLanguage+Bundle.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = JourneyLanguage+Bundle.swift; sourceTree = "<group>"; };
-		13C486523410E1222F1573B4 /* Pretendard-Regular.otf */ = {isa = PBXFileReference; lastKnownFileType = file; path = Pretendard-Regular.otf; sourceTree = "<group>"; };
-		4153BD3462EE339A124EB3A9 /* Pretendard-SemiBold.otf */ = {isa = PBXFileReference; lastKnownFileType = file; path = Pretendard-SemiBold.otf; sourceTree = "<group>"; };
-		AD76A5A1E33DC81E78E2A5FD /* Pretendard-ExtraBold.otf */ = {isa = PBXFileReference; lastKnownFileType = file; path = Pretendard-ExtraBold.otf; sourceTree = "<group>"; };
+		13C486523410E1222F1573B4 /* Pretendard-Regular.otf */ = {isa = PBXFileReference; lastKnownFileType = file; path = "Pretendard-Regular.otf"; sourceTree = "<group>"; };
+		4153BD3462EE339A124EB3A9 /* Pretendard-SemiBold.otf */ = {isa = PBXFileReference; lastKnownFileType = file; path = "Pretendard-SemiBold.otf"; sourceTree = "<group>"; };
+		AD76A5A1E33DC81E78E2A5FD /* Pretendard-ExtraBold.otf */ = {isa = PBXFileReference; lastKnownFileType = file; path = "Pretendard-ExtraBold.otf"; sourceTree = "<group>"; };
 		884A285C8E7C51970C52AB55 /* OFL.txt */ = {isa = PBXFileReference; lastKnownFileType = text; path = OFL.txt; sourceTree = "<group>"; };
 		CDEE18322166B654E434EBF5 /* ja */ = {isa = PBXFileReference; lastKnownFileType = text.plist.strings; name = ja; path = ja.lproj/Localizable.strings; sourceTree = "<group>"; };
-		B949D6B9C4302E3D0C68412F /* zh-Hans */ = {isa = PBXFileReference; lastKnownFileType = text.plist.strings; name = "zh-Hans"; path = zh-Hans.lproj/Localizable.strings; sourceTree = "<group>"; };
+		B949D6B9C4302E3D0C68412F /* zh-Hans */ = {isa = PBXFileReference; lastKnownFileType = text.plist.strings; name = "zh-Hans"; path = "zh-Hans.lproj/Localizable.strings"; sourceTree = "<group>"; };
 		100FC5111767E5D298C468E5 /* ja */ = {isa = PBXFileReference; lastKnownFileType = text.plist.strings; name = ja; path = ja.lproj/InfoPlist.strings; sourceTree = "<group>"; };
-		9C07CCC94036A0238FBF00B0 /* zh-Hans */ = {isa = PBXFileReference; lastKnownFileType = text.plist.strings; name = "zh-Hans"; path = zh-Hans.lproj/InfoPlist.strings; sourceTree = "<group>"; };
+		9C07CCC94036A0238FBF00B0 /* zh-Hans */ = {isa = PBXFileReference; lastKnownFileType = text.plist.strings; name = "zh-Hans"; path = "zh-Hans.lproj/InfoPlist.strings"; sourceTree = "<group>"; };
 		62279B0E07ECDFCEBE189D89 /* BetaFeedback.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = BetaFeedback.swift; sourceTree = "<group>"; };
+		79C4C1E14730170FDC9798E5 /* JourneyLanguageCurrent.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = JourneyLanguageCurrent.swift; sourceTree = "<group>"; };
 /* End PBXFileReference section */
 
 /* Begin PBXFrameworksBuildPhase section */
@@ -315,7 +315,7 @@
 			isa = PBXGroup;
 			children = (
 				C61FF6E913F7DCDE87D983B5 /* BrandWordmark.swift */,
-				1588A893BB3A6A84254FD2B3 /* JourneyLanguage+Bundle.swift */,
+				79C4C1E14730170FDC9798E5 /* JourneyLanguageCurrent.swift */,
 				3A6FA6A0937D209C796FC84C /* LiveActivitySurfaces.swift */,
 				D102FEDCF3DA956AE2EC37A9 /* ReturnActivitySurfaces.swift */,
 				C6E05EE62093C184B4EE9E8F /* RideAgainOpenIntent.swift */,
@@ -641,7 +641,7 @@
 				21314EBAC48BF9850B409EF3 /* CatalogSearchViews.swift in Sources */,
 				3CC3ABC68AFD26260A4BD353 /* DemoControlsView.swift in Sources */,
 				C5476D706116582E39974F11 /* HomeView.swift in Sources */,
-				B4E12F5C6EDC56079BF11275 /* JourneyLanguage+Bundle.swift in Sources */,
+				49A1F49BD2C022642ACE249C /* JourneyLanguageCurrent.swift in Sources */,
 				C072DFB6007261AB2C4AC702 /* JourneyStore.swift in Sources */,
 				353C5AEA2F4ED35FBF1207BC /* LiveActivityClient.swift in Sources */,
 				216C1DAF60AA1BF258CBA512 /* LiveActivitySurfaces.swift in Sources */,
@@ -685,7 +685,7 @@
 			buildActionMask = 2147483647;
 			files = (
 				11F216705CBD35830606908D /* BrandWordmark.swift in Sources */,
-				4A8F21800DA116D2364A2777 /* JourneyLanguage+Bundle.swift in Sources */,
+				9A2AB73087432F4AA9B00C1A /* JourneyLanguageCurrent.swift in Sources */,
 				E7D6FCED61BA991CB675260B /* LiveActivitySurfaces.swift in Sources */,
 				780FE7AA8EE44BC0BAAB03E2 /* ReturnActivitySurfaces.swift in Sources */,
 				BC537E74602056783FF8F8A4 /* RideAgainControl.swift in Sources */,
