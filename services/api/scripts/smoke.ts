@@ -156,6 +156,16 @@ async function run(): Promise<void> {
     typeof build.environment === "string" ? build.environment : undefined,
   ));
 
+  // Write-free too: the router checks for a feedback store before reading the body,
+  // so an empty object answers 400 where reports are kept and 503 where they are not.
+  // Nothing is stored either way. Beta testers rely on it (`docs/beta/FREE_TEAM_FIELD_TEST.md`).
+  const feedback = await send("POST", "/v1/feedback", "{}");
+  record("feedback store", feedback.status === 400
+    ? pass("reports are kept; the write-free probe was rejected by input validation, nothing stored")
+    : feedback.status === 503 || feedback.status === 404
+      ? { outcome: "WARN", detail: `${feedback.status}: ${feedback.status === 404 ? "deployment predates the feedback endpoint" : "no feedback store; the app will say a report could not be sent"}` }
+      : fail(`status ${feedback.status}: ${preview(feedback.text)}`));
+
   // No token is sent, so a 200 here would mean the operator ride-capture path
   // is answering the whole internet with uncached upstream reads. That is the
   // one failure this script can catch without holding any secret at all.

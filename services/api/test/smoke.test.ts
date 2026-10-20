@@ -8,6 +8,7 @@ import { readTransitApiConfig, type ServerEnv } from "../src/apiConfig.ts";
 import { createTransitApiHandler } from "../src/apiRouter.ts";
 import { CachedTransitProvider } from "../src/cachedTransitProvider.ts";
 import type { RouteRequest, StopOnRoute, VehicleObservation } from "../src/domain.ts";
+import { MemoryFeedbackStore } from "../src/feedbackStore.ts";
 import { JourneySessionCoordinator } from "../src/journeySession.ts";
 import { fileStaticTransitData, inMemoryStaticTransitData } from "../src/staticTransitData.ts";
 import { buildCatalog } from "../src/transitCatalog.ts";
@@ -37,7 +38,7 @@ const staticData = inMemoryStaticTransitData({
  * checks fails every scheduled production run; this catches that in CI.
  */
 
-function deployment(env: ServerEnv, events: string[] = []): Server {
+function deployment(env: ServerEnv, events: string[] = [], feedback?: MemoryFeedbackStore): Server {
   const config = readTransitApiConfig({ TAGO_SERVICE_KEY: "synthetic-key", VERCEL: "1", ...env }, { nodeVersion: "v22.0.0" });
   const upstream = {
     async stops(_request: RouteRequest): Promise<StopOnRoute[]> {
@@ -74,6 +75,7 @@ function deployment(env: ServerEnv, events: string[] = []): Server {
     sessions: new JourneySessionCoordinator(provider, { automaticMatchingEnabled: config.matching.automaticMatchingEnabled }),
     log: (_level, event) => { events.push(event); },
     staticData,
+    ...(feedback ? { feedback } : {}),
   });
   return createServer(async (request, response) => {
     const chunks: Buffer[] = [];
@@ -91,8 +93,15 @@ function deployment(env: ServerEnv, events: string[] = []): Server {
   });
 }
 
-async function smoke(env: ServerEnv, events: string[] = [], script = "scripts/smoke.ts", extra: string[] = []): Promise<{ code: number | null; output: string }> {
-  const server = deployment(env, events);
+async function smoke(
+  env: ServerEnv,
+  events: string[] = [],
+  script = "scripts/smoke.ts",
+  extra: string[] = [],
+  /** `null`: a deployment that keeps no reports. */
+  feedback: MemoryFeedbackStore | null = new MemoryFeedbackStore(),
+): Promise<{ code: number | null; output: string }> {
+  const server = deployment(env, events, feedback ?? undefined);
   await new Promise<void>((resolve) => server.listen(0, "127.0.0.1", resolve));
   const { port } = server.address() as AddressInfo;
   try {
@@ -115,7 +124,8 @@ async function smoke(env: ServerEnv, events: string[] = [], script = "scripts/sm
 test("the production smoke test passes end to end against the current API contract", async () => {
   const { code, output } = await smoke({});
   assert.equal(code, 0, output);
-  assert.match(output, /19 passed, 0 warned, 0 blocked by credentials, 0 failed/);
+  assert.match(output, /20 passed, 0 warned, 0 blocked by credentials, 0 failed/);
+  assert.match(output, /PASS +feedback store +reports are kept; the write-free probe was rejected by input validation, nothing stored/);
   assert.match(output, /PASS +official timetables +route 365: available, as of 2026-10-03/);
   assert.match(output, /PASS +transit catalog +catalog [0-9a-f]{16}: 1 variants, 2 stops/);
   assert.match(output, /PASS +session store +memory store; sessions disabled because a serverless deployment would lose rides on scale-out/);
@@ -145,6 +155,16 @@ test("the smoke test never creates a journey session, even where sessions are en
   assert.equal(code, 0, output);
   assert.match(output, /PASS +sessions policy +sessions enabled; the write-free probe was rejected by input validation, nothing created/);
   assert.equal(events.includes("journey_session_created"), false, events.join(", "));
+});
+
+test("the smoke test stores no feedback, and warns where reports are not kept", async () => {
+  const store = new MemoryFeedbackStore();
+  const kept = await smoke({}, [], "scripts/smoke.ts", [], store);
+  assert.equal(kept.code, 0, kept.output);
+  assert.deepEqual(await store.recent(10), [], "the probe left no report behind");
+  const missing = await smoke({}, [], "scripts/smoke.ts", [], null);
+  assert.equal(missing.code, 0, missing.output);
+  assert.match(missing.output, /WARN +feedback store +503: no feedback store/);
 });
 
 test("the session smoke creates one session, reads it, confirms a bus, ends it and leaves nothing behind", async () => {
