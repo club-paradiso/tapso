@@ -8,6 +8,8 @@ struct RideView: View {
     @Bindable var model: TapsoAppModel
     @State private var confirmingEnd = false
     @State private var showingDiagnostics = false
+    /// Its own flag: Home under the navigation stack presents from `model.isFeedbackPresented`.
+    @State private var showingFeedback = false
     @Environment(\.accessibilityReduceMotion) private var reduceMotion
 
     var body: some View {
@@ -81,7 +83,7 @@ struct RideView: View {
                             .disabled(model.isRecheckingPosition)
                         }
                         #if DEBUG || TAPSO_FIELD_TOOLS
-                        Button("feedback.entry", systemImage: "exclamationmark.bubble") { model.isFeedbackPresented = true }
+                        Button("feedback.entry", systemImage: "exclamationmark.bubble") { showingFeedback = true }
                         if model.isLiveRide {
                             Button("ride.menu.trace", systemImage: "waveform.path") { showingDiagnostics = true }
                             // Field validation: tap the moment the bus passes a stop (RideTrace `ground_truth_stop`).
@@ -115,7 +117,7 @@ struct RideView: View {
                         .background(TapsoColor.backgroundSecondary, in: Capsule())
                 }
             }
-            .sheet(isPresented: $model.isFeedbackPresented) { FeedbackView(model: model) }
+            .sheet(isPresented: $showingFeedback) { FeedbackView(model: model) }
             .sheet(isPresented: $showingDiagnostics) {
                 #if DEBUG || TAPSO_FIELD_TOOLS
                 NavigationStack {
