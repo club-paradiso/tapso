@@ -57,14 +57,14 @@
 "check.proposed.headline" = "This looks like your bus";
 "check.proposed.detail" = "Check the plate as you board";
 "check.similarBuses.headline" = "Similar buses nearby";
-"check.similarBuses.detail" = "Pick the bus you boarded";
+"check.similarBuses.detail" = "Pick the bus you're taking";
 "check.choose.headline" = "Pick the bus you're boarding";
 "check.choose.detail" = "Tap the one whose plate matches";
 "check.notFoundYet.headline" = "No bus in sight yet";
 "check.notFoundYet.detail" = "We'll show route %@ as soon as one appears";
 "check.confirmed.headline" = "Bus confirmed";
 "check.confirmed.detail" = "TAPSO follows this bus now";
-"check.confirm" = "Yes, I'm on this bus";
+"check.confirm" = "Confirm this bus";
 "check.reject" = "It's a different bus";
 "check.noneOfThese" = "Neither of these";
 "check.choose.none" = "Not in this list";
@@ -122,7 +122,7 @@
 "ride.stopsAhead" = "Stops ahead";
 "ride.gotOff" = "I'm off";
 "ride.passed.destination" = "Your stop: %@";
-"ride.passed.end" = "End ride";
+"ride.passed.end" = "End guidance";
 "rescue.exitAt" = "Get off at the next stop, %@";
 "rescue.suggested" = "Suggested";
 "rescue.walkBack.title" = "Walk back";
@@ -387,7 +387,7 @@
 "mapImport.shot.seen" = "Get off at, from your screenshot: %@";
 
 // Hybrid ride tracking
-"ride.refresh" = "Check location again";
+"ride.refresh" = "Check again";
 "ride.refreshing" = "Checking location…";
 "ride.predicted.eyebrow" = "Estimated position";
 "ride.predicted.headline" = "Estimated position";
@@ -552,3 +552,27 @@
 "a11y.compact.waiting.one" = "Bus %ld stop from your stop.";
 "a11y.minimal.waiting" = "Route %1$@, %2$ld stops from your boarding stop";
 "a11y.minimal.waiting.one" = "Route %1$@, %2$ld stop from your boarding stop";
+
+/* Beta feedback (FeedbackView): sent only after the server confirms a receipt. */
+"feedback.entry" = "Send feedback (beta)";
+"feedback.title" = "Beta feedback";
+"feedback.category.header" = "What went wrong?";
+"feedback.category.busNotFound" = "I couldn't find my bus";
+"feedback.category.wrongBusSelected" = "A different bus was picked";
+"feedback.category.wrongRemainingStops" = "The stops left were wrong";
+"feedback.category.missedAlert" = "I didn't get the get-off alert";
+"feedback.category.appFrozeOrQuit" = "The app froze or closed";
+"feedback.category.translationOrWording" = "A translation or message is off";
+"feedback.category.designOrUsability" = "Hard to use or read";
+"feedback.category.other" = "Something else";
+"feedback.message.header" = "Tell us more (optional)";
+"feedback.message.placeholder" = "When, which bus, and what was different";
+"feedback.diagnostics.toggle" = "Attach the ride record";
+"feedback.diagnostics.footer" = "Adds the app version and the bus updates the app received on this ride. No location history, contacts or photos. Leave it off to send only what you wrote.";
+"feedback.send" = "Send";
+"feedback.failed.title" = "Not sent";
+"feedback.failed.detail" = "Check your connection and try again. You can also share the report through another app below.";
+"feedback.failed.share" = "Share the report";
+"feedback.sent.title" = "Sent";
+"feedback.sent.receipt" = "Reference %@";
+"feedback.sent.detail" = "Quote this reference if you get in touch about it.";

@@ -283,6 +283,8 @@ final class TapsoAppModel {
     var scenario: DemoRideScenario = .smooth
     var speed: DemoSpeed = .one
     var isDemoPanelPresented = false
+    /// The beta feedback sheet (`FeedbackView`), from Home or the ride menu in Debug and Beta builds.
+    var isFeedbackPresented = false
 
     private(set) var library: JourneyLibrary
     private(set) var draft: RideDraft?
@@ -2219,6 +2221,27 @@ final class TapsoAppModel {
                 guard !Task.isCancelled, let self, self.canAdvanceDemo else { return }
                 await self.advanceDemo()
             }
+        }
+    }
+
+    // MARK: Beta feedback
+
+    /// What a tester may attach, with consent: the build identity and the ride's privacy-scrubbed
+    /// trace (`RideTrace`, Debug and Beta builds only). Never a location history.
+    func feedbackDiagnostics() -> String {
+        var parts = [TapsoBuild.identity().line]
+        #if DEBUG || TAPSO_FIELD_TOOLS
+        if !rideTrace.events.isEmpty { parts.append(rideTrace.text) }
+        #endif
+        return parts.joined(separator: "\n")
+    }
+
+    /// The server's receipt, or `nil` when the report was not confirmed as kept.
+    func sendFeedback(_ report: FeedbackReport) async -> FeedbackReceipt? {
+        do {
+            return try await api.sendFeedback(report)
+        } catch {
+            return nil
         }
     }
 

@@ -139,7 +139,7 @@ struct PlaceLookupSection: View {
                     } label: {
                         Label {
                             Text(String(format: RideText.string("search.place.offer"), trimmed))
-                                .font(.subheadline.weight(.semibold))
+                                .font(.tapso(.subheadline, .semibold))
                                 .multilineTextAlignment(.leading)
                         } icon: {
                             Image(systemName: "map")
@@ -182,25 +182,25 @@ struct PlaceLookupSection: View {
             HStack(spacing: TapsoSpace.sm) {
                 ProgressView()
                 Text("search.place.loading")
-                    .font(.subheadline)
+                    .font(.tapso(.subheadline))
                     .foregroundStyle(TapsoColor.textSecondary)
             }
             .frame(maxWidth: .infinity, minHeight: 56, alignment: .leading)
         case .failed:
             VStack(alignment: .leading, spacing: TapsoSpace.xs) {
                 Text("search.place.failed")
-                    .font(.footnote)
+                    .font(.tapso(.footnote))
                     .foregroundStyle(TapsoColor.textSecondary)
                     .fixedSize(horizontal: false, vertical: true)
                 Button("common.retry") { attempt += 1 }
-                    .font(.subheadline.weight(.semibold))
+                    .font(.tapso(.subheadline, .semibold))
                     .foregroundStyle(TapsoColor.mintDeep)
                     .frame(minHeight: TapsoSize.minimumTouch)
             }
         case let .found(places, source):
             if places.isEmpty {
                 Text("search.place.empty")
-                    .font(.footnote)
+                    .font(.tapso(.footnote))
                     .foregroundStyle(TapsoColor.textSecondary)
                     .fixedSize(horizontal: false, vertical: true)
                     .padding(.vertical, TapsoSpace.xs)
@@ -211,7 +211,7 @@ struct PlaceLookupSection: View {
                 }
             }
             Text(source == .kakao ? LocalizedStringKey("search.place.source.kakao") : LocalizedStringKey("search.place.source"))
-                .font(.caption)
+                .font(.tapso(.caption))
                 .foregroundStyle(TapsoColor.textTertiary)
                 .fixedSize(horizontal: false, vertical: true)
                 .padding(.top, TapsoSpace.xs)
@@ -225,16 +225,16 @@ struct PlaceLookupSection: View {
         } label: {
             HStack(spacing: TapsoSpace.sm) {
                 Image(systemName: "building.2.crop.circle")
-                    .font(.title3)
+                    .font(.tapso(.title3))
                     .foregroundStyle(TapsoColor.mintDeep)
                     .frame(width: 28)
                 VStack(alignment: .leading, spacing: 2) {
                     Text(verbatim: place.name)
-                        .font(.body.weight(.medium))
+                        .font(.tapso(.body, .medium))
                         .foregroundStyle(TapsoColor.textPrimary)
                     if let address = place.address, address != place.name {
                         Text(verbatim: address)
-                            .font(.footnote)
+                            .font(.tapso(.footnote))
                             .foregroundStyle(TapsoColor.textSecondary)
                             .lineLimit(2)
                     }
@@ -242,7 +242,7 @@ struct PlaceLookupSection: View {
                 .multilineTextAlignment(.leading)
                 Spacer(minLength: 0)
                 Image(systemName: isOpen ? "chevron.up" : "chevron.down")
-                    .font(.footnote.weight(.bold))
+                    .font(.tapso(.footnote, .bold))
                     .foregroundStyle(TapsoColor.textTertiary)
             }
             .padding(.vertical, TapsoSpace.sm)
@@ -265,19 +265,19 @@ struct PlaceLookupSection: View {
             : near
         VStack(alignment: .leading, spacing: 0) {
             Text(String(format: RideText.string("search.place.nearby"), place.name))
-                .font(.footnote.weight(.semibold))
+                .font(.tapso(.footnote, .semibold))
                 .foregroundStyle(TapsoColor.textSecondary)
                 .padding(.top, TapsoSpace.xxs)
             if nearby.isEmpty {
                 Text("search.place.noStops")
-                    .font(.footnote)
+                    .font(.tapso(.footnote))
                     .foregroundStyle(TapsoColor.textSecondary)
                     .fixedSize(horizontal: false, vertical: true)
                     .padding(.vertical, TapsoSpace.xs)
             } else {
                 if near.isEmpty {
                     Text("search.place.far")
-                        .font(.caption)
+                        .font(.tapso(.caption))
                         .foregroundStyle(TapsoColor.textTertiary)
                         .fixedSize(horizontal: false, vertical: true)
                         .padding(.top, TapsoSpace.xxs)
@@ -319,7 +319,7 @@ struct DemoPlaceLookupSection: View {
                     Divider().overlay(TapsoColor.separator)
                 }
                 Label("search.place.demoNote", systemImage: "testtube.2")
-                    .font(.caption)
+                    .font(.tapso(.caption))
                     .foregroundStyle(TapsoColor.textTertiary)
                     .fixedSize(horizontal: false, vertical: true)
                     .padding(.top, TapsoSpace.xs)
@@ -335,23 +335,23 @@ struct DemoPlaceLookupSection: View {
         } label: {
             HStack(spacing: TapsoSpace.sm) {
                 Image(systemName: "building.2.crop.circle")
-                    .font(.title3)
+                    .font(.tapso(.title3))
                     .foregroundStyle(TapsoColor.mintDeep)
                     .frame(width: 28)
                 VStack(alignment: .leading, spacing: 2) {
                     Text(verbatim: place.name)
-                        .font(.body.weight(.medium))
+                        .font(.tapso(.body, .medium))
                         .foregroundStyle(TapsoColor.textPrimary)
                     if let address = place.address {
                         Text(verbatim: address)
-                            .font(.footnote)
+                            .font(.tapso(.footnote))
                             .foregroundStyle(TapsoColor.textSecondary)
                     }
                 }
                 .multilineTextAlignment(.leading)
                 Spacer(minLength: 0)
                 Image(systemName: isOpen ? "chevron.up" : "chevron.down")
-                    .font(.footnote.weight(.bold))
+                    .font(.tapso(.footnote, .bold))
                     .foregroundStyle(TapsoColor.textTertiary)
             }
             .padding(.vertical, TapsoSpace.sm)
@@ -374,19 +374,19 @@ struct DemoPlaceLookupSection: View {
             : near
         VStack(alignment: .leading, spacing: 0) {
             Text(String(format: RideText.string("search.place.nearby"), place.name))
-                .font(.footnote.weight(.semibold))
+                .font(.tapso(.footnote, .semibold))
                 .foregroundStyle(TapsoColor.textSecondary)
                 .padding(.top, TapsoSpace.xxs)
             if stops.isEmpty {
                 Text("search.place.noStops")
-                    .font(.footnote)
+                    .font(.tapso(.footnote))
                     .foregroundStyle(TapsoColor.textSecondary)
                     .fixedSize(horizontal: false, vertical: true)
                     .padding(.vertical, TapsoSpace.xs)
             } else {
                 if near.isEmpty {
                     Text("search.place.far")
-                        .font(.caption)
+                        .font(.tapso(.caption))
                         .foregroundStyle(TapsoColor.textTertiary)
                         .fixedSize(horizontal: false, vertical: true)
                         .padding(.top, TapsoSpace.xxs)

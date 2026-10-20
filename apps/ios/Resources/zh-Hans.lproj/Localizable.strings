@@ -58,14 +58,14 @@
 "check.proposed.headline" = "这辆可能是您的车";
 "check.proposed.detail" = "上车时请核对车牌";
 "check.similarBuses.headline" = "附近有相似的公交车";
-"check.similarBuses.detail" = "请选择您乘坐的公交车";
+"check.similarBuses.detail" = "请选择您要乘坐的公交车";
 "check.choose.headline" = "请选择您要乘坐的公交车";
 "check.choose.detail" = "点按车牌一致的那辆";
 "check.notFoundYet.headline" = "暂时还没看到公交车";
 "check.notFoundYet.detail" = "%@路公交车一出现就会显示";
 "check.confirmed.headline" = "已确认公交车";
 "check.confirmed.detail" = "TAPSO 现在跟踪这辆公交车";
-"check.confirm" = "是的，我在这辆车上";
+"check.confirm" = "确认这辆车";
 "check.reject" = "是另一辆车";
 "check.noneOfThese" = "都不是";
 "check.choose.none" = "不在列表中";
@@ -123,7 +123,7 @@
 "ride.stopsAhead" = "前方车站";
 "ride.gotOff" = "我已下车";
 "ride.passed.destination" = "下车站：%@";
-"ride.passed.end" = "结束行程";
+"ride.passed.end" = "结束引导";
 "rescue.exitAt" = "请在下一站%@下车";
 "rescue.suggested" = "推荐";
 "rescue.walkBack.title" = "步行返回";
@@ -388,7 +388,7 @@
 "mapImport.shot.seen" = "截图中的下车站：%@";
 
 /* Hybrid ride tracking */
-"ride.refresh" = "重新查询位置";
+"ride.refresh" = "重新查询";
 "ride.refreshing" = "正在查询位置…";
 "ride.predicted.eyebrow" = "估计位置";
 "ride.predicted.headline" = "估计位置";
@@ -553,3 +553,27 @@
 "a11y.compact.waiting.one" = "公交车距上车站%ld站。";
 "a11y.minimal.waiting" = "%1$@路，距您的上车站%2$ld站";
 "a11y.minimal.waiting.one" = "%1$@路，距您的上车站%2$ld站";
+
+/* Beta feedback (FeedbackView): sent only after the server confirms a receipt. */
+"feedback.entry" = "发送反馈（测试版）";
+"feedback.title" = "测试版反馈";
+"feedback.category.header" = "遇到了什么问题？";
+"feedback.category.busNotFound" = "找不到我的公交车";
+"feedback.category.wrongBusSelected" = "选中了另一辆车";
+"feedback.category.wrongRemainingStops" = "剩余站数不对";
+"feedback.category.missedAlert" = "没有收到下车提醒";
+"feedback.category.appFrozeOrQuit" = "应用卡住或退出了";
+"feedback.category.translationOrWording" = "翻译或提示有问题";
+"feedback.category.designOrUsability" = "设计或用法不方便";
+"feedback.category.other" = "其他意见";
+"feedback.message.header" = "详细说明（可选）";
+"feedback.message.placeholder" = "何时、哪路车、哪里不对";
+"feedback.diagnostics.toggle" = "附上行程记录";
+"feedback.diagnostics.footer" = "会附上应用版本和本次行程中应用收到的公交信息记录。不会发送位置记录、联系人或照片。不开启则只发送您填写的内容。";
+"feedback.send" = "发送";
+"feedback.failed.title" = "未能发送";
+"feedback.failed.detail" = "请检查网络后重试。也可以在下方通过其他应用分享内容。";
+"feedback.failed.share" = "分享内容";
+"feedback.sent.title" = "已发送";
+"feedback.sent.receipt" = "受理编号 %@";
+"feedback.sent.detail" = "联系我们时提供受理编号，便于查找。";

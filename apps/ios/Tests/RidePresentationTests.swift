@@ -28,7 +28,7 @@ final class RidePresentationTests: XCTestCase {
 
     func testCopyNeverShowsEngineeringLanguage() throws {
         let banned = ["READY_", "CA-", "BA-", "matcher", "directed-route", "confidence", "%)", "확신", "매칭"]
-        for language in ["ko", "en"] {
+        for language in ["ko", "en", "zh-Hans", "ja"] {
             let path = try XCTUnwrap(Bundle.main.path(forResource: language, ofType: "lproj"))
             let bundle = try XCTUnwrap(Bundle(path: path))
             for key in RideGuidancePolicy.allCopyKeys + VehicleCheck.allCopyKeys {

@@ -58,14 +58,14 @@
 "check.proposed.headline" = "このバスのようです";
 "check.proposed.detail" = "乗るときにナンバーを確認してください";
 "check.similarBuses.headline" = "近くに似たバスがあります";
-"check.similarBuses.detail" = "乗ったバスを選んでください";
+"check.similarBuses.detail" = "乗るバスを選んでください";
 "check.choose.headline" = "乗るバスを選んでください";
 "check.choose.detail" = "ナンバーが一致するバスをタップしてください";
 "check.notFoundYet.headline" = "まだバスが見つかりません";
 "check.notFoundYet.detail" = "%@番のバスが現れたらすぐ表示します";
 "check.confirmed.headline" = "バスを確認しました";
 "check.confirmed.detail" = "TAPSOがこのバスを追跡します";
-"check.confirm" = "はい、このバスに乗っています";
+"check.confirm" = "このバスを確認";
 "check.reject" = "別のバスです";
 "check.noneOfThese" = "どちらでもありません";
 "check.choose.none" = "この中にありません";
@@ -123,7 +123,7 @@
 "ride.stopsAhead" = "この先の停留所";
 "ride.gotOff" = "降りました";
 "ride.passed.destination" = "降りる停留所：%@";
-"ride.passed.end" = "乗車を終了";
+"ride.passed.end" = "案内を終了";
 "rescue.exitAt" = "次の停留所、%@で降りてください";
 "rescue.suggested" = "おすすめ";
 "rescue.walkBack.title" = "歩いて戻る";
@@ -388,7 +388,7 @@
 "mapImport.shot.seen" = "スクリーンショットの降りる停留所：%@";
 
 /* Hybrid ride tracking */
-"ride.refresh" = "位置を再確認";
+"ride.refresh" = "もう一度確認";
 "ride.refreshing" = "位置を確認中…";
 "ride.predicted.eyebrow" = "推定位置";
 "ride.predicted.headline" = "推定位置";
@@ -553,3 +553,27 @@
 "a11y.compact.waiting.one" = "バスは乗る停留所の%ld停留所前。";
 "a11y.minimal.waiting" = "%1$@番、乗る停留所の%2$ld停留所前";
 "a11y.minimal.waiting.one" = "%1$@番、乗る停留所の%2$ld停留所前";
+
+/* Beta feedback (FeedbackView): sent only after the server confirms a receipt. */
+"feedback.entry" = "フィードバックを送る（ベータ）";
+"feedback.title" = "ベータ版フィードバック";
+"feedback.category.header" = "どんな問題でしたか？";
+"feedback.category.busNotFound" = "バスが見つかりません";
+"feedback.category.wrongBusSelected" = "別のバスが選ばれました";
+"feedback.category.wrongRemainingStops" = "残りの停留所数が違います";
+"feedback.category.missedAlert" = "降車の通知が来ませんでした";
+"feedback.category.appFrozeOrQuit" = "アプリが止まった・終了しました";
+"feedback.category.translationOrWording" = "翻訳や案内がおかしいです";
+"feedback.category.designOrUsability" = "デザインや使い方がわかりにくいです";
+"feedback.category.other" = "その他";
+"feedback.message.header" = "詳しく教えてください（任意）";
+"feedback.message.placeholder" = "いつ、どのバスで、何が違ったか";
+"feedback.diagnostics.toggle" = "乗車記録を添付する";
+"feedback.diagnostics.footer" = "アプリのバージョンと、この乗車でアプリが受け取ったバス情報の記録を添付します。位置履歴、連絡先、写真は送りません。オフのままなら入力した内容だけを送ります。";
+"feedback.send" = "送信";
+"feedback.failed.title" = "送信できませんでした";
+"feedback.failed.detail" = "接続を確認してもう一度送ってください。下から他のアプリで共有することもできます。";
+"feedback.failed.share" = "内容を共有";
+"feedback.sent.title" = "送信しました";
+"feedback.sent.receipt" = "受付番号 %@";
+"feedback.sent.detail" = "お問い合わせの際は受付番号をお知らせください。";

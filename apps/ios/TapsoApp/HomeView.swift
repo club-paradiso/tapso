@@ -22,9 +22,11 @@ struct HomeView: View {
                 onSample: { model.startDemo() },
                 onAutoStart: { model.openAutoStartGuide() },
                 onDemoSettings: { model.isDemoPanelPresented = true },
+                onFeedback: TapsoBuild.showsFieldTools ? { model.isFeedbackPresented = true } : nil,
                 pendingPlaceName: model.sharedPlace.flatMap { $0.name ?? $0.address }
             )
         }
+        .sheet(isPresented: $model.isFeedbackPresented) { FeedbackView(model: model) }
         .scrollBounceBehavior(.basedOnSize)
         .background(TapsoColor.backgroundPrimary)
         .toolbar(.hidden, for: .navigationBar)
@@ -42,6 +44,8 @@ struct HomeContent: View {
     let onSample: () -> Void
     var onAutoStart: () -> Void = {}
     var onDemoSettings: () -> Void = {}
+    /// Debug and Beta builds: the tester's way to report a problem (`FeedbackView`).
+    var onFeedback: (() -> Void)? = nil
     /// A place shared from a map app that is waiting for a ride.
     var pendingPlaceName: String? = nil
     /// The sample ride and its "체험판" chip exist only in a demo build (`TapsoBuild`).
@@ -90,10 +94,21 @@ struct HomeContent: View {
         case .sample:
             firstRideCard
         case .privacy:
-            Label("home.privacy", systemImage: "location.slash")
-                .font(.footnote)
-                .foregroundStyle(TapsoColor.textSecondary)
-                .fixedSize(horizontal: false, vertical: true)
+            VStack(alignment: .leading, spacing: TapsoSpace.sm) {
+                Label("home.privacy", systemImage: "location.slash")
+                    .font(.tapso(.footnote))
+                    .foregroundStyle(TapsoColor.textSecondary)
+                    .fixedSize(horizontal: false, vertical: true)
+                if let onFeedback {
+                    Button(action: onFeedback) {
+                        Label("feedback.entry", systemImage: "exclamationmark.bubble")
+                            .font(.tapso(.subheadline, .semibold))
+                            .frame(minHeight: TapsoSize.minimumTouch)
+                    }
+                    .foregroundStyle(TapsoColor.mintDeep)
+                    .accessibilityIdentifier("home-feedback")
+                }
+            }
         }
     }
 
@@ -153,7 +168,7 @@ struct HomeContent: View {
                         HStack(spacing: 6) {
                             CitrusDot(size: 8)
                             Text(verbatim: name)
-                                .font(.subheadline.weight(.semibold))
+                                .font(.tapso(.subheadline, .semibold))
                                 .foregroundStyle(TapsoColor.textPrimary)
                         }
                         .padding(.horizontal, TapsoSpace.sm)
@@ -175,11 +190,11 @@ struct HomeContent: View {
                 HStack(spacing: TapsoSpace.xs) {
                     RouteBadge(number: DemoFixtures.route.number)
                     Text("home.sample.title")
-                        .font(.headline)
+                        .font(.tapso(.headline))
                         .foregroundStyle(TapsoColor.textPrimary)
                 }
                 Text("home.sample.body")
-                    .font(.subheadline)
+                    .font(.tapso(.subheadline))
                     .foregroundStyle(TapsoColor.textSecondary)
                     .fixedSize(horizontal: false, vertical: true)
                 Button("home.sample.action", action: onSample)
@@ -206,11 +221,11 @@ struct HomeIntroCard: View {
                 DolBuddy(expression: .awake, size: 64, animated: true)
                 VStack(alignment: .leading, spacing: TapsoSpace.xxs) {
                     Text("home.intro.title")
-                        .font(.title2.weight(.bold))
+                        .font(.tapso(.title2, .bold))
                         .foregroundStyle(TapsoColor.textPrimary)
                         .accessibilityAddTraits(.isHeader)
                     Text("home.intro.body")
-                        .font(.subheadline)
+                        .font(.tapso(.subheadline))
                         .foregroundStyle(TapsoColor.textSecondary)
                 }
                 .fixedSize(horizontal: false, vertical: true)
@@ -234,13 +249,13 @@ struct HomeIntroCard: View {
         ForEach(Array(Self.stepKeys.enumerated()), id: \.offset) { index, key in
             if separated, index > 0 {
                 Image(systemName: "chevron.forward")
-                    .font(.caption2.weight(.bold))
+                    .font(.tapso(.caption2, .bold))
                     .foregroundStyle(TapsoColor.textTertiary)
                     .accessibilityHidden(true)
             }
             HStack(spacing: 6) {
                 Text(verbatim: String(index + 1))
-                    .font(.system(.caption, design: .rounded, weight: .black))
+                    .font(.tapso(.caption, .black))
                     .foregroundStyle(TapsoColor.textOnAccent)
                     .frame(width: 20, height: 20)
                     .background(TapsoColor.journeyActive, in: Circle())
@@ -248,13 +263,13 @@ struct HomeIntroCard: View {
                 // stacked, they wrap instead of running off a narrow or large-type screen.
                 if separated {
                     Text(key)
-                        .font(.footnote.weight(.semibold))
+                        .font(.tapso(.footnote, .semibold))
                         .foregroundStyle(TapsoColor.textPrimary)
                         .lineLimit(1)
                         .fixedSize()
                 } else {
                     Text(key)
-                        .font(.footnote.weight(.semibold))
+                        .font(.tapso(.footnote, .semibold))
                         .foregroundStyle(TapsoColor.textPrimary)
                         .fixedSize(horizontal: false, vertical: true)
                 }
@@ -271,10 +286,10 @@ struct SearchFieldButton: View {
         Button(action: action) {
             HStack(spacing: TapsoSpace.sm) {
                 Image(systemName: "magnifyingglass")
-                    .font(.headline)
+                    .font(.tapso(.headline))
                     .foregroundStyle(TapsoColor.mintDeep)
                 Text("home.search.placeholder")
-                    .font(.body)
+                    .font(.tapso(.body))
                     .foregroundStyle(TapsoColor.textSecondary)
                 Spacer(minLength: 0)
             }
@@ -303,21 +318,21 @@ struct MapHandoffIntakeCard: View {
         Button(action: action) {
             HStack(spacing: TapsoSpace.sm) {
                 Image(systemName: "map")
-                    .font(.title3)
+                    .font(.tapso(.title3))
                     .foregroundStyle(TapsoColor.mintDeep)
                     .frame(width: 40, height: 40)
                     .background(TapsoColor.journeyActive.opacity(0.14), in: RoundedRectangle(cornerRadius: TapsoRadius.sm, style: .continuous))
                 VStack(alignment: .leading, spacing: 2) {
                     Text("home.mapImport.title")
-                        .font(.body.weight(.semibold))
+                        .font(.tapso(.body, .semibold))
                         .foregroundStyle(TapsoColor.textPrimary)
                     if let pendingPlaceName {
                         Text(String(format: RideText.string("home.mapImport.pending"), pendingPlaceName))
-                            .font(.footnote.weight(.semibold))
+                            .font(.tapso(.footnote, .semibold))
                             .foregroundStyle(TapsoColor.mintDeep)
                     } else {
                         Text("home.mapImport.body")
-                            .font(.footnote)
+                            .font(.tapso(.footnote))
                             .foregroundStyle(TapsoColor.textSecondary)
                     }
                 }
@@ -325,7 +340,7 @@ struct MapHandoffIntakeCard: View {
                 .fixedSize(horizontal: false, vertical: true)
                 Spacer(minLength: 0)
                 Image(systemName: "chevron.forward")
-                    .font(.footnote.weight(.bold))
+                    .font(.tapso(.footnote, .bold))
                     .foregroundStyle(TapsoColor.textTertiary)
             }
             .padding(TapsoSpace.md)

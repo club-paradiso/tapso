@@ -103,6 +103,7 @@
 		E85CD98AA83E9165FA9655A4 /* Pretendard-SemiBold.otf in Resources */ = {isa = PBXBuildFile; fileRef = 4153BD3462EE339A124EB3A9 /* Pretendard-SemiBold.otf */; };
 		7A590435D0D80B9CF98D884B /* Pretendard-ExtraBold.otf in Resources */ = {isa = PBXBuildFile; fileRef = AD76A5A1E33DC81E78E2A5FD /* Pretendard-ExtraBold.otf */; };
 		26472BF9C3558F836D60FD2C /* OFL.txt in Resources */ = {isa = PBXBuildFile; fileRef = 884A285C8E7C51970C52AB55 /* OFL.txt */; };
+		5B31E77CB28150EF18D52E80 /* BetaFeedback.swift in Sources */ = {isa = PBXBuildFile; fileRef = 62279B0E07ECDFCEBE189D89 /* BetaFeedback.swift */; };
 /* End PBXBuildFile section */
 
 /* Begin PBXContainerItemProxy section */
@@ -230,6 +231,7 @@
 		B949D6B9C4302E3D0C68412F /* zh-Hans */ = {isa = PBXFileReference; lastKnownFileType = text.plist.strings; name = "zh-Hans"; path = zh-Hans.lproj/Localizable.strings; sourceTree = "<group>"; };
 		100FC5111767E5D298C468E5 /* ja */ = {isa = PBXFileReference; lastKnownFileType = text.plist.strings; name = ja; path = ja.lproj/InfoPlist.strings; sourceTree = "<group>"; };
 		9C07CCC94036A0238FBF00B0 /* zh-Hans */ = {isa = PBXFileReference; lastKnownFileType = text.plist.strings; name = "zh-Hans"; path = zh-Hans.lproj/InfoPlist.strings; sourceTree = "<group>"; };
+		62279B0E07ECDFCEBE189D89 /* BetaFeedback.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = BetaFeedback.swift; sourceTree = "<group>"; };
 /* End PBXFileReference section */
 
 /* Begin PBXFrameworksBuildPhase section */
@@ -359,6 +361,7 @@
 			children = (
 				0536FBEED2B9B31942781186 /* AppComponents.swift */,
 				ABFD8AA3417276C50E02F62B /* AutoStartGuideView.swift */,
+				62279B0E07ECDFCEBE189D89 /* BetaFeedback.swift */,
 				33BDF9583F4139C5640E9DBA /* BoardingFirstViews.swift */,
 				B22F19D0E9218D35C723520C /* CatalogSearchViews.swift */,
 				40E4AA7B89142869EB276D08 /* DemoControlsView.swift */,
@@ -632,6 +635,7 @@
 			files = (
 				8F65C63671DC8F13C4B219C8 /* AppComponents.swift in Sources */,
 				4529FC35F853D45B55597C98 /* AutoStartGuideView.swift in Sources */,
+				5B31E77CB28150EF18D52E80 /* BetaFeedback.swift in Sources */,
 				687C453830C42053B292CF3C /* BoardingFirstViews.swift in Sources */,
 				27D3B0A355DC8BCC07907E1D /* BrandWordmark.swift in Sources */,
 				21314EBAC48BF9850B409EF3 /* CatalogSearchViews.swift in Sources */,

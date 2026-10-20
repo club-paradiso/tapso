@@ -15,7 +15,7 @@ struct LiveRideEntryCard: View {
         Button(action: action) {
             HStack(spacing: TapsoSpace.sm) {
                 Image(systemName: "bus.fill")
-                    .font(.title3)
+                    .font(.tapso(.title3))
                     .foregroundStyle(TapsoColor.mintDeep)
                     .frame(width: 40, height: 40)
                     .background(TapsoColor.journeyActive.opacity(0.14), in: RoundedRectangle(cornerRadius: TapsoRadius.sm, style: .continuous))
@@ -33,14 +33,14 @@ struct LiveRideEntryCard: View {
                         }
                     }
                     Text("live.entry.body")
-                        .font(.footnote)
+                        .font(.tapso(.footnote))
                         .foregroundStyle(TapsoColor.textSecondary)
                 }
                 .multilineTextAlignment(.leading)
                 .fixedSize(horizontal: false, vertical: true)
                 Spacer(minLength: 0)
                 Image(systemName: "chevron.forward")
-                    .font(.footnote.weight(.bold))
+                    .font(.tapso(.footnote, .bold))
                     .foregroundStyle(TapsoColor.textTertiary)
             }
             .padding(TapsoSpace.md)
@@ -53,7 +53,7 @@ struct LiveRideEntryCard: View {
 
     private var entryTitle: some View {
         Text("live.entry.title")
-            .font(.body.weight(.semibold))
+            .font(.tapso(.body, .semibold))
             .foregroundStyle(TapsoColor.textPrimary)
     }
 }
@@ -62,7 +62,7 @@ struct LiveRideEntryCard: View {
 struct LiveBadge: View {
     var body: some View {
         Text("live.badge")
-            .font(.caption2.weight(.bold))
+            .font(.tapso(.caption2, .bold))
             .foregroundStyle(TapsoColor.textOnAccent)
             .padding(.horizontal, 6)
             .padding(.vertical, 2)
@@ -112,7 +112,7 @@ struct LiveRouteSearchView: View {
                 QuestionTitle("live.route.question")
                 HStack(spacing: TapsoSpace.sm) {
                     TextField("live.route.placeholder", text: $number)
-                        .font(.title2.weight(.bold))
+                        .font(.tapso(.title2, .bold))
                         .keyboardType(.numbersAndPunctuation)
                         .textInputAutocapitalization(.never)
                         .autocorrectionDisabled()
@@ -125,7 +125,7 @@ struct LiveRouteSearchView: View {
                         .accessibilityIdentifier("live-route-number")
                     Button(action: search) {
                         Image(systemName: "magnifyingglass")
-                            .font(.headline)
+                            .font(.tapso(.headline))
                             .foregroundStyle(TapsoColor.textOnAccent)
                             .frame(width: TapsoSize.primaryButtonHeight, height: TapsoSize.primaryButtonHeight)
                             .background(TapsoColor.journeyActive, in: RoundedRectangle(cornerRadius: TapsoRadius.md, style: .continuous))
@@ -145,7 +145,7 @@ struct LiveRouteSearchView: View {
                 results
 
                 Label("live.route.note", systemImage: "info.circle")
-                    .font(.footnote)
+                    .font(.tapso(.footnote))
                     .foregroundStyle(TapsoColor.textSecondary)
                     .fixedSize(horizontal: false, vertical: true)
             }
@@ -193,7 +193,7 @@ struct LiveRouteSearchView: View {
             } else {
                 VStack(alignment: .leading, spacing: TapsoSpace.sm) {
                     Text("live.route.variants")
-                        .font(.subheadline.weight(.semibold))
+                        .font(.tapso(.subheadline, .semibold))
                         .foregroundStyle(TapsoColor.textSecondary)
                     ForEach(routes) { route in
                         Button {
@@ -220,18 +220,18 @@ struct LiveRouteRow: View {
             RouteBadge(number: route.routeNumber)
             VStack(alignment: .leading, spacing: 2) {
                 Text(String(format: RideText.string("route.headsign"), route.endStopName ?? "—"))
-                    .font(.body.weight(.semibold))
+                    .font(.tapso(.body, .semibold))
                     .foregroundStyle(TapsoColor.textPrimary)
                 if let start = route.startStopName {
                     Text(String(format: RideText.string("live.route.from"), start))
-                        .font(.footnote)
+                        .font(.tapso(.footnote))
                         .foregroundStyle(TapsoColor.textSecondary)
                 }
             }
             .multilineTextAlignment(.leading)
             Spacer(minLength: 0)
             Image(systemName: "chevron.forward")
-                .font(.footnote.weight(.bold))
+                .font(.tapso(.footnote, .bold))
                 .foregroundStyle(TapsoColor.textTertiary)
         }
         .padding(TapsoSpace.md)
@@ -328,7 +328,7 @@ struct LiveStopPickerContent: View {
             HStack(spacing: TapsoSpace.xs) {
                 RouteBadge(number: stops.route.number)
                 Text(String(format: RideText.string("route.headsign"), stops.route.destinationName))
-                    .font(.subheadline)
+                    .font(.tapso(.subheadline))
                     .foregroundStyle(TapsoColor.textSecondary)
                 LiveBadge()
             }
@@ -348,7 +348,7 @@ struct LiveStopPickerContent: View {
 
             if stops.topology != "linear" {
                 Label("live.stops.loopNote", systemImage: "arrow.triangle.2.circlepath")
-                    .font(.footnote)
+                    .font(.tapso(.footnote))
                     .foregroundStyle(TapsoColor.textSecondary)
                     .fixedSize(horizontal: false, vertical: true)
             }
@@ -361,7 +361,7 @@ struct LiveStopPickerContent: View {
                         self.boarding = nil
                         query = ""
                     }
-                    .font(.subheadline.weight(.semibold))
+                    .font(.tapso(.subheadline, .semibold))
                 }
                 QuestionTitle("live.stops.destination")
                 if let suggestedDestination, suggestedDestination.sequence > boarding.sequence {
@@ -421,11 +421,11 @@ struct LiveStopPickerContent: View {
         if noneNearby || !match.suggestions.isEmpty {
             VStack(alignment: .leading, spacing: 0) {
                 Text(String(format: RideText.string("live.stops.nearPlace"), place.name ?? place.address ?? ""))
-                    .font(.subheadline.weight(.semibold))
+                    .font(.tapso(.subheadline, .semibold))
                     .foregroundStyle(TapsoColor.textSecondary)
                 if noneNearby {
                     Text(String(format: RideText.string("live.stops.nearPlace.none"), Int(HandoffStopSuggester.maxStraightLineMeters)))
-                        .font(.footnote)
+                        .font(.tapso(.footnote))
                         .foregroundStyle(TapsoColor.textSecondary)
                         .fixedSize(horizontal: false, vertical: true)
                         .padding(.top, TapsoSpace.xs)
@@ -452,7 +452,7 @@ struct LiveStopPickerContent: View {
     private func screenshotSuggestion(_ routeStop: RouteStop) -> some View {
         VStack(alignment: .leading, spacing: 0) {
             Text("mapImport.shot.suggested")
-                .font(.subheadline.weight(.semibold))
+                .font(.tapso(.subheadline, .semibold))
                 .foregroundStyle(TapsoColor.textSecondary)
             StopRow(
                 name: routeStop.stop.name,
@@ -505,7 +505,7 @@ struct HandoffPlaceLine: View {
     var body: some View {
         Label {
             Text(String(format: RideText.string("live.handoff.place"), place.name ?? place.address ?? ""))
-                .font(.footnote.weight(.semibold))
+                .font(.tapso(.footnote, .semibold))
                 .foregroundStyle(TapsoColor.textPrimary)
                 .fixedSize(horizontal: false, vertical: true)
         } icon: {
@@ -527,7 +527,7 @@ struct ScreenshotDestinationLine: View {
     var body: some View {
         Label {
             Text(String(format: RideText.string("mapImport.shot.seen"), name))
-                .font(.footnote.weight(.semibold))
+                .font(.tapso(.footnote, .semibold))
                 .foregroundStyle(TapsoColor.textPrimary)
                 .fixedSize(horizontal: false, vertical: true)
         } icon: {

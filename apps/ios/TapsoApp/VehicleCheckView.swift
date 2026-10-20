@@ -72,13 +72,13 @@ struct VehicleCheckContent: View {
                         animated: true
                     )
                     Text(LocalizedStringKey(check.headlineKey))
-                        .font(.title2.weight(.bold))
+                        .font(.tapso(.title2, .bold))
                         .foregroundStyle(TapsoColor.textPrimary)
                         .fixedSize(horizontal: false, vertical: true)
                         .accessibilityAddTraits(.isHeader)
                 }
                 Text(detail)
-                    .font(.subheadline)
+                    .font(.tapso(.subheadline))
                     .foregroundStyle(TapsoColor.textSecondary)
                     .fixedSize(horizontal: false, vertical: true)
             }
@@ -124,7 +124,7 @@ struct VehicleCheckContent: View {
             }
 
             Label(LocalizedStringKey(isLive ? "check.why.live" : "check.why"), systemImage: "info.circle")
-                .font(.footnote)
+                .font(.tapso(.footnote))
                 .foregroundStyle(TapsoColor.textSecondary)
                 .fixedSize(horizontal: false, vertical: true)
         }
@@ -157,14 +157,14 @@ struct AccessibilityBoardingCard: View {
         TapsoCard {
             VStack(alignment: .leading, spacing: TapsoSpace.xs) {
                 Label("check.accessibility.title", systemImage: "figure.roll")
-                    .font(.subheadline.weight(.semibold))
+                    .font(.tapso(.subheadline, .semibold))
                     .foregroundStyle(TapsoColor.textPrimary)
                 Text("check.accessibility.body")
-                    .font(.footnote)
+                    .font(.tapso(.footnote))
                     .foregroundStyle(TapsoColor.textSecondary)
                     .fixedSize(horizontal: false, vertical: true)
                 Text(verbatim: String(format: RideText.string("check.accessibility.context"), handoff.routeNumber, handoff.stopName))
-                    .font(.footnote.weight(.semibold))
+                    .font(.tapso(.footnote, .semibold))
                     .foregroundStyle(TapsoColor.textSecondary)
                 Button(action: onOpen) {
                     Label("check.accessibility.action", systemImage: "arrow.up.right.square")
@@ -174,7 +174,7 @@ struct AccessibilityBoardingCard: View {
                 .accessibilityIdentifier("accessibility-boarding-open")
                 if openFailed {
                     Text("check.accessibility.failed")
-                        .font(.footnote)
+                        .font(.tapso(.footnote))
                         .foregroundStyle(TapsoColor.textSecondary)
                 }
             }
@@ -212,20 +212,20 @@ struct ConfirmationCard: View {
                 HStack(spacing: TapsoSpace.xs) {
                     RouteBadge(number: routeNumber, role: confirmed ? .journeyActive : .journeyChecking)
                     Text(position)
-                        .font(.subheadline.weight(.semibold))
+                        .font(.tapso(.subheadline, .semibold))
                         .foregroundStyle(TapsoColor.textSecondary)
                 }
                 Text(verbatim: proposal.maskedPlate)
-                    .font(.system(.largeTitle, design: .rounded, weight: .heavy))
+                    .font(.tapso(.largeTitle, .heavy))
                     .monospacedDigit()
                     .foregroundStyle(TapsoColor.textPrimary)
                 Text("check.plateHint")
-                    .font(.footnote)
+                    .font(.tapso(.footnote))
                     .foregroundStyle(TapsoColor.textTertiary)
             }
             Spacer(minLength: 0)
             Image(systemName: confirmed ? "checkmark.circle.fill" : (selectable ? "hand.tap" : "bus.doubledecker"))
-                .font(.title)
+                .font(.tapso(.title))
                 .foregroundStyle(confirmed ? TapsoColor.vehicleConfirmed : TapsoColor.vehicleNeedsConfirmation)
         }
         .padding(TapsoSpace.lg)
@@ -264,11 +264,11 @@ private struct SearchingIndicator: View {
     var body: some View {
         HStack(spacing: TapsoSpace.sm) {
             Image(systemName: "arrow.triangle.2.circlepath")
-                .font(.headline)
+                .font(.tapso(.headline))
                 .foregroundStyle(TapsoColor.journeyChecking)
                 .symbolEffect(.pulse, options: .repeating, isActive: !reduceMotion)
             Text("check.searching.live")
-                .font(.subheadline.weight(.semibold))
+                .font(.tapso(.subheadline, .semibold))
                 .foregroundStyle(TapsoColor.journeyChecking)
         }
         .padding(TapsoSpace.md)

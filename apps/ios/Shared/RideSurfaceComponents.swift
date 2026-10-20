@@ -587,10 +587,10 @@ struct TrustBadge: View {
     var body: some View {
         HStack(spacing: 5) {
             Image(systemName: symbol)
-                .font(.caption2.weight(.bold))
+                .font(.tapso(.caption2, .bold))
                 .foregroundStyle(color)
             Text(label)
-                .font(.caption.weight(.semibold))
+                .font(.tapso(.caption, .semibold))
                 .foregroundStyle(onDark ? Color.white.opacity(0.82) : TapsoColor.textSecondary)
             if case let .vehicle(_, plate?) = kind {
                 Text(verbatim: plate)

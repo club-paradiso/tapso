@@ -51,7 +51,7 @@ struct RideView: View {
                 // A hybrid ride without Precise Location continues on official progress alone; say so plainly.
                 if model.isLiveRide, model.hybridTrackingEnabled, model.ridePrecision == .reducedAccuracy {
                     Label("ride.location.approximate", systemImage: "location.slash")
-                        .font(.footnote)
+                        .font(.tapso(.footnote))
                         .foregroundStyle(TapsoColor.textSecondary)
                         .frame(maxWidth: .infinity, alignment: .leading)
                         .padding(.horizontal, TapsoSpace.gutter)
@@ -67,7 +67,7 @@ struct RideView: View {
                     HStack(spacing: TapsoSpace.xs) {
                         RouteBadge(number: model.routeNumber, role: model.guidance?.colorRole ?? .journeyActive, compact: true)
                         Text(verbatim: model.destinationName)
-                            .font(.subheadline.weight(.semibold))
+                            .font(.tapso(.subheadline, .semibold))
                             .lineLimit(1)
                     }
                     .accessibilityElement(children: .combine)
@@ -81,6 +81,7 @@ struct RideView: View {
                             .disabled(model.isRecheckingPosition)
                         }
                         #if DEBUG || TAPSO_FIELD_TOOLS
+                        Button("feedback.entry", systemImage: "exclamationmark.bubble") { model.isFeedbackPresented = true }
                         if model.isLiveRide {
                             Button("ride.menu.trace", systemImage: "waveform.path") { showingDiagnostics = true }
                             // Field validation: tap the moment the bus passes a stop (RideTrace `ground_truth_stop`).
@@ -114,13 +115,14 @@ struct RideView: View {
                         .background(TapsoColor.backgroundSecondary, in: Capsule())
                 }
             }
+            .sheet(isPresented: $model.isFeedbackPresented) { FeedbackView(model: model) }
             .sheet(isPresented: $showingDiagnostics) {
                 #if DEBUG || TAPSO_FIELD_TOOLS
                 NavigationStack {
                     ScrollView {
                         VStack(alignment: .leading, spacing: TapsoSpace.md) {
                             Text(verbatim: TapsoBuild.identity().line)
-                                .font(.footnote.monospacedDigit())
+                                .font(.tapso(.footnote).monospacedDigit())
                             Text(verbatim: model.rideTrace.text)
                                 .font(.system(.caption2, design: .monospaced))
                                 .textSelection(.enabled)
@@ -304,7 +306,7 @@ struct RideContent: View {
                 } icon: {
                     Image(systemName: "bus")
                 }
-                .font(.footnote.weight(.semibold))
+                .font(.tapso(.footnote, .semibold))
                 .foregroundStyle(TapsoColor.textSecondary)
                 .padding(.leading, TapsoSpace.md)
                 .accessibilityElement(children: .ignore)
@@ -349,7 +351,7 @@ struct RideContent: View {
             keepAliveCard
         } else if guidance.moment == .riding {
             Label(closeAppKey, systemImage: "iphone.gen3.radiowaves.left.and.right")
-                .font(.footnote)
+                .font(.tapso(.footnote))
                 .foregroundStyle(TapsoColor.textSecondary)
                 .fixedSize(horizontal: false, vertical: true)
         }
@@ -362,18 +364,18 @@ struct RideContent: View {
             VStack(alignment: .leading, spacing: TapsoSpace.xs) {
                 Toggle(isOn: Binding(get: { on }, set: { onKeepAlive($0) })) {
                     Label("ride.keepAlive.title", systemImage: "lock.iphone")
-                        .font(.subheadline.weight(.semibold))
+                        .font(.tapso(.subheadline, .semibold))
                         .foregroundStyle(TapsoColor.textPrimary)
                 }
                 .tint(TapsoColor.journeyActive)
                 .accessibilityIdentifier("ride-keep-alive")
                 Text(on ? "ride.keepAlive.on" : "ride.closeApp.live")
-                    .font(.footnote)
+                    .font(.tapso(.footnote))
                     .foregroundStyle(TapsoColor.textSecondary)
                     .fixedSize(horizontal: false, vertical: true)
                 if snapshot.keepAliveDenied {
                     Text("ride.keepAlive.denied")
-                        .font(.footnote.weight(.semibold))
+                        .font(.tapso(.footnote, .semibold))
                         .foregroundStyle(TapsoColor.journeyNext)
                         .fixedSize(horizontal: false, vertical: true)
                 }
@@ -424,7 +426,7 @@ struct RideHeroCard: View {
         VStack(alignment: .leading, spacing: TapsoSpace.sm) {
             if guidance.copy.eyebrow == "ride.predicted.eyebrow" {
                 Text("ride.predicted.eyebrow")
-                    .font(.caption)
+                    .font(.tapso(.caption))
                     .foregroundStyle(TapsoColor.textSecondary)
             }
             if guidance.isWaiting {
@@ -436,10 +438,10 @@ struct RideHeroCard: View {
                     } icon: {
                         Image(systemName: "bus")
                     }
-                    .font(.headline)
+                    .font(.tapso(.headline))
                     .foregroundStyle(TapsoColor.mintDeep)
                     Text("ride.waiting.detail")
-                        .font(.footnote)
+                        .font(.tapso(.footnote))
                         .foregroundStyle(TapsoColor.textSecondary)
                         .fixedSize(horizontal: false, vertical: true)
                 }
@@ -448,7 +450,7 @@ struct RideHeroCard: View {
             if guidance.count == .hidden {
                 // Signals disagree: no number to act on until they agree again.
                 Text(String(format: RideText.string("ride.toDestination"), snapshot.destinationName))
-                    .font(.title2.weight(.bold))
+                    .font(.tapso(.title2, .bold))
                     .foregroundStyle(TapsoColor.textPrimary)
                     .fixedSize(horizontal: false, vertical: true)
             } else {
@@ -507,17 +509,17 @@ struct RideHeroCard: View {
     private var countLabels: some View {
         VStack(alignment: .leading, spacing: 0) {
             Text(LocalizedStringKey(countUnitKey))
-                .font(.title3.weight(.bold))
+                .font(.tapso(.title3, .bold))
                 .foregroundStyle(TapsoColor.textSecondary)
             if guidance.isWaiting {
                 // The ride itself, so the two numbers are never confused.
                 Text(String(format: RideText.string(RideText.countKey("ride.waiting.rideLength", snapshot.totalStops)), snapshot.totalStops))
-                    .font(.subheadline.weight(.semibold))
+                    .font(.tapso(.subheadline, .semibold))
                     .foregroundStyle(TapsoColor.textPrimary)
                     .fixedSize(horizontal: false, vertical: true)
             }
             Text(String(format: RideText.string("ride.toDestination"), snapshot.destinationName))
-                .font(.subheadline.weight(.semibold))
+                .font(.tapso(.subheadline, .semibold))
                 .foregroundStyle(TapsoColor.textPrimary)
                 .fixedSize(horizontal: false, vertical: true)
         }
@@ -532,19 +534,19 @@ struct RideHeroCard: View {
     private var prepare: some View {
         VStack(alignment: .leading, spacing: TapsoSpace.sm) {
             Label(LocalizedStringKey(guidance.copy.eyebrow), systemImage: guidance.symbolName)
-                .font(.subheadline.weight(.bold))
+                .font(.tapso(.subheadline, .bold))
             Text(LocalizedStringKey(guidance.copy.headline))
-                .font(.system(.largeTitle, design: .rounded, weight: .heavy))
+                .font(.tapso(.largeTitle, .heavy))
                 .fixedSize(horizontal: false, vertical: true)
             Text(LocalizedStringKey(guidance.copy.detail))
-                .font(.title3.weight(.semibold))
+                .font(.tapso(.title3, .semibold))
             if let next = snapshot.upcomingStops.first {
                 HStack(spacing: TapsoSpace.xs) {
                     Text("ride.nextStopLabel")
-                        .font(.subheadline.weight(.semibold))
+                        .font(.tapso(.subheadline, .semibold))
                         .opacity(0.75)
                     Text(verbatim: next)
-                        .font(.subheadline.weight(.bold))
+                        .font(.tapso(.subheadline, .bold))
                 }
                 .padding(.top, TapsoSpace.xxs)
             }
@@ -567,18 +569,18 @@ struct RideHeroCard: View {
         VStack(alignment: .leading, spacing: TapsoSpace.md) {
             HStack(spacing: TapsoSpace.sm) {
                 Image(systemName: guidance.symbolName)
-                    .font(.title.weight(.bold))
+                    .font(.tapso(.title, .bold))
                     .symbolEffect(.bounce, value: reduceMotion ? nil : guidance.moment)
                 Text(LocalizedStringKey(guidance.copy.headline))
-                    .font(.system(.largeTitle, design: .rounded, weight: .black))
+                    .font(.tapso(.largeTitle, .black))
                     .fixedSize(horizontal: false, vertical: true)
             }
             Text(verbatim: snapshot.destinationName)
-                .font(.title.weight(.bold))
+                .font(.tapso(.title, .bold))
                 .fixedSize(horizontal: false, vertical: true)
             // Full strength: dimmed to 90 % the white line read 4.4:1 on the light coral.
             Text(LocalizedStringKey(guidance.copy.detail))
-                .font(.headline)
+                .font(.tapso(.headline))
                 .fixedSize(horizontal: false, vertical: true)
         }
         .foregroundStyle(onFill)
@@ -600,18 +602,18 @@ struct RideHeroCard: View {
         VStack(alignment: .leading, spacing: TapsoSpace.md) {
             HStack(spacing: TapsoSpace.sm) {
                 Image(systemName: guidance.symbolName)
-                    .font(.title.weight(.bold))
+                    .font(.tapso(.title, .bold))
                 Text(LocalizedStringKey(guidance.copy.headline))
-                    .font(.system(.largeTitle, design: .rounded, weight: .black))
+                    .font(.tapso(.largeTitle, .black))
                     .fixedSize(horizontal: false, vertical: true)
             }
             .accessibilityElement(children: .combine)
             .accessibilityAddTraits(.isHeader)
             Text(verbatim: snapshot.destinationName)
-                .font(.title.weight(.bold))
+                .font(.tapso(.title, .bold))
                 .fixedSize(horizontal: false, vertical: true)
             Text(LocalizedStringKey(guidance.copy.detail))
-                .font(.headline)
+                .font(.tapso(.headline))
                 .opacity(0.85)
             Button(action: onFinish) {
                 Label("ride.gotOff", systemImage: "checkmark")
@@ -631,15 +633,15 @@ struct RideHeroCard: View {
     private var passed: some View {
         VStack(alignment: .leading, spacing: TapsoSpace.md) {
             Label(LocalizedStringKey(guidance.copy.headline), systemImage: guidance.symbolName)
-                .font(.title2.weight(.heavy))
+                .font(.tapso(.title2, .heavy))
                 .foregroundStyle(TapsoColor.journeyNext)
                 .accessibilityAddTraits(.isHeader)
             Text(verbatim: RideText.detail(guidance, exitStopName: snapshot.rescue?.exitStop?.stop.name))
-                .font(.headline)
+                .font(.tapso(.headline))
                 .foregroundStyle(TapsoColor.textPrimary)
                 .fixedSize(horizontal: false, vertical: true)
             Text(String(format: RideText.string("ride.passed.destination"), snapshot.destinationName))
-                .font(.subheadline)
+                .font(.tapso(.subheadline))
                 .foregroundStyle(TapsoColor.textSecondary)
                 .fixedSize(horizontal: false, vertical: true)
             if let rescue = snapshot.rescue {
@@ -687,16 +689,16 @@ struct RescueOptionList: View {
                     VStack(alignment: .leading, spacing: 2) {
                         HStack(spacing: TapsoSpace.xs) {
                             Text(verbatim: row.title)
-                                .font(.subheadline.weight(.semibold))
+                                .font(.tapso(.subheadline, .semibold))
                                 .foregroundStyle(TapsoColor.textPrimary)
                             if index == 0 && rows.count > 1 {
                                 Text("rescue.suggested")
-                                    .font(.caption.weight(.bold))
+                                    .font(.tapso(.caption, .bold))
                                     .foregroundStyle(TapsoColor.journeyNext)
                             }
                         }
                         Text(verbatim: row.detail)
-                            .font(.footnote)
+                            .font(.tapso(.footnote))
                             .foregroundStyle(TapsoColor.textSecondary)
                             .fixedSize(horizontal: false, vertical: true)
                     }
@@ -705,7 +707,7 @@ struct RescueOptionList: View {
             }
             if advice.walkTooFar, let meters = advice.straightLineMeters {
                 Text(String(format: RideText.string("rescue.walk.tooFar"), meters))
-                    .font(.footnote)
+                    .font(.tapso(.footnote))
                     .foregroundStyle(TapsoColor.textSecondary)
                     .fixedSize(horizontal: false, vertical: true)
             }
@@ -781,29 +783,29 @@ struct StopLadder: View {
                 switch kind {
                 case .current:
                     Image(systemName: "bus.fill")
-                        .font(.caption.weight(.bold))
+                        .font(.tapso(.caption, .bold))
                         .foregroundStyle(TapsoColor.onJourney(role))
                         .frame(width: 22, height: 22)
                         .background(TapsoColor.journey(role), in: Circle())
                 case .ahead:
                     Circle().stroke(TapsoColor.textTertiary, lineWidth: 2).frame(width: 10, height: 10)
                 case .gap:
-                    Image(systemName: "ellipsis").font(.caption).foregroundStyle(TapsoColor.textTertiary)
+                    Image(systemName: "ellipsis").font(.tapso(.caption)).foregroundStyle(TapsoColor.textTertiary)
                 case .destination:
                     CitrusDot(size: 16)
                 }
             }
             .frame(width: 24, height: 32)
             Text(verbatim: name)
-                .font(kind == .destination || kind == .current ? .body.weight(.semibold) : .subheadline)
+                .font(kind == .destination || kind == .current ? .tapso(.body, .semibold) : .tapso(.subheadline))
                 .foregroundStyle(kind == .gap ? TapsoColor.textTertiary : TapsoColor.textPrimary)
                 .fixedSize(horizontal: false, vertical: true)
             Spacer(minLength: 0)
             if kind == .current {
-                Text("ride.now").font(.caption.weight(.bold)).foregroundStyle(TapsoColor.textSecondary)
+                Text("ride.now").font(.tapso(.caption, .bold)).foregroundStyle(TapsoColor.textSecondary)
             } else if kind == .destination {
                 // The citrus dot carries the destination colour; tangerine text read 2.0:1 on the card.
-                Text("ride.getOffHere").font(.caption.weight(.bold)).foregroundStyle(TapsoColor.textPrimary)
+                Text("ride.getOffHere").font(.tapso(.caption, .bold)).foregroundStyle(TapsoColor.textPrimary)
             }
         }
     }

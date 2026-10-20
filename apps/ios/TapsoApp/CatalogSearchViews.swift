@@ -40,7 +40,7 @@ struct CatalogDestinationSearchContent: View {
                 } icon: {
                     Image(systemName: "magnifyingglass")
                 }
-                .font(.footnote)
+                .font(.tapso(.footnote))
                 .foregroundStyle(TapsoColor.textSecondary)
                 .fixedSize(horizontal: false, vertical: true)
             } else if results.isEmpty {
@@ -64,7 +64,7 @@ struct CatalogDestinationSearchContent: View {
             } icon: {
                 Image(systemName: "info.circle")
             }
-            .font(.caption)
+            .font(.tapso(.caption))
             .foregroundStyle(TapsoColor.textTertiary)
             .fixedSize(horizontal: false, vertical: true)
         }
@@ -110,7 +110,7 @@ struct CatalogPendingContent: View {
                 HStack(spacing: TapsoSpace.sm) {
                     ProgressView()
                     Text("search.catalog.loading")
-                        .font(.subheadline)
+                        .font(.tapso(.subheadline))
                         .foregroundStyle(TapsoColor.textSecondary)
                 }
                 .frame(maxWidth: .infinity, minHeight: 80)
@@ -130,7 +130,7 @@ struct FixedDestinationLine: View {
     var body: some View {
         Label {
             Text(String(format: RideText.string("live.stops.fixedDestination"), name))
-                .font(.footnote.weight(.semibold))
+                .font(.tapso(.footnote, .semibold))
                 .foregroundStyle(TapsoColor.textPrimary)
                 .fixedSize(horizontal: false, vertical: true)
         } icon: {

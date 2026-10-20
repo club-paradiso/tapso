@@ -107,6 +107,16 @@ struct TapsoAPIClient: Sendable {
         return try await send(request, as: PlacesResponse.self).items
     }
 
+    // MARK: Beta feedback
+
+    /// Sends a tester's report. Returns only once the server answered 201 with a receipt;
+    /// every other outcome throws, so the app never says "sent" for a report that was not kept.
+    func sendFeedback(_ report: FeedbackReport) async throws -> FeedbackReceipt {
+        var request = try makeRequest(path: "/v1/feedback", method: "POST", body: report)
+        request.timeoutInterval = 15
+        return try await send(request, as: FeedbackReceipt.self)
+    }
+
     // MARK: Journey sessions
 
     /// Starts a session for a rider waiting at the boarding stop.
