@@ -91,6 +91,12 @@
 		B9A777F1275FB47FC12BF1BC /* TouristLanguageSettings.swift in Sources */ = {isa = PBXBuildFile; fileRef = EC83BEE1F1B9251D77746823 /* TouristLanguageSettings.swift */; };
 		1FCD668C05FB239546D3D952 /* TouristStrings.swift in Sources */ = {isa = PBXBuildFile; fileRef = ED18D5D7654F7B1B971A3E0D /* TouristStrings.swift */; };
 		5E91EC06548F022E8304C01F /* TouristStrings.swift in Sources */ = {isa = PBXBuildFile; fileRef = ED18D5D7654F7B1B971A3E0D /* TouristStrings.swift */; };
+		4CCE643CFCC5C082AD3EDB27 /* PlaceLookupViews.swift in Sources */ = {isa = PBXBuildFile; fileRef = 08A7A38C2F81F25CC44EA4DB /* PlaceLookupViews.swift */; };
+		B7B5643C711535E6538F9B0F /* RideReadSupport.swift in Sources */ = {isa = PBXBuildFile; fileRef = A3552CAA846219CA33AAC43D /* RideReadSupport.swift */; };
+		0240EF3208A9B31BE5D78DA3 /* DolLivenessTests.swift in Sources */ = {isa = PBXBuildFile; fileRef = 249AFC02A3DC5CB4E2E074B0 /* DolLivenessTests.swift */; };
+		18663C4A2F8795B643DDD18D /* HomeLayoutTests.swift in Sources */ = {isa = PBXBuildFile; fileRef = BE2000063775934C20DB408B /* HomeLayoutTests.swift */; };
+		522C090B8191DE45D0C20C8D /* HybridRideReconcileTests.swift in Sources */ = {isa = PBXBuildFile; fileRef = 12873EA81968F53A1B70B049 /* HybridRideReconcileTests.swift */; };
+		753B05637D7A255F05962663 /* RideLocationSamplerTests.swift in Sources */ = {isa = PBXBuildFile; fileRef = E3ECAC8A2E99BE066DF83D63 /* RideLocationSamplerTests.swift */; };
 /* End PBXBuildFile section */
 
 /* Begin PBXContainerItemProxy section */
@@ -203,6 +209,12 @@
 		13198596FFB79BF6CE328491 /* RideKeepAlive.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = RideKeepAlive.swift; sourceTree = "<group>"; };
 		EC83BEE1F1B9251D77746823 /* TouristLanguageSettings.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = TouristLanguageSettings.swift; sourceTree = "<group>"; };
 		ED18D5D7654F7B1B971A3E0D /* TouristStrings.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = TouristStrings.swift; sourceTree = "<group>"; };
+		08A7A38C2F81F25CC44EA4DB /* PlaceLookupViews.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = PlaceLookupViews.swift; sourceTree = "<group>"; };
+		A3552CAA846219CA33AAC43D /* RideReadSupport.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = RideReadSupport.swift; sourceTree = "<group>"; };
+		249AFC02A3DC5CB4E2E074B0 /* DolLivenessTests.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = DolLivenessTests.swift; sourceTree = "<group>"; };
+		BE2000063775934C20DB408B /* HomeLayoutTests.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = HomeLayoutTests.swift; sourceTree = "<group>"; };
+		12873EA81968F53A1B70B049 /* HybridRideReconcileTests.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = HybridRideReconcileTests.swift; sourceTree = "<group>"; };
+		E3ECAC8A2E99BE066DF83D63 /* RideLocationSamplerTests.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = RideLocationSamplerTests.swift; sourceTree = "<group>"; };
 /* End PBXFileReference section */
 
 /* Begin PBXFrameworksBuildPhase section */
@@ -245,7 +257,11 @@
 			isa = PBXGroup;
 			children = (
 				5E327558E2B513FF963AD97E /* BrandTests.swift */,
+				249AFC02A3DC5CB4E2E074B0 /* DolLivenessTests.swift */,
+				BE2000063775934C20DB408B /* HomeLayoutTests.swift */,
+				12873EA81968F53A1B70B049 /* HybridRideReconcileTests.swift */,
 				0254DEF030E85E3CF7322DF3 /* MapHandoffFlowTests.swift */,
+				E3ECAC8A2E99BE066DF83D63 /* RideLocationSamplerTests.swift */,
 				4F3242CAC95098615B71E4AF /* RidePresentationTests.swift */,
 				19459AAF91BDF6A8B061D08F /* RideTraceTests.swift */,
 				6DB796C0ED563974A2B95EA4 /* ScreenshotImportFlowTests.swift */,
@@ -325,10 +341,12 @@
 				01DE7451FA463336C39A13CA /* LiveRideSetupViews.swift */,
 				8B023AAD9EC6D00AFF13C829 /* LiveRouteImportCatalog.swift */,
 				85623FA1F6C3B0EE2F9DC99A /* PhotoLibraryScreenshotEraser.swift */,
+				08A7A38C2F81F25CC44EA4DB /* PlaceLookupViews.swift */,
 				1BA1E189F8D5241F18ABD214 /* RideEndView.swift */,
 				857A4229A2F4867FB62DD336 /* RideFeedback.swift */,
 				13198596FFB79BF6CE328491 /* RideKeepAlive.swift */,
 				813AFBE6918965418D110364 /* RideLocationSampler.swift */,
+				A3552CAA846219CA33AAC43D /* RideReadSupport.swift */,
 				52D0922404CBE0BFEAC62CCE /* RideTrace.swift */,
 				B71E19ABC4E943435650D65F /* RideView.swift */,
 				B44662751CB9EDA0A65897FC /* ScreenshotImportViews.swift */,
@@ -589,12 +607,14 @@
 				16CBA37E2A09BAAB0168A223 /* LiveRideSetupViews.swift in Sources */,
 				15C8BE959913FD7DC74C90BC /* LiveRouteImportCatalog.swift in Sources */,
 				5511485E8DD9FA463D1FB2A9 /* PhotoLibraryScreenshotEraser.swift in Sources */,
+				4CCE643CFCC5C082AD3EDB27 /* PlaceLookupViews.swift in Sources */,
 				9E47BA264E7738D256848D31 /* ReturnActivitySurfaces.swift in Sources */,
 				499B6807EDD8F3BA8C1EAAA7 /* RideAgainOpenIntent.swift in Sources */,
 				E90C569F723A43A0F30ED146 /* RideEndView.swift in Sources */,
 				3D1562DEB72025EBE17ABDCD /* RideFeedback.swift in Sources */,
 				CC04D368747C18BD79E23EDE /* RideKeepAlive.swift in Sources */,
 				C698235F4923522CB7ED7EFA /* RideLocationSampler.swift in Sources */,
+				B7B5643C711535E6538F9B0F /* RideReadSupport.swift in Sources */,
 				BB8FAE7699DAE3EAEA47D888 /* RideSurfaceComponents.swift in Sources */,
 				757ECDCE342BEDD66CD09D74 /* RideTrace.swift in Sources */,
 				FC181FC49F83051C0EF18002 /* RideView.swift in Sources */,
@@ -648,7 +668,11 @@
 			buildActionMask = 2147483647;
 			files = (
 				4DA1D1D973E57698519C31FC /* BrandTests.swift in Sources */,
+				0240EF3208A9B31BE5D78DA3 /* DolLivenessTests.swift in Sources */,
+				18663C4A2F8795B643DDD18D /* HomeLayoutTests.swift in Sources */,
+				522C090B8191DE45D0C20C8D /* HybridRideReconcileTests.swift in Sources */,
 				6C7EC458E60617F296856254 /* MapHandoffFlowTests.swift in Sources */,
+				753B05637D7A255F05962663 /* RideLocationSamplerTests.swift in Sources */,
 				F0FCB5D5AF2DDFA92C6AD18C /* RidePresentationTests.swift in Sources */,
 				1E35209170DFE0C3B68B31CC /* RideTraceTests.swift in Sources */,
 				22E0764272F0461035C8207B /* ScreenshotImportFlowTests.swift in Sources */,
