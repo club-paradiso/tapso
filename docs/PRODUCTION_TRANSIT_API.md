@@ -133,6 +133,7 @@ accepts both so local and production paths are identical.
 | POST | `/v1/sessions/:id/confirm` | Confirm a vehicle explicitly |
 | PUT | `/v1/sessions/:id/live-activity` | Store the ride's Live Activity push token, `{ "pushToken": "<hex>" }`; answers its fingerprint, never the token. `503 LIVE_ACTIVITY_PUSH_UNAVAILABLE` unless APNs is configured (`/health` → `liveActivityPush.enabled`) |
 | DELETE | `/v1/sessions/:id/live-activity` | Clear the push token, `204`; ending the session clears it too |
+| POST | `/v1/feedback` | A beta tester's report (`feedbackStore.ts`): `category` (one of 8), optional `message` (≤ 2,000 chars), `appVersion`, `build`, `gitCommit?`, `buildConfiguration?`, `osVersion`, `deviceModel`, `language`, and `diagnostics` (≤ 24,000 chars) only with `diagnosticsConsent: true`. `201 {id, receivedAt, durable}` once stored; `503 FEEDBACK_UNAVAILABLE` where no store exists (Vercel without Redis), so the app never claims a report was sent. No IP or location is stored; entries expire after 30 days. 5 per minute per caller. `GET /operator/feedback?limit=` (operator token) reads the newest |
 
 Two further paths exist for controlled ride evidence only, a legacy flow that
 no release gate has required since 2026-09-29. They require
@@ -253,6 +254,7 @@ ever returned, logged, or placed in a URL a client can see.
 | `TRANSIT_AUTOMATIC_MATCHING_ENABLED` | no | `false` | Operator opt-in to automatic vehicle selection (`true`/`1`/`false`/`0`; anything else fails at boot). Refused below `READY_FOR_BOUNDED_AUTOMATION`; the demonstrated readiness is `READY_FOR_SHADOW` (`src/matchingReadiness.ts`, never read from the environment). When refused, `/health` reports `matching.automaticMatchingRequested: true`, `automaticMatchingEnabled: false` and `withheldReason: "matching_readiness_below_bounded_automation"`, and the runtime logs `automatic_matching_refused` once per process |
 | `PORT` | no | `8787` | Local Node server (`src/server.ts`) only |
 | `KAKAO_REST_API_KEY` | no | unset → `/v1/places` answers 503 | Kakao Developers **REST API key** for place and address search. Store it on Vercel as a **Sensitive** variable; `/health` reports only `places.available` |
+| `TRANSIT_SESSION_CREATE_LIMIT_PER_MINUTE` | no | `30` | Deployment-wide ceiling on new ride sessions per minute (`sessionCreateBudget.ts`), shared through Redis when the session store is Redis; over it `POST /v1/sessions` answers `429 RATE_LIMITED` with `Retry-After`. `0` turns it off |
 | `RIDE_CAPTURE_OPERATOR_TOKEN` | no | unset → `/operator/*` disabled | Shared secret for the ride-capture endpoints and the mobile controller. Minimum 24 characters; a shorter value is refused. Store it on Vercel as a **Sensitive** variable |
 | `RIDE_CAPTURE_OPERATOR_RATE_LIMIT_PER_MINUTE` | no | `30` | Per-caller ceiling on the operator budget, kept separate from the public one; `0` disables |
 
