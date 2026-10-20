@@ -98,6 +98,7 @@ node --experimental-strip-types scripts/journey/live-activity-signals.ts --check
 - Finding: the macOS runners for this repository queued for about 20 minutes per job; at most one ran at a time.
 - Evidence: CI run 39362474415 on `0d356af` (milestone A) passed every job, including `ios`: build and XCTest on the iOS 26.2 iPhone 17 Pro simulator, snapshot evidence rendered, and `transit-core` with `RideBoardingRegressionTests` (SIMULATOR_VERIFIED for the waiting state and `testWaitingIsOneDecisionOnEverySurface`).
 - Incident: `7d35bc8` added `Shared/JourneyLanguage+Bundle.swift`. `sync_xcodeproj.py` wrote its path unquoted, which made the project unreadable to `xcodebuild`, so the iOS jobs of the following commits failed before compiling. Fixed in `6105a7b`: the file was renamed, `-` paths were quoted, and the script now quotes names it cannot write bare.
+- Evidence: CI run 39387008884 on `c547cf5` (all milestones plus review fixes) passed `ios` (build, XCTest, snapshots in ko/en/zh-Hans/ja), `transit-core`, `api`, `web` and `matcher-evidence`.
 - Finding: `AGENTS.md` said the transit API ships no dependencies. It depends on `web-push` 3.6.7, and the
   local test suite needs `npm install` first.
 - Risks:
@@ -106,5 +107,4 @@ node --experimental-strip-types scripts/journey/live-activity-signals.ts --check
     `RideText.string(_:language:)` (`testLiveActivityStringsFollowTheJourneyLanguage`). Whether the widget
     extension bundles every `.lproj` on a device is still device-only verification.
   - Machine-translated zh/ja copy needs native review before external testing.
-- **Next action:** CI green on PR #146 (`ios` job, snapshots in four languages). Then the owner works through
-  `docs/beta/HUMAN_ACTION_REQUIRED.md` in order.
+- **Next action:** the owner reviews and merges PR #146, then works through `docs/beta/HUMAN_ACTION_REQUIRED.md` in order.
