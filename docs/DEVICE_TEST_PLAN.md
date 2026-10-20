@@ -80,6 +80,9 @@ Current result: iOS 26.3 iPhone 17 Pro Simulator verifies the app build, 8 iOS t
 
 ## Beta field protocol (2026-10-20, `docs/exec-plans/TAPSO_BETA_READINESS.md`)
 
+The free-team pilot runs these cases from `docs/beta/FREE_TEAM_FIELD_TEST.md` (Korean, step by step; B-7 and B-8 wait
+for APNs). Install with the **Tapso Beta** scheme; its build is the one CI compiles in the `ios` job's Beta build step.
+
 Every case starts as **NOT_TESTED**. A case passes only on a physical iPhone, with the evidence listed. A simulator
 run, a CI screenshot or "the code handles it" is never a pass.
 
