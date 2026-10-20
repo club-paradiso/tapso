@@ -23,6 +23,7 @@
           "longitude": 126.318
         },
         "riderState": "waiting_at_stop",
+        "language": "ko",
         "matchConfidence": "unknown",
         "state": "awaiting_match",
         "candidates": [
@@ -92,6 +93,7 @@
           "longitude": 126.318
         },
         "riderState": "waiting_at_stop",
+        "language": "ko",
         "matchConfidence": "unknown",
         "state": "confirmation_required",
         "candidates": [
@@ -175,6 +177,7 @@
           "longitude": 126.318
         },
         "riderState": "waiting_at_stop",
+        "language": "ko",
         "matchConfidence": "unknown",
         "state": "confirmation_required",
         "candidates": [
@@ -286,6 +289,7 @@
           "longitude": 126.318
         },
         "riderState": "waiting_at_stop",
+        "language": "ko",
         "selectedVehicleId": "SYN70가0412",
         "selectionMode": "explicit",
         "matchConfidence": "low",
@@ -359,6 +363,7 @@
           "longitude": 126.318
         },
         "riderState": "waiting_at_stop",
+        "language": "ko",
         "selectedVehicleId": "SYN70가0412",
         "selectionMode": "explicit",
         "matchConfidence": "low",
@@ -422,6 +427,7 @@
           "longitude": 126.318
         },
         "riderState": "waiting_at_stop",
+        "language": "ko",
         "selectedVehicleId": "SYN70가0412",
         "selectionMode": "explicit",
         "matchConfidence": "low",
@@ -485,6 +491,7 @@
           "longitude": 126.318
         },
         "riderState": "waiting_at_stop",
+        "language": "ko",
         "selectedVehicleId": "SYN70가0412",
         "selectionMode": "explicit",
         "matchConfidence": "low",
@@ -548,6 +555,7 @@
           "longitude": 126.318
         },
         "riderState": "waiting_at_stop",
+        "language": "ko",
         "selectedVehicleId": "SYN70가0412",
         "selectionMode": "explicit",
         "matchConfidence": "low",
@@ -611,6 +619,7 @@
           "longitude": 126.318
         },
         "riderState": "waiting_at_stop",
+        "language": "ko",
         "selectedVehicleId": "SYN70가0412",
         "selectionMode": "explicit",
         "matchConfidence": "low",
@@ -674,6 +683,7 @@
           "longitude": 126.318
         },
         "riderState": "waiting_at_stop",
+        "language": "ko",
         "selectedVehicleId": "SYN70가0412",
         "selectionMode": "explicit",
         "matchConfidence": "low",
@@ -728,6 +738,7 @@
           "longitude": 126.318
         },
         "riderState": "waiting_at_stop",
+        "language": "ko",
         "selectedVehicleId": "SYN70가0412",
         "selectionMode": "explicit",
         "matchConfidence": "low",
@@ -782,6 +793,7 @@
           "longitude": 126.316
         },
         "riderState": "waiting_at_stop",
+        "language": "ko",
         "selectedVehicleId": "SYN70가0611",
         "selectionMode": "explicit",
         "matchConfidence": "low",
@@ -823,6 +835,134 @@
       }
     },
     {
+      "id": "short-ride-before-boarding",
+      "why": "a 1-stop ride confirmed with the bus one stop before boarding: the rider is waiting, no prepare alert",
+      "view": {
+        "id": "syn-session-short",
+        "routeId": "SYN-ROUTE-202",
+        "cityCode": "999",
+        "boardingStop": {
+          "stopId": "SYN-STOP-8",
+          "name": "합성 정류장 8",
+          "sequence": 8,
+          "latitude": 33.464000000000006,
+          "longitude": 126.314
+        },
+        "destinationStop": {
+          "stopId": "SYN-STOP-9",
+          "name": "합성 정류장 9",
+          "sequence": 9,
+          "latitude": 33.466,
+          "longitude": 126.316
+        },
+        "riderState": "waiting_at_stop",
+        "language": "ko",
+        "selectedVehicleId": "SYN70가0246",
+        "selectionMode": "explicit",
+        "matchConfidence": "low",
+        "state": "tracking",
+        "progress": {
+          "currentStopSequence": 7,
+          "currentStopId": "SYN-STOP-7",
+          "remainingStops": 2,
+          "phase": "approaching",
+          "source": "provider_stop_sequence",
+          "observedAt": "1970-01-01T00:00:00.000Z",
+          "evidenceAt": "2026-10-01T06:45:10.000Z",
+          "evidenceAtIs": "tapso_server_receipt"
+        },
+        "explanation": "Confirmed vehicle advanced with provider stop-sequence evidence.",
+        "matchingMode": "shadow",
+        "sourceFreshness": {
+          "SYN70가0246": {
+            "state": "unknown",
+            "sampleCount": 2,
+            "spanSeconds": 10,
+            "latestReceiptAgeSeconds": 0,
+            "maxReceiptGapSeconds": 10,
+            "contentChangeCount": 1,
+            "sequenceDecreaseCount": 0,
+            "reason": "More server-observed TAGO samples are required before freshness can be inferred."
+          }
+        },
+        "reliability": {
+          "provider": "responding",
+          "observation": "changing",
+          "position": "official",
+          "vehicle": "confirmed",
+          "matcherCadence": "unknown",
+          "trust": "live"
+        },
+        "createdAt": "2026-10-01T06:45:00.000Z",
+        "updatedAt": "2026-10-01T06:45:10.000Z",
+        "expiresAt": "2026-10-01T10:45:00.000Z"
+      }
+    },
+    {
+      "id": "short-ride-at-boarding",
+      "why": "the same bus at the boarding stop: the next stop is the destination",
+      "view": {
+        "id": "syn-session-short",
+        "routeId": "SYN-ROUTE-202",
+        "cityCode": "999",
+        "boardingStop": {
+          "stopId": "SYN-STOP-8",
+          "name": "합성 정류장 8",
+          "sequence": 8,
+          "latitude": 33.464000000000006,
+          "longitude": 126.314
+        },
+        "destinationStop": {
+          "stopId": "SYN-STOP-9",
+          "name": "합성 정류장 9",
+          "sequence": 9,
+          "latitude": 33.466,
+          "longitude": 126.316
+        },
+        "riderState": "waiting_at_stop",
+        "language": "ko",
+        "selectedVehicleId": "SYN70가0246",
+        "selectionMode": "explicit",
+        "matchConfidence": "low",
+        "state": "tracking",
+        "progress": {
+          "currentStopSequence": 8,
+          "currentStopId": "SYN-STOP-8",
+          "remainingStops": 1,
+          "phase": "next_stop",
+          "source": "provider_stop_sequence",
+          "observedAt": "1970-01-01T00:00:00.000Z",
+          "evidenceAt": "2026-10-01T06:45:20.000Z",
+          "evidenceAtIs": "tapso_server_receipt"
+        },
+        "explanation": "Confirmed vehicle advanced with provider stop-sequence evidence.",
+        "matchingMode": "shadow",
+        "sourceFreshness": {
+          "SYN70가0246": {
+            "state": "fresh",
+            "sampleCount": 3,
+            "spanSeconds": 20,
+            "latestReceiptAgeSeconds": 0,
+            "maxReceiptGapSeconds": 10,
+            "contentChangeCount": 2,
+            "sequenceDecreaseCount": 0,
+            "reason": "Repeated server receipts contain forward, changing TAGO content inside the bounded evidence window."
+          }
+        },
+        "reliability": {
+          "provider": "responding",
+          "observation": "changing",
+          "position": "official",
+          "vehicle": "confirmed",
+          "matcherCadence": "fresh",
+          "trust": "live"
+        },
+        "createdAt": "2026-10-01T06:45:00.000Z",
+        "updatedAt": "2026-10-01T06:45:20.000Z",
+        "expiresAt": "2026-10-01T10:45:00.000Z"
+      }
+    },
+    {
       "id": "passed-destination",
       "why": "the bus was next seen one stop past the destination",
       "view": {
@@ -844,6 +984,7 @@
           "longitude": 126.31
         },
         "riderState": "waiting_at_stop",
+        "language": "ko",
         "selectedVehicleId": "SYN70가0777",
         "selectionMode": "explicit",
         "matchConfidence": "low",
@@ -907,6 +1048,7 @@
           "longitude": 126.32
         },
         "riderState": "waiting_at_stop",
+        "language": "ko",
         "selectedVehicleId": "SYN70가0555",
         "selectionMode": "explicit",
         "matchConfidence": "low",
@@ -957,6 +1099,7 @@
           "longitude": 126.32
         },
         "riderState": "waiting_at_stop",
+        "language": "ko",
         "selectedVehicleId": "SYN70가0555",
         "selectionMode": "explicit",
         "matchConfidence": "low",
@@ -1007,6 +1150,7 @@
           "longitude": 126.322
         },
         "riderState": "waiting_at_stop",
+        "language": "ko",
         "matchConfidence": "unknown",
         "state": "confirmation_required",
         "candidates": [
@@ -1130,6 +1274,7 @@
           "longitude": 126.322
         },
         "riderState": "waiting_at_stop",
+        "language": "ko",
         "matchConfidence": "unknown",
         "state": "confirmation_required",
         "candidates": [

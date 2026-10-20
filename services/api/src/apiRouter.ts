@@ -20,12 +20,13 @@ import type { ActiveRideSnapshotProvider } from "./activeRideSnapshot.ts";
 import type { CachedTransitProvider } from "./cachedTransitProvider.ts";
 import type { TransitProvider } from "./provider.ts";
 import type { TagoCity, TagoRoute, TagoRouteServiceHours, TagoTransitProvider } from "./tagoProvider.ts";
-import type { JourneySessionCoordinator } from "./journeySession.ts";
+import { validateSessionInput, type JourneySessionCoordinator } from "./journeySession.ts";
 import type { TransitApiConfig } from "./apiConfig.ts";
 import type { BurstLimiter } from "./rateLimit.ts";
+import { SessionCreateBudgetError, type SessionCreateBudget } from "./sessionCreateBudget.ts";
 import { maskClientAddress } from "./rateLimit.ts";
 import { TtlCache } from "./ttlCache.ts";
-import { logEvent } from "./observability.ts";
+import { logEvent, sessionRef } from "./observability.ts";
 import type { LiveActivityPusher } from "./liveActivityPusher.ts";
 import type { ProviderHealth } from "./providerHealth.ts";
 import { TAGO_CADENCE_POLICY_V1 } from "./sourceFreshness.ts";
@@ -138,6 +139,11 @@ export interface TransitApiDependencies {
    */
   activeRideReads?: Pick<ActiveRideSnapshotProvider, "policy" | "stats">;
   limiter?: BurstLimiter;
+  /**
+   * The deployment-wide ceiling on new rides per minute (`sessionCreateBudget.ts`).
+   * Absent means unlimited.
+   */
+  sessionCreateBudget?: SessionCreateBudget;
   /** Separate budget so a ride never spends the public API's burst allowance. */
   operatorLimiter?: BurstLimiter;
   /**
@@ -640,9 +646,13 @@ async function dispatch(
   }
 
   if (resolved.route === "session_create") {
-    const session = await sessions.create(await readJsonBody(request));
+    const input = await readJsonBody(request);
+    // A body the coordinator would refuse never spends the deployment's ride budget.
+    validateSessionInput(input);
+    await takeSessionCreateBudget(dependencies.sessionCreateBudget);
+    const session = await sessions.create(input);
     logEvent("journey_session_created", {
-      sessionId: session.id,
+      sessionRef: sessionRef(session.id),
       routeId: session.routeId,
       state: session.state,
       selectedVehicleId: session.selectedVehicleId,
@@ -658,7 +668,7 @@ async function dispatch(
     // One line per read, by dimension (TAPSO_V1_RELEASE_CLOSURE.md, workstream L):
     // how many rides are live, rechecking or unavailable, and why, is a count over these.
     logEvent("journey_session_read", {
-      sessionId: session.id,
+      sessionRef: sessionRef(session.id),
       routeId: session.routeId,
       state: session.state,
       selected: session.selectedVehicleId !== undefined,
@@ -679,7 +689,7 @@ async function dispatch(
     await dependencies.liveActivityPusher?.beforeEnd(sessionId);
     const ended = await sessions.end(sessionId);
     logEvent("journey_session_ended", {
-      sessionId: ended.id,
+      sessionRef: sessionRef(ended.id),
       routeId: ended.routeId,
       expired: ended.expired,
       selectionMode: ended.selectionMode,
@@ -697,7 +707,7 @@ async function dispatch(
     }
     const registration = await sessions.registerLiveActivityToken(sessionId, await readJsonBody(request));
     logEvent("live_activity_token_registered", {
-      sessionId: registration.sessionId,
+      sessionRef: sessionRef(registration.sessionId),
       tokenFingerprint: registration.liveActivityPush.fingerprint,
     });
     return { response: json(registration, 200, { "cache-control": "no-store" }) };
@@ -706,7 +716,7 @@ async function dispatch(
   const session = await sessions.confirm(sessionId, await readJsonBody(request));
   await dependencies.liveActivityPusher?.afterRead(session);
   logEvent("vehicle_match_confirmed", {
-    sessionId: session.id,
+    sessionRef: sessionRef(session.id),
     routeId: session.routeId,
     selectedVehicleId: session.selectedVehicleId,
   });
@@ -881,6 +891,22 @@ function requiredParam(url: URL, name: string, pattern: RegExp): string {
   if (!value) throw apiError("INVALID_INPUT", `${name} is required`);
   if (!pattern.test(value)) throw apiError("INVALID_INPUT", `${name} is not a valid official identifier`);
   return value;
+}
+
+async function takeSessionCreateBudget(budget: SessionCreateBudget | undefined): Promise<void> {
+  if (!budget) return;
+  let verdict;
+  try {
+    verdict = await budget.take();
+  } catch (error) {
+    if (error instanceof SessionCreateBudgetError) throw apiError("SESSION_STORE_UNAVAILABLE", "the session store could not be reached");
+    throw error;
+  }
+  if (verdict.allowed) return;
+  logEvent("journey_session_create_refused", { reason: "deployment_budget", limitPerMinute: budget.limitPerMinute });
+  throw Object.assign(apiError("RATE_LIMITED", "too many new rides right now; try again shortly"), {
+    retryAfterSeconds: verdict.retryAfterSeconds,
+  });
 }
 
 function sessionIdentifier(resolved: Resolved, url: URL): string {

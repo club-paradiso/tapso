@@ -15,6 +15,8 @@ import {
   type TransitProvider,
 } from "../src/provider.ts";
 import type { RouteRequest, StopOnRoute, VehicleObservation } from "../src/domain.ts";
+import { sessionRef } from "../src/observability.ts";
+import { MemorySessionCreateBudget, type SessionCreateBudget } from "../src/sessionCreateBudget.ts";
 
 const CITY = "39";
 const ROUTE = "JEB405136521";
@@ -72,7 +74,7 @@ type Harness = {
 
 function harness(
   env: ServerEnv = {},
-  overrides: { discoveryFailure?: Error; demonstratedReadiness?: ReadinessLevel; liveActivityPush?: boolean } = {},
+  overrides: { discoveryFailure?: Error; demonstratedReadiness?: ReadinessLevel; liveActivityPush?: boolean; sessionCreateBudget?: SessionCreateBudget } = {},
 ): Harness {
   const config = readTransitApiConfig(
     { TAGO_SERVICE_KEY: "synthetic-key", ...env },
@@ -112,6 +114,7 @@ function harness(
       ? createBurstLimiter(config.rateLimit.limit, config.rateLimit.windowSeconds)
       : undefined,
     ...(overrides.liveActivityPush ? { liveActivityPush: { enabled: true, environment: "development" } } : {}),
+    ...(overrides.sessionCreateBudget ? { sessionCreateBudget: overrides.sessionCreateBudget } : {}),
     log: () => {},
   });
   return { handler, upstream, discoveryCalls };
@@ -396,7 +399,10 @@ test("an enabled session withholds automatic tracking while freshness is unknown
   assert.equal(refreshedSession.selectedVehicleId, undefined);
   const read = lines.map((line) => JSON.parse(line) as Record<string, unknown>).find((entry) => entry.event === "journey_session_read");
   assert.ok(read, "a session read is logged");
-  assert.equal(read.sessionId, session.id);
+  // The id is a bearer capability: logs join lines by a one-way reference, never the id itself.
+  assert.equal(read.sessionId, undefined);
+  assert.equal(read.sessionRef, sessionRef(session.id));
+  assert.ok(!lines.some((line) => line.includes(session.id)), "no log line carries the session id");
   assert.equal(read.routeId, ROUTE);
   assert.equal(read.state, "confirmation_required");
   assert.equal(read.selected, false);
@@ -1103,4 +1109,37 @@ test("route info: values TAGO sent outside its documented shape are reported in 
   const clean = serviceHoursHandler(async (_cityCode, routeId) => ({ routeId, headwayMinutes: {} }));
   const plain = await (await get(clean, `/v1/route-info?cityCode=${CITY}&routeId=${ROUTE}`)).json() as { meta: Record<string, unknown> };
   assert.equal("undocumentedFields" in plain.meta, false, "absent when TAGO sent nothing undocumented");
+});
+
+test("the deployment-wide ride budget refuses new sessions with a retry, and never touches TAGO for them", async () => {
+  const { handler, upstream } = harness({ TRANSIT_SESSIONS_ENABLED: "true" }, { sessionCreateBudget: new MemorySessionCreateBudget(2) });
+  const body = { routeId: ROUTE, cityCode: CITY, boardingStopSequence: 2, destinationStopSequence: 3 };
+  assert.equal((await postJson(handler, "/v1/sessions", body)).status, 201);
+  assert.equal((await postJson(handler, "/v1/sessions", body)).status, 201);
+  const readsBefore = upstream.stopCalls + upstream.vehicleCalls;
+  const refused = await postJson(handler, "/v1/sessions", body);
+  assert.equal(refused.status, 429);
+  assert.equal((await refused.json()).error, "RATE_LIMITED");
+  assert.ok(Number(refused.headers.get("retry-after")) >= 1);
+  assert.equal(upstream.stopCalls + upstream.vehicleCalls, readsBefore, "a refused ride costs no upstream read");
+});
+
+test("session input is bounded: malformed ids and unknown languages are refused before any read", async () => {
+  const { handler } = harness({ TRANSIT_SESSIONS_ENABLED: "true" });
+  const valid = { routeId: ROUTE, cityCode: CITY, boardingStopSequence: 2, destinationStopSequence: 3 };
+  for (const bad of [
+    { ...valid, routeId: "x".repeat(65) },
+    { ...valid, routeId: "../stops" },
+    { ...valid, cityCode: "39a" },
+    { ...valid, language: "fr" },
+    { ...valid, directionCode: "d".repeat(65) },
+  ]) {
+    const response = await postJson(handler, "/v1/sessions", bad);
+    assert.equal(response.status, 400, JSON.stringify(bad).slice(0, 80));
+  }
+  const english = await postJson(handler, "/v1/sessions", { ...valid, language: "en" });
+  assert.equal(english.status, 201);
+  assert.equal((await english.json()).language, "en");
+  const unspecified = await postJson(handler, "/v1/sessions", valid);
+  assert.equal((await unspecified.json()).language, "ko");
 });

@@ -18,6 +18,7 @@ import { logProviderRequest, ProviderHealth } from "./providerHealth.ts";
 import { createBurstLimiter } from "./rateLimit.ts";
 import { resolveTagoServiceKey, serviceKeyWarning } from "./serviceKey.ts";
 import { readSessionKeyPrefix } from "./sessionKeyPrefix.ts";
+import { MemorySessionCreateBudget, readSessionCreateLimit, UpstashSessionCreateBudget, type SessionCreateBudget } from "./sessionCreateBudget.ts";
 import { MemoryJourneySessionStore, type JourneySessionStore } from "./sessionStore.ts";
 import { fileStaticTransitData } from "./staticTransitData.ts";
 import { KakaoPlaceSearch, readKakaoApiKey } from "./placeSearch.ts";
@@ -83,6 +84,7 @@ export function createTransitApi(env: ServerEnv = process.env as ServerEnv): Tra
   // rather than asserted: wiring that silently produced a store with an empty
   // token would fail on every request instead of at boot.
   const sessionStore = createSessionStore(config, env);
+  const sessionCreateBudget = createSessionCreateBudget(config, env);
   // Journey sessions never read the shared 20 s vehicle cache. Server-observed
   // cadence is only evidence if consecutive reads are genuinely consecutive;
   // that cache would hand one rider the same receipt on several polls. Their
@@ -139,10 +141,21 @@ export function createTransitApi(env: ServerEnv = process.env as ServerEnv): Tra
       // The Kakao key never leaves the server; without it `/v1/places` fails closed.
       places: new KakaoPlaceSearch({ apiKey: readKakaoApiKey(env) }),
       ...(limiter ? { limiter } : {}),
+      ...(sessionCreateBudget ? { sessionCreateBudget } : {}),
       ...(operatorLimiter ? { operatorLimiter } : {}),
       ...(operator.configured ? { operatorToken: operator.token } : {}),
     }),
   };
+}
+
+/** One shared counter with the Redis store; one per process with the memory store, which is one process too. */
+function createSessionCreateBudget(config: TransitApiConfig, env: ServerEnv): SessionCreateBudget | undefined {
+  const limit = readSessionCreateLimit(env);
+  if (limit === 0) return undefined;
+  if (config.sessions.store !== "redis") return new MemorySessionCreateBudget(limit);
+  const credentials = readUpstashCredentials(env);
+  if (!credentials) return new MemorySessionCreateBudget(limit);
+  return new UpstashSessionCreateBudget(credentials, readSessionKeyPrefix(env), limit);
 }
 
 function createSessionStore(config: TransitApiConfig, env: ServerEnv): JourneySessionStore {

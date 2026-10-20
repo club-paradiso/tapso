@@ -14,28 +14,36 @@ struct TapsoLiveActivityWidget: Widget {
                 state: context.state,
                 isStale: context.isStale
             )
+            .journeyLocale(context.attributes)
             .activityBackgroundTint(RideSurfacePalette.background(for: moment))
             .activitySystemActionForegroundColor(RideSurfacePalette.primaryText(for: moment))
         } dynamicIsland: { context in
             DynamicIsland {
                 DynamicIslandExpandedRegion(.leading) {
                     IslandExpandedLeading(attributes: context.attributes, state: context.state, isStale: context.isStale)
+                        .journeyLocale(context.attributes)
                 }
                 DynamicIslandExpandedRegion(.trailing) {
                     IslandExpandedTrailing(state: context.state, isStale: context.isStale, rideLength: context.attributes.totalStops)
+                        .journeyLocale(context.attributes)
                 }
                 DynamicIslandExpandedRegion(.center) {
                     IslandExpandedCenter(state: context.state, isStale: context.isStale, rideLength: context.attributes.totalStops)
+                        .journeyLocale(context.attributes)
                 }
                 DynamicIslandExpandedRegion(.bottom, priority: 1) {
                     IslandExpandedBottom(attributes: context.attributes, state: context.state, isStale: context.isStale)
+                        .journeyLocale(context.attributes)
                 }
             } compactLeading: {
                 IslandCompactLeading(attributes: context.attributes, state: context.state, isStale: context.isStale)
+                    .journeyLocale(context.attributes)
             } compactTrailing: {
                 IslandCompactTrailing(state: context.state, isStale: context.isStale, rideLength: context.attributes.totalStops)
+                    .journeyLocale(context.attributes)
             } minimal: {
                 IslandMinimal(attributes: context.attributes, state: context.state, isStale: context.isStale)
+                    .journeyLocale(context.attributes)
             }
             .keylineTint(TapsoColor.journey(guidanceAccountingForStaleness(context.state, isStale: context.isStale, rideLength: context.attributes.totalStops).colorRole))
             .widgetURL(URL(string: "tapso://ride"))

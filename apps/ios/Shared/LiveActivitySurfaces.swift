@@ -565,3 +565,16 @@ private func compactAccessibilityLabel(_ state: TapsoActivityAttributes.ContentS
         return RideText.string(guidance.copy.headline)
     }
 }
+
+extension View {
+    /// Renders an activity's localized text in its journey language (`TapsoActivityAttributes.language`),
+    /// so the Lock Screen and Dynamic Island speak the language the ride started in.
+    @ViewBuilder
+    func journeyLocale(_ attributes: TapsoActivityAttributes) -> some View {
+        if let locale = attributes.journeyLocale {
+            environment(\.locale, locale)
+        } else {
+            self
+        }
+    }
+}

@@ -97,6 +97,8 @@
 		522C090B8191DE45D0C20C8D /* HybridRideReconcileTests.swift in Sources */ = {isa = PBXBuildFile; fileRef = 12873EA81968F53A1B70B049 /* HybridRideReconcileTests.swift */; };
 		753B05637D7A255F05962663 /* RideLocationSamplerTests.swift in Sources */ = {isa = PBXBuildFile; fileRef = E3ECAC8A2E99BE066DF83D63 /* RideLocationSamplerTests.swift */; };
 		4CCE643CFCC5C082AD3EDB27 /* PlaceLookupViews.swift in Sources */ = {isa = PBXBuildFile; fileRef = 08A7A38C2F81F25CC44EA4DB /* PlaceLookupViews.swift */; };
+		B4E12F5C6EDC56079BF11275 /* JourneyLanguage+Bundle.swift in Sources */ = {isa = PBXBuildFile; fileRef = 1588A893BB3A6A84254FD2B3 /* JourneyLanguage+Bundle.swift */; };
+		4A8F21800DA116D2364A2777 /* JourneyLanguage+Bundle.swift in Sources */ = {isa = PBXBuildFile; fileRef = 1588A893BB3A6A84254FD2B3 /* JourneyLanguage+Bundle.swift */; };
 /* End PBXBuildFile section */
 
 /* Begin PBXContainerItemProxy section */
@@ -215,6 +217,7 @@
 		12873EA81968F53A1B70B049 /* HybridRideReconcileTests.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = HybridRideReconcileTests.swift; sourceTree = "<group>"; };
 		E3ECAC8A2E99BE066DF83D63 /* RideLocationSamplerTests.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = RideLocationSamplerTests.swift; sourceTree = "<group>"; };
 		08A7A38C2F81F25CC44EA4DB /* PlaceLookupViews.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = PlaceLookupViews.swift; sourceTree = "<group>"; };
+		1588A893BB3A6A84254FD2B3 /* JourneyLanguage+Bundle.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = JourneyLanguage+Bundle.swift; sourceTree = "<group>"; };
 /* End PBXFileReference section */
 
 /* Begin PBXFrameworksBuildPhase section */
@@ -287,6 +290,7 @@
 			isa = PBXGroup;
 			children = (
 				C61FF6E913F7DCDE87D983B5 /* BrandWordmark.swift */,
+				1588A893BB3A6A84254FD2B3 /* JourneyLanguage+Bundle.swift */,
 				3A6FA6A0937D209C796FC84C /* LiveActivitySurfaces.swift */,
 				D102FEDCF3DA956AE2EC37A9 /* ReturnActivitySurfaces.swift */,
 				C6E05EE62093C184B4EE9E8F /* RideAgainOpenIntent.swift */,
@@ -603,6 +607,7 @@
 				21314EBAC48BF9850B409EF3 /* CatalogSearchViews.swift in Sources */,
 				3CC3ABC68AFD26260A4BD353 /* DemoControlsView.swift in Sources */,
 				C5476D706116582E39974F11 /* HomeView.swift in Sources */,
+				B4E12F5C6EDC56079BF11275 /* JourneyLanguage+Bundle.swift in Sources */,
 				C072DFB6007261AB2C4AC702 /* JourneyStore.swift in Sources */,
 				353C5AEA2F4ED35FBF1207BC /* LiveActivityClient.swift in Sources */,
 				216C1DAF60AA1BF258CBA512 /* LiveActivitySurfaces.swift in Sources */,
@@ -646,6 +651,7 @@
 			buildActionMask = 2147483647;
 			files = (
 				11F216705CBD35830606908D /* BrandWordmark.swift in Sources */,
+				4A8F21800DA116D2364A2777 /* JourneyLanguage+Bundle.swift in Sources */,
 				E7D6FCED61BA991CB675260B /* LiveActivitySurfaces.swift in Sources */,
 				780FE7AA8EE44BC0BAAB03E2 /* ReturnActivitySurfaces.swift in Sources */,
 				BC537E74602056783FF8F8A4 /* RideAgainControl.swift in Sources */,

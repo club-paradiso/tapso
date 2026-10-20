@@ -116,6 +116,29 @@ async function earlyConfirmation(): Promise<void> {
   );
 }
 
+/**
+ * A 1-stop ride confirmed while the bus is still one stop before the boarding
+ * stop. The bus is two stops from the destination, so a guidance that ignored
+ * the ride length would say "2 stops left, get ready" to a rider still waiting.
+ */
+async function shortRideBeforeBoarding(): Promise<void> {
+  const provider = new ScriptedProvider();
+  let now = new Date("2026-10-01T06:45:00.000Z");
+  const sessions = new JourneySessionCoordinator(provider, { now: () => now, idFactory: () => "syn-session-short" });
+  provider.rows = [row("SYN70가0246", now, 6)];
+  await sessions.create({ routeId, cityCode, boardingStopSequence: 8, destinationStopSequence: 9 });
+  now = new Date(now.getTime() + 10_000);
+  provider.rows = [row("SYN70가0246", now, 7)];
+  record(
+    "short-ride-before-boarding",
+    "a 1-stop ride confirmed with the bus one stop before boarding: the rider is waiting, no prepare alert",
+    await sessions.confirm("syn-session-short", { vehicleId: "SYN70가0246" }),
+  );
+  now = new Date(now.getTime() + 10_000);
+  provider.rows = [row("SYN70가0246", now, 8)];
+  record("short-ride-at-boarding", "the same bus at the boarding stop: the next stop is the destination", await sessions.refresh("syn-session-short"));
+}
+
 async function passedRide(): Promise<void> {
   const provider = new ScriptedProvider();
   let now = new Date("2026-10-01T07:00:00.000Z");
@@ -188,6 +211,7 @@ async function riderIdentifies(): Promise<void> {
 
 await waitingRide();
 await earlyConfirmation();
+await shortRideBeforeBoarding();
 await passedRide();
 await lostRide();
 await riderIdentifies();

@@ -2230,7 +2230,8 @@ final class TapsoAppModel {
             boardingStopName: ride.draft.boarding?.name ?? "",
             destinationName: ride.draft.destination?.name ?? "",
             totalStops: ride.draft.totalStops,
-            vehiclePlate: ride.plate
+            vehiclePlate: ride.plate,
+            language: .current
         )
         // Only a live ride has a server session to push to; a demo ride never asks for a token.
         let push = ride.live != nil && !hybridTrackingEnabled ? await api.liveActivityPushEnabled() : false

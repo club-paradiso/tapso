@@ -11,11 +11,12 @@ import test from "node:test";
 import { fileURLToPath } from "node:url";
 
 import type { StopOnRoute } from "../src/domain.ts";
-import type { JourneySessionView } from "../src/journeySession.ts";
+import { JOURNEY_LANGUAGES, type JourneySessionView } from "../src/journeySession.ts";
 import {
   LIVE_ACTIVITY_REFRESH_INTERVAL_MS,
   LIVE_ACTIVITY_STALE_INTERVAL_MS,
   MILESTONE_ALERTS,
+  MILESTONE_ALERTS_BY_LANGUAGE,
   liveActivityContentState,
   planLiveActivityEnd,
   planLiveActivityPush,
@@ -33,11 +34,27 @@ test("the committed Live Activity signals are what the server's port computes to
   assert.equal(child.status, 0, `${child.stdout}\n${child.stderr}`);
 });
 
-test("milestone alerts use the app's own words", () => {
-  const strings = new Map([...readFileSync(`${repo}/apps/ios/Resources/ko.lproj/Localizable.strings`, "utf8").matchAll(/^"([^"]+)" = "([^"]*)";$/gm)].map((match) => [match[1]!, match[2]!]));
-  for (const [milestone, alert] of Object.entries(MILESTONE_ALERTS)) {
-    assert.equal(alert.title, strings.get(`ride.${milestone}.headline`), milestone);
-    assert.equal(alert.body, strings.get(`ride.${milestone}.detail`), milestone);
+test("milestone alerts use the app's own words in every journey language", () => {
+  for (const language of JOURNEY_LANGUAGES) {
+    const strings = new Map([...readFileSync(`${repo}/apps/ios/Resources/${language}.lproj/Localizable.strings`, "utf8").matchAll(/^"([^"]+)" = "([^"]*)";$/gm)].map((match) => [match[1]!, match[2]!]));
+    for (const [milestone, alert] of Object.entries(MILESTONE_ALERTS_BY_LANGUAGE[language])) {
+      assert.equal(alert.title, strings.get(`alert.${milestone}.title`), `${language} ${milestone}`);
+      assert.equal(alert.body, strings.get(`alert.${milestone}.body`), `${language} ${milestone}`);
+    }
+  }
+  assert.equal(MILESTONE_ALERTS, MILESTONE_ALERTS_BY_LANGUAGE.ko);
+});
+
+test("a milestone alert speaks the journey's language, Korean when none was given", () => {
+  const prepare = view("tracking-prepare");
+  assert.equal(prepare.language, "ko");
+  const korean = planLiveActivityPush(prepare, stops, undefined);
+  assert.ok(korean.send);
+  assert.deepEqual(korean.push.alert, MILESTONE_ALERTS_BY_LANGUAGE.ko.prepare);
+  for (const language of JOURNEY_LANGUAGES) {
+    const plan = planLiveActivityPush({ ...view("tracking-prepare"), language }, stops, undefined);
+    assert.ok(plan.send);
+    assert.deepEqual(plan.push.alert, MILESTONE_ALERTS_BY_LANGUAGE[language].prepare, language);
   }
 });
 

@@ -58,6 +58,8 @@ final class TapsoAPIClientTests: XCTestCase {
         XCTAssertEqual(json["boardingStopSequence"] as? Int, 4)
         XCTAssertEqual(json["destinationStopSequence"] as? Int, 10)
         XCTAssertNil(json["vehicleId"], "a session never starts with a chosen bus")
+        XCTAssertEqual(json["language"] as? String, JourneyLanguage.current.rawValue, "the journey language travels with the session")
+        XCTAssertEqual(Set(json.keys), ["routeId", "cityCode", "boardingStopSequence", "destinationStopSequence", "riderState", "language"], "nothing else about the rider is sent")
     }
 
     func testEveryServerFailureKeepsItsMeaning() async {

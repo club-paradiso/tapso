@@ -68,6 +68,9 @@ public struct TapsoActivityAttributes: ActivityAttributes, Sendable {
     public let totalStops: Int
     /// The masked plate of the rider-confirmed bus, e.g. `••0001`.
     public let vehiclePlate: String?
+    /// The journey language (`JourneyLanguage.rawValue`), fixed at ride start so the Lock
+    /// Screen and Dynamic Island speak the app's language. Optional so older activities decode.
+    public let language: String?
 
     public init(
         routeNumber: String,
@@ -75,7 +78,8 @@ public struct TapsoActivityAttributes: ActivityAttributes, Sendable {
         boardingStopName: String,
         destinationName: String,
         totalStops: Int,
-        vehiclePlate: String? = nil
+        vehiclePlate: String? = nil,
+        language: JourneyLanguage? = nil
     ) {
         self.routeNumber = routeNumber
         self.routeID = routeID
@@ -83,5 +87,11 @@ public struct TapsoActivityAttributes: ActivityAttributes, Sendable {
         self.destinationName = destinationName
         self.totalStops = totalStops
         self.vehiclePlate = vehiclePlate
+        self.language = language?.rawValue
+    }
+
+    /// The locale the activity's strings render in; the extension's own when unset.
+    public var journeyLocale: Locale? {
+        language.flatMap(JourneyLanguage.init(rawValue:))?.locale
     }
 }

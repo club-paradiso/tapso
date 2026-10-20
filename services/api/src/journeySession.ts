@@ -214,6 +214,8 @@ export interface JourneySessionView {
   directionCode?: string;
   /** What the rider declared at session start; `waiting_at_stop` when they did not say. */
   riderState: RiderState;
+  /** The journey language server-sent alerts use; `ko` when the client did not say. */
+  language: JourneyLanguage;
   selectedVehicleId?: string;
   selectionMode?: "automatic" | "explicit";
   matchConfidence: MatchConfidence;
@@ -308,6 +310,18 @@ export interface JourneySessionCoordinatorOptions {
   matchingReadiness?: ReadinessLevel;
 }
 
+/**
+ * The languages a journey's server-sent text (Live Activity alerts) can speak.
+ * The rider's choice travels with the session and nothing else about them does.
+ */
+export const JOURNEY_LANGUAGES = ["ko", "en", "zh-Hans", "ja"] as const;
+export type JourneyLanguage = (typeof JOURNEY_LANGUAGES)[number];
+
+/** Same shapes the GET routes accept (`apiRouter.ts`); a session stores what it is given. */
+const SESSION_ROUTE_ID_PATTERN = /^[A-Za-z0-9_-]{1,64}$/;
+const SESSION_CITY_CODE_PATTERN = /^[0-9]{1,6}$/;
+const SESSION_TEXT_MAX_LENGTH = 64;
+
 type SessionInput = {
   routeId: string;
   cityCode: string;
@@ -316,6 +330,8 @@ type SessionInput = {
   directionCode?: string;
   /** Absent means `waiting_at_stop`, the rule whose failure mode is abstaining. */
   riderState?: RiderState;
+  /** Absent means Korean (`JOURNEY_LANGUAGES`). */
+  language?: JourneyLanguage;
 };
 
 /**
@@ -1400,6 +1416,7 @@ export class JourneySessionCoordinator {
       destinationStop: { ...record.destinationStop },
       directionCode: record.directionCode,
       riderState: record.riderState ?? "waiting_at_stop",
+      language: record.language ?? "ko",
       selectedVehicleId: record.selectedVehicleId,
       selectionMode: record.selectionMode,
       matchConfidence: record.matchConfidence,
@@ -1440,6 +1457,7 @@ function toStored(record: SessionRecord): StoredJourneySession {
     destinationStopSequence: record.destinationStopSequence,
     ...(record.directionCode === undefined ? {} : { directionCode: record.directionCode }),
     ...(record.riderState === undefined ? {} : { riderState: record.riderState }),
+    ...(record.language === undefined ? {} : { language: record.language }),
     stops: record.stops,
     boardingStop: record.boardingStop,
     destinationStop: record.destinationStop,
@@ -1470,6 +1488,7 @@ function toRecord(session: StoredJourneySession): SessionRecord {
     destinationStopSequence: session.destinationStopSequence,
     ...(session.directionCode === undefined ? {} : { directionCode: session.directionCode }),
     ...(session.riderState === undefined ? {} : { riderState: session.riderState }),
+    ...(session.language === undefined ? {} : { language: session.language }),
     stops: session.stops,
     boardingStop: session.boardingStop,
     destinationStop: session.destinationStop,
@@ -1567,15 +1586,23 @@ export class SessionIdCollisionError extends Error {
   }
 }
 
+/** Throws `SessionInputError` for a body `create` would refuse, before anything is spent on it. */
+export function validateSessionInput(value: unknown): void {
+  parseSessionInput(value);
+}
+
 function parseSessionInput(value: unknown): SessionInput {
   if (!value || typeof value !== "object" || Array.isArray(value)) throw new SessionInputError("JSON object required");
   const input = value as Record<string, unknown>;
   const routeId = requiredText(input.routeId, "routeId");
+  if (!SESSION_ROUTE_ID_PATTERN.test(routeId)) throw new SessionInputError("routeId is not a route id");
   const cityCode = requiredText(input.cityCode, "cityCode");
+  if (!SESSION_CITY_CODE_PATTERN.test(cityCode)) throw new SessionInputError("cityCode is not a city code");
   const boardingStopSequence = positiveInteger(input.boardingStopSequence, "boardingStopSequence");
   const destinationStopSequence = positiveInteger(input.destinationStopSequence, "destinationStopSequence");
-  const directionCode = input.directionCode === undefined ? undefined : requiredText(input.directionCode, "directionCode");
+  const directionCode = input.directionCode === undefined ? undefined : boundedText(input.directionCode, "directionCode");
   const riderState = parseRiderState(input.riderState);
+  const language = parseLanguage(input.language);
   return {
     routeId,
     cityCode,
@@ -1583,6 +1610,7 @@ function parseSessionInput(value: unknown): SessionInput {
     destinationStopSequence,
     directionCode,
     ...(riderState === undefined ? {} : { riderState }),
+    ...(language === undefined ? {} : { language }),
   };
 }
 
@@ -1592,9 +1620,22 @@ function parseRiderState(value: unknown): RiderState | undefined {
   throw new SessionInputError("riderState must be waiting_at_stop or on_board");
 }
 
+function parseLanguage(value: unknown): JourneyLanguage | undefined {
+  if (value === undefined) return undefined;
+  if (typeof value === "string" && (JOURNEY_LANGUAGES as readonly string[]).includes(value)) return value as JourneyLanguage;
+  throw new SessionInputError(`language must be one of ${JOURNEY_LANGUAGES.join(", ")}`);
+}
+
 function parseVehicleConfirmation(value: unknown): string {
   if (!value || typeof value !== "object" || Array.isArray(value)) throw new SessionInputError("JSON object required");
-  return requiredText((value as Record<string, unknown>).vehicleId, "vehicleId");
+  return boundedText((value as Record<string, unknown>).vehicleId, "vehicleId");
+}
+
+/** Required text no longer than `SESSION_TEXT_MAX_LENGTH`, so a row never stores an arbitrary blob. */
+function boundedText(value: unknown, field: string): string {
+  const text = requiredText(value, field);
+  if (text.length > SESSION_TEXT_MAX_LENGTH) throw new SessionInputError(`${field} is too long`);
+  return text;
 }
 
 function requiredText(value: unknown, field: string): string {

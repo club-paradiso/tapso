@@ -44,6 +44,8 @@ export interface StoredJourneySession {
   directionCode?: string;
   /** Absent on rows written before rider states existed; read as `waiting_at_stop`. */
   riderState?: "waiting_at_stop" | "on_board";
+  /** The rider's journey language, for server-sent alert text. Absent means Korean. */
+  language?: "ko" | "en" | "zh-Hans" | "ja";
   stops: StopOnRoute[];
   boardingStop: StopOnRoute;
   destinationStop: StopOnRoute;

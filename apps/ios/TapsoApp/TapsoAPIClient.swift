@@ -114,14 +114,16 @@ struct TapsoAPIClient: Sendable {
         routeID: String,
         cityCode: String,
         boardingSequence: Int,
-        destinationSequence: Int
+        destinationSequence: Int,
+        language: JourneyLanguage = .current
     ) async throws -> JourneySessionSnapshot {
         let body = SessionRequest(
             routeId: routeID,
             cityCode: cityCode,
             boardingStopSequence: boardingSequence,
             destinationStopSequence: destinationSequence,
-            riderState: "waiting_at_stop"
+            riderState: "waiting_at_stop",
+            language: language.rawValue
         )
         let request = try makeRequest(path: "/v1/sessions", method: "POST", body: body)
         return try await send(request, as: JourneySessionSnapshot.self)
@@ -201,6 +203,8 @@ struct TapsoAPIClient: Sendable {
         let boardingStopSequence: Int
         let destinationStopSequence: Int
         let riderState: String
+        /// The journey language for server-sent alerts (`JourneyLanguage`); nothing else about the rider.
+        let language: String
     }
 
     private struct ConfirmRequest: Encodable {
