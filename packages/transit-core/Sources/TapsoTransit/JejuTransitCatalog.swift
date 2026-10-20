@@ -227,6 +227,22 @@ public struct DestinationSearchIndex: Sendable {
             .map(\.place)
     }
 
+    /// Places a tourist reaches by a curated spot name in Korean, English, Chinese or Japanese
+    /// ("Seongsan", "城山日出峰", "城山日出峰"). Only the curated guides (`allTouristStopGuides`)
+    /// answer, and each resolves to the catalog place of its official Korean stop name, so a
+    /// foreign query can never invent a stop or a translation. Empty for anything else.
+    public func touristSearch(_ query: String) -> [DestinationPlace] {
+        let trimmed = query.trimmingCharacters(in: .whitespacesAndNewlines)
+        let names = Set(allTouristStopGuides.filter { $0.matches(trimmed) }.map { Self.placeName($0.stopNameKo) })
+        guard !names.isEmpty else { return [] }
+        return places.filter { names.contains($0.name) }
+    }
+
+    /// The curated guide for a place, when one of the guides names it.
+    public func touristGuide(for place: DestinationPlace) -> TouristStopGuide? {
+        allTouristStopGuides.first { Self.placeName($0.stopNameKo) == place.name }
+    }
+
     /// Every variant that can drop the rider at the place, grouped by route
     /// number. A variant where the place is its first stop is left out (nowhere
     /// to board before it); a variant that stops there twice offers each stop.

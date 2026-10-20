@@ -21,7 +21,15 @@ struct CatalogDestinationSearchContent: View {
     let onChoose: (DestinationPlace) -> Void
 
     private var trimmed: String { query.trimmingCharacters(in: .whitespacesAndNewlines) }
-    private var results: [DestinationPlace] { trimmed.isEmpty ? [] : index.search(trimmed) }
+    /// Stop names first; then the curated tourist spots a foreign-language query names
+    /// ("Seongsan", "城山日出峰"), each as its official Korean stop.
+    private var results: [DestinationPlace] {
+        guard !trimmed.isEmpty else { return [] }
+        let stops = index.search(trimmed)
+        let known = Set(stops.map(\.id))
+        return stops + index.touristSearch(trimmed).filter { !known.contains($0.id) }
+    }
+    private var language: JourneyLanguage { .current }
     private var recents: [DestinationPlace] {
         recentNames.compactMap { name in
             let key = DestinationSearchIndex.placeName(name)
@@ -80,13 +88,21 @@ struct CatalogDestinationSearchContent: View {
             ForEach(places) { place in
                 StopRow(
                     name: place.name,
-                    detail: String(format: RideText.string(RideText.countKey("search.catalog.routes", place.routeCount)), place.routeCount),
+                    detail: detail(for: place),
                     systemImage: symbol,
                     tint: TapsoColor.tangerine
                 ) { onChoose(place) }
                 Divider().overlay(TapsoColor.separator)
             }
         }
+    }
+
+    /// The route count; for a curated tourist stop outside Korean, the spot's name in the
+    /// rider's language first. The official Korean stop name stays the row's title.
+    private func detail(for place: DestinationPlace) -> String {
+        let routes = String(format: RideText.string(RideText.countKey("search.catalog.routes", place.routeCount)), place.routeCount)
+        guard language != .ko, let guide = index.touristGuide(for: place) else { return routes }
+        return "\(guide.spotName(for: language)) · \(routes)"
     }
 
     /// "2026-10-03T07:41:12.000Z" → "2026-10-03".
