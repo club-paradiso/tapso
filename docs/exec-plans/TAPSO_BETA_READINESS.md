@@ -107,4 +107,9 @@ node --experimental-strip-types scripts/journey/live-activity-signals.ts --check
     `RideText.string(_:language:)` (`testLiveActivityStringsFollowTheJourneyLanguage`). Whether the widget
     extension bundles every `.lproj` on a device is still device-only verification.
   - Machine-translated zh/ja copy needs native review before external testing.
-- **Next action:** the owner reviews and merges PR #146, then works through `docs/beta/HUMAN_ACTION_REQUIRED.md` in order.
+- 2026-10-20: #146 merged (`10a39dc`); post-deploy smoke on that commit passed 19/19 and the session lifecycle 8/8
+  (run 39394592084). Owner closed #145 and chose a free-team pilot before paid enrollment. Added the **Tapso Beta**
+  scheme, a CI build of the Beta configuration for a device (it was never compiled before), a write-free feedback
+  probe in the production smoke, `docs/beta/FREE_TEAM_FIELD_TEST.md` and the evidence template.
+- **Next action:** the owner runs the free-team pilot (`docs/beta/FREE_TEAM_FIELD_TEST.md`); Claude turns reported
+  results into sanitized evidence files and fixes what they find.

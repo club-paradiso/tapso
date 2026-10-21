@@ -98,6 +98,17 @@ jobs:
               CODE_SIGNING_ALLOWED=NO 2>&1 | tail -n 20
           done
           find work/snapshots -name '*.png' | wc -l
+      - name: Beta build (what testers install from Xcode, for a device, unsigned)
+        run: |
+          # The Beta configuration is Release plus TAPSO_FIELD_TOOLS; the Tapso scheme above
+          # builds Debug only, so without this step the tester's build is never compiled here.
+          set -o pipefail
+          xcodebuild -project apps/ios/Tapso.xcodeproj -scheme "Tapso Beta" \
+            -destination "generic/platform=iOS" \
+            -derivedDataPath work/DerivedDataBeta \
+            CODE_SIGNING_ALLOWED=NO \
+            build 2>&1 | tee work-beta.log | grep -E "error:|warning: .*(Tapso|Shared|LiveActivity)|\*\* BUILD" || true
+          grep -q "\*\* BUILD SUCCEEDED \*\*" work-beta.log
       - uses: actions/upload-artifact@v4
         if: always()
         with:
@@ -109,7 +120,10 @@ jobs:
         if: failure()
         with:
           name: ios-xcodebuild-log
-          path: work-xcodebuild.log
+          path: |
+            work-xcodebuild.log
+            work-beta.log
+          if-no-files-found: ignore
           retention-days: 7
       - name: XcodeGen spec produces the same source membership
         run: |
@@ -118,6 +132,7 @@ jobs:
           xcodegen generate --spec apps/ios/project.yml --project "$RUNNER_TEMP/xcodegen" --quiet
           membership() { grep -oE '/\* [A-Za-z0-9]+\.swift in Sources \*/' "$1" | sort; }
           diff <(membership apps/ios/Tapso.xcodeproj/project.pbxproj) <(membership "$RUNNER_TEMP/xcodegen/Tapso.xcodeproj/project.pbxproj")
+          test -f "$RUNNER_TEMP/xcodegen/Tapso.xcodeproj/xcshareddata/xcschemes/Tapso Beta.xcscheme"
 
   api:
     runs-on: ubuntu-latest

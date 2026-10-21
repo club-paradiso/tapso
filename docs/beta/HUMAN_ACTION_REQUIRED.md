@@ -6,7 +6,10 @@ key, token or password into a GitHub comment, issue, PR or chat.
 
 Status as of 2026-10-20. ⛔ blocks the pilot; 🟠 blocks TestFlight; 🟡 before external testers.
 
-## 1. ⛔ Decide PR #145
+**Owner decision (2026-10-20):** #145 is closed. Everything a free Personal Team can test is tested first
+(`docs/beta/FREE_TEAM_FIELD_TEST.md`); steps 3–7 start only after that pilot meets its exit criteria.
+
+## 1. ✅ Decide PR #145 (closed 2026-10-20)
 
 - **What:** close #145 once PR #146 is merged, or tell Claude to keep it open.
 - **Why:** #145 would revert the reliability work of #138–#144 (see `docs/exec-plans/TAPSO_BETA_READINESS.md` §2).
@@ -23,10 +26,12 @@ Status as of 2026-10-20. ⛔ blocks the pilot; 🟠 blocks TestFlight; 🟡 befo
   provisioning profile lasts 7 days.
 - **Evidence:** the build identity line (version, build, git SHA, configuration). It is shown in the feedback
   sheet of a Beta build.
-- **Check:** run `docs/DEVICE_TEST_PLAN.md` §"Beta field protocol" and commit results to
-  `artifacts/device-validation/`.
+- **Check:** follow `docs/beta/FREE_TEAM_FIELD_TEST.md` (install with the **Tapso Beta** scheme, every case a free
+  team can run) and record results in `artifacts/device-validation/`.
 
 ## 3. 🟠 Apple Developer Program (paid)
+
+- **When:** after the free-team pilot meets its exit criteria (owner decision, 2026-10-20).
 
 - **What:** enrol, or confirm enrolment, of the account that will own TAPSO.
 - **Why:** TestFlight, distribution signing and APNs keys need a paid team. The last recorded team is the free
@@ -78,7 +83,7 @@ Status as of 2026-10-20. ⛔ blocks the pilot; 🟠 blocks TestFlight; 🟡 befo
   - add internal testers.
 - **Why:** this is where internal TestFlight distribution happens.
 - **Where:** appstoreconnect.apple.com › Apps, and Users and Access.
-- **Evidence:** the app record exists, and a build uploaded with Xcode › Product › Archive (Beta configuration)
+- **Evidence:** the app record exists, and a build uploaded with Xcode › Product › Archive with the **Tapso Beta** scheme (Beta configuration)
   shows "Ready to Test".
 - **Fill in from `docs/TESTFLIGHT.md`:** beta description, "What to Test", privacy policy URL and support
   contact (step 7).

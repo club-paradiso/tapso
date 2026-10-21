@@ -15,7 +15,7 @@ A percentage of finished tasks never decides it; one open P0 blocks.
 
 | ID | Blocker | Owner | Status |
 |---|---|---|---|
-| P0-1 | #145 would revert reliability fixes if merged | Claude (done in #146) + owner (close #145) | Fixed in #146; #145 open |
+| P0-1 | #145 would revert reliability fixes if merged | Claude (done in #146) + owner (close #145) | Done: #146 merged, #145 closed |
 | P0-2 | No APNs: with TAPSO closed and no keep-alive, the Lock Screen goes stale after 120 s and no get-off alert arrives | Owner (paid team, .p8) | BLOCKED |
 | P0-3 | No paid Apple Developer team, so no TestFlight | Owner | BLOCKED |
 | P0-4 | No physical ride evidence (gates 4, 5) | Owner (hardware, rides) | NOT_TESTED |
@@ -28,11 +28,18 @@ A percentage of finished tasks never decides it; one open P0 blocks.
 | P2 | Live Activity fonts do not follow Dynamic Type | Claude, later | Open |
 | — | Matching readiness `READY_FOR_SHADOW` (issue #74, CA-5 on real bases) | — | Unchanged by design; automatic matching stays off |
 
+## Plan (owner decision, 2026-10-20)
+
+1. Free-team pilot: every case a Personal Team can run, per `docs/beta/FREE_TEAM_FIELD_TEST.md`. B-7 and B-8 are out
+   of reach without APNs, so this pilot runs with the app open or keep-alive on.
+2. Paid enrollment only after that pilot meets its exit criteria.
+3. Then APNs, and B-7/B-8 on a device.
+
 ## What moves it
 
 **To `READY_FOR_INTERNAL_FIELD_PILOT`, all of:**
-1. PR #146 CI green: `ios`, `transit-core`, `api`, `web`, `matcher-evidence`.
-2. #146 merged by the owner.
+1. PR #146 CI green: `ios`, `transit-core`, `api`, `web`, `matcher-evidence`. Done.
+2. #146 merged by the owner. Done.
 3. A paired device runs the Beta configuration, and the tester has `docs/DEVICE_TEST_PLAN.md` §"Beta field
    protocol".
 4. The pilot is limited to:

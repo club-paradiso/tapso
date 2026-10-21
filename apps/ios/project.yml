@@ -175,3 +175,18 @@ targets:
     dependencies:
       - target: Tapso
       - package: TapsoTransit
+# What a tester installs from Xcode (docs/beta/FREE_TEAM_FIELD_TEST.md): Run, Profile and Archive use
+# the Beta configuration, so the build on the phone is the one CI compiles in the "Beta build" step.
+schemes:
+  Tapso Beta:
+    build:
+      targets:
+        Tapso: [running, profiling, archiving, analyzing]
+    run:
+      config: Beta
+    profile:
+      config: Beta
+    analyze:
+      config: Beta
+    archive:
+      config: Beta
