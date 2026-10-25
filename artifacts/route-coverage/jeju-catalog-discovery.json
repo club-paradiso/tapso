@@ -1,13 +1,13 @@
 {
-  "generatedAt": "2026-10-03T08:56:42.191Z",
+  "generatedAt": "2026-10-25T21:52:05.900Z",
   "base": "https://tapso-api.vercel.app",
-  "catalogVersion": "794f3bcb831d783e",
+  "catalogVersion": "226dbab9867595f1",
   "discovery": [
     {
       "method": "all_routes",
       "query": "",
-      "routeIds": 0,
-      "status": 504
+      "routeIds": 994,
+      "status": 200
     },
     {
       "method": "number_search",
@@ -54,7 +54,7 @@
     {
       "method": "number_search",
       "query": "8",
-      "routeIds": 98,
+      "routeIds": 100,
       "status": 200
     },
     {
@@ -1554,7 +1554,7 @@
     {
       "method": "timetable_census_number",
       "query": "888",
-      "routeIds": 1,
+      "routeIds": 3,
       "status": 200
     },
     {
@@ -1600,8 +1600,8 @@
       "status": 200
     }
   ],
-  "routeIds": 992,
-  "routes": 989,
+  "routeIds": 994,
+  "routes": 991,
   "stops": 4338,
   "unavailable": [
     {
