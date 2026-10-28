@@ -11,7 +11,7 @@ void main(){
  vec2 q=(p-center)*vec2(aspect,1.); float radius=aspect<.9?.255:.30;
  float a=atan(q.y,q.x);float wobble=sin(a*3.+time*.55)*.009+sin(a*5.-time*.4)*.004;
  float d=length(q)/(radius+wobble);float mask=1.-smoothstep(.985,1.015,d);
- vec3 blur=vec3(0.);for(int x=-2;x<=2;x++){for(int y=-2;y<=2;y++){blur+=photo(p+vec2(float(x),float(y))*.012);}}blur/=25.;
+ vec3 blur=vec3(0.);float weights=0.;for(int x=-2;x<=2;x++){for(int y=-2;y<=2;y++){float w=exp(-float(x*x+y*y)*.35);blur+=photo(p+vec2(float(x),float(y))*.004)*w;weights+=w;}}blur/=weights;
  float z=sqrt(max(0.,1.-d*d));vec2 bend=q*(.34*z-.09)/vec2(aspect,1.);vec3 lens=photo(p-bend);
  float rim=pow(clamp(d,0.,1.),14.);float shine=pow(max(0.,dot(normalize(vec3(q/radius,z)),normalize(vec3(-.6,.8,1.)))),24.);
  lens+=rim*vec3(.24,.48,.52)+shine*.65;
