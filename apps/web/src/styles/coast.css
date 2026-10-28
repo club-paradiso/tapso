@@ -1,0 +1,497 @@
+/*
+ * Hero: real Jeju coastal-road footage that becomes an iPhone Lock Screen.
+ *
+ * The stage is always a dark film surface in both themes: the type on it is
+ * white on a basalt shade, never on a light wash, so the same contrast holds
+ * in light and dark mode. `Hero.tsx` writes --film-clip, --phone-x/y/w and
+ * the three fades while the visitor scrolls.
+ */
+
+.coast {
+  --film-ink: #ffffff;
+  --film-ink-2: rgb(255 255 255 / 84%);
+  --film-mint: #7df0d5;
+  --film-basalt: 7 25 35;
+  position: relative;
+  height: 290svh;
+  /* The film runs under the sticky header. */
+  margin-top: -64px;
+  background: var(--night);
+  color: var(--film-ink);
+}
+
+.coast.is-static {
+  height: auto;
+}
+
+/* Hand the dark film over to the page's own background (a no-op in dark mode). */
+.coast::after {
+  content: "";
+  display: block;
+  height: 96px;
+  background: linear-gradient(var(--night), var(--bg));
+}
+
+.coast-stage {
+  --film-clip: inset(0 0 0 0 round 0);
+  --copy-out: 0;
+  --device-in: 0;
+  --pocket-in: 0;
+  position: sticky;
+  top: 0;
+  height: 100svh;
+  min-height: 560px;
+  overflow: hidden;
+  isolation: isolate;
+  background: var(--night);
+}
+
+.is-static .coast-stage {
+  position: relative;
+}
+
+/* Film ------------------------------------------------------------------- */
+
+.coast-media {
+  position: absolute;
+  inset: 0;
+  z-index: 0;
+  clip-path: var(--film-clip);
+  background: var(--night);
+}
+
+.coast-still,
+.coast-film {
+  position: absolute;
+  inset: 0;
+  width: 100%;
+  height: 100%;
+  object-fit: cover;
+  object-position: 55% 50%;
+}
+
+.coast-film {
+  opacity: 0;
+  transition: opacity 0.9s var(--ease-standard);
+}
+
+.has-frame.film-playing .coast-film,
+.has-frame.film-paused .coast-film {
+  opacity: 1;
+}
+
+.film-failed .coast-film {
+  display: none;
+}
+
+/* Shade: dense where type sits (left and bottom), clear over the road. */
+.coast-shade {
+  position: absolute;
+  inset: 0;
+  background:
+    linear-gradient(90deg, rgb(var(--film-basalt) / 78%) 0%, rgb(var(--film-basalt) / 52%) 34%, rgb(var(--film-basalt) / 0%) 62%),
+    linear-gradient(0deg, rgb(var(--film-basalt) / 70%) 0%, rgb(var(--film-basalt) / 0%) 40%),
+    linear-gradient(180deg, rgb(var(--film-basalt) / 68%) 0%, rgb(var(--film-basalt) / 30%) 9%, rgb(var(--film-basalt) / 0%) 22%);
+}
+
+/* Once the film is the phone's wallpaper it needs the Lock Screen's own dim. */
+.coast-stage .coast-shade {
+  opacity: calc(1 - var(--device-in) * 0.55);
+}
+
+/* Copy ------------------------------------------------------------------- */
+
+.coast-copy {
+  position: absolute;
+  z-index: 2;
+  left: max(var(--gutter), calc((100vw - 1200px) / 2));
+  bottom: clamp(88px, 13svh, 150px);
+  width: min(620px, calc(100% - 2 * var(--gutter)));
+  opacity: calc(1 - var(--copy-out));
+  transform: translateY(calc(var(--copy-out) * -48px));
+}
+
+.coast-eyebrow {
+  font-size: 0.9375rem;
+  font-weight: 700;
+  letter-spacing: 0.01em;
+  color: var(--film-ink-2);
+}
+
+.coast-status {
+  color: #ffc46b;
+}
+
+.coast h1 {
+  margin: 18px 0 14px;
+  font-size: clamp(3rem, 6.4vw, 6rem);
+  font-weight: 800;
+  line-height: 1.04;
+  letter-spacing: -0.045em;
+  color: var(--film-ink);
+  text-wrap: balance;
+  text-shadow: 0 2px 30px rgb(var(--film-basalt) / 35%);
+}
+
+.coast h1 span:last-child {
+  color: var(--film-mint);
+}
+
+.coast-gloss {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  font-size: 1rem;
+  color: var(--film-ink-2);
+}
+
+.coast-gloss-tag {
+  padding: 2px 8px;
+  border: 1px solid rgb(255 255 255 / 40%);
+  border-radius: 6px;
+  font-size: 0.8125rem;
+  font-weight: 700;
+}
+
+.coast-lede {
+  margin: 22px 0 28px;
+  font-size: clamp(1.25rem, 1.9vw, 1.625rem);
+  font-weight: 700;
+  letter-spacing: -0.02em;
+  line-height: 1.35;
+}
+
+.coast-actions {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 12px;
+}
+
+.coast .btn-primary {
+  color: var(--night);
+  background: var(--mint);
+}
+
+.coast .btn-primary:hover {
+  background: #52d8be;
+}
+
+.btn-glass {
+  color: var(--film-ink);
+  background: rgb(255 255 255 / 12%);
+  box-shadow: inset 0 0 0 1px rgb(255 255 255 / 36%);
+  backdrop-filter: blur(12px);
+  -webkit-backdrop-filter: blur(12px);
+}
+
+.btn-glass:hover {
+  background: rgb(255 255 255 / 20%);
+}
+
+.coast-status-line {
+  max-width: 480px;
+  margin-top: 20px;
+  font-size: 0.9375rem;
+  line-height: 1.55;
+  color: var(--film-ink-2);
+}
+
+.coast-status-line a,
+.coast-pocket a {
+  color: var(--film-ink);
+  text-decoration: underline;
+  text-underline-offset: 3px;
+}
+
+/* Bottom bar: where the film comes from, and the pause control. ---------- */
+
+.coast-bar {
+  position: absolute;
+  z-index: 3;
+  left: max(var(--gutter), calc((100vw - 1200px) / 2));
+  right: max(var(--gutter), calc((100vw - 1200px) / 2));
+  bottom: 20px;
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 16px;
+}
+
+.coast-credit {
+  max-width: 560px;
+  font-size: 0.8125rem;
+  line-height: 1.45;
+  color: var(--film-ink-2);
+  opacity: calc(1 - var(--device-in));
+}
+
+.coast-toggle {
+  display: inline-flex;
+  flex: none;
+  align-items: center;
+  gap: 8px;
+  min-height: var(--touch-min);
+  padding: 0 16px 0 12px;
+  border-radius: 999px;
+  font-size: 0.875rem;
+  font-weight: 700;
+  color: var(--film-ink);
+  background: rgb(var(--film-basalt) / 55%);
+  box-shadow: inset 0 0 0 1px rgb(255 255 255 / 30%);
+  backdrop-filter: blur(12px);
+  -webkit-backdrop-filter: blur(12px);
+}
+
+.coast-toggle svg {
+  width: 18px;
+  height: 18px;
+}
+
+.coast-cue {
+  display: none;
+  position: absolute;
+  z-index: 2;
+  left: 50%;
+  bottom: 84px;
+  transform: translateX(-50%);
+  font-size: 0.8125rem;
+  font-weight: 600;
+  color: var(--film-ink-2);
+  opacity: calc(1 - var(--copy-out));
+  pointer-events: none;
+}
+
+/* Only where it cannot meet the copy. */
+@media (min-width: 1100px) and (min-height: 820px) {
+  .coast-cue {
+    display: block;
+  }
+}
+
+.coast-cue::after {
+  content: "";
+  display: block;
+  width: 1px;
+  height: 28px;
+  margin: 8px auto 0;
+  background: linear-gradient(var(--film-ink-2), transparent);
+}
+
+/* Phone the film turns into ---------------------------------------------- */
+
+.coast-phone.phone {
+  --pw: var(--phone-w);
+  position: absolute;
+  z-index: 1;
+  left: var(--phone-x);
+  top: var(--phone-y);
+  width: var(--pw);
+  /* The film itself is the screen: only the hardware edge is drawn. */
+  background: none;
+  box-shadow: none;
+  opacity: var(--device-in);
+  pointer-events: none;
+}
+
+.coast-phone::before {
+  content: "";
+  position: absolute;
+  inset: 0;
+  border: calc(var(--pw) * 0.03) solid var(--device-edge-mid);
+  border-radius: calc(var(--pw) * 0.155);
+  box-shadow: var(--shadow-device), inset 0 0 0 1.5px rgb(255 255 255 / 10%), 0 0 0 1px rgb(255 255 255 / 14%);
+}
+
+.coast-phone .phone-screen {
+  background: transparent;
+  color: #fff;
+}
+
+/* The Lock Screen dims the top of a bright wallpaper behind the clock. */
+.coast-phone .phone-screen::before {
+  content: "";
+  position: absolute;
+  inset: 0 0 auto;
+  z-index: -1;
+  height: 42%;
+  background: linear-gradient(180deg, rgb(var(--film-basalt) / 55%), rgb(var(--film-basalt) / 0%));
+}
+
+.coast-phone .lock-clock,
+.coast-phone .phone-status {
+  text-shadow: 0 1px 12px rgb(var(--film-basalt) / 45%);
+}
+
+.coast-phone .lock-clock {
+  color: #fff;
+}
+
+.coast-pocket {
+  position: absolute;
+  z-index: 2;
+  left: max(var(--gutter), calc((100vw - 1200px) / 2));
+  top: 50%;
+  width: min(440px, calc(var(--phone-x) - max(var(--gutter), calc((100vw - 1200px) / 2)) - 56px));
+  transform: translateY(calc(-50% + (1 - var(--pocket-in)) * 32px));
+  opacity: var(--pocket-in);
+}
+
+.coast-pocket-title {
+  margin: 14px 0 18px;
+  font-size: clamp(2rem, 3.6vw, 3.25rem);
+  font-weight: 800;
+  line-height: 1.12;
+  letter-spacing: -0.04em;
+}
+
+.coast-pocket-body {
+  font-size: 1.125rem;
+  line-height: 1.6;
+  color: var(--film-ink-2);
+}
+
+.coast-steps {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 8px;
+  margin: 28px 0 14px;
+}
+
+.coast-steps button {
+  min-height: var(--touch-min);
+  padding: 0 16px;
+  border-radius: 999px;
+  font-size: 0.9375rem;
+  font-weight: 700;
+  color: var(--film-ink-2);
+  background: rgb(255 255 255 / 8%);
+  box-shadow: inset 0 0 0 1px rgb(255 255 255 / 22%);
+  transition:
+    background-color var(--dur-emphasis) var(--ease-standard),
+    color var(--dur-emphasis) var(--ease-standard);
+}
+
+.coast-steps button.is-done {
+  color: var(--film-ink);
+}
+
+.coast-steps button.is-active {
+  color: var(--night);
+  background: var(--film-ink);
+  box-shadow: none;
+}
+
+.coast-note {
+  font-size: 0.8125rem;
+  color: var(--film-ink-2);
+}
+
+/* Reduced motion: the Lock Screen moment is its own block below the film. */
+.coast-stage.is-pocket {
+  --device-in: 1;
+  --pocket-in: 1;
+  height: 100svh;
+}
+
+.coast-stage.is-pocket .coast-shade {
+  opacity: 0.45;
+}
+
+.coast-stage.is-pocket .coast-phone {
+  pointer-events: auto;
+}
+
+/* Narrow screens: copy at the bottom, phone above it. ------------------ */
+
+@media (max-width: 759px) {
+  .coast {
+    height: 260svh;
+  }
+
+  .coast-stage {
+    min-height: 600px;
+  }
+
+  .coast-shade {
+    background:
+      linear-gradient(0deg, rgb(var(--film-basalt) / 90%) 0%, rgb(var(--film-basalt) / 74%) 48%, rgb(var(--film-basalt) / 0%) 82%),
+      linear-gradient(180deg, rgb(var(--film-basalt) / 68%) 0%, rgb(var(--film-basalt) / 0%) 20%);
+  }
+
+  .coast-copy {
+    bottom: 96px;
+  }
+
+  .coast h1 {
+    font-size: clamp(2.75rem, 13vw, 3.75rem);
+    margin: 12px 0 10px;
+  }
+
+  .coast-lede {
+    margin: 14px 0 20px;
+  }
+
+  .coast-actions .btn {
+    flex: 1 1 auto;
+    justify-content: center;
+  }
+
+  .coast-status-line {
+    margin-top: 14px;
+    font-size: 0.8125rem;
+  }
+
+  .coast-gloss {
+    font-size: 0.875rem;
+  }
+
+  .coast-bar {
+    bottom: 14px;
+    align-items: flex-end;
+  }
+
+  .coast-credit {
+    font-size: 0.6875rem;
+  }
+
+  .coast-pocket {
+    top: auto;
+    bottom: 76px;
+    width: calc(100% - 2 * var(--gutter));
+    transform: translateY(calc((1 - var(--pocket-in)) * 24px));
+  }
+
+  .coast-pocket .coast-eyebrow,
+  .coast-pocket-body {
+    display: none;
+  }
+
+  .coast-pocket-title {
+    margin: 0 0 4px;
+    font-size: 1.625rem;
+    text-align: center;
+  }
+
+  .coast-steps {
+    justify-content: center;
+    flex-wrap: nowrap;
+    gap: 6px;
+    margin: 12px 0 8px;
+  }
+
+  .coast-steps button {
+    padding: 0 12px;
+    font-size: 0.8125rem;
+  }
+
+  .coast-note {
+    text-align: center;
+  }
+}
+
+@media (max-width: 759px) and (max-height: 700px) {
+  .coast-gloss,
+  .coast-status-line {
+    display: none;
+  }
+}

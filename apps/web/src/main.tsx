@@ -9,7 +9,8 @@ import "./styles/island.css";
 import "./styles/journey.css";
 import "./styles/forms.css";
 import "./support-million.css";
-import "./styles/liquid.css";
+import "./styles/theme.css";
+import "./styles/coast.css";
 
 const root = document.getElementById("root")!;
 const app = (
