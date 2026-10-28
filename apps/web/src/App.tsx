@@ -3,7 +3,6 @@ import { confirmSupportPayment, formatKrw } from "./lib/supportClient";
 import { ThemeProvider } from "./design/Theme";
 import { Header } from "./sections/Header";
 import { Hero } from "./sections/Hero";
-import { JourneyFilm } from "./sections/JourneyFilm";
 import { Journey } from "./sections/Journey";
 import { MapCompanion } from "./sections/MapCompanion";
 import { Privacy } from "./sections/Privacy";
@@ -113,7 +112,6 @@ export default function App() {
           <SupportReturnBanner result={supportReturn} onDismiss={dismissSupportReturn} />
         ) : null}
         <Hero />
-        <JourneyFilm />
         <Journey />
         <MapCompanion />
         <Privacy />

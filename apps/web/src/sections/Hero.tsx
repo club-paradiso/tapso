@@ -5,8 +5,6 @@ import { PreviewTag } from "../components/RideParts";
 import { presentMoment } from "../demo/rideMoments.ts";
 import { HERO_LOOP, loopLabel } from "../story/beats.ts";
 import { useHeroTracking, useStory } from "../story/storyStore.ts";
-import { LiquidLens } from "../components/LiquidLens";
-import { useTheme } from "../design/Theme";
 import config from "../design/marketing.json";
 import { useReducedMotion } from "../lib/useReducedMotion";
 
@@ -21,8 +19,9 @@ const HOLD_MS = [3400, 2600, 2600, 3000] as const;
  */
 export function Hero() {
   const ref = useRef<HTMLElement>(null);
-  const {dark}=useTheme();
-  const [lensPaused,setLensPaused]=useState(false);
+  const videoRef = useRef<HTMLVideoElement>(null);
+  const [videoPlaying, setVideoPlaying] = useState(false);
+  const userPaused = useRef(false);
   useHeroTracking(ref);
   const heroInView = useStory((s) => s.heroInView);
   const reduceMotion = useReducedMotion();
@@ -47,9 +46,16 @@ export function Hero() {
   const activity = HERO_LOOP[index] ?? HERO_LOOP[0]!;
   const p = presentMoment(activity.moment);
 
+  useEffect(() => {
+    if (!heroInView) videoRef.current?.pause();
+    else if (!reduceMotion && !userPaused.current && videoRef.current?.paused) void videoRef.current.play().catch(() => setVideoPlaying(false));
+  }, [heroInView, reduceMotion]);
+
   return (
     <section className="hero liquid-hero" id="top" aria-labelledby="hero-title" ref={ref}>
-      <LiquidLens dark={dark} paused={lensPaused}/>
+      <video ref={videoRef} className="hero-film" muted playsInline loop autoPlay={!reduceMotion} preload="metadata" poster="/media/jeju-coast.webp" aria-hidden="true" onPlay={() => setVideoPlaying(true)} onPause={() => setVideoPlaying(false)}>
+        <source src="/media/jeju-journey.mp4" type="video/mp4" />
+      </video>
       <div className="hero-wash" aria-hidden="true"/>
       <div className="container hero-grid">
         <div className="hero-copy">
@@ -137,7 +143,7 @@ export function Hero() {
           <PreviewTag>제품 미리보기 · 합성 데이터</PreviewTag>
         </div>
       </div>
-      <div className="lens-controls"><span>창밖은 제주, 내릴 때는 탑서.</span><button type="button" onClick={()=>setLensPaused(v=>!v)} aria-pressed={lensPaused}>{lensPaused?"렌즈 움직임 켜기":"렌즈 움직임 멈추기"}</button><a href="#how">아래로 내려서 타보기 ↓</a></div>
+      <div className="lens-controls"><span>풍경은 연출 이미지 · 앱 화면은 미리보기</span><button type="button" onClick={() => { const video = videoRef.current; if (!video) return; if (video.paused) { userPaused.current = false; void video.play().catch(() => setVideoPlaying(false)); } else { userPaused.current = true; video.pause(); } }} aria-label={videoPlaying ? "배경 영상 일시 정지" : "배경 영상 재생"}>{videoPlaying ? "영상 멈추기" : "영상 재생"}</button><a href="#how">아래로 내려서 타보기 ↓</a></div>
     </section>
   );
 }

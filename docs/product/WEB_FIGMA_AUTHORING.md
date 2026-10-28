@@ -4,7 +4,7 @@
 - Live: https://tapso-nu.vercel.app/
 - Figma: https://www.figma.com/design/kkx04GvqOzHje7Dw5ikO9X?node-id=314-12
 - Settings: apps/web/src/design/marketing.json
-- Scene shader: apps/web/src/components/LiquidLens.tsx
+- Hero: apps/web/src/sections/Hero.tsx
 - Presentation: apps/web/src/styles/liquid.css
 
 The Figma `11 Marketing Web` page now contains **Web PR / Editable settings · Liquid lens**, with Light/Dark previews bound to the **TAPSO Web PR** variable collection. Existing iOS and web boards remain intact.
@@ -18,4 +18,4 @@ The Figma `11 Marketing Web` page now contains **Web PR / Editable settings · L
 This is an explicit, reviewable export/import workflow, not automatic Figma-to-production synchronization. Current Figma account does not support Code Layers. Figma arbitrary layout edits are not translated into React automatically; request implementation against a node link for layout changes. The local exporter must be installed by the user in their Figma desktop app; no claim of installation or an end-to-end user export is made.
 
 ## Runtime
-Theme follows the OS initially and persists a manual choice locally. The WebGL sphere refracts an original AI-generated Jeju scene, with soft background blur and pointer response. Dark uses a sunset scene. Reduced-motion and explicit pause stop continuous rendering; offscreen and hidden documents skip draws. If WebGL or image loading fails, the CSS photograph and semantic content still render. The scenery is an illustration, not evidence of a real bus route. Product mockups remain labeled synthetic. Existing waitlist and support endpoints are retained.
+Theme follows the OS initially and persists a manual choice locally. The hero plays a muted, looping illustrated coast video with a separate app preview. The temporary clip animates an AI-generated still, not footage of a moving bus or the app; the visual is labelled accordingly. Reduced-motion and explicit pause stop playback, and a poster image remains if video fails. The scenery is an illustration, not evidence of a real bus route. Product mockups remain labeled synthetic. Existing waitlist and support endpoints are retained.
