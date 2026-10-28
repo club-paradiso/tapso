@@ -1,3 +1,4 @@
+import { ThemeToggle } from "../design/Theme";
 import { NAV_ITEMS } from "../content/site.ts";
 import { BrandMark } from "../components/BrandMark";
 import { useIslandShowing } from "../components/IslandDock";
@@ -26,6 +27,7 @@ export function Header() {
             ))}
           </ul>
         </nav>
+        <ThemeToggle />
         <a className="btn btn-primary btn-sm header-cta" href="#waitlist">
           <span className="only-wide">TestFlight </span>사전예약
         </a>

@@ -8,7 +8,8 @@
     "build": "tsc -b && vite build && vite build --ssr src/entry-server.tsx --outDir dist-ssr --emptyOutDir && node scripts/prerender.mjs",
     "preview": "vite preview",
     "test": "node --experimental-strip-types --test test/*.test.ts",
-    "typecheck:vercel": "tsc --project tsconfig.vercel.json"
+    "typecheck:vercel": "tsc --project tsconfig.vercel.json",
+    "design:import": "node scripts/import-design.mjs"
   },
   "dependencies": {
     "react": "^19.1.1",

@@ -1,5 +1,6 @@
 import { Suspense, lazy, useCallback, useEffect, useState } from "react";
 import { confirmSupportPayment, formatKrw } from "./lib/supportClient";
+import { ThemeProvider } from "./design/Theme";
 import { Header } from "./sections/Header";
 import { Hero } from "./sections/Hero";
 import { Journey } from "./sections/Journey";
@@ -103,7 +104,7 @@ export default function App() {
   const [supportReturn, dismissSupportReturn] = useSupportReturn();
 
   return (
-    <div className="page">
+    <ThemeProvider><div className="page">
       <Header />
       <IslandDock />
       <main id="main" tabIndex={-1}>
@@ -125,6 +126,6 @@ export default function App() {
           <SupportDialog onClose={() => setSupportOpen(false)} />
         </Suspense>
       ) : null}
-    </div>
+    </div></ThemeProvider>
   );
 }

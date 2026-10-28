@@ -1,10 +1,13 @@
 import { useEffect, useRef, useState } from "react";
 import { ArrowIcon, PauseIcon, PlayIcon } from "../components/Icons";
-import { HomeScreenPhone, LockScreenPhone } from "../components/NativeSurfaces";
+import { LockScreenPhone } from "../components/NativeSurfaces";
 import { PreviewTag } from "../components/RideParts";
 import { presentMoment } from "../demo/rideMoments.ts";
 import { HERO_LOOP, loopLabel } from "../story/beats.ts";
 import { useHeroTracking, useStory } from "../story/storyStore.ts";
+import { LiquidLens } from "../components/LiquidLens";
+import { useTheme } from "../design/Theme";
+import config from "../design/marketing.json";
 import { useReducedMotion } from "../lib/useReducedMotion";
 
 /** How long each moment of the loop stays; riding gets the longest look. */
@@ -18,6 +21,8 @@ const HOLD_MS = [3400, 2600, 2600, 3000] as const;
  */
 export function Hero() {
   const ref = useRef<HTMLElement>(null);
+  const {dark}=useTheme();
+  const [lensPaused,setLensPaused]=useState(false);
   useHeroTracking(ref);
   const heroInView = useStory((s) => s.heroInView);
   const reduceMotion = useReducedMotion();
@@ -43,7 +48,9 @@ export function Hero() {
   const p = presentMoment(activity.moment);
 
   return (
-    <section className="hero" id="top" aria-labelledby="hero-title" ref={ref}>
+    <section className="hero liquid-hero" id="top" aria-labelledby="hero-title" ref={ref}>
+      <LiquidLens dark={dark} paused={lensPaused}/>
+      <div className="hero-wash" aria-hidden="true"/>
       <div className="container hero-grid">
         <div className="hero-copy">
           <p className="hero-chips">
@@ -52,13 +59,13 @@ export function Hero() {
             <span className="is-status">개발 중</span>
           </p>
           <h1 id="hero-title">
-            와리지 말앙 <br className="hero-break" />
-            혼저 탑서.
+            {config.copy.headline.split("\n").map((line,i)=><span key={line}>{i>0?<br/>:null}{line}</span>)}
           </h1>
           <p className="hero-gloss">
             <span className="hero-gloss-tag">제주어</span>
             서두르지 말고, 어서 타세요.
           </p>
+          <p className="liquid-lede">{config.copy.description}</p>
           <ol className="hero-steps">
             <li>
               <span className="hero-step-dot" aria-hidden="true" />
@@ -75,7 +82,7 @@ export function Hero() {
           </ol>
           <div className="hero-actions">
             <a className="btn btn-primary btn-lg" href="#waitlist">
-              TestFlight 사전예약
+              {config.copy.cta}
               <ArrowIcon />
             </a>
             <a className="btn btn-quiet btn-lg" href="#how">
@@ -96,7 +103,7 @@ export function Hero() {
 
         <div className={`hero-visual role-${p.colorRole}`}>
           <div className="hero-devices">
-            <HomeScreenPhone activity={activity} form="compact" className="hero-phone-back" />
+
             <LockScreenPhone moment={activity.moment} remaining={activity.remaining} className="hero-phone-front" />
           </div>
           <div className="hero-rail">
@@ -127,9 +134,10 @@ export function Hero() {
               {playing ? <PauseIcon /> : <PlayIcon />}
             </button>
           </div>
-          <PreviewTag>제품 미리보기 · 합성 데이터 · 왼쪽 다른 앱을 쓸 때, 오른쪽 잠금 화면</PreviewTag>
+          <PreviewTag>제품 미리보기 · 합성 데이터</PreviewTag>
         </div>
       </div>
+      <div className="lens-controls"><span>창밖은 제주, 내릴 때는 탑서.</span><button type="button" onClick={()=>setLensPaused(v=>!v)} aria-pressed={lensPaused}>{lensPaused?"렌즈 움직임 켜기":"렌즈 움직임 멈추기"}</button><a href="#how">아래로 내려서 타보기 ↓</a></div>
     </section>
   );
 }

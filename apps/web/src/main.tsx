@@ -9,6 +9,7 @@ import "./styles/island.css";
 import "./styles/journey.css";
 import "./styles/forms.css";
 import "./support-million.css";
+import "./styles/liquid.css";
 
 const root = document.getElementById("root")!;
 const app = (
