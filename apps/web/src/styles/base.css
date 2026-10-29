@@ -7,7 +7,8 @@
 html {
   -webkit-text-size-adjust: 100%;
   text-size-adjust: 100%;
-  scroll-behavior: smooth;
+  /* Direct anchor jumps prevent long, visually fatiguing page fly-throughs. */
+  scroll-behavior: auto;
   scroll-padding-top: 80px;
   background: var(--bg);
 }
@@ -329,13 +330,3 @@ main:focus {
   }
 }
 
-/* A visitor can opt out inside TAPSO even if the OS setting is unchanged. */
-html[data-motion="reduce"] {
-  scroll-behavior: auto;
-}
-html[data-motion="reduce"] *,
-html[data-motion="reduce"] *::before,
-html[data-motion="reduce"] *::after {
-  transition: none !important;
-  animation: none !important;
-}
