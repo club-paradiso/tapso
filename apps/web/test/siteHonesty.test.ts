@@ -115,14 +115,19 @@ test("every navigation target exists on the page", () => {
   }
 });
 
-test("visitor-facing support, status and footer contain no developer-platform links", () => {
-  const paths = ["sections/Status.tsx", "sections/Footer.tsx", "sections/Support.tsx", "sections/Faq.tsx", "content/site.ts"];
-  for (const path of paths) {
-    const displayed = visibleSource(join(src, path));
-    assert.doesNotMatch(displayed, /GitHub|github\\.com|LINKS\\.(github|issues)/i, path);
+test("no GitHub platform branding or repository links can leak into public website source", () => {
+  // Check *all* of the shipped React code, including lazy components, to
+  // prevent a hidden footer/link from resurfacing in another section.
+  for (const path of files(src)) {
+    assert.doesNotMatch(
+      visibleSource(path),
+      /github(?:\\.com|\\s*issues?)?|GitHubIcon|LINKS\\.(github|issues)/i,
+      path.replace(src, "src/"),
+    );
   }
-  const app = visibleSource(join(src, "App.tsx"));
-  assert.match(app, /같은 금액을 곧바로 다시 결제하지 마세요/);
+  const publicHtml = readFileSync(join(src, "../index.html"), "utf8");
+  assert.doesNotMatch(publicHtml, /github(?:\\.com|\\s*issues?)?|github\\.io/i);
+  assert.match(visibleSource(join(src, "App.tsx")), /같은 금액을 곧바로 다시 결제하지 마세요/);
 });
 
 test("the FAQ answers the questions a visitor asks first", () => {
