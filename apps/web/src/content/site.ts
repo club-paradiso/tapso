@@ -6,8 +6,6 @@
  */
 
 export const LINKS = {
-  github: "https://github.com/club-paradiso/tapso",
-  issues: "https://github.com/club-paradiso/tapso/issues",
   site: "https://tapso-nu.vercel.app/",
 } as const;
 
