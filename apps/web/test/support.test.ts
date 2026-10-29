@@ -170,7 +170,7 @@ test("re-confirming a paid order is idempotent and does not charge again", async
   const store = createFakeStore();
   const provider = createFakeProvider(paymentView({ orderId: "placeholder", amount: 5000 }));
   const orderId = await seedIntent(store, provider);
-  provider.confirmResult = paymentView({ orderId, amount: 5000 });
+  provider.confirmResult = paymentView({ orderId, amount: 5000, paymentKey: "pay_abc" });
 
   await confirmSupportPayment({ orderId, paymentKey: "pay_abc" }, deps(store, provider));
   const again = await confirmSupportPayment({ orderId, paymentKey: "pay_abc" }, deps(store, provider));
