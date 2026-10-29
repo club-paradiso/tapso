@@ -138,7 +138,7 @@ test("preorder action copy is consistently '사전예약' without a TestFlight p
   const page = readFileSync(join(src, "../index.html"), "utf8");
 
   assert.equal(config.copy.cta, "사전예약");
-  assert.match(header, />사전예약\s*<\/a>/);
+  assert.match(header, />\s*사전예약\s*<\/a>/);
   assert.match(footer, /href="#waitlist">사전예약<\/a>/);
   assert.match(form, /"보내는 중…" : "사전예약"/);
   for (const content of [header, footer, form, page, JSON.stringify(config)]) {
