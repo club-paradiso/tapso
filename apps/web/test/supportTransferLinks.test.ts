@@ -31,14 +31,28 @@ test("Toss link needs the sender-specific bank transfer data", () => {
   }
 });
 
-test("support screen never claims an unconfigured KakaoPay link works", () => {
+test("KakaoPay fallback copies the real account and explains bank transfer, not a fake direct link", () => {
   const dialog = readFileSync(new URL("../src/components/SupportDialog.tsx", import.meta.url), "utf8");
   assert.match(dialog, /SUPPORT_CHANNEL_AVAILABILITY\.kakaoPay\s*\?/);
-  assert.match(dialog, /카카오페이 전용 송금 링크는 아직 연결되지 않았어요/);
-  assert.match(dialog, /카카오페이 계좌송금용 번호 복사/);
+  assert.match(dialog, /카카오페이 송금용 계좌번호 복사/);
+  assert.match(dialog, /copyBankAccount\("kakao"\)/);
+  assert.match(dialog, /writeText\(SUPPORT_CHANNELS\.bank\.account\)/);
+  assert.match(dialog, /카카오페이에서 붙여넣기/);
+  assert.match(dialog, /위에 표시된 계좌번호를 직접 복사해주세요/);
+  assert.match(dialog, /일반 웹페이지에서는 자동으로 송금 화면을 열 수 없어요/);
+  assert.doesNotMatch(dialog, /kakaopay:\/\/money\/to\/bank/);
   assert.match(dialog, /토스로 송금하기/);
   assert.match(dialog, /커피 한 잔으로 응원하기/);
   assert.doesNotMatch(dialog, /카드 · 해외 결제/);
+});
+
+test("KakaoPay handoff and ordinary bank copy report success independently", () => {
+  const dialog = readFileSync(new URL("../src/components/SupportDialog.tsx", import.meta.url), "utf8");
+  assert.match(dialog, /type CopyTarget = "bank" \| "kakao"/);
+  assert.match(dialog, /copyResults\.kakao === "copied"/);
+  assert.match(dialog, /copyResults\.bank === "copied"/);
+  assert.match(dialog, /copyResults\.kakao === "failed"/);
+  assert.match(dialog, /copyResults\.bank === "failed"/);
 });
 
 test("published QR asset is an SVG with quiet zone and actual modules", () => {

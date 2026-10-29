@@ -29,6 +29,7 @@ type DialogState =
   | { status: "error"; message: string };
 
 type CopyState = "idle" | "copied" | "failed";
+type CopyTarget = "bank" | "kakao";
 
 const CUSTOM = "custom";
 const MILLION_SUPPORT_AMOUNT = 1_000_000;
@@ -42,7 +43,7 @@ export default function SupportDialog({ onClose }: { onClose: () => void }) {
   const [state, setState] = useState<DialogState>({ status: "loading" });
   const [selected, setSelected] = useState<number | typeof CUSTOM | undefined>(undefined);
   const [customAmount, setCustomAmount] = useState("");
-  const [copyState, setCopyState] = useState<CopyState>("idle");
+  const [copyResults, setCopyResults] = useState<Record<CopyTarget, CopyState>>({ bank: "idle", kakao: "idle" });
 
   useEffect(() => {
     dialogRef.current?.showModal();
@@ -78,12 +79,12 @@ export default function SupportDialog({ onClose }: { onClose: () => void }) {
     amount >= config.minAmount &&
     amount <= config.maxAmount;
 
-  const copyBankAccount = async () => {
+  const copyBankAccount = async (target: CopyTarget) => {
     try {
       await navigator.clipboard.writeText(SUPPORT_CHANNELS.bank.account);
-      setCopyState("copied");
+      setCopyResults((prev) => ({ ...prev, [target]: "copied" }));
     } catch {
-      setCopyState("failed");
+      setCopyResults((prev) => ({ ...prev, [target]: "failed" }));
     }
   };
 
@@ -204,11 +205,11 @@ export default function SupportDialog({ onClose }: { onClose: () => void }) {
             <button
               type="button"
               className="figma-support support-channel-button"
-              onClick={() => void copyBankAccount()}
+              onClick={() => void copyBankAccount("bank")}
             >
-              {copyState === "copied" ? "계좌번호 복사됨" : "계좌번호 복사"}
+              {copyResults.bank === "copied" ? "계좌번호 복사됨" : "계좌번호 복사"}
             </button>
-            {copyState === "failed" ? (
+            {copyResults.bank === "failed" ? (
               <p className="support-dialog-error" role="alert">
                 자동 복사가 되지 않았어요. 계좌번호를 직접 선택해 복사해주세요.
               </p>
@@ -222,28 +223,48 @@ export default function SupportDialog({ onClose }: { onClose: () => void }) {
             ) : null}
             <div className="support-kakao-transfer">
               <p className="support-channel-copy">
-                <strong>카카오페이로 송금하기</strong>
+                <strong>카카오페이로 계좌송금하기</strong>
               </p>
               {SUPPORT_CHANNEL_AVAILABILITY.kakaoPay ? (
                 <a className="figma-support support-channel-button"
                   href={SUPPORT_CHANNELS.kakaoPayUrl}
                   target="_blank" rel="noopener noreferrer">
-                  카카오페이 송금 화면 열기
+                  카카오페이 송금 링크 열기
                 </a>
               ) : (
-                <button type="button" className="figma-support support-channel-button"
-                  onClick={() => void copyBankAccount()}>
-                  {copyState === "copied"
-                    ? "계좌 복사됨 · 카카오페이에서 송금하세요"
-                    : "카카오페이 계좌송금용 번호 복사"}
-                </button>
+                <>
+                  <button
+                    type="button"
+                    className="figma-support support-channel-button"
+                    onClick={() => void copyBankAccount("kakao")}
+                  >
+                    {copyResults.kakao === "copied"
+                      ? "계좌번호 복사됨 · 카카오페이에서 붙여넣기"
+                      : "카카오페이 송금용 계좌번호 복사"}
+                  </button>
+                  {copyResults.kakao === "failed" ? (
+                    <p className="support-dialog-error" role="alert">
+                      자동 복사가 안 됐어요. 위에 표시된 계좌번호를 직접 복사해주세요.
+                    </p>
+                  ) : null}
+                  <div className="support-kakao-instructions" aria-live="polite">
+                    {copyResults.kakao === "copied" ? (
+                      <strong>계좌번호를 복사했어요. 이제 카카오페이를 열어주세요.</strong>
+                    ) : (
+                      <strong>카카오페이에서 보내는 방법</strong>
+                    )}
+                    <ol>
+                      <li>카카오톡 또는 카카오페이 앱에서 송금 메뉴를 엽니다.</li>
+                      <li>계좌송금을 선택하고 제주은행 계좌번호를 붙여넣습니다.</li>
+                      <li>예금주와 금액을 확인한 후 직접 송금합니다.</li>
+                    </ol>
+                    <p className="support-channel-copy">
+                      카카오페이의 계좌 자동입력 딥링크는 알림톡 전용이라
+                      일반 웹페이지에서는 자동으로 송금 화면을 열 수 없어요.
+                    </p>
+                  </div>
+                </>
               )}
-              {!SUPPORT_CHANNEL_AVAILABILITY.kakaoPay ? (
-                <p className="support-channel-copy">
-                  카카오페이 앱의 송금 → 계좌번호 입력에서 복사한 계좌로 보낼 수 있어요.
-                  카카오페이 전용 송금 링크는 아직 연결되지 않았어요.
-                </p>
-              ) : null}
             </div>
           </section>
         ) : null}
