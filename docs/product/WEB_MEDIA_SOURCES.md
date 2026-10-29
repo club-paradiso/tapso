@@ -62,15 +62,23 @@ Optimized local files (output files live in `apps/web/public/media/hero/`):
 | `/media/hero/jungmun-poster.webp` | 172KB | 1600×900 | `d7c33c67c299a637d73bd9164086cae438848d581c6e0e87287bc3fe43dc2d78` |
 | `/media/hero/jungmun-poster-portrait.webp` | 77KB | 720×1280 | `b1a971e4f30c823cbc0a53314b4e8cb7cfedc93bf97d0093dbca6ea2352bb0b0` |
 
-The original licensed clips are not committed. The new films are offered
-**only when the optimized assets physically exist** in the deployed public
-folder and report the expected MP4/WebP MIME types. The PR can therefore be
-deployed without broken videos while binary upload is pending.
+The original licensed clips are not committed. The three films now form an
+**automatic, endlessly repeating sequence**: Joham Coastal Road → Udo beach →
+Jungmun coast → Joham Coastal Road. Each clip changes on its actual media
+`ended` event rather than a hardcoded timer. The only hero motion control is
+`움직임 줄이기`, which respects visitor and OS reduced-motion preferences.
+Background playback pauses offscreen / in background tabs to conserve power,
+and reduced-data connections stay on a still poster. No manual scene-selection
+or film pause/play buttons are shown.
+
+The Udo and Jungmun clips are included **only when the optimized files exist**
+in the deployed public folder and report the expected MP4/WebP MIME types.
+When the extra assets are missing, the original Joham video loops on its own.
 Source manifest: `apps/web/src/content/media.ts`. Tests: `apps/web/test/media.test.ts`.
 
 ## The Lock Screen (separate manual preview)
 
-In V4, the video stays in the hero and never morphs into a phone. The visitor can manually select a separate iPhone Live Activity preview; scrolling does not move the film into an app UI. That layer is the web re-drawing of `LiveActivitySurfaces.swift` used everywhere else on the page (`NativeSurfaces.tsx`), on the page's synthetic ride (route 365, 제주시청(아라방면)), and is labelled "앱 화면은 미리보기 · 합성 데이터". It is not a screen recording of the app.
+In V4, the video stays in the hero and never morphs into a phone. The hero no longer has a manually selected iPhone preview; the separate, synthetic iPhone Live Activity walkthrough remains in the Journey section below. Scrolling does not move the film into an app UI. That layer is the web re-drawing of `LiveActivitySurfaces.swift` used everywhere else on the page (`NativeSurfaces.tsx`), on the page's synthetic ride (route 365, 제주시청(아라방면)), and is labelled "앱 화면은 미리보기 · 합성 데이터". It is not a screen recording of the app.
 
 ## Removed
 
