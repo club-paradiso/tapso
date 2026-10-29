@@ -5,17 +5,17 @@
 [data-theme="dark"] {
   color-scheme: dark;
   /* Same values as design/marketing.json, so the first paint is already dark. */
-  --bg: #071923;
-  --ink: #f5fafb;
-  --mist: #0e222c;
-  --text-secondary: #b4c4cb;
-  --separator: #274452;
+  --bg: #0f171a;
+  --ink: #eef2f1;
+  --mist: #172124;
+  --text-secondary: #a9b6ba;
+  --separator: #2a373b;
   --sand: var(--night-raised);
   --sand-deep: var(--night-elevated);
   --mint-ink: var(--mint);
-  --ink-04: rgb(245 250 251 / 4%);
-  --ink-08: rgb(245 250 251 / 8%);
-  --ink-12: rgb(245 250 251 / 12%);
+  --ink-04: rgb(238 242 241 / 4%);
+  --ink-08: rgb(238 242 241 / 8%);
+  --ink-12: rgb(238 242 241 / 12%);
 }
 
 [data-theme="dark"] body {
@@ -32,15 +32,15 @@
 [data-theme="dark"] .on-dark,
 [data-theme="dark"] .surface-basalt {
   --bg: #ffffff;
-  --ink: #071923;
+  --ink: #0f171a;
 }
 
 [data-theme="dark"] .phone {
-  --mist: #f5fafb;
-  --text-secondary: #566973;
-  --text-tertiary: #5f7079;
-  --separator: #dfe8eb;
-  --mint-ink: #0b7f6d;
+  --mist: #f3f5f4;
+  --text-secondary: #56636a;
+  --text-tertiary: #5c686e;
+  --separator: #e1e6e4;
+  --mint-ink: #097666;
 }
 
 .site-header {
@@ -68,7 +68,7 @@
 .site-header.is-over-film .brand,
 .site-header.is-over-film .site-nav a,
 .site-header.is-over-film .theme-toggle {
-  text-shadow: 0 1px 10px rgb(7 25 35 / 55%);
+  text-shadow: 0 1px 10px rgb(15 23 26 / 55%);
 }
 
 .site-header.is-over-film .brand-word span,
@@ -84,7 +84,7 @@
 .site-header.is-over-film .theme-toggle {
   color: #ffffff;
   border-color: rgb(255 255 255 / 50%);
-  background: rgb(7 25 35 / 30%);
+  background: rgb(15 23 26 / 30%);
 }
 
 .site-header.is-over-film .header-cta {

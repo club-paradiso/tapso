@@ -44,11 +44,12 @@ jobs:
       - uses: actions/checkout@v4
         with:
           persist-credentials: false
-      - name: Project membership and localization (no Xcode needed)
+      - name: Project membership, design tokens, and localization (no Xcode needed)
         run: |
           python3 scripts/ios/sync_xcodeproj.py --check
           python3 scripts/ios/check_localization.py
           python3 scripts/ios/check_brand.py
+          python3 scripts/design/validate_tokens.py
       - name: Pick the newest iPhone simulator
         id: simulator
         run: |

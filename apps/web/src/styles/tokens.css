@@ -10,17 +10,17 @@
 :root {
   color-scheme: light;
 
-  /* Product V2 · text and backgrounds (light) */
-  --ink: #071923;
-  --text-secondary: #566973;
-  --text-tertiary: #5f7079;
+  /* Product V3 (basalt) · text and backgrounds (light) */
+  --ink: #0f171a;
+  --text-secondary: #56636a;
+  --text-tertiary: #5c686e;
   --bg: #ffffff;
-  --mist: #f5fafb;
-  --separator: #dfe8eb;
+  --mist: #f3f5f4;
+  --separator: #e1e6e4;
 
-  /* Product V2 · journey roles */
+  /* Product V3 · journey roles */
   --mint: #2fc7aa;
-  --mint-ink: #0b7f6d;
+  --mint-ink: #097666;
   --amber: #f4b84a;
   --coral: #c93c3c;
   --coral-on-dark: #ff7a6e;
@@ -30,14 +30,14 @@
   --slate: #8a9aa3;
   --slate-on-dark: #9fb0b8;
 
-  /* Product V2 · identity */
+  /* Product V3 · identity and dark neutrals */
   --basalt: #0f171a;
   --basalt-raised: #1a2528;
-  --night: #071923;
-  --night-raised: #0e222c;
-  --night-elevated: #16303d;
-  --night-separator: #274452;
-  --night-text-secondary: #b4c4cb;
+  --night: #0f171a;
+  --night-raised: #172124;
+  --night-elevated: #1f2b2f;
+  --night-separator: #2a373b;
+  --night-text-secondary: #a9b6ba;
 
   /* Drawn hardware: the phone edge and the island are black glass. */
   --device-edge-light: #2a3438;
@@ -49,10 +49,10 @@
   --sand: #fbf7f1;
   --sand-deep: #f4ece0;
 
-  /* Translucent helpers derived from the tokens above. */
-  --ink-04: rgb(7 25 35 / 4%);
-  --ink-08: rgb(7 25 35 / 8%);
-  --ink-12: rgb(7 25 35 / 12%);
+  /* Translucent helpers derived from the tokens above (basalt #0F171A = rgb(15 23 26)). */
+  --ink-04: rgb(15 23 26 / 4%);
+  --ink-08: rgb(15 23 26 / 8%);
+  --ink-12: rgb(15 23 26 / 12%);
   --white-08: rgb(255 255 255 / 8%);
   --white-16: rgb(255 255 255 / 16%);
   --white-70: rgb(255 255 255 / 70%);
@@ -105,7 +105,7 @@
 
   /* Elevation */
   --shadow-card: 0 1px 2px var(--ink-04), 0 12px 32px -12px var(--ink-12);
-  --shadow-device: 0 2px 4px rgb(7 25 35 / 10%), 0 32px 80px -24px rgb(7 25 35 / 45%);
+  --shadow-device: 0 2px 4px rgb(15 23 26 / 10%), 0 32px 80px -24px rgb(15 23 26 / 45%);
 
   /* Motion (TapsoMotion: standard 250 ms, emphasis spring) */
   --ease-standard: cubic-bezier(0.4, 0, 0.2, 1);

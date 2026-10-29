@@ -1,4 +1,12 @@
-# Figma → SwiftUI implementation map V2
+# Figma → SwiftUI implementation map V2 (Consolidation to V3)
+
+> [!NOTE]
+> **V3 CONSOLIDATION SPECIFICATION AVAILABLE**  
+> For the V3 basalt consolidation, PR #148 (coastal film hero) and PR #149 (Dori rail marker smile), see:
+> - Canonical Figma Sync Manifest: `design/figma-sync-manifest.json`
+> - Detailed Editor Handoff: `docs/design/FIGMA_EDIT_HANDOFF.md`
+> - V3 Parity Audit: `docs/design/DESIGN_PARITY_AUDIT.md`
+> - Canonical Machine Tokens: `design/tokens/tokens.json`
 
 File: `TAPSO — Product / Marketing Design System`, key `kkx04GvqOzHje7Dw5ikO9X`.
 

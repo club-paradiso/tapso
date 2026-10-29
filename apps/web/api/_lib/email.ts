@@ -62,20 +62,20 @@ export function buildConfirmationEmail(to: string, riderType: RiderType): Outgoi
 
   const html = `<!doctype html>
 <html lang="ko">
-  <body style="margin:0;padding:24px;background:#f5fafb;font-family:Pretendard,-apple-system,BlinkMacSystemFont,'Apple SD Gothic Neo',sans-serif;color:#071923;">
-    <div style="max-width:520px;margin:0 auto;padding:28px;background:#ffffff;border:1px solid #dfe8eb;border-radius:24px;">
+  <body style="margin:0;padding:24px;background:#f3f5f4;font-family:Pretendard,-apple-system,BlinkMacSystemFont,'Apple SD Gothic Neo',sans-serif;color:#0f171a;">
+    <div style="max-width:520px;margin:0 auto;padding:28px;background:#ffffff;border:1px solid #e1e6e4;border-radius:24px;">
       <p style="margin:0 0 12px;font-size:34px;line-height:51px;">🍊</p>
       <h1 style="margin:0 0 12px;font-size:20px;line-height:29px;font-weight:700;">TAPSO 첫 탑승 소식 명단에 등록됐수다.</h1>
-      <p style="margin:0 0 16px;font-size:14px;line-height:21px;color:#657680;">
-        이용 유형: <strong style="color:#071923;">${escapeHtml(label)}</strong>
+      <p style="margin:0 0 16px;font-size:14px;line-height:21px;color:#56636a;">
+        이용 유형: <strong style="color:#0f171a;">${escapeHtml(label)}</strong>
       </p>
-      <p style="margin:0 0 16px;font-size:14px;line-height:21px;color:#657680;">
+      <p style="margin:0 0 16px;font-size:14px;line-height:21px;color:#56636a;">
         TestFlight나 중요한 출시 소식이 준비되면 이 주소로 알려드릴게요. 그 외의 광고 메일은 보내지 않습니다.
       </p>
-      <p style="margin:0 0 16px;font-size:14px;line-height:21px;color:#657680;">
+      <p style="margin:0 0 16px;font-size:14px;line-height:21px;color:#56636a;">
         지금은 합성 교통 데이터로 흐름을 검증하는 단계예요.
       </p>
-      <p style="margin:0;padding-top:16px;border-top:1px solid #dfe8eb;font-size:12px;line-height:18px;color:#657680;">
+      <p style="margin:0;padding-top:16px;border-top:1px solid #e1e6e4;font-size:12px;line-height:18px;color:#56636a;">
         등록을 취소하거나 저장된 정보를 삭제하고 싶으면 이 메일에 그대로 답장해주세요.
       </p>
     </div>

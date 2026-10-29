@@ -1,6 +1,14 @@
-# Design System V2
+# Design System V2 (Superseded by V3 Basalt)
 
-> **2026-10-20:** colour and type are superseded by V3 "basalt" (`docs/beta/DESIGN_DIRECTION.md`, `apps/ios/Shared/TapsoTokens.swift`). Journey colours and their meanings are unchanged; the hex table below is kept as V2 history.
+> [!WARNING]
+> **SUPERSEDED SPECIFICATION — HISTORICAL ARCHIVE**  
+> As of 2026-10-20 and the V3 Consolidation Milestone, colour neutrals, typography, and waiting states in this document are **superseded** by Design System V3 ("basalt").
+> - Canonical Machine Manifest: `design/tokens/tokens.json`
+> - Canonical Code Implementation: `apps/ios/Shared/TapsoTokens.swift`, `RideSurfaceComponents.swift`, `LiveActivitySurfaces.swift`
+> - V3 Direction: `docs/beta/DESIGN_DIRECTION.md`
+> - Parity Audit & Figma Handoff: `docs/design/DESIGN_PARITY_AUDIT.md`, `docs/design/FIGMA_EDIT_HANDOFF.md`
+> 
+> Journey safety colours, moment models, spacing scales, and radii continue from V2 into V3. Legacy hex tables below (`#071923` navy ink, `#F5FAFB` mist) are preserved strictly for historical audit reference.
 
 Calm transit instrument, warm Jeju mobility product. Source of truth: Figma `TAPSO — Product / Marketing Design System` (`kkx04GvqOzHje7Dw5ikO9X`), variable collection **TAPSO V2 Semantic** (`VariableCollectionId:151:14`, modes Light/Dark) and page **02F iOS Ride V2** (`152:2`). Code: `apps/ios/Shared/TapsoTokens.swift`, compiled into both the app and the Live Activity extension, so no screen or surface defines its own colour.
 
