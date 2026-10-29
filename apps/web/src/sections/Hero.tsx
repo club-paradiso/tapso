@@ -107,31 +107,22 @@ function FilmControls({ state, onToggle }: { state: FilmState; onToggle: () => v
 export function Hero() {
   const section = useRef<HTMLElement>(null);
   const video = useRef<HTMLVideoElement>(null);
-  const resumeAfterPreview = useRef(false);
   useHeroTracking(section);
   const reduceMotion = useReducedMotion();
+  const [scene, setScene] = useState<Scene>("coast");
+  const [step, setStep] = useState(0);
   const [userReducedMotion, setUserReducedMotion] = useState(() =>
     typeof window === "undefined" ? false : getSiteReducedMotion()
   );
-  const film = useHeroFilm(video, section, reduceMotion);
-  const [scene, setScene] = useState<Scene>("coast");
-  const [step, setStep] = useState(0);
+  const film = useHeroFilm(video, section, reduceMotion, scene === "coast");
 
-  const pickScene = (next: Scene) => {
-    if (scene === next) return;
-    if (next === "preview") {
-      resumeAfterPreview.current = film.state === "playing";
-      video.current?.pause();
-    } else if (resumeAfterPreview.current && !reduceMotion) {
-      void video.current?.play().catch(() => undefined);
-    }
-    setScene(next);
-  };
+  const pickScene = (next: Scene) => setScene(next);
 
   const toggleReducedMotion = () => {
     const next = !userReducedMotion;
     setUserReducedMotion(next);
     setSiteReducedMotion(next);
+    if (next) video.current?.pause();
   };
 
   return (
