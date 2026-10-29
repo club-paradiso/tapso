@@ -129,33 +129,10 @@
   flex-direction: column;
   gap: 12px;
 }
-.coast-v4 .coast-scene-picker { display: flex; flex-wrap: wrap; gap: 8px; }
-.coast-v4 .coast-scene-picker button,
-.coast-v4 .coast-control-button {
-  display: inline-flex;
-  align-items: center;
-  justify-content: center;
-  gap: 7px;
-  min-height: var(--touch-min);
-  padding: 0 15px;
-  border: 1px solid rgb(255 255 255 / 32%);
-  border-radius: 999px;
-  color: #fff;
-  background: rgb(var(--film-basalt) / 65%);
-  font-size: 0.875rem;
-  font-weight: 700;
-  cursor: pointer;
-}
-.coast-v4 .coast-scene-picker button.is-active {
-  color: var(--night);
-  background: #fff;
-  border-color: #fff;
-}
 .coast-v4 .coast-bottom-actions {
   display: flex;
   align-items: center;
-  justify-content: space-between;
-  gap: 12px;
+  justify-content: flex-end;
 }
 .coast-v4 .coast-film-controls {
   display: flex;
@@ -165,10 +142,9 @@
   justify-content: flex-end;
   gap: 14px;
 }
-.coast-v4 .coast-control-button svg { width: 17px; height: 17px; }
 .coast-v4 .coast-credit {
   max-width: 620px;
-  margin: 0;
+  margin: 0 0 0 auto;
   font-size: 0.75rem;
   line-height: 1.45;
   color: var(--film-ink-2);
@@ -245,7 +221,6 @@
     background: linear-gradient(0deg, rgb(var(--film-basalt) / 90%), rgb(var(--film-basalt) / 70%) 58%, rgb(var(--film-basalt) / 35%));
   }
   .coast-v4 .coast-bottom { bottom: 16px; }
-  .coast-v4 .coast-scene-picker button { min-height: 38px; padding-inline: 12px; font-size: 0.8125rem; }
   .coast-v4 .coast-film-controls { justify-content: space-between; }
   .coast-v4 .coast-credit { flex: 1 1 175px; font-size: 0.6875rem; }
   .coast-v4.is-preview .coast-stage { min-height: 965px; }
@@ -264,7 +239,6 @@
 
 @media (max-width: 390px) {
   .coast-v4 .coast-bottom-actions { gap: 8px; }
-  .coast-v4 .coast-control-button { padding: 0 10px; font-size: 0.75rem; }
   .coast-v4 .coast-credit { max-width: 200px; }
   .coast-v4 .coast-steps { gap: 4px; }
   .coast-v4 .coast-steps button { padding: 0 9px; font-size: 0.75rem; }
@@ -273,4 +247,3 @@
 @media (prefers-reduced-motion: reduce) {
   .coast-v4 .coast-film { transition: none; }
 }
-html[data-motion="reduce"] .coast-v4 .coast-film { transition: none; }
