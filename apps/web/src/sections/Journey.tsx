@@ -11,6 +11,7 @@ import {
   useBeatVariant,
 } from "../components/JourneyParts";
 import { PreviewTag } from "../components/RideParts";
+import { IslandDock } from "../components/IslandDock";
 import { presentMoment } from "../demo/rideMoments.ts";
 import { BEATS, CHAPTERS, beatsOf, resolveBeat, type Beat, type Chapter } from "../story/beats.ts";
 import { CHAPTER_COPY, STEP_COPY, TRUST_NOTES } from "../story/journeyCopy.ts";
@@ -26,7 +27,12 @@ function StepExtras({ beat }: { beat: Beat }) {
     case "pocket":
       return <GlanceChart />;
     case "island":
-      return <VariantPicker beat={beat} label="다이나믹 아일랜드 모양 고르기" />;
+      return (
+        <>
+          <VariantPicker beat={beat} label="다이나믹 아일랜드 모양 고르기" />
+          <IslandDock activity={resolveBeat(beat, variant).activity} />
+        </>
+      );
     case "trust":
       return (
         <>

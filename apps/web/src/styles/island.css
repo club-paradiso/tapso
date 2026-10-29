@@ -241,35 +241,29 @@
   height: 1.05em;
 }
 
-/* Persistent dock ------------------------------------------------------------- */
-
+/* In-flow Dynamic Island demo: live inside its own Journey explanation,
+   never over navigation, CTAs, content or the browser's mobile toolbar. */
 .dock {
-  position: fixed;
-  top: 13px;
-  left: 50%;
-  z-index: 60;
-  display: flex;
+  display: inline-flex;
   flex-direction: column;
-  align-items: center;
-  gap: 6px;
-  font-size: 15px;
-  pointer-events: none;
-  opacity: 0;
-  transform: translate(-50%, -8px) scale(0.86);
-  transform-origin: 50% 0;
-  transition:
-    opacity 140ms var(--ease-standard),
-    transform 140ms var(--ease-standard);
-}
-
-.dock.is-visible {
-  pointer-events: auto;
-  opacity: 1;
-  transform: translate(-50%, 0);
+  align-items: flex-start;
+  gap: 10px;
+  align-self: flex-start;
+  width: max-content;
+  max-width: 100%;
+  margin-top: var(--space-3);
+  padding: 14px 16px;
+  border: 1px solid var(--night-separator);
+  border-radius: var(--radius-lg);
+  color: var(--bg);
+  background: var(--night-raised);
+  font-size: clamp(9px, 1.12vw, 14px);
 }
 
 .dock-button {
-  display: block;
+  display: inline-flex;
+  justify-content: center;
+  max-width: 100%;
   padding: 0;
   border: 0;
   border-radius: 1.4em;
@@ -278,50 +272,25 @@
 }
 
 .dock-button:focus-visible {
-  outline-offset: 4px;
-  border-radius: 1.4em;
+  outline: 3px solid var(--mint);
+  outline-offset: 5px;
 }
 
 .dock .isle {
-  box-shadow: 0 0.5em 1.4em -0.5em rgb(7 25 35 / 55%);
+  box-shadow: 0 0.5em 1.4em -0.5em rgb(7 25 35 / 45%);
 }
 
 .dock-note {
-  padding: 2px 9px;
-  border-radius: var(--radius-pill);
-  color: var(--text-secondary);
-  background: rgb(255 255 255 / 92%);
-  box-shadow: 0 1px 2px var(--ink-08);
+  max-width: 100%;
+  color: var(--night-text-secondary);
   font-size: var(--fs-xs);
-  font-weight: 700;
-  opacity: 0;
-  transform: translateY(-4px);
-  transition:
-    opacity var(--dur-fast) var(--ease-standard),
-    transform var(--dur-fast) var(--ease-standard);
+  line-height: 1.5;
 }
 
-.dock.is-open .dock-note {
-  opacity: 1;
-  transform: none;
-}
-
-/* Wide screens: the island sits in the middle of the header, where the
-   hardware sits on a phone. The nav makes room for it (sections.css). */
 @media (max-width: 899px) {
-  /* Phones: the browser's own UI owns the top edge (and the real island, on
-     an iPhone), so the dock floats above the bottom toolbar instead. */
   .dock {
-    top: auto;
-    bottom: max(14px, env(safe-area-inset-bottom));
-    flex-direction: column-reverse;
-    font-size: 15px;
-    transform: translate(-50%, 10px) scale(0.86);
-    transform-origin: 50% 100%;
-  }
-
-  .dock.is-visible {
-    transform: translate(-50%, 0);
+    font-size: clamp(9px, 2.8vw, 12px);
+    padding: 12px;
   }
 }
 

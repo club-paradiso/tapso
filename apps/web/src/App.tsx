@@ -11,7 +11,6 @@ import { Waitlist } from "./sections/Waitlist";
 import { Support } from "./sections/Support";
 import { Faq } from "./sections/Faq";
 import { Footer } from "./sections/Footer";
-import { IslandDock } from "./components/IslandDock";
 
 // Kept out of the initial chunk: the marketing page must not pay for a
 // secondary action most visitors never open.
@@ -106,7 +105,6 @@ export default function App() {
   return (
     <ThemeProvider><div className="page">
       <Header />
-      <IslandDock />
       <main id="main" tabIndex={-1}>
         {supportReturn ? (
           <SupportReturnBanner result={supportReturn} onDismiss={dismissSupportReturn} />
