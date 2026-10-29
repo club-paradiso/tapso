@@ -120,18 +120,31 @@ Nothing below has been done, and none of it is required to ship the waitlist.
    User-facing wording lives in `SupportDialog.tsx` (the sheet) and
    `apps/web/src/sections/Support.tsx` with `src/lib/supportStatus.ts` (the
    page section, which says outright that no receipt or deduction is issued).
-3. Set `TOSS_CLIENT_KEY` and `TOSS_SECRET_KEY` to **test** keys, set
-   `SUPPORT_ENABLED=true` on a Preview deployment only, and complete one test
-   payment. Confirm a `support_payments` row reaches `status = 'paid'`.
-4. Generate a long random `SUPPORT_WEBHOOK_TOKEN` and register the webhook URL
-   with Toss as `https://<domain>/api/support/webhook?t=<token>` for the
-   `PAYMENT_STATUS_CHANGED` event. Toss sends no signature for this event, so
-   the server treats the body as a hint and re-reads the payment from the Toss
-   API before recording anything. The token is TAPSO's own shared secret, not a
-   Toss feature.
-5. Only after a test payment works end to end, swap in live keys.
+3. Provision the `support_payments` and webhook-event tables using the
+   committed Supabase migration and configure `SUPABASE_URL` and
+   `SUPABASE_SERVICE_ROLE_KEY` **server-side only**.
+4. Generate `SUPPORT_WEBHOOK_TOKEN` with at least **32 random characters**
+   and configure it in the appropriate Vercel environment. Register
+   `https://<domain>/api/support/webhook?t=<token>` with Toss for
+   `PAYMENT_STATUS_CHANGED`. Toss does not sign this event, so TAPSO
+   independently re-reads the authoritative payment before recording a status.
+5. In **Preview only**, supply matching `test_ck_` / `test_sk_` keys and set
+   `SUPPORT_ENABLED=true`. Preview rejects live merchant keys. Perform test
+   checkout, retry the same confirmation, check webhook deduplication and a
+   durable `support_payments.status = 'paid'` record. Verify that a failed
+   server write or timeout does **not** show a completed payment.
+6. Review the merchant contract, accounting/tax treatment of the supporter
+   payments, customer notices, refund/contact process, and privacy handling.
+   Decide and publish the actual payer-facing operator/contact information
+   before real charges.
+7. **Only after all tests and contractual checks pass:** configure the
+   production-scoped `live_ck_` / `live_sk_` keys and webhook token, verify
+   the Supabase backend and set `SUPPORT_ENABLED=true` in **Production**.
+   Redeploy, verify `/api/support/config` reports `live`, perform a permitted
+   small live settlement and refund/reconciliation test, and monitor errors.
+   Production rejects test keys, while Preview/local reject live keys.
 
-Until step 3, the page's support section reads "결제 준비 중" (it asks
+Until the live production configuration is complete, the page's support section reads "결제 준비 중" (it asks
 `/api/support/config`, and anything but `live` counts as not open) and its
 button opens a sheet whose continue button is disabled with an explanation. That is intentional: the site must never invite a payment it cannot
 take.
