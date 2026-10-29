@@ -81,14 +81,8 @@
   padding: 165px 0 194px;
 }
 .coast-v4 .coast-copy[inert] { display: none; }
-.coast-v4 .coast-eyebrow {
-  color: var(--film-ink-2);
-  font-weight: 700;
-  font-size: 0.9375rem;
-}
-.coast-v4 .coast-status { color: #ffc46b; }
 .coast-v4 h1 {
-  margin: 18px 0 16px;
+  margin: 0 0 16px;
   font-size: clamp(3rem, 6.4vw, 6rem);
   font-weight: 800;
   line-height: 1.04;
@@ -98,17 +92,7 @@
 }
 .coast-v4 h1 span:last-child { color: var(--film-mint); }
 .coast-v4 .coast-gloss {
-  display: flex;
-  align-items: center;
-  gap: 10px;
   color: var(--film-ink-2);
-}
-.coast-v4 .coast-gloss-tag {
-  padding: 2px 8px;
-  border: 1px solid rgb(255 255 255 / 40%);
-  border-radius: 6px;
-  font-size: 0.8125rem;
-  font-weight: 700;
 }
 .coast-v4 .coast-lede {
   margin: 22px 0 28px;
