@@ -1,30 +1,29 @@
-/** Public deep-link syntax checks. Validation does not prove account ownership. */
-/** Only accept KakaoPay's own HTTPS receive domains, not arbitrary redirects. */
-export function kakaoReceiveUrl(value: string): string {
+/**
+ * Validate the public Toss send URL before exposing it to visitors.
+ * This is a user-provided QR deep link, not an official public web SDK.
+ * Keep the recipient tied to the same account displayed on the support page.
+ */
+export function tossSendUrl(
+  value: string,
+  recipient: { name: string; account: string },
+): string {
   try {
     const url = new URL(value);
-    return url.protocol === "https:" &&
-      (url.hostname === "qr.kakaopay.com" || url.hostname === "link.kakaopay.com")
-      ? url.href
-      : "";
+    if (
+      url.protocol !== "supertoss:" ||
+      url.hostname !== "send" ||
+      url.pathname !== "" ||
+      !recipient.name ||
+      !recipient.account ||
+      url.searchParams.get("bank") !== recipient.name ||
+      url.searchParams.get("accountNo") !== recipient.account ||
+      // Do not pre-fill a nonzero amount: supporters choose and confirm it in Toss.
+      (url.searchParams.has("amount") && url.searchParams.get("amount") !== "0")
+    ) {
+      return "";
+    }
+    return value;
   } catch {
     return "";
   }
 }
-
-export function tossSendUrl(value: string): string {
-  // The user-provided QR currently encodes a Toss transfer to Jeju Bank.
-  // Do not pass arbitrary custom schemes or pretend this is a KakaoPay URL.
-  try {
-    const url = new URL(value);
-    return url.protocol === "supertoss:" &&
-      url.hostname === "send" &&
-      url.searchParams.get("bank") !== null &&
-      url.searchParams.get("accountNo") !== null
-      ? value
-      : "";
-  } catch {
-    return "";
-  }
-}
-
