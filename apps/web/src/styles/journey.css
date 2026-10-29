@@ -250,7 +250,7 @@
 
 /* Each chapter paints its own band, edge to edge, behind both columns. */
 .chapter {
-  --step-gap: clamp(112px, 20vh, 220px);
+  --step-gap: clamp(72px, 12vh, 132px);
   position: relative;
   padding-block: var(--section-y) calc(var(--section-y) * 0.6);
   background: var(--bg);
@@ -264,7 +264,7 @@
 }
 
 .chapter-arrive {
-  padding-bottom: max(var(--section-y), 34vh);
+  padding-bottom: max(var(--section-y), 18vh);
 }
 
 .chapter-confirm {
@@ -681,7 +681,7 @@
 .stage-device {
   position: relative;
   z-index: 1;
-  animation: stage-in 460ms var(--ease-emphasis) both;
+  /* Calm V4: the device changes state without zooming into view. */
 }
 
 .stage-device .phone {
@@ -691,21 +691,7 @@
 .stage-screen {
   position: absolute;
   inset: 0;
-  animation: stage-screen-in 320ms var(--ease-standard) both;
-}
-
-@keyframes stage-in {
-  from {
-    opacity: 0;
-    transform: translateY(14px) scale(0.98);
-  }
-}
-
-@keyframes stage-screen-in {
-  from {
-    opacity: 0;
-    transform: translateY(8px);
-  }
+  /* No scroll-triggered fly-in on each synthetic ride beat. */
 }
 
 .stage-caption {
