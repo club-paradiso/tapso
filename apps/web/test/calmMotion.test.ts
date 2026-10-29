@@ -63,6 +63,21 @@ test("floating island opens only by activation and has no signal glow", () => {
   assert.doesNotMatch(islandCss, /animation:\s*isle-tick|animation:\s*isle-content-in/);
 });
 
+test("sticky iPhone preview stays comfortably below the navigation bar", () => {
+  const stage = journeyCss.match(/\.stage\s*\{[^}]*\}/)?.[0];
+  assert.ok(stage, "Sticky stage rules must exist");
+  assert.match(stage, /position:\s*sticky/);
+  assert.match(stage, /--stage-top:\s*clamp\(104px,\s*13svh,\s*144px\)/);
+  assert.match(stage, /top:\s*var\(--stage-top\)/);
+  assert.match(stage, /height:\s*calc\(100svh\s*-\s*var\(--stage-top\)\)/);
+  assert.doesNotMatch(stage, /top:\s*64px|height:\s*calc\(100svh\s*-\s*64px\)|min-height:\s*560px/);
+  assert.match(journeyCss, /@media \(min-width: 900px\) and \(max-height: 820px\)/);
+  assert.match(journeyCss, /@media \(min-width: 900px\) and \(max-height: 650px\)/);
+  assert.match(journeyCss, /--pw:\s*clamp\(170px,\s*16vw,\s*215px\)/);
+  // Narrow viewports use the in-step preview, not the sticky side rail.
+  assert.match(journeyCss, /@media \(max-width: 899px\)\s*\{[\s\S]*?\.journey-stage\s*\{\s*display:\s*none/);
+});
+
 test("story phone changes without scroll-induced entrance animation", () => {
   assert.doesNotMatch(journeyCss, /animation:\s*stage-in|animation:\s*stage-screen-in/);
   assert.doesNotMatch(journeyCss, /@keyframes stage-in|@keyframes stage-screen-in/);
