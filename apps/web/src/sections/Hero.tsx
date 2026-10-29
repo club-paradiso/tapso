@@ -103,13 +103,12 @@ export function Hero() {
           film={current.film}
         />
         <div className="coast-copy">
-          <p className="coast-eyebrow">제주 버스 · iPhone 앱 · <span className="coast-status">개발 중</span></p>
           <h1 id="hero-title">
             {config.copy.headline.split("\n").map((line, index) => (
               <span key={index}>{index > 0 ? <br /> : null}{line}</span>
             ))}
           </h1>
-          <p className="coast-gloss"><span className="coast-gloss-tag">제주어</span>서두르지 말고, 어서 타세요.</p>
+          <p className="coast-gloss">서두르지 말고, 어서 타세요.</p>
           <p className="coast-lede">{config.copy.description}</p>
           <div className="coast-actions">
             <a className="btn btn-primary btn-lg" href="#waitlist">{config.copy.cta}<ArrowIcon /></a>
