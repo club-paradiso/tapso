@@ -28,7 +28,11 @@ export function useReducedMotion(): boolean {
     const query = typeof window.matchMedia === "function"
       ? window.matchMedia("(prefers-reduced-motion: reduce)")
       : undefined;
-    const sync = () => setReduce(Boolean(query?.matches) || savedPreference());
+    const sync = () => {
+      const saved = savedPreference();
+      document.documentElement.dataset.motion = saved ? "reduce" : "normal";
+      setReduce(Boolean(query?.matches) || saved);
+    };
     sync();
     query?.addEventListener("change", sync);
     window.addEventListener(EVENT, sync);
