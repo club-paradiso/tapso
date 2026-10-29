@@ -1,0 +1,65 @@
+name: Import user-provided TAPSO AI rider video assets (one shot)
+
+on:
+  push:
+    branches:
+      - feat/ai-rider-hero-films
+    paths:
+      - .github/workflows/ingest-ai-riders-once.yml
+
+permissions:
+  contents: write
+
+jobs:
+  ingest:
+    runs-on: ubuntu-latest
+    timeout-minutes: 20
+    steps:
+      - uses: actions/checkout@v4
+        with:
+          persist-credentials: true
+      - name: Install FFmpeg
+        run: |
+          sudo apt-get update -qq
+          sudo apt-get install -y ffmpeg
+      - name: Download verified user-provided videos and build responsive assets
+        shell: bash
+        run: |
+          set -euo pipefail
+          mkdir -p /tmp/tapso-ai apps/web/public/media/hero
+          curl -fLsS --retry 3 --max-time 120 -o /tmp/tapso-ai/city-woman.mp4 https://at.adobe.com/V5ekUswtc3ke8eFw
+          curl -fLsS --retry 3 --max-time 120 -o /tmp/tapso-ai/coast-man.mp4 https://at.adobe.com/myMbqZTkCAgIPu32
+          curl -fLsS --retry 3 --max-time 120 -o /tmp/tapso-ai/rural-city.mp4 https://at.adobe.com/obHEtyxfQBFqTdli
+          curl -fLsS --retry 3 --max-time 120 -o /tmp/tapso-ai/city-man.mov https://at.adobe.com/phu22yEyweTyRZZk
+          printf '%s\n'             'dd1ad53dc23307a54bd8657150be2ef3a44d2bd5d39882ef6e3612d4c4faf4a5  /tmp/tapso-ai/city-woman.mp4'             '48a6aa52b50c2473fbd2363f4e72670fc6b5f62c16e02feb4cf0b9f3d33ddf5c  /tmp/tapso-ai/coast-man.mp4'             '6ca4a75541a73543872cefceb70f2db42c58fd211ebd612e8d971a6226cda922  /tmp/tapso-ai/rural-city.mp4'             '938105bb87971c7e47da344b58b10ad5ff8c77cea53b0d35d91cd8143698df52  /tmp/tapso-ai/city-man.mov' | sha256sum -c -
+          build() {
+            name="$1"
+            source="$2"
+            crop="$3"
+            out="apps/web/public/media/hero/$name"
+            # Keep the full-length originals, with H.264 remuxed into browser-safe MP4.
+            ffmpeg -nostdin -y -hide_banner -loglevel error -i "$source" -map 0:v:0 -an -c:v copy -movflags +faststart "$out.mp4"
+            ffmpeg -nostdin -y -hide_banner -loglevel error -i "$source" -an -vf "$crop,scale=720:1280:flags=lanczos,format=yuv420p" -c:v libx264 -preset fast -crf 31 -movflags +faststart "$out-portrait.mp4"
+            ffmpeg -nostdin -y -hide_banner -loglevel error -ss 1 -i "$source" -frames:v 1 -vf "scale=1600:900:flags=lanczos" -c:v libwebp -quality 70 "$out-poster.webp"
+            ffmpeg -nostdin -y -hide_banner -loglevel error -ss 1 -i "$source" -frames:v 1 -vf "$crop,scale=720:1280:flags=lanczos" -c:v libwebp -quality 70 "$out-poster-portrait.webp"
+          }
+          build ai-rural-city /tmp/tapso-ai/rural-city.mp4 'crop=405:720:if(gte(t\,5)\,520\,170):0'
+          build ai-coast-man /tmp/tapso-ai/coast-man.mp4 'crop=405:720:160:0'
+          build ai-city-woman /tmp/tapso-ai/city-woman.mp4 'crop=405:720:645:0'
+          build ai-city-man /tmp/tapso-ai/city-man.mov 'crop=405:720:220:0'
+          for file in apps/web/public/media/hero/ai-*; do
+            bytes="$(stat -c%s "$file")"
+            if [[ "$file" == *.mp4 && "$bytes" -gt 7000000 ]]; then echo "Oversized video: $file ($bytes)"; exit 1; fi
+            if [[ "$file" == *.webp && "$bytes" -gt 500000 ]]; then echo "Oversized poster: $file ($bytes)"; exit 1; fi
+            printf 'ASSET %s bytes=%s sha256=%s\n' "$file" "$bytes" "$(sha256sum "$file" | cut -d' ' -f1)"
+          done
+      - name: Commit actual MP4 and WebP files to feature branch
+        shell: bash
+        run: |
+          set -euo pipefail
+          git config user.name "github-actions[bot]"
+          git config user.email "41898282+github-actions[bot]@users.noreply.github.com"
+          git add apps/web/public/media/hero/ai-*
+          git diff --cached --check
+          git commit -m "assets(web): add verified AI Jeju bus rider video and mobile posters"
+          git push origin HEAD:feat/ai-rider-hero-films
