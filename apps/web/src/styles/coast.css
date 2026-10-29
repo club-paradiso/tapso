@@ -206,22 +206,29 @@
   outline-offset: 3px;
 }
 
+/* The mobile header is a taller, opaque two-row bar (theme.css), so the film
+   no longer tucks underneath it. Desktop keeps the -64px over-film overlap. */
+@media (max-width: 959px) {
+  .coast-v4 { margin-top: 0; }
+  .coast-v4 .coast-copy { padding-top: 96px; }
+}
+
 @media (max-width: 759px) {
   .coast-v4 .coast-stage { min-height: max(720px, 100svh); }
   .coast-v4 .coast-copy {
     width: calc(100% - 2 * var(--gutter));
-    padding: 160px 0 230px;
+    padding: 96px 0 230px;
   }
   .coast-v4 h1 { font-size: clamp(2.75rem, 12vw, 3.75rem); }
   .coast-v4 .coast-lede { margin: 14px 0 22px; }
   .coast-v4 .coast-actions .btn { flex: 1 1 auto; }
-  .coast-v4 .coast-status-line { font-size: 0.8125rem; }
+  .coast-v4 .coast-status-line { font-size: 0.875rem; }
   .coast-v4 .coast-shade {
     background: linear-gradient(0deg, rgb(var(--film-basalt) / 90%), rgb(var(--film-basalt) / 70%) 58%, rgb(var(--film-basalt) / 35%));
   }
-  .coast-v4 .coast-bottom { bottom: 16px; }
+  .coast-v4 .coast-bottom { bottom: max(16px, env(safe-area-inset-bottom)); }
   .coast-v4 .coast-film-controls { justify-content: space-between; }
-  .coast-v4 .coast-credit { flex: 1 1 175px; font-size: 0.6875rem; }
+  .coast-v4 .coast-credit { flex: 1 1 175px; font-size: 0.75rem; }
   .coast-v4.is-preview .coast-stage { min-height: 965px; }
   .coast-v4 .coast-demo {
     grid-template-columns: 1fr;

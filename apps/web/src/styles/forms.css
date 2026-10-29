@@ -234,6 +234,8 @@
   color: var(--ink);
   background: var(--bg);
   overflow: auto;
+  /* Keep the sheet's own scrolling from chaining into the page behind it. */
+  overscroll-behavior: contain;
 }
 
 .support-dialog::backdrop {
