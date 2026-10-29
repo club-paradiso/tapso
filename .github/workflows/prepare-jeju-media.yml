@@ -24,6 +24,8 @@ jobs:
           python-version: "3.12"
       - name: Install media tools
         run: |
+          sudo apt-get update -qq
+          sudo apt-get install -y ffmpeg
           command -v ffmpeg
           command -v ffprobe
           python -m pip install --disable-pip-version-check yt-dlp
