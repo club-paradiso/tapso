@@ -130,6 +130,22 @@ test("no GitHub platform branding or repository links can leak into public websi
   assert.match(visibleSource(join(src, "App.tsx")), /같은 금액을 곧바로 다시 결제하지 마세요/);
 });
 
+test("preorder action copy is consistently '사전예약' without a TestFlight prefix", () => {
+  const header = readFileSync(join(src, "sections/Header.tsx"), "utf8");
+  const footer = readFileSync(join(src, "sections/Footer.tsx"), "utf8");
+  const form = readFileSync(join(src, "components/WaitlistForm.tsx"), "utf8");
+  const config = JSON.parse(readFileSync(join(src, "design/marketing.json"), "utf8"));
+  const page = readFileSync(join(src, "../index.html"), "utf8");
+
+  assert.equal(config.copy.cta, "사전예약");
+  assert.match(header, />사전예약\s*<\/a>/);
+  assert.match(footer, /href="#waitlist">사전예약<\/a>/);
+  assert.match(form, /"보내는 중…" : "사전예약"/);
+  for (const content of [header, footer, form, page, JSON.stringify(config)]) {
+    assert.doesNotMatch(content, /TestFlight\s+사전예약/i);
+  }
+});
+
 test("the FAQ answers the questions a visitor asks first", () => {
   const questions = FAQ_ITEMS.map((f) => f.q).join("\n");
   for (const topic of ["지도 앱", "위치 권한", "실제 버스", "TestFlight", "Android", "다이나믹 아일랜드가 없는", "데이터가 끊기면"]) {
