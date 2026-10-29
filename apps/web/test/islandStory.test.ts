@@ -162,6 +162,27 @@ test("every beat and chapter has words", () => {
   for (const chapter of CHAPTERS) assert.ok(CHAPTER_COPY[chapter.id].title, chapter.id);
 });
 
+test("destination guide matches implemented stop-name, address, and building lookup", () => {
+  const body = STEP_COPY.destination.body;
+  for (const term of ["정류장 이름", "주소", "건물 이름", "근처 하차 정류장", "지도 앱"]) {
+    assert.ok(body.includes(term), `destination instructions missing ${term}`);
+  }
+  // iOS first matches official stop names, then searches places/addresses in
+  // Jeju and lets the rider pick a *nearby* catalog stop rather than silently
+  // assigning an arbitrary stop from a building or address.
+  const catalogSearch = readFileSync(repo("apps/ios/TapsoApp/CatalogSearchViews.swift"), "utf8");
+  const placeLookup = readFileSync(repo("apps/ios/TapsoApp/PlaceLookupViews.swift"), "utf8");
+  const serverSearch = readFileSync(repo("services/api/src/placeSearch.ts"), "utf8");
+  assert.match(catalogSearch, /index\.search\(trimmed\)/);
+  assert.match(catalogSearch, /PlaceLookupSection\(query: query, index: index/);
+  assert.match(placeLookup, /PlaceLookup\.search\(trimmed\)/);
+  assert.match(placeLookup, /index\.places\(nearLatitude: place\.latitude/);
+  assert.match(placeLookup, /onChoose\(stop\.place\)/);
+  assert.match(serverSearch, /search\/keyword\.json/);
+  assert.match(serverSearch, /search\/address\.json/);
+  assert.match(serverSearch, /road\.building_name/);
+});
+
 test("until pushed updates are shown on a device, the page says the Lock Screen updates only with the app open", () => {
   // The app can ask for a push token, but nothing pushes until a scheduler runs and a device
   // has shown it (`LIVE_ACTIVITY_PUSH.md`, milestone 6). Only that evidence lifts the claim.
