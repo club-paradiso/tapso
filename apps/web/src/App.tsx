@@ -4,7 +4,6 @@ import { ThemeProvider } from "./design/Theme";
 import { Header } from "./sections/Header";
 import { Hero } from "./sections/Hero";
 import { Journey } from "./sections/Journey";
-import { MapCompanion } from "./sections/MapCompanion";
 import { Privacy } from "./sections/Privacy";
 import { Status } from "./sections/Status";
 import { Waitlist } from "./sections/Waitlist";
@@ -111,7 +110,6 @@ export default function App() {
         ) : null}
         <Hero />
         <Journey />
-        <MapCompanion />
         <Privacy />
         <Status />
         <Waitlist />
