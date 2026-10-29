@@ -38,15 +38,6 @@ export function Waitlist() {
             </li>
           </ul>
 
-          <img
-            className="waitlist-dori"
-            src="/media/dori-480.webp"
-            alt=""
-            width={240}
-            height={240}
-            loading="lazy"
-            decoding="async"
-          />
         </div>
 
         <div className="waitlist-form-wrap">
