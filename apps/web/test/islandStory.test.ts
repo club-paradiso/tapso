@@ -162,6 +162,18 @@ test("every beat and chapter has words", () => {
   for (const chapter of CHAPTERS) assert.ok(CHAPTER_COPY[chapter.id].title, chapter.id);
 });
 
+test("boarding illustration remains in the story without the removed copy", () => {
+  const boarding = BEATS.find((b) => b.id === "boarding");
+  assert.ok(boarding, "the boarding visual beat remains");
+  assert.equal(STEP_COPY.boarding.title, "");
+  assert.equal(STEP_COPY.boarding.body, "");
+  assert.equal(STEP_COPY.boarding.label, "타는 곳");
+  const journey = readFileSync(repo("apps/web/src/sections/Journey.tsx"), "utf8");
+  assert.match(journey, /copy\.title \? <h3/);
+  assert.match(journey, /copy\.body \? <p/);
+  assert.match(journey, /step-\$\{beat\.id\}-label/);
+});
+
 test("destination guide matches implemented stop-name, address, and building lookup", () => {
   const body = STEP_COPY.destination.body;
   for (const term of ["정류장 이름", "주소", "건물 이름", "근처 하차 정류장", "지도 앱"]) {
