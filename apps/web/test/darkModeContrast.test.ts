@@ -81,7 +81,7 @@ test("bright journey fills retain dark text even when the page theme is dark", (
 
 test("mint CTAs and highlighted icons do not use dark-theme --ink", () => {
   assert.match(css.forms, /\.figma-submit,\s*\.figma-support\s*\{[^}]*color:\s*var\(--on-light-accent\)/s);
-  assert.match(rule(css.forms, ".figma-support"), /color:\s*var\(--ink\)\s*;/);
+  assert.match(css.forms, /\.figma-support\s*\{\s*color:\s*var\(--ink\)\s*;/);
   assert.match(rule(css.sections, ".tone-tapso .flow-icon"), /color:\s*var\(--on-light-accent\)\s*;/);
   for (const selector of [".scene-bus-body", ".privacy-token.is-bus", ".waitlist-promises svg"]) {
     assert.match(rule(css.sections, selector), /color:\s*var\(--on-light-accent\)\s*;/, selector);
