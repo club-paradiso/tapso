@@ -3,8 +3,10 @@ import { type HeroFilmSource } from "../content/media.ts";
 
 type NetworkInformation = { saveData?: boolean; effectiveType?: string };
 
-const CROSSFADE_MS = 1200;
-const PRE_ROLL_SECONDS = 1.65;
+// About five seconds per scene: four seconds at full strength, then a
+// one-second overlap with the preloaded next clip.
+const CROSSFADE_MS = 1000;
+const SCENE_DWELL_SECONDS = 4;
 
 /** Honor operating-system motion and network data-saving preferences. */
 function prefersStill(reduceMotion: boolean): boolean {
@@ -63,6 +65,9 @@ export function useHeroCrossfade(
     let onScreen = true;
     let currentSlot: Slot = 0;
     let currentIndex = 0;
+    // Media time at the end of the previous fade. Counting from this point
+    // keeps subsequent scene durations consistent despite the overlap.
+    let activeAt = 0;
     let transitioning = false;
     let fadeTimer: number | undefined;
 
@@ -113,11 +118,13 @@ export function useHeroCrossfade(
 
       const outgoing = videos[currentSlot];
       const duration = outgoing.duration;
-      if (
-        !Number.isFinite(duration) || duration < PRE_ROLL_SECONDS + 2 ||
-        outgoing.currentTime < 1 ||
-        duration - outgoing.currentTime > PRE_ROLL_SECONDS
-      ) return;
+      // Count *displayed* media time, not clip duration: the longer source
+      // files can remain intact, and a clip may loop while its successor loads.
+      if (!Number.isFinite(duration) || duration <= SCENE_DWELL_SECONDS + CROSSFADE_MS / 1000) return;
+      const elapsed = outgoing.currentTime >= activeAt
+        ? outgoing.currentTime - activeAt
+        : duration - activeAt + outgoing.currentTime;
+      if (elapsed < SCENE_DWELL_SECONDS) return;
 
       const nextSlot = (currentSlot === 0 ? 1 : 0) as Slot;
       const incoming = videos[nextSlot];
@@ -137,6 +144,7 @@ export function useHeroCrossfade(
           outgoing.pause();
           currentSlot = nextSlot;
           currentIndex = nextIndex;
+          activeAt = incoming.currentTime;
           setActiveSlot(nextSlot);
           setIncomingSlot(null);
           setActiveIndex(nextIndex);
