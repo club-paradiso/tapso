@@ -31,8 +31,9 @@ test("one-tap Toss is the primary domestic action; QR and bank copy remain fallb
   const dialog = readFileSync(new URL("../src/components/SupportDialog.tsx", import.meta.url), "utf8");
   assert.match(dialog, /href=\{SUPPORT_CHANNELS\.tossSendUrl\}/);
   assert.match(dialog, /토스 앱에서 바로 송금하기/);
-  assert.match(dialog, /앱이 열리지 않으면 아래 QR이나 계좌번호 복사를 이용해주세요/);
-  assert.match(dialog, /송금은 토스 앱에서 계좌와 금액을 확인한 뒤 완료합니다/);
+  assert.doesNotMatch(dialog, /토스가 설치된 휴대폰에서 누르면 송금 화면 열기를 시도해요/);
+  assert.doesNotMatch(dialog, /실제 송금은 토스 앱에서 계좌와 금액을 확인한 뒤 완료합니다/);
+  assert.doesNotMatch(dialog, /toss-help/);
   assert.match(dialog, /writeText\(SUPPORT_CHANNELS\.bank\.account\)/);
   assert.ok(dialog.indexOf("토스 앱에서 바로 송금하기") < dialog.indexOf("support-transfer-qr"));
   assert.match(dialog, /커피 한 잔으로 응원하기/);
