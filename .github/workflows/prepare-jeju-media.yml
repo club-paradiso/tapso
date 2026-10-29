@@ -1,0 +1,41 @@
+name: Prepare verified Jeju film assets (one-shot)
+
+on:
+  push:
+    branches:
+      - design/v4-calm-motion-hero
+    paths:
+      - .github/workflows/prepare-jeju-media.yml
+  workflow_dispatch:
+
+permissions:
+  contents: write
+
+jobs:
+  encode:
+    runs-on: ubuntu-latest
+    timeout-minutes: 15
+    steps:
+      - uses: actions/checkout@v4
+        with:
+          persist-credentials: true
+      - uses: actions/setup-python@v5
+        with:
+          python-version: "3.12"
+      - name: Install media tools
+        run: |
+          command -v ffmpeg
+          command -v ffprobe
+          python -m pip install --disable-pip-version-check yt-dlp
+      - name: Download, optimize and verify two licensed Pixabay clips
+        env:
+          PIXABAY_API_KEY: ${{ secrets.PIXABAY_API_KEY }}
+        run: python scripts/media/ingest_jeju_videos.py
+      - name: Commit verified MP4 and WebP files on the PR branch
+        run: |
+          git config user.email "41898282+github-actions[bot]@users.noreply.github.com"
+          git config user.name "github-actions[bot]"
+          git add apps/web/public/media/hero/udo-* apps/web/public/media/hero/jungmun-*
+          git diff --cached --check
+          git commit -m "assets(web): add optimized Udo and Jungmun MP4/WebP footage"
+          git push origin HEAD:design/v4-calm-motion-hero
