@@ -19,23 +19,41 @@ test("hero contains no scroll-pinned film-to-phone choreography", () => {
   assert.match(coast, /min-height:\s*max\(730px,\s*100svh\)/);
 });
 
-test("the film playlist progresses automatically, without user-facing scene or pause controls", () => {
-  assert.match(hero, /FILM_SCENES\.filter/);
-  assert.match(hero, /filmAssetsExist/);
-  assert.match(hero, /onEnded=\{onEnded\}/);
-  assert.match(hero, /setFilmIndex\(\(index\) => \(index \+ 1\) % playlist\.length\)/);
-  assert.match(hero, /loop=\{playlist\.length <= 1\}/);
-  assert.doesNotMatch(hero, /coast-scene-picker|onClick=\{\(\) => pickScene/);
-  assert.doesNotMatch(hero, /영상 멈추기|영상 재생|PauseIcon|PlayIcon|FilmControls/);
-  assert.doesNotMatch(hero, /setInterval|setTimeout/);
+test("two permanent video layers crossfade instead of reloading one element", () => {
+  assert.match(hero, /useHeroCrossfade/);
+  assert.match(hero, /const videoA = useRef<HTMLVideoElement>/);
+  assert.match(hero, /const videoB = useRef<HTMLVideoElement>/);
+  assert.match(hero, /first=\{videoA\}/);
+  assert.match(hero, /second=\{videoB\}/);
+  assert.match(hero, /className=\{`coast-film \$\{role\(0\)\}`\}/);
+  assert.match(hero, /className=\{`coast-film \$\{role\(1\)\}`\}/);
+  assert.doesNotMatch(hero, /onEnded|setFilmIndex|영상 멈추기|영상 재생|PauseIcon|PlayIcon/);
+  assert.match(coast, /\.coast-film\.is-incoming\s*\{[^}]*opacity:\s*1;[^}]*z-index:\s*2/s);
+  assert.match(coast, /transition:\s*opacity 1200ms ease-in-out/);
 });
 
-test("automatic playback respects the saved motion setting and visibility", () => {
-  assert.match(hero, /useHeroFilm\(video, section, reduceMotion, true, current\.film\)/);
-  assert.match(hero, /if \(!reduceMotion && playlist\.length > 1\)/);
-  assert.match(filmHook, /if \(prefersStill\(reduceMotion\)\)/);
-  assert.match(filmHook, /onScreen\.current/);
+test("the next scene preloads and starts before the outgoing video ends", () => {
+  assert.match(filmHook, /prepare\(0, 0\)/);
+  assert.match(filmHook, /prepare\(1, 1\)/);
+  assert.match(filmHook, /timeupdate/);
+  assert.match(filmHook, /duration - outgoing\.currentTime > PRE_ROLL_SECONDS/);
+  assert.match(filmHook, /incoming\.readyState < HTMLMediaElement\.HAVE_CURRENT_DATA/);
+  assert.match(filmHook, /void incoming\.play\(\)\.then\(\(\) =>/);
+  assert.match(filmHook, /setIncomingSlot\(nextSlot\)/);
+  assert.match(filmHook, /outgoing\.pause\(\)/);
+  assert.match(filmHook, /setActiveSlot\(nextSlot\)/);
+  assert.match(filmHook, /prepare\(\(nextSlot === 0 \? 1 : 0\)/);
+  assert.match(hero, /\bloop\b/);
+});
+
+test("video playback never overrides OS motion and data-saver settings", () => {
+  assert.match(hero, /FILM_SCENES\.filter/);
+  assert.match(hero, /filmAssetsExist/);
+  assert.match(filmHook, /if \(prefersStill\(reduceMotion\)\) return;/);
+  assert.match(filmHook, /connection\?\.saveData/);
   assert.match(filmHook, /document\.hidden/);
+  assert.match(filmHook, /IntersectionObserver/);
+  assert.doesNotMatch(hero, /coast-scene-picker|coast-control-button|setInterval/);
 });
 
 test("floating island opens only by activation and has no signal glow", () => {

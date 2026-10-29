@@ -1,42 +1,58 @@
-import { useEffect, useRef, useState, type RefObject } from "react";
+import { useEffect, useMemo, useRef, useState, type RefObject } from "react";
 import { ArrowIcon } from "../components/Icons";
 import { EXTRA_FILMS, FILM_SCENES, filmAssetsExist, type FilmSceneId, type HeroFilmSource } from "../content/media.ts";
 import config from "../design/marketing.json";
-import { useHeroFilm, type FilmState } from "../lib/useHeroFilm";
+import { useHeroCrossfade } from "../lib/useHeroFilm";
 import { useReducedMotion } from "../lib/useReducedMotion";
 import { useHeroTracking } from "../story/storyStore.ts";
 
+type Slot = 0 | 1;
+
 function FilmMedia({
-  videoRef,
-  state,
+  first,
+  second,
+  activeSlot,
+  incomingSlot,
   hasFrame,
   film,
-  loop,
-  onEnded,
 }: {
-  videoRef: RefObject<HTMLVideoElement | null>;
-  state: FilmState;
+  first: RefObject<HTMLVideoElement | null>;
+  second: RefObject<HTMLVideoElement | null>;
+  activeSlot: Slot;
+  incomingSlot: Slot | null;
   hasFrame: boolean;
   film: HeroFilmSource;
-  loop: boolean;
-  onEnded: () => void;
 }) {
+  const role = (slot: Slot): string => {
+    if (slot === incomingSlot) return "is-incoming";
+    return slot === activeSlot && hasFrame ? "is-active" : "is-standby";
+  };
+
   return (
-    <div className={`coast-media film-${state}${hasFrame ? " has-frame" : ""}`} aria-hidden="true">
+    <div className="coast-media" aria-hidden="true">
       <picture>
         <source media="(max-aspect-ratio: 4/5)" srcSet={film.stills.portrait} />
         <img className="coast-still" src={film.stills.wide} alt="" decoding="async" fetchPriority="high" />
       </picture>
       <video
-        ref={videoRef}
-        className="coast-film"
+        ref={first}
+        className={`coast-film ${role(0)}`}
         muted
-        loop={loop}
+        loop
         playsInline
-        preload="none"
+        preload="auto"
         disablePictureInPicture
         tabIndex={-1}
-        onEnded={onEnded}
+      />
+      <video
+        ref={second}
+        className={`coast-film ${role(1)}`}
+        muted
+        loop
+        playsInline
+        preload="auto"
+        disablePictureInPicture
+        tabIndex={-1}
       />
       <span className="coast-shade" />
     </div>
@@ -44,50 +60,47 @@ function FilmMedia({
 }
 
 /**
- * V4 continuous film: cycle by the actual media ended event rather than an
- * arbitrary timer. The next clip starts only after the previous clip ends.
- * Reduced-motion and data-saver preferences retain the static poster fallback.
+ * The three licensed Jeju films overlap: the next clip is already decoded
+ * before an uninterrupted crossfade. No scene controls or long scroll effects.
  */
 export function Hero() {
   const section = useRef<HTMLElement>(null);
-  const video = useRef<HTMLVideoElement>(null);
+  const videoA = useRef<HTMLVideoElement>(null);
+  const videoB = useRef<HTMLVideoElement>(null);
   useHeroTracking(section);
   const reduceMotion = useReducedMotion();
-  const [filmIndex, setFilmIndex] = useState(0);
   const [additionalFilms, setAdditionalFilms] = useState<FilmSceneId[]>([]);
-  // Verify video and poster files before adding them to automatic playback.
-  // A Vercel SPA 200/HTML fallback must never be treated as a valid MP4.
+
+  // Never schedule a scene without its published MP4 and poster images.
+  // Check MIME as well: a 200 SPA HTML fallback is not a working video.
   useEffect(() => {
     let active = true;
     void Promise.all(EXTRA_FILMS.map(async ({ id, film }) => ({
       id,
       ready: await filmAssetsExist(film),
     }))).then((results) => {
-      if (active) setAdditionalFilms(results.filter((result) => result.ready).map((result) => result.id));
+      if (active) setAdditionalFilms(results.filter(({ ready }) => ready).map(({ id }) => id));
     });
     return () => { active = false; };
   }, []);
 
-  const playlist = FILM_SCENES.filter(({ id }) => id === "coast" || additionalFilms.includes(id));
-  const current = playlist[filmIndex % playlist.length] ?? FILM_SCENES[0]!;
-  const film = useHeroFilm(video, section, reduceMotion, true, current.film);
-
-  const advanceFilm = () => {
-    if (!reduceMotion && playlist.length > 1) {
-      setFilmIndex((index) => (index + 1) % playlist.length);
-    }
-  };
+  const playlist = useMemo(
+    () => FILM_SCENES.filter(({ id }) => id === "coast" || additionalFilms.includes(id)),
+    [additionalFilms],
+  );
+  const player = useHeroCrossfade(videoA, videoB, section, playlist, reduceMotion);
+  const current = playlist[player.activeIndex] ?? FILM_SCENES[0]!;
 
   return (
     <section className="coast coast-v4" id="top" aria-labelledby="hero-title" ref={section}>
       <div className="coast-stage">
         <FilmMedia
-          videoRef={video}
-          state={film.state}
-          hasFrame={film.hasFrame && !reduceMotion}
+          first={videoA}
+          second={videoB}
+          activeSlot={player.activeSlot}
+          incomingSlot={player.incomingSlot}
+          hasFrame={player.hasFrame && !reduceMotion}
           film={current.film}
-          loop={playlist.length <= 1}
-          onEnded={advanceFilm}
         />
         <div className="coast-copy">
           <p className="coast-eyebrow">제주 버스 · iPhone 앱 · <span className="coast-status">개발 중</span></p>
