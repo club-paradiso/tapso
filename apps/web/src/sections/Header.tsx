@@ -29,7 +29,7 @@ export function Header() {
         </nav>
         <ThemeToggle />
         <a className="btn btn-primary btn-sm header-cta" href="#waitlist">
-          <span className="only-wide">TestFlight </span>사전예약
+          사전예약
         </a>
       </div>
     </header>
