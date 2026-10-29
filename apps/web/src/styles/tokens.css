@@ -1,10 +1,10 @@
 /*
  * TAPSO web tokens.
  *
- * Colour values are the Product V2 semantic tokens (docs/product/DESIGN_SYSTEM_V2.md,
- * Figma collection "TAPSO V2 Semantic", apps/ios/Shared/TapsoTokens.swift). The
- * web adds only layout, type and motion scales and one warm paper tone. No
- * other file in src/styles may introduce a raw hex value.
+ * Shared semantic colours follow Design System V3 (basalt), validated against
+ * design/tokens/tokens.json and apps/ios/Shared/TapsoTokens.swift by
+ * scripts/design/validate_tokens.py. Web-only hardware, paper, type, layout,
+ * and motion tokens remain intentionally local.
  */
 
 :root {
