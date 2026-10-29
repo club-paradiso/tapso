@@ -56,10 +56,26 @@ test("video playback never overrides OS motion and data-saver settings", () => {
   assert.doesNotMatch(hero, /coast-scene-picker|coast-control-button|setInterval/);
 });
 
-test("floating island opens only by activation and has no signal glow", () => {
-  assert.match(islandDock, /const open = visible && pinned/);
+test("Dynamic Island is an in-flow journey demo, never a floating obstruction", () => {
+  const app = fromRoot("../src/App.tsx");
+  const header = fromRoot("../src/sections/Header.tsx");
+  const journey = fromRoot("../src/sections/Journey.tsx");
+  const dock = islandCss.match(/\.dock\s*\{[^}]*\}/)?.[0];
+  assert.ok(dock, "Expected an inline Dynamic Island container");
+  assert.match(dock, /display:\s*inline-flex/);
+  assert.match(dock, /max-width:\s*100%/);
+  assert.doesNotMatch(dock, /position:\s*fixed|pointer-events:\s*none|z-index:\s*60/);
+  assert.doesNotMatch(app, /<IslandDock\s*\/>/);
+  assert.doesNotMatch(header, /useIslandShowing|has-island/);
+  assert.doesNotMatch(journeyCss, /\.site-header\.has-island/);
+  assert.match(journey, /case "island":/);
+  assert.match(journey, /<IslandDock activity=\{resolveBeat\(beat, variant\)\.activity\} \/>/);
+  assert.match(islandCss, /@media \(max-width: 899px\)\s*\{\s*\.dock\s*\{/);
+  assert.match(islandDock, /role="group" aria-label="다이나믹 아일랜드 시연"/);
+  assert.match(islandDock, /aria-expanded=\{expanded\}/);
+  assert.match(islandDock, /event\.key === "Escape"/);
+  assert.doesNotMatch(islandDock, /useStory|heroInView|fixed|is-visible/);
   assert.doesNotMatch(islandDock, /milestoneToSignal|setSignal|onPointerEnter|onPointerLeave/);
-  assert.doesNotMatch(islandDock, /signalling=\{/);
   assert.doesNotMatch(islandCss, /animation:\s*isle-tick|animation:\s*isle-content-in/);
 });
 
