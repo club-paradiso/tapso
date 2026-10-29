@@ -36,6 +36,8 @@ export default function WaitlistForm() {
   // costs a real visitor nothing and makes an instant scripted post cheap to
   // reject.
   const formRenderedAt = useRef(Date.now()).current;
+  const emailRef = useRef<HTMLInputElement>(null);
+  const consentRef = useRef<HTMLInputElement>(null);
   const submitting = state.status === "submitting";
 
   const submit = async (event: FormEvent<HTMLFormElement>) => {
@@ -43,20 +45,16 @@ export default function WaitlistForm() {
     if (submitting) return;
 
     const trimmed = email.trim();
-    let blocked = false;
-    if (!trimmed || !trimmed.includes("@")) {
-      setEmailError("메일 주소를 다시 확인해주세요.");
-      blocked = true;
-    } else {
-      setEmailError(undefined);
+    const emailBad = !trimmed || !trimmed.includes("@");
+    const consentBad = !consent;
+    setEmailError(emailBad ? "메일 주소를 다시 확인해주세요." : undefined);
+    setConsentError(consentBad ? "사전예약을 하려면 동의가 필요해요." : undefined);
+    if (emailBad || consentBad) {
+      // Move focus to the first field that needs fixing, so keyboard and
+      // screen-reader users land on the error instead of hunting for it.
+      (emailBad ? emailRef : consentRef).current?.focus();
+      return;
     }
-    if (!consent) {
-      setConsentError("사전예약을 하려면 동의가 필요해요.");
-      blocked = true;
-    } else {
-      setConsentError(undefined);
-    }
-    if (blocked) return;
 
     setState({ status: "submitting" });
     const result = await submitWaitlist({
@@ -77,8 +75,14 @@ export default function WaitlistForm() {
         return;
       case "invalid":
         // The typed address stays in the field so it can simply be corrected.
-        if (outcome.field === "email") setEmailError("메일 주소를 다시 확인해주세요.");
-        if (outcome.field === "privacyConsent") setConsentError("사전예약을 하려면 동의가 필요해요.");
+        if (outcome.field === "email") {
+          setEmailError("메일 주소를 다시 확인해주세요.");
+          emailRef.current?.focus();
+        }
+        if (outcome.field === "privacyConsent") {
+          setConsentError("사전예약을 하려면 동의가 필요해요.");
+          consentRef.current?.focus();
+        }
         setState({ status: "idle" });
         return;
       case "error":
@@ -117,6 +121,7 @@ export default function WaitlistForm() {
         <label className="figma-field" htmlFor={`${formId}-email`} data-figma-node-id="9:53">
           <span>이메일</span>
           <input
+            ref={emailRef}
             id={`${formId}-email`}
             name="email"
             type="email"
@@ -179,6 +184,7 @@ export default function WaitlistForm() {
 
         <label className="waitlist-consent" htmlFor={`${formId}-consent`}>
           <input
+            ref={consentRef}
             id={`${formId}-consent`}
             type="checkbox"
             required

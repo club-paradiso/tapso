@@ -121,6 +121,10 @@ main:focus {
   max-width: calc(var(--container) + var(--gutter) * 2);
   margin-inline: auto;
   padding-inline: var(--gutter);
+  /* Landscape iPhones: keep content out from under the notch / rounded corners.
+     With no inset (every other device) max() falls back to the plain gutter. */
+  padding-left: max(var(--gutter), env(safe-area-inset-left));
+  padding-right: max(var(--gutter), env(safe-area-inset-right));
 }
 
 .flip {

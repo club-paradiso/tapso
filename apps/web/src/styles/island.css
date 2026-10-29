@@ -260,10 +260,23 @@
   font-size: clamp(9px, 1.12vw, 14px);
 }
 
-.dock-button {
-  display: inline-flex;
-  justify-content: center;
+/* The stage carries the 44px touch minimum (the island graphic itself is
+   only ≈2.3em tall, 28–32px); the toggle button covers the stage so a tap
+   anywhere on the graphic toggles, without wrapping the graphic's text. */
+.dock-stage {
+  position: relative;
+  display: inline-grid;
+  place-items: center;
+  min-width: var(--touch-min);
+  min-height: var(--touch-min);
   max-width: 100%;
+}
+
+.dock-button {
+  position: absolute;
+  inset: 0;
+  width: 100%;
+  height: 100%;
   padding: 0;
   border: 0;
   border-radius: 1.4em;

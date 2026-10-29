@@ -233,25 +233,40 @@
   border-radius: var(--radius-hero);
   color: var(--ink);
   background: var(--bg);
-  overflow: auto;
+  overflow: hidden;
+  /* Keep the sheet's own scrolling from chaining into the page behind it. */
+  overscroll-behavior: contain;
 }
 
 .support-dialog::backdrop {
   background: rgb(7 25 35 / 45%);
 }
 
+/* Column layout only while open (an author display rule would otherwise
+   override the UA's closed-dialog `display: none`): the header — and its
+   close button — stays put while only the body scrolls. */
+.support-dialog[open] {
+  display: flex;
+  flex-direction: column;
+}
+
 .support-dialog-body {
   display: flex;
   flex-direction: column;
   gap: var(--space-4);
-  padding: 28px;
+  min-height: 0;
+  overflow-y: auto;
+  overscroll-behavior: contain;
+  padding: var(--space-4) 28px 28px;
 }
 
 .support-dialog-header {
   display: flex;
+  flex: none;
   align-items: flex-start;
   justify-content: space-between;
   gap: var(--space-4);
+  padding: 28px 28px 0;
 }
 
 .support-dialog-header h2 {
@@ -515,7 +530,11 @@ a.support-channel-button {
     border-radius: var(--radius-hero) var(--radius-hero) 0 0;
   }
 
+  .support-dialog-header {
+    padding: 24px 20px 0;
+  }
+
   .support-dialog-body {
-    padding: 24px 20px calc(24px + env(safe-area-inset-bottom));
+    padding: var(--space-4) 20px calc(24px + env(safe-area-inset-bottom));
   }
 }

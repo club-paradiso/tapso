@@ -23,6 +23,12 @@
   background: var(--bg);
 }
 
+/* The mark's basalt squircle is the same colour as the dark header, so only
+   its face would show. Lift it one step, like the footer already does. */
+[data-theme="dark"] .site-header .brand-mark rect:first-child {
+  fill: var(--night-elevated);
+}
+
 [data-theme="dark"] .btn-primary {
   color: var(--night);
 }
@@ -95,7 +101,9 @@
 .theme-toggle {
   display: flex;
   align-items: center;
+  justify-content: center;
   gap: 8px;
+  min-width: var(--touch-min);
   min-height: var(--touch-min);
   padding: 8px 14px;
   border: 1px solid var(--separator);
@@ -129,4 +137,44 @@
     gap: 8px;
   }
 
+}
+
+@media (max-width: 959px) {
+  .site-header-inner {
+    row-gap: 2px;
+  }
+
+  /* On phones the header has a second row (the nav strip), so it cannot stay
+     transparent over the hero film: the film only tucks 64px underneath,
+     which would leave white text floating over the page background. Keep the
+     mobile header opaque and readable instead; coast.css removes the film
+     overlap at this width. Desktop keeps the transparent over-film header. */
+  .site-header.is-over-film {
+    color: inherit;
+    background: color-mix(in srgb, var(--bg) 92%, transparent);
+    border-bottom-color: var(--separator);
+    backdrop-filter: saturate(1.4) blur(14px);
+    -webkit-backdrop-filter: saturate(1.4) blur(14px);
+  }
+
+  .site-header.is-over-film .brand,
+  .site-header.is-over-film .site-nav a,
+  .site-header.is-over-film .theme-toggle {
+    text-shadow: none;
+  }
+
+  .site-header.is-over-film .site-nav a {
+    color: var(--text-secondary);
+  }
+
+  .site-header.is-over-film .site-nav a:hover {
+    color: var(--ink);
+    background: var(--ink-04);
+  }
+
+  .site-header.is-over-film .theme-toggle {
+    color: inherit;
+    border-color: var(--separator);
+    background: transparent;
+  }
 }

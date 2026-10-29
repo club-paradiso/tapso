@@ -157,16 +157,70 @@
 }
 
 @media (max-width: 959px) {
+  /* Mobile header: brand / theme / CTA on the first row, the page nav as a
+     horizontally scrollable strip on the second row. Hiding the nav (the old
+     behaviour) left phone visitors with no way to jump to a section. */
+  .site-header-inner {
+    flex-wrap: wrap;
+    height: auto;
+    padding-block: 10px 0;
+    row-gap: 2px;
+  }
+
   .site-nav {
+    display: block;
+    flex: 1 1 100%;
+    order: 3;
+    margin-left: 0;
+    border-top: 1px solid var(--ink-08);
+  }
+
+  .site-nav ul {
+    overflow-x: auto;
+    overscroll-behavior-x: contain;
+    scrollbar-width: none;
+    -webkit-overflow-scrolling: touch;
+  }
+
+  .site-nav ul::-webkit-scrollbar {
     display: none;
   }
 
-  .header-cta {
+  .site-nav a {
+    white-space: nowrap;
+  }
+
+  .theme-toggle {
     margin-left: auto;
+  }
+
+  .header-cta {
+    margin-left: 0;
   }
 
   .only-wide {
     display: none;
+  }
+
+  /* The two-row header is taller, so anchored sections need more clearance. */
+  html {
+    scroll-padding-top: 124px;
+  }
+}
+
+/* The smallest iPhones: shrink the wordmark and CTA padding before the
+   header row can overflow (32px mark + wordmark + toggle + CTA ≈ 288px). */
+@media (max-width: 400px) {
+  .brand {
+    gap: 8px;
+  }
+
+  .brand-word {
+    font-size: 1.05rem;
+  }
+
+  .header-cta {
+    padding-inline: 12px;
   }
 }
 
@@ -481,14 +535,26 @@
     display: none;
   }
 
+  /* One line per tab: the longest label ("비슷한 버스가 있을 때") wrapped onto
+     two lines and made the row uneven. The group scrolls sideways instead. */
   .segmented {
     display: flex;
+    flex-wrap: nowrap;
     width: 100%;
+    max-width: 100%;
+    overflow-x: auto;
+    scrollbar-width: none;
+    -webkit-overflow-scrolling: touch;
+  }
+
+  .segmented::-webkit-scrollbar {
+    display: none;
   }
 
   .segmented button {
-    flex: 1 1 auto;
+    flex: 1 0 auto;
     padding: 0 10px;
+    white-space: nowrap;
   }
 }
 
@@ -1219,7 +1285,7 @@ details[open] .faq-toggle::after {
 /* Footer ----------------------------------------------------------------- */
 
 .site-footer {
-  padding-block: clamp(48px, 6vw, 88px) var(--space-8);
+  padding-block: clamp(48px, 6vw, 88px) calc(var(--space-8) + env(safe-area-inset-bottom));
   color: var(--on-dark-surface);
   background: var(--basalt);
 }

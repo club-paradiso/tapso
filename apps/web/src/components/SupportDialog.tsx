@@ -76,6 +76,10 @@ export default function SupportDialog({ onClose }: { onClose: () => void }) {
     Number.isSafeInteger(amount) &&
     amount >= config.minAmount &&
     amount <= config.maxAmount;
+  // A typed-but-out-of-range custom amount gets an explicit error instead of
+  // the submit button silently staying disabled.
+  const customInvalid =
+    selected === CUSTOM && customAmount.trim() !== "" && config !== undefined && !amountValid;
 
   const copyBankAccount = async () => {
     try {
@@ -137,19 +141,21 @@ export default function SupportDialog({ onClose }: { onClose: () => void }) {
         if (event.target === dialogRef.current) dialogRef.current?.close();
       }}
     >
-      <div className="support-dialog-body">
-        <div className="support-dialog-header">
-          <h2 id={titleId}>탑서를 응원하는 방법</h2>
-          <button
-            type="button"
-            className="support-dialog-close"
-            onClick={() => dialogRef.current?.close()}
-          >
-            <span aria-hidden="true">✕</span>
-            <span className="visually-hidden">닫기</span>
-          </button>
-        </div>
+      {/* The header stays outside the scrolling body so the close button is
+          reachable even after scrolling to the bottom of the sheet. */}
+      <div className="support-dialog-header">
+        <h2 id={titleId}>탑서를 응원하는 방법</h2>
+        <button
+          type="button"
+          className="support-dialog-close"
+          onClick={() => dialogRef.current?.close()}
+        >
+          <span aria-hidden="true">✕</span>
+          <span className="visually-hidden">닫기</span>
+        </button>
+      </div>
 
+      <div className="support-dialog-body">
         <p className="support-dialog-intro">
           후원금은 서버비, 실제 기기 테스트, 출시 준비에 씁니다. 후원하지 않아도
           탑서는 그대로 쓸 수 있어요.
@@ -215,6 +221,10 @@ export default function SupportDialog({ onClose }: { onClose: () => void }) {
             >
               {copyState === "copied" ? "계좌번호 복사됨" : "계좌번호 복사"}
             </button>
+            {/* The button label changes visually; announce it too. */}
+            <span className="visually-hidden" role="status">
+              {copyState === "copied" ? "계좌번호가 복사됐어요." : ""}
+            </span>
             {copyState === "failed" ? (
               <p className="support-dialog-error" role="alert">
                 자동 복사가 되지 않았어요. 계좌번호를 직접 선택해 복사해주세요.
@@ -310,11 +320,23 @@ export default function SupportDialog({ onClose }: { onClose: () => void }) {
                   placeholder={String(config.minAmount)}
                   value={customAmount}
                   onChange={(event) => setCustomAmount(event.target.value)}
-                  aria-describedby={`${customFieldId}-range`}
+                  aria-invalid={customInvalid || undefined}
+                  aria-describedby={
+                    customInvalid
+                      ? `${customFieldId}-range ${customFieldId}-error`
+                      : `${customFieldId}-range`
+                  }
                 />
                 <span className="support-range" id={`${customFieldId}-range`}>
                   {formatKrw(config.minAmount)} ~ {formatKrw(config.maxAmount)} 사이로 적어주세요.
                 </span>
+                {customInvalid ? (
+                  <span className="field-error" id={`${customFieldId}-error`} role="alert">
+                    <span aria-hidden="true">⚠ </span>
+                    금액을 {formatKrw(config.minAmount)}부터 {formatKrw(config.maxAmount)} 사이로
+                    적어주세요.
+                  </span>
+                ) : null}
               </label>
             ) : null}
 
