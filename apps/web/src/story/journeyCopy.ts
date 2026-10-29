@@ -46,8 +46,9 @@ export const STEP_COPY: Record<BeatId, StepCopy> = {
   },
   boarding: {
     label: "타는 곳",
-    title: "어떤 버스를 어디서 탈까요?",
-    body: "내릴 곳으로 가는 버스 노선을 보여줘요. 탈 노선과 타는 정류장을 고르면, 내릴 때까지 몇 정거장인지 바로 알 수 있어요. 고를 방향이 하나뿐이면 따로 선택하지 않아도 돼요.",
+    // Keep the boarding visual in the journey, but omit this explanatory copy.
+    title: "",
+    body: "",
   },
   sameBus: {
     label: "같은 번호",
