@@ -38,14 +38,29 @@
   object-position: 55% 50%;
 }
 
+/* Double-buffered motion. Outgoing footage remains fully opaque while
+   pre-decoded incoming footage fades in above it, so no blank frame appears. */
 .coast-v4 .coast-film {
   opacity: 0;
-  transition: opacity 550ms ease-out;
+  z-index: 0;
+  transition: opacity 1200ms ease-in-out;
+  will-change: opacity;
 }
-.coast-v4 .has-frame.film-playing .coast-film,
-.coast-v4 .has-frame.film-paused .coast-film { opacity: 1; }
-.coast-v4 .film-failed .coast-film,
-.coast-v4.is-preview .coast-film { opacity: 0 !important; }
+.coast-v4 .coast-film.is-active {
+  opacity: 1;
+  z-index: 1;
+}
+.coast-v4 .coast-film.is-incoming {
+  opacity: 1;
+  z-index: 2;
+}
+.coast-v4 .coast-film.is-standby {
+  opacity: 0;
+  z-index: 0;
+}
+.coast-v4 .coast-shade {
+  z-index: 3;
+}
 .coast-v4 .coast-shade {
   position: absolute;
   inset: 0;
