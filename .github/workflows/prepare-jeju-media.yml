@@ -4,9 +4,9 @@ on:
   push:
     branches:
       - design/v4-calm-motion-hero
+    # Run only for an explicit acquisition request, not on every PR edit.
     paths:
-      - .github/workflows/prepare-jeju-media.yml
-      - scripts/media/ingest_jeju_videos.py
+      - scripts/media/REQUEST_PIXABAY_INGEST.md
   workflow_dispatch:
 
 permissions:
