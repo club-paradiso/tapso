@@ -25,10 +25,10 @@
   color: var(--bg);
   background: var(--island-black);
   transition:
-    width var(--dur-emphasis) var(--ease-emphasis),
-    height var(--dur-emphasis) var(--ease-emphasis),
-    border-radius var(--dur-emphasis) var(--ease-emphasis),
-    box-shadow var(--dur-standard) var(--ease-standard);
+    width 140ms var(--ease-standard),
+    height 140ms var(--ease-standard),
+    border-radius 140ms var(--ease-standard),
+    box-shadow 140ms var(--ease-standard);
 }
 
 .form-compact {
@@ -76,14 +76,7 @@
   position: absolute;
   inset: 0;
   display: flex;
-  animation: isle-content-in 300ms var(--ease-standard) 90ms both;
-}
-
-@keyframes isle-content-in {
-  from {
-    opacity: 0;
-    filter: blur(3px);
-  }
+  /* Text changes immediately: no blur/sweep on every stop. */
 }
 
 .isle-compact-row {
@@ -106,14 +99,7 @@
 /* A stop passed: the count rolls in rather than flickering. */
 .isle-tick {
   display: inline-block;
-  animation: isle-tick 360ms var(--ease-emphasis) both;
-}
-
-@keyframes isle-tick {
-  from {
-    opacity: 0;
-    transform: translateY(45%);
-  }
+  /* Numeric changes must remain stable, not roll. */
 }
 
 /* Two activities at once: another app keeps the island, TAPSO steps outside it. */
@@ -146,9 +132,9 @@
   opacity: 0;
   transform: translateX(-1.6em) scale(0.3);
   transition:
-    opacity var(--dur-standard) var(--ease-standard),
-    transform var(--dur-emphasis) var(--ease-emphasis),
-    left var(--dur-emphasis) var(--ease-emphasis);
+    opacity 140ms var(--ease-standard),
+    transform 140ms var(--ease-standard),
+    left 140ms var(--ease-standard);
 }
 
 .isle-orb svg {
@@ -272,8 +258,8 @@
   transform: translate(-50%, -8px) scale(0.86);
   transform-origin: 50% 0;
   transition:
-    opacity var(--dur-standard) var(--ease-standard),
-    transform var(--dur-emphasis) var(--ease-emphasis);
+    opacity 140ms var(--ease-standard),
+    transform 140ms var(--ease-standard);
 }
 
 .dock.is-visible {
