@@ -494,6 +494,32 @@ a.support-channel-button {
   color: var(--ink);
 }
 
+.support-kakao-instructions {
+  padding: 12px 14px;
+  border: 1px solid var(--separator);
+  border-radius: var(--radius-md);
+  background: var(--mist);
+  font-size: var(--fs-xs);
+}
+
+.support-kakao-instructions > strong {
+  display: block;
+  margin-bottom: 8px;
+}
+
+.support-kakao-instructions ol {
+  display: grid;
+  gap: 5px;
+  padding-left: 18px;
+  list-style: decimal;
+  color: var(--ink);
+  line-height: 1.6;
+}
+
+.support-kakao-instructions .support-channel-copy {
+  margin-top: 10px;
+}
+
 @media (max-width: 420px) {
   .support-transfer-qr {
     flex-direction: column;
