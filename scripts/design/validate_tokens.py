@@ -148,6 +148,93 @@ def check_marketing_json(manifest: dict) -> list[str]:
     return errors
 
 
+
+def css_declarations(css: str, selector: str) -> dict[str, str]:
+    """Extract custom properties declared in a specific top-level CSS selector."""
+    css = re.sub(r"/\*.*?\*/", "", css, flags=re.DOTALL)
+    props = {}
+    for selector_group, body in re.findall(r"([^{}]+)\{([^{}]*)\}", css):
+        if selector not in (part.strip() for part in selector_group.split(",")):
+            continue
+        for name, value in re.findall(r"(--[A-Za-z0-9-]+)\s*:\s*([^;]+);", body):
+            props[name] = value.strip()
+    return props
+
+
+def check_web_css(
+    manifest: dict, tokens_css: str | None = None, theme_css: str | None = None
+) -> list[str]:
+    """Enforce shared semantic tokens in real CSS, including dark-mode overrides."""
+    if tokens_css is None:
+        if not WEB_TOKENS_CSS.is_file():
+            return [f"Missing web tokens CSS: {WEB_TOKENS_CSS}"]
+        tokens_css = WEB_TOKENS_CSS.read_text(encoding="utf-8")
+    if theme_css is None:
+        if not WEB_THEME_CSS.is_file():
+            return [f"Missing web theme CSS: {WEB_THEME_CSS}"]
+        theme_css = WEB_THEME_CSS.read_text(encoding="utf-8")
+
+    color = manifest["color"]
+    root = {
+        "--ink": color["text"]["primary"]["light"],
+        "--text-secondary": color["text"]["secondary"]["light"],
+        "--text-tertiary": color["text"]["tertiary"]["light"],
+        "--bg": color["background"]["primary"]["light"],
+        "--mist": color["background"]["secondary"]["light"],
+        "--separator": color["separator"]["default"]["light"],
+        "--mint": color["journey"]["active"]["light"],
+        "--mint-ink": color["identity"]["mintDeep"]["light"],
+        "--amber": color["journey"]["prepare"]["light"],
+        "--coral": color["journey"]["next"]["light"],
+        "--coral-on-dark": color["journey"]["next"]["dark"],
+        "--tangerine": color["journey"]["arrival"]["light"],
+        "--blue": color["journey"]["checking"]["light"],
+        "--blue-on-dark": color["journey"]["checking"]["dark"],
+        "--slate": color["journey"]["degraded"]["light"],
+        "--slate-on-dark": color["journey"]["degraded"]["dark"],
+        "--basalt": color["identity"]["basalt"]["light"],
+        "--basalt-raised": color["identity"]["basaltRaised"]["light"],
+        "--night": color["background"]["primary"]["dark"],
+        "--night-raised": color["background"]["secondary"]["dark"],
+        "--night-elevated": color["background"]["elevated"]["dark"],
+        "--night-separator": color["separator"]["default"]["dark"],
+        "--night-text-secondary": color["text"]["secondary"]["dark"],
+    }
+    dark = {
+        "--bg": color["background"]["primary"]["dark"],
+        "--ink": color["text"]["primary"]["dark"],
+        "--mist": color["background"]["secondary"]["dark"],
+        "--text-secondary": color["text"]["secondary"]["dark"],
+        "--separator": color["separator"]["default"]["dark"],
+        "--mint-ink": "var(--mint)",
+    }
+    light_phone = {
+        "--bg": color["background"]["primary"]["light"],
+        "--ink": color["text"]["primary"]["light"],
+        "--mist": color["background"]["secondary"]["light"],
+        "--text-secondary": color["text"]["secondary"]["light"],
+        "--text-tertiary": color["text"]["tertiary"]["light"],
+        "--separator": color["separator"]["default"]["light"],
+        "--mint-ink": color["identity"]["mintDeep"]["light"],
+    }
+
+    errors = []
+    for file_label, css, selector, expected in (
+        ("tokens.css", tokens_css, ":root", root),
+        ("theme.css", theme_css, '[data-theme="dark"]', dark),
+        ("theme.css", theme_css, '[data-theme="dark"] .phone', light_phone),
+    ):
+        declared = css_declarations(css, selector)
+        for name, value in expected.items():
+            actual = declared.get(name)
+            if actual is None or actual.upper() != value.upper():
+                errors.append(
+                    f"{file_label} {selector} {name}: "
+                    f"found {actual if actual is not None else '(missing)'}, expected {value}"
+                )
+    return errors
+
+
 def main() -> int:
     if not TOKENS_JSON.exists():
         print(f"ERROR: {TOKENS_JSON} does not exist", file=sys.stderr)
@@ -158,6 +245,7 @@ def main() -> int:
 
     errors.extend(check_contrast(manifest))
     errors.extend(check_swift_tokens(manifest))
+    errors.extend(check_web_css(manifest))
     marketing_errors = check_marketing_json(manifest)
     if marketing_errors:
         errors.extend(marketing_errors)
@@ -171,6 +259,7 @@ def main() -> int:
     print("Tokens validated successfully:")
     print("  ✓ WCAG contrast compliance verified (textPrimary, mintDeep, textSecondary)")
     print("  ✓ Swift tokens (TapsoTokens.swift) match canonical manifest")
+    print("  ✓ Web CSS (tokens.css and theme.css) matches canonical manifest")
     print("  ✓ Marketing settings (marketing.json) match canonical manifest")
     return 0
 
