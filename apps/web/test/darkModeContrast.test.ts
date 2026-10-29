@@ -89,5 +89,5 @@ test("mint CTAs and highlighted icons do not use dark-theme --ink", () => {
   assert.match(rule(css.base, ".btn-primary"), /color:\s*var\(--on-light-accent\)\s*;/);
   assert.match(rule(css.island, ".isle-group.role-next"), /--on-role:\s*var\(--on-light-accent\)\s*;/);
   assert.match(rule(css.theme, '[data-theme="dark"]'), /--text-tertiary:\s*#8c999e\s*;/);
-  assert.ok(contrast("#8c999e", hex("bg")) < 4.5, "light backgrounds should use their own tertiary text token");
+  assert.ok(contrast("#8c999e", hex("basalt")) >= 4.5, "dark-mode tertiary labels must remain readable");
 });
