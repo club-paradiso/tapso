@@ -442,6 +442,70 @@ a.support-channel-button {
   width: 100%;
 }
 
+/* Visitor-supplied 제주은행 → Toss QR. Always keep a white quiet zone for scanners. */
+.support-transfer-qr {
+  display: flex;
+  align-items: center;
+  gap: var(--space-4);
+  padding: 14px;
+  border: 1px solid var(--separator);
+  border-radius: var(--radius-lg);
+  background: var(--mist);
+}
+
+.support-transfer-qr img {
+  flex: none;
+  display: block;
+  width: min(184px, 44%);
+  height: auto;
+  aspect-ratio: 1;
+  padding: 6px;
+  border: 1px solid var(--separator);
+  border-radius: var(--radius-sm);
+  background: #ffffff;
+}
+
+.support-transfer-qr-copy {
+  display: flex;
+  flex-direction: column;
+  gap: 6px;
+  min-width: 0;
+  font-size: var(--fs-xs);
+}
+
+.support-transfer-qr-copy strong {
+  font-weight: 800;
+}
+
+.support-transfer-qr-copy p {
+  color: var(--text-secondary);
+  line-height: 1.55;
+}
+
+.support-kakao-transfer {
+  display: flex;
+  flex-direction: column;
+  gap: var(--space-2);
+  padding-top: var(--space-3);
+  border-top: 1px solid var(--separator);
+}
+
+.support-kakao-transfer strong {
+  color: var(--ink);
+}
+
+@media (max-width: 420px) {
+  .support-transfer-qr {
+    flex-direction: column;
+    align-items: flex-start;
+  }
+
+  .support-transfer-qr img {
+    width: min(184px, 100%);
+    align-self: center;
+  }
+}
+
 /* support-million.css reads these names. */
 :root {
   --border: var(--separator);

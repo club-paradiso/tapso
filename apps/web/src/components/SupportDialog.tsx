@@ -67,7 +67,8 @@ export default function SupportDialog({ onClose }: { onClose: () => void }) {
   const live = config?.mode === "live";
   const anyExternal =
     SUPPORT_CHANNEL_AVAILABILITY.buyMeACoffee ||
-    SUPPORT_CHANNEL_AVAILABILITY.bankTransfer;
+    SUPPORT_CHANNEL_AVAILABILITY.bankTransfer ||
+    SUPPORT_CHANNEL_AVAILABILITY.kakaoPay;
   const amount =
     selected === CUSTOM ? Number.parseInt(customAmount.replace(/[^0-9]/g, ""), 10) : selected;
   const amountValid =
@@ -159,15 +160,31 @@ export default function SupportDialog({ onClose }: { onClose: () => void }) {
           <section className="support-channel" aria-labelledby={`${titleId}-bank`}>
             <div className="support-channel-heading">
               <div>
-                <p className="support-channel-kicker">대한민국 · KRW</p>
-                <h3 id={`${titleId}-bank`}>원화 계좌이체</h3>
+                <p className="support-channel-kicker">제주에서 만드는 탑서 · KRW</p>
+                <h3 id={`${titleId}-bank`}>{SUPPORT_CHANNELS.bank.name} 계좌로 응원하기</h3>
               </div>
-              <span className="support-channel-badge">KRW 송금</span>
+              <span className="support-channel-badge">원화 송금</span>
             </div>
             <p className="support-channel-copy">
-              국내에서 가장 단순한 방법이에요. 아래 전용 계좌로 원하는 금액을
-              보내면 됩니다.
+              원하는 금액을 직접 보내서 응원할 수 있어요.
+              송금 전 은행과 예금주, 금액을 꼭 확인해주세요.
             </p>
+            {SUPPORT_CHANNEL_AVAILABILITY.tossTransfer ? (
+              <div className="support-transfer-qr">
+                <img
+                  src="/media/jeju-bank-toss-support-qr.svg"
+                  alt="제주은행 계좌로 연결되는 토스 앱 송금 QR코드"
+                  width="184"
+                  height="184"
+                  loading="lazy"
+                />
+                <div className="support-transfer-qr-copy">
+                  <strong>QR로 송금하기</strong>
+                  <p>PC에서는 휴대폰으로 QR을 스캔하세요. 토스 앱의 송금 화면으로 연결됩니다.</p>
+                  <p>휴대폰에서는 아래 송금 버튼을 이용할 수 있어요.</p>
+                </div>
+              </div>
+            ) : null}
             <dl className="support-bank-details">
               <div>
                 <dt>은행</dt>
@@ -177,10 +194,12 @@ export default function SupportDialog({ onClose }: { onClose: () => void }) {
                 <dt>계좌번호</dt>
                 <dd>{SUPPORT_CHANNELS.bank.account}</dd>
               </div>
-              <div>
-                <dt>예금주</dt>
-                <dd>{SUPPORT_CHANNELS.bank.holder}</dd>
-              </div>
+              {SUPPORT_CHANNELS.bank.holder ? (
+                <div>
+                  <dt>예금주</dt>
+                  <dd>{SUPPORT_CHANNELS.bank.holder}</dd>
+                </div>
+              ) : null}
             </dl>
             <button
               type="button"
@@ -194,6 +213,38 @@ export default function SupportDialog({ onClose }: { onClose: () => void }) {
                 자동 복사가 되지 않았어요. 계좌번호를 직접 선택해 복사해주세요.
               </p>
             ) : null}
+            {SUPPORT_CHANNEL_AVAILABILITY.tossTransfer ? (
+              <a className="figma-submit support-channel-button"
+                href={SUPPORT_CHANNELS.tossSendUrl}
+              >
+                토스로 송금하기
+              </a>
+            ) : null}
+            <div className="support-kakao-transfer">
+              <p className="support-channel-copy">
+                <strong>카카오페이로 송금하기</strong>
+              </p>
+              {SUPPORT_CHANNEL_AVAILABILITY.kakaoPay ? (
+                <a className="figma-support support-channel-button"
+                  href={SUPPORT_CHANNELS.kakaoPayUrl}
+                  target="_blank" rel="noopener noreferrer">
+                  카카오페이 송금 화면 열기
+                </a>
+              ) : (
+                <button type="button" className="figma-support support-channel-button"
+                  onClick={() => void copyBankAccount()}>
+                  {copyState === "copied"
+                    ? "계좌 복사됨 · 카카오페이에서 송금하세요"
+                    : "카카오페이 계좌송금용 번호 복사"}
+                </button>
+              )}
+              {!SUPPORT_CHANNEL_AVAILABILITY.kakaoPay ? (
+                <p className="support-channel-copy">
+                  카카오페이 앱의 송금 → 계좌번호 입력에서 복사한 계좌로 보낼 수 있어요.
+                  카카오페이 전용 송금 링크는 아직 연결되지 않았어요.
+                </p>
+              ) : null}
+            </div>
           </section>
         ) : null}
 
@@ -201,10 +252,10 @@ export default function SupportDialog({ onClose }: { onClose: () => void }) {
           <section className="support-channel" aria-labelledby={`${titleId}-bmac`}>
             <div className="support-channel-heading">
               <div>
-                <p className="support-channel-kicker">카드 · 해외 결제</p>
-                <h3 id={`${titleId}-bmac`}>Buy Me a Coffee</h3>
+                <p className="support-channel-kicker">원하는 방식으로 간편하게</p>
+                <h3 id={`${titleId}-bmac`}>커피 한 잔으로 응원하기</h3>
               </div>
-              <span className="support-channel-badge">외부 결제</span>
+              <span className="support-channel-badge">Buy Me a Coffee</span>
             </div>
             <p className="support-channel-copy">
               카드나 지원되는 간편결제로 후원할 수 있어요. 결제 정보는 Buy Me a
@@ -216,7 +267,7 @@ export default function SupportDialog({ onClose }: { onClose: () => void }) {
               target="_blank"
               rel="noopener noreferrer"
             >
-              Buy Me a Coffee에서 후원
+              Buy Me a Coffee에서 후원하기
             </a>
           </section>
         ) : null}

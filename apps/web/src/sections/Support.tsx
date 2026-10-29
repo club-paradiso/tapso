@@ -26,22 +26,25 @@ export function Support({ onOpen }: { onOpen: () => void }) {
   const nativeStatus = supportStatus(config);
   const externalOpen =
     SUPPORT_CHANNEL_AVAILABILITY.buyMeACoffee ||
-    SUPPORT_CHANNEL_AVAILABILITY.bankTransfer;
+    SUPPORT_CHANNEL_AVAILABILITY.bankTransfer ||
+    SUPPORT_CHANNEL_AVAILABILITY.kakaoPay;
   const supportOpen = externalOpen || nativeStatus.open;
 
   const detail = SUPPORT_CHANNEL_AVAILABILITY.bankTransfer
     ? SUPPORT_CHANNEL_AVAILABILITY.buyMeACoffee
-      ? "원화 계좌이체와 Buy Me a Coffee 중 편한 방법을 고를 수 있어요."
-      : "국내에서는 원화 계좌이체로 바로 응원할 수 있어요."
+      ? "제주은행 계좌이체와 Buy Me a Coffee 중 편한 방법으로 응원할 수 있어요."
+      : "원화 계좌이체로 원하는 금액을 응원할 수 있어요."
     : SUPPORT_CHANNEL_AVAILABILITY.buyMeACoffee
-      ? "카드나 간편결제는 Buy Me a Coffee에서 안전하게 처리돼요."
-      : nativeStatus.detail;
+      ? "커피 한 잔으로 응원할 수 있어요. 결제는 Buy Me a Coffee에서 처리돼요."
+      : SUPPORT_CHANNEL_AVAILABILITY.kakaoPay
+        ? "카카오페이 송금으로 탑서 개발을 응원할 수 있어요."
+        : nativeStatus.detail;
 
   return (
     <section className="section support" id="support" aria-labelledby="support-title" ref={ref}>
       <div className="container">
         <SectionHead
-          title="탑서 개발을 후원하고 싶다면"
+          title="탑서에 커피 한 잔 보태고 싶다면"
           titleId="support-title"
         >
           <p>
