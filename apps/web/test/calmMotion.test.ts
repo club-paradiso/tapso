@@ -19,20 +19,23 @@ test("hero contains no scroll-pinned film-to-phone choreography", () => {
   assert.match(coast, /min-height:\s*max\(730px,\s*100svh\)/);
 });
 
-test("film scene and iPhone demo are deliberate visitor choices", () => {
-  assert.match(hero, /aria-pressed=\{scene === id\}/);
-  assert.match(hero, /filmAssetsExist/);
+test("the film playlist progresses automatically, without user-facing scene or pause controls", () => {
   assert.match(hero, /FILM_SCENES\.filter/);
-  assert.match(hero, /aria-pressed=\{scene === "preview"\}/);
-  assert.match(hero, /onClick=\{\(\) => onPick\(index\)\}/);
-  assert.match(hero, /앱 화면은 미리보기 · 합성 데이터/);
+  assert.match(hero, /filmAssetsExist/);
+  assert.match(hero, /onEnded=\{onEnded\}/);
+  assert.match(hero, /setFilmIndex\(\(index\) => \(index \+ 1\) % playlist\.length\)/);
+  assert.match(hero, /loop=\{playlist\.length <= 1\}/);
+  assert.doesNotMatch(hero, /coast-scene-picker|onClick=\{\(\) => pickScene/);
+  assert.doesNotMatch(hero, /영상 멈추기|영상 재생|PauseIcon|PlayIcon|FilmControls/);
   assert.doesNotMatch(hero, /setInterval|setTimeout/);
 });
 
-test("film pauses when the product preview is selected", () => {
-  assert.match(hero, /useHeroFilm\(video, section, reduceMotion, scene !== "preview", selectedFilm\.film\)/);
-  assert.match(filmHook, /if \(!enabled\)/);
-  assert.match(filmHook, /film\.pause\(\)/);
+test("automatic playback respects the saved motion setting and visibility", () => {
+  assert.match(hero, /useHeroFilm\(video, section, reduceMotion, true, current\.film\)/);
+  assert.match(hero, /if \(!reduceMotion && playlist\.length > 1\)/);
+  assert.match(filmHook, /if \(prefersStill\(reduceMotion\)\)/);
+  assert.match(filmHook, /onScreen\.current/);
+  assert.match(filmHook, /document\.hidden/);
 });
 
 test("floating island opens only by activation and has no signal glow", () => {
