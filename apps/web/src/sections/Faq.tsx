@@ -7,7 +7,7 @@ export function Faq() {
     <section className="section faq" id="faq" aria-labelledby="faq-title">
       <div className="container faq-grid">
         <SectionHead title="궁금한 점" titleId="faq-title">
-          <p>여기에 없는 질문은 GitHub 이슈로 남겨주세요.</p>
+          <p>버스를 탈 때 필요한 정보와 출시 준비 상황을 모았어요.</p>
         </SectionHead>
         <div className="faq-list">
           {FAQ_ITEMS.map((item) => (
