@@ -1,5 +1,5 @@
 import { SectionHead } from "../components/SectionHead";
-import { LINKS, STATUS_ITEMS, STATUS_STATE_LABELS } from "../content/site.ts";
+import { STATUS_ITEMS, STATUS_STATE_LABELS } from "../content/site.ts";
 
 export function Status() {
   return (
@@ -9,13 +9,7 @@ export function Status() {
           <p>
             아직 출시 전입니다. 끝난 것, 만드는 중인 것, 아직 남은 일을 나눠서 적어뒀어요. 출시일은 아직 정하지 않았습니다.
           </p>
-          <p className="fineprint">
-            자세한 진행 기록은{" "}
-            <a className="text-link" href={LINKS.github} rel="noopener">
-              GitHub 저장소
-            </a>
-            에 공개돼 있어요.
-          </p>
+
         </SectionHead>
 
         <ol className="timeline">

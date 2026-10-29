@@ -8,6 +8,7 @@ import {
   type SupportDependencies,
 } from "../api/_lib/support/service.ts";
 import { canTransition, type SupportAmountPolicy } from "../api/_lib/support/types.ts";
+import { readTossConfig } from "../api/_lib/env.ts";
 import { createBurstLimiter } from "../api/_lib/rateLimit.ts";
 import {
   createFakeProvider,
@@ -169,7 +170,7 @@ test("re-confirming a paid order is idempotent and does not charge again", async
   const store = createFakeStore();
   const provider = createFakeProvider(paymentView({ orderId: "placeholder", amount: 5000 }));
   const orderId = await seedIntent(store, provider);
-  provider.confirmResult = paymentView({ orderId, amount: 5000 });
+  provider.confirmResult = paymentView({ orderId, amount: 5000, paymentKey: "pay_abc" });
 
   await confirmSupportPayment({ orderId, paymentKey: "pay_abc" }, deps(store, provider));
   const again = await confirmSupportPayment({ orderId, paymentKey: "pay_abc" }, deps(store, provider));
@@ -363,4 +364,86 @@ test("terminal and backwards transitions are blocked", () => {
   assert.equal(canTransition("paid", "failed"), false);
   assert.equal(canTransition("failed", "paid"), false);
   assert.equal(canTransition("refunded", "paid"), false);
+});
+
+
+test("Toss checkout remains disabled until credentials and the protected webhook are ready", () => {
+  const common = {
+    SUPPORT_ENABLED: "true",
+    SUPPORT_WEBHOOK_TOKEN: "a".repeat(48),
+  };
+  const testKeys = { TOSS_CLIENT_KEY: "test_ck_example", TOSS_SECRET_KEY: "test_sk_example" };
+  const liveKeys = { TOSS_CLIENT_KEY: "live_ck_example", TOSS_SECRET_KEY: "live_sk_example" };
+
+  assert.equal(readTossConfig({ ...common, ...testKeys, VERCEL_ENV: "preview" })?.clientKey, "test_ck_example");
+  assert.equal(readTossConfig({ ...common, ...liveKeys, VERCEL_ENV: "production" })?.clientKey, "live_ck_example");
+  assert.equal(readTossConfig({ ...common, ...testKeys, VERCEL_ENV: "production" }), undefined);
+  assert.equal(readTossConfig({ ...common, ...liveKeys, VERCEL_ENV: "preview" }), undefined);
+  assert.equal(readTossConfig({ ...common, ...testKeys, TOSS_SECRET_KEY: "live_sk_wrong" }), undefined);
+  assert.equal(readTossConfig({ ...common, ...testKeys, SUPPORT_WEBHOOK_TOKEN: "short" }), undefined);
+  assert.equal(readTossConfig({ ...common, ...testKeys, SUPPORT_ENABLED: "false" }), undefined);
+});
+
+test("a provider timeout does not falsely mark an order failed", async () => {
+  const store = createFakeStore();
+  const provider = createFakeProvider(paymentView({ orderId: "placeholder", amount: 5000 }));
+  const orderId = await seedIntent(store, provider);
+  provider.confirmResult = { ok: false, code: "PROVIDER_UNREACHABLE", message: "timeout" };
+
+  const result = await confirmSupportPayment({ orderId, paymentKey: "pay_abc" }, deps(store, provider));
+  assert.deepEqual(result.response, { status: "internal_error" });
+  assert.equal(result.httpStatus, 503);
+  assert.equal(store.payments.get(orderId)?.status, "pending");
+});
+
+test("a paid response is not returned if the ledger cannot persist provider approval", async () => {
+  const store = createFakeStore();
+  const provider = createFakeProvider(paymentView({ orderId: "placeholder", amount: 5000 }));
+  const orderId = await seedIntent(store, provider);
+  provider.confirmResult = paymentView({ orderId, amount: 5000 });
+  store.updatePayment = async () => { throw new Error("DB unavailable"); };
+
+  const result = await confirmSupportPayment({ orderId, paymentKey: "pay_abc" }, deps(store, provider));
+  assert.deepEqual(result.response, { status: "internal_error" });
+  assert.equal(result.httpStatus, 503);
+  assert.equal(store.payments.get(orderId)?.status, "pending");
+});
+
+test("webhook stays retryable if persisting an authoritative payment fails", async () => {
+  const store = createFakeStore();
+  const provider = createFakeProvider(paymentView({ orderId: "placeholder", amount: 5000 }));
+  const orderId = await seedIntent(store, provider);
+  provider.fetchResult = paymentView({ orderId, amount: 5000 });
+  store.updatePayment = async () => { throw new Error("DB unavailable"); };
+
+  const result = await handleSupportWebhook(webhookBody("pay_abc"), undefined, undefined, deps(store, provider));
+  assert.equal(result.outcome, "retry");
+  assert.equal(result.httpStatus, 503);
+  assert.equal(store.webhookEvents.size, 0);
+});
+
+test("provider currency mismatches never count as paid", async () => {
+  const store = createFakeStore();
+  const provider = createFakeProvider(paymentView({ orderId: "placeholder", amount: 5000 }));
+  const orderId = await seedIntent(store, provider);
+  const reported = paymentView({ orderId, amount: 5000 });
+  if (!reported.ok) throw new Error("invalid fixture");
+  reported.payment.currency = "USD";
+  provider.confirmResult = reported;
+
+  const result = await confirmSupportPayment({ orderId, paymentKey: "pay_abc" }, deps(store, provider));
+  assert.equal(result.response.status, "failed");
+  assert.notEqual(store.payments.get(orderId)?.status, "paid");
+});
+
+test("a re-confirm for a different provider key is rejected without another charge", async () => {
+  const store = createFakeStore();
+  const provider = createFakeProvider(paymentView({ orderId: "placeholder", amount: 5000 }));
+  const orderId = await seedIntent(store, provider);
+  provider.confirmResult = paymentView({ orderId, amount: 5000, paymentKey: "pay_original" });
+  await confirmSupportPayment({ orderId, paymentKey: "pay_original" }, deps(store, provider));
+
+  const result = await confirmSupportPayment({ orderId, paymentKey: "pay_different" }, deps(store, provider));
+  assert.deepEqual(result.response, { status: "invalid_request", field: "paymentKey" });
+  assert.equal(provider.confirmCalls.length, 1);
 });

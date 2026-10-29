@@ -96,12 +96,24 @@ export function readTossConfig(env: ServerEnv = process.env): TossConfig | undef
   if (trimmed(env, "SUPPORT_ENABLED") !== "true") return undefined;
   const secretKey = trimmed(env, "TOSS_SECRET_KEY");
   const clientKey = trimmed(env, "TOSS_CLIENT_KEY");
-  if (!secretKey || !clientKey) return undefined;
+  const webhookToken = trimmed(env, "SUPPORT_WEBHOOK_TOKEN");
+  // A public webhook endpoint must not be open without a shared secret.
+  if (!secretKey || !clientKey || !webhookToken || webhookToken.length < 32) return undefined;
+
+  const testPair = secretKey.startsWith("test_sk_") && clientKey.startsWith("test_ck_");
+  const livePair = secretKey.startsWith("live_sk_") && clientKey.startsWith("live_ck_");
+  if (!testPair && !livePair) return undefined;
+
+  // Never silently let preview/local environments use real-money keys.
+  // Never let production launch a test merchant and call it live support.
+  const production = trimmed(env, "VERCEL_ENV") === "production";
+  if ((production && !livePair) || (!production && !testPair)) return undefined;
+
   return {
     secretKey,
     clientKey,
     apiBaseUrl: trimmed(env, "TOSS_API_BASE_URL") ?? "https://api.tosspayments.com",
-    webhookToken: trimmed(env, "SUPPORT_WEBHOOK_TOKEN"),
+    webhookToken,
   };
 }
 

@@ -115,6 +115,16 @@ test("every navigation target exists on the page", () => {
   }
 });
 
+test("visitor-facing support, status and footer contain no developer-platform links", () => {
+  const paths = ["sections/Status.tsx", "sections/Footer.tsx", "sections/Support.tsx", "sections/Faq.tsx", "content/site.ts"];
+  for (const path of paths) {
+    const displayed = visibleSource(join(src, path));
+    assert.doesNotMatch(displayed, /GitHub|github\\.com|LINKS\\.(github|issues)/i, path);
+  }
+  const app = visibleSource(join(src, "App.tsx"));
+  assert.match(app, /같은 금액을 곧바로 다시 결제하지 마세요/);
+});
+
 test("the FAQ answers the questions a visitor asks first", () => {
   const questions = FAQ_ITEMS.map((f) => f.q).join("\n");
   for (const topic of ["지도 앱", "위치 권한", "실제 버스", "TestFlight", "Android", "다이나믹 아일랜드가 없는", "데이터가 끊기면"]) {

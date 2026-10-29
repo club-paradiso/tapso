@@ -60,15 +60,15 @@ function useSupportReturn(): [SupportReturn | undefined, () => void] {
           tone: "good",
           message: `${formatKrw(response.amount)} 후원해주셔서 고맙수다. 서버와 테스트 비용에 잘 쓰겠습니다. 🍊`,
         });
-      } else if (response.status === "pending") {
+      } else if (response.status === "pending" || response.status === "internal_error" || response.status === "unavailable") {
         setResult({
           tone: "neutral",
-          message: "결제를 확인하는 중이에요. 완료되면 영수증이 도착합니다.",
+          message: "결제 상태를 아직 확정하지 못했어요. 결제사 승인 내역을 확인한 뒤 다시 확인해주세요. 같은 금액을 곧바로 다시 결제하지 마세요.",
         });
       } else {
         setResult({
           tone: "bad",
-          message: "결제가 완료되지 않았어요. 금액이 청구되지 않았는지 확인해주세요.",
+          message: "결제가 완료되지 않았거나 확인 정보가 올바르지 않아요. 결제사 승인 내역을 확인해주세요.",
         });
       }
     });
