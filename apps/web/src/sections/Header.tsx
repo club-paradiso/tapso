@@ -14,8 +14,8 @@ export function Header() {
       <div className="container site-header-inner">
         <a className="brand" href="#top" aria-label="TAPSO 탑서, 맨 위로">
           <BrandMark />
-          <span className="brand-word" aria-hidden="true">
-            TAPSŌ <span>탑서</span>
+          <span className="brand-word" data-wordmark="TAPSŌ" aria-hidden="true">
+            TAPS<span className="brand-word-o">O</span>
           </span>
         </a>
         <nav className="site-nav" aria-label="페이지 안내">

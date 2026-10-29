@@ -72,7 +72,6 @@
   text-shadow: 0 1px 10px rgb(15 23 26 / 55%);
 }
 
-.site-header.is-over-film .brand-word span,
 .site-header.is-over-film .site-nav a {
   color: rgb(255 255 255 / 86%);
 }
@@ -130,7 +129,4 @@
     gap: 8px;
   }
 
-  .site-header .brand-word > span {
-    display: none;
-  }
 }

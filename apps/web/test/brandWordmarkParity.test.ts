@@ -14,7 +14,7 @@ test("iOS brand uses a system rounded black wordmark with 1.2-point tracking", (
   assert.match(ios, /static let wordmark = "TAPS\\u\{014C\}"/);
 });
 
-test("web header and footer share the rounded iOS wordmark treatment", () => {
+test("header and footer use one rounded wordmark without a visible Korean suffix", () => {
   const mark = css.match(/\.brand-word,\s*\.footer-logo > span\s*\{([^}]+)\}/)?.[1];
   assert.ok(mark, "Header and footer must share one wordmark rule");
   assert.match(mark, /font-family:\s*ui-rounded,\s*"SF Pro Rounded"/);
@@ -23,11 +23,19 @@ test("web header and footer share the rounded iOS wordmark treatment", () => {
   assert.match(mark, /white-space:\s*nowrap;/);
   assert.match(css, /\.brand-word\s*\{\s*font-size:\s*1\.25rem;/);
   assert.match(css, /\.footer-logo\s*\{[^}]*font-size:\s*1\.25rem;/s);
-  assert.match(header, /TAPSŌ <span>탑서<\/span>/);
-  assert.match(footer, /TAPSŌ <span>탑서<\/span>/);
+  assert.match(header, /data-wordmark="TAPSŌ"/);
+  assert.match(footer, /role="img" aria-label="TAPSŌ"/);
+  for (const source of [header, footer]) {
+    assert.match(source, /TAPS<span className="brand-word-o"/);
+    assert.doesNotMatch(source, /<span>탑서<\/span>/);
+  }
 });
 
-test("the Korean descriptor keeps Pretendard instead of inheriting rounded Latin branding", () => {
-  assert.match(css, /\.brand-word span\s*\{\s*font-family:\s*var\(--font\);/);
-  assert.match(css, /\.footer-logo > span > span\s*\{\s*font-family:\s*var\(--font\);/);
+test("macron is drawn over a same-font O to avoid a heavy fallback Ō glyph", () => {
+  assert.match(css, /\.brand-word-o\s*\{[^}]*font:\s*inherit;/s);
+  assert.match(css, /\.brand-word-o::after\s*\{[^}]*background:\s*currentColor;/s);
+  assert.match(css, /\.brand-word-o::after\s*\{[^}]*width:\s*0\.54em;/s);
+  const theme = readFileSync(new URL("../src/styles/theme.css", import.meta.url), "utf8");
+  assert.doesNotMatch(theme, /\.site-header\s+\.brand-word\s*>\s*span\s*\{\s*display:\s*none;/);
+  assert.doesNotMatch(theme, /\.site-header\.is-over-film\s+\.brand-word\s+span/);
 });
