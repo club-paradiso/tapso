@@ -103,6 +103,15 @@ test("status never claims TestFlight or the App Store is here", () => {
   assert.ok(STATUS_ITEMS.some((i) => i.state === "done"));
 });
 
+test("the landing page omits the map-app comparison section without leaving a blank block", () => {
+  const app = readFileSync(join(src, "App.tsx"), "utf8");
+  assert.doesNotMatch(app, /MapCompanion/);
+  assert.match(app, /<Journey \/>\s*<Privacy \/>/);
+  for (const section of ["Hero", "Journey", "Privacy", "Status", "Waitlist", "Faq"]) {
+    assert.match(app, new RegExp(`<${section}\\s*/>`), `missing ${section} section`);
+  }
+});
+
 test("every navigation target exists on the page", () => {
   const sources = files(join(src, "sections")).map((p) => readFileSync(p, "utf8")).join("\n");
   // The journey's chapters take their anchors from the story model.
