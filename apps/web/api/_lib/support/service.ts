@@ -151,6 +151,10 @@ export async function confirmSupportPayment(
 
   // Retrying a completed confirm must not charge again or change the record.
   if (record.status === "paid") {
+    // Never acknowledge a different payment key against an existing order.
+    if (record.providerPaymentId && record.providerPaymentId !== paymentKey) {
+      return { response: { status: "invalid_request", field: "paymentKey" }, httpStatus: 400 };
+    }
     return { response: { status: "paid", orderId, amount: record.amount }, httpStatus: 200 };
   }
 
@@ -164,22 +168,34 @@ export async function confirmSupportPayment(
   const result = await deps.provider.confirm({ paymentKey, orderId, amount: record.amount });
   if (!result.ok) {
     log("warn", "support_confirm_rejected", { orderId, code: result.code });
-    await applyStatus(deps, orderId, record.status, "failed", { failureCode: result.code });
+    // Timeout/5xx means an unknown outcome, not a declined charge.
+    // Toss may have approved the payment while our request timed out.
+    if (result.code === "PROVIDER_UNREACHABLE" || /^HTTP_5\d\d$/.test(result.code)) {
+      return { response: { status: "internal_error" }, httpStatus: 503 };
+    }
+    if (!await applyStatus(deps, orderId, record.status, "failed", { failureCode: result.code })) {
+      return { response: { status: "internal_error" }, httpStatus: 503 };
+    }
     return { response: { status: "failed", orderId, reason: result.code }, httpStatus: 200 };
   }
 
   const payment = result.payment;
-  if (payment.orderId !== orderId || payment.amount !== record.amount) {
+  if (payment.orderId !== orderId || payment.amount !== record.amount || payment.currency !== record.currency) {
     log("error", "support_confirm_provider_mismatch", { orderId });
-    await applyStatus(deps, orderId, record.status, "failed", { failureCode: "AMOUNT_MISMATCH" });
-    return { response: { status: "failed", orderId, reason: "AMOUNT_MISMATCH" }, httpStatus: 200 };
+    if (!await applyStatus(deps, orderId, record.status, "failed", { failureCode: "PAYMENT_MISMATCH" })) {
+      return { response: { status: "internal_error" }, httpStatus: 503 };
+    }
+    return { response: { status: "failed", orderId, reason: "PAYMENT_MISMATCH" }, httpStatus: 200 };
   }
 
-  await applyStatus(deps, orderId, record.status, payment.status, {
+  const stored = await applyStatus(deps, orderId, record.status, payment.status, {
     providerPaymentId: payment.providerPaymentId,
     confirmedAt: payment.status === "paid" ? (payment.approvedAt ?? isoNow(deps)) : undefined,
     failureCode: payment.failureCode,
   });
+  // Provider approval without a durable ledger entry is not a confirmed
+  // TAPSO payment. Let callers retry safely with the same orderId.
+  if (!stored) return { response: { status: "internal_error" }, httpStatus: 503 };
 
   if (payment.status === "paid") {
     log("info", "support_paid", { orderId, amount: payment.amount });
@@ -269,12 +285,12 @@ export async function handleSupportWebhook(
     return { outcome: "ignored", httpStatus: 200 };
   }
 
-  if (payment.amount !== record.amount) {
+  if (payment.amount !== record.amount || payment.currency !== record.currency) {
     log("error", "support_webhook_amount_mismatch", { orderId: payment.orderId });
-    await applyStatus(deps, payment.orderId, record.status, "failed", {
-      failureCode: "AMOUNT_MISMATCH",
+    const recorded = await applyStatus(deps, payment.orderId, record.status, "failed", {
+      failureCode: "PAYMENT_MISMATCH",
     });
-    return { outcome: "applied", httpStatus: 200 };
+    return recorded ? { outcome: "applied", httpStatus: 200 } : { outcome: "retry", httpStatus: 503 };
   }
 
   const applied = await applyStatus(deps, payment.orderId, record.status, payment.status, {
@@ -282,6 +298,9 @@ export async function handleSupportWebhook(
     confirmedAt: payment.status === "paid" ? (payment.approvedAt ?? isoNow(deps)) : undefined,
     failureCode: payment.failureCode,
   });
+  if (!applied && canTransition(record.status, payment.status)) {
+    return { outcome: "retry", httpStatus: 503 };
+  }
 
   // Recorded after the work, so a transient failure above still gets retried.
   let seen: "recorded" | "duplicate" = "recorded";
