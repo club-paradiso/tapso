@@ -1,6 +1,4 @@
 import { BrandMark } from "../components/BrandMark";
-import { GitHubIcon } from "../components/Icons";
-import { LINKS } from "../content/site.ts";
 
 export function Footer() {
   return (
@@ -42,16 +40,8 @@ export function Footer() {
             </li>
           </ul>
           <ul>
-            <li>
-              <a href={LINKS.github} rel="noopener">
-                <GitHubIcon /> GitHub
-              </a>
-            </li>
-            <li>
-              <a href={LINKS.issues} rel="noopener">
-                문의 · 의견 (GitHub 이슈)
-              </a>
-            </li>
+            <li><a href="#how">탑서 이용 방법</a></li>
+            <li><a href="#faq">자주 묻는 질문</a></li>
           </ul>
         </nav>
       </div>
