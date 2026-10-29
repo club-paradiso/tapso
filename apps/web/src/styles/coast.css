@@ -43,7 +43,7 @@
 .coast-v4 .coast-film {
   opacity: 0;
   z-index: 0;
-  transition: opacity 1200ms ease-in-out;
+  transition: opacity 1000ms ease-in-out;
   will-change: opacity;
 }
 .coast-v4 .coast-film.is-active {
