@@ -29,14 +29,20 @@ test("two permanent video layers crossfade instead of reloading one element", ()
   assert.match(hero, /className=\{`coast-film \$\{role\(1\)\}`\}/);
   assert.doesNotMatch(hero, /onEnded|setFilmIndex|영상 멈추기|영상 재생|PauseIcon|PlayIcon/);
   assert.match(coast, /\.coast-film\.is-incoming\s*\{[^}]*opacity:\s*1;[^}]*z-index:\s*2/s);
-  assert.match(coast, /transition:\s*opacity 1200ms ease-in-out/);
+  assert.match(coast, /transition:\s*opacity 1000ms ease-in-out/);
 });
 
 test("the next scene preloads and starts before the outgoing video ends", () => {
   assert.match(filmHook, /prepare\(0, 0\)/);
   assert.match(filmHook, /prepare\(1, 1\)/);
   assert.match(filmHook, /timeupdate/);
-  assert.match(filmHook, /duration - outgoing\.currentTime > PRE_ROLL_SECONDS/);
+  assert.match(filmHook, /const CROSSFADE_MS = 1000;/);
+  assert.match(filmHook, /const SCENE_DWELL_SECONDS = 4;/);
+  assert.match(filmHook, /let activeAt = 0;/);
+  assert.match(filmHook, /outgoing\.currentTime >= activeAt/);
+  assert.match(filmHook, /elapsed < SCENE_DWELL_SECONDS/);
+  assert.match(filmHook, /activeAt = incoming\.currentTime;/);
+  assert.doesNotMatch(filmHook, /PRE_ROLL_SECONDS|duration - outgoing\.currentTime/);
   assert.match(filmHook, /incoming\.readyState < HTMLMediaElement\.HAVE_CURRENT_DATA/);
   assert.match(filmHook, /void incoming\.play\(\)\.then\(\(\) =>/);
   assert.match(filmHook, /setIncomingSlot\(nextSlot\)/);
@@ -44,6 +50,17 @@ test("the next scene preloads and starts before the outgoing video ends", () => 
   assert.match(filmHook, /setActiveSlot\(nextSlot\)/);
   assert.match(filmHook, /prepare\(\(nextSlot === 0 \? 1 : 0\)/);
   assert.match(hero, /\bloop\b/);
+});
+
+test("hero cuts early without changing or re-encoding the licensed files", () => {
+  const media = fromRoot("../src/content/media.ts");
+  assert.match(media, /joham-coast-720\.mp4/);
+  assert.match(media, /udo-720\.mp4/);
+  assert.match(media, /jungmun-720\.mp4/);
+  assert.match(filmHook, /duration <= SCENE_DWELL_SECONDS \+ CROSSFADE_MS \/ 1000/);
+  assert.match(filmHook, /if \(elapsed < SCENE_DWELL_SECONDS\) return;/);
+  assert.match(filmHook, /if \(incoming\.readyState < HTMLMediaElement\.HAVE_CURRENT_DATA \|\| incoming\.error\) return;/);
+  assert.match(hero, /preload="auto"/);
 });
 
 test("video playback never overrides OS motion and data-saver settings", () => {
