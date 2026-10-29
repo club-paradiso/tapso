@@ -65,8 +65,8 @@ Optimized local files (output files live in `apps/web/public/media/hero/`):
 The original licensed clips are not committed. The three films now form an
 **automatic, endlessly repeating sequence**: Joham Coastal Road → Udo beach →
 Jungmun coast → Joham Coastal Road. Each clip changes on its actual media
-`ended` event rather than a hardcoded timer. The only hero motion control is
-`움직임 줄이기`, which respects visitor and OS reduced-motion preferences.
+`ended` event rather than a hardcoded timer. The hero has no on-page motion button. The browser's OS reduced-motion
+preference remains supported without requiring users to find a setting.
 Background playback pauses offscreen / in background tabs to conserve power,
 and reduced-data connections stay on a still poster. No manual scene-selection
 or film pause/play buttons are shown.
