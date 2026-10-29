@@ -666,16 +666,19 @@
 }
 
 .stage {
+  /* The 64px sticky header should never touch the iPhone mockup. The
+     viewport-relative inset preserves clearance even while this stage sticks. */
+  --stage-top: clamp(104px, 13svh, 144px);
   position: sticky;
-  top: 64px;
+  top: var(--stage-top);
   display: flex;
   flex-direction: column;
   align-items: center;
   justify-content: center;
   gap: 14px;
-  height: calc(100vh - 64px);
-  height: calc(100svh - 64px);
-  min-height: 560px;
+  height: calc(100svh - var(--stage-top));
+  min-height: 0;
+  padding-block: clamp(12px, 2svh, 20px);
 }
 
 .stage-device {
@@ -685,7 +688,34 @@
 }
 
 .stage-device .phone {
-  --pw: clamp(250px, 20vw, 292px);
+  --pw: clamp(225px, 20vw, 292px);
+}
+
+/* Short laptop viewports cannot fit a 292px-wide (852/393 aspect) phone,
+   caption and preview label while also leaving space under the header.
+   Scale the mockup down instead of letting the flex group overflow upward. */
+@media (min-width: 900px) and (max-height: 820px) {
+  .stage {
+    --stage-top: clamp(92px, 12svh, 116px);
+    gap: 10px;
+    padding-block: 10px;
+  }
+
+  .stage-device .phone {
+    --pw: clamp(200px, 18vw, 252px);
+  }
+}
+
+@media (min-width: 900px) and (max-height: 650px) {
+  .stage {
+    --stage-top: 88px;
+    gap: 8px;
+    padding-block: 8px;
+  }
+
+  .stage-device .phone {
+    --pw: clamp(170px, 16vw, 215px);
+  }
 }
 
 .stage-screen {
