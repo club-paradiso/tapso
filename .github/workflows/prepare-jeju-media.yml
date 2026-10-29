@@ -29,7 +29,7 @@ jobs:
           sudo apt-get install -y ffmpeg
           command -v ffmpeg
           command -v ffprobe
-          python -m pip install --disable-pip-version-check yt-dlp
+          python -m pip install --disable-pip-version-check yt-dlp curl_cffi
       - name: Download, optimize and verify two licensed Pixabay clips
         env:
           PIXABAY_API_KEY: ${{ secrets.PIXABAY_API_KEY }}
