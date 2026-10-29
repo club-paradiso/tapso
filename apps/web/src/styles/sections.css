@@ -100,11 +100,30 @@
   font-size: 1.25rem;
 }
 
-.brand-word span {
-  font-family: var(--font);
-  font-weight: 700;
-  letter-spacing: normal;
-  color: var(--text-secondary);
+/* Render O with exactly the same font face as TAPS, then draw the macron
+   as a separate hairline. Some browser/font combinations substitute Ō with a
+   heavier fallback glyph; this avoids that font-weight discontinuity.
+   The canonical brand string remains precomposed TAPSŌ in DOM metadata/ARIA. */
+.brand-word-o {
+  position: relative;
+  display: inline-block;
+  font: inherit;
+  letter-spacing: inherit;
+  line-height: 1;
+  vertical-align: baseline;
+}
+
+.brand-word-o::after {
+  content: "";
+  position: absolute;
+  top: -0.095em;
+  left: 50%;
+  width: 0.54em;
+  height: 0.085em;
+  border-radius: 99px;
+  background: currentColor;
+  transform: translateX(-50%);
+  pointer-events: none;
 }
 
 .site-nav {
@@ -1227,13 +1246,6 @@ details[open] .faq-toggle::after {
 
 .site-footer .brand-mark rect:first-child {
   fill: var(--night-elevated);
-}
-
-.footer-logo > span > span {
-  font-family: var(--font);
-  color: var(--night-text-secondary);
-  font-weight: 700;
-  letter-spacing: normal;
 }
 
 .footer-motto {
