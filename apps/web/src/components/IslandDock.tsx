@@ -1,62 +1,43 @@
 import { useEffect, useState } from "react";
-import { BEATS, resolveBeat, type Activity } from "../story/beats.ts";
-import { useStory } from "../story/storyStore.ts";
+import { type Activity } from "../story/beats.ts";
 import { Island, islandLabel } from "./NativeSurfaces";
 
-function useActivity(): Activity | null {
-  const position = useStory((s) => s.position);
-  const variants = useStory((s) => s.variants);
-  const found = BEATS.find((beat) => beat.id === position);
-  return found ? resolveBeat(found, variants[found.id]).activity : null;
-}
-
-export function useIslandShowing(): boolean {
-  const activity = useActivity();
-  const heroInView = useStory((s) => s.heroInView);
-  return activity !== null && !heroInView;
-}
-
-/** V4: a compact preview that expands only on deliberate user activation. */
-export function IslandDock() {
-  const activity = useActivity();
-  const heroInView = useStory((s) => s.heroInView);
-  const visible = activity !== null && !heroInView;
-  const [pinned, setPinned] = useState(false);
+/**
+ * The island demo belongs to the specific journey step that explains it,
+ * not to a fixed viewport overlay that blocks navigation and other content.
+ */
+export function IslandDock({ activity }: { activity: Activity | null }) {
+  const [expanded, setExpanded] = useState(false);
 
   useEffect(() => {
-    if (!visible) setPinned(false);
-  }, [visible]);
-
-  useEffect(() => {
-    if (!pinned) return;
+    if (!expanded) return;
     const onKey = (event: KeyboardEvent) => {
-      if (event.key === "Escape") setPinned(false);
+      if (event.key === "Escape") setExpanded(false);
     };
     window.addEventListener("keydown", onKey);
     return () => window.removeEventListener("keydown", onKey);
-  }, [pinned]);
+  }, [expanded]);
 
-  const open = visible && pinned;
-  const form = open ? "expanded" : "compact";
+  const form = expanded ? "expanded" : "compact";
 
   return (
-    <div className={`dock${visible ? " is-visible" : ""}${open ? " is-open" : ""}`} aria-hidden={!visible} inert={!visible}>
+    <div className={`dock${expanded ? " is-open" : ""}`} role="group" aria-label="다이나믹 아일랜드 시연">
       <button
         type="button"
         className="dock-button"
-        aria-expanded={open}
-        aria-label={`탑서 실시간 현황 미리보기. ${islandLabel(activity, form)}. 눌러서 ${open ? "접기" : "펼치기"}`}
-        onClick={() => setPinned((value) => !value)}
+        aria-expanded={expanded}
+        aria-label={`다이나믹 아일랜드 시연. ${islandLabel(activity, form)}. 눌러서 ${expanded ? "접기" : "펼치기"}`}
+        onClick={() => setExpanded((value) => !value)}
         onKeyDown={(event) => {
           if (event.key === "Escape") {
             event.stopPropagation();
-            setPinned(false);
+            setExpanded(false);
           }
         }}
       >
         <Island activity={activity} form={form} />
       </button>
-      <span className="dock-note" aria-hidden="true">iPhone 미리보기 · 합성 데이터</span>
+      <span className="dock-note">iPhone 미리보기 · 합성 데이터 · 눌러서 ${expanded ? "접기" : "펼쳐보기"}</span>
     </div>
   );
 }
