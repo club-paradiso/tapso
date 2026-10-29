@@ -83,14 +83,27 @@
   min-height: var(--touch-min);
 }
 
-.brand-word {
-  font-size: 1.125rem;
+/* Match apps/ios/Shared/BrandWordmark.swift:
+   .system(.title3, design: .rounded, weight: .black).tracking(1.2).
+   Apple's ui-rounded resolves to the platform rounded system face without
+   distributing restricted Apple font files. Other OSes get rounded fallbacks. */
+.brand-word,
+.footer-logo > span {
+  font-family: ui-rounded, "SF Pro Rounded", "Arial Rounded MT Bold", system-ui, sans-serif;
   font-weight: 900;
-  letter-spacing: -0.02em;
+  letter-spacing: 1.2px;
+  line-height: 1.1;
+  white-space: nowrap;
+}
+
+.brand-word {
+  font-size: 1.25rem;
 }
 
 .brand-word span {
+  font-family: var(--font);
   font-weight: 700;
+  letter-spacing: normal;
   color: var(--text-secondary);
 }
 
@@ -1216,9 +1229,11 @@ details[open] .faq-toggle::after {
   fill: var(--night-elevated);
 }
 
-.footer-logo span span {
+.footer-logo > span > span {
+  font-family: var(--font);
   color: var(--night-text-secondary);
   font-weight: 700;
+  letter-spacing: normal;
 }
 
 .footer-motto {
