@@ -1,0 +1,135 @@
+/*
+ * Light / dark switch (`design/Theme.tsx` sets html[data-theme]) and the
+ * header, which is see-through over the hero film and opaque everywhere else.
+ */
+[data-theme="dark"] {
+  color-scheme: dark;
+  /* Same values as design/marketing.json, so the first paint is already dark. */
+  --bg: #071923;
+  --ink: #f5fafb;
+  --mist: #0e222c;
+  --text-secondary: #b4c4cb;
+  --separator: #274452;
+  --sand: var(--night-raised);
+  --sand-deep: var(--night-elevated);
+  --mint-ink: var(--mint);
+  --ink-04: rgb(245 250 251 / 4%);
+  --ink-08: rgb(245 250 251 / 8%);
+  --ink-12: rgb(245 250 251 / 12%);
+}
+
+[data-theme="dark"] body {
+  background: var(--bg);
+}
+
+[data-theme="dark"] .btn-primary {
+  color: var(--night);
+}
+
+/* Drawn devices and the island are always their own dark-on-light objects. */
+[data-theme="dark"] .phone,
+[data-theme="dark"] .island,
+[data-theme="dark"] .on-dark,
+[data-theme="dark"] .surface-basalt {
+  --bg: #ffffff;
+  --ink: #071923;
+}
+
+[data-theme="dark"] .phone {
+  --mist: #f5fafb;
+  --text-secondary: #566973;
+  --text-tertiary: #5f7079;
+  --separator: #dfe8eb;
+  --mint-ink: #0b7f6d;
+}
+
+.site-header {
+  background: color-mix(in srgb, var(--bg) 90%, transparent);
+  border-bottom: 1px solid var(--separator);
+  transition:
+    background-color 0.3s var(--ease-standard),
+    border-color 0.3s var(--ease-standard),
+    color 0.3s var(--ease-standard);
+}
+
+.site-header-inner {
+  gap: 20px;
+}
+
+/* Over the film: no panel, white type, the shade underneath carries contrast. */
+.site-header.is-over-film {
+  color: #ffffff;
+  background: transparent;
+  border-bottom-color: transparent;
+  backdrop-filter: none;
+  -webkit-backdrop-filter: none;
+}
+
+.site-header.is-over-film .brand,
+.site-header.is-over-film .site-nav a,
+.site-header.is-over-film .theme-toggle {
+  text-shadow: 0 1px 10px rgb(7 25 35 / 55%);
+}
+
+.site-header.is-over-film .brand-word span,
+.site-header.is-over-film .site-nav a {
+  color: rgb(255 255 255 / 86%);
+}
+
+.site-header.is-over-film .site-nav a:hover {
+  color: #ffffff;
+  background: rgb(255 255 255 / 12%);
+}
+
+.site-header.is-over-film .theme-toggle {
+  color: #ffffff;
+  border-color: rgb(255 255 255 / 50%);
+  background: rgb(7 25 35 / 30%);
+}
+
+.site-header.is-over-film .header-cta {
+  color: var(--night);
+  background: var(--mint);
+}
+
+.theme-toggle {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  min-height: var(--touch-min);
+  padding: 8px 14px;
+  border: 1px solid var(--separator);
+  border-radius: 99px;
+  font-size: 14px;
+  white-space: nowrap;
+  color: inherit;
+  background: transparent;
+}
+
+.theme-toggle::first-letter {
+  font-size: 20px;
+}
+
+@media (max-width: 1000px) {
+  .site-header-inner {
+    gap: 10px;
+  }
+
+  .theme-toggle span {
+    display: none;
+  }
+}
+
+@media (max-width: 700px) {
+  .theme-toggle {
+    padding: 8px 12px;
+  }
+
+  .site-header-inner {
+    gap: 8px;
+  }
+
+  .site-header .brand-word > span {
+    display: none;
+  }
+}

@@ -10,7 +10,15 @@
     />
     <link rel="canonical" href="https://tapso-nu.vercel.app/" />
     <meta name="theme-color" content="#ffffff" />
-    <meta name="color-scheme" content="light" />
+    <meta name="color-scheme" content="light dark" />
+    <script>
+      // Apply the saved or system theme before the first paint (design/Theme.tsx takes over after hydration).
+      try {
+        var saved = localStorage.getItem("tapso-theme");
+        var dark = saved ? saved === "dark" : matchMedia("(prefers-color-scheme: dark)").matches;
+        document.documentElement.dataset.theme = dark ? "dark" : "light";
+      } catch (e) {}
+    </script>
     <meta name="format-detection" content="telephone=no" />
 
     <meta property="og:type" content="website" />

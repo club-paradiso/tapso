@@ -1,12 +1,16 @@
+import { ThemeToggle } from "../design/Theme";
 import { NAV_ITEMS } from "../content/site.ts";
 import { BrandMark } from "../components/BrandMark";
 import { useIslandShowing } from "../components/IslandDock";
+import { useStory } from "../story/storyStore.ts";
 
 export function Header() {
   // Between 900 and 1240 px the island needs the middle of the header; the nav steps aside.
   const island = useIslandShowing();
+  // Over the hero film the header drops its panel and turns white.
+  const overFilm = useStory((s) => s.heroInView);
   return (
-    <header className={`site-header${island ? " has-island" : ""}`}>
+    <header className={`site-header${island ? " has-island" : ""}${overFilm ? " is-over-film" : ""}`}>
       <a className="skip-link" href="#main">
         본문으로 건너뛰기
       </a>
@@ -26,6 +30,7 @@ export function Header() {
             ))}
           </ul>
         </nav>
+        <ThemeToggle />
         <a className="btn btn-primary btn-sm header-cta" href="#waitlist">
           <span className="only-wide">TestFlight </span>사전예약
         </a>
