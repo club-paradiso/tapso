@@ -32,15 +32,16 @@ test("two permanent video layers crossfade instead of reloading one element", ()
   assert.match(coast, /transition:\s*opacity 1000ms ease-in-out/);
 });
 
-test("the next scene preloads and starts before the outgoing video ends", () => {
+test("new 10-second and 5-second scenes preload and play to their own ending", () => {
   assert.match(filmHook, /prepare\(0, 0\)/);
   assert.match(filmHook, /prepare\(1, 1\)/);
   assert.match(filmHook, /timeupdate/);
   assert.match(filmHook, /const CROSSFADE_MS = 1000;/);
-  assert.match(filmHook, /const SCENE_DWELL_SECONDS = 4;/);
+  assert.doesNotMatch(filmHook, /SCENE_DWELL_SECONDS/);
+  assert.match(filmHook, /playlist\[currentIndex\]\?\.film\.durationSeconds/);
   assert.match(filmHook, /let activeAt = 0;/);
   assert.match(filmHook, /outgoing\.currentTime >= activeAt/);
-  assert.match(filmHook, /elapsed < SCENE_DWELL_SECONDS/);
+  assert.match(filmHook, /elapsed < dwellSeconds/);
   assert.match(filmHook, /activeAt = incoming\.currentTime;/);
   assert.doesNotMatch(filmHook, /PRE_ROLL_SECONDS|duration - outgoing\.currentTime/);
   assert.match(filmHook, /incoming\.readyState < HTMLMediaElement\.HAVE_CURRENT_DATA/);
@@ -52,13 +53,16 @@ test("the next scene preloads and starts before the outgoing video ends", () => 
   assert.match(hero, /\bloop\b/);
 });
 
-test("hero cuts early without changing or re-encoding the licensed files", () => {
+test("hero uses only newly generated and packaged local footage", () => {
   const media = fromRoot("../src/content/media.ts");
-  assert.match(media, /joham-coast-720\.mp4/);
-  assert.match(media, /udo-720\.mp4/);
-  assert.match(media, /jungmun-720\.mp4/);
-  assert.match(filmHook, /duration <= SCENE_DWELL_SECONDS \+ CROSSFADE_MS \/ 1000/);
-  assert.match(filmHook, /if \(elapsed < SCENE_DWELL_SECONDS\) return;/);
+  assert.match(media, /ai-rural-city/);
+  assert.match(media, /ai-coast-man/);
+  assert.match(media, /ai-city-woman/);
+  assert.match(media, /ai-city-man/);
+  assert.doesNotMatch(media, /joham-coast-720|udo-720|jungmun-720/);
+  assert.match(filmHook, /const endAt = Math.min\(duration, expected\)/);
+  assert.match(filmHook, /const dwellSeconds = endAt - activeAt - fadeSeconds/);
+  assert.match(filmHook, /elapsed < dwellSeconds/);
   assert.match(filmHook, /if \(incoming\.readyState < HTMLMediaElement\.HAVE_CURRENT_DATA \|\| incoming\.error\) return;/);
   assert.match(hero, /preload="auto"/);
 });
