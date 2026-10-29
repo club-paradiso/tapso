@@ -1,7 +1,7 @@
 import { useEffect, useRef, useState, type RefObject } from "react";
 import { ArrowIcon, PauseIcon, PlayIcon } from "../components/Icons";
 import { Island, LockScreenActivity, surfaceLabel } from "../components/NativeSurfaces";
-import { HERO_FILM } from "../content/media.ts";
+import { EXTRA_FILMS, FILM_SCENES, filmAssetsExist, type FilmSceneId, type HeroFilmSource } from "../content/media.ts";
 import config from "../design/marketing.json";
 import { presentMoment } from "../demo/rideMoments.ts";
 import { useHeroFilm, type FilmState } from "../lib/useHeroFilm";
@@ -9,22 +9,24 @@ import { getSiteReducedMotion, setSiteReducedMotion, useReducedMotion } from "..
 import { HERO_LOOP, loopLabel } from "../story/beats.ts";
 import { useHeroTracking } from "../story/storyStore.ts";
 
-type Scene = "coast" | "preview";
+type Scene = FilmSceneId | "preview";
 
 function FilmMedia({
   videoRef,
   state,
   hasFrame,
+  film,
 }: {
   videoRef: RefObject<HTMLVideoElement | null>;
   state: FilmState;
   hasFrame: boolean;
+  film: HeroFilmSource;
 }) {
   return (
     <div className={`coast-media film-${state}${hasFrame ? " has-frame" : ""}`} aria-hidden="true">
       <picture>
-        <source media="(max-aspect-ratio: 4/5)" srcSet={HERO_FILM.stills.portrait} />
-        <img className="coast-still" src={HERO_FILM.stills.wide} alt="" decoding="async" fetchPriority="high" />
+        <source media="(max-aspect-ratio: 4/5)" srcSet={film.stills.portrait} />
+        <img className="coast-still" src={film.stills.wide} alt="" decoding="async" fetchPriority="high" />
       </picture>
       <video ref={videoRef} className="coast-film" muted loop playsInline preload="none" disablePictureInPicture tabIndex={-1} />
       <span className="coast-shade" />
@@ -83,12 +85,12 @@ function DemoPreview({ step, onPick }: { step: number; onPick: (n: number) => vo
   );
 }
 
-function FilmControls({ state, onToggle }: { state: FilmState; onToggle: () => void }) {
+function FilmControls({ state, onToggle, film }: { state: FilmState; onToggle: () => void; film: HeroFilmSource }) {
   return (
     <div className="coast-film-controls">
       <p className="coast-credit">
         {state === "failed" ? "영상을 불러오지 못해 사진으로 보여드려요. " : null}
-        {HERO_FILM.credit}
+        {film.credit}
       </p>
       {state !== "failed" && (
         <button type="button" className="coast-control-button" aria-pressed={state !== "playing"} onClick={onToggle}>
@@ -111,10 +113,25 @@ export function Hero() {
   const reduceMotion = useReducedMotion();
   const [scene, setScene] = useState<Scene>("coast");
   const [step, setStep] = useState(0);
+  const [additionalFilms, setAdditionalFilms] = useState<FilmSceneId[]>([]);
   const [userReducedMotion, setUserReducedMotion] = useState(false);
   // Match SSR markup first; load persisted client preference after hydration.
   useEffect(() => setUserReducedMotion(getSiteReducedMotion()), []);
-  const film = useHeroFilm(video, section, reduceMotion, scene === "coast");
+  const selectedFilm = FILM_SCENES.find((entry) => entry.id === scene) ?? FILM_SCENES[0]!;
+  const film = useHeroFilm(video, section, reduceMotion, scene !== "preview", selectedFilm.film);
+
+  // Only offer a scene after every MP4/WebP asset is actually published. This
+  // also guards against Vercel SPA fallback pages masquerading as an asset.
+  useEffect(() => {
+    let active = true;
+    void Promise.all(EXTRA_FILMS.map(async ({ id, film: source }) => ({
+      id,
+      ready: await filmAssetsExist(source),
+    }))).then((results) => {
+      if (active) setAdditionalFilms(results.filter((x) => x.ready).map((x) => x.id));
+    });
+    return () => { active = false; };
+  }, []);
 
   const pickScene = (next: Scene) => setScene(next);
 
@@ -128,7 +145,7 @@ export function Hero() {
   return (
     <section className={`coast coast-v4${scene === "preview" ? " is-preview" : ""}`} id="top" aria-labelledby="hero-title" ref={section}>
       <div className="coast-stage">
-        <FilmMedia videoRef={video} state={film.state} hasFrame={film.hasFrame} />
+        <FilmMedia videoRef={video} state={film.state} hasFrame={film.hasFrame} film={selectedFilm.film} />
         {scene === "preview" ? <DemoPreview step={step} onPick={setStep} /> : null}
         <div className="coast-copy" aria-hidden={scene === "preview"} inert={scene === "preview"}>
           <p className="coast-eyebrow">제주 버스 · iPhone 앱 · <span className="coast-status">개발 중</span></p>
@@ -150,7 +167,9 @@ export function Hero() {
         </div>
         <div className="coast-bottom">
           <div className="coast-scene-picker" role="group" aria-label="화면 선택">
-            <button type="button" aria-pressed={scene === "coast"} className={scene === "coast" ? "is-active" : ""} onClick={() => pickScene("coast")}>제주 풍경</button>
+             {FILM_SCENES.filter(({ id }) => id === "coast" || additionalFilms.includes(id)).map(({ id, label }) => (
+              <button type="button" key={id} aria-pressed={scene === id} className={scene === id ? "is-active" : ""} onClick={() => pickScene(id)}>{label}</button>
+            ))}
             <button type="button" aria-pressed={scene === "preview"} className={scene === "preview" ? "is-active" : ""} onClick={() => pickScene("preview")}>앱 미리보기</button>
           </div>
           <div className="coast-bottom-actions">
@@ -163,7 +182,7 @@ export function Hero() {
             >
               {userReducedMotion ? "움직임 기본값" : "움직임 줄이기"}
             </button>
-            {scene === "coast" ? <FilmControls state={film.state} onToggle={film.toggle} /> : null}
+            {scene !== "preview" ? <FilmControls state={film.state} onToggle={film.toggle} film={selectedFilm.film} /> : null}
           </div>
         </div>
       </div>
