@@ -73,10 +73,16 @@ def get_public_video_url(media_id: int, page: str) -> str:
     if url:
         return url
 
-    markup = request_bytes(page, limit=6_000_000).decode("utf-8", errors="replace")
-    candidates = extract_candidates(markup, media_id)
-    if candidates:
-        return candidates[0]
+    # Browser-like requests may receive HTTP 403 from Pixabay's anti-bot
+    # gateway on hosted runners. Fallback gracefully to the published player
+    # extractor; do not treat the HTML restriction as permission to bypass it.
+    try:
+        markup = request_bytes(page, limit=6_000_000).decode("utf-8", errors="replace")
+        candidates = extract_candidates(markup, media_id)
+        if candidates:
+            return candidates[0]
+    except Exception as exc:
+        print(f"Pixabay public page unavailable for {media_id}: {type(exc).__name__} {exc}")
 
     # Generic media extraction can resolve a video that is in a player but not
     # serialized in the HTML. It must still point to Pixabay's own video CDN.
