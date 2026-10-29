@@ -127,7 +127,7 @@
   padding: 0 var(--space-5);
   border: 1px solid transparent;
   border-radius: var(--radius-md);
-  color: var(--ink);
+  color: var(--on-light-accent);
   background: var(--mint);
   font-size: var(--fs-body);
   font-weight: 800;
@@ -153,6 +153,7 @@
 }
 
 .figma-support {
+  color: var(--ink);
   border-color: var(--separator);
   background: var(--bg);
 }

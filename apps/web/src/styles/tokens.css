@@ -38,6 +38,9 @@
   --night-elevated: #1f2b2f;
   --night-separator: #2a373b;
   --night-text-secondary: #a9b6ba;
+  /* Foreground colours stay fixed when --bg / --ink swap in dark mode. */
+  --on-dark-surface: #ffffff;
+  --on-light-accent: #0f171a;
 
   /* Drawn hardware: the phone edge and the island are black glass. */
   --device-edge-light: #2a3438;
@@ -118,27 +121,27 @@
 /* Journey role → fill and text. Views never choose a journey colour by hand. */
 .role-active {
   --role: var(--mint);
-  --on-role: var(--ink);
+  --on-role: var(--on-light-accent);
 }
 .role-prepare {
   --role: var(--amber);
-  --on-role: var(--ink);
+  --on-role: var(--on-light-accent);
 }
 .role-next {
   --role: var(--coral);
-  --on-role: var(--bg);
+  --on-role: var(--on-dark-surface);
 }
 .role-arrival {
   --role: var(--tangerine);
-  --on-role: var(--ink);
+  --on-role: var(--on-light-accent);
 }
 .role-checking {
   --role: var(--blue);
-  --on-role: var(--ink);
+  --on-role: var(--on-light-accent);
 }
 .role-degraded {
   --role: var(--slate);
-  --on-role: var(--ink);
+  --on-role: var(--on-light-accent);
 }
 .role-neutral {
   --role: var(--white-16);
@@ -152,7 +155,7 @@
 .island.role-next,
 .surface-basalt .role-next {
   --role: var(--coral-on-dark);
-  --on-role: var(--ink);
+  --on-role: var(--on-light-accent);
 }
 .on-dark .role-checking,
 .island.role-checking,

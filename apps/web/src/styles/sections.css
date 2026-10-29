@@ -9,7 +9,7 @@
 }
 
 .on-dark {
-  color: var(--bg);
+  color: var(--on-dark-surface);
   background: var(--night);
 }
 
@@ -53,7 +53,7 @@
 }
 
 .on-dark .section-lede b {
-  color: var(--bg);
+  color: var(--on-dark-surface);
 }
 
 /* Header ----------------------------------------------------------------- */
@@ -273,7 +273,7 @@
   gap: 6px;
   padding: 4px 10px;
   border-radius: var(--radius-pill);
-  color: var(--ink);
+  color: var(--on-light-accent);
   background: var(--mint);
   font-weight: 900;
   font-variant-numeric: tabular-nums;
@@ -483,7 +483,7 @@
 }
 
 .flow-card.tone-tapso {
-  color: var(--bg);
+  color: var(--on-dark-surface);
   background: var(--basalt);
 }
 
@@ -499,7 +499,7 @@
 }
 
 .tone-tapso .flow-icon {
-  color: var(--ink);
+  color: var(--on-light-accent);
   background: var(--mint);
 }
 
@@ -653,7 +653,7 @@
 }
 
 .privacy-token.is-bus {
-  color: var(--ink);
+  color: var(--on-light-accent);
   background: var(--mint);
 }
 
@@ -695,7 +695,7 @@
 }
 
 .privacy-label b {
-  color: var(--bg);
+  color: var(--on-dark-surface);
   font-size: var(--fs-small);
 }
 
@@ -898,7 +898,7 @@
   flex: none;
   padding: 3px;
   border-radius: 50%;
-  color: var(--ink);
+  color: var(--on-light-accent);
   background: var(--mint);
 }
 
@@ -1188,7 +1188,7 @@ details[open] .faq-toggle::after {
 
 .site-footer {
   padding-block: clamp(48px, 6vw, 88px) var(--space-8);
-  color: var(--bg);
+  color: var(--on-dark-surface);
   background: var(--basalt);
 }
 
@@ -1267,7 +1267,7 @@ details[open] .faq-toggle::after {
 }
 
 .footer-nav a:hover {
-  color: var(--bg);
+  color: var(--on-dark-surface);
 }
 
 .footer-nav svg {
