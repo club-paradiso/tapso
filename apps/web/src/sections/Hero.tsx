@@ -31,7 +31,6 @@ function FilmMedia({
         ref={videoRef}
         className="coast-film"
         muted
-        autoPlay
         loop={loop}
         playsInline
         preload="none"
