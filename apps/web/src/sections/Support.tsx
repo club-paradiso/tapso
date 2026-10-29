@@ -1,7 +1,5 @@
 import { useEffect, useState } from "react";
-import { GitHubIcon } from "../components/Icons";
 import { SectionHead } from "../components/SectionHead";
-import { LINKS } from "../content/site.ts";
 import { SUPPORT_CHANNEL_AVAILABILITY } from "../lib/supportChannels.ts";
 import { fetchSupportConfig, type SupportConfigResponse } from "../lib/supportClient";
 import { supportStatus } from "../lib/supportStatus.ts";
@@ -86,17 +84,15 @@ export function Support({ onOpen }: { onOpen: () => void }) {
                 </a>
               </li>
               <li>
-                <a href={LINKS.github} rel="noopener">
-                  <b>
-                    <GitHubIcon /> GitHub에서 지켜보기
-                  </b>
-                  <span>개발 과정과 코드는 전부 공개해두고 있어요.</span>
+                <a href="#status">
+                  <b>개발 현황 살펴보기</b>
+                  <span>탑서가 어디까지 만들어졌는지 확인해보세요.</span>
                 </a>
               </li>
               <li>
-                <a href={LINKS.issues} rel="noopener">
-                  <b>의견 남기기</b>
-                  <span>제주 버스를 타면서 겪은 불편을 알려주세요.</span>
+                <a href="#faq">
+                  <b>자주 묻는 질문 보기</b>
+                  <span>출시 일정과 기능에 대한 안내를 모았어요.</span>
                 </a>
               </li>
             </ul>
