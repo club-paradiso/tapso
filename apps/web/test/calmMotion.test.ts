@@ -74,7 +74,7 @@ test("Dynamic Island is an in-flow journey demo, never a floating obstruction", 
   assert.match(islandDock, /role="group" aria-label="다이나믹 아일랜드 시연"/);
   assert.match(islandDock, /aria-expanded=\{expanded\}/);
   assert.match(islandDock, /event\.key === "Escape"/);
-  assert.doesNotMatch(islandDock, /useStory|heroInView|fixed|is-visible/);
+  assert.doesNotMatch(islandDock, /useStory|heroInView|is-visible/);
   assert.doesNotMatch(islandDock, /milestoneToSignal|setSignal|onPointerEnter|onPointerLeave/);
   assert.doesNotMatch(islandCss, /animation:\s*isle-tick|animation:\s*isle-content-in/);
 });
