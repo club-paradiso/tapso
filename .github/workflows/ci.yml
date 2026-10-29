@@ -49,6 +49,7 @@ jobs:
           python3 scripts/ios/sync_xcodeproj.py --check
           python3 scripts/ios/check_localization.py
           python3 scripts/ios/check_brand.py
+          python3 -m unittest discover -s scripts/design -p 'test_*.py'
           python3 scripts/design/validate_tokens.py
       - name: Pick the newest iPhone simulator
         id: simulator
