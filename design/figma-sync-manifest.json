@@ -1,0 +1,251 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "fileKey": "kkx04GvqOzHje7Dw5ikO9X",
+  "fileName": "TAPSO — Product / Marketing Design System",
+  "systemVersion": "V3 (basalt)",
+  "canonicalCommit": "ca223b4",
+  "syncStatus": "PENDING_MANUAL_WRITEBACK",
+  "note": "Antigravity Figma integration is read-only. This manifest defines the exact node-level changes required for Figma editors.",
+  "workspacePlan": {
+    "sections": [
+      {
+        "id": "WS-01",
+        "title": "START HERE",
+        "pages": ["00 Cover / Index"],
+        "purpose": "Central directory, reality labels, governance rules, and sync status"
+      },
+      {
+        "id": "WS-02",
+        "title": "DESIGN SYSTEM V3",
+        "pages": ["01 Foundations", "02 Components", "02F iOS Ride V2", "02G iOS Product V3"],
+        "purpose": "Canonical design tokens (basalt/shore/stone), atomic components, and interaction states"
+      },
+      {
+        "id": "WS-03",
+        "title": "iOS CURRENT",
+        "pages": ["03 iOS — GO", "04 iOS — RIDE", "09 Return / Rescue"],
+        "purpose": "Current implementation truth for setup, boarding selection, active ride, and rescue flows"
+      },
+      {
+        "id": "WS-04",
+        "title": "LIVE ACTIVITY",
+        "pages": ["05 Live Activity · Dynamic Island", "05B · Dynamic Island Coexistence V3"],
+        "purpose": "ActivityKit Lock Screen and Dynamic Island layouts across all 9 ride moments + waiting state"
+      },
+      {
+        "id": "WS-05",
+        "title": "MARKETING CURRENT",
+        "pages": ["11 Marketing Web"],
+        "purpose": "Desktop and mobile responsive breakpoints with Joham coastal road hero and persistent island"
+      },
+      {
+        "id": "WS-06",
+        "title": "LAB / ROADMAP",
+        "pages": ["06 Roadmap", "07 Discover", "08 Eat", "10 Passport / Share", "12 Prototype"],
+        "purpose": "Future exploratory work gated by data availability"
+      },
+      {
+        "id": "WS-07",
+        "title": "ARCHIVE",
+        "pages": ["13 Archive"],
+        "purpose": "Historical superseded V1 and V2 boards preserved with timestamps"
+      }
+    ]
+  },
+  "variableCollections": [
+    {
+      "collectionId": "VariableCollectionId:151:14",
+      "currentName": "TAPSO V2 Semantic",
+      "targetName": "TAPSO V3 Semantic",
+      "modes": ["Light", "Dark"],
+      "variables": [
+        {
+          "name": "background/primary",
+          "light": "#FFFFFF",
+          "dark": "#0F171A",
+          "role": "Screen background",
+          "wcagCompliance": "18.1:1 on dark ink"
+        },
+        {
+          "name": "background/secondary",
+          "light": "#F3F5F4",
+          "dark": "#172124",
+          "role": "Shore surface: cards, rows, fields",
+          "wcagCompliance": "Ink on shore: 16.6:1"
+        },
+        {
+          "name": "background/elevated",
+          "light": "#FFFFFF",
+          "dark": "#1F2B2F",
+          "role": "Confirmation and modal card"
+        },
+        {
+          "name": "text/primary",
+          "light": "#0F171A",
+          "dark": "#EEF2F1",
+          "role": "Basalt ink: headlines and primary labels"
+        },
+        {
+          "name": "text/secondary",
+          "light": "#56636A",
+          "dark": "#A9B6BA",
+          "role": "Stone: secondary supporting copy"
+        },
+        {
+          "name": "text/tertiary",
+          "light": "#5C686E",
+          "dark": "#8C999E",
+          "role": "Hints, placeholders, chevrons"
+        },
+        {
+          "name": "text/on-accent",
+          "light": "#0F171A",
+          "dark": "#0F171A",
+          "role": "Basalt ink on journey fills"
+        },
+        {
+          "name": "text/on-urgent",
+          "light": "#FFFFFF",
+          "dark": "#0F171A",
+          "role": "On next-stop coral fill"
+        },
+        {
+          "name": "text/on-dark-surface",
+          "light": "#FFFFFF",
+          "dark": "#FFFFFF",
+          "role": "On Lock Screen and Dynamic Island"
+        },
+        {
+          "name": "line/separator",
+          "light": "#E1E6E4",
+          "dark": "#2A373B",
+          "role": "Dividers and outlines"
+        },
+        {
+          "name": "journey/active",
+          "light": "#2FC7AA",
+          "dark": "#2FC7AA",
+          "role": "Riding progress"
+        },
+        {
+          "name": "journey/prepare",
+          "light": "#F4B84A",
+          "dark": "#F4B84A",
+          "role": "Two stops remaining"
+        },
+        {
+          "name": "journey/next",
+          "light": "#C93C3C",
+          "dark": "#FF7A6E",
+          "role": "Next stop alert"
+        },
+        {
+          "name": "journey/arrival",
+          "light": "#F7972F",
+          "dark": "#F7972F",
+          "role": "Arrival moment"
+        },
+        {
+          "name": "journey/checking",
+          "light": "#4389EF",
+          "dark": "#5B9BFF",
+          "role": "Rechecking telemetry"
+        },
+        {
+          "name": "journey/degraded",
+          "light": "#8A9AA3",
+          "dark": "#9FB0B8",
+          "role": "Degraded / delayed / offline"
+        },
+        {
+          "name": "identity/tangerine",
+          "light": "#F7972F",
+          "dark": "#F7972F",
+          "role": "Destination marker"
+        },
+        {
+          "name": "identity/dolCheek",
+          "light": "#FF7A6E",
+          "dark": "#FF7A6E",
+          "role": "Dori cheek blush"
+        },
+        {
+          "name": "identity/basalt",
+          "light": "#0F171A",
+          "dark": "#0F171A",
+          "role": "Identity pebble and dark surface"
+        },
+        {
+          "name": "identity/basalt-raised",
+          "light": "#1A2528",
+          "dark": "#1A2528",
+          "role": "Raised basalt surface"
+        },
+        {
+          "name": "identity/mint-ink",
+          "light": "#097666",
+          "dark": "#2FC7AA",
+          "role": "High-contrast mint text on light Shore"
+        }
+      ]
+    },
+    {
+      "collectionId": "TAPSO Web PR",
+      "targetName": "TAPSO Web PR",
+      "modes": ["Light", "Dark"],
+      "variables": [
+        { "name": "color/bg", "light": "#FFFFFF", "dark": "#0F171A" },
+        { "name": "color/ink", "light": "#0F171A", "dark": "#EEF2F1" },
+        { "name": "color/mint", "light": "#2FC7AA", "dark": "#2FC7AA" },
+        { "name": "color/text-secondary", "light": "#56636A", "dark": "#A9B6BA" },
+        { "name": "color/mist", "light": "#F3F5F4", "dark": "#172124" },
+        { "name": "color/separator", "light": "#E1E6E4", "dark": "#2A373B" },
+        { "name": "copy/headline", "canonical": "와리지 말앙,\n혼저 탑서." },
+        { "name": "copy/description", "canonical": "제주 버스, 내릴 때를 알려드려요." },
+        { "name": "copy/cta", "canonical": "TestFlight 사전예약" }
+      ]
+    }
+  ],
+  "nodeUpdates": [
+    {
+      "page": "02F iOS Ride V2",
+      "nodeId": "154:233",
+      "componentName": "JourneyRail / V2",
+      "changeType": "ADD_VARIANT",
+      "details": "Add variant `waiting=true` featuring a dashed zone before the boarding ring and dashed marker rim, matching RideSurfaceComponents.swift L509-514.",
+      "sourcePath": "apps/ios/Shared/RideSurfaceComponents.swift"
+    },
+    {
+      "page": "02F iOS Ride V2",
+      "nodeId": "295:1109",
+      "componentName": "돌이 RailMarker / V3",
+      "changeType": "UPDATE_VECTOR",
+      "details": "Add PR #149 smile arc (`Arc(x0: 30, x1: 43, y: 48, cx: 36.5, cy: 55)`) for reliable moments; omit for degraded and checking moments.",
+      "sourcePath": "apps/ios/Shared/RideSurfaceComponents.swift"
+    },
+    {
+      "page": "05 Live Activity · Dynamic Island",
+      "nodeId": "156:420",
+      "componentName": "LiveActivity / Lock Screen V2",
+      "changeType": "OPACITY_CORRECTION",
+      "details": "For `moment=nextStop` (coral background), set secondary copy opacity to 100% (was 70%) to preserve WCAG AA contrast (5.0:1 on light coral, 7.1:1 on dark).",
+      "sourcePath": "apps/ios/Shared/LiveActivitySurfaces.swift"
+    },
+    {
+      "page": "05 Live Activity · Dynamic Island",
+      "nodeId": "160:1208",
+      "componentName": "Live Activity Moments Board",
+      "changeType": "ADD_FRAME",
+      "details": "Add '00 Waiting (오는 중)' row showing bus approaching boarding stop with stopsBeforeBoarding countdown and dashed rail.",
+      "sourcePath": "apps/ios/Shared/LiveActivitySurfaces.swift"
+    },
+    {
+      "page": "11 Marketing Web",
+      "nodeId": "314:12",
+      "componentName": "Web PR / Coast film hero",
+      "changeType": "UPDATE_METADATA",
+      "details": "Update hero credit text to: '영상의 길은 조천–함덕 해안도로이며, 탑서 버스 주행 영상은 아닙니다.' Rebind colors to updated TAPSO Web PR collection.",
+      "sourcePath": "apps/web/src/sections/Hero.tsx"
+    }
+  ]
+}
