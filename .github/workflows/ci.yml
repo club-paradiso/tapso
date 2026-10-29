@@ -14,6 +14,7 @@ jobs:
     outputs:
       ios: ${{ steps.scope.outputs.ios }}
       transit: ${{ steps.scope.outputs.transit }}
+      matcher: ${{ steps.scope.outputs.matcher }}
     steps:
       - uses: actions/checkout@v4
         with:
@@ -30,6 +31,7 @@ jobs:
           if [[ "$EVENT_NAME" != "pull_request" ]]; then
             echo "ios=true" >> "$GITHUB_OUTPUT"
             echo "transit=true" >> "$GITHUB_OUTPUT"
+            echo "matcher=true" >> "$GITHUB_OUTPUT"
             exit 0
           fi
           git diff --name-only "$BASE_SHA" "$HEAD_SHA" > "$RUNNER_TEMP/native-changes.txt"
@@ -48,7 +50,15 @@ jobs:
           else
             echo "transit=false" >> "$GITHUB_OUTPUT"
           fi
-          echo "Native tests run on every main push; this PR is scoped by changed files."
+          # Matcher evidence runs when backend, shared data, policy or release
+          # evidence changes. It takes ~20 minutes and cannot be affected by
+          # marketing-video or standalone web-style changes.
+          if grep -Eq '^(services/|packages/|apps/ios/|artifacts/|data/|docs/validation/|scripts/(matcher-evidence|negative-controls|release-gates|tago|timetables|crosswalk)/)' "$RUNNER_TEMP/native-changes.txt"; then
+            echo "matcher=true" >> "$GITHUB_OUTPUT"
+          else
+            echo "matcher=false" >> "$GITHUB_OUTPUT"
+          fi
+          echo "All native/matcher tests run on every main push; PR checks are scoped."
 
   main-history-policy:
     if: github.event_name == 'push' && github.ref == 'refs/heads/main'
@@ -204,6 +214,8 @@ jobs:
         run: node --experimental-strip-types scripts/crosswalk/jeju-stop-crosswalk.ts --check
 
   matcher-evidence:
+    needs: native-change-scope
+    if: needs.native-change-scope.outputs.matcher == 'true'
     # The offline half of release gate matcher-passive-safety-v4: every check
     # here is deterministic and needs no network, no credential and no rider.
     # See docs/exec-plans/HUMAN_LABOR_ELIMINATION.md.
