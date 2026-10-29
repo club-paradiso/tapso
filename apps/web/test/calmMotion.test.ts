@@ -20,7 +20,9 @@ test("hero contains no scroll-pinned film-to-phone choreography", () => {
 });
 
 test("film scene and iPhone demo are deliberate visitor choices", () => {
-  assert.match(hero, /aria-pressed=\{scene === "coast"\}/);
+  assert.match(hero, /aria-pressed=\{scene === id\}/);
+  assert.match(hero, /filmAssetsExist/);
+  assert.match(hero, /FILM_SCENES\.filter/);
   assert.match(hero, /aria-pressed=\{scene === "preview"\}/);
   assert.match(hero, /onClick=\{\(\) => onPick\(index\)\}/);
   assert.match(hero, /앱 화면은 미리보기 · 합성 데이터/);
@@ -28,7 +30,7 @@ test("film scene and iPhone demo are deliberate visitor choices", () => {
 });
 
 test("film pauses when the product preview is selected", () => {
-  assert.match(hero, /useHeroFilm\(video, section, reduceMotion, scene === "coast"\)/);
+  assert.match(hero, /useHeroFilm\(video, section, reduceMotion, scene !== "preview", selectedFilm\.film\)/);
   assert.match(filmHook, /if \(!enabled\)/);
   assert.match(filmHook, /film\.pause\(\)/);
 });
