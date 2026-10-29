@@ -2,7 +2,7 @@
   "version": 1,
   "copy": {
     "headline": "와리지 말앙,\n혼저 탑서.",
-    "description": "제주 버스, 내릴 때를 알려드려요.",
+    "description": "제주 버스 앱, 탑서.",
     "cta": "TestFlight 사전예약"
   },
   "light": {
