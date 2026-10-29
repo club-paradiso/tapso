@@ -5,6 +5,51 @@ on:
   pull_request:
 
 jobs:
+  # Only allocate expensive macOS runners for changes that can affect native
+  # targets. Pull requests touching only the marketing website/media need the
+  # full web/API/matcher CI, but should not wait indefinitely for Xcode machines.
+  # Every push to main still runs BOTH native suites.
+  native-change-scope:
+    runs-on: ubuntu-latest
+    outputs:
+      ios: ${{ steps.scope.outputs.ios }}
+      transit: ${{ steps.scope.outputs.transit }}
+    steps:
+      - uses: actions/checkout@v4
+        with:
+          fetch-depth: 0
+      - name: Determine whether this PR affects native app or Swift package
+        id: scope
+        env:
+          BASE_SHA: ${{ github.event.pull_request.base.sha }}
+          HEAD_SHA: ${{ github.event.pull_request.head.sha }}
+          EVENT_NAME: ${{ github.event_name }}
+        run: |
+          set -euo pipefail
+          # Main pushes always validate iOS and Swift, regardless of file paths.
+          if [[ "$EVENT_NAME" != "pull_request" ]]; then
+            echo "ios=true" >> "$GITHUB_OUTPUT"
+            echo "transit=true" >> "$GITHUB_OUTPUT"
+            exit 0
+          fi
+          git diff --name-only "$BASE_SHA" "$HEAD_SHA" > "$RUNNER_TEMP/native-changes.txt"
+          echo "Files changed in PR:"
+          cat "$RUNNER_TEMP/native-changes.txt"
+          # Conservative triggers cover platform sources, all shared packages,
+          # native validators and canonical design tokens. Workflow-only
+          # modifications and web/media assets do not modify native code.
+          if grep -Eq '^(apps/ios/|packages/|scripts/ios/|scripts/design/|design/)' "$RUNNER_TEMP/native-changes.txt"; then
+            echo "ios=true" >> "$GITHUB_OUTPUT"
+          else
+            echo "ios=false" >> "$GITHUB_OUTPUT"
+          fi
+          if grep -Eq '^(packages/|apps/ios/|scripts/ios/)' "$RUNNER_TEMP/native-changes.txt"; then
+            echo "transit=true" >> "$GITHUB_OUTPUT"
+          else
+            echo "transit=false" >> "$GITHUB_OUTPUT"
+          fi
+          echo "Native tests run on every main push; this PR is scoped by changed files."
+
   main-history-policy:
     if: github.event_name == 'push' && github.ref == 'refs/heads/main'
     runs-on: ubuntu-latest
@@ -27,12 +72,16 @@ jobs:
           fi
 
   transit-core:
+    needs: native-change-scope
+    if: needs.native-change-scope.outputs.transit == 'true'
     runs-on: macos-15
     steps:
       - uses: actions/checkout@v4
       - run: swift test --package-path packages/transit-core
 
   ios:
+    needs: native-change-scope
+    if: needs.native-change-scope.outputs.ios == 'true'
     # Builds the committed Xcode project, runs the app and Live Activity tests on
     # a simulator, and renders the Product V2 screens and ride surfaces in Korean
     # and English as a reviewable artifact.
