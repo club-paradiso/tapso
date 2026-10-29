@@ -1,4 +1,4 @@
-import { useRef, useState, type RefObject } from "react";
+import { useEffect, useRef, useState, type RefObject } from "react";
 import { ArrowIcon, PauseIcon, PlayIcon } from "../components/Icons";
 import { Island, LockScreenActivity, surfaceLabel } from "../components/NativeSurfaces";
 import { HERO_FILM } from "../content/media.ts";
@@ -111,9 +111,9 @@ export function Hero() {
   const reduceMotion = useReducedMotion();
   const [scene, setScene] = useState<Scene>("coast");
   const [step, setStep] = useState(0);
-  const [userReducedMotion, setUserReducedMotion] = useState(() =>
-    typeof window === "undefined" ? false : getSiteReducedMotion()
-  );
+  const [userReducedMotion, setUserReducedMotion] = useState(false);
+  // Match SSR markup first; load persisted client preference after hydration.
+  useEffect(() => setUserReducedMotion(getSiteReducedMotion()), []);
   const film = useHeroFilm(video, section, reduceMotion, scene === "coast");
 
   const pickScene = (next: Scene) => setScene(next);
