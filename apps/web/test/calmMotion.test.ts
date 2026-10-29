@@ -53,7 +53,7 @@ test("story phone changes without scroll-induced entrance animation", () => {
 test("native OS reduced motion is honored without an on-page motion button", () => {
   assert.match(motionHook, /matchMedia\("\(prefers-reduced-motion: reduce\)"\)/);
   assert.match(motionHook, /query\.addEventListener\("change", sync\)/);
-  assert.doesNotMatch(motionHook, /localStorage\\.(getItem|setItem)|getSiteReducedMotion|setSiteReducedMotion/);
+  assert.doesNotMatch(motionHook, /localStorage[.](getItem|setItem)|getSiteReducedMotion|setSiteReducedMotion/);
   assert.doesNotMatch(hero, /움직임 줄이기|움직임 기본값|toggleReducedMotion|coast-control-button/);
   assert.doesNotMatch(baseCss, /html\[data-motion="reduce"\]/);
 });
