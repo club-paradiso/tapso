@@ -119,7 +119,14 @@ test("support sheet announces the account copy and explains an out-of-range amou
   assert.match(supportDialog, /aria-invalid=\{customInvalid \|\| undefined\}/);
   assert.match(supportDialog, /className="field-error" id=\{`\$\{customFieldId\}-error`\} role="alert"/);
   // Scrolling inside the sheet must not chain into the page behind it.
-  assert.match(rule(forms, ".support-dialog"), /overscroll-behavior:\s*contain/);
+  assert.match(rule(forms, ".support-dialog-body"), /overscroll-behavior:\s*contain/);
+  // The close button must survive scrolling: header outside the scroll area.
+  assert.match(rule(forms, ".support-dialog[open]"), /display:\s*flex/);
+  assert.match(rule(forms, ".support-dialog-body"), /overflow-y:\s*auto/);
+  assert.ok(
+    supportDialog.indexOf("support-dialog-header") < supportDialog.indexOf("support-dialog-body"),
+    "support dialog header must render before (outside) the scrolling body",
+  );
 });
 
 test("support routes stay Toss transfer, bank copy and Buy Me a Coffee", () => {

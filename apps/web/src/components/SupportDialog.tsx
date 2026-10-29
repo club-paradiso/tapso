@@ -141,19 +141,21 @@ export default function SupportDialog({ onClose }: { onClose: () => void }) {
         if (event.target === dialogRef.current) dialogRef.current?.close();
       }}
     >
-      <div className="support-dialog-body">
-        <div className="support-dialog-header">
-          <h2 id={titleId}>탑서를 응원하는 방법</h2>
-          <button
-            type="button"
-            className="support-dialog-close"
-            onClick={() => dialogRef.current?.close()}
-          >
-            <span aria-hidden="true">✕</span>
-            <span className="visually-hidden">닫기</span>
-          </button>
-        </div>
+      {/* The header stays outside the scrolling body so the close button is
+          reachable even after scrolling to the bottom of the sheet. */}
+      <div className="support-dialog-header">
+        <h2 id={titleId}>탑서를 응원하는 방법</h2>
+        <button
+          type="button"
+          className="support-dialog-close"
+          onClick={() => dialogRef.current?.close()}
+        >
+          <span aria-hidden="true">✕</span>
+          <span className="visually-hidden">닫기</span>
+        </button>
+      </div>
 
+      <div className="support-dialog-body">
         <p className="support-dialog-intro">
           후원금은 서버비, 실제 기기 테스트, 출시 준비에 씁니다. 후원하지 않아도
           탑서는 그대로 쓸 수 있어요.

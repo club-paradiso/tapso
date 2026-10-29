@@ -109,3 +109,12 @@ npm --prefix apps/web run build
   - Desktop 1280px regression: header 65px and transparent over the film,
     nav inline, hero overlap -64px preserved, overflow 0.
   - Reduced motion: hero video has no src, stays paused at opacity 0.
+- 2026-10-30 (follow-up from the live-site audit): the support sheet's
+  title and close button scrolled away with its content. The header now
+  sits outside the scrolling body (`[open]` flex column; body is the
+  scroller) — verified in the browser: after scrolling the sheet body
+  409px at 390px (366px on desktop) the 44px close button stays inside
+  the dialog and still closes it, and axe stays at 0 violations with the
+  dialog open. The audit's other small-target worries measured fine:
+  footer links are 44px tall, FAQ rows 64–88px, and the waitlist consent
+  label's clickable area is 44×318px (tapping it toggles the box).
