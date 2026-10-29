@@ -748,19 +748,6 @@
   transition: background-color var(--dur-emphasis) var(--ease-standard);
 }
 
-/* Header with the island --------------------------------------------------------- */
-
-@media (max-width: 1279px) and (min-width: 900px) {
-  .site-header.has-island .site-nav {
-    visibility: hidden;
-    opacity: 0;
-  }
-}
-
-.site-nav {
-  transition: opacity var(--dur-fast) var(--ease-standard), visibility var(--dur-fast);
-}
-
 /* Narrow screens ---------------------------------------------------------------- */
 
 @media (max-width: 1023px) {
