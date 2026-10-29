@@ -40,7 +40,7 @@
 
 .coast-v4 .coast-film {
   opacity: 0;
-  transition: opacity 180ms linear;
+  transition: opacity 550ms ease-out;
 }
 .coast-v4 .has-frame.film-playing .coast-film,
 .coast-v4 .has-frame.film-paused .coast-film { opacity: 1; }
@@ -153,10 +153,9 @@
 }
 .coast-v4 .coast-bottom-actions {
   display: flex;
-  flex-wrap: wrap;
+  align-items: center;
   justify-content: space-between;
   gap: 12px;
-  align-items: end;
 }
 .coast-v4 .coast-film-controls {
   display: flex;
@@ -169,9 +168,11 @@
 .coast-v4 .coast-control-button svg { width: 17px; height: 17px; }
 .coast-v4 .coast-credit {
   max-width: 620px;
+  margin: 0;
   font-size: 0.75rem;
   line-height: 1.45;
   color: var(--film-ink-2);
+  text-align: right;
 }
 
 .coast-v4 .coast-demo {
