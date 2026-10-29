@@ -173,15 +173,9 @@ export default function SupportDialog({ onClose }: { onClose: () => void }) {
                 <a
                   className="figma-submit support-channel-button support-toss-button"
                   href={SUPPORT_CHANNELS.tossSendUrl}
-                  aria-describedby={`${titleId}-toss-help`}
                 >
                   토스 앱에서 바로 송금하기
                 </a>
-                <p className="support-channel-copy" id={`${titleId}-toss-help`}>
-                  토스가 설치된 휴대폰에서 누르면 송금 화면 열기를 시도해요.
-                  실제 송금은 토스 앱에서 계좌와 금액을 확인한 뒤 완료합니다.
-                  앱이 열리지 않으면 아래 QR이나 계좌번호 복사를 이용해주세요.
-                </p>
                 <div className="support-transfer-qr">
                   <img
                     src="/media/jeju-bank-toss-support-qr.svg"
