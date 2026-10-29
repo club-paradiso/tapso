@@ -24,7 +24,7 @@ export function Footer() {
         <nav className="footer-nav" aria-label="바닥글">
           <ul>
             <li>
-              <a href="#waitlist">TestFlight 사전예약</a>
+              <a href="#waitlist">사전예약</a>
             </li>
             <li>
               <a href="#support">개발 후원하기</a>
