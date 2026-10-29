@@ -168,7 +168,7 @@ main:focus {
 }
 
 .btn-primary {
-  color: var(--ink);
+  color: var(--on-light-accent);
   background: var(--mint);
 }
 
