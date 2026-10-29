@@ -1,19 +1,50 @@
 import { useEffect, useState } from "react";
 
-/**
- * The visitor's reduced-motion preference. `false` on the prerendered page and
- * until the effect runs, so nothing that waits on it moves before it is known:
- * every automatic motion on the page starts only after a delay.
- */
+const KEY = "tapso:reduce-motion";
+const EVENT = "tapso:motion-preference";
+
+/** User-controlled preference in addition to OS-level reduced motion. */
+export function setSiteReducedMotion(reduce: boolean): void {
+  try {
+    window.localStorage.setItem(KEY, reduce ? "1" : "0");
+  } catch {
+    // Private browsing can prohibit storage. The current tab still works.
+  }
+  document.documentElement.dataset.motion = reduce ? "reduce" : "normal";
+  window.dispatchEvent(new Event(EVENT));
+}
+
+function savedPreference(): boolean {
+  try {
+    return window.localStorage.getItem(KEY) === "1";
+  } catch {
+    return document.documentElement.dataset.motion === "reduce";
+  }
+}
+
 export function useReducedMotion(): boolean {
   const [reduce, setReduce] = useState(false);
   useEffect(() => {
-    const query = typeof window.matchMedia === "function" ? window.matchMedia("(prefers-reduced-motion: reduce)") : undefined;
-    if (!query) return;
-    setReduce(query.matches);
-    const onChange = () => setReduce(query.matches);
-    query.addEventListener("change", onChange);
-    return () => query.removeEventListener("change", onChange);
+    const query = typeof window.matchMedia === "function"
+      ? window.matchMedia("(prefers-reduced-motion: reduce)")
+      : undefined;
+    const sync = () => {
+      const saved = savedPreference();
+      document.documentElement.dataset.motion = saved ? "reduce" : "normal";
+      setReduce(Boolean(query?.matches) || saved);
+    };
+    sync();
+    query?.addEventListener("change", sync);
+    window.addEventListener(EVENT, sync);
+    return () => {
+      query?.removeEventListener("change", sync);
+      window.removeEventListener(EVENT, sync);
+    };
   }, []);
   return reduce;
+}
+
+/** For the site's own toggle, distinct from the OS setting. */
+export function getSiteReducedMotion(): boolean {
+  return typeof window !== "undefined" && savedPreference();
 }

@@ -1,5 +1,5 @@
 import { useCallback, useEffect, useRef, useState, type RefObject } from "react";
-import { HERO_FILM } from "../content/media.ts";
+import { HERO_FILM, type HeroFilmSource } from "../content/media.ts";
 
 /**
  * - `waiting`: nothing decided yet (also the prerendered page): the still shows.
@@ -26,11 +26,11 @@ function onSlowNetwork(): boolean {
 }
 
 /** The smallest file that fills this screen: the portrait cut on tall screens, 720p on a slow network. */
-function chooseSource(): string {
+function chooseSource(film: HeroFilmSource): string {
   const tall = window.matchMedia?.("(max-aspect-ratio: 4/5)")?.matches ?? false;
-  if (tall) return HERO_FILM.files.portrait;
+  if (tall) return film.files.portrait;
   const pixels = window.innerWidth * Math.min(window.devicePixelRatio || 1, 2);
-  return pixels > 1500 && !onSlowNetwork() ? HERO_FILM.files.wide : HERO_FILM.files.medium;
+  return pixels > 1500 && !onSlowNetwork() ? film.files.wide : film.files.medium;
 }
 
 /**
@@ -43,6 +43,8 @@ export function useHeroFilm(
   video: RefObject<HTMLVideoElement | null>,
   section: RefObject<HTMLElement | null>,
   reduceMotion: boolean,
+  enabled = true,
+  film: HeroFilmSource = HERO_FILM,
 ): { state: FilmState; hasFrame: boolean; toggle: () => void } {
   const [state, setState] = useState<FilmState>("waiting");
   // Until a frame is decoded the <video> would paint black over the still.
@@ -53,10 +55,10 @@ export function useHeroFilm(
   const load = useCallback(() => {
     const element = video.current;
     if (!element || element.getAttribute("src")) return element;
-    element.src = chooseSource();
+    element.src = chooseSource(film);
     element.load();
     return element;
-  }, [video]);
+  }, [video, film]);
 
   const play = useCallback(() => {
     const element = load();
@@ -85,11 +87,28 @@ export function useHeroFilm(
       element.removeEventListener("pause", onPause);
       element.removeEventListener("error", onError);
     };
-  }, [video]);
+  }, [video, film]);
+
+  // A newly chosen film always starts with a clean still/frame and URL.
+  // The play effect below then follows the existing motion/data preferences.
+  useEffect(() => {
+    const element = video.current;
+    if (!element) return;
+    element.pause();
+    element.removeAttribute("src");
+    element.load();
+    userPaused.current = false;
+    setHasFrame(false);
+    setState("waiting");
+  }, [film, video]);
 
   // Decide once the reduced-motion preference is known (it starts `false`).
   useEffect(() => {
     const timer = window.setTimeout(() => {
+      if (!enabled) {
+        video.current?.pause();
+        return;
+      }
       if (prefersStill(reduceMotion)) {
         video.current?.pause();
         setState((s) => (s === "failed" ? s : s === "waiting" ? "still" : s === "playing" ? "paused" : s));
@@ -98,14 +117,16 @@ export function useHeroFilm(
       if (!userPaused.current && onScreen.current) play();
     }, 400);
     return () => window.clearTimeout(timer);
-  }, [reduceMotion, play, video]);
+  }, [reduceMotion, play, video, enabled]);
 
   useEffect(() => {
     const element = section.current;
     if (!element) return;
     const resumeIfAllowed = () => {
       const film = video.current;
-      if (!film || !film.getAttribute("src") || userPaused.current || film.error) return;
+      if (!film) return;
+      if (!enabled) { film.pause(); return; }
+      if (!film.getAttribute("src") || userPaused.current || film.error) return;
       if (onScreen.current && !document.hidden) void film.play().catch(() => undefined);
       else film.pause();
     };
@@ -122,11 +143,11 @@ export function useHeroFilm(
       observer?.disconnect();
       document.removeEventListener("visibilitychange", resumeIfAllowed);
     };
-  }, [section, video]);
+  }, [section, video, enabled]);
 
   const toggle = useCallback(() => {
     const element = video.current;
-    if (!element) return;
+    if (!element || !enabled) return;
     if (state === "playing") {
       userPaused.current = true;
       element.pause();
@@ -134,7 +155,7 @@ export function useHeroFilm(
       userPaused.current = false;
       play();
     }
-  }, [state, play, video]);
+  }, [state, play, video, enabled]);
 
   return { state, hasFrame, toggle };
 }

@@ -1,497 +1,275 @@
-/*
- * Hero: real Jeju coastal-road footage that becomes an iPhone Lock Screen.
- *
- * The stage is always a dark film surface in both themes: the type on it is
- * white on a basalt shade, never on a light wash, so the same contrast holds
- * in light and dark mode. `Hero.tsx` writes --film-clip, --phone-x/y/w and
- * the three fades while the visitor scrolls.
- */
-
-.coast {
-  --film-ink: #ffffff;
-  --film-ink-2: rgb(255 255 255 / 84%);
+/* TAPSO V4 · calm hero: one normal-height scene, no scroll pin or clip morph. */
+.coast-v4 {
+  --film-ink: #fff;
+  --film-ink-2: rgb(255 255 255 / 83%);
   --film-mint: #7df0d5;
-  --film-basalt: 7 25 35;
+  --film-basalt: 15 23 26;
   position: relative;
-  height: 290svh;
-  /* The film runs under the sticky header. */
   margin-top: -64px;
   background: var(--night);
   color: var(--film-ink);
 }
 
-.coast.is-static {
-  height: auto;
-}
-
-/* Hand the dark film over to the page's own background (a no-op in dark mode). */
-.coast::after {
-  content: "";
-  display: block;
-  height: 96px;
-  background: linear-gradient(var(--night), var(--bg));
-}
-
-.coast-stage {
-  --film-clip: inset(0 0 0 0 round 0);
-  --copy-out: 0;
-  --device-in: 0;
-  --pocket-in: 0;
-  position: sticky;
-  top: 0;
-  height: 100svh;
-  min-height: 560px;
+.coast-v4 .coast-stage {
+  position: relative;
+  display: flex;
+  align-items: flex-end;
+  width: 100%;
+  min-height: max(730px, 100svh);
   overflow: hidden;
   isolation: isolate;
-  background: var(--night);
 }
 
-.is-static .coast-stage {
-  position: relative;
-}
-
-/* Film ------------------------------------------------------------------- */
-
-.coast-media {
+.coast-v4 .coast-media {
   position: absolute;
   inset: 0;
-  z-index: 0;
-  clip-path: var(--film-clip);
   background: var(--night);
+  z-index: -1;
 }
 
-.coast-still,
-.coast-film {
+.coast-v4 .coast-still,
+.coast-v4 .coast-film {
   position: absolute;
   inset: 0;
+  display: block;
   width: 100%;
   height: 100%;
   object-fit: cover;
   object-position: 55% 50%;
 }
 
-.coast-film {
+.coast-v4 .coast-film {
   opacity: 0;
-  transition: opacity 0.9s var(--ease-standard);
+  transition: opacity 180ms linear;
 }
-
-.has-frame.film-playing .coast-film,
-.has-frame.film-paused .coast-film {
-  opacity: 1;
-}
-
-.film-failed .coast-film {
-  display: none;
-}
-
-/* Shade: dense where type sits (left and bottom), clear over the road. */
-.coast-shade {
+.coast-v4 .has-frame.film-playing .coast-film,
+.coast-v4 .has-frame.film-paused .coast-film { opacity: 1; }
+.coast-v4 .film-failed .coast-film,
+.coast-v4.is-preview .coast-film { opacity: 0 !important; }
+.coast-v4 .coast-shade {
   position: absolute;
   inset: 0;
   background:
-    linear-gradient(90deg, rgb(var(--film-basalt) / 78%) 0%, rgb(var(--film-basalt) / 52%) 34%, rgb(var(--film-basalt) / 0%) 62%),
-    linear-gradient(0deg, rgb(var(--film-basalt) / 70%) 0%, rgb(var(--film-basalt) / 0%) 40%),
-    linear-gradient(180deg, rgb(var(--film-basalt) / 68%) 0%, rgb(var(--film-basalt) / 30%) 9%, rgb(var(--film-basalt) / 0%) 22%);
+    linear-gradient(90deg, rgb(var(--film-basalt) / 82%) 0%, rgb(var(--film-basalt) / 60%) 39%, transparent 90%),
+    linear-gradient(0deg, rgb(var(--film-basalt) / 83%) 0%, transparent 42%),
+    linear-gradient(180deg, rgb(var(--film-basalt) / 65%) 0%, transparent 30%);
+}
+.coast-v4.is-preview .coast-shade {
+  background: rgb(var(--film-basalt) / 82%);
 }
 
-/* Once the film is the phone's wallpaper it needs the Lock Screen's own dim. */
-.coast-stage .coast-shade {
-  opacity: calc(1 - var(--device-in) * 0.55);
+.coast-v4 .coast-copy {
+  z-index: 1;
+  position: relative;
+  width: min(650px, 100%);
+  margin-left: max(var(--gutter), calc((100vw - 1200px) / 2));
+  padding: 165px 0 194px;
 }
-
-/* Copy ------------------------------------------------------------------- */
-
-.coast-copy {
-  position: absolute;
-  z-index: 2;
-  left: max(var(--gutter), calc((100vw - 1200px) / 2));
-  bottom: clamp(88px, 13svh, 150px);
-  width: min(620px, calc(100% - 2 * var(--gutter)));
-  opacity: calc(1 - var(--copy-out));
-  transform: translateY(calc(var(--copy-out) * -48px));
-}
-
-.coast-eyebrow {
-  font-size: 0.9375rem;
-  font-weight: 700;
-  letter-spacing: 0.01em;
+.coast-v4 .coast-copy[inert] { display: none; }
+.coast-v4 .coast-eyebrow {
   color: var(--film-ink-2);
+  font-weight: 700;
+  font-size: 0.9375rem;
 }
-
-.coast-status {
-  color: #ffc46b;
-}
-
-.coast h1 {
-  margin: 18px 0 14px;
+.coast-v4 .coast-status { color: #ffc46b; }
+.coast-v4 h1 {
+  margin: 18px 0 16px;
   font-size: clamp(3rem, 6.4vw, 6rem);
   font-weight: 800;
   line-height: 1.04;
   letter-spacing: -0.045em;
-  color: var(--film-ink);
   text-wrap: balance;
-  text-shadow: 0 2px 30px rgb(var(--film-basalt) / 35%);
+  text-shadow: 0 2px 18px rgb(var(--film-basalt) / 38%);
 }
-
-.coast h1 span:last-child {
-  color: var(--film-mint);
-}
-
-.coast-gloss {
+.coast-v4 h1 span:last-child { color: var(--film-mint); }
+.coast-v4 .coast-gloss {
   display: flex;
   align-items: center;
   gap: 10px;
-  font-size: 1rem;
   color: var(--film-ink-2);
 }
-
-.coast-gloss-tag {
+.coast-v4 .coast-gloss-tag {
   padding: 2px 8px;
   border: 1px solid rgb(255 255 255 / 40%);
   border-radius: 6px;
   font-size: 0.8125rem;
   font-weight: 700;
 }
-
-.coast-lede {
+.coast-v4 .coast-lede {
   margin: 22px 0 28px;
   font-size: clamp(1.25rem, 1.9vw, 1.625rem);
   font-weight: 700;
-  letter-spacing: -0.02em;
-  line-height: 1.35;
+  line-height: 1.4;
 }
-
-.coast-actions {
-  display: flex;
-  flex-wrap: wrap;
-  gap: 12px;
-}
-
-.coast .btn-primary {
-  color: var(--night);
-  background: var(--mint);
-}
-
-.coast .btn-primary:hover {
-  background: #52d8be;
-}
-
-.btn-glass {
-  color: var(--film-ink);
+.coast-v4 .coast-actions { display: flex; flex-wrap: wrap; gap: 12px; }
+.coast-v4 .btn-primary { color: var(--night); background: var(--mint); }
+.coast-v4 .btn-primary:hover { background: #52d8be; }
+.coast-v4 .btn-glass {
+  color: #fff;
   background: rgb(255 255 255 / 12%);
-  box-shadow: inset 0 0 0 1px rgb(255 255 255 / 36%);
-  backdrop-filter: blur(12px);
-  -webkit-backdrop-filter: blur(12px);
+  border-color: rgb(255 255 255 / 36%);
 }
-
-.btn-glass:hover {
-  background: rgb(255 255 255 / 20%);
-}
-
-.coast-status-line {
-  max-width: 480px;
+.coast-v4 .btn-glass:hover { background: rgb(255 255 255 / 20%); }
+.coast-v4 .coast-status-line {
+  max-width: 500px;
   margin-top: 20px;
   font-size: 0.9375rem;
   line-height: 1.55;
   color: var(--film-ink-2);
 }
+.coast-v4 .coast-status-line a { color: #fff; text-decoration: underline; text-underline-offset: 3px; }
 
-.coast-status-line a,
-.coast-pocket a {
-  color: var(--film-ink);
-  text-decoration: underline;
-  text-underline-offset: 3px;
-}
-
-/* Bottom bar: where the film comes from, and the pause control. ---------- */
-
-.coast-bar {
+.coast-v4 .coast-bottom {
   position: absolute;
   z-index: 3;
   left: max(var(--gutter), calc((100vw - 1200px) / 2));
   right: max(var(--gutter), calc((100vw - 1200px) / 2));
-  bottom: 20px;
+  bottom: 24px;
   display: flex;
-  align-items: center;
-  justify-content: space-between;
-  gap: 16px;
+  flex-direction: column;
+  gap: 12px;
 }
-
-.coast-credit {
-  max-width: 560px;
-  font-size: 0.8125rem;
-  line-height: 1.45;
-  color: var(--film-ink-2);
-  opacity: calc(1 - var(--device-in));
-}
-
-.coast-toggle {
+.coast-v4 .coast-scene-picker { display: flex; flex-wrap: wrap; gap: 8px; }
+.coast-v4 .coast-scene-picker button,
+.coast-v4 .coast-control-button {
   display: inline-flex;
-  flex: none;
   align-items: center;
-  gap: 8px;
+  justify-content: center;
+  gap: 7px;
   min-height: var(--touch-min);
-  padding: 0 16px 0 12px;
+  padding: 0 15px;
+  border: 1px solid rgb(255 255 255 / 32%);
   border-radius: 999px;
+  color: #fff;
+  background: rgb(var(--film-basalt) / 65%);
   font-size: 0.875rem;
   font-weight: 700;
-  color: var(--film-ink);
-  background: rgb(var(--film-basalt) / 55%);
-  box-shadow: inset 0 0 0 1px rgb(255 255 255 / 30%);
-  backdrop-filter: blur(12px);
-  -webkit-backdrop-filter: blur(12px);
+  cursor: pointer;
 }
-
-.coast-toggle svg {
-  width: 18px;
-  height: 18px;
+.coast-v4 .coast-scene-picker button.is-active {
+  color: var(--night);
+  background: #fff;
+  border-color: #fff;
 }
-
-.coast-cue {
-  display: none;
-  position: absolute;
-  z-index: 2;
-  left: 50%;
-  bottom: 84px;
-  transform: translateX(-50%);
-  font-size: 0.8125rem;
-  font-weight: 600;
+.coast-v4 .coast-bottom-actions {
+  display: flex;
+  flex-wrap: wrap;
+  justify-content: space-between;
+  gap: 12px;
+  align-items: end;
+}
+.coast-v4 .coast-film-controls {
+  display: flex;
+  flex: 1;
+  flex-wrap: wrap;
+  align-items: center;
+  justify-content: flex-end;
+  gap: 14px;
+}
+.coast-v4 .coast-control-button svg { width: 17px; height: 17px; }
+.coast-v4 .coast-credit {
+  max-width: 620px;
+  font-size: 0.75rem;
+  line-height: 1.45;
   color: var(--film-ink-2);
-  opacity: calc(1 - var(--copy-out));
-  pointer-events: none;
 }
 
-/* Only where it cannot meet the copy. */
-@media (min-width: 1100px) and (min-height: 820px) {
-  .coast-cue {
-    display: block;
-  }
-}
-
-.coast-cue::after {
-  content: "";
-  display: block;
-  width: 1px;
-  height: 28px;
-  margin: 8px auto 0;
-  background: linear-gradient(var(--film-ink-2), transparent);
-}
-
-/* Phone the film turns into ---------------------------------------------- */
-
-.coast-phone.phone {
-  --pw: var(--phone-w);
-  position: absolute;
+.coast-v4 .coast-demo {
+  position: relative;
   z-index: 1;
-  left: var(--phone-x);
-  top: var(--phone-y);
-  width: var(--pw);
-  /* The film itself is the screen: only the hardware edge is drawn. */
-  background: none;
-  box-shadow: none;
-  opacity: var(--device-in);
-  pointer-events: none;
+  display: grid;
+  grid-template-columns: minmax(0, 1fr) minmax(210px, 290px);
+  align-items: center;
+  gap: clamp(28px, 5vw, 90px);
+  width: min(1200px, calc(100% - 2 * var(--gutter)));
+  margin: 100px auto 176px;
 }
-
-.coast-phone::before {
-  content: "";
-  position: absolute;
-  inset: 0;
-  border: calc(var(--pw) * 0.03) solid var(--device-edge-mid);
-  border-radius: calc(var(--pw) * 0.155);
-  box-shadow: var(--shadow-device), inset 0 0 0 1.5px rgb(255 255 255 / 10%), 0 0 0 1px rgb(255 255 255 / 14%);
-}
-
-.coast-phone .phone-screen {
-  background: transparent;
-  color: #fff;
-}
-
-/* The Lock Screen dims the top of a bright wallpaper behind the clock. */
-.coast-phone .phone-screen::before {
-  content: "";
-  position: absolute;
-  inset: 0 0 auto;
-  z-index: -1;
-  height: 42%;
-  background: linear-gradient(180deg, rgb(var(--film-basalt) / 55%), rgb(var(--film-basalt) / 0%));
-}
-
-.coast-phone .lock-clock,
-.coast-phone .phone-status {
-  text-shadow: 0 1px 12px rgb(var(--film-basalt) / 45%);
-}
-
-.coast-phone .lock-clock {
-  color: #fff;
-}
-
-.coast-pocket {
-  position: absolute;
-  z-index: 2;
-  left: max(var(--gutter), calc((100vw - 1200px) / 2));
-  top: 50%;
-  width: min(440px, calc(var(--phone-x) - max(var(--gutter), calc((100vw - 1200px) / 2)) - 56px));
-  transform: translateY(calc(-50% + (1 - var(--pocket-in)) * 32px));
-  opacity: var(--pocket-in);
-}
-
-.coast-pocket-title {
-  margin: 14px 0 18px;
-  font-size: clamp(2rem, 3.6vw, 3.25rem);
+.coast-v4 .coast-demo h2 {
+  margin: 12px 0 16px;
+  font-size: clamp(2.3rem, 4.5vw, 4rem);
   font-weight: 800;
   line-height: 1.12;
   letter-spacing: -0.04em;
 }
-
-.coast-pocket-body {
-  font-size: 1.125rem;
-  line-height: 1.6;
+.coast-v4 .coast-demo-copy > p:not(.coast-eyebrow):not(.coast-note) {
+  max-width: 440px;
   color: var(--film-ink-2);
+  line-height: 1.65;
 }
-
-.coast-steps {
+.coast-v4 .coast-demo-phone.phone {
+  --pw: clamp(210px, 21vw, 290px);
+  margin-inline: auto;
+}
+.coast-v4 .coast-steps {
   display: flex;
-  flex-wrap: wrap;
   gap: 8px;
-  margin: 28px 0 14px;
+  flex-wrap: wrap;
+  margin-top: 26px;
 }
-
-.coast-steps button {
+.coast-v4 .coast-steps button {
   min-height: var(--touch-min);
-  padding: 0 16px;
+  padding: 0 15px;
+  border: 1px solid rgb(255 255 255 / 36%);
   border-radius: 999px;
-  font-size: 0.9375rem;
+  color: #fff;
+  background: transparent;
+  font-size: 0.875rem;
   font-weight: 700;
-  color: var(--film-ink-2);
-  background: rgb(255 255 255 / 8%);
-  box-shadow: inset 0 0 0 1px rgb(255 255 255 / 22%);
-  transition:
-    background-color var(--dur-emphasis) var(--ease-standard),
-    color var(--dur-emphasis) var(--ease-standard);
 }
-
-.coast-steps button.is-done {
-  color: var(--film-ink);
-}
-
-.coast-steps button.is-active {
+.coast-v4 .coast-steps button.is-active {
   color: var(--night);
-  background: var(--film-ink);
-  box-shadow: none;
+  background: #fff;
 }
-
-.coast-note {
-  font-size: 0.8125rem;
+.coast-v4 .coast-note {
+  margin-top: 14px;
   color: var(--film-ink-2);
+  font-size: 0.8125rem;
 }
-
-/* Reduced motion: the Lock Screen moment is its own block below the film. */
-.coast-stage.is-pocket {
-  --device-in: 1;
-  --pocket-in: 1;
-  height: 100svh;
+.coast-v4 :is(.coast-scene-picker button, .coast-control-button, .coast-steps button):focus-visible {
+  outline: 3px solid #fff;
+  outline-offset: 3px;
 }
-
-.coast-stage.is-pocket .coast-shade {
-  opacity: 0.45;
-}
-
-.coast-stage.is-pocket .coast-phone {
-  pointer-events: auto;
-}
-
-/* Narrow screens: copy at the bottom, phone above it. ------------------ */
 
 @media (max-width: 759px) {
-  .coast {
-    height: 260svh;
-  }
-
-  .coast-stage {
-    min-height: 600px;
-  }
-
-  .coast-shade {
-    background:
-      linear-gradient(0deg, rgb(var(--film-basalt) / 90%) 0%, rgb(var(--film-basalt) / 74%) 48%, rgb(var(--film-basalt) / 0%) 82%),
-      linear-gradient(180deg, rgb(var(--film-basalt) / 68%) 0%, rgb(var(--film-basalt) / 0%) 20%);
-  }
-
-  .coast-copy {
-    bottom: 96px;
-  }
-
-  .coast h1 {
-    font-size: clamp(2.75rem, 13vw, 3.75rem);
-    margin: 12px 0 10px;
-  }
-
-  .coast-lede {
-    margin: 14px 0 20px;
-  }
-
-  .coast-actions .btn {
-    flex: 1 1 auto;
-    justify-content: center;
-  }
-
-  .coast-status-line {
-    margin-top: 14px;
-    font-size: 0.8125rem;
-  }
-
-  .coast-gloss {
-    font-size: 0.875rem;
-  }
-
-  .coast-bar {
-    bottom: 14px;
-    align-items: flex-end;
-  }
-
-  .coast-credit {
-    font-size: 0.6875rem;
-  }
-
-  .coast-pocket {
-    top: auto;
-    bottom: 76px;
+  .coast-v4 .coast-stage { min-height: max(720px, 100svh); }
+  .coast-v4 .coast-copy {
     width: calc(100% - 2 * var(--gutter));
-    transform: translateY(calc((1 - var(--pocket-in)) * 24px));
+    padding: 160px 0 230px;
   }
-
-  .coast-pocket .coast-eyebrow,
-  .coast-pocket-body {
-    display: none;
+  .coast-v4 h1 { font-size: clamp(2.75rem, 12vw, 3.75rem); }
+  .coast-v4 .coast-lede { margin: 14px 0 22px; }
+  .coast-v4 .coast-actions .btn { flex: 1 1 auto; }
+  .coast-v4 .coast-status-line { font-size: 0.8125rem; }
+  .coast-v4 .coast-shade {
+    background: linear-gradient(0deg, rgb(var(--film-basalt) / 90%), rgb(var(--film-basalt) / 70%) 58%, rgb(var(--film-basalt) / 35%));
   }
-
-  .coast-pocket-title {
-    margin: 0 0 4px;
-    font-size: 1.625rem;
+  .coast-v4 .coast-bottom { bottom: 16px; }
+  .coast-v4 .coast-scene-picker button { min-height: 38px; padding-inline: 12px; font-size: 0.8125rem; }
+  .coast-v4 .coast-film-controls { justify-content: space-between; }
+  .coast-v4 .coast-credit { flex: 1 1 175px; font-size: 0.6875rem; }
+  .coast-v4.is-preview .coast-stage { min-height: 965px; }
+  .coast-v4 .coast-demo {
+    grid-template-columns: 1fr;
+    gap: 22px;
+    align-content: start;
+    margin: 95px auto 188px;
     text-align: center;
   }
-
-  .coast-steps {
-    justify-content: center;
-    flex-wrap: nowrap;
-    gap: 6px;
-    margin: 12px 0 8px;
-  }
-
-  .coast-steps button {
-    padding: 0 12px;
-    font-size: 0.8125rem;
-  }
-
-  .coast-note {
-    text-align: center;
-  }
+  .coast-v4 .coast-demo h2 { font-size: 2.25rem; }
+  .coast-v4 .coast-demo-copy > p:not(.coast-eyebrow):not(.coast-note) { margin-inline: auto; }
+  .coast-v4 .coast-steps { justify-content: center; margin-top: 16px; }
+  .coast-v4 .coast-demo-phone.phone { --pw: min(235px, 58vw); }
 }
 
-@media (max-width: 759px) and (max-height: 700px) {
-  .coast-gloss,
-  .coast-status-line {
-    display: none;
-  }
+@media (max-width: 390px) {
+  .coast-v4 .coast-bottom-actions { gap: 8px; }
+  .coast-v4 .coast-control-button { padding: 0 10px; font-size: 0.75rem; }
+  .coast-v4 .coast-credit { max-width: 200px; }
+  .coast-v4 .coast-steps { gap: 4px; }
+  .coast-v4 .coast-steps button { padding: 0 9px; font-size: 0.75rem; }
 }
+
+@media (prefers-reduced-motion: reduce) {
+  .coast-v4 .coast-film { transition: none; }
+}
+html[data-motion="reduce"] .coast-v4 .coast-film { transition: none; }

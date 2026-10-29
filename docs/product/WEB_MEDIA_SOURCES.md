@@ -33,9 +33,44 @@ ffmpeg -ss 18 -t 16.2 -i 339975_large.mp4 -filter_complex "[0:v]scale=1920:1080:
 # Stills: the frame at 19 s, scaled as above, WebP quality 70.
 ```
 
-## The Lock Screen on the film
+## V4 additional film selections: Jeju Udo and Jungmun
 
-When the visitor scrolls, the same film is cut down to an iPhone screen and TAPSO's Lock Screen Live Activity is drawn over it. That layer is the web re-drawing of `LiveActivitySurfaces.swift` used everywhere else on the page (`NativeSurfaces.tsx`), on the page's synthetic ride (route 365, 제주시청(아라방면)), and is labelled "앱 화면은 미리보기 · 합성 데이터". It is not a screen recording of the app.
+The user's original Pixabay clips were supplied on 2026-10-29 and
+independently identified by their corresponding source video IDs. The real
+scenes are sea/waves, **not** a bus ride, in-app recording or view from a bus.
+
+| | Udo | Jungmun |
+|---|---|---|
+| Location | 제주 우도 해변 | 제주 중문 해안 |
+| Author | somedaywish | Life_Vitamin |
+| Source | https://pixabay.com/videos/korea-jeju-beach-sea-island-262066/ | https://pixabay.com/videos/wave-sea-ocean-jeju-289799/ |
+| Licence | Pixabay Content License | Pixabay Content License |
+| Licence URL | https://pixabay.com/service/license-summary/ | https://pixabay.com/service/license-summary/ |
+| User-supplied original | `262066.mp4` · 1920×1080, HEVC, 14.04s, 17,982,817 bytes | `289799.mp4` · 1920×1080, HEVC, 28.85s, 14,429,846 bytes |
+| Edit | Start at 1s, clip 9s, H.264 24fps, audio removed | Start at 3s, clip 9s, H.264 24fps, audio removed |
+
+Optimized local files (output files live in `apps/web/public/media/hero/`):
+
+| Path | Approx. size | Dimensions | SHA-256 |
+|---|---:|---|---|
+| `/media/hero/udo-720.mp4` | 1.86MB | 1280×720, H.264 24fps | `a5abcac1867c8777dbd9dcc65b060d2e2aa199c9f38171f2da6869836a015298` |
+| `/media/hero/udo-portrait.mp4` | 1.58MB | 720×1280, H.264 24fps | `32eab74a65a1bcae91bcd4b9944d41fe66a60a095eb68afadeb2a78b315468b4` |
+| `/media/hero/udo-poster.webp` | 102KB | 1600×900 | `1998b3e3dec13299220aa91db83860805cd8cdc268dac2c09e3474a9f8cfedf2` |
+| `/media/hero/udo-poster-portrait.webp` | 61KB | 720×1280 | `813e3edeab1ede900ba4960654d378e8ad30c98edf0fb56032927050dcc0394e` |
+| `/media/hero/jungmun-720.mp4` | 1.93MB | 1280×720, H.264 24fps | `8778fda655a2ddbba1dae757b464f947d6cbbeb7a9d356e8fedf891d65b0e20f` |
+| `/media/hero/jungmun-portrait.mp4` | 1.58MB | 720×1280, H.264 24fps | `03bb5cebb83fb7cea0396c4500d5bdafa43a2373ce962cfd36bdaa9a1d08468f` |
+| `/media/hero/jungmun-poster.webp` | 172KB | 1600×900 | `d7c33c67c299a637d73bd9164086cae438848d581c6e0e87287bc3fe43dc2d78` |
+| `/media/hero/jungmun-poster-portrait.webp` | 77KB | 720×1280 | `b1a971e4f30c823cbc0a53314b4e8cb7cfedc93bf97d0093dbca6ea2352bb0b0` |
+
+The original licensed clips are not committed. The new films are offered
+**only when the optimized assets physically exist** in the deployed public
+folder and report the expected MP4/WebP MIME types. The PR can therefore be
+deployed without broken videos while binary upload is pending.
+Source manifest: `apps/web/src/content/media.ts`. Tests: `apps/web/test/media.test.ts`.
+
+## The Lock Screen (separate manual preview)
+
+In V4, the video stays in the hero and never morphs into a phone. The visitor can manually select a separate iPhone Live Activity preview; scrolling does not move the film into an app UI. That layer is the web re-drawing of `LiveActivitySurfaces.swift` used everywhere else on the page (`NativeSurfaces.tsx`), on the page's synthetic ride (route 365, 제주시청(아라방면)), and is labelled "앱 화면은 미리보기 · 합성 데이터". It is not a screen recording of the app.
 
 ## Removed
 
