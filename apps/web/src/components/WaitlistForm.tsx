@@ -211,7 +211,7 @@ export default function WaitlistForm() {
             aria-busy={submitting}
             data-figma-node-id="9:61"
           >
-            {submitting ? "보내는 중…" : "TestFlight 사전예약"}
+            {submitting ? "보내는 중…" : "사전예약"}
             {submitting ? null : <span aria-hidden="true">→</span>}
           </button>
         </div>
