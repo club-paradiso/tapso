@@ -16,6 +16,8 @@ const css = {
   island: readFileSync(new URL("../src/styles/island.css", import.meta.url), "utf8"),
   surfaces: readFileSync(new URL("../src/styles/surfaces.css", import.meta.url), "utf8"),
   forms: readFileSync(new URL("../src/styles/forms.css", import.meta.url), "utf8"),
+  base: readFileSync(new URL("../src/styles/base.css", import.meta.url), "utf8"),
+  theme: readFileSync(new URL("../src/styles/theme.css", import.meta.url), "utf8"),
 };
 
 function rule(source: string, selector: string): string {
@@ -81,5 +83,11 @@ test("mint CTAs and highlighted icons do not use dark-theme --ink", () => {
   assert.match(css.forms, /\.figma-submit,\s*\.figma-support\s*\{[^}]*color:\s*var\(--on-light-accent\)/s);
   assert.match(rule(css.forms, ".figma-support"), /color:\s*var\(--ink\)\s*;/);
   assert.match(rule(css.sections, ".tone-tapso .flow-icon"), /color:\s*var\(--on-light-accent\)\s*;/);
+  for (const selector of [".scene-bus-body", ".privacy-token.is-bus", ".waitlist-promises svg"]) {
+    assert.match(rule(css.sections, selector), /color:\s*var\(--on-light-accent\)\s*;/, selector);
+  }
+  assert.match(rule(css.base, ".btn-primary"), /color:\s*var\(--on-light-accent\)\s*;/);
   assert.match(rule(css.island, ".isle-group.role-next"), /--on-role:\s*var\(--on-light-accent\)\s*;/);
+  assert.match(rule(css.theme, '[data-theme="dark"]'), /--text-tertiary:\s*#8c999e\s*;/);
+  assert.ok(contrast("#8c999e", hex("bg")) < 4.5, "light backgrounds should use their own tertiary text token");
 });
