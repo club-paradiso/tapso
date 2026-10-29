@@ -80,7 +80,7 @@
 .hero-gloss-tag {
   padding: 2px 8px;
   border-radius: 6px;
-  color: var(--bg);
+  color: var(--on-dark-surface);
   background: var(--basalt);
   font-size: 0.75rem;
   font-weight: 800;
@@ -419,7 +419,7 @@
   padding: 12px 14px;
   border-left: 3px solid var(--amber);
   border-radius: 4px 12px 12px 4px;
-  color: var(--bg);
+  color: var(--on-dark-surface);
   background: var(--white-08);
   font-size: var(--fs-small);
   line-height: 1.6;
@@ -428,7 +428,7 @@
 .step-variant-note {
   max-width: 34em;
   min-height: 3.2em;
-  color: var(--bg);
+  color: var(--on-dark-surface);
   font-size: var(--fs-body);
   font-weight: 600;
   line-height: 1.6;
@@ -449,7 +449,7 @@
   padding: 0 16px;
   border: 1px solid var(--night-separator);
   border-radius: var(--radius-pill);
-  color: var(--bg);
+  color: var(--on-dark-surface);
   background: transparent;
   font-size: var(--fs-small);
   font-weight: 700;
@@ -614,7 +614,7 @@
   left: 50%;
   padding: 2px 8px;
   border-radius: var(--radius-pill);
-  color: var(--bg);
+  color: var(--on-dark-surface);
   background: var(--night-elevated);
   font-size: 0.75rem;
   font-weight: 800;
@@ -647,7 +647,7 @@
   place-items: center;
   height: 26px;
   border-radius: var(--radius-pill);
-  color: var(--bg);
+  color: var(--on-dark-surface);
   background: color-mix(in srgb, var(--mint) 20%, transparent);
   font-size: var(--fs-xs);
   font-weight: 800;
