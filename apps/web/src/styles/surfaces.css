@@ -149,7 +149,7 @@
 }
 
 .trust-badge.on-dark {
-  color: var(--bg);
+  color: var(--on-dark-surface);
   background: var(--white-08);
   border-color: var(--white-16);
 }
@@ -279,7 +279,7 @@
 }
 
 .phone-dark .phone-screen {
-  color: var(--bg);
+  color: var(--on-dark-surface);
   background: var(--night);
 }
 
@@ -774,7 +774,7 @@
 }
 
 .hero-nextStop {
-  color: var(--bg);
+  color: var(--on-dark-surface);
   background: var(--coral);
 }
 
@@ -896,7 +896,7 @@
   flex-direction: column;
   align-items: center;
   padding-top: 4.6em;
-  color: var(--bg);
+  color: var(--on-dark-surface);
   text-align: center;
 }
 
@@ -925,7 +925,7 @@
   gap: 0.65em;
   padding: 1em;
   border-radius: 1.5em;
-  color: var(--bg);
+  color: var(--on-dark-surface);
   background: var(--basalt);
   transition: background-color var(--dur-emphasis) var(--ease-standard);
 }
@@ -935,7 +935,7 @@
 }
 
 .la-lock.surface-tangerine {
-  color: var(--ink);
+  color: var(--on-light-accent);
   background: var(--tangerine);
 }
 
@@ -991,19 +991,19 @@
 
 .surface-coral .count,
 .surface-coral .count-symbol {
-  color: var(--bg);
+  color: var(--on-dark-surface);
 }
 
 .surface-tangerine .count,
 .surface-tangerine .count-symbol {
-  color: var(--ink);
+  color: var(--on-light-accent);
 }
 
 /* Dynamic Island ---------------------------------------------------------- */
 
 .island {
   display: flex;
-  color: var(--bg);
+  color: var(--on-dark-surface);
   background: var(--island-black);
   font-size: 1em;
   line-height: 1.2;
