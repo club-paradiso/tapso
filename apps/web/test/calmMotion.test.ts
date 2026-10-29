@@ -50,10 +50,23 @@ test("story phone changes without scroll-induced entrance animation", () => {
   assert.doesNotMatch(journeyCss, /@keyframes stage-in|@keyframes stage-screen-in/);
 });
 
-test("site motion setting persists and disables CSS motion independently of OS", () => {
-  assert.match(motionHook, /localStorage\.setItem/);
+test("native OS reduced motion is honored without an on-page motion button", () => {
   assert.match(motionHook, /matchMedia\("\(prefers-reduced-motion: reduce\)"\)/);
-  assert.match(motionHook, /document\.documentElement\.dataset\.motion/);
-  assert.match(baseCss, /html\[data-motion="reduce"\]/);
-  assert.match(hero, /움직임 줄이기/);
+  assert.match(motionHook, /query\.addEventListener\("change", sync\)/);
+  assert.doesNotMatch(motionHook, /localStorage[.](getItem|setItem)|getSiteReducedMotion|setSiteReducedMotion/);
+  assert.doesNotMatch(hero, /움직임 줄이기|움직임 기본값|toggleReducedMotion|coast-control-button/);
+  assert.doesNotMatch(baseCss, /html\[data-motion="reduce"\]/);
+});
+
+test("page anchors jump instantly without a long animated fly-through", () => {
+  const htmlStyles = baseCss.match(/html\s*\{[^}]*\}/)?.[0];
+  assert.ok(htmlStyles, "Expected global html styles");
+  assert.match(htmlStyles, /scroll-behavior:\s*auto/);
+  assert.match(htmlStyles, /scroll-padding-top:\s*80px/);
+  assert.doesNotMatch(htmlStyles, /scroll-behavior:\s*smooth/);
+  const header = fromRoot("../src/sections/Header.tsx");
+  const nav = fromRoot("../src/content/site.ts");
+  assert.match(header, /href=\{item\.href\}/);
+  assert.match(nav, /href:\s*"#status"/);
+  assert.match(nav, /href:\s*"#support"/);
 });

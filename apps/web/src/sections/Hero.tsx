@@ -3,7 +3,7 @@ import { ArrowIcon } from "../components/Icons";
 import { EXTRA_FILMS, FILM_SCENES, filmAssetsExist, type FilmSceneId, type HeroFilmSource } from "../content/media.ts";
 import config from "../design/marketing.json";
 import { useHeroFilm, type FilmState } from "../lib/useHeroFilm";
-import { getSiteReducedMotion, setSiteReducedMotion, useReducedMotion } from "../lib/useReducedMotion";
+import { useReducedMotion } from "../lib/useReducedMotion";
 import { useHeroTracking } from "../story/storyStore.ts";
 
 function FilmMedia({
@@ -55,11 +55,6 @@ export function Hero() {
   const reduceMotion = useReducedMotion();
   const [filmIndex, setFilmIndex] = useState(0);
   const [additionalFilms, setAdditionalFilms] = useState<FilmSceneId[]>([]);
-  const [userReducedMotion, setUserReducedMotion] = useState(false);
-
-  // Match SSR markup before reading persisted client-side preferences.
-  useEffect(() => setUserReducedMotion(getSiteReducedMotion()), []);
-
   // Verify video and poster files before adding them to automatic playback.
   // A Vercel SPA 200/HTML fallback must never be treated as a valid MP4.
   useEffect(() => {
@@ -81,13 +76,6 @@ export function Hero() {
     if (!reduceMotion && playlist.length > 1) {
       setFilmIndex((index) => (index + 1) % playlist.length);
     }
-  };
-
-  const toggleReducedMotion = () => {
-    const next = !userReducedMotion;
-    setUserReducedMotion(next);
-    setSiteReducedMotion(next);
-    if (next) video.current?.pause();
   };
 
   return (
@@ -121,15 +109,6 @@ export function Hero() {
         </div>
         <div className="coast-bottom">
           <div className="coast-bottom-actions">
-            <button
-              type="button"
-              className="coast-control-button"
-              onClick={toggleReducedMotion}
-              aria-pressed={userReducedMotion}
-              title={reduceMotion && !userReducedMotion ? "기기 설정에서 움직임을 줄이고 있어요" : undefined}
-            >
-              {userReducedMotion ? "움직임 기본값" : "움직임 줄이기"}
-            </button>
             <p className="coast-credit">{current.film.credit}</p>
           </div>
         </div>
