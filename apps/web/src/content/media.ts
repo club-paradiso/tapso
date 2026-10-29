@@ -1,97 +1,86 @@
 /**
- * Every moving picture on the page, with where it came from. The page prints
- * `credit` next to the film, and `docs/product/WEB_MEDIA_SOURCES.md` keeps the
- * licence record; `test/media.test.ts` checks the two agree and that the files
- * exist.
- *
- * The hero film is real footage of a real Jeju coastal road, but it is an
- * aerial shot of a car, not a TAPSO ride and not the view from a bus seat.
- * Nothing on the page may present it as either.
+ * Four user-provided, AI-generated scenes of young people riding Jeju buses.
+ * They are visual illustrations, not recordings of actual passengers or
+ * evidence of real routes, locations, schedules, or working TAPSO screens.
+ * Credits stay visible and provenance lives in WEB_MEDIA_SOURCES.md.
  */
-export const HERO_FILM = {
-  files: {
-    wide: "/media/hero/joham-coast-1080.mp4",
-    medium: "/media/hero/joham-coast-720.mp4",
-    portrait: "/media/hero/joham-coast-portrait.mp4",
-  },
-  stills: {
-    wide: "/media/hero/joham-coast-poster.webp",
-    portrait: "/media/hero/joham-coast-poster-portrait.webp",
-  },
-  place: "제주 조함해안도로(조천–함덕)",
-  kind: "실제 촬영 · 드론",
-  author: "YounStudios",
-  source: "https://pixabay.com/videos/jeju-island-south-korea-339975/",
-  licence: "Pixabay Content License",
-  licenceUrl: "https://pixabay.com/service/license-summary/",
-  /** What the page says under the film. */
-  credit: "영상: 제주 조함해안도로 실제 드론 촬영(YounStudios, Pixabay). 탑서 승차 장면이 아니에요.",
-} as const;
+function generatedFilm(
+  slug: string,
+  source: string,
+  place: string,
+  durationSeconds: number,
+) {
+  return {
+    files: {
+      wide: `/media/hero/${slug}.mp4`,
+      medium: `/media/hero/${slug}.mp4`,
+      portrait: `/media/hero/${slug}-portrait.mp4`,
+    },
+    stills: {
+      wide: `/media/hero/${slug}-poster.webp`,
+      portrait: `/media/hero/${slug}-poster-portrait.webp`,
+    },
+    durationSeconds,
+    place,
+    kind: "AI 생성 연출",
+    author: "사용자 제공 Gemini 영상",
+    source,
+    licence: "사용자가 제공한 AI 생성 영상",
+    credit: "AI 제작 연출 영상 · 실제 버스 촬영물이 아닙니다.",
+  } as const;
+}
 
+export const HERO_FILM = generatedFilm(
+  "ai-rural-city",
+  "gemini_generated_video_AB86876C.MP4",
+  "제주 외곽과 시가지의 버스 이용 장면을 연출",
+  10,
+);
 
-/** Uploaded source clip IDs: Pixabay 262066 (Udo) and 289799 (Jungmun). */
+/** All four new video assets are committed locally; legacy Pixabay films
+ * remain archived on disk but are not in the live hero playlist. */
 export const EXTRA_FILMS = [
   {
-    id: "udo",
-    label: "우도 해변",
-    film: {
-      files: {
-        wide: "/media/hero/udo-720.mp4",
-        medium: "/media/hero/udo-720.mp4",
-        portrait: "/media/hero/udo-portrait.mp4",
-      },
-      stills: {
-        wide: "/media/hero/udo-poster.webp",
-        portrait: "/media/hero/udo-poster-portrait.webp",
-      },
-      place: "제주 우도 해변",
-      kind: "실제 촬영 · 해변",
-      author: "somedaywish",
-      source: "https://pixabay.com/videos/korea-jeju-beach-sea-island-262066/",
-      licence: "Pixabay Content License",
-      licenceUrl: "https://pixabay.com/service/license-summary/",
-      credit: "영상: 제주 우도 해변 실제 촬영(somedaywish, Pixabay). 탑서 승차 장면이 아니에요.",
-    },
+    id: "coastal-rider",
+    label: "제주 해안도로 버스",
+    film: generatedFilm(
+      "ai-coast-man",
+      "gemini_generated_video_A3BF8643.MP4",
+      "제주 해안도로 버스 승객 연출",
+      10,
+    ),
   },
   {
-    id: "jungmun",
-    label: "중문 파도",
-    film: {
-      files: {
-        wide: "/media/hero/jungmun-720.mp4",
-        medium: "/media/hero/jungmun-720.mp4",
-        portrait: "/media/hero/jungmun-portrait.mp4",
-      },
-      stills: {
-        wide: "/media/hero/jungmun-poster.webp",
-        portrait: "/media/hero/jungmun-poster-portrait.webp",
-      },
-      place: "제주 중문 해안",
-      kind: "실제 촬영 · 파도",
-      author: "Life_Vitamin",
-      source: "https://pixabay.com/videos/wave-sea-ocean-jeju-289799/",
-      licence: "Pixabay Content License",
-      licenceUrl: "https://pixabay.com/service/license-summary/",
-      credit: "영상: 제주 중문 해안 파도 실제 촬영(Life_Vitamin, Pixabay). 탑서 승차 장면이 아니에요.",
-    },
+    id: "city-woman",
+    label: "제주 시내 버스",
+    film: generatedFilm(
+      "ai-city-woman",
+      "gemini_generated_video_93419BE5.MP4",
+      "제주 시내 버스 승객 연출",
+      10,
+    ),
+  },
+  {
+    id: "city-man",
+    label: "제주 도심 이동",
+    film: generatedFilm(
+      "ai-city-man",
+      "gemini_generated_video_B2799913.mov",
+      "제주 도심 버스 승객 연출",
+      5,
+    ),
   },
 ] as const;
 
 export const FILM_SCENES = [
-  { id: "coast", label: "조함해안도로", film: HERO_FILM },
+  { id: "rural-city", label: "제주 외곽과 시가지", film: HERO_FILM },
   ...EXTRA_FILMS,
 ] as const;
 
 export type HeroFilmSource = (typeof FILM_SCENES)[number]["film"];
 export type FilmSceneId = (typeof FILM_SCENES)[number]["id"];
 
-/**
- * The new MP4 binaries are intentionally NOT assumed present on a PR branch.
- * Detect all actual assets first, with a matching MIME type to guard against
- * SPA catch-all HTML responses which can return 200 for missing files.
- * When the committed files land in public/, the choices become available
- * without another deployment flag or hardcoded switch.
- */
+/** Check actual published media, not an SPA HTML fallback with status 200. */
 export async function filmAssetsExist(
   film: HeroFilmSource,
   head: (input: string, init: RequestInit) => Promise<Response> = fetch,

@@ -2,6 +2,46 @@
 
 Every moving picture on the marketing site, with its licence. `apps/web/src/content/media.ts` is what the page uses; `apps/web/test/media.test.ts` fails if this record and that file disagree.
 
+## Active hero as of 2026-10-29: four user-provided Gemini rider films
+
+Four user-supplied AI-generated scenes replace the earlier Pixabay aerial and surf
+clips on the **public-facing TAPSO hero**. The videos are illustrative, **not real
+Jeju bus footage or proof of TAPSO operating on a real bus**. The website prints
+the credit `AI 제작 연출 영상 · 실제 버스 촬영물이 아닙니다.` under
+the current clip. No generated app interface, bus schedule, or real passenger
+identity is presented as authentic.
+
+| Active scene | Original user-uploaded file | Actual duration | Local files |
+|---|---|---:|---|
+| 제주시 외곽 청년 → 시가지 여성 | `gemini_generated_video_AB86876C.MP4` | 10.005s | `/media/hero/ai-rural-city.mp4`, `/media/hero/ai-rural-city-portrait.mp4`, `/media/hero/ai-rural-city-poster.webp`, `/media/hero/ai-rural-city-poster-portrait.webp` |
+| 해안도로 청년 승객 | `gemini_generated_video_A3BF8643.MP4` | 10.005s | `/media/hero/ai-coast-man.mp4`, `/media/hero/ai-coast-man-portrait.mp4`, `/media/hero/ai-coast-man-poster.webp`, `/media/hero/ai-coast-man-poster-portrait.webp` |
+| 제주시 시가지 여성 승객 | `gemini_generated_video_93419BE5.MP4` | 10.005s | `/media/hero/ai-city-woman.mp4`, `/media/hero/ai-city-woman-portrait.mp4`, `/media/hero/ai-city-woman-poster.webp`, `/media/hero/ai-city-woman-poster-portrait.webp` |
+| 제주시 시가지 남성 승객 | `gemini_generated_video_B2799913.mov` | 5.045s | `/media/hero/ai-city-man.mp4`, `/media/hero/ai-city-man-portrait.mp4`, `/media/hero/ai-city-man-poster.webp`, `/media/hero/ai-city-man-poster-portrait.webp` |
+
+**Provenance and edit.** Original files supplied directly by the user on
+2026-10-29. SHA-256 original files in table order:
+
+- `AB86876C.MP4`: `6ca4a75541a73543872cefceb70f2db42c58fd211ebd612e8d971a6226cda922`
+- `A3BF8643.MP4`: `48a6aa52b50c2473fbd2363f4e72670fc6b5f62c16e02feb4cf0b9f3d33ddf5c`
+- `93419BE5.MP4`: `dd1ad53dc23307a54bd8657150be2ef3a44d2bd5d39882ef6e3612d4c4faf4a5`
+- `B2799913.mov`: `938105bb87971c7e47da344b58b10ad5ff8c77cea53b0d35d91cd8143698df52`
+
+The one-shot import used SHA-256 verification before processing. H.264 was
+remuxed losslessly into MP4 with audio removed. For mobile screens, vertical
+720×1280 H.264 renditions were cropped toward the rider; the mixed rural/city
+clip switches crop alongside the intended five-second interior cut. Separate
+landscape and portrait WebP frames at approximately 1s are used as honest
+low-motion/data-saver fallbacks.
+
+The crossfade is one second, timed near the **actual end** of the current source
+rather than cutting every clip at the old 5-second timer. All four play in
+sequence; reduced-motion, save-data and background-pausing behavior is retained.
+The videos are not linked to a specific authenticated TAPSO route.
+
+---
+
+## Archived sources (no longer shown in the hero)
+
 ## Hero film: Joham Coastal Road, Jeju
 
 | | |
@@ -77,9 +117,9 @@ Background playback pauses offscreen / in background tabs to conserve power,
 and reduced-data connections stay on a still poster. No manual scene-selection
 or film pause/play buttons are shown.
 
-The Udo and Jungmun clips are included **only when the optimized files exist**
+Previously, the Udo and Jungmun clips were included **only when the optimized files existed**
 in the deployed public folder and report the expected MP4/WebP MIME types.
-When the extra assets are missing, the original Joham video loops on its own.
+For the new user-supplied AI playlist, missing optional media falls back to the first AI scene.
 Source manifest: `apps/web/src/content/media.ts`. Tests: `apps/web/test/media.test.ts`.
 
 ## The Lock Screen (separate manual preview)
@@ -92,7 +132,7 @@ The earlier hero clip (`jeju-journey.mp4`) was an AI-generated still with moveme
 
 ## Still missing: footage of an actual ride
 
-No usable footage exists of riding a Jeju bus along the coast. Searched on 2026-10-28: the repository, the owner's local video files, Pexels ("jeju bus", "jeju road", "jeju drive", "bus window ocean" and others) and Pixabay ("jeju", "jeju bus", "jeju road", "korea bus window"). Pexels and Pixabay have real Jeju coast footage and real car-window coast footage from other countries, but no view from a Jeju bus. Figma Weave (generation) is not linked to the Figma account, and no other generation tool is connected; generated footage would in any case have to be labelled as such.
+No usable footage exists of riding a Jeju bus along the coast. Searched on 2026-10-28: the repository, the owner's local video files, Pexels ("jeju bus", "jeju road", "jeju drive", "bus window ocean" and others) and Pixabay ("jeju", "jeju bus", "jeju road", "korea bus window"). Pexels and Pixabay have real Jeju coast footage and real car-window coast footage from other countries, but no view from a Jeju bus. The user has now supplied Gemini-generated illustrative scenes, clearly labelled as AI footage; real on-bus shots are still not available.
 
 To replace the hero film with the intended scene, shoot (or license) these, and drop them into `HERO_FILM` in `apps/web/src/content/media.ts` with a new entry in this file:
 

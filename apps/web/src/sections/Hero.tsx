@@ -60,8 +60,8 @@ function FilmMedia({
 }
 
 /**
- * The three licensed Jeju films overlap: the next clip is already decoded
- * before an uninterrupted crossfade. No scene controls or long scroll effects.
+ * Four user-supplied AI rider scenes, full duration, preloaded and crossfaded.
+ * No scene controls, scroll pinning, or artificial playing-state overlays.
  */
 export function Hero() {
   const section = useRef<HTMLElement>(null);
@@ -85,7 +85,7 @@ export function Hero() {
   }, []);
 
   const playlist = useMemo(
-    () => FILM_SCENES.filter(({ id }) => id === "coast" || additionalFilms.includes(id)),
+    () => FILM_SCENES.filter(({ id }) => id === "rural-city" || additionalFilms.includes(id)),
     [additionalFilms],
   );
   const player = useHeroCrossfade(videoA, videoB, section, playlist, reduceMotion);

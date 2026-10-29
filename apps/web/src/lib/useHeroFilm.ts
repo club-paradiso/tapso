@@ -3,10 +3,9 @@ import { type HeroFilmSource } from "../content/media.ts";
 
 type NetworkInformation = { saveData?: boolean; effectiveType?: string };
 
-// About five seconds per scene: four seconds at full strength, then a
-// one-second overlap with the preloaded next clip.
+// New Gemini rider clips run for their own durations (10s / 5s), with
+// a one-second overlap; the final second is not cut off mid-shot.
 const CROSSFADE_MS = 1000;
-const SCENE_DWELL_SECONDS = 4;
 
 /** Honor operating-system motion and network data-saving preferences. */
 function prefersStill(reduceMotion: boolean): boolean {
@@ -118,13 +117,18 @@ export function useHeroCrossfade(
 
       const outgoing = videos[currentSlot];
       const duration = outgoing.duration;
-      // Count *displayed* media time, not clip duration: the longer source
-      // files can remain intact, and a clip may loop while its successor loads.
-      if (!Number.isFinite(duration) || duration <= SCENE_DWELL_SECONDS + CROSSFADE_MS / 1000) return;
+      // A new scene is already ~1s into playback when its incoming fade ends.
+      // Start its outgoing fade one second before the source reaches the end:
+      // each 10s/5s clip gets one uninterrupted full playback cycle.
+      const expected = playlist[currentIndex]?.film.durationSeconds ?? duration;
+      const endAt = Math.min(duration, expected);
+      const fadeSeconds = CROSSFADE_MS / 1000;
+      if (!Number.isFinite(endAt) || endAt <= fadeSeconds + 1) return;
       const elapsed = outgoing.currentTime >= activeAt
         ? outgoing.currentTime - activeAt
-        : duration - activeAt + outgoing.currentTime;
-      if (elapsed < SCENE_DWELL_SECONDS) return;
+        : endAt - activeAt + outgoing.currentTime;
+      const dwellSeconds = endAt - activeAt - fadeSeconds;
+      if (dwellSeconds <= 0 || elapsed < dwellSeconds) return;
 
       const nextSlot = (currentSlot === 0 ? 1 : 0) as Slot;
       const incoming = videos[nextSlot];
