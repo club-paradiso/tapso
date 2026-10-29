@@ -362,6 +362,8 @@ private enum DolFace {
     static let markerEyes = [Dot(x: 27, y: 38, r: 7), Dot(x: 46, y: 38, r: 7)]
     static let markerSquint = [Box(x: 19, y: 35, width: 15, height: 6), Box(x: 39, y: 35, width: 15, height: 6)]
     static let markerPin = Dot(x: 56, y: 15, r: 8.5)
+    /// A simple smile survives the small rail size; unavailable data stays neutral.
+    static let markerSmile = [Arc(x0: 30, x1: 43, y: 48, cx: 36.5, cy: 55)]
 
     /// Whites, pupils and glints for a gaze (artboard units from a pupil that
     /// sits slightly down and in, looking at the rider).
@@ -549,7 +551,8 @@ struct JourneyRail: View {
 /// 돌이 reduced to a rail marker (16–18 pt): the basalt pebble, a rim in the
 /// moment's colour, two bold eyes and the tangerine pin. The sheen, pores and
 /// cheeks of `DolBuddy` are under a point at this size and are left out rather
-/// than shrunk into noise. Squinting when the data is degraded, like `DolBuddy`.
+/// than shrunk into noise. A small smile appears for reliable states; uncertain
+/// data stays neutral, with squinting for degraded data.
 struct DolRailMarker: View {
     let size: CGFloat
     let role: RideColorRole
@@ -568,6 +571,10 @@ struct DolRailMarker: View {
                 DolShape(kind: .bars(DolFace.markerSquint)).fill(.white)
             } else {
                 DolShape(kind: .circles(DolFace.markerEyes)).fill(.white)
+            }
+            if role != .journeyDegraded && role != .journeyChecking {
+                DolShape(kind: .arcs(DolFace.markerSmile))
+                    .stroke(.white, style: StrokeStyle(lineWidth: 3.8 * unit, lineCap: .round))
             }
             DolShape(kind: .circles([DolFace.markerPin])).fill(TapsoColor.tangerine)
         }
