@@ -183,18 +183,18 @@ export default function SupportDialog({ onClose }: { onClose: () => void }) {
                   앱이 열리지 않으면 아래 QR이나 계좌번호 복사를 이용해주세요.
                 </p>
                 <div className="support-transfer-qr">
-                <img
-                  src="/media/jeju-bank-toss-support-qr.svg"
-                  alt="제주은행 계좌로 연결되는 토스 앱 송금 QR코드"
-                  width="184"
-                  height="184"
-                  loading="lazy"
-                />
-                <div className="support-transfer-qr-copy">
-                  <strong>QR로 송금하기</strong>
-                  <p>PC에서는 휴대폰으로 QR을 스캔하세요.</p>
-                  <p>토스 앱이 열리지 않을 경우에는 아래 계좌번호를 복사해 송금할 수 있어요.</p>
-                </div>
+                  <img
+                    src="/media/jeju-bank-toss-support-qr.svg"
+                    alt="제주은행 계좌로 연결되는 토스 앱 송금 QR코드"
+                    width="184"
+                    height="184"
+                    loading="lazy"
+                  />
+                  <div className="support-transfer-qr-copy">
+                    <strong>QR로 송금하기</strong>
+                    <p>PC에서는 휴대폰으로 QR을 스캔하세요.</p>
+                    <p>토스 앱이 열리지 않을 경우에는 아래 계좌번호를 복사해 송금할 수 있어요.</p>
+                  </div>
                 </div>
               </>
             ) : null}
@@ -226,7 +226,6 @@ export default function SupportDialog({ onClose }: { onClose: () => void }) {
                 자동 복사가 되지 않았어요. 계좌번호를 직접 선택해 복사해주세요.
               </p>
             ) : null}
-
           </section>
         ) : null}
 
