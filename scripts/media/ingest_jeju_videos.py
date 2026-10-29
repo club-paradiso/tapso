@@ -88,7 +88,7 @@ def get_public_video_url(media_id: int, page: str) -> str:
     # serialized in the HTML. It must still point to Pixabay's own video CDN.
     try:
         import yt_dlp
-        with yt_dlp.YoutubeDL({"quiet": True, "no_warnings": True, "skip_download": True}) as ydl:
+        with yt_dlp.YoutubeDL({"quiet": True, "no_warnings": True, "skip_download": True, "impersonate": "chrome", "extractor_args": {"generic": {"impersonate": ["chrome"]}}}) as ydl:
             info = ydl.extract_info(page, download=False)
         formats = [info, *(info.get("formats") or [])]
         urls = [x.get("url", "") for x in formats if isinstance(x, dict)]
