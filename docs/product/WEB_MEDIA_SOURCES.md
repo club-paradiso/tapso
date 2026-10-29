@@ -64,8 +64,12 @@ Optimized local files (output files live in `apps/web/public/media/hero/`):
 
 The original licensed clips are not committed. The three films now form an
 **automatic, endlessly repeating sequence**: Joham Coastal Road → Udo beach →
-Jungmun coast → Joham Coastal Road. Each clip changes on its actual media
-`ended` event rather than a hardcoded timer. The hero has no on-page motion button. The browser's OS reduced-motion
+Jungmun coast → Joham Coastal Road. Two permanent video elements are used:
+the next film is preloaded while the current one plays, and a 1.2-second
+crossfade starts roughly 1.65 seconds before the current clip ends. The old
+clip stays opaque beneath the incoming film until the incoming video is
+playing and the fade is finished. If loading is slow or autoplay is blocked,
+the current video loops rather than cutting to black or flashing its poster. The hero has no on-page motion button. The browser's OS reduced-motion
 preference remains supported without requiring users to find a setting.
 Background playback pauses offscreen / in background tabs to conserve power,
 and reduced-data connections stay on a still poster. No manual scene-selection
