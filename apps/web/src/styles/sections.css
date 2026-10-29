@@ -862,7 +862,6 @@
 }
 
 .waitlist-copy {
-  position: relative;
   display: flex;
   flex-direction: column;
   gap: var(--space-5);
@@ -912,13 +911,6 @@
 .waitlist-promises b {
   color: var(--ink);
   font-weight: 800;
-}
-
-.waitlist-dori {
-  width: clamp(120px, 14vw, 200px);
-  height: auto;
-  margin-top: var(--space-4);
-  filter: drop-shadow(0 20px 30px rgb(7 25 35 / 18%));
 }
 
 .waitlist-form-wrap {
@@ -980,18 +972,6 @@
 @media (max-width: 859px) {
   .waitlist-grid {
     grid-template-columns: 1fr;
-  }
-
-  .waitlist-dori {
-    position: absolute;
-    top: 0;
-    right: 0;
-    width: 88px;
-    margin: 0;
-  }
-
-  .waitlist-copy h2 {
-    padding-right: 72px;
   }
 }
 
