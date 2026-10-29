@@ -6,6 +6,7 @@ placeholder footage or copy unverified CDN URLs. Failure is deliberately fatal.
 """
 from __future__ import annotations
 
+import argparse
 import hashlib
 import html
 import json
@@ -142,6 +143,15 @@ def poster(src: Path, dst: Path, width: int, height: int) -> None:
         raise ValueError(f"WebP poster exceeds 500 KB: {dst.name}")
 
 def main():
+    parser = argparse.ArgumentParser(description="Optimize 2 verified Jeju source clips")
+    parser.add_argument("--udo-source", type=Path,
+                        help="Pixabay Udo original MP4 downloaded by the rights holder")
+    parser.add_argument("--jungmun-source", type=Path,
+                        help="Pixabay Jungmun original MP4 downloaded by the rights holder")
+    args = parser.parse_args()
+    if bool(args.udo_source) != bool(args.jungmun_source):
+        parser.error("Provide both --udo-source and --jungmun-source together")
+    local = {"udo": args.udo_source, "jungmun": args.jungmun_source}
     if shutil.which("ffmpeg") is None or shutil.which("ffprobe") is None:
         raise RuntimeError("ffmpeg and ffprobe are required")
     DEST.mkdir(parents=True, exist_ok=True)
@@ -149,13 +159,20 @@ def main():
     with tempfile.TemporaryDirectory() as temp:
         tmp = Path(temp)
         for name, media_id, page in SOURCES:
-            url = get_public_video_url(media_id, page)
-            if not re.fullmatch(
-                rf"https://cdn\.pixabay\.com/video/\d{{4}}/\d{{2}}/\d{{2}}/"
-                rf"{media_id}-\d+_(?:medium|small|large|tiny)\.mp4", url):
-                raise ValueError(f"Rejected non-Pixabay or mismatched media URL for {media_id}")
             original = tmp / f"{name}-original.mp4"
-            original.write_bytes(request_bytes(url))
+            provided = local[name]
+            if provided:
+                if not provided.is_file() or provided.suffix.lower() != ".mp4":
+                    raise FileNotFoundError(f"Expected original MP4: {provided}")
+                shutil.copyfile(provided, original)
+                print(f"Local source supplied for {name}: {provided.name}")
+            else:
+                url = get_public_video_url(media_id, page)
+                if not re.fullmatch(
+                    rf"https://cdn\.pixabay\.com/video/\d{{4}}/\d{{2}}/\d{{2}}/"
+                    rf"{media_id}-\d+_(?:medium|small|large|tiny)\.mp4", url):
+                    raise ValueError(f"Rejected non-Pixabay or mismatched media URL for {media_id}")
+                original.write_bytes(request_bytes(url))
             details = probe(original)
             stream = details["streams"][0]
             if not (stream["width"] >= 640 and stream["height"] >= 360):
