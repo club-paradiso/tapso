@@ -1,161 +1,204 @@
-import { useCallback, useEffect, useRef, useState, type RefObject } from "react";
-import { HERO_FILM, type HeroFilmSource } from "../content/media.ts";
-
-/**
- * - `waiting`: nothing decided yet (also the prerendered page): the still shows.
- * - `still`: the visitor asked for less motion or less data, or the network is
- *   2G; the still stays and the film loads only if they press play.
- * - `playing` / `paused`: the film is loaded.
- * - `failed`: the film could not load; the still stays for good.
- */
-export type FilmState = "waiting" | "still" | "playing" | "paused" | "failed";
+import { useEffect, useRef, useState, type RefObject } from "react";
+import { type HeroFilmSource } from "../content/media.ts";
 
 type NetworkInformation = { saveData?: boolean; effectiveType?: string };
 
-/** Whether to hold the film back before the visitor asks for it. */
+const CROSSFADE_MS = 1200;
+const PRE_ROLL_SECONDS = 1.65;
+
+/** Honor operating-system motion and network data-saving preferences. */
 function prefersStill(reduceMotion: boolean): boolean {
   if (reduceMotion) return true;
   const connection = (navigator as Navigator & { connection?: NetworkInformation }).connection;
-  if (connection?.saveData) return true;
-  return connection?.effectiveType === "slow-2g" || connection?.effectiveType === "2g";
+  return Boolean(connection?.saveData) ||
+    connection?.effectiveType === "slow-2g" ||
+    connection?.effectiveType === "2g";
 }
 
-function onSlowNetwork(): boolean {
-  const connection = (navigator as Navigator & { connection?: NetworkInformation }).connection;
-  return connection?.effectiveType === "3g";
-}
-
-/** The smallest file that fills this screen: the portrait cut on tall screens, 720p on a slow network. */
 function chooseSource(film: HeroFilmSource): string {
   const tall = window.matchMedia?.("(max-aspect-ratio: 4/5)")?.matches ?? false;
   if (tall) return film.files.portrait;
+  const connection = (navigator as Navigator & { connection?: NetworkInformation }).connection;
   const pixels = window.innerWidth * Math.min(window.devicePixelRatio || 1, 2);
-  return pixels > 1500 && !onSlowNetwork() ? film.files.wide : film.files.medium;
+  return pixels > 1500 && connection?.effectiveType !== "3g"
+    ? film.files.wide
+    : film.files.medium;
 }
 
+type Slot = 0 | 1;
+
 /**
- * The hero film: muted, looping, inline. It loads after hydration (never on a
- * reduced-motion, data-saver or 2G connection unless asked), plays only
- * while its section is on screen and the tab is visible, remembers a pause the
- * visitor chose, and falls back to the still on any error.
+ * Double-buffered hero video player.
+ *
+ * Both video elements stay mounted. The active clip remains fully visible
+ * while the next clip loads invisibly. A transition starts only once the next
+ * video can decode and play, *before* the outgoing video ends. With slow
+ * networks the current video loops until the incoming buffer is ready,
+ * instead of exposing a black frame or a still poster between scenes.
  */
-export function useHeroFilm(
-  video: RefObject<HTMLVideoElement | null>,
+export function useHeroCrossfade(
+  first: RefObject<HTMLVideoElement | null>,
+  second: RefObject<HTMLVideoElement | null>,
   section: RefObject<HTMLElement | null>,
+  playlist: readonly { film: HeroFilmSource }[],
   reduceMotion: boolean,
-  enabled = true,
-  film: HeroFilmSource = HERO_FILM,
-): { state: FilmState; hasFrame: boolean; toggle: () => void } {
-  const [state, setState] = useState<FilmState>("waiting");
-  // Until a frame is decoded the <video> would paint black over the still.
+): {
+  activeSlot: Slot;
+  incomingSlot: Slot | null;
+  activeIndex: number;
+  hasFrame: boolean;
+} {
+  const [activeSlot, setActiveSlot] = useState<Slot>(0);
+  const [incomingSlot, setIncomingSlot] = useState<Slot | null>(null);
+  const [activeIndex, setActiveIndex] = useState(0);
   const [hasFrame, setHasFrame] = useState(false);
-  const userPaused = useRef(false);
-  const onScreen = useRef(true);
-
-  const load = useCallback(() => {
-    const element = video.current;
-    if (!element || element.getAttribute("src")) return element;
-    element.src = chooseSource(film);
-    element.load();
-    return element;
-  }, [video, film]);
-
-  const play = useCallback(() => {
-    const element = load();
-    if (!element) return;
-    void element.play().catch(() => {
-      // Autoplay refused (Low Power Mode, a policy): keep the still, offer the button.
-      if (element.error) setState("failed");
-      else setState("paused");
-    });
-  }, [load]);
 
   useEffect(() => {
-    const element = video.current;
-    if (!element) return;
-    const onPlay = () => setState("playing");
-    const onPause = () => setState((s) => (s === "failed" ? s : "paused"));
-    const onError = () => setState("failed");
-    const onFrame = () => setHasFrame(true);
-    element.addEventListener("loadeddata", onFrame);
-    element.addEventListener("playing", onPlay);
-    element.addEventListener("pause", onPause);
-    element.addEventListener("error", onError);
-    return () => {
-      element.removeEventListener("loadeddata", onFrame);
-      element.removeEventListener("playing", onPlay);
-      element.removeEventListener("pause", onPause);
-      element.removeEventListener("error", onError);
-    };
-  }, [video, film]);
+    const a = first.current;
+    const b = second.current;
+    if (!a || !b || playlist.length === 0) return;
 
-  // A newly chosen film always starts with a clean still/frame and URL.
-  // The play effect below then follows the existing motion/data preferences.
-  useEffect(() => {
-    const element = video.current;
-    if (!element) return;
-    element.pause();
-    element.removeAttribute("src");
-    element.load();
-    userPaused.current = false;
-    setHasFrame(false);
-    setState("waiting");
-  }, [film, video]);
+    const videos = [a, b] as const;
+    let destroyed = false;
+    let onScreen = true;
+    let currentSlot: Slot = 0;
+    let currentIndex = 0;
+    let transitioning = false;
+    let fadeTimer: number | undefined;
 
-  // Decide once the reduced-motion preference is known (it starts `false`).
-  useEffect(() => {
-    const timer = window.setTimeout(() => {
-      if (!enabled) {
-        video.current?.pause();
-        return;
-      }
-      if (prefersStill(reduceMotion)) {
-        video.current?.pause();
-        setState((s) => (s === "failed" ? s : s === "waiting" ? "still" : s === "playing" ? "paused" : s));
-        return;
-      }
-      if (!userPaused.current && onScreen.current) play();
-    }, 400);
-    return () => window.clearTimeout(timer);
-  }, [reduceMotion, play, video, enabled]);
-
-  useEffect(() => {
-    const element = section.current;
-    if (!element) return;
-    const resumeIfAllowed = () => {
-      const film = video.current;
-      if (!film) return;
-      if (!enabled) { film.pause(); return; }
-      if (!film.getAttribute("src") || userPaused.current || film.error) return;
-      if (onScreen.current && !document.hidden) void film.play().catch(() => undefined);
-      else film.pause();
-    };
-    const observer =
-      typeof IntersectionObserver === "undefined"
-        ? undefined
-        : new IntersectionObserver(([entry]) => {
-            onScreen.current = entry?.isIntersecting ?? true;
-            resumeIfAllowed();
-          });
-    observer?.observe(element);
-    document.addEventListener("visibilitychange", resumeIfAllowed);
-    return () => {
-      observer?.disconnect();
-      document.removeEventListener("visibilitychange", resumeIfAllowed);
-    };
-  }, [section, video, enabled]);
-
-  const toggle = useCallback(() => {
-    const element = video.current;
-    if (!element || !enabled) return;
-    if (state === "playing") {
-      userPaused.current = true;
-      element.pause();
-    } else {
-      userPaused.current = false;
-      play();
+    // Reset both slots before applying the visitor's motion/data preference.
+    for (const video of videos) {
+      video.pause();
+      video.removeAttribute("src");
+      video.load();
     }
-  }, [state, play, video, enabled]);
+    setActiveSlot(0);
+    setIncomingSlot(null);
+    setActiveIndex(0);
+    setHasFrame(false);
 
-  return { state, hasFrame, toggle };
+    if (prefersStill(reduceMotion)) return;
+
+    function prepare(slot: Slot, index: number) {
+      const video = videos[slot];
+      const film = playlist[index]?.film;
+      if (!film) return;
+      video.pause();
+      video.src = chooseSource(film);
+      video.load();
+    }
+
+    prepare(0, 0);
+    if (playlist.length > 1) prepare(1, 1);
+
+    function resumeIfVisible() {
+      if (destroyed) return;
+      if (!onScreen || document.hidden) {
+        for (const video of videos) video.pause();
+        return;
+      }
+      const video = videos[currentSlot];
+      void video.play().then(() => {
+        if (!destroyed && video === videos[currentSlot]) setHasFrame(true);
+      }).catch(() => {
+        // Browser autoplay restrictions / Low Power Mode: keep the still.
+      });
+    }
+
+    function tryCrossfade(slot: Slot) {
+      if (
+        destroyed || transitioning || slot !== currentSlot ||
+        playlist.length <= 1 || !onScreen || document.hidden
+      ) return;
+
+      const outgoing = videos[currentSlot];
+      const duration = outgoing.duration;
+      if (
+        !Number.isFinite(duration) || duration < PRE_ROLL_SECONDS + 2 ||
+        outgoing.currentTime < 1 ||
+        duration - outgoing.currentTime > PRE_ROLL_SECONDS
+      ) return;
+
+      const nextSlot = (currentSlot === 0 ? 1 : 0) as Slot;
+      const incoming = videos[nextSlot];
+      // A video element may report a URL but have no usable decoded frame.
+      if (incoming.readyState < HTMLMediaElement.HAVE_CURRENT_DATA || incoming.error) return;
+
+      transitioning = true;
+      const nextIndex = (currentIndex + 1) % playlist.length;
+      void incoming.play().then(() => {
+        if (destroyed) return;
+        // Opacity transition affects the incoming layer only; the outgoing
+        // layer stays opaque underneath throughout the full crossfade.
+        setIncomingSlot(nextSlot);
+
+        fadeTimer = window.setTimeout(() => {
+          if (destroyed) return;
+          outgoing.pause();
+          currentSlot = nextSlot;
+          currentIndex = nextIndex;
+          setActiveSlot(nextSlot);
+          setIncomingSlot(null);
+          setActiveIndex(nextIndex);
+          setHasFrame(true);
+          transitioning = false;
+
+          // Reuse the old player to preload the following film.
+          prepare((nextSlot === 0 ? 1 : 0) as Slot, (nextIndex + 1) % playlist.length);
+          if (!onScreen || document.hidden) videos[nextSlot].pause();
+        }, CROSSFADE_MS);
+      }).catch(() => {
+        // If the next video cannot autoplay, keep looping the outgoing film.
+        transitioning = false;
+      });
+    }
+
+    const onFirstTime = () => tryCrossfade(0);
+    const onSecondTime = () => tryCrossfade(1);
+    const onFirstPlaying = () => {
+      if (!destroyed && currentSlot === 0) setHasFrame(true);
+    };
+    const onSecondPlaying = () => {
+      if (!destroyed && currentSlot === 1) setHasFrame(true);
+    };
+    const onFirstError = () => {
+      if (!destroyed && currentSlot === 0 && !transitioning) setHasFrame(false);
+    };
+    const onSecondError = () => {
+      if (!destroyed && currentSlot === 1 && !transitioning) setHasFrame(false);
+    };
+
+    a.addEventListener("timeupdate", onFirstTime);
+    b.addEventListener("timeupdate", onSecondTime);
+    a.addEventListener("playing", onFirstPlaying);
+    b.addEventListener("playing", onSecondPlaying);
+    a.addEventListener("error", onFirstError);
+    b.addEventListener("error", onSecondError);
+
+    const observer = typeof IntersectionObserver === "undefined"
+      ? undefined
+      : new IntersectionObserver(([entry]) => {
+        onScreen = entry?.isIntersecting ?? true;
+        resumeIfVisible();
+      });
+    if (section.current) observer?.observe(section.current);
+    document.addEventListener("visibilitychange", resumeIfVisible);
+    resumeIfVisible();
+
+    return () => {
+      destroyed = true;
+      if (fadeTimer !== undefined) window.clearTimeout(fadeTimer);
+      observer?.disconnect();
+      document.removeEventListener("visibilitychange", resumeIfVisible);
+      a.removeEventListener("timeupdate", onFirstTime);
+      b.removeEventListener("timeupdate", onSecondTime);
+      a.removeEventListener("playing", onFirstPlaying);
+      b.removeEventListener("playing", onSecondPlaying);
+      a.removeEventListener("error", onFirstError);
+      b.removeEventListener("error", onSecondError);
+      for (const video of videos) video.pause();
+    };
+  }, [first, second, section, playlist, reduceMotion]);
+
+  return { activeSlot, incomingSlot, activeIndex, hasFrame };
 }
