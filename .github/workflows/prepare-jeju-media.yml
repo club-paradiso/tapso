@@ -6,6 +6,7 @@ on:
       - design/v4-calm-motion-hero
     paths:
       - .github/workflows/prepare-jeju-media.yml
+      - scripts/media/ingest_jeju_videos.py
   workflow_dispatch:
 
 permissions:
