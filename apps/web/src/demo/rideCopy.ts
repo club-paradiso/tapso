@@ -40,7 +40,7 @@ export const IOS_COPY = {
   "check.position.atStop": "정류장에 도착",
   "check.position.away": "%ld정거장 전",
   "check.why":
-    "탑서는 확실하지 않으면 버스를 대신 고르지 않아요. 한 번만 확인해주시면 그다음은 탑서가 지켜볼게요.",
+    "TAPSO는 확실하지 않으면 버스를 대신 고르지 않아요. 한 번만 확인해주시면 그다음은 TAPSO가 지켜볼게요.",
   "ride.riding.eyebrow": "타고 가는 중",
   "ride.riding.headline": "내릴 때 알려드릴게요",
   "ride.riding.detail": "지금은 편하게 가셔도 돼요",
