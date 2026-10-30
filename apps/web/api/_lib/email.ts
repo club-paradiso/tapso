@@ -25,7 +25,7 @@ export type EmailTransport = {
 };
 
 const RIDER_LABELS: Record<RiderType, string> = {
-  resident: "제주 도민",
+  resident: "제주도민",
   visitor: "제주 여행객",
   enthusiast: "제주 버스 애호가",
   supporter: "그 외 지역에서 응원 중",
@@ -57,7 +57,7 @@ export function buildConfirmationEmail(to: string, riderType: RiderType): Outgoi
     "",
     "등록을 취소하거나 저장된 정보를 삭제하고 싶으면 이 메일에 그대로 답장해주세요.",
     "",
-    "— TAPSO 탑서",
+    "— TAPSO",
   ];
 
   const html = `<!doctype html>
