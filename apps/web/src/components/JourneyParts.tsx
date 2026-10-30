@@ -14,7 +14,7 @@ import { TrustBadge } from "./RideParts";
 
 /** Where the phone is, in the rider's words. */
 export function stageCaption(stage: Stage): string {
-  if (stage.kind === "app") return "탑서 앱";
+  if (stage.kind === "app") return "TAPSO 앱";
   if (stage.kind === "lock") return "잠금 화면";
   if (stage.form === "expanded") return "다른 앱을 쓰는 중 · 길게 눌렀을 때";
   if (stage.form === "minimal") return "다른 앱을 쓰는 중 · 실시간 현황이 둘일 때";
@@ -266,8 +266,8 @@ export function GlanceChart() {
       </div>
       <div className="glance-row glance-after">
         <p className="glance-row-label">
-          <b>탑서와 함께</b>
-          <span>탑서가 부를 때만</span>
+          <b>TAPSO와 함께</b>
+          <span>TAPSO가 부를 때만</span>
         </p>
         <div className="glance-track" aria-hidden="true">
           <span className="glance-pocket" style={{ left: pct(2), right: `calc(100% - ${pct(TRIP_TOTAL_STOPS - 2.6)})` }}>
@@ -282,7 +282,7 @@ export function GlanceChart() {
       </div>
       <figcaption>
         <span className="visually-hidden">
-          지도 앱만 볼 때는 {TRIP_TOTAL_STOPS}개 정류장마다 화면을 확인하지만, 탑서와 함께라면 탈 때 한 번, 2정거장 전, 다음 하차,
+          지도 앱만 볼 때는 {TRIP_TOTAL_STOPS}개 정류장마다 화면을 확인하지만, TAPSO와 함께라면 탈 때 한 번, 2정거장 전, 다음 하차,
           도착 때만 화면을 봐요.
         </span>
         그림으로 나타낸 예시예요. 측정한 수치가 아니에요.
