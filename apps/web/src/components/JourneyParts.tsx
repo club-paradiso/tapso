@@ -163,7 +163,7 @@ export function TrustTable({ beat }: { beat: Beat }) {
 const SLOTS = [3, 2, 1, 0, -1] as const;
 
 function slotLabel(stopsAway: number): string {
-  if (stopsAway === 0) return `타는 정류장 · ${BOARDING_STOP}`;
+  if (stopsAway === 0) return "타는 정류장";
   if (stopsAway < 0) return "지난 정류장";
   return `${stopsAway}정거장 전`;
 }
@@ -211,7 +211,14 @@ export function BusScene() {
               <li key={slot} className={`scene-slot${slot === 0 ? " is-boarding" : ""}${slot < 0 ? " is-past" : ""}`}>
                 <span className="scene-stop">
                   <span className="scene-stop-dot" aria-hidden="true" />
-                  {slotLabel(slot)}
+                  {slot === 0 ? (
+                    <span className="scene-boarding-label">
+                      <strong>타는 정류장</strong>
+                      <span>{BOARDING_STOP}</span>
+                    </span>
+                  ) : (
+                    <span className="scene-stop-label">{slotLabel(slot)}</span>
+                  )}
                 </span>
                 {bus ? <SceneBusView bus={bus} /> : <span className="scene-empty" aria-hidden="true" />}
               </li>

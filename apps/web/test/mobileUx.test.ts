@@ -140,3 +140,27 @@ test("browser chrome colour follows the OS colour scheme", () => {
   assert.match(indexHtml, /<meta name="theme-color" media="\(prefers-color-scheme: dark\)" content="#0f171a" \/>/);
   assert.doesNotMatch(indexHtml, /<meta name="theme-color" content=/);
 });
+
+
+test("long Jeju boarding stop takes the full mobile row instead of a 40% column", () => {
+  const scene = read("../src/components/JourneyParts.tsx");
+  assert.match(scene, /className="scene-boarding-label"/);
+  assert.match(scene, /<span>\{BOARDING_STOP\}<\/span>/);
+  assert.match(scene, /slot === 0 \?/);
+  // At ordinary phone widths, the boarding name and bus chip are stacked.
+  assert.match(sections, /@media \(max-width: 719px\)\s*\{[\s\S]*?\.scene-slot\.is-boarding\s*\{\s*grid-template-columns:\s*minmax\(0, 1fr\)/);
+  assert.match(sections, /\.scene-slot\.is-boarding \.scene-bus\s*\{[^}]*grid-column:\s*1/);
+  assert.match(sections, /\.scene-stop\s*\{[^}]*max-width:\s*none/);
+  assert.match(sections, /\.scene-boarding-label > span\s*\{[^}]*overflow-wrap:\s*anywhere/);
+  // Prevent bringing back the old narrow-left-column regression.
+  const mobileLayout = sections.slice(sections.lastIndexOf("@media (max-width: 719px)"));
+  assert.doesNotMatch(mobileLayout, /\.scene-stop\s*\{[^}]*max-width:\s*40%/);
+});
+
+test("other mobile bus chips stay compact and the nav remains comfortably reachable", () => {
+  assert.match(sections, /\.scene-bus\s*\{[^}]*max-width:\s*146px/);
+  assert.match(sections, /@media \(max-width: 359px\)\s*\{[\s\S]*?\.scene-slot:not\(\.is-boarding\)/);
+  assert.match(sections, /\.site-nav a\s*\{[^}]*font-size:\s*clamp\(0\.8125rem, 3\.5vw, 0\.9375rem\)/);
+  assert.match(sections, /\.site-nav ul\s*\{[^}]*scroll-snap-type:\s*x proximity/);
+  assert.match(rule(sections, ".site-nav a"), /min-height:\s*var\(--touch-min\)/);
+});
