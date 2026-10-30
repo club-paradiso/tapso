@@ -1040,26 +1040,57 @@
   background: var(--bg);
 }
 
-.state-done .timeline-node {
+.level-built .timeline-node {
+  border-color: var(--mint);
+  background: var(--bg);
+}
+
+.level-realdata .timeline-node {
   border-color: var(--mint);
   background: var(--mint);
 }
 
-.state-active .timeline-node {
+.level-device .timeline-node {
+  border-color: var(--mint);
+  background: var(--mint);
+  box-shadow: 0 0 0 5px var(--mint-14);
+}
+
+.level-verifying .timeline-node {
   border-color: var(--amber);
   background: var(--bg);
   box-shadow: 0 0 0 5px rgb(244 184 74 / 25%);
 }
 
-.state-next .timeline-node {
-  border-color: var(--ink);
-}
-
-.state-later .timeline-node {
+.level-blocked .timeline-node {
   border-style: dashed;
 }
 
+.status-groups {
+  display: flex;
+  flex-direction: column;
+  gap: var(--space-10);
+  min-width: 0;
+}
+
+.status-group h3 {
+  font-size: var(--fs-h3);
+  font-weight: 800;
+}
+
+.status-group-lede,
+.status-note {
+  color: var(--text-secondary);
+  font-size: var(--fs-small);
+}
+
+.status-group-lede {
+  margin: 4px 0 var(--space-5);
+}
+
 .timeline-body {
+  min-width: 0;
+  overflow-wrap: anywhere;
   display: flex;
   flex-direction: column;
   gap: 6px;

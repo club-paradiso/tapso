@@ -124,9 +124,9 @@ test("the claim guard itself catches what it is meant to catch", () => {
 
 test("status never claims TestFlight or the App Store is here", () => {
   for (const item of STATUS_ITEMS) {
-    if (/TestFlight|App Store/.test(item.title)) assert.equal(item.state, "later", item.title);
+    if (/TestFlight|App Store/.test(item.title)) assert.equal(item.level, "blocked", item.title);
   }
-  assert.ok(STATUS_ITEMS.some((i) => i.state === "done"));
+  assert.ok(STATUS_ITEMS.some((i) => i.level === "realdata" || i.level === "built"));
 });
 
 test("the landing page omits the map-app comparison section without leaving a blank block", () => {
@@ -181,10 +181,10 @@ test("unavailable preorder is not offered on the landing page", () => {
 });
 
 test("public status separates implementation, field validation and availability", () => {
-  assert.deepEqual(STATUS_ITEMS.map((item) => item.state), ["done", "active", "later"]);
-  assert.match(STATUS_ITEMS[1]!.body, /실제 iPhone/);
-  assert.match(STATUS_ITEMS[1]!.body, /자동 선택은 꺼져/);
-  assert.match(STATUS_ITEMS[2]!.body, /공개되지 않았어요/);
+  const level = (id: string) => STATUS_ITEMS.find((item) => item.id === id);
+  assert.equal(level("vehicle-progress")?.level, "verifying");
+  assert.match(level("vehicle-progress")?.body ?? "", /자동 선택은 꺼/);
+  assert.match(level("release")?.body ?? "", /공개되지 않았어요/);
   assert.match(FAQ_ITEMS.find((item) => item.q.includes("위치 권한"))!.a, /선택 기능/);
 });
 

@@ -1,31 +1,39 @@
 import { SectionHead } from "../components/SectionHead";
-import { STATUS_ITEMS, STATUS_STATE_LABELS } from "../content/site.ts";
+import { STATUS_GROUPS, STATUS_ITEMS, STATUS_LEVEL_LABELS } from "../content/site.ts";
 
 export function Status() {
   return (
     <section className="section status" id="status" aria-labelledby="status-title">
       <div className="container status-grid">
-        <SectionHead title="지금은 여기까지 만들었어요." titleId="status-title">
+        <SectionHead title="TAPSO는 지금 이렇게 만들어지고 있어요" titleId="status-title">
           <p>
-            제주 버스에서 내릴 때를 알려주는 iPhone 앱을 만들고 있어요. 실제 이용 전 검증이 필요하며 출시일은 아직 정하지 않았어요.
+            목적지 검색부터 하차 안내까지, TAPSO의 핵심 기능을 만들고 검증하고 있어요. 지금 구현된 기능과 출시 전까지 남은 과정을 확인해보세요.
           </p>
-
+          <p className="status-note">아직 출시 전이고 출시일은 정해지지 않았어요. ‘구현됨’은 실제 iPhone 확인 전이라는 뜻이에요.</p>
         </SectionHead>
 
-        <ol className="timeline">
-          {STATUS_ITEMS.map((item) => (
-            <li key={item.title} className={`timeline-item state-${item.state}`}>
-              <span className="timeline-node" aria-hidden="true" />
-              <div className="timeline-body">
-                <p className="timeline-top">
-                  <b>{item.title}</b>
-                  <span className={`state-pill tone-${item.state}`}>{STATUS_STATE_LABELS[item.state]}</span>
-                </p>
-                <p>{item.body}</p>
-              </div>
-            </li>
+        <div className="status-groups">
+          {STATUS_GROUPS.map((group) => (
+            <section key={group.id} className="status-group" aria-labelledby={`status-${group.id}`}>
+              <h3 id={`status-${group.id}`}>{group.title}</h3>
+              <p className="status-group-lede">{group.lede}</p>
+              <ol className="timeline">
+                {STATUS_ITEMS.filter((item) => item.group === group.id).map((item) => (
+                  <li key={item.id} className={`timeline-item level-${item.level}`}>
+                    <span className="timeline-node" aria-hidden="true" />
+                    <div className="timeline-body">
+                      <p className="timeline-top">
+                        <b>{item.title}</b>
+                        <span className={`state-pill level-pill-${item.level}`}>{STATUS_LEVEL_LABELS[item.level]}</span>
+                      </p>
+                      <p>{item.body}</p>
+                    </div>
+                  </li>
+                ))}
+              </ol>
+            </section>
           ))}
-        </ol>
+        </div>
       </div>
     </section>
   );

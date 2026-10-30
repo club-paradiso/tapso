@@ -295,6 +295,33 @@ main:focus {
   background: var(--tangerine-16);
 }
 
+.state-pill.level-pill-built {
+  color: var(--ink);
+  background: var(--ink-08);
+}
+
+.state-pill.level-pill-realdata,
+.state-pill.level-pill-device {
+  color: var(--ink);
+  background: var(--mint-14);
+}
+
+.state-pill.level-pill-realdata::before,
+.state-pill.level-pill-device::before {
+  background: var(--mint-ink);
+}
+
+.state-pill.level-pill-verifying {
+  color: var(--ink);
+  background: rgb(244 184 74 / 28%);
+}
+
+.state-pill.level-pill-blocked {
+  color: var(--text-secondary);
+  background: transparent;
+  border: 1px dashed var(--separator);
+}
+
 .preview-tag {
   display: inline-flex;
   align-items: center;
