@@ -17,67 +17,115 @@ export const NAV_ITEMS = [
   { href: "#faq", label: "FAQ" },
 ] as const;
 
-export type StatusState = "done" | "active" | "next" | "later";
+/**
+ * How far a status item has been checked, from weakest to strongest. A level
+ * is only as strong as the evidence in `statusEvidence.ts`; nothing here may
+ * imply a stronger check than that file records.
+ *
+ * - built: in the app or server code and covered by automatic tests or
+ *   simulator snapshots; not yet seen on a real iPhone or bus.
+ * - realdata: checked against real Jeju bus data in production.
+ * - verifying: being checked; the result is not in yet.
+ * - blocked: waiting on an account, credential or release step.
+ * - device: seen working on a real iPhone. No item may use it until an
+ *   device-validation evidence file exists in the repository (checked by statusHonesty.test.ts).
+ */
+export type StatusLevel = "built" | "realdata" | "verifying" | "blocked" | "device";
 
-export const STATUS_STATE_LABELS: Record<StatusState, string> = {
-  done: "완료",
-  active: "진행 중",
-  next: "준비 중",
-  later: "그다음",
+export const STATUS_LEVEL_LABELS: Record<StatusLevel, string> = {
+  built: "구현됨",
+  realdata: "실데이터 확인",
+  verifying: "검증 중",
+  blocked: "준비 중",
+  device: "실기기 확인",
 };
 
-export type StatusItem = { title: string; state: StatusState; body: string };
+export type StatusGroupId = "built" | "verifying" | "remaining";
+
+export const STATUS_GROUPS: readonly { id: StatusGroupId; title: string; lede: string }[] = [
+  { id: "built", title: "지금까지 만든 기능", lede: "앱과 서버에 들어 있어요. 아직 실제 iPhone에서 써 본 기록은 없어요." },
+  { id: "verifying", title: "지금 검증하는 기능", lede: "실제 제주 버스와 사용 환경에서 확인하는 중이에요." },
+  { id: "remaining", title: "출시까지 남은 단계", lede: "계정, 인증 정보, 배포 절차가 필요한 일이에요." },
+];
+
+export type StatusItem = {
+  id: string;
+  group: StatusGroupId;
+  title: string;
+  level: StatusLevel;
+  body: string;
+};
 
 export const STATUS_ITEMS: readonly StatusItem[] = [
   {
-    title: "Product V2 · iOS 앱 흐름",
-    state: "done",
-    body: "내릴 곳을 고르고 버스를 확인한 뒤, 잠금 화면·다이나믹 아일랜드로 안내받는 흐름까지 만들었어요. 지금은 합성 데이터로 테스트하고 있어요.",
+    id: "destination-search",
+    group: "built",
+    title: "내릴 곳 검색",
+    level: "realdata",
+    body: "정류장, 장소, 주소, 건물 이름으로 찾고 근처 정류장을 보여줘요. 제주 정류장 4,338곳 데이터를 쓰고, 실제 iPhone 확인은 남았어요.",
   },
   {
-    title: "제주 실시간 버스 데이터",
-    state: "active",
-    body: "국토교통부 버스 공공데이터를 읽는 서버와 iPhone 앱의 연결은 만들었어요. 운영 서버에서 여정 기능을 켜는 설정이 남았어요.",
+    id: "route-boarding",
+    group: "built",
+    title: "노선, 방향, 탈 정류장 고르기",
+    level: "realdata",
+    body: "버스 번호를 고르면 방향과 정류장 목록이 나와요. 운영 서버의 여정 저장은 확인했고, 앱 화면은 실제 iPhone 확인이 남았어요.",
   },
   {
-    title: "지도 앱에서 바로 출발",
-    state: "active",
-    body: "카카오맵·네이버 지도·Apple 지도에서 공유한 장소로 여정을 시작하고, 내린 뒤 걷는 길은 다시 지도 앱으로 넘겨요. 실제 iPhone 확인이 남았어요.",
+    id: "lock-screen",
+    group: "built",
+    title: "잠금 화면과 다이나믹 아일랜드",
+    level: "built",
+    body: "남은 정거장, 내릴 준비, 도착을 각각 다른 화면으로 보여줘요. 시뮬레이터 화면은 확인했고, 실제 iPhone 확인은 남았어요.",
   },
   {
-    title: "돌아갈 때 막차",
-    state: "active",
-    body: "노선의 막차(기점 출발) 시각이 공개돼 있으면 몇 시까지 정류장에 나가야 하는지 알려주고, 원하면 남은 시간을 잠금 화면에 띄워요. 다만 지금 받는 제주 노선 정보에는 막차 시각이 비어 있어서 \"알 수 없어요\"로 안내해요. iPhone 확인도 남았어요.",
+    id: "map-apps",
+    group: "built",
+    title: "지도 앱 연동",
+    level: "built",
+    body: "카카오맵, 네이버 지도, Apple 지도에서 장소를 공유해 시작하고, 내린 뒤 걷는 길은 지도 앱으로 이어줘요. 실제 iPhone 확인이 남았어요.",
   },
   {
-    title: "내릴 곳을 지났을 때",
-    state: "active",
-    body: "지나친 뒤 내릴 다음 정류장과 목적지까지의 직선거리를 알려주고, 다른 길은 지도 앱으로 이어줘요. 실제 iPhone 확인이 남았어요.",
+    id: "last-bus-passed-stop",
+    group: "built",
+    title: "막차와 내릴 곳을 지났을 때",
+    level: "built",
+    body: "지나쳤을 때 다음에 내릴 정류장을 알려줘요. 지금 받는 제주 노선 정보에는 막차 시각이 없어 \"알 수 없어요\"로 안내해요. 실제 iPhone 확인이 남았어요.",
   },
   {
-    title: "버스 확인 안전성 검증",
-    state: "active",
-    body: "실제 운행 기록으로 계속 검증하고 있어요. 버스 자동 선택 기능은 꺼 둔 상태라, 탈 때 직접 한 번 확인합니다.",
+    id: "vehicle-progress",
+    group: "verifying",
+    title: "탄 버스 확인과 남은 정거장",
+    level: "verifying",
+    body: "번호판을 보고 직접 확인한 버스를 따라가요. 자동 선택은 꺼 둔 상태예요. 실제 탑승으로 확인한 기록은 아직 없어요.",
   },
   {
-    title: "실제 iPhone 테스트",
-    state: "next",
-    body: "Apple Developer Program을 준비한 뒤 실제 iPhone에서 잠금 화면과 다이나믹 아일랜드를 확인할 차례예요.",
+    id: "language-access-privacy",
+    group: "verifying",
+    title: "언어, 접근성, 개인정보",
+    level: "verifying",
+    body: "한국어, 영어, 중국어, 일본어를 준비했어요. 중국어와 일본어는 원어민 검수 전이고, VoiceOver는 실제 iPhone 확인이 남았어요.",
   },
   {
+    id: "background-push",
+    group: "remaining",
     title: "앱을 닫아도 이어지는 안내",
-    state: "next",
-    body: "앱을 닫아도 잠금 화면이 계속 갱신되도록 푸시를 붙여야 해요. 지금 개발 빌드는 앱이 켜져 있을 때만 진행됩니다.",
+    level: "blocked",
+    body: "푸시 알림 서버는 만들었지만 Apple 인증 정보가 없어 운영에서 꺼져 있어요. 지금은 앱이 열려 있을 때 안내가 갱신돼요.",
   },
   {
-    title: "TestFlight 베타",
-    state: "later",
-    body: "아직 날짜는 없습니다. TestFlight가 열리면 사전예약한 분께 먼저 메일을 보낼게요.",
+    id: "real-iphone",
+    group: "remaining",
+    title: "실제 iPhone과 버스에서 테스트",
+    level: "blocked",
+    body: "테스트 절차는 준비했어요. 실제 iPhone에서 확인한 기록은 아직 없어요.",
   },
   {
-    title: "App Store 출시",
-    state: "later",
-    body: "TestFlight에서 충분히 검증한 뒤 준비합니다.",
+    id: "release",
+    group: "remaining",
+    title: "TestFlight와 App Store",
+    level: "blocked",
+    body: "유료 Apple Developer Program 가입이 먼저예요. 출시 일정은 정해지지 않았어요.",
   },
 ];
 
