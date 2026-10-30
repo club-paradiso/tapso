@@ -36,10 +36,16 @@ function parseSwiftSwitch(source: string, functionName: string): Map<string, str
 const iosStrings = parseStrings(repo("apps/ios/Resources/ko.lproj/Localizable.strings"));
 const guidance = readFileSync(repo("packages/transit-core/Sources/TapsoTransit/RideGuidance.swift"), "utf8");
 
-test("every product string the site quotes is the iOS app's own Korean string", () => {
+test("product preview quotes iOS copy exactly, except an intentional TAPSO brand spelling", () => {
   for (const [key, value] of Object.entries(IOS_COPY)) {
     assert.ok(iosStrings.has(key), `${key} is not an iOS string key`);
-    assert.equal(value, iosStrings.get(key), `${key} drifted from Localizable.strings`);
+    // Marketing copy spells the app name TAPSO. The Korean iOS build still
+    // uses '탑서' in its original localized dialogue. No functional text may
+    // drift; this one check.why brand orthography is the sole exception.
+    const expected = key === "check.why"
+      ? iosStrings.get(key)!.replaceAll("탑서", "TAPSO")
+      : iosStrings.get(key);
+    assert.equal(value, expected, `${key} drifted from Localizable.strings`);
   }
 });
 
