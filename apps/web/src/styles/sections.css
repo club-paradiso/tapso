@@ -558,6 +558,151 @@
   }
 }
 
+/* The boarding stop has a label and an actual, often long, Jeju stop name.
+   Keep both readable instead of forcing them into the bus chip's column. */
+.scene-boarding-label {
+  display: flex;
+  flex-direction: column;
+  gap: 3px;
+  min-width: 0;
+}
+
+.scene-boarding-label strong {
+  font-weight: 800;
+}
+
+.scene-boarding-label > span {
+  overflow-wrap: anywhere;
+}
+
+@media (max-width: 959px) {
+  /* Don't sacrifice the 44px touch target to squeeze all nav labels in view. */
+  .site-nav {
+    min-width: 0;
+  }
+
+  .site-nav ul {
+    scroll-snap-type: x proximity;
+    scroll-padding-inline: 12px;
+  }
+
+  .site-nav a {
+    padding-inline: 12px;
+    font-size: clamp(0.8125rem, 3.5vw, 0.9375rem);
+    scroll-snap-align: start;
+  }
+}
+
+@media (max-width: 719px) {
+  .scene {
+    padding: clamp(14px, 4vw, 24px);
+  }
+
+  .scene-road {
+    min-width: 0;
+    width: 100%;
+  }
+
+  /* Every stop owns its space: the long boarding stop takes a whole row,
+     while ordinary "N stops away" rows retain a compact bus chip. */
+  .scene-slot {
+    display: grid;
+    grid-template-columns: minmax(0, 1fr) auto;
+    align-items: center;
+    column-gap: 10px;
+    min-width: 0;
+    padding-block: 8px;
+  }
+
+  .scene-stop {
+    display: flex;
+    align-items: center;
+    min-width: 0;
+    max-width: none;
+    width: 100%;
+    gap: 12px;
+    overflow-wrap: anywhere;
+  }
+
+  .scene-stop-dot {
+    flex: none;
+  }
+
+  .scene-stop-label {
+    min-width: 0;
+  }
+
+  .scene-slot.is-boarding {
+    grid-template-columns: minmax(0, 1fr);
+    row-gap: 10px;
+    padding-block: 12px 16px;
+  }
+
+  .scene-slot.is-boarding .scene-stop {
+    font-size: var(--fs-small);
+    line-height: 1.45;
+  }
+
+  .scene-slot.is-boarding .scene-bus {
+    grid-column: 1;
+    justify-self: start;
+    margin-left: 38px;
+    max-width: calc(100% - 38px);
+  }
+
+  .scene-bus {
+    display: flex;
+    flex-direction: row;
+    flex-wrap: wrap;
+    align-items: center;
+    justify-content: center;
+    flex: 0 1 auto;
+    width: auto;
+    max-width: 146px;
+    min-width: 0;
+    gap: 4px 6px;
+    padding: 8px;
+    border-radius: var(--radius-sm);
+  }
+
+  .scene-bus-body {
+    padding: 4px 8px;
+    font-size: 0.875rem;
+    white-space: nowrap;
+  }
+
+  .scene-bus-plate {
+    font-size: 0.75rem;
+  }
+
+  .scene-bus-note {
+    display: flex;
+    flex-basis: 100%;
+    justify-content: center;
+    font-size: 0.75rem;
+    text-align: center;
+  }
+
+  .scene-bus.role-proposed {
+    transform: none;
+  }
+}
+
+@media (max-width: 359px) {
+  .scene-slot:not(.is-boarding) {
+    grid-template-columns: minmax(0, 1fr) 112px;
+  }
+
+  .scene-slot:not(.is-boarding) .scene-bus {
+    width: 112px;
+    padding-inline: 5px;
+  }
+
+  .scene-bus-body {
+    padding-inline: 6px;
+  }
+}
+
 /* Maps ------------------------------------------------------------------- */
 
 .maps {
