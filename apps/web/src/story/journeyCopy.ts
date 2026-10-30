@@ -16,7 +16,7 @@ export const CHAPTER_COPY: Record<Chapter, { title: string; lede: string }> = {
     lede: "같은 번호의 버스가 여러 대 다녀요. 남은 정거장을 제대로 알려드릴 수 있도록, TAPSO에서 내가 탄 버스를 한 번만 확인해주세요.",
   },
   ride: {
-    title: "이제 휴대폰은 넣어두세요.",
+    title: "잠금 화면에서 남은 정거장을 확인해요.",
     lede: "버스를 확인한 뒤로는 잠금 화면과 다이나믹 아일랜드가 남은 정거장을 들고 있어요.",
   },
   trust: {
@@ -25,7 +25,7 @@ export const CHAPTER_COPY: Record<Chapter, { title: string; lede: string }> = {
   },
   arrive: {
     title: "내릴 때가 되면, 한 번씩 또렷하게.",
-    lede: "알림은 세 번이에요. 2정거장 전, 다음 정류장, 도착. 같은 알림은 두 번 오지 않아요.",
+    lede: "2정거장 전, 다음 정류장, 도착 때 안내하도록 만들었어요. 실제 iPhone에서 확인이 필요해요.",
   },
 };
 
@@ -83,7 +83,7 @@ export const STEP_COPY: Record<BeatId, StepCopy> = {
   prepare: {
     label: "2정거장",
     title: "2정거장 전, 일어설 시간을 드려요",
-    body: "화면이 켜지고 한 번 알려드려요. 짐 챙기고 일어날 시간이에요.",
+    body: "2정거장 전에 안내하도록 만들었어요. 알림 표시는 실제 iPhone에서 확인해야 해요.",
   },
   nextStop: {
     label: "다음 하차",

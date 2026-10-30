@@ -161,20 +161,27 @@ test("no GitHub platform branding or repository links can leak into public websi
   assert.match(visibleSource(join(src, "App.tsx")), /같은 금액을 곧바로 다시 결제하지 마세요/);
 });
 
-test("preorder action copy is consistently '사전예약' without a TestFlight prefix", () => {
+test("unavailable preorder is not offered on the landing page", () => {
   const header = readFileSync(join(src, "sections/Header.tsx"), "utf8");
   const footer = readFileSync(join(src, "sections/Footer.tsx"), "utf8");
-  const form = readFileSync(join(src, "components/WaitlistForm.tsx"), "utf8");
+  const waitlist = readFileSync(join(src, "sections/Waitlist.tsx"), "utf8");
   const config = JSON.parse(readFileSync(join(src, "design/marketing.json"), "utf8"));
   const page = readFileSync(join(src, "../index.html"), "utf8");
+  assert.equal(config.copy.cta, "개발 현황 보기");
+  assert.match(header, /href="#status"/);
+  assert.match(footer, /href="#status"/);
+  assert.match(waitlist, /사전예약을 받고 있지 않아요/);
+  assert.doesNotMatch(readFileSync(join(src, "sections/Support.tsx"), "utf8"), /onClick=\{onOpen\}/);
+  assert.doesNotMatch(waitlist, /<WaitlistForm|<form/);
+  assert.doesNotMatch(page, /사전예약을 받고 있어요/);
+});
 
-  assert.equal(config.copy.cta, "사전예약");
-  assert.match(header, />\s*사전예약\s*<\/a>/);
-  assert.match(footer, /href="#waitlist">사전예약<\/a>/);
-  assert.match(form, /"보내는 중…" : "사전예약"/);
-  for (const content of [header, footer, form, page, JSON.stringify(config)]) {
-    assert.doesNotMatch(content, /TestFlight\s+사전예약/i);
-  }
+test("public status separates implementation, field validation and availability", () => {
+  assert.deepEqual(STATUS_ITEMS.map((item) => item.state), ["done", "active", "later"]);
+  assert.match(STATUS_ITEMS[1]!.body, /실제 iPhone/);
+  assert.match(STATUS_ITEMS[1]!.body, /자동 선택은 꺼져/);
+  assert.match(STATUS_ITEMS[2]!.body, /공개되지 않았어요/);
+  assert.match(FAQ_ITEMS.find((item) => item.q.includes("위치 권한"))!.a, /선택 기능/);
 });
 
 test("the FAQ answers the questions a visitor asks first", () => {

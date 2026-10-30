@@ -3,7 +3,6 @@ import {
   BeatDevice,
   BeatPicture,
   BusScene,
-  GlanceChart,
   TrustTable,
   VariantPicker,
   pictureLabel,
@@ -24,8 +23,6 @@ function StepExtras({ beat }: { beat: Beat }) {
   switch (beat.id) {
     case "sameBus":
       return <BusScene />;
-    case "pocket":
-      return <GlanceChart />;
     case "island":
       return (
         <>

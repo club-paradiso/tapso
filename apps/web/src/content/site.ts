@@ -23,62 +23,15 @@ export const STATUS_STATE_LABELS: Record<StatusState, string> = {
   done: "완료",
   active: "진행 중",
   next: "준비 중",
-  later: "그다음",
+  later: "이용 전",
 };
 
 export type StatusItem = { title: string; state: StatusState; body: string };
 
 export const STATUS_ITEMS: readonly StatusItem[] = [
-  {
-    title: "Product V2 · iOS 앱 흐름",
-    state: "done",
-    body: "내릴 곳을 고르고 버스를 확인한 뒤, 잠금 화면·다이나믹 아일랜드로 안내받는 흐름까지 만들었어요. 지금은 합성 데이터로 테스트하고 있어요.",
-  },
-  {
-    title: "제주 실시간 버스 데이터",
-    state: "active",
-    body: "국토교통부 버스 공공데이터를 읽는 서버와 iPhone 앱의 연결은 만들었어요. 운영 서버에서 여정 기능을 켜는 설정이 남았어요.",
-  },
-  {
-    title: "지도 앱에서 바로 출발",
-    state: "active",
-    body: "카카오맵·네이버 지도·Apple 지도에서 공유한 장소로 여정을 시작하고, 내린 뒤 걷는 길은 다시 지도 앱으로 넘겨요. 실제 iPhone 확인이 남았어요.",
-  },
-  {
-    title: "돌아갈 때 막차",
-    state: "active",
-    body: "노선의 막차(기점 출발) 시각이 공개돼 있으면 몇 시까지 정류장에 나가야 하는지 알려주고, 원하면 남은 시간을 잠금 화면에 띄워요. 다만 지금 받는 제주 노선 정보에는 막차 시각이 비어 있어서 \"알 수 없어요\"로 안내해요. iPhone 확인도 남았어요.",
-  },
-  {
-    title: "내릴 곳을 지났을 때",
-    state: "active",
-    body: "지나친 뒤 내릴 다음 정류장과 목적지까지의 직선거리를 알려주고, 다른 길은 지도 앱으로 이어줘요. 실제 iPhone 확인이 남았어요.",
-  },
-  {
-    title: "버스 확인 안전성 검증",
-    state: "active",
-    body: "실제 운행 기록으로 계속 검증하고 있어요. 버스 자동 선택 기능은 꺼 둔 상태라, 탈 때 직접 한 번 확인합니다.",
-  },
-  {
-    title: "실제 iPhone 테스트",
-    state: "next",
-    body: "Apple Developer Program을 준비한 뒤 실제 iPhone에서 잠금 화면과 다이나믹 아일랜드를 확인할 차례예요.",
-  },
-  {
-    title: "앱을 닫아도 이어지는 안내",
-    state: "next",
-    body: "앱을 닫아도 잠금 화면이 계속 갱신되도록 푸시를 붙여야 해요. 지금 개발 빌드는 앱이 켜져 있을 때만 진행됩니다.",
-  },
-  {
-    title: "TestFlight 베타",
-    state: "later",
-    body: "아직 날짜는 없습니다. TestFlight가 열리면 사전예약한 분께 먼저 메일을 보낼게요.",
-  },
-  {
-    title: "App Store 출시",
-    state: "later",
-    body: "TestFlight에서 충분히 검증한 뒤 준비합니다.",
-  },
+  { title: "지금 만들었어요", state: "done", body: "목적지를 찾고 탈 버스를 직접 확인한 뒤 남은 정거장을 보는 iPhone 앱을 만들었어요. 제주 실시간 버스 데이터를 연결했어요." },
+  { title: "실제 사용을 검증할 차례예요", state: "active", body: "실제 iPhone과 버스에서 데이터와 잠금 화면 안내를 확인해야 해요. 버스 자동 선택은 꺼져 있어 직접 확인해야 합니다." },
+  { title: "아직 이용할 수 없어요", state: "later", body: "TestFlight와 App Store는 아직 공개되지 않았어요. 공개 전 실제 기기 검증과 배포 준비가 필요해요. 일정은 정해지지 않았어요." },
 ];
 
 export type MapLink = { state: string; tone: "done" | "none" | "planned"; title: string; body: string };
@@ -113,8 +66,8 @@ export const MAP_LINKS: readonly MapLink[] = [
 
 export const PRIVACY_POINTS = [
   {
-    title: "위치 권한을 묻지 않아요",
-    body: "TAPSO는 승객이 아니라 버스를 따라가요. 남은 정거장은 내가 탄 차량의 위치로 계산해요.",
+    title: "기본 안내에는 위치 권한이 필요 없어요",
+    body: "TAPSO는 버스 위치로 남은 정거장을 계산해요. 선택 기능에서는 위치 권한을 요청할 수 있어요.",
   },
   {
     title: "알림 권한도 필요 없어요",
@@ -139,7 +92,7 @@ export const FAQ_ITEMS: readonly FaqItem[] = [
   },
   {
     q: "위치 권한이 필요한가요?",
-    a: "아니요. TAPSO는 승객이 아니라 버스를 따라가요. 지금 앱은 위치 권한도, 알림 권한도 요청하지 않아요.",
+    a: "기본 안내에는 필요하지 않아요. 선택 기능을 켜면 위치 권한을 요청할 수 있어요. 실제 기기에서 동작을 확인해야 해요.",
   },
   {
     q: "왜 실제 버스를 확인하나요?",
@@ -147,11 +100,11 @@ export const FAQ_ITEMS: readonly FaqItem[] = [
   },
   {
     q: "앱을 닫아도 알려주나요?",
-    a: "그게 목표입니다. 지금 개발 빌드는 앱이 켜져 있을 때만 잠금 화면과 다이나믹 아일랜드가 갱신돼요. 앱을 닫아도 이어지게 만드는 푸시는 아직 작업 전이고, 그동안 정보가 멈추면 ‘업데이트 지연’으로 표시합니다.",
+    a: "그게 목표입니다. 지금 개발 빌드는 앱이 켜져 있을 때만 잠금 화면과 다이나믹 아일랜드가 갱신돼요. 앱을 닫은 뒤 갱신하는 기능은 아직 운영 환경과 실제 기기에서 검증되지 않았고, 그동안 정보가 멈추면 ‘업데이트 지연’으로 표시합니다.",
   },
   {
     q: "다이나믹 아일랜드가 없는 iPhone에서는요?",
-    a: "잠금 화면의 실시간 현황으로 똑같이 안내해요. 2정거장·다음 하차·도착 알림은 다이나믹 아일랜드 대신 배너로 떠요. iOS 17 이상을 대상으로 만들고 있어요.",
+    a: "잠금 화면의 실시간 현황을 지원하도록 만들고 있어요. 알림 표시와 소리는 실제 iPhone에서 확인해야 해요. iOS 17 이상을 대상으로 합니다.",
   },
   {
     q: "데이터가 끊기면 어떻게 되나요?",
@@ -159,7 +112,7 @@ export const FAQ_ITEMS: readonly FaqItem[] = [
   },
   {
     q: "TestFlight는 언제 시작하나요?",
-    a: "날짜는 아직 정하지 않았어요. Apple Developer Program 가입과 실제 기기 테스트가 먼저예요. 사전예약하시면 열리는 대로 메일로 먼저 알려드려요.",
+    a: "날짜는 아직 정하지 않았어요. 실제 iPhone 테스트와 배포 준비가 먼저예요. 현재 사전예약도 받고 있지 않아요.",
   },
   {
     q: "Android도 나오나요?",

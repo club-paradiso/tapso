@@ -24,16 +24,10 @@ export function Footer() {
         <nav className="footer-nav" aria-label="바닥글">
           <ul>
             <li>
-              <a href="#waitlist">사전예약</a>
-            </li>
-            <li>
               <a href="#support">개발 후원하기</a>
             </li>
             <li>
               <a href="#status">개발 현황</a>
-            </li>
-            <li>
-              <a href="#waitlist-privacy">사전예약 개인정보 안내</a>
             </li>
             <li>
               <a href="#privacy">TAPSO의 개인정보 원칙</a>

@@ -7,7 +7,7 @@ export function Status() {
       <div className="container status-grid">
         <SectionHead title="지금은 여기까지 만들었어요." titleId="status-title">
           <p>
-            아직 출시 전입니다. 끝난 것, 만드는 중인 것, 아직 남은 일을 나눠서 적어뒀어요. 출시일은 아직 정하지 않았습니다.
+            제주 버스에서 내릴 때를 알려주는 iPhone 앱을 만들고 있어요. 실제 이용 전 검증이 필요하며 출시일은 아직 정하지 않았어요.
           </p>
 
         </SectionHead>
