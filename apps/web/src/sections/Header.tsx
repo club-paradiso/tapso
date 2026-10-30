@@ -12,9 +12,9 @@ export function Header() {
         본문으로 건너뛰기
       </a>
       <div className="container site-header-inner">
-        <a className="brand" href="#top" aria-label="TAPSO 탑서, 맨 위로">
+        <a className="brand" href="#top" aria-label="TAPSO, 맨 위로">
           <BrandMark />
-          <span className="brand-word" data-wordmark="TAPSŌ" aria-hidden="true">
+          <span className="brand-word" data-wordmark="TAPSO" aria-hidden="true">
             TAPS<span className="brand-word-o">O</span>
           </span>
         </a>
