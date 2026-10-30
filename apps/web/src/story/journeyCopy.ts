@@ -9,11 +9,11 @@ import type { BeatId, Chapter } from "./beats.ts";
 export const CHAPTER_COPY: Record<Chapter, { title: string; lede: string }> = {
   plan: {
     title: "내릴 곳만 정하면 돼요.",
-    lede: "길찾기는 지도 앱이 잘해요. 탑서는 버스에 오르기 직전부터, 내릴 때까지만 맡아요.",
+    lede: "TAPSO는 목적지 검색부터 탑승 정류장 선택, 하차 안내까지 이어줘요. 실제로 탄 버스를 확인하면 남은 정거장과 내릴 때를 한눈에 볼 수 있어요.",
   },
   confirm: {
     title: "365번 버스, 내가 탄 차를 확인해요.",
-    lede: "같은 번호의 버스가 여러 대 다녀요. 남은 정거장을 제대로 알려드릴 수 있도록, 탑서에서 내가 탄 버스를 한 번만 확인해주세요.",
+    lede: "같은 번호의 버스가 여러 대 다녀요. 남은 정거장을 제대로 알려드릴 수 있도록, TAPSO에서 내가 탄 버스를 한 번만 확인해주세요.",
   },
   ride: {
     title: "이제 휴대폰은 넣어두세요.",
@@ -46,14 +46,13 @@ export const STEP_COPY: Record<BeatId, StepCopy> = {
   },
   boarding: {
     label: "타는 곳",
-    // Keep the boarding visual in the journey, but omit this explanatory copy.
-    title: "",
-    body: "",
+    title: "어느 버스를 어디서 탈까요?",
+    body: "내릴 곳으로 가는 버스를 확인하고, 타는 정류장을 골라주세요. 선택한 정류장에서 목적지까지 몇 정거장인지 TAPSO가 보여줘요.",
   },
   sameBus: {
     label: "같은 번호",
     title: "번호만으로는 내 버스를 몰라요",
-    body: "365번은 한 대만 다니지 않아요. 같은 번호가 여러 대, 양방향으로 달려요. 탑서는 타는 정류장으로 오는 버스를 한 대씩 살펴봐요.",
+    body: "365번은 한 대만 다니지 않아요. 같은 번호가 여러 대, 양방향으로 달려요. TAPSO는 타는 정류장으로 오는 버스를 한 대씩 살펴봐요.",
   },
   proposed: {
     label: "이 버스?",
@@ -68,7 +67,7 @@ export const STEP_COPY: Record<BeatId, StepCopy> = {
   pocket: {
     label: "6정거장",
     title: "남은 정거장은 잠금 화면에",
-    body: "정류장을 지날 때마다 화면을 켤 필요 없어요. 탑서가 부를 때만 보면 돼요.",
+    body: "정류장을 지날 때마다 화면을 켤 필요 없어요. TAPSO가 부를 때만 보면 돼요.",
     note: "지금 개발 빌드는 앱이 켜져 있는 동안만 잠금 화면이 갱신돼요. 앱을 닫아도 이어지게 하는 작업은 아직 진행 중이에요.",
   },
   island: {
