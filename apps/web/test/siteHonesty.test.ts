@@ -69,6 +69,28 @@ test("support reads as closed until the server says live", () => {
   assert.equal(live.open, true);
 });
 
+
+test("marketing branding consistently says TAPSO, keeping 제주어 quotes intact", () => {
+  const support = readFileSync(join(src, "sections/Support.tsx"), "utf8");
+  const companion = readFileSync(join(src, "sections/MapCompanion.tsx"), "utf8");
+  const story = readFileSync(join(src, "story/journeyCopy.ts"), "utf8");
+  const waitlistLabels = readFileSync(join(src, "lib/waitlistClient.ts"), "utf8");
+  const email = readFileSync(join(src, "../api/_lib/email.ts"), "utf8");
+  const html = readFileSync(join(src, "../index.html"), "utf8");
+
+  assert.match(support, /개발자한테 커피 한 잔 보태고 싶다면/);
+  assert.match(waitlistLabels, /label: "제주도민"/);
+  assert.match(email, /resident: "제주도민"/);
+  assert.doesNotMatch(waitlistLabels, /제주 도민/);
+  assert.doesNotMatch(email, /제주 도민/);
+  assert.match(story, /title: "어느 버스를 어디서 탈까요\?"/);
+  assert.doesNotMatch(story, /길찾기는 지도 앱이 잘해요/);
+  assert.doesNotMatch(companion, /더 잘해요|더 잘 알아요/);
+  assert.match(html, /<title>TAPSO —/);
+  assert.doesNotMatch(html, /탑서 TAPSO/);
+  assert.match(html, /혼저 탑서/);
+});
+
 test("no source file makes a claim TAPSO cannot back", () => {
   for (const path of files(src)) {
     const text = visibleSource(path);
