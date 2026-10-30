@@ -8,7 +8,7 @@ export type { RiderType, WaitlistResponse };
 
 /** Korean labels live here; the wire and the database use the stable codes. */
 export const RIDER_TYPE_LABELS: ReadonlyArray<{ value: RiderType; label: string }> = [
-  { value: "resident", label: "제주 도민" },
+  { value: "resident", label: "제주도민" },
   { value: "visitor", label: "제주 여행객" },
   { value: "enthusiast", label: "제주 버스 애호가" },
   { value: "supporter", label: "그 외 지역에서 응원 중" },
