@@ -104,7 +104,7 @@ export default function WaitlistForm() {
               : "신청은 저장됐어요. 확인 메일이 조금 늦을 수 있지만 소식은 이 주소로 꼭 보내드릴게요."}
           </p>
           <a className="figma-support" href="#support">
-            탑서를 응원하는 다른 방법
+            TAPSO 개발을 응원하는 다른 방법
           </a>
         </div>
       </div>
