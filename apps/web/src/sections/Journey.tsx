@@ -56,11 +56,11 @@ function Step({ beat, index, active }: { beat: Beat; index: number; active: numb
   const role = activity ? ` role-${presentMoment(activity.moment).colorRole}` : "";
   const state = index === active ? " is-active" : index < active ? " is-past" : "";
   return (
-    <article className={`step${role}${state}`} data-beat={beat.id} aria-labelledby={copy.title ? `step-${beat.id}` : `step-${beat.id}-label`}>
+    <article className={`step${role}${state}`} data-beat={beat.id} aria-labelledby={`step-${beat.id}`}>
       <span className="step-stop" aria-hidden="true" />
       <p className="step-label" id={`step-${beat.id}-label`}>{copy.label}</p>
-      {copy.title ? <h3 id={`step-${beat.id}`}>{copy.title}</h3> : null}
-      {copy.body ? <p className="step-body">{copy.body}</p> : null}
+      <h3 id={`step-${beat.id}`}>{copy.title}</h3>
+      <p className="step-body">{copy.body}</p>
       <StepExtras beat={beat} />
       {copy.note ? <p className="step-note">{copy.note}</p> : null}
       <p className="visually-hidden">그림: {pictureLabel(stage, activity)}</p>
