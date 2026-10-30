@@ -19,7 +19,7 @@ export function supportStatus(config: SupportConfigResponse | undefined): Suppor
     return {
       open: true,
       label: "후원 가능",
-      detail: "후원은 카드 결제로 받아요. 카드 정보는 결제사에만 남고 탑서는 저장하지 않아요.",
+      detail: "후원은 카드 결제로 받아요. 카드 정보는 결제사에만 남고 TAPSO는 저장하지 않아요.",
       action: "후원하기",
     };
   }
