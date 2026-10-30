@@ -205,15 +205,16 @@ test("destination guide matches implemented stop-name, address, and building loo
   assert.match(serverSearch, /road\.building_name/);
 });
 
-test("until pushed updates are shown on a device, the page says the Lock Screen updates only with the app open", () => {
+test("until pushed updates are shown on a device, the page distinguishes default updates from unverified background operation", () => {
   // The app can ask for a push token, but nothing pushes until a scheduler runs and a device
   // has shown it (`LIVE_ACTIVITY_PUSH.md`, milestone 6). Only that evidence lifts the claim.
   const plan = readFileSync(repo("docs/exec-plans/LIVE_ACTIVITY_PUSH.md"), "utf8");
   const shownOnDevice = /6\. \*\*Device evidence\*\* — `DONE`/.test(plan);
   if (shownOnDevice) return; // The claim below must then be revisited with the push path's real status.
-  assert.match(STEP_COPY.pocket.note ?? "", /앱이 켜져 있는 동안만/);
+  assert.match(STEP_COPY.pocket.note ?? "", /기본 안내는 앱이 실행 중일 때 갱신/);
+  assert.match(STEP_COPY.pocket.note ?? "", /실제 기기에서 검증/);
   const faq = FAQ_ITEMS.find((f) => f.q.includes("앱을 닫아도"));
-  assert.ok(faq && /켜져 있을 때만/.test(faq.a), "the FAQ keeps the same honesty");
+  assert.ok(faq && /기본 안내는 앱이 실행 중일 때 갱신/.test(faq.a) && /실제 iPhone 검증이 필요/.test(faq.a), "the FAQ distinguishes default and optional behavior");
 });
 
 test("the story store follows position and picks without duplicating state", () => {
