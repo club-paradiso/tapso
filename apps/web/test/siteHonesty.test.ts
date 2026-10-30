@@ -161,7 +161,7 @@ test("no GitHub platform branding or repository links can leak into public websi
     );
   }
   const publicHtml = readFileSync(join(src, "../index.html"), "utf8");
-  assert.doesNotMatch(publicHtml, /github(?:\.com|\s*issues?)?|github\.io/i);
+  assert.doesNotMatch(publicHtml, /github(?:\.com|\s*issues?)?|github\.io|jsdelivr\.net\/gh\//i);
   assert.match(visibleSource(join(src, "App.tsx")), /같은 금액을 곧바로 다시 결제하지 마세요/);
 });
 
