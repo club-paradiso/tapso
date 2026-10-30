@@ -16,6 +16,10 @@ export type ForbiddenClaim = {
 };
 
 export const FORBIDDEN_CLAIMS: readonly ForbiddenClaim[] = [
+  { pattern: /사전예약을\s*받고\s*있어요/, reason: "waitlist storage is not configured" },
+  { pattern: /실제\s*(iPhone|기기|버스).{0,20}검증(을)?\s*(완료|마쳤)/, reason: "physical validation is not evidenced" },
+  { pattern: /앱을\s*닫아도.{0,25}(계속|항상)\s*(안내|갱신)/, reason: "closed-app updates are not verified" },
+  { pattern: /위치\s*권한을\s*(전혀\s*)?묻지\s*않아요/, reason: "optional keep-alive can request location" },
   { pattern: /지금\s*(바로\s*)?다운로드/, reason: "the app cannot be downloaded" },
   { pattern: /App\s*Store에서\s*(다운로드|받|만나)/, reason: "not on the App Store" },
   { pattern: /출시(됐|되었|했습|했어)/, reason: "not launched" },

@@ -111,11 +111,11 @@ export function Hero() {
           <p className="coast-gloss">서두르지 말고, 어서 타세요.</p>
           <p className="coast-lede">{config.copy.description}</p>
           <div className="coast-actions">
-            <a className="btn btn-primary btn-lg" href="#waitlist">{config.copy.cta}<ArrowIcon /></a>
+            <a className="btn btn-primary btn-lg" href="#status">{config.copy.cta}<ArrowIcon /></a>
             <a className="btn btn-glass btn-lg" href="#how">타는 법 보기</a>
           </div>
           <p className="coast-status-line">
-            아직 개발 중이고 TestFlight는 열리지 않았어요. 열리면 사전예약하신 분께 먼저 알려드려요.{" "}
+            아직 개발 중이며 TestFlight는 공개되지 않았어요. 사전예약도 받고 있지 않아요.{" "}
             <a href="#status">개발 현황 보기</a>
           </p>
         </div>

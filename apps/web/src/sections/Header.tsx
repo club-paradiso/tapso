@@ -28,8 +28,8 @@ export function Header() {
           </ul>
         </nav>
         <ThemeToggle />
-        <a className="btn btn-primary btn-sm header-cta" href="#waitlist">
-          사전예약
+        <a className="btn btn-primary btn-sm header-cta" href="#status">
+          개발 현황
         </a>
       </div>
     </header>

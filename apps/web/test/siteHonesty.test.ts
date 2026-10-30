@@ -112,6 +112,10 @@ test("the claim guard itself catches what it is meant to catch", () => {
     "탑서가 자동으로 버스를 찾아드려요",
     "기부금 영수증을 발급해드려요",
     "1만 명이 사용 중",
+    "사전예약을 받고 있어요",
+    "실제 iPhone 검증을 완료",
+    "앱을 닫아도 계속 안내",
+    "위치 권한을 묻지 않아요",
   ];
   for (const sample of samples) {
     assert.ok(FORBIDDEN_CLAIMS.some(({ pattern }) => pattern.test(sample)), sample);
@@ -161,20 +165,27 @@ test("no GitHub platform branding or repository links can leak into public websi
   assert.match(visibleSource(join(src, "App.tsx")), /같은 금액을 곧바로 다시 결제하지 마세요/);
 });
 
-test("preorder action copy is consistently '사전예약' without a TestFlight prefix", () => {
+test("unavailable preorder is not offered on the landing page", () => {
   const header = readFileSync(join(src, "sections/Header.tsx"), "utf8");
   const footer = readFileSync(join(src, "sections/Footer.tsx"), "utf8");
-  const form = readFileSync(join(src, "components/WaitlistForm.tsx"), "utf8");
+  const waitlist = readFileSync(join(src, "sections/Waitlist.tsx"), "utf8");
   const config = JSON.parse(readFileSync(join(src, "design/marketing.json"), "utf8"));
   const page = readFileSync(join(src, "../index.html"), "utf8");
+  assert.equal(config.copy.cta, "개발 현황 보기");
+  assert.match(header, /href="#status"/);
+  assert.match(footer, /href="#status"/);
+  assert.match(waitlist, /사전예약을 받고 있지 않아요/);
+  assert.doesNotMatch(readFileSync(join(src, "sections/Support.tsx"), "utf8"), /onClick=\{onOpen\}/);
+  assert.doesNotMatch(waitlist, /<WaitlistForm|<form/);
+  assert.doesNotMatch(page, /사전예약을 받고 있어요/);
+});
 
-  assert.equal(config.copy.cta, "사전예약");
-  assert.match(header, />\s*사전예약\s*<\/a>/);
-  assert.match(footer, /href="#waitlist">사전예약<\/a>/);
-  assert.match(form, /"보내는 중…" : "사전예약"/);
-  for (const content of [header, footer, form, page, JSON.stringify(config)]) {
-    assert.doesNotMatch(content, /TestFlight\s+사전예약/i);
-  }
+test("public status separates implementation, field validation and availability", () => {
+  const level = (id: string) => STATUS_ITEMS.find((item) => item.id === id);
+  assert.equal(level("vehicle-progress")?.level, "verifying");
+  assert.match(level("vehicle-progress")?.body ?? "", /자동 선택은 꺼/);
+  assert.match(level("release")?.body ?? "", /공개되지 않았어요/);
+  assert.match(FAQ_ITEMS.find((item) => item.q.includes("위치 권한"))!.a, /선택 기능/);
 });
 
 test("the FAQ answers the questions a visitor asks first", () => {

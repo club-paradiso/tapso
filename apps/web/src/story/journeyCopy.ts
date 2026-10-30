@@ -16,7 +16,7 @@ export const CHAPTER_COPY: Record<Chapter, { title: string; lede: string }> = {
     lede: "같은 번호의 버스가 여러 대 다녀요. 남은 정거장을 제대로 알려드릴 수 있도록, TAPSO에서 내가 탄 버스를 한 번만 확인해주세요.",
   },
   ride: {
-    title: "이제 휴대폰은 넣어두세요.",
+    title: "잠금 화면에서 남은 정거장을 확인해요.",
     lede: "버스를 확인한 뒤로는 잠금 화면과 다이나믹 아일랜드가 남은 정거장을 들고 있어요.",
   },
   trust: {
@@ -25,7 +25,7 @@ export const CHAPTER_COPY: Record<Chapter, { title: string; lede: string }> = {
   },
   arrive: {
     title: "내릴 때가 되면, 한 번씩 또렷하게.",
-    lede: "알림은 세 번이에요. 2정거장 전, 다음 정류장, 도착. 같은 알림은 두 번 오지 않아요.",
+    lede: "2정거장 전, 다음 정류장, 도착 때 안내하도록 만들었어요. 실제 iPhone에서 확인이 필요해요.",
   },
 };
 
@@ -56,8 +56,8 @@ export const STEP_COPY: Record<BeatId, StepCopy> = {
   },
   proposed: {
     label: "이 버스?",
-    title: "이 버스로 보이면, 한 번만 물어봐요",
-    body: "그럴듯한 한 대를 번호판 끝자리와 함께 보여줘요. 이미 지나간 버스는 빼고요. 그럴듯한 버스가 두 대면 대신 고르지 않고 물어봐요.",
+    title: "탄 버스를 직접 확인해요",
+    body: "버스 목록에서 번호판 끝자리를 보고 실제로 탄 버스를 직접 골라 확인해요. 자동 선택은 꺼져 있어요.",
   },
   confirmed: {
     label: "확인",
@@ -68,7 +68,7 @@ export const STEP_COPY: Record<BeatId, StepCopy> = {
     label: "6정거장",
     title: "남은 정거장은 잠금 화면에",
     body: "정류장을 지날 때마다 화면을 켤 필요 없어요. TAPSO가 부를 때만 보면 돼요.",
-    note: "지금 개발 빌드는 앱이 켜져 있는 동안만 잠금 화면이 갱신돼요. 앱을 닫아도 이어지게 하는 작업은 아직 진행 중이에요.",
+    note: "기본 안내는 앱이 실행 중일 때 갱신돼요. 앱을 닫은 뒤에도 이어지는 안내는 실제 기기에서 검증해야 해요.",
   },
   island: {
     label: "다른 앱",
@@ -83,7 +83,7 @@ export const STEP_COPY: Record<BeatId, StepCopy> = {
   prepare: {
     label: "2정거장",
     title: "2정거장 전, 일어설 시간을 드려요",
-    body: "화면이 켜지고 한 번 알려드려요. 짐 챙기고 일어날 시간이에요.",
+    body: "2정거장 전에 안내하도록 만들었어요. 알림 표시는 실제 iPhone에서 확인해야 해요.",
   },
   nextStop: {
     label: "다음 하차",
