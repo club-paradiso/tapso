@@ -162,16 +162,26 @@ test("every beat and chapter has words", () => {
   for (const chapter of CHAPTERS) assert.ok(CHAPTER_COPY[chapter.id].title, chapter.id);
 });
 
-test("boarding illustration remains in the story without the removed copy", () => {
+test("every journey step always has a visible title and useful explanatory text", () => {
   const boarding = BEATS.find((b) => b.id === "boarding");
   assert.ok(boarding, "the boarding visual beat remains");
-  assert.equal(STEP_COPY.boarding.title, "");
-  assert.equal(STEP_COPY.boarding.body, "");
   assert.equal(STEP_COPY.boarding.label, "타는 곳");
+  assert.match(STEP_COPY.boarding.title, /버스/);
+  assert.match(STEP_COPY.boarding.body, /타는 정류장/);
+  for (const beat of BEATS) {
+    const copy = STEP_COPY[beat.id];
+    assert.ok(copy.title.trim(), `${beat.id}: missing heading`);
+    assert.ok(copy.body.trim(), `${beat.id}: missing description`);
+  }
   const journey = readFileSync(repo("apps/web/src/sections/Journey.tsx"), "utf8");
-  assert.match(journey, /copy\.title \? <h3/);
-  assert.match(journey, /copy\.body \? <p/);
-  assert.match(journey, /step-\$\{beat\.id\}-label/);
+  assert.match(journey, /<h3 id=\{`step-\$\{beat\.id\}`\}>\{copy\.title\}<\/h3>/);
+  assert.match(journey, /<p className="step-body">\{copy\.body\}<\/p>/);
+});
+
+test("journey opening does not position map apps as better than TAPSO", () => {
+  assert.match(CHAPTER_COPY.plan.lede, /TAPSO/);
+  assert.match(CHAPTER_COPY.plan.lede, /남은 정거장/);
+  assert.doesNotMatch(CHAPTER_COPY.plan.lede, /지도 앱이 잘|더 잘|맡아요/);
 });
 
 test("destination guide matches implemented stop-name, address, and building lookup", () => {
