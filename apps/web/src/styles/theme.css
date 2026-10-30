@@ -75,11 +75,11 @@
 .site-header.is-over-film .brand,
 .site-header.is-over-film .site-nav a,
 .site-header.is-over-film .theme-toggle {
-  text-shadow: 0 1px 10px rgb(15 23 26 / 55%);
+  text-shadow: 0 1px 10px rgb(15 23 26 / 70%);
 }
 
 .site-header.is-over-film .site-nav a {
-  color: rgb(255 255 255 / 86%);
+  color: #ffffff;
 }
 
 .site-header.is-over-film .site-nav a:hover {
@@ -89,8 +89,8 @@
 
 .site-header.is-over-film .theme-toggle {
   color: #ffffff;
-  border-color: rgb(255 255 255 / 50%);
-  background: rgb(15 23 26 / 30%);
+  border-color: rgb(255 255 255 / 60%);
+  background: rgb(15 23 26 / 50%);
 }
 
 .site-header.is-over-film .header-cta {

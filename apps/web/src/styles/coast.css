@@ -43,6 +43,8 @@
 .coast-v4 .coast-film {
   opacity: 0;
   z-index: 0;
+  /* The footage is overcast; lift colour, not brightness, so the white copy keeps its contrast. */
+  filter: saturate(1.14) contrast(1.05);
   transition: opacity 1000ms ease-in-out;
   will-change: opacity;
 }
@@ -61,17 +63,28 @@
 .coast-v4 .coast-shade {
   z-index: 3;
 }
+/* The copy sits on the left half, so the heavy shade does too. The left
+   gradient carries the text and the top band the header; the bottom band is
+   eased off toward the right so the footage there is not dimmed for no reason. */
 .coast-v4 .coast-shade {
   position: absolute;
   inset: 0;
   background:
-    linear-gradient(90deg, rgb(var(--film-basalt) / 82%) 0%, rgb(var(--film-basalt) / 60%) 39%, transparent 90%),
-    linear-gradient(0deg, rgb(var(--film-basalt) / 83%) 0%, transparent 42%),
+    linear-gradient(90deg, rgb(var(--film-basalt) / 82%) 0%, rgb(var(--film-basalt) / 60%) 39%, rgb(var(--film-basalt) / 18%) 70%, transparent 90%),
     linear-gradient(180deg, rgb(var(--film-basalt) / 65%) 0%, transparent 30%);
+}
+.coast-v4 .coast-shade::after {
+  content: "";
+  position: absolute;
+  inset: 0;
+  background: linear-gradient(0deg, rgb(var(--film-basalt) / 83%) 0%, transparent 42%);
+  -webkit-mask-image: linear-gradient(90deg, #000 0%, #000 55%, rgb(0 0 0 / 45%) 100%);
+  mask-image: linear-gradient(90deg, #000 0%, #000 55%, rgb(0 0 0 / 45%) 100%);
 }
 .coast-v4.is-preview .coast-shade {
   background: rgb(var(--film-basalt) / 82%);
 }
+.coast-v4.is-preview .coast-shade::after { content: none; }
 
 .coast-v4 .coast-copy {
   z-index: 1;
@@ -103,12 +116,15 @@
 .coast-v4 .coast-actions { display: flex; flex-wrap: wrap; gap: 12px; }
 .coast-v4 .btn-primary { color: var(--night); background: var(--mint); }
 .coast-v4 .btn-primary:hover { background: #52d8be; }
+/* Dark glass, not white glass: white text stays readable on any frame. */
 .coast-v4 .btn-glass {
   color: #fff;
-  background: rgb(255 255 255 / 12%);
-  border-color: rgb(255 255 255 / 36%);
+  background: rgb(var(--film-basalt) / 52%);
+  border-color: rgb(255 255 255 / 60%);
+  -webkit-backdrop-filter: blur(10px);
+  backdrop-filter: blur(10px);
 }
-.coast-v4 .btn-glass:hover { background: rgb(255 255 255 / 20%); }
+.coast-v4 .btn-glass:hover { background: rgb(var(--film-basalt) / 68%); border-color: #fff; }
 .coast-v4 .coast-status-line {
   max-width: 500px;
   margin-top: 20px;
@@ -148,6 +164,7 @@
   line-height: 1.45;
   color: var(--film-ink-2);
   text-align: right;
+  text-shadow: 0 1px 8px rgb(var(--film-basalt) / 85%);
 }
 
 .coast-v4 .coast-demo {
@@ -224,8 +241,10 @@
   .coast-v4 .coast-actions .btn { flex: 1 1 auto; }
   .coast-v4 .coast-status-line { font-size: 0.875rem; }
   .coast-v4 .coast-shade {
-    background: linear-gradient(0deg, rgb(var(--film-basalt) / 90%), rgb(var(--film-basalt) / 70%) 58%, rgb(var(--film-basalt) / 35%));
+    /* The copy sits in the lower half; the top of the frame carries no text. */
+    background: linear-gradient(0deg, rgb(var(--film-basalt) / 90%) 0%, rgb(var(--film-basalt) / 72%) 55%, rgb(var(--film-basalt) / 30%) 72%, rgb(var(--film-basalt) / 6%) 100%);
   }
+  .coast-v4 .coast-shade::after { content: none; }
   .coast-v4 .coast-bottom { bottom: max(16px, env(safe-area-inset-bottom)); }
   .coast-v4 .coast-film-controls { justify-content: space-between; }
   .coast-v4 .coast-credit { flex: 1 1 175px; font-size: 0.75rem; }
