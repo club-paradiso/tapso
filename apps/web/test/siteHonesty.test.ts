@@ -120,9 +120,9 @@ test("the claim guard itself catches what it is meant to catch", () => {
 
 test("status never claims TestFlight or the App Store is here", () => {
   for (const item of STATUS_ITEMS) {
-    if (/TestFlight|App Store/.test(item.title)) assert.equal(item.state, "later", item.title);
+    if (/TestFlight|App Store/.test(item.title)) assert.equal(item.level, "blocked", item.title);
   }
-  assert.ok(STATUS_ITEMS.some((i) => i.state === "done"));
+  assert.ok(STATUS_ITEMS.some((i) => i.level === "realdata" || i.level === "built"));
 });
 
 test("the landing page omits the map-app comparison section without leaving a blank block", () => {
