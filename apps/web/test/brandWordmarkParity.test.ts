@@ -23,8 +23,8 @@ test("header and footer use one rounded wordmark without a visible Korean suffix
   assert.match(mark, /white-space:\s*nowrap;/);
   assert.match(css, /\.brand-word\s*\{\s*font-size:\s*1\.25rem;/);
   assert.match(css, /\.footer-logo\s*\{[^}]*font-size:\s*1\.25rem;/s);
-  assert.match(header, /data-wordmark="TAPSŌ"/);
-  assert.match(footer, /role="img" aria-label="TAPSŌ"/);
+  assert.match(header, /data-wordmark="TAPSO"/);
+  assert.match(footer, /role="img" aria-label="TAPSO"/);
   for (const source of [header, footer]) {
     assert.match(source, /TAPS<span className="brand-word-o"/);
     assert.doesNotMatch(source, /<span>탑서<\/span>/);

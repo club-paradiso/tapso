@@ -17,7 +17,7 @@ const FLOW = [
     tone: "map",
   },
   {
-    who: "탑서",
+    who: "TAPSO",
     question: "지금 탄 버스, 언제 내리지?",
     body: "탄 버스를 확인하고, 남은 정거장을 지켜보다가 내릴 때 알려요.",
     Icon: BusIcon,
@@ -26,7 +26,7 @@ const FLOW = [
   {
     who: "다시 지도 앱",
     question: "내린 다음엔 어디로?",
-    body: "걸어가는 길은 지도 앱이 더 잘 알아요.",
+    body: "내린 뒤 도보 길찾기로 자연스럽게 이어갈 수 있어요.",
     Icon: WalkIcon,
     tone: "map",
   },
@@ -38,15 +38,15 @@ export function MapCompanion() {
         <SectionHead
           title={
             <>
-              지도 앱은 길을 찾고,
+              목적지를 정한 순간부터,
               <br />
-              탑서는 내릴 때를 지켜요.
+              TAPSO가 하차까지 함께해요.
             </>
           }
           titleId="maps-title"
         >
           <p>
-            길찾기는 카카오맵이나 네이버 지도가 더 잘해요. 탑서는 버스에 탄 다음부터 맡습니다. 지금 탄 버스와 남은 정거장, 내릴 순간에만 집중해요.
+            목적지나 건물 이름으로 하차 정류장을 찾고, 탈 버스를 확인하세요. TAPSO가 남은 정거장과 내릴 순간을 계속 보여줘요.
           </p>
         </SectionHead>
 
@@ -80,7 +80,7 @@ export function MapCompanion() {
             ))}
           </ul>
           <p className="fineprint">
-            카카오맵, 네이버 지도, Apple 지도는 각 회사의 서비스이며, 탑서와 제휴 관계가 없어요. ‘체험판’은
+            카카오맵, 네이버 지도, Apple 지도는 각 회사의 서비스이며, TAPSO와 제휴 관계가 없어요. ‘체험판’은
             합성 데이터로 움직이는 개발 중인 iOS 앱을 말해요.
           </p>
         </div>

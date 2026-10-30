@@ -55,7 +55,7 @@ export function Waitlist() {
               </div>
               <div>
                 <dt>쓰는 곳</dt>
-                <dd>탑서 출시와 TestFlight 소식 안내에만 써요.</dd>
+                <dd>TAPSO 출시와 TestFlight 소식 안내에만 써요.</dd>
               </div>
               <div>
                 <dt>지우는 때</dt>

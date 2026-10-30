@@ -7,7 +7,7 @@ export function Footer() {
         <div className="footer-brand">
           <p className="footer-logo">
             <BrandMark size={36} />
-            <span className="brand-word" role="img" aria-label="TAPSŌ">
+            <span className="brand-word" role="img" aria-label="TAPSO">
               TAPS<span className="brand-word-o" aria-hidden="true">O</span>
             </span>
           </p>
@@ -36,11 +36,11 @@ export function Footer() {
               <a href="#waitlist-privacy">사전예약 개인정보 안내</a>
             </li>
             <li>
-              <a href="#privacy">탑서의 개인정보 원칙</a>
+              <a href="#privacy">TAPSO의 개인정보 원칙</a>
             </li>
           </ul>
           <ul>
-            <li><a href="#how">탑서 이용 방법</a></li>
+            <li><a href="#how">TAPSO 사용 방법</a></li>
             <li><a href="#faq">자주 묻는 질문</a></li>
           </ul>
         </nav>

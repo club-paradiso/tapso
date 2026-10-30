@@ -41,12 +41,12 @@ export function Support({ onOpen }: { onOpen: () => void }) {
     <section className="section support" id="support" aria-labelledby="support-title" ref={ref}>
       <div className="container">
         <SectionHead
-          title="탑서에 커피 한 잔 보태고 싶다면"
+          title="개발자한테 커피 한 잔 보태고 싶다면"
           titleId="support-title"
         >
           <p>
             서버비, 실제 기기 테스트, 출시 준비에 비용이 들어요. 후원하지 않아도
-            탑서는 그대로 쓸 수 있습니다.
+            TAPSO는 그대로 쓸 수 있습니다.
           </p>
         </SectionHead>
 
@@ -69,7 +69,7 @@ export function Support({ onOpen }: { onOpen: () => void }) {
               {supportOpen ? "후원하기" : "후원 준비 상태 보기"}
             </button>
             <p className="fineprint">
-              탑서는 비영리 단체가 아니며 기부금 영수증이나 세액공제는 제공하지
+              TAPSO는 비영리 단체가 아니며 기부금 영수증이나 세액공제는 제공하지
               않습니다. 후원 여부와 앱 이용에는 아무 관계가 없어요.
             </p>
           </div>
@@ -86,7 +86,7 @@ export function Support({ onOpen }: { onOpen: () => void }) {
               <li>
                 <a href="#status">
                   <b>개발 현황 살펴보기</b>
-                  <span>탑서가 어디까지 만들어졌는지 확인해보세요.</span>
+                  <span>TAPSO가 어디까지 만들어졌는지 확인해보세요.</span>
                 </a>
               </li>
               <li>

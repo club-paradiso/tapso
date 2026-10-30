@@ -144,7 +144,7 @@ export default function SupportDialog({ onClose }: { onClose: () => void }) {
       {/* The header stays outside the scrolling body so the close button is
           reachable even after scrolling to the bottom of the sheet. */}
       <div className="support-dialog-header">
-        <h2 id={titleId}>탑서를 응원하는 방법</h2>
+        <h2 id={titleId}>TAPSO 개발을 응원하는 방법</h2>
         <button
           type="button"
           className="support-dialog-close"
@@ -158,14 +158,14 @@ export default function SupportDialog({ onClose }: { onClose: () => void }) {
       <div className="support-dialog-body">
         <p className="support-dialog-intro">
           후원금은 서버비, 실제 기기 테스트, 출시 준비에 씁니다. 후원하지 않아도
-          탑서는 그대로 쓸 수 있어요.
+          TAPSO는 그대로 쓸 수 있어요.
         </p>
 
         {SUPPORT_CHANNEL_AVAILABILITY.bankTransfer ? (
           <section className="support-channel" aria-labelledby={`${titleId}-bank`}>
             <div className="support-channel-heading">
               <div>
-                <p className="support-channel-kicker">제주에서 만드는 탑서 · KRW</p>
+                <p className="support-channel-kicker">제주에서 만드는 TAPSO · KRW</p>
                 <h3 id={`${titleId}-bank`}>{SUPPORT_CHANNELS.bank.name} 계좌로 응원하기</h3>
               </div>
               <span className="support-channel-badge">원화 송금</span>
@@ -244,7 +244,7 @@ export default function SupportDialog({ onClose }: { onClose: () => void }) {
             </div>
             <p className="support-channel-copy">
               카드나 지원되는 간편결제로 후원할 수 있어요. 결제 정보는 Buy Me a
-              Coffee가 처리하고 탑서는 카드 정보를 저장하지 않습니다.
+              Coffee가 처리하고 TAPSO는 카드 정보를 저장하지 않습니다.
             </p>
             <a
               className="figma-submit support-channel-button"
@@ -267,7 +267,7 @@ export default function SupportDialog({ onClose }: { onClose: () => void }) {
           <section className="support-channel support-channel-native" aria-labelledby={`${titleId}-native`}>
             <div className="support-channel-heading">
               <div>
-                <p className="support-channel-kicker">탑서 웹사이트</p>
+                <p className="support-channel-kicker">TAPSO 웹사이트</p>
                 <h3 id={`${titleId}-native`}>원화 카드 결제</h3>
               </div>
               <span className="support-channel-badge">KRW</span>
@@ -352,7 +352,7 @@ export default function SupportDialog({ onClose }: { onClose: () => void }) {
               disabled={!amountValid || state.status !== "ready"}
               onClick={start}
             >
-              {state.status === "starting" ? "결제 창 여는 중…" : "탑서에서 카드로 후원"}
+              {state.status === "starting" ? "결제 창 여는 중…" : "TAPSO에서 카드로 후원"}
             </button>
           </section>
         ) : null}
@@ -387,7 +387,7 @@ export default function SupportDialog({ onClose }: { onClose: () => void }) {
         ) : null}
 
         <p className="fineprint">
-          탑서는 비영리 단체가 아니며 기부금 영수증이나 세액공제를 제공하지 않습니다.
+          TAPSO는 비영리 단체가 아니며 기부금 영수증이나 세액공제를 제공하지 않습니다.
         </p>
       </div>
     </dialog>

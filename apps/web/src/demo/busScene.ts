@@ -59,7 +59,7 @@ export const BUS_SCENES: Record<BusView, BusScene> = {
   },
   tapso: {
     view: "tapso",
-    tab: "탑서가 볼 때",
+    tab: "TAPSO가 볼 때",
     headline: "이 버스로 보여요",
     detail: "타는 정류장을 기준으로 봐요. 이미 지나간 버스는 내 버스일 수 없고, 최종 확인은 탑승자가 해요.",
     asksRider: false,
