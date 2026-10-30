@@ -112,6 +112,10 @@ test("the claim guard itself catches what it is meant to catch", () => {
     "탑서가 자동으로 버스를 찾아드려요",
     "기부금 영수증을 발급해드려요",
     "1만 명이 사용 중",
+    "사전예약을 받고 있어요",
+    "실제 iPhone 검증을 완료",
+    "앱을 닫아도 계속 안내",
+    "위치 권한을 묻지 않아요",
   ];
   for (const sample of samples) {
     assert.ok(FORBIDDEN_CLAIMS.some(({ pattern }) => pattern.test(sample)), sample);
