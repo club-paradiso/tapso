@@ -9,6 +9,7 @@ import { Status } from "./sections/Status";
 import { Waitlist } from "./sections/Waitlist";
 import { Support } from "./sections/Support";
 import { Faq } from "./sections/Faq";
+import { useDisclosureAnchors } from "./components/ResponsiveDetails";
 import { Footer } from "./sections/Footer";
 
 // Kept out of the initial chunk: the marketing page must not pay for a
@@ -98,6 +99,7 @@ function SupportReturnBanner({
 }
 
 export default function App() {
+  useDisclosureAnchors();
   const [supportOpen, setSupportOpen] = useState(false);
   const [supportReturn, dismissSupportReturn] = useSupportReturn();
 

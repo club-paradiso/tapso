@@ -1,3 +1,4 @@
+import { ResponsiveDetails } from "../components/ResponsiveDetails";
 import { BusIcon, PinIcon } from "../components/Icons";
 import { SectionHead } from "../components/SectionHead";
 import { PRIVACY_POINTS } from "../content/site.ts";
@@ -36,6 +37,8 @@ export function Privacy() {
           </div>
         </div>
         <div>
+          <p className="mobile-privacy-note">선택 기능에서는 추가 권한을 요청할 수 있어요. 실제 기기 동작은 아직 검증 전이에요.</p>
+          <ResponsiveDetails summary="개인정보 원칙 자세히 보기">
           <ul className="privacy-points">
             {PRIVACY_POINTS.map((point) => (
               <li key={point.title}>
@@ -47,6 +50,7 @@ export function Privacy() {
           <p className="fineprint">
             지금 개발 중인 iOS 앱 기준이에요. 선택 기능의 위치 권한과 실제 기기 동작은 검증이 필요해요.
           </p>
+          </ResponsiveDetails>
         </div>
       </div>
     </section>

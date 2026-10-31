@@ -140,15 +140,7 @@
 }
 
 @media (max-width: 959px) {
-  .site-header-inner {
-    row-gap: 2px;
-  }
-
-  /* On phones the header has a second row (the nav strip), so it cannot stay
-     transparent over the hero film: the film only tucks 64px underneath,
-     which would leave white text floating over the page background. Keep the
-     mobile header opaque and readable instead; coast.css removes the film
-     overlap at this width. Desktop keeps the transparent over-film header. */
+  /* Keep mobile navigation opaque and readable above the film. */
   .site-header.is-over-film {
     color: inherit;
     background: color-mix(in srgb, var(--bg) 92%, transparent);

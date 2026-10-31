@@ -11,6 +11,7 @@ import "./styles/forms.css";
 import "./support-million.css";
 import "./styles/theme.css";
 import "./styles/coast.css";
+import "./styles/mobile-first.css";
 
 const root = document.getElementById("root")!;
 const app = (
