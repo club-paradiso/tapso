@@ -26,7 +26,7 @@ function generatedFilm(
     author: "사용자 제공 Gemini 영상",
     source,
     licence: "사용자가 제공한 AI 생성 영상",
-    credit: "AI 제작 연출 영상 · 실제 버스 촬영물이 아닙니다.",
+    credit: "AI 제작 연출 영상",
   } as const;
 }
 
