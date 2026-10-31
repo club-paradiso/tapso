@@ -1,5 +1,5 @@
 /* Mobile-first disclosure and navigation. Desktop keeps its editorial journey. */
-.mobile-menu, .mobile-walkthrough, .mobile-privacy-note, .waitlist-mobile-title { display: none; }
+.mobile-menu, .mobile-walkthrough, .mobile-privacy-note, .waitlist-mobile-title, .support-mobile-action { display: none; }
 .responsive-details { min-width: 0; }
 .responsive-details > summary, .mobile-menu > summary {
   display: flex; align-items: center; justify-content: space-between; gap: 12px;
@@ -45,7 +45,7 @@ details[open] > summary > .disclosure-mark { transform: rotate(225deg); margin-b
   .walkthrough-steps { position: sticky; top: calc(65px + env(safe-area-inset-top)); z-index: 4; background: var(--bg); display: grid; grid-template-columns: repeat(4, minmax(0,1fr)); gap: 4px; padding-bottom: 16px; border-bottom: 1px solid var(--separator); }
   .walkthrough-steps button { display: flex; flex-direction: column; align-items: center; gap: 6px; justify-content: center; min-height: 64px; min-width: 44px; border: 0; border-radius: 12px; background: transparent; color: var(--text-secondary); padding: 8px 2px; font-size: 0.8125rem; font-weight: 700; }
   .walkthrough-steps button > span { font-size: 0.8125rem; }
-  .walkthrough-steps button[aria-pressed="true"] { color: var(--ink); background: var(--mint-14); box-shadow: inset 0 -3px var(--mint); }
+  .walkthrough-steps button[aria-pressed="true"] { color: var(--ink); background: var(--mint-14); }
   .walkthrough-copy { min-height: 144px; padding-block: 20px 12px; }
   .walkthrough-counter { font-size: 0.8125rem; color: var(--mint-ink); font-weight: 800; margin-bottom: 4px; }
   .walkthrough-copy h3 { font-size: 1.25rem; letter-spacing: -0.025em; line-height: 1.4; margin-bottom: 8px; }
@@ -87,8 +87,9 @@ details[open] > summary > .disclosure-mark { transform: rotate(225deg); margin-b
   .waitlist-copy { gap: 12px; }
   .waitlist-copy h2 { font-size: 1.5rem; margin-bottom: 16px; }
   .waitlist-copy > p { font-size: 0.9375rem; }
-  .waitlist-copy .btn { margin-top: 12px; padding: 0; min-height: 44px; border: 0; color: var(--mint-ink); background: transparent; text-decoration: underline; text-underline-offset: 4px; }
+  .waitlist-copy .btn { display: none; }
   .support .section-head { margin-bottom: 16px; }
+  .support-mobile-action { display: inline-flex; margin-bottom: 20px; }
   .faq .faq-grid { display: block; }
   .faq-list > .responsive-details { margin-top: 12px; }
   .faq-list > .responsive-details > summary { color: var(--mint-ink); }

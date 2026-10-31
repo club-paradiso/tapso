@@ -192,7 +192,13 @@ test("unavailable preorder is not offered on the landing page", () => {
   assert.match(header, /href="#status"/);
   assert.match(footer, /href="#status"/);
   assert.match(waitlist, /사전예약을 받고 있지 않아요/);
-  assert.doesNotMatch(readFileSync(join(src, "sections/Support.tsx"), "utf8"), /onClick=\{onOpen\}/);
+  const support = readFileSync(join(src, "sections/Support.tsx"), "utf8");
+  const dialog = readFileSync(join(src, "components/SupportDialog.tsx"), "utf8");
+  assert.match(support, /후원 방법 보기/);
+  assert.match(support, /onClick=\{onOpen\}/);
+  assert.match(dialog, /SUPPORT_CHANNEL_AVAILABILITY\.bankTransfer/);
+  assert.match(dialog, /SUPPORT_CHANNEL_AVAILABILITY\.buyMeACoffee/);
+  assert.match(dialog, /config\?\.mode === "live"/);
   assert.doesNotMatch(waitlist, /<WaitlistForm|<form/);
   assert.doesNotMatch(page, /사전예약을 받고 있어요/);
 });
