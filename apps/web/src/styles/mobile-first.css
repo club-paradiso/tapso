@@ -128,3 +128,34 @@ details[open] > summary > .disclosure-mark { transform: rotate(225deg); margin-b
   .coast-v4 .coast-actions .btn { padding-inline: 14px; }
   .coast-v4 .coast-status-link { font-size: 0.8125rem; }
 }
+
+/* Keep the desktop's information on phones; disclose depth, not the topics. */
+.mobile-status-list { display: none; }
+@media (max-width: 899px) {
+  .walkthrough-explanation { margin-top: 20px; padding-left: 16px; border-left: 2px solid var(--separator); }
+  .walkthrough-explanation h4 { margin-bottom: 8px; font-size: 1rem; }
+  .walkthrough-explanation p { margin-top: 8px; color: var(--text-secondary); font-size: 0.9375rem; }
+  .mobile-trust-summary { margin-top: 36px; padding: 28px 24px; border-radius: 24px; background: var(--night); color: var(--on-dark-surface); }
+  .mobile-trust-summary .walkthrough-eyebrow { color: var(--mint); }
+  .mobile-trust-summary h3 { font-size: 1.375rem; line-height: 1.35; letter-spacing: var(--tracking-heading); }
+  .mobile-trust-summary > p:not(.walkthrough-eyebrow) { margin-top: 12px; color: var(--night-text-secondary); font-size: 0.9375rem; line-height: 1.75; }
+  .mobile-trust-summary a { display: inline-flex; align-items: center; min-height: 44px; margin-top: 12px; color: var(--mint); font-size: 0.875rem; }
+  .privacy-points { gap: 18px; }
+  .privacy-points li { padding-block: 0; }
+  .privacy-points li b { font-size: 1rem; }
+  .privacy-points li span { font-size: 0.9375rem; line-height: 1.7; }
+  .mobile-status-list { display: block; margin-bottom: 24px; }
+  .mobile-status-list section + section { margin-top: 24px; }
+  .mobile-status-list h3 { margin-bottom: 10px; color: var(--text-secondary); font-size: 0.875rem; font-weight: 700; }
+  .mobile-status-item { border-bottom: 1px solid var(--separator); }
+  .mobile-status-item summary { display: flex; align-items: center; justify-content: space-between; gap: 12px; min-height: 64px; padding-block: 12px; cursor: pointer; list-style: none; }
+  .mobile-status-item summary::-webkit-details-marker { display: none; }
+  .mobile-status-item summary > span:first-child { flex: 1; font-size: 0.9375rem; font-weight: 650; }
+  .mobile-status-item .state-pill { flex-shrink: 0; font-size: 0.6875rem; }
+  .mobile-status-item > p { padding-bottom: 16px; font-size: 0.875rem; line-height: 1.75; color: var(--text-secondary); }
+  .support-card, .support-free { padding: 20px; border-radius: 20px; }
+  .support-grid { gap: 16px; }
+  .support-uses { gap: 8px; }
+  .support-uses li { padding: 10px; font-size: 0.8125rem; }
+  .faq-list > details > summary { padding-block: 16px; font-size: 0.9375rem; }
+}

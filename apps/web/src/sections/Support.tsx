@@ -17,7 +17,7 @@ export function Support({ onOpen }: { onOpen: () => void }) {
         </SectionHead>
 
         <button className="btn btn-primary support-mobile-action" type="button" onClick={onOpen}>후원 방법 보기</button>
-        <ResponsiveDetails summary="개발 응원과 후원 준비 안내">
+        <ResponsiveDetails summary="개발 응원과 후원 준비 안내" mobileOpen>
         <div className="support-grid">
           <div className="support-card">
             <p className="support-status">

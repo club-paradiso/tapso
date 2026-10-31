@@ -38,7 +38,7 @@ export function Privacy() {
         </div>
         <div>
           <p className="mobile-privacy-note">선택 기능에서는 추가 권한을 요청할 수 있어요. 실제 기기 동작은 아직 검증 전이에요.</p>
-          <ResponsiveDetails summary="개인정보 원칙 자세히 보기">
+          <ResponsiveDetails summary="개인정보 원칙" mobileOpen>
           <ul className="privacy-points">
             {PRIVACY_POINTS.map((point) => (
               <li key={point.title}>

@@ -1,6 +1,7 @@
 import { useEffect, useState } from "react";
 import { BeatDevice, pictureLabel } from "./JourneyParts";
 import { PreviewTag } from "./RideParts";
+import { CHAPTER_COPY, STEP_COPY } from "../story/journeyCopy.ts";
 import { resolveBeat, type BeatId } from "../story/beats.ts";
 import { MOBILE_STAGES, MOBILE_RIDE_VIEWS, mobileBeat } from "../story/mobileJourney.ts";
 
@@ -23,7 +24,15 @@ export function MobileWalkthrough() {
       <PreviewTag />
     </div>
     {current === 3 ? <div className="walkthrough-views" role="group" aria-label="하차 안내 화면 선택">{MOBILE_RIDE_VIEWS.map((view) => <button type="button" key={view.beatId} aria-pressed={rideView === view.beatId} onClick={() => setRideView(view.beatId)}>{view.label}</button>)}</div> : null}
+    {current === 2 ? <aside className="walkthrough-explanation"><h4>같은 번호의 버스가 여러 대 다녀요.</h4><p>{CHAPTER_COPY.confirm.lede}</p><p>{STEP_COPY.confirmed.body}</p></aside> : null}
+    {current === 3 ? <aside className="walkthrough-explanation"><h4>2정거장 전부터, 내릴 때까지.</h4><p>{CHAPTER_COPY.arrive.lede}</p><p>{STEP_COPY.pocket.note}</p></aside> : null}
     <p className="walkthrough-caveat">개발 중인 화면 예시예요. 실제 iPhone·버스 검증은 남아 있으며, 앱을 닫은 뒤의 안내는 아직 준비 중이에요.</p>
+    <aside className="mobile-trust-summary" aria-labelledby="mobile-trust-title">
+      <p className="walkthrough-eyebrow">정보가 흔들릴 때도</p>
+      <h3 id="mobile-trust-title">{CHAPTER_COPY.trust.title}</h3>
+      <p>{STEP_COPY.trust.body}</p>
+      <a className="text-link" href="#trust">정보 지연·오프라인 안내 살펴보기</a>
+    </aside>
     <noscript><ol className="walkthrough-fallback">{MOBILE_STAGES.map((item) => <li key={item.beatId}><b>{item.title}</b><p>{item.body}</p></li>)}</ol><p>아래 ‘전체 사용 과정 보기’에서 모든 화면을 볼 수 있어요.</p></noscript>
   </section>;
 }
