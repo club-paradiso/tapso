@@ -1042,7 +1042,7 @@
 
 .level-built .timeline-node {
   border-color: var(--mint);
-  background: var(--bg);
+  background: var(--mint);
 }
 
 .level-realdata .timeline-node {

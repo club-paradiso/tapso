@@ -122,6 +122,20 @@ test("the evidence map stays out of the shipped source", () => {
   assert.doesNotMatch(siteSource, /apps\/ios|services\/api|artifacts\//);
 });
 
+test("implemented timeline milestones are filled, while verifying and blocked remain open", () => {
+  const css = readFileSync(join(repo, "apps", "web", "src", "styles", "sections.css"), "utf8");
+  for (const level of ["built", "realdata", "device"]) {
+    const rule = css.match(new RegExp(`\\.level-${level} \\.timeline-node \\{([^}]+)\\}`))?.[1];
+    assert.ok(rule, `${level} marker rule must exist`);
+    assert.match(rule, /background:\s*var\(--mint\)/, `${level} milestone should be filled`);
+  }
+  for (const level of ["verifying", "blocked"]) {
+    const rule = css.match(new RegExp(`\\.level-${level} \\.timeline-node \\{([^}]+)\\}`))?.[1];
+    assert.ok(rule, `${level} marker rule must exist`);
+    assert.doesNotMatch(rule, /background:\s*var\(--mint\)/, `${level} must remain unfinished`);
+  }
+});
+
 test("the section shows the new title, the three groups and one pill per item", () => {
   assert.match(statusSource, /TAPSO는 지금 이렇게 만들어지고 있어요/);
   assert.match(statusSource, /STATUS_GROUPS\.map/);
