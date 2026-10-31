@@ -157,16 +157,15 @@ export default function SupportDialog({ onClose }: { onClose: () => void }) {
 
       <div className="support-dialog-body">
         <p className="support-dialog-intro">
-          후원금은 서버비, 실제 기기 테스트, 출시 준비에 씁니다. 후원하지 않아도
-          TAPSO는 그대로 쓸 수 있어요.
+          후원금은 서버 운영, 실제 iPhone 테스트, 출시 준비에 써요.
+          후원은 선택이며, 앱 이용 조건이 아니에요.
         </p>
 
         {SUPPORT_CHANNEL_AVAILABILITY.bankTransfer ? (
           <section className="support-channel" aria-labelledby={`${titleId}-bank`}>
             <div className="support-channel-heading">
               <div>
-                <p className="support-channel-kicker">제주에서 만드는 TAPSO · KRW</p>
-                <h3 id={`${titleId}-bank`}>{SUPPORT_CHANNELS.bank.name} 계좌로 응원하기</h3>
+                <h3 id={`${titleId}-bank`}>계좌이체로 응원하기</h3>
               </div>
               <span className="support-channel-badge">원화 송금</span>
             </div>
@@ -237,14 +236,13 @@ export default function SupportDialog({ onClose }: { onClose: () => void }) {
           <section className="support-channel" aria-labelledby={`${titleId}-bmac`}>
             <div className="support-channel-heading">
               <div>
-                <p className="support-channel-kicker">원하는 방식으로 간편하게</p>
-                <h3 id={`${titleId}-bmac`}>커피 한 잔으로 응원하기</h3>
+                <h3 id={`${titleId}-bmac`}>커피 한 잔 값으로 응원하기</h3>
               </div>
               <span className="support-channel-badge">Buy Me a Coffee</span>
             </div>
             <p className="support-channel-copy">
               카드나 지원되는 간편결제로 후원할 수 있어요. 결제 정보는 Buy Me a
-              Coffee가 처리하고 TAPSO는 카드 정보를 저장하지 않습니다.
+              Coffee가 처리해요. TAPSO는 카드 정보를 저장하지 않아요.
             </p>
             <a
               className="figma-submit support-channel-button"

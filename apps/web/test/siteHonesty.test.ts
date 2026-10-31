@@ -118,6 +118,12 @@ test("no source file makes a claim TAPSO cannot back", () => {
   }
 });
 
+test("hero keeps development status without repeated availability copy", () => {
+  const hero = readFileSync(join(src, "sections/Hero.tsx"), "utf8");
+  assert.doesNotMatch(hero, /개발 중인 iPhone 앱이에요|사전예약도 받고 있지 않아요/);
+  assert.match(hero, /개발 중 · TestFlight 공개 전/);
+});
+
 test("the claim guard itself catches what it is meant to catch", () => {
   const samples = [
     "지금 다운로드하세요",
@@ -191,7 +197,8 @@ test("unavailable preorder is not offered on the landing page", () => {
   assert.equal(config.copy.cta, "개발 현황 보기");
   assert.match(header, /href="#status"/);
   assert.match(footer, /href="#status"/);
-  assert.match(waitlist, /사전예약을 받고 있지 않아요/);
+  assert.match(waitlist, /TestFlight 공개 일정은 아직 정해지지 않았어요/);
+  assert.match(waitlist, /실제 iPhone 테스트와 배포를 준비/);
   const support = readFileSync(join(src, "sections/Support.tsx"), "utf8");
   const dialog = readFileSync(join(src, "components/SupportDialog.tsx"), "utf8");
   assert.match(support, /후원 방법 보기/);

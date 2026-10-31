@@ -36,7 +36,9 @@ test("one-tap Toss is the primary domestic action; QR and bank copy remain fallb
   assert.doesNotMatch(dialog, /toss-help/);
   assert.match(dialog, /writeText\(SUPPORT_CHANNELS\.bank\.account\)/);
   assert.ok(dialog.indexOf("토스 앱에서 바로 송금하기") < dialog.indexOf("support-transfer-qr"));
-  assert.match(dialog, /커피 한 잔으로 응원하기/);
+  assert.match(dialog, /계좌이체로 응원하기/);
+  assert.match(dialog, /커피 한 잔 값으로 응원하기/);
+  assert.doesNotMatch(dialog, /제주에서 만드는 TAPSO · KRW/);
   assert.doesNotMatch(dialog, /kakaopay|카카오페이/i);
 });
 

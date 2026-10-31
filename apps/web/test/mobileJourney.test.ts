@@ -32,7 +32,7 @@ test("no-JS and anchor disclosure fallbacks remain in the shipped page", () => {
   const walkthrough = read("../src/components/MobileWalkthrough.tsx");
   const details = read("../src/components/ResponsiveDetails.tsx");
   assert.match(walkthrough, /<noscript>/);
-  assert.match(walkthrough, /실제 iPhone·버스 검증은 남아/);
+  assert.match(walkthrough, /실제 iPhone·버스 테스트와 앱을 닫은 뒤의 안내 검증은 남아/);
   assert.match(walkthrough, /aria-pressed=\{current === index\}/);
   assert.match(details, /ancestor instanceof HTMLDetailsElement/);
   assert.match(details, /ancestor.open = true/);
