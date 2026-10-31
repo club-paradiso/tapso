@@ -1,5 +1,6 @@
 /* Mobile-first disclosure and navigation. Desktop keeps its editorial journey. */
-.mobile-menu, .mobile-walkthrough, .mobile-privacy-note, .waitlist-mobile-title, .support-mobile-action { display: none; }
+.mobile-menu, .mobile-walkthrough, .mobile-privacy-note, .waitlist-mobile-title { display: none; }
+.support-mobile-action { display: inline-flex; margin-bottom: 20px; }
 .responsive-details { min-width: 0; }
 .responsive-details > summary, .mobile-menu > summary {
   display: flex; align-items: center; justify-content: space-between; gap: 12px;
@@ -89,7 +90,6 @@ details[open] > summary > .disclosure-mark { transform: rotate(225deg); margin-b
   .waitlist-copy > p { font-size: 0.9375rem; }
   .waitlist-copy .btn { display: none; }
   .support .section-head { margin-bottom: 16px; }
-  .support-mobile-action { display: inline-flex; margin-bottom: 20px; }
   .faq .faq-grid { display: block; }
   .faq-list > .responsive-details { margin-top: 12px; }
   .faq-list > .responsive-details > summary { color: var(--mint-ink); }
