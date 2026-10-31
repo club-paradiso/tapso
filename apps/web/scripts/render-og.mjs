@@ -50,7 +50,8 @@ await page.evaluate(() => {
   og.innerHTML = `
     <div class="og-copy">
       <div class="og-brand"></div>
-      <p class="og-title">와리지 말앙<br />혼저 탑서.</p>
+      <p class="og-title">와리지 말앙,<br />쉬멍 탑서.</p>
+      <p class="og-gloss">서두르지 말고, 쉬어 가며 타세요.</p>
       <p class="og-line">제주 버스 승차 동반자 · iPhone 앱 개발 중</p>
     </div>
     <div class="og-visual">
@@ -72,6 +73,7 @@ await page.evaluate(() => {
     .og-brand .brand-word { font-size: 26px; }
     .og-brand svg { width: 44px; height: 44px; }
     .og-title { margin: 22px 0 0; font-size: 92px; font-weight: 850; letter-spacing: -0.05em; line-height: 1.03; color: var(--ink); }
+    .og-gloss { margin: 18px 0 0; font-size: 22px; font-weight: 600; color: var(--text-secondary); }
     .og-line { margin: 26px 0 0; font-size: 24px; font-weight: 700; color: var(--text-secondary); }
     .og-visual { position: relative; z-index: 1; display: flex; flex-direction: column; align-items: flex-start; gap: 18px; font-size: 18px; }
     .og-island { font-size: 22px; }

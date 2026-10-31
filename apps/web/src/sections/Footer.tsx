@@ -12,8 +12,8 @@ export function Footer() {
             </span>
           </p>
           <p className="footer-motto">
-            와리지 말앙 혼저 탑서.
-            <span>서두르지 말고, 어서 타세요.</span>
+            와리지 말앙,<br />쉬멍 탑서.
+            <span>서두르지 말고, 쉬어 가며 타세요.</span>
           </p>
           <p className="footer-status">
             <span className="kicker-dot" aria-hidden="true" />
