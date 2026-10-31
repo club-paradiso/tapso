@@ -127,12 +127,12 @@ test("implemented timeline milestones are filled, while verifying and blocked re
   for (const level of ["built", "realdata", "device"]) {
     const rule = css.match(new RegExp(`\\.level-${level} \\.timeline-node \\{([^}]+)\\}`))?.[1];
     assert.ok(rule, `${level} marker rule must exist`);
-    assert.match(rule, /background:\\s*var\\(--mint\\)/, `${level} milestone should be filled`);
+    assert.match(rule, /background:\s*var\(--mint\)/, `${level} milestone should be filled`);
   }
   for (const level of ["verifying", "blocked"]) {
     const rule = css.match(new RegExp(`\\.level-${level} \\.timeline-node \\{([^}]+)\\}`))?.[1];
     assert.ok(rule, `${level} marker rule must exist`);
-    assert.doesNotMatch(rule, /background:\\s*var\\(--mint\\)/, `${level} must remain unfinished`);
+    assert.doesNotMatch(rule, /background:\s*var\(--mint\)/, `${level} must remain unfinished`);
   }
 });
 
