@@ -113,7 +113,7 @@ details[open] > summary > .disclosure-mark { transform: rotate(225deg); margin-b
   .coast-v4 .coast-actions .btn { flex: 0 1 auto; min-height: 48px; padding: 0 20px; font-size: 0.9375rem; }
   .coast-v4 .coast-status-link { font-size: 0.875rem; }
   .coast-v4 .coast-status-line { margin-top: 14px; font-size: 0.8125rem; }
-  .coast-v4 .coast-shade { background: linear-gradient(0deg, rgb(var(--film-basalt) / 96%) 0%, rgb(var(--film-basalt) / 85%) 55%, rgb(var(--film-basalt) / 48%) 78%, rgb(var(--film-basalt) / 8%) 100%); }
+  .coast-v4 .coast-shade { background: linear-gradient(0deg, rgb(var(--film-basalt) / 78%) 0%, rgb(var(--film-basalt) / 63%) 55%, rgb(var(--film-basalt) / 34%) 78%, rgb(var(--film-basalt) / 5%) 100%); }
   .coast-v4 .coast-stage { flex-direction: column; align-items: stretch; }
   .coast-v4 .coast-bottom { position: relative; left: auto; right: auto; bottom: auto; padding: 0 max(var(--gutter), env(safe-area-inset-right)) 16px max(var(--gutter), env(safe-area-inset-left)); }
   .coast-v4 .coast-bottom-actions { justify-content: flex-start; }
