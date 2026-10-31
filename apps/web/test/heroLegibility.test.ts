@@ -30,30 +30,30 @@ test("the glass button is dark glass with a visible border, never white-on-white
 
 test("desktop shade is lighter over the footage and still fades off on the right", () => {
   const shade = rule(coast, ".coast-v4 .coast-shade");
-  assert.match(shade, /linear-gradient\\(90deg, rgb\\(var\\(--film-basalt\\) \\/ 65%\\) 0%, rgb\\(var\\(--film-basalt\\) \\/ 45%\\) 39%/);
-  assert.match(shade, /linear-gradient\\(180deg, rgb\\(var\\(--film-basalt\\) \\/ 45%\\) 0%, transparent 30%\\)/);
+  assert.ok(shade.includes("linear-gradient(90deg, rgb(var(--film-basalt) / 65%) 0%, rgb(var(--film-basalt) / 45%) 39%"));
+  assert.ok(shade.includes("linear-gradient(180deg, rgb(var(--film-basalt) / 45%) 0%, transparent 30%)"));
   const after = rule(coast, ".coast-v4 .coast-shade::after");
-  assert.match(after, /rgb\\(var\\(--film-basalt\\) \\/ 64%\\)/);
-  assert.match(after, /mask-image:\\s*linear-gradient\\(90deg/);
-  assert.doesNotMatch(after, /180deg/);
+  assert.ok(after.includes("rgb(var(--film-basalt) / 64%)"));
+  assert.ok(after.includes("mask-image: linear-gradient(90deg"));
+  assert.ok(!after.includes("180deg"));
 });
 
 test("phone and tablet overrides cannot bring back the near-opaque black overlay", () => {
   for (const css of [coast.slice(coast.indexOf("@media (max-width: 759px)")), mobileFirst]) {
-    const gradient = css.match(/\\.coast-shade \\{\\s*[^}]*linear-gradient\\(0deg, ([^;]+)\\);/s)?.[1] ?? "";
-    const stops = [...gradient.matchAll(/\\/ (\\d+)%\\)(?: (\\d+)%)?/g)].map((m) => Number(m[1]));
+    const gradient = css.split(".coast-shade {")[1]?.split("linear-gradient(0deg, ")[1]?.split(");")[0] ?? "";
+    const stops = [...gradient.matchAll(/\/ (\d+)%\)/g)].map((m) => Number(m[1]));
     assert.equal(stops.length, 4, "mobile shade must have four opacity stops");
     assert.ok(stops[0]! >= 70 && stops[0]! <= 80, "bottom copy zone should stay legible but let video show");
     assert.ok(stops[1]! >= 58 && stops[1]! <= 65, "middle of the video is no longer heavily shaded");
     assert.ok(stops[2]! <= 35, "upper footage stays visible");
     assert.ok(stops[3]! <= 6, "top of the frame is nearly clear");
   }
-  assert.match(coast, /\\.coast-shade::after \\{ content: none; \\}/);
+  assert.ok(coast.includes(".coast-shade::after { content: none; }"));
 });
 
 test("shadowed hero text maintains legibility with the lighter shade", () => {
-  assert.match(rule(coast, ".coast-v4 h1"), /text-shadow: 0 3px 20px/);
-  assert.match(coast, /\\.coast-gloss, \\.coast-lede, \\.coast-status-line, \\.coast-status-link/);
+  assert.ok(rule(coast, ".coast-v4 h1").includes("text-shadow: 0 3px 20px"));
+  assert.ok(coast.includes(".coast-gloss, .coast-lede, .coast-status-line, .coast-status-link"));
 });
 
 test("the header over the film uses solid white type and a firm toggle", () => {
