@@ -7,7 +7,7 @@ Every moving picture on the marketing site, with its licence. `apps/web/src/cont
 Four user-supplied AI-generated scenes replace the earlier Pixabay aerial and surf
 clips on the **public-facing TAPSO hero**. The videos are illustrative, **not real
 Jeju bus footage or proof of TAPSO operating on a real bus**. The website prints
-the credit `AI 제작 연출 영상 · 실제 버스 촬영물이 아닙니다.` under
+the credit `AI 제작 연출 영상` under
 the current clip. No generated app interface, bus schedule, or real passenger
 identity is presented as authentic.
 

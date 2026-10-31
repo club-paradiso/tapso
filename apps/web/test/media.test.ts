@@ -15,8 +15,8 @@ test("only the four actual user-supplied Gemini films appear in the hero", () =>
   assert.ok(films.every((film) => film.kind === "AI 생성 연출"));
   for (const { film } of FILM_SCENES) {
     assert.doesNotMatch(film.files.medium, /joham|udo|jungmun/);
-    assert.match(film.credit, /AI 제작/);
-    assert.match(film.credit, /실제.*촬영물이 아/);
+    assert.equal(film.credit, "AI 제작 연출 영상");
+    assert.doesNotMatch(film.credit, /실제.*촬영물이 아/);
   }
 });
 
