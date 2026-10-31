@@ -12,6 +12,8 @@ import { readFileSync } from "node:fs";
 
 const read = (path: string) => readFileSync(new URL(path, import.meta.url), "utf8");
 
+const mobileFirst = read("../src/styles/mobile-first.css");
+const header = read("../src/sections/Header.tsx");
 const sections = read("../src/styles/sections.css");
 const base = read("../src/styles/base.css");
 const theme = read("../src/styles/theme.css");
@@ -37,16 +39,15 @@ function rule(source: string, selector: string): string {
   return match[1]!;
 }
 
-test("mobile header keeps the page nav reachable as a scrollable second row", () => {
-  // The nav must never be display:none again: phones had no section jumps.
-  assert.doesNotMatch(sections, /\.site-nav\s*\{\s*display:\s*none/);
-  const mobile = mediaSlice(sections, "@media (max-width: 959px)");
-  assert.match(mobile, /\.site-nav\s*\{[^}]*display:\s*block/);
-  assert.match(mobile, /\.site-nav ul\s*\{[^}]*overflow-x:\s*auto/);
-  assert.match(mobile, /\.site-nav a\s*\{[^}]*white-space:\s*nowrap/);
-  assert.match(mobile, /\.site-header-inner\s*\{[^}]*flex-wrap:\s*wrap/);
-  // Anchored sections clear the taller two-row header.
-  assert.match(mobile, /scroll-padding-top:\s*124px/);
+test("mobile header keeps navigation in an accessible native disclosure", () => {
+  assert.match(mobileFirst, /\.site-header-inner\s*\{[^}]*flex-wrap:\s*nowrap/);
+  assert.match(header, /<details className="mobile-menu"/);
+  assert.match(header, /<summary[^>]*aria-label="페이지 메뉴"[^>]*aria-controls="mobile-navigation"/);
+  assert.match(header, /event\.key === "Escape"/);
+  assert.match(header, /trigger\.current\?\.focus\(\)/);
+  assert.match(header, /revealAnchor\(item\.href\)/);
+  assert.match(mobileFirst, /scroll-padding-top:\s*80px/);
+  assert.doesNotMatch(sections, /scroll-padding-top:\s*124px/);
 });
 
 test("mobile header stays opaque over the hero film and the film does not tuck under it", () => {
@@ -157,10 +158,10 @@ test("long Jeju boarding stop takes the full mobile row instead of a 40% column"
   assert.doesNotMatch(mobileLayout, /\.scene-stop\s*\{[^}]*max-width:\s*40%/);
 });
 
-test("other mobile bus chips stay compact and the nav remains comfortably reachable", () => {
+test("other mobile bus chips stay compact and menu targets remain comfortably reachable", () => {
   assert.match(sections, /\.scene-bus\s*\{[^}]*max-width:\s*146px/);
   assert.match(sections, /@media \(max-width: 359px\)\s*\{[\s\S]*?\.scene-slot:not\(\.is-boarding\)/);
-  assert.match(sections, /\.site-nav a\s*\{[^}]*font-size:\s*clamp\(0\.8125rem, 3\.5vw, 0\.9375rem\)/);
-  assert.match(sections, /\.site-nav ul\s*\{[^}]*scroll-snap-type:\s*x proximity/);
+  assert.match(mobileFirst, /\.mobile-menu nav a\s*\{[^}]*min-height:\s*48px/);
+  assert.match(mobileFirst, /\.mobile-menu > summary\s*\{[^}]*min-height:\s*44px/);
   assert.match(rule(sections, ".site-nav a"), /min-height:\s*var\(--touch-min\)/);
 });

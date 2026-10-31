@@ -223,15 +223,14 @@
   outline-offset: 3px;
 }
 
-/* The mobile header is a taller, opaque two-row bar (theme.css), so the film
-   no longer tucks underneath it. Desktop keeps the -64px over-film overlap. */
+/* The mobile header is opaque. Desktop keeps the -64px film overlap. */
 @media (max-width: 959px) {
   .coast-v4 { margin-top: 0; }
   .coast-v4 .coast-copy { padding-top: 96px; }
 }
 
 @media (max-width: 759px) {
-  .coast-v4 .coast-stage { min-height: max(720px, 100svh); }
+  .coast-v4 .coast-stage { min-height: 0; }
   .coast-v4 .coast-copy {
     width: calc(100% - 2 * var(--gutter));
     padding: 96px 0 230px;

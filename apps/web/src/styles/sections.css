@@ -157,56 +157,9 @@
 }
 
 @media (max-width: 959px) {
-  /* Mobile header: brand / theme / CTA on the first row, the page nav as a
-     horizontally scrollable strip on the second row. Hiding the nav (the old
-     behaviour) left phone visitors with no way to jump to a section. */
-  .site-header-inner {
-    flex-wrap: wrap;
-    height: auto;
-    padding-block: 10px 0;
-    row-gap: 2px;
-  }
-
-  .site-nav {
-    display: block;
-    flex: 1 1 100%;
-    order: 3;
-    margin-left: 0;
-    border-top: 1px solid var(--ink-08);
-  }
-
-  .site-nav ul {
-    overflow-x: auto;
-    overscroll-behavior-x: contain;
-    scrollbar-width: none;
-    -webkit-overflow-scrolling: touch;
-  }
-
-  .site-nav ul::-webkit-scrollbar {
-    display: none;
-  }
-
-  .site-nav a {
-    white-space: nowrap;
-  }
-
-  .theme-toggle {
-    margin-left: auto;
-  }
-
-  .header-cta {
-    margin-left: 0;
-  }
-
-  .only-wide {
-    display: none;
-  }
-
-  /* The two-row header is taller, so anchored sections need more clearance. */
-  html {
-    scroll-padding-top: 124px;
-  }
+  .only-wide { display: none; }
 }
+
 
 /* The smallest iPhones: shrink the wordmark and CTA padding before the
    header row can overflow (32px mark + wordmark + toggle + CTA ≈ 288px). */
@@ -575,23 +528,7 @@
   overflow-wrap: anywhere;
 }
 
-@media (max-width: 959px) {
-  /* Don't sacrifice the 44px touch target to squeeze all nav labels in view. */
-  .site-nav {
-    min-width: 0;
-  }
 
-  .site-nav ul {
-    scroll-snap-type: x proximity;
-    scroll-padding-inline: 12px;
-  }
-
-  .site-nav a {
-    padding-inline: 12px;
-    font-size: clamp(0.8125rem, 3.5vw, 0.9375rem);
-    scroll-snap-align: start;
-  }
-}
 
 @media (max-width: 719px) {
   .scene {

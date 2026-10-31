@@ -1,3 +1,4 @@
+import { ResponsiveDetails } from "../components/ResponsiveDetails";
 import { SectionHead } from "../components/SectionHead";
 
 /** Support routes stay hidden until their payment flow has been verified. */
@@ -15,6 +16,7 @@ export function Support(_props: { onOpen: () => void }) {
           </p>
         </SectionHead>
 
+        <ResponsiveDetails summary="개발 응원과 후원 준비 안내">
         <div className="support-grid">
           <div className="support-card">
             <p className="support-status">
@@ -50,6 +52,7 @@ export function Support(_props: { onOpen: () => void }) {
             </ul>
           </div>
         </div>
+        </ResponsiveDetails>
       </div>
     </section>
   );
