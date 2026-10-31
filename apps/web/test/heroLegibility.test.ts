@@ -1,13 +1,13 @@
 /**
- * The hero must stay readable without burying the footage. The shade is heavy
- * only where the copy sits, and the buttons carry their own dark backing, so
- * white text does not depend on which frame of the film is showing.
+ * The hero must stay readable without burying the footage. Scrim opacity is
+ * capped on desktop and mobile; shadowed type keeps the copy legible on video.
  */
 import assert from "node:assert/strict";
 import { readFileSync } from "node:fs";
 import { test } from "node:test";
 
 const coast = readFileSync(new URL("../src/styles/coast.css", import.meta.url), "utf8");
+const mobileFirst = readFileSync(new URL("../src/styles/mobile-first.css", import.meta.url), "utf8");
 const theme = readFileSync(new URL("../src/styles/theme.css", import.meta.url), "utf8");
 
 /** Every declaration block that starts with exactly this selector, joined. */
@@ -28,23 +28,32 @@ test("the glass button is dark glass with a visible border, never white-on-white
   assert.doesNotMatch(coast, /\.btn-glass:hover \{ background: rgb\(255 255 255/);
 });
 
-test("the bottom shade eases off on the right and the top band stays for the header", () => {
+test("desktop shade is lighter over the footage and still fades off on the right", () => {
   const shade = rule(coast, ".coast-v4 .coast-shade");
-  assert.match(shade, /linear-gradient\(180deg, rgb\(var\(--film-basalt\) \/ 65%\) 0%, transparent 30%\)/);
+  assert.match(shade, /linear-gradient\\(90deg, rgb\\(var\\(--film-basalt\\) \\/ 65%\\) 0%, rgb\\(var\\(--film-basalt\\) \\/ 45%\\) 39%/);
+  assert.match(shade, /linear-gradient\\(180deg, rgb\\(var\\(--film-basalt\\) \\/ 45%\\) 0%, transparent 30%\\)/);
   const after = rule(coast, ".coast-v4 .coast-shade::after");
-  assert.match(after, /mask-image:\s*linear-gradient\(90deg/);
+  assert.match(after, /rgb\\(var\\(--film-basalt\\) \\/ 64%\\)/);
+  assert.match(after, /mask-image:\\s*linear-gradient\\(90deg/);
   assert.doesNotMatch(after, /180deg/);
 });
 
-test("on phones the top of the frame is light and the shade is heavy where the copy sits", () => {
-  const mobile = coast.slice(coast.indexOf("@media (max-width: 759px)"));
-  const gradient = mobile.match(/\.coast-shade \{\s*[^}]*linear-gradient\(0deg, ([^;]+)\);/s)?.[1] ?? "";
-  const stops = [...gradient.matchAll(/\/ (\d+)%\)(?: (\d+)%)?/g)].map((m) => Number(m[1]));
-  assert.ok(stops.length >= 4, "mobile shade has four stops");
-  assert.ok(stops[0]! >= 85, "bottom stop stays dark under the copy");
-  assert.ok(stops[1]! >= 65, "copy zone stays dark");
-  assert.ok(stops[stops.length - 1]! <= 10, "top of the frame is nearly clear");
-  assert.match(mobile, /\.coast-shade::after \{ content: none; \}/);
+test("phone and tablet overrides cannot bring back the near-opaque black overlay", () => {
+  for (const css of [coast.slice(coast.indexOf("@media (max-width: 759px)")), mobileFirst]) {
+    const gradient = css.match(/\\.coast-shade \\{\\s*[^}]*linear-gradient\\(0deg, ([^;]+)\\);/s)?.[1] ?? "";
+    const stops = [...gradient.matchAll(/\\/ (\\d+)%\\)(?: (\\d+)%)?/g)].map((m) => Number(m[1]));
+    assert.equal(stops.length, 4, "mobile shade must have four opacity stops");
+    assert.ok(stops[0]! >= 70 && stops[0]! <= 80, "bottom copy zone should stay legible but let video show");
+    assert.ok(stops[1]! >= 58 && stops[1]! <= 65, "middle of the video is no longer heavily shaded");
+    assert.ok(stops[2]! <= 35, "upper footage stays visible");
+    assert.ok(stops[3]! <= 6, "top of the frame is nearly clear");
+  }
+  assert.match(coast, /\\.coast-shade::after \\{ content: none; \\}/);
+});
+
+test("shadowed hero text maintains legibility with the lighter shade", () => {
+  assert.match(rule(coast, ".coast-v4 h1"), /text-shadow: 0 3px 20px/);
+  assert.match(coast, /\\.coast-gloss, \\.coast-lede, \\.coast-status-line, \\.coast-status-link/);
 });
 
 test("the header over the film uses solid white type and a firm toggle", () => {
