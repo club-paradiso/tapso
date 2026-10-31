@@ -109,6 +109,47 @@ export function useHeroCrossfade(
       });
     }
 
+    // Keep the default silent autoplay. If a webview blocks it, a normal tap
+    // anywhere on the page retries play() directly in the trusted gesture.
+    // This adds no overlay or control and never consumes the user's tap.
+    let gesturePlaybackPending = false;
+    let touchMoved = false;
+
+    function retryPlaybackOnGesture() {
+      if (destroyed || !onScreen || document.hidden || transitioning || gesturePlaybackPending) return;
+      const current = videos[currentSlot];
+      if (!current.src || !current.paused) return;
+
+      gesturePlaybackPending = true;
+      void current.play().then(() => {
+        if (!destroyed && current === videos[currentSlot]) setHasFrame(true);
+      }).catch(() => {
+        // Deliberately keep the still; do not show a button or message.
+      }).finally(() => {
+        gesturePlaybackPending = false;
+      });
+
+      // Authorize the standby video in this same gesture as well, so the
+      // existing automatic crossfade can resume after a single tap on iOS.
+      const standby = videos[(currentSlot === 0 ? 1 : 0) as Slot];
+      if (playlist.length > 1 && standby.src && standby.paused && !standby.error) {
+        void standby.play().then(() => {
+          if (!destroyed && !transitioning && standby !== videos[currentSlot]) {
+            standby.pause();
+            standby.currentTime = 0;
+          }
+        }).catch(() => {
+          // Crossfade already keeps the outgoing film if the next play fails.
+        });
+      }
+    }
+
+    function onTouchStart() { touchMoved = false; }
+    function onTouchMove() { touchMoved = true; }
+    function onTouchEnd() {
+      if (!touchMoved) retryPlaybackOnGesture();
+    }
+
     function tryCrossfade(slot: Slot) {
       if (
         destroyed || transitioning || slot !== currentSlot ||
@@ -195,6 +236,10 @@ export function useHeroCrossfade(
       });
     if (section.current) observer?.observe(section.current);
     document.addEventListener("visibilitychange", resumeIfVisible);
+    document.addEventListener("touchstart", onTouchStart, { capture: true, passive: true });
+    document.addEventListener("touchmove", onTouchMove, { capture: true, passive: true });
+    document.addEventListener("touchend", onTouchEnd, { capture: true, passive: true });
+    document.addEventListener("click", retryPlaybackOnGesture, true);
     resumeIfVisible();
 
     return () => {
@@ -202,6 +247,10 @@ export function useHeroCrossfade(
       if (fadeTimer !== undefined) window.clearTimeout(fadeTimer);
       observer?.disconnect();
       document.removeEventListener("visibilitychange", resumeIfVisible);
+      document.removeEventListener("touchstart", onTouchStart, true);
+      document.removeEventListener("touchmove", onTouchMove, true);
+      document.removeEventListener("touchend", onTouchEnd, true);
+      document.removeEventListener("click", retryPlaybackOnGesture, true);
       a.removeEventListener("timeupdate", onFirstTime);
       b.removeEventListener("timeupdate", onSecondTime);
       a.removeEventListener("playing", onFirstPlaying);
