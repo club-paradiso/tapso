@@ -1,4 +1,3 @@
-import { ResponsiveDetails } from "../components/ResponsiveDetails";
 import { BusIcon, PinIcon } from "../components/Icons";
 import { SectionHead } from "../components/SectionHead";
 import { PRIVACY_POINTS } from "../content/site.ts";
@@ -37,7 +36,9 @@ export function Privacy() {
           </div>
         </div>
         <div>
-          <ResponsiveDetails summary="개인정보 원칙" mobileOpen>
+          <details className="responsive-details">
+          <summary>개인정보 원칙 보기<span className="disclosure-mark" aria-hidden="true" /></summary>
+          <div className="disclosure-content">
           <ul className="privacy-points">
             {PRIVACY_POINTS.map((point) => (
               <li key={point.title}>
@@ -49,7 +50,8 @@ export function Privacy() {
           <p className="fineprint">
             개발 중인 iPhone 앱을 기준으로 안내해요. 위치 권한은 선택 기능을 켤 때 요청할 수 있으며, 실제 iPhone에서의 동작 확인은 아직 남아 있어요.
           </p>
-          </ResponsiveDetails>
+          </div>
+          </details>
         </div>
       </div>
     </section>
