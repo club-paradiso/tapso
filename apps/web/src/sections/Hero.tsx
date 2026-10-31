@@ -108,7 +108,7 @@ export function Hero() {
               <span key={index}>{index > 0 ? <br /> : null}{line}</span>
             ))}
           </h1>
-          <p className="coast-gloss">서두르지 말고, 어서 타세요.</p>
+          <p className="coast-gloss">서두르지 말고, 쉬어 가며 타세요.</p>
           <p className="coast-lede">{config.copy.description}</p>
           <div className="coast-actions">
             <a className="btn btn-primary btn-lg" href="#status">{config.copy.cta}<ArrowIcon /></a>
