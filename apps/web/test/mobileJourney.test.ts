@@ -19,7 +19,9 @@ test("ride view cannot leak into earlier steps or invent states", () => {
     for (const index of [0, 1, 2]) assert.equal(mobileBeat(index, view.beatId).id, MOBILE_STAGES[index]!.beatId);
     assert.strictEqual(mobileBeat(3, view.beatId), BEATS.find((b) => b.id === view.beatId));
   }
-  assert.equal(mobileBeat(3, "arrived").id, "pocket");
+  assert.equal(mobileBeat(3, "trust").id, "pocket");
+  assert.equal(resolveBeat(mobileBeat(3, "arrived")).activity?.remaining, 0);
+  assert.equal(resolveBeat(mobileBeat(3, "prepare")).activity?.remaining, 2);
   assert.equal(mobileBeat(-1).id, "destination");
   const { stage, activity } = resolveBeat(mobileBeat(3, "island"));
   assert.ok(islandOnPhone(stage, activity));

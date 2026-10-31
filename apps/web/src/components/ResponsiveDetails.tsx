@@ -1,8 +1,8 @@
 import { useEffect, useRef, type ReactNode } from "react";
 
-/** Native disclosure: closed on phones, expanded on desktop, usable without JS. */
-export function ResponsiveDetails({ summary, children, className = "", id }: {
-  summary: string; children: ReactNode; className?: string; id?: string;
+/** Native disclosure: configurable on phones, expanded on desktop, usable without JS. */
+export function ResponsiveDetails({ summary, children, className = "", id, mobileOpen = false }: {
+  summary: string; children: ReactNode; className?: string; id?: string; mobileOpen?: boolean;
 }) {
   const ref = useRef<HTMLDetailsElement>(null);
   useEffect(() => {
@@ -11,15 +11,15 @@ export function ResponsiveDetails({ summary, children, className = "", id }: {
       const details = ref.current;
       if (!details) return;
       // Never strand keyboard focus in content collapsed by a breakpoint change.
-      if (!media.matches && details.contains(document.activeElement)) details.querySelector("summary")?.focus();
+      if (!media.matches && !mobileOpen && details.contains(document.activeElement)) details.querySelector("summary")?.focus();
       details.classList.toggle("is-wide", media.matches);
-      details.open = media.matches;
+      details.open = media.matches || mobileOpen;
     };
     sync();
     media.addEventListener("change", sync);
     return () => media.removeEventListener("change", sync);
-  }, []);
-  return <details ref={ref} id={id} className={`responsive-details ${className}`}>
+  }, [mobileOpen]);
+  return <details ref={ref} id={id} open={mobileOpen} className={`responsive-details ${className}`}>
     <summary>{summary}<span className="disclosure-mark" aria-hidden="true" /></summary>
     <div className="disclosure-content">{children}</div>
   </details>;

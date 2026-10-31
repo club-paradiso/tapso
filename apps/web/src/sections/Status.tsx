@@ -19,6 +19,20 @@ export function Status() {
             const count = STATUS_ITEMS.filter((item) => item.level === level).length;
             return count > 0 ? <div key={level} className={`level-${level}`}><dt>{STATUS_LEVEL_LABELS[level]}</dt><dd>{count}<span>개</span></dd></div> : null;
           })}</dl>
+          <div className="mobile-status-list" aria-label="기능별 개발 현황">
+            {STATUS_GROUPS.map((group) => (
+              <section key={group.id} aria-labelledby={`mobile-status-${group.id}`}>
+                <h3 id={`mobile-status-${group.id}`}>{group.title}</h3>
+                {STATUS_ITEMS.filter((item) => item.group === group.id).map((item) => (
+                  <details key={item.id} className={`mobile-status-item level-${item.level}`}>
+                    <summary><span>{item.title}</span><span className={`state-pill level-pill-${item.level}`}>{STATUS_LEVEL_LABELS[item.level]}</span><span className="disclosure-mark" aria-hidden="true" /></summary>
+                    <p>{item.body}</p>
+                  </details>
+                ))}
+              </section>
+            ))}
+            <p className="fineprint">기능을 누르면 확인한 범위와 남은 검증을 볼 수 있어요.</p>
+          </div>
           <ResponsiveDetails summary="전체 개발 현황 보기">
             <div className="status-groups">
               {STATUS_GROUPS.map((group) => (

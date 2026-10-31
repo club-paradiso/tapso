@@ -10,7 +10,9 @@ export const MOBILE_STAGES: readonly { beatId: BeatId; label: string; title: str
 export const MOBILE_RIDE_VIEWS: readonly { beatId: BeatId; label: string }[] = [
   { beatId: "pocket", label: "잠금 화면" },
   { beatId: "island", label: "아일랜드" },
+  { beatId: "prepare", label: "2정거장 전" },
   { beatId: "nextStop", label: "다음 하차" },
+  { beatId: "arrived", label: "도착" },
 ];
 export function mobileBeat(stageIndex: number, rideView: BeatId = "pocket") {
   const stage = MOBILE_STAGES[stageIndex] ?? MOBILE_STAGES[0]!;
