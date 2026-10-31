@@ -22,13 +22,15 @@ export function Status() {
           <div className="mobile-status-list" aria-label="기능별 개발 현황">
             {STATUS_GROUPS.map((group) => (
               <section key={group.id} aria-labelledby={`mobile-status-${group.id}`}>
-                <h3 id={`mobile-status-${group.id}`}>{group.title}</h3>
+                <details className="mobile-status-group">
+                <summary><h3 id={`mobile-status-${group.id}`}>{group.title}</h3><span className="disclosure-mark" aria-hidden="true" /></summary>
                 {STATUS_ITEMS.filter((item) => item.group === group.id).map((item) => (
                   <details key={item.id} className={`mobile-status-item level-${item.level}`}>
                     <summary><span>{item.title}</span><span className={`state-pill level-pill-${item.level}`}>{STATUS_LEVEL_LABELS[item.level]}</span><span className="disclosure-mark" aria-hidden="true" /></summary>
                     <p>{item.body}</p>
                   </details>
                 ))}
+                </details>
               </section>
             ))}
             <p className="fineprint">각 기능을 누르면 확인한 내용과 남은 테스트를 볼 수 있어요.</p>
