@@ -63,21 +63,21 @@
 .coast-v4 .coast-shade {
   z-index: 3;
 }
-/* The copy sits on the left half, so the heavy shade does too. The left
-   gradient carries the text and the top band the header; the bottom band is
-   eased off toward the right so the footage there is not dimmed for no reason. */
+/* Keep the copy legible with a lighter directional shade: leave more of the
+   rider footage visible, especially on the right. The headline carries its
+   own shadow so visibility does not depend on darkening the whole frame. */
 .coast-v4 .coast-shade {
   position: absolute;
   inset: 0;
   background:
-    linear-gradient(90deg, rgb(var(--film-basalt) / 82%) 0%, rgb(var(--film-basalt) / 60%) 39%, rgb(var(--film-basalt) / 18%) 70%, transparent 90%),
-    linear-gradient(180deg, rgb(var(--film-basalt) / 65%) 0%, transparent 30%);
+    linear-gradient(90deg, rgb(var(--film-basalt) / 65%) 0%, rgb(var(--film-basalt) / 45%) 39%, rgb(var(--film-basalt) / 12%) 70%, transparent 90%),
+    linear-gradient(180deg, rgb(var(--film-basalt) / 45%) 0%, transparent 30%);
 }
 .coast-v4 .coast-shade::after {
   content: "";
   position: absolute;
   inset: 0;
-  background: linear-gradient(0deg, rgb(var(--film-basalt) / 83%) 0%, transparent 42%);
+  background: linear-gradient(0deg, rgb(var(--film-basalt) / 64%) 0%, transparent 42%);
   -webkit-mask-image: linear-gradient(90deg, #000 0%, #000 55%, rgb(0 0 0 / 45%) 100%);
   mask-image: linear-gradient(90deg, #000 0%, #000 55%, rgb(0 0 0 / 45%) 100%);
 }
@@ -101,11 +101,14 @@
   line-height: 1.04;
   letter-spacing: -0.045em;
   text-wrap: balance;
-  text-shadow: 0 2px 18px rgb(var(--film-basalt) / 38%);
+  text-shadow: 0 3px 20px rgb(var(--film-basalt) / 70%);
 }
 .coast-v4 h1 span:last-child { color: var(--film-mint); }
 .coast-v4 .coast-gloss {
   color: var(--film-ink-2);
+}
+.coast-v4 :is(.coast-gloss, .coast-lede, .coast-status-line, .coast-status-link) {
+  text-shadow: 0 2px 12px rgb(var(--film-basalt) / 78%);
 }
 .coast-v4 .coast-lede {
   margin: 22px 0 28px;
@@ -241,7 +244,7 @@
   .coast-v4 .coast-status-line { font-size: 0.875rem; }
   .coast-v4 .coast-shade {
     /* The copy sits in the lower half; the top of the frame carries no text. */
-    background: linear-gradient(0deg, rgb(var(--film-basalt) / 90%) 0%, rgb(var(--film-basalt) / 72%) 55%, rgb(var(--film-basalt) / 30%) 72%, rgb(var(--film-basalt) / 6%) 100%);
+    background: linear-gradient(0deg, rgb(var(--film-basalt) / 78%) 0%, rgb(var(--film-basalt) / 63%) 55%, rgb(var(--film-basalt) / 34%) 78%, rgb(var(--film-basalt) / 5%) 100%);
   }
   .coast-v4 .coast-shade::after { content: none; }
   .coast-v4 .coast-bottom { bottom: max(16px, env(safe-area-inset-bottom)); }
