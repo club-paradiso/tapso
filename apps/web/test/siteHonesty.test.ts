@@ -88,7 +88,24 @@ test("marketing branding consistently says TAPSO, keeping 제주어 quotes intac
   assert.doesNotMatch(companion, /더 잘해요|더 잘 알아요/);
   assert.match(html, /<title>TAPSO —/);
   assert.doesNotMatch(html, /탑서 TAPSO/);
-  assert.match(html, /혼저 탑서/);
+  assert.match(html, /와리지 말앙, 쉬멍 탑서/);
+});
+
+test("the 제주어 campaign motto and translation match throughout the marketing site", () => {
+  const config = JSON.parse(readFileSync(join(src, "design/marketing.json"), "utf8"));
+  const hero = readFileSync(join(src, "sections/Hero.tsx"), "utf8");
+  const footer = readFileSync(join(src, "sections/Footer.tsx"), "utf8");
+  const waitlist = readFileSync(join(src, "sections/Waitlist.tsx"), "utf8");
+  const metadata = readFileSync(join(src, "../index.html"), "utf8");
+
+  assert.deepEqual(config.copy.headline.split("\n"), ["와리지 말앙,", "쉬멍 탑서."]);
+  for (const content of [hero, footer, waitlist]) {
+    assert.ok(content.includes("서두르지 말고, 쉬어 가며 타세요."));
+  }
+  for (const content of [footer, waitlist, metadata]) {
+    assert.ok(content.includes("쉬멍 탑서."));
+  }
+  assert.doesNotMatch(metadata, /혼저 탑서/);
 });
 
 test("no source file makes a claim TAPSO cannot back", () => {
