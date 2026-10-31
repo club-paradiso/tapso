@@ -67,6 +67,17 @@ test("hero uses only newly generated and packaged local footage", () => {
   assert.match(hero, /preload="auto"/);
 });
 
+test("one ordinary tap silently retries blocked hero autoplay without hijacking navigation", () => {
+  assert.match(filmHook, /document\\.addEventListener\\("touchend", onTouchEnd/);
+  assert.match(filmHook, /document\\.addEventListener\\("click", retryPlaybackOnGesture, true\\)/);
+  assert.match(filmHook, /function retryPlaybackOnGesture\\(\\)/);
+  assert.match(filmHook, /void current\\.play\\(\\)\\.then/);
+  assert.match(filmHook, /void standby\\.play\\(\\)\\.then/);
+  assert.match(filmHook, /if \\(!touchMoved\\) retryPlaybackOnGesture\\(\\)/);
+  assert.match(filmHook, /document\\.removeEventListener\\("touchend", onTouchEnd, true\\)/);
+  assert.doesNotMatch(hero, /needsTap|setNeedsTap|onClick=\\{.*play|재생하기/);
+});
+
 test("video playback never overrides OS motion and data-saver settings", () => {
   assert.match(hero, /FILM_SCENES\.filter/);
   assert.match(hero, /filmAssetsExist/);
