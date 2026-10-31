@@ -1,8 +1,8 @@
 import { ResponsiveDetails } from "../components/ResponsiveDetails";
 import { SectionHead } from "../components/SectionHead";
 
-/** Support routes stay hidden until their payment flow has been verified. */
-export function Support(_props: { onOpen: () => void }) {
+/** The dialog only exposes configured channels and checks native checkout status. */
+export function Support({ onOpen }: { onOpen: () => void }) {
   return (
     <section className="section support" id="support" aria-labelledby="support-title">
       <div className="container">
@@ -16,12 +16,13 @@ export function Support(_props: { onOpen: () => void }) {
           </p>
         </SectionHead>
 
+        <button className="btn btn-primary support-mobile-action" type="button" onClick={onOpen}>후원 방법 보기</button>
         <ResponsiveDetails summary="개발 응원과 후원 준비 안내">
         <div className="support-grid">
           <div className="support-card">
             <p className="support-status">
               <span className={"state-pill tone-next"}>
-                후원 경로 확인 중
+                후원 방법 안내
               </span>
             </p>
             <h3>후원금은 여기에 써요</h3>
@@ -31,7 +32,7 @@ export function Support(_props: { onOpen: () => void }) {
               <li>서버와 실시간 데이터 운영</li>
               <li>TestFlight와 출시 준비</li>
             </ul>
-            <p className="support-detail">후원 경로를 확인하고 있어요. 확인이 끝나면 안내할게요.</p>
+            <p className="support-detail">후원 방법 보기에서 이용 가능한 경로를 확인해 주세요.</p>
           </div>
 
           <div className="support-free">
