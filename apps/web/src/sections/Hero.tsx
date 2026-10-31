@@ -109,13 +109,13 @@ export function Hero() {
             ))}
           </h1>
           <p className="coast-gloss">서두르지 말고, 쉬어 가며 타세요.</p>
-          <p className="coast-lede">내가 탄 제주 버스와 남은 정거장,<br />내릴 때를 한눈에. 개발 중인 iPhone 앱이에요.</p>
+          <p className="coast-lede">내가 탄 제주 버스와 남은 정거장,<br />내릴 때를 한눈에.</p>
           <div className="coast-actions">
             <a className="btn btn-primary btn-lg" href="#how">타는 법 살펴보기<ArrowIcon /></a>
             <a className="coast-status-link" href="#status">개발 현황 보기</a>
           </div>
           <p className="coast-status-line">
-            아직 개발 중이며 TestFlight는 공개되지 않았어요. 사전예약도 받고 있지 않아요.
+            개발 중 · TestFlight 공개 전
           </p>
         </div>
         <div className="coast-bottom">

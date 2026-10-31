@@ -8,9 +8,9 @@ export function Privacy() {
     <section className="section privacy on-dark" id="privacy" aria-labelledby="privacy-title">
       <div className="container privacy-grid">
         <div>
-          <SectionHead title="사람이 아니라, 버스를 따라가요." titleId="privacy-title">
+          <SectionHead title="내 위치 대신, 버스 위치로 안내해요." titleId="privacy-title">
             <p>
-              내 위치를 계속 보내는 대신 공공 버스 위치를 봐요. 그래서 기본 기능에는 위치 권한이 필요하지 않아요.
+              공공 버스 위치 데이터로 남은 정거장을 계산해요. 기본 하차 안내를 위해 내 위치를 계속 공유할 필요는 없어요.
             </p>
           </SectionHead>
           <div className="privacy-visual" aria-hidden="true">
@@ -21,7 +21,7 @@ export function Privacy() {
               <span className="privacy-line" />
               <span className="privacy-label">
                 <b>버스 위치</b>
-                공공 데이터로 따라가요
+                공공 데이터로 확인해요
               </span>
             </p>
             <p className="privacy-row is-off">
@@ -31,13 +31,12 @@ export function Privacy() {
               <span className="privacy-line" />
               <span className="privacy-label">
                 <b>내 위치</b>
-                요청하지 않아요
+                기본 안내에는 필요 없어요
               </span>
             </p>
           </div>
         </div>
         <div>
-          <p className="mobile-privacy-note">선택 기능에서는 추가 권한을 요청할 수 있어요. 실제 기기 동작은 아직 검증 전이에요.</p>
           <ResponsiveDetails summary="개인정보 원칙" mobileOpen>
           <ul className="privacy-points">
             {PRIVACY_POINTS.map((point) => (
@@ -48,7 +47,7 @@ export function Privacy() {
             ))}
           </ul>
           <p className="fineprint">
-            지금 개발 중인 iOS 앱 기준이에요. 선택 기능의 위치 권한과 실제 기기 동작은 검증이 필요해요.
+            개발 중인 iPhone 앱을 기준으로 안내해요. 위치 권한은 선택 기능을 켤 때 요청할 수 있으며, 실제 iPhone에서의 동작 확인은 아직 남아 있어요.
           </p>
           </ResponsiveDetails>
         </div>

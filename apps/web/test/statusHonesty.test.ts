@@ -137,11 +137,12 @@ test("implemented timeline milestones are filled, while verifying and blocked re
 });
 
 test("the section shows the new title, the three groups and one pill per item", () => {
-  assert.match(statusSource, /TAPSO는 지금 이렇게 만들어지고 있어요/);
+  assert.match(statusSource, /만든 기능과 남은 준비를 확인해요/);
   assert.match(statusSource, /STATUS_GROUPS\.map/);
   assert.match(statusSource, /STATUS_ITEMS\.filter\(\(item\) => item\.group === group\.id\)/);
   assert.match(statusSource, /STATUS_LEVEL_LABELS\[item\.level\]/);
   assert.match(statusSource, /출시일은 정해지지 않았어요/);
-  assert.match(statusSource, /‘구현됨’은 실제 iPhone 확인 전이라는 뜻/);
+  assert.match(statusSource, /‘구현됨’은 코드를 만들었다는 뜻/);
+  assert.match(statusSource, /실제 iPhone에서의 동작 확인은 남아/);
   assert.doesNotMatch(statusSource, /지금은 여기까지 만들었어요|Product V2/);
 });
