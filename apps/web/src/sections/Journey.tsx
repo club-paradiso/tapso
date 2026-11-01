@@ -9,6 +9,7 @@ import {
   stageCaption,
   useBeatVariant,
 } from "../components/JourneyParts";
+import { SectionHead } from "../components/SectionHead";
 import { ResponsiveDetails } from "../components/ResponsiveDetails";
 import { MobileWalkthrough } from "../components/MobileWalkthrough";
 import { PreviewTag } from "../components/RideParts";
@@ -123,22 +124,27 @@ export function Journey() {
   const active = position === "before" ? -1 : position === "after" ? BEATS.length : BEATS.findIndex((b) => b.id === position);
 
   return (
-    <div className="journey" id="how">
-      <MobileWalkthrough />
-      <ResponsiveDetails summary="전체 사용 과정 보기" className="journey-details">
-          <div ref={ref}>
-          <div className="container journey-grid">
-            <div className="journey-flow" style={{ ["--journey-progress" as string]: Math.max(0, active) / (BEATS.length - 1) }}>
-              {CHAPTERS.map((chapter) => (
-                <ChapterBlock key={chapter.id} chapter={chapter} active={active} />
-              ))}
-            </div>
-            <aside className="journey-stage" aria-hidden="true">
-              <Stage />
-            </aside>
-          </div>
-          </div>
-      </ResponsiveDetails>
-    </div>
+    <section className="section journey" id="how" aria-labelledby="how-title">
+      <div className="container">
+        <SectionHead title="내릴 때까지, 한눈에." titleId="how-title" />
+        <ResponsiveDetails summary="타는 법 보기">
+          <MobileWalkthrough />
+          <ResponsiveDetails summary="전체 사용 과정 보기" className="journey-details">
+              <div ref={ref}>
+              <div className="container journey-grid">
+                <div className="journey-flow" style={{ ["--journey-progress" as string]: Math.max(0, active) / (BEATS.length - 1) }}>
+                  {CHAPTERS.map((chapter) => (
+                    <ChapterBlock key={chapter.id} chapter={chapter} active={active} />
+                  ))}
+                </div>
+                <aside className="journey-stage" aria-hidden="true">
+                  <Stage />
+                </aside>
+              </div>
+              </div>
+          </ResponsiveDetails>
+        </ResponsiveDetails>
+      </div>
+    </section>
   );
 }

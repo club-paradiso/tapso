@@ -6,7 +6,6 @@ import { Hero } from "./sections/Hero";
 import { Journey } from "./sections/Journey";
 import { Privacy } from "./sections/Privacy";
 import { Status } from "./sections/Status";
-import { Waitlist } from "./sections/Waitlist";
 import { Support } from "./sections/Support";
 import { Faq } from "./sections/Faq";
 import { useDisclosureAnchors } from "./components/ResponsiveDetails";
@@ -114,7 +113,6 @@ export default function App() {
         <Journey />
         <Privacy />
         <Status />
-        <Waitlist />
         <Support onOpen={() => setSupportOpen(true)} />
         <Faq />
       </main>

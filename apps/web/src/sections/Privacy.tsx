@@ -1,3 +1,4 @@
+import { ResponsiveDetails } from "../components/ResponsiveDetails";
 import { BusIcon, PinIcon } from "../components/Icons";
 import { SectionHead } from "../components/SectionHead";
 import { PRIVACY_POINTS } from "../content/site.ts";
@@ -6,12 +7,9 @@ export function Privacy() {
   return (
     <section className="section privacy on-dark" id="privacy" aria-labelledby="privacy-title">
       <div className="container privacy-grid">
-        <div>
-          <SectionHead title="내 위치 대신, 버스 위치로 안내해요." titleId="privacy-title">
-            <p>
-              공공 버스 위치 데이터로 남은 정거장을 계산해요. 기본 하차 안내를 위해 내 위치를 계속 공유할 필요는 없어요.
-            </p>
-          </SectionHead>
+        <SectionHead title="내 위치 대신, 버스 위치로 안내해요." titleId="privacy-title" />
+        <ResponsiveDetails summary="개인정보 원칙 보기">
+          <p className="fineprint">공공 버스 위치 데이터로 남은 정거장을 계산해요. 기본 하차 안내를 위해 내 위치를 계속 공유할 필요는 없어요.</p>
           <div className="privacy-visual" aria-hidden="true">
             <p className="privacy-row">
               <span className="privacy-token is-bus">
@@ -34,11 +32,7 @@ export function Privacy() {
               </span>
             </p>
           </div>
-        </div>
-        <div>
-          <details className="responsive-details">
-          <summary>개인정보 원칙 보기<span className="disclosure-mark" aria-hidden="true" /></summary>
-          <div className="disclosure-content">
+
           <ul className="privacy-points">
             {PRIVACY_POINTS.map((point) => (
               <li key={point.title}>
@@ -50,9 +44,7 @@ export function Privacy() {
           <p className="fineprint">
             개발 중인 iPhone 앱을 기준으로 안내해요. 위치 권한은 선택 기능을 켤 때 요청할 수 있으며, 실제 iPhone에서의 동작 확인은 아직 남아 있어요.
           </p>
-          </div>
-          </details>
-        </div>
+        </ResponsiveDetails>
       </div>
     </section>
   );

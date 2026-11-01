@@ -1379,7 +1379,7 @@
   transform: translate(-50%, -50%) rotate(90deg);
 }
 
-details[open] .faq-toggle::after {
+.faq-list details[open] > summary .faq-toggle::after {
   transform: translate(-50%, -50%) rotate(0deg);
 }
 

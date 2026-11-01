@@ -137,7 +137,7 @@ test("implemented timeline milestones are filled, while verifying and blocked re
 });
 
 test("the section shows the new title, the three groups and one pill per item", () => {
-  assert.match(statusSource, /만든 기능과 남은 준비를 확인해요/);
+  assert.match(statusSource, /지금까지 만든 기능 보기/);
   assert.match(statusSource, /STATUS_GROUPS\.map/);
   assert.match(statusSource, /STATUS_ITEMS\.filter\(\(item\) => item\.group === group\.id\)/);
   assert.match(statusSource, /STATUS_LEVEL_LABELS\[item\.level\]/);
