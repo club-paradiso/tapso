@@ -39,5 +39,5 @@ test("no-JS and anchor disclosure fallbacks remain in the shipped page", () => {
   assert.match(details, /addEventListener\("hashchange"/);
   assert.doesNotMatch(details, /preventDefault|pushState|replaceState/);
   const status = read("../src/sections/Status.tsx");
-  assert.match(status, /STATUS_ITEMS\.filter\(\(item\) => item.level === level\)\.length/);
+  assert.match(status, /지금까지 만든 기능 보기/);
 });

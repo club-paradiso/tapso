@@ -9,15 +9,10 @@ export function Support({ onOpen }: { onOpen: () => void }) {
         <SectionHead
           title="개발자한테 커피 한 잔 보태고 싶다면"
           titleId="support-title"
-        >
-          <p>
-            후원금은 서버 운영, 실제 iPhone 테스트, 출시 준비에 써요.
-            후원은 선택이며, 앱 이용 조건이 아니에요.
-          </p>
-        </SectionHead>
-
+        />
         <button className="btn btn-primary support-mobile-action" type="button" onClick={onOpen}>후원 방법 보기</button>
-        <ResponsiveDetails summary="후원금 사용처와 개발 소식" mobileOpen>
+        <ResponsiveDetails summary="후원금 사용처와 개발 소식">
+          <p className="fineprint">후원금은 서버 운영, 실제 iPhone 테스트, 출시 준비에 써요. 후원은 선택이며, 앱 이용 조건이 아니에요.</p>
         <div className="support-grid">
           <div className="support-card">
             <p className="support-status">

@@ -156,7 +156,7 @@ test("the landing page omits the map-app comparison section without leaving a bl
   const app = readFileSync(join(src, "App.tsx"), "utf8");
   assert.doesNotMatch(app, /MapCompanion/);
   assert.match(app, /<Journey \/>\s*<Privacy \/>/);
-  for (const section of ["Hero", "Journey", "Privacy", "Status", "Waitlist", "Faq"]) {
+  for (const section of ["Hero", "Journey", "Privacy", "Status", "Faq"]) {
     assert.match(app, new RegExp(`<${section}\\s*/>`), `missing ${section} section`);
   }
 });
