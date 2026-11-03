@@ -182,3 +182,9 @@ details[open] > summary > .disclosure-mark { transform: rotate(225deg); margin-b
 .footer-logo .brand-by { align-self: flex-end; margin-bottom: 0.3em; font-size: 0.875rem; }
 .site-footer .brand-by { color: var(--night-text-secondary); }
 .site-footer .club-paradiso { color: var(--mint); }
+
+/* Under the catchphrase, the lede, buttons and status line are centred in
+   the hero column. The catchphrase and its gloss keep their alignment. */
+.coast-v4 .coast-lede, .coast-v4 .coast-status-line { text-align: center; }
+.coast-v4 .coast-status-line { margin-inline: auto; }
+.coast-v4 .coast-actions { justify-content: center; }
