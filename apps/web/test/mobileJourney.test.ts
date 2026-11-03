@@ -38,6 +38,8 @@ test("no-JS and anchor disclosure fallbacks remain in the shipped page", () => {
   assert.match(details, /ancestor.open = true/);
   assert.match(details, /addEventListener\("hashchange"/);
   assert.doesNotMatch(details, /preventDefault|pushState|replaceState/);
+  // A tab shows its whole view: the status timeline is not folded behind a disclosure.
   const status = read("../src/sections/Status.tsx");
-  assert.match(status, /지금까지 만든 기능 보기/);
+  assert.doesNotMatch(status, /ResponsiveDetails|<details/);
+  assert.match(status, /STATUS_GROUPS\.map/);
 });

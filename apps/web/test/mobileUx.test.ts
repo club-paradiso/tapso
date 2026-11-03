@@ -39,14 +39,13 @@ function rule(source: string, selector: string): string {
   return match[1]!;
 }
 
-test("mobile header keeps navigation in an accessible native disclosure", () => {
+test("mobile header keeps the top tabs visible on their own row", () => {
   assert.match(mobileFirst, /\.site-header-inner\s*\{[^}]*flex-wrap:\s*nowrap/);
-  assert.match(header, /<details className="mobile-menu"/);
-  assert.match(header, /<summary[^>]*aria-label="페이지 메뉴"[^>]*aria-controls="mobile-navigation"/);
-  assert.match(header, /event\.key === "Escape"/);
-  assert.match(header, /trigger\.current\?\.focus\(\)/);
-  assert.match(header, /revealAnchor\(item\.href\)/);
-  assert.match(mobileFirst, /scroll-padding-top:\s*80px/);
+  assert.match(mobileFirst, /\.site-header-inner\s*\{[^}]*flex-wrap:\s*wrap/);
+  assert.match(mobileFirst, /\.site-header \.site-nav\s*\{[^}]*flex:\s*1 0 100%/);
+  assert.doesNotMatch(header, /mobile-menu/);
+  assert.match(header, /aria-current=\{item\.view === view \? "page" : undefined\}/);
+  assert.match(mobileFirst, /scroll-padding-top:\s*112px/);
   assert.doesNotMatch(sections, /scroll-padding-top:\s*124px/);
 });
 
@@ -161,7 +160,6 @@ test("long Jeju boarding stop takes the full mobile row instead of a 40% column"
 test("other mobile bus chips stay compact and menu targets remain comfortably reachable", () => {
   assert.match(sections, /\.scene-bus\s*\{[^}]*max-width:\s*146px/);
   assert.match(sections, /@media \(max-width: 359px\)\s*\{[\s\S]*?\.scene-slot:not\(\.is-boarding\)/);
-  assert.match(mobileFirst, /\.mobile-menu nav a\s*\{[^}]*min-height:\s*48px/);
-  assert.match(mobileFirst, /\.mobile-menu > summary\s*\{[^}]*min-height:\s*44px/);
+  assert.match(mobileFirst, /\.site-header \.site-nav a\s*\{[^}]*min-height:\s*44px/);
   assert.match(rule(sections, ".site-nav a"), /min-height:\s*var\(--touch-min\)/);
 });

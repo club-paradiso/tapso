@@ -9,12 +9,12 @@ export const LINKS = {
   site: "https://tapso-nu.vercel.app/",
 } as const;
 
+/** Top tabs. The home view holds the hero, support and the FAQ; each other tab is a full view. */
 export const NAV_ITEMS = [
-  { href: "#how", label: "타는 법" },
-  { href: "#trust", label: "위치가 늦을 때" },
-  { href: "#status", label: "개발 현황" },
-  { href: "#support", label: "후원하기" },
-  { href: "#faq", label: "FAQ" },
+  { href: "#top", label: "홈", view: "home" },
+  { href: "#how", label: "타는 법", view: "how" },
+  { href: "#privacy", label: "개인정보", view: "privacy" },
+  { href: "#status", label: "개발 현황", view: "status" },
 ] as const;
 
 /**

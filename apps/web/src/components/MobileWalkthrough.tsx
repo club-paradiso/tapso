@@ -13,7 +13,7 @@ export function MobileWalkthrough() {
   const copy = MOBILE_STAGES[current]!;
   const { stage, activity } = resolveBeat(mobileBeat(current, rideView));
   return <section className="mobile-walkthrough container" aria-labelledby="walkthrough-title">
-    <header className="walkthrough-head"><p className="walkthrough-eyebrow">TAPSO와 타는 네 단계</p><h2 id="walkthrough-title">마음 편하게<br />쉬며 이동해요.</h2><p>각 단계를 눌러 미리 살펴보세요.</p></header>
+    <header className="walkthrough-head"><p className="walkthrough-eyebrow">한눈에 보기</p><h2 id="walkthrough-title">네 단계로 미리 보기</h2><p>단계를 눌러 화면을 미리 살펴보세요. 더 자세한 과정은 바로 아래에 이어져요.</p></header>
     <div className="walkthrough-steps" role="group" aria-label="사용 과정 단계 선택">
       {MOBILE_STAGES.map((item, index) => <button key={item.beatId} type="button" disabled={!ready} aria-pressed={current === index} aria-controls="walkthrough-preview" aria-label={`${index + 1}단계: ${item.title}`} onClick={() => { setCurrent(index); setRideView("pocket"); }}><span aria-hidden="true">0{index + 1}</span>{item.label}</button>)}
     </div>
@@ -33,6 +33,6 @@ export function MobileWalkthrough() {
       <p>{STEP_COPY.trust.body}</p>
       <a className="text-link" href="#trust">위치가 늦거나 끊길 때 보기</a>
     </aside>
-    <noscript><ol className="walkthrough-fallback">{MOBILE_STAGES.map((item) => <li key={item.beatId}><b>{item.title}</b><p>{item.body}</p></li>)}</ol><p>아래 ‘전체 사용 과정 보기’에서 모든 화면을 볼 수 있어요.</p></noscript>
+    <noscript><ol className="walkthrough-fallback">{MOBILE_STAGES.map((item) => <li key={item.beatId}><b>{item.title}</b><p>{item.body}</p></li>)}</ol><p>모든 화면은 바로 아래 전체 과정에서 볼 수 있어요.</p></noscript>
   </section>;
 }
