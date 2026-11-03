@@ -8,7 +8,7 @@ import { Privacy } from "./sections/Privacy";
 import { Status } from "./sections/Status";
 import { Support } from "./sections/Support";
 import { Faq } from "./sections/Faq";
-import { useDisclosureAnchors } from "./components/ResponsiveDetails";
+import { useDisclosureAnchors, ViewPanel } from "./components/ResponsiveDetails";
 import { Footer } from "./sections/Footer";
 
 // Kept out of the initial chunk: the marketing page must not pay for a
@@ -98,23 +98,32 @@ function SupportReturnBanner({
 }
 
 export default function App() {
-  useDisclosureAnchors();
+  const view = useDisclosureAnchors();
   const [supportOpen, setSupportOpen] = useState(false);
   const [supportReturn, dismissSupportReturn] = useSupportReturn();
 
   return (
     <ThemeProvider><div className="page">
-      <Header />
+      <Header view={view} />
       <main id="main" tabIndex={-1}>
         {supportReturn ? (
           <SupportReturnBanner result={supportReturn} onDismiss={dismissSupportReturn} />
         ) : null}
-        <Hero />
-        <Journey />
-        <Privacy />
-        <Status />
-        <Support onOpen={() => setSupportOpen(true)} />
-        <Faq />
+        {/* Home keeps only the hero, support and the FAQ; the rest opens from the top tabs. */}
+        <ViewPanel view="home" active={view} label="홈">
+          <Hero />
+          <Support onOpen={() => setSupportOpen(true)} />
+          <Faq />
+        </ViewPanel>
+        <ViewPanel view="how" active={view} label="타는 법">
+          <Journey />
+        </ViewPanel>
+        <ViewPanel view="privacy" active={view} label="개인정보">
+          <Privacy />
+        </ViewPanel>
+        <ViewPanel view="status" active={view} label="개발 현황">
+          <Status />
+        </ViewPanel>
       </main>
       <Footer />
       {supportOpen ? (

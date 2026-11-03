@@ -10,7 +10,6 @@ import {
   useBeatVariant,
 } from "../components/JourneyParts";
 import { SectionHead } from "../components/SectionHead";
-import { ResponsiveDetails } from "../components/ResponsiveDetails";
 import { MobileWalkthrough } from "../components/MobileWalkthrough";
 import { PreviewTag } from "../components/RideParts";
 import { IslandDock } from "../components/IslandDock";
@@ -125,25 +124,24 @@ export function Journey() {
 
   return (
     <section className="section journey" id="how" aria-labelledby="how-title">
-      <div className="container">
-        <SectionHead title="마음 편하게 쉬며 이동해요." titleId="how-title" />
-        <ResponsiveDetails summary="타는 법 보기">
-          <MobileWalkthrough />
-          <ResponsiveDetails summary="전체 사용 과정 보기" className="journey-details">
-              <div ref={ref}>
-              <div className="container journey-grid">
-                <div className="journey-flow" style={{ ["--journey-progress" as string]: Math.max(0, active) / (BEATS.length - 1) }}>
-                  {CHAPTERS.map((chapter) => (
-                    <ChapterBlock key={chapter.id} chapter={chapter} active={active} />
-                  ))}
-                </div>
-                <aside className="journey-stage" aria-hidden="true">
-                  <Stage />
-                </aside>
-              </div>
-              </div>
-          </ResponsiveDetails>
-        </ResponsiveDetails>
+      <div className="container view-intro">
+        <p className="view-eyebrow">타는 법</p>
+        <SectionHead title="마음 편하게 쉬며 이동해요." titleId="how-title">
+          <p>내릴 곳을 정하면 탈 버스, 남은 정거장, 내릴 때를 차례로 알려줘요. 아래 화면은 실제 앱을 웹에서 다시 그린 미리보기이고, 버스와 정류장은 합성 데이터예요.</p>
+        </SectionHead>
+      </div>
+      <MobileWalkthrough />
+      <div ref={ref} className="journey-full">
+        <div className="container journey-grid">
+          <div className="journey-flow" style={{ ["--journey-progress" as string]: Math.max(0, active) / (BEATS.length - 1) }}>
+            {CHAPTERS.map((chapter) => (
+              <ChapterBlock key={chapter.id} chapter={chapter} active={active} />
+            ))}
+          </div>
+          <aside className="journey-stage" aria-hidden="true">
+            <Stage />
+          </aside>
+        </div>
       </div>
     </section>
   );

@@ -1,4 +1,3 @@
-import { ResponsiveDetails } from "../components/ResponsiveDetails";
 import { SectionHead } from "../components/SectionHead";
 
 /** The dialog only exposes configured channels and checks native checkout status. */
@@ -9,10 +8,13 @@ export function Support({ onOpen }: { onOpen: () => void }) {
         <SectionHead
           title="개발자한테 커피 한 잔 보태고 싶다면"
           titleId="support-title"
-        />
+        >
+          <p>
+            보태 주신 돈은 서버 운영, 실제 iPhone 테스트, 출시 준비에 써요.
+            후원은 선택이고, 후원하지 않아도 앱은 똑같이 쓸 수 있어요.
+          </p>
+        </SectionHead>
         <button className="btn btn-primary support-mobile-action" type="button" onClick={onOpen}>후원 방법 보기</button>
-        <ResponsiveDetails summary="후원금 사용처와 개발 소식">
-          <p className="fineprint">후원금은 서버 운영, 실제 iPhone 테스트, 출시 준비에 써요. 후원은 선택이며, 앱 이용 조건이 아니에요.</p>
         <div className="support-grid">
           <div className="support-card">
             <p className="support-status">
@@ -27,28 +29,27 @@ export function Support({ onOpen }: { onOpen: () => void }) {
               <li>서버와 실시간 데이터 운영</li>
               <li>TestFlight와 출시 준비</li>
             </ul>
-            <p className="support-detail">‘후원 방법 보기’에서 계좌이체 등 이용 가능한 방법을 확인할 수 있어요.</p>
+            <p className="support-detail">‘후원 방법 보기’를 누르면 계좌이체처럼 지금 쓸 수 있는 방법이 나와요.</p>
           </div>
 
           <div className="support-free">
-            <h3>기능과 출시 준비가 궁금하다면</h3>
+            <h3>얼마나 만들었는지 먼저 보고 싶다면</h3>
             <ul>
               <li>
                 <a href="#status">
-                  <b>개발 현황 살펴보기</b>
-                  <span>TAPSO가 어디까지 만들어졌는지 확인해보세요.</span>
+                  <b>개발 현황</b>
+                  <span>만든 기능과 출시 전까지 남은 일을 볼 수 있어요.</span>
                 </a>
               </li>
               <li>
                 <a href="#faq">
-                  <b>자주 묻는 질문 보기</b>
-                  <span>출시 일정과 기능에 대한 안내를 모았어요.</span>
+                  <b>FAQ</b>
+                  <span>출시 일정과 기능에 대해 자주 받는 질문이에요.</span>
                 </a>
               </li>
             </ul>
           </div>
         </div>
-        </ResponsiveDetails>
       </div>
     </section>
   );

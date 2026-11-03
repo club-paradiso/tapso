@@ -149,5 +149,6 @@ test("page anchors jump instantly without a long animated fly-through", () => {
   const nav = fromRoot("../src/content/site.ts");
   assert.match(header, /href=\{item\.href\}/);
   assert.match(nav, /href:\s*"#status"/);
-  assert.match(nav, /href:\s*"#support"/);
+  // Support lives on the home view; the header reaches it with its own shortcut.
+  assert.match(header, /href="#support"/);
 });

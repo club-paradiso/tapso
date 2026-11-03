@@ -155,7 +155,9 @@ test("status never claims TestFlight or the App Store is here", () => {
 test("the landing page omits the map-app comparison section without leaving a blank block", () => {
   const app = readFileSync(join(src, "App.tsx"), "utf8");
   assert.doesNotMatch(app, /MapCompanion/);
-  assert.match(app, /<Journey \/>\s*<Privacy \/>/);
+  // Home keeps the hero, support and the FAQ; each other topic is its own tab view.
+  assert.match(app, /<ViewPanel view="home"[^>]*>\s*<Hero \/>\s*<Support onOpen=\{[^}]*\}\s*\/>\s*<Faq \/>\s*<\/ViewPanel>/);
+  for (const view of ["how", "privacy", "status"]) assert.match(app, new RegExp(`<ViewPanel view="${view}"`));
   for (const section of ["Hero", "Journey", "Privacy", "Status", "Faq"]) {
     assert.match(app, new RegExp(`<${section}\\s*/>`), `missing ${section} section`);
   }
@@ -195,7 +197,8 @@ test("unavailable preorder is not offered on the landing page", () => {
   const config = JSON.parse(readFileSync(join(src, "design/marketing.json"), "utf8"));
   const page = readFileSync(join(src, "../index.html"), "utf8");
   assert.equal(config.copy.cta, "개발 현황 보기");
-  assert.match(header, /href="#status"/);
+  assert.match(header, /href=\{item\.href\}/);
+  assert.ok(NAV_ITEMS.some((item) => item.href === "#status"));
   assert.match(footer, /href="#status"/);
   assert.match(waitlist, /TestFlight 공개 일정은 아직 정해지지 않았어요/);
   assert.match(waitlist, /실제 iPhone 테스트와 배포를 준비/);
