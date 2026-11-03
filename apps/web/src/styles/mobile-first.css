@@ -172,3 +172,13 @@ details[open] > summary > .disclosure-mark { transform: rotate(225deg); margin-b
 /* A tab view opens right under the header: less air above it than a section mid-page. */
 .view-panel:not([data-view="home"]) > .section:first-child { padding-top: clamp(40px, 6vw, 88px); }
 .view-panel .section-head h2 { text-wrap: balance; }
+
+/* "by Club Paradiso": the club's drawn lettering, in TAPSO's mint. Under the
+   wordmark in the header, beside it in the footer, as on Print-cess. */
+.brand-lockup { display: inline-flex; flex-direction: column; align-items: flex-start; gap: 3px; }
+.brand-by { display: inline-flex; align-items: center; gap: 0.3em; color: var(--text-secondary); font-size: 0.6875rem; font-weight: 600; line-height: 1; white-space: nowrap; }
+.club-paradiso { display: inline-block; height: 1.15em; width: auto; aspect-ratio: 4097 / 598; color: var(--mint-ink); }
+.site-header.is-over-film .brand-by, .site-header.is-over-film .club-paradiso { color: inherit; }
+.footer-logo .brand-by { align-self: flex-end; margin-bottom: 0.3em; font-size: 0.875rem; }
+.site-footer .brand-by { color: var(--night-text-secondary); }
+.site-footer .club-paradiso { color: var(--mint); }
