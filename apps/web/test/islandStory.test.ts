@@ -211,10 +211,10 @@ test("until pushed updates are shown on a device, the page distinguishes default
   const plan = readFileSync(repo("docs/exec-plans/LIVE_ACTIVITY_PUSH.md"), "utf8");
   const shownOnDevice = /6\. \*\*Device evidence\*\* — `DONE`/.test(plan);
   if (shownOnDevice) return; // The claim below must then be revisited with the push path's real status.
-  assert.match(STEP_COPY.pocket.note ?? "", /기본 안내는 앱이 실행 중일 때 갱신/);
-  assert.match(STEP_COPY.pocket.note ?? "", /실제 기기에서 검증/);
+  assert.match(STEP_COPY.pocket.note ?? "", /기본 안내는 앱이 켜져 있을 때만 새로 고쳐/);
+  assert.match(STEP_COPY.pocket.note ?? "", /실제 iPhone에서 아직 확인하지 못했/);
   const faq = FAQ_ITEMS.find((f) => f.q.includes("앱을 닫아도"));
-  assert.ok(faq && /기본 안내는 앱이 실행 중일 때 갱신/.test(faq.a) && /실제 iPhone 검증이 필요/.test(faq.a), "the FAQ distinguishes default and optional behavior");
+  assert.ok(faq && /기본 안내는 앱이 켜져 있을 때만 새로 고쳐/.test(faq.a) && /실제 iPhone에서 아직 확인하지 못했/.test(faq.a), "the FAQ distinguishes default and optional behavior");
 });
 
 test("the story store follows position and picks without duplicating state", () => {

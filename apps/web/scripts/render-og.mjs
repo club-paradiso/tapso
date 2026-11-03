@@ -52,7 +52,7 @@ await page.evaluate(() => {
       <div class="og-brand"></div>
       <p class="og-title">와리지 말앙,<br />쉬멍 탑서.</p>
       <p class="og-gloss">서두르지 말고, 쉬어 가며 타세요.</p>
-      <p class="og-line">제주 버스 승차 동반자 · iPhone 앱 개발 중</p>
+      <p class="og-line">제주 버스 iPhone 앱 · 개발 중</p>
     </div>
     <div class="og-visual">
       <div class="og-island"></div>

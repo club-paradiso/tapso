@@ -26,7 +26,7 @@ const FLOW = [
   {
     who: "다시 지도 앱",
     question: "내린 다음엔 어디로?",
-    body: "내린 뒤 도보 길찾기로 자연스럽게 이어갈 수 있어요.",
+    body: "내린 뒤에는 도보 길찾기로 이어서 갈 수 있어요.",
     Icon: WalkIcon,
     tone: "map",
   },
@@ -38,15 +38,15 @@ export function MapCompanion() {
         <SectionHead
           title={
             <>
-              목적지를 정한 순간부터,
+              목적지를 정하면,
               <br />
-              TAPSO가 하차까지 함께해요.
+              내릴 때까지 TAPSO가 알려줘요.
             </>
           }
           titleId="maps-title"
         >
           <p>
-            목적지나 건물 이름으로 하차 정류장을 찾고, 탈 버스를 확인하세요. TAPSO가 남은 정거장과 내릴 순간을 계속 보여줘요.
+            목적지나 건물 이름으로 하차 정류장을 찾고, 탈 버스를 확인하세요. TAPSO가 남은 정거장과 내릴 때를 계속 보여줘요.
           </p>
         </SectionHead>
 

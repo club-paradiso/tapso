@@ -6,7 +6,7 @@ export function Status() {
   return (
     <section className="section status" id="status" aria-labelledby="status-title">
       <div className="container status-grid">
-        <SectionHead title="출시를 준비하고 있어요." titleId="status-title" />
+        <SectionHead title="우리, 곧 만나요." titleId="status-title" />
         <ResponsiveDetails summary="지금까지 만든 기능 보기">
           <p className="status-note">아직 출시 전이며, 출시일은 정해지지 않았어요. ‘구현됨’은 코드를 만들었다는 뜻으로, 실제 iPhone에서의 동작 확인은 남아 있어요.</p>
             <div className="status-groups">

@@ -13,7 +13,7 @@ export function MobileWalkthrough() {
   const copy = MOBILE_STAGES[current]!;
   const { stage, activity } = resolveBeat(mobileBeat(current, rideView));
   return <section className="mobile-walkthrough container" aria-labelledby="walkthrough-title">
-    <header className="walkthrough-head"><p className="walkthrough-eyebrow">TAPSO와 타는 네 단계</p><h2 id="walkthrough-title">내릴 때까지,<br />한눈에.</h2><p>각 단계를 눌러 미리 살펴보세요.</p></header>
+    <header className="walkthrough-head"><p className="walkthrough-eyebrow">TAPSO와 타는 네 단계</p><h2 id="walkthrough-title">마음 편하게<br />쉬며 이동해요.</h2><p>각 단계를 눌러 미리 살펴보세요.</p></header>
     <div className="walkthrough-steps" role="group" aria-label="사용 과정 단계 선택">
       {MOBILE_STAGES.map((item, index) => <button key={item.beatId} type="button" disabled={!ready} aria-pressed={current === index} aria-controls="walkthrough-preview" aria-label={`${index + 1}단계: ${item.title}`} onClick={() => { setCurrent(index); setRideView("pocket"); }}><span aria-hidden="true">0{index + 1}</span>{item.label}</button>)}
     </div>
@@ -28,10 +28,10 @@ export function MobileWalkthrough() {
     {current === 3 ? <aside className="walkthrough-explanation"><h4>2정거장 전부터, 내릴 때까지.</h4><p>{CHAPTER_COPY.arrive.lede}</p><p>{STEP_COPY.pocket.note}</p></aside> : null}
     <p className="walkthrough-caveat">개발 중인 화면 예시예요. 실제 iPhone·버스 테스트와 앱을 닫은 뒤의 안내 검증은 남아 있어요.</p>
     <aside className="mobile-trust-summary" aria-labelledby="mobile-trust-title">
-      <p className="walkthrough-eyebrow">버스 정보가 늦거나 끊기면</p>
+      <p className="walkthrough-eyebrow">버스 위치가 늦거나 끊기면</p>
       <h3 id="mobile-trust-title">{CHAPTER_COPY.trust.title}</h3>
       <p>{STEP_COPY.trust.body}</p>
-      <a className="text-link" href="#trust">정보 지연·오프라인 안내 살펴보기</a>
+      <a className="text-link" href="#trust">위치가 늦거나 끊길 때 보기</a>
     </aside>
     <noscript><ol className="walkthrough-fallback">{MOBILE_STAGES.map((item) => <li key={item.beatId}><b>{item.title}</b><p>{item.body}</p></li>)}</ol><p>아래 ‘전체 사용 과정 보기’에서 모든 화면을 볼 수 있어요.</p></noscript>
   </section>;

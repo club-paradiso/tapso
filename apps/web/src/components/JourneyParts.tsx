@@ -122,7 +122,7 @@ export function VariantPicker({ beat, label }: { beat: Beat; label: string }) {
 
 const COUNT_WORDS: Record<CountPresentation, string> = {
   live: "그대로 보여줘요",
-  lastKnown: "마지막 확인 값을 흐리게",
+  lastKnown: "마지막으로 확인한 값을 흐리게",
   hidden: "숨겨요",
 };
 
@@ -140,7 +140,7 @@ export function TrustTable({ beat }: { beat: Beat }) {
         </dd>
       </div>
       <div>
-        <dt>정보가 최신인가요?</dt>
+        <dt>위치가 최신인가요?</dt>
         <dd>
           <TrustBadge kind="data" status={p.data} onDark />
         </dd>

@@ -7,9 +7,9 @@ export function Privacy() {
   return (
     <section className="section privacy on-dark" id="privacy" aria-labelledby="privacy-title">
       <div className="container privacy-grid">
-        <SectionHead title="내 위치 대신, 버스 위치로 안내해요." titleId="privacy-title" />
+        <SectionHead title="불필요한 위치 정보는 수집하지 않아요." titleId="privacy-title" />
         <ResponsiveDetails summary="개인정보 원칙 보기">
-          <p className="fineprint">공공 버스 위치 데이터로 남은 정거장을 계산해요. 기본 하차 안내를 위해 내 위치를 계속 공유할 필요는 없어요.</p>
+          <p className="fineprint">공공 버스 위치 데이터로 남은 정거장을 계산해요. 기본 안내에는 내 위치를 계속 공유할 필요가 없어요.</p>
           <div className="privacy-visual" aria-hidden="true">
             <p className="privacy-row">
               <span className="privacy-token is-bus">
