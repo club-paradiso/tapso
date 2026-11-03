@@ -126,7 +126,7 @@ export function Journey() {
   return (
     <section className="section journey" id="how" aria-labelledby="how-title">
       <div className="container">
-        <SectionHead title="내릴 때까지, 한눈에." titleId="how-title" />
+        <SectionHead title="마음 편하게 쉬며 이동해요." titleId="how-title" />
         <ResponsiveDetails summary="타는 법 보기">
           <MobileWalkthrough />
           <ResponsiveDetails summary="전체 사용 과정 보기" className="journey-details">

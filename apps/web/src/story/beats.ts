@@ -110,9 +110,9 @@ export const BEATS: readonly Beat[] = [
     stage: { kind: "lock" },
     activity: { moment: "delayed", remaining: LAST_KNOWN },
     variants: [
-      { id: "delayed", label: "정보 지연", activity: { moment: "delayed", remaining: LAST_KNOWN } },
-      { id: "vehicleLost", label: "버스 놓침", activity: { moment: "vehicleLost", remaining: LAST_KNOWN } },
-      { id: "offline", label: "오프라인", activity: { moment: "offline", remaining: LAST_KNOWN } },
+      { id: "delayed", label: "위치가 늦을 때", activity: { moment: "delayed", remaining: LAST_KNOWN } },
+      { id: "vehicleLost", label: "버스가 안 보일 때", activity: { moment: "vehicleLost", remaining: LAST_KNOWN } },
+      { id: "offline", label: "연결 끊김", activity: { moment: "offline", remaining: LAST_KNOWN } },
       { id: "checking", label: "다시 확인 중", activity: { moment: "checking", remaining: LAST_KNOWN } },
     ],
   },

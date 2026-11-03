@@ -11,7 +11,7 @@ export function Faq() {
   return (
     <section className="section faq" id="faq" aria-labelledby="faq-title">
       <div className="container faq-grid">
-        <SectionHead title="궁금한 점" titleId="faq-title" />
+        <SectionHead title="FAQ" titleId="faq-title" />
         <ResponsiveDetails summary="자주 묻는 질문 보기">
         <div className="faq-list">
           {FAQ_ITEMS.map((item) => <Question key={item.q} item={item} />)}
