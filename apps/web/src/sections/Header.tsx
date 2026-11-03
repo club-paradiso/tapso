@@ -1,6 +1,7 @@
 import { ThemeToggle } from "../design/Theme";
 import { NAV_ITEMS } from "../content/site.ts";
 import { BrandMark } from "../components/BrandMark";
+import { ClubParadisoLogo } from "../components/ClubParadisoLogo";
 import type { View } from "../components/ResponsiveDetails";
 import { useStory } from "../story/storyStore.ts";
 
@@ -16,9 +17,12 @@ export function Header({ view }: { view: View }) {
     <header className={`site-header${overFilm ? " is-over-film" : ""}`}>
       <a className="skip-link" href="#main">본문으로 건너뛰기</a>
       <div className="container site-header-inner">
-        <a className="brand" href="#top" aria-label="TAPSO, 홈으로">
+        <a className="brand" href="#top" aria-label="TAPSO by Club Paradiso, 홈으로">
           <BrandMark />
-          <span className="brand-word" data-wordmark="TAPSO" aria-hidden="true">TAPS<span className="brand-word-o">O</span></span>
+          <span className="brand-lockup" aria-hidden="true">
+            <span className="brand-word" data-wordmark="TAPSO">TAPS<span className="brand-word-o">O</span></span>
+            <small className="brand-by">by <ClubParadisoLogo /></small>
+          </span>
         </a>
         <nav className="site-nav" aria-label="페이지 탭"><ul>
           {NAV_ITEMS.map((item) => (

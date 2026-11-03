@@ -1,15 +1,17 @@
 import { BrandMark } from "../components/BrandMark";
+import { ClubParadisoLogo } from "../components/ClubParadisoLogo";
 
 export function Footer() {
   return (
     <footer className="site-footer">
       <div className="container footer-grid">
         <div className="footer-brand">
-          <p className="footer-logo">
+          <p className="footer-logo" role="img" aria-label="TAPSO by Club Paradiso">
             <BrandMark size={36} />
-            <span className="brand-word" role="img" aria-label="TAPSO">
+            <span className="brand-word" aria-hidden="true">
               TAPS<span className="brand-word-o" aria-hidden="true">O</span>
             </span>
+            <small className="brand-by" aria-hidden="true">by <ClubParadisoLogo /></small>
           </p>
           <p className="footer-motto">
             와리지 말앙,<br />쉬멍 탑서.

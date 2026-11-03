@@ -24,7 +24,10 @@ test("header and footer use one rounded wordmark without a visible Korean suffix
   assert.match(css, /\.brand-word\s*\{\s*font-size:\s*1\.25rem;/);
   assert.match(css, /\.footer-logo\s*\{[^}]*font-size:\s*1\.25rem;/s);
   assert.match(header, /data-wordmark="TAPSO"/);
-  assert.match(footer, /role="img" aria-label="TAPSO"/);
+  // The footer lockup carries the endorsement, so its one accessible name does too.
+  assert.match(footer, /role="img" aria-label="TAPSO by Club Paradiso"/);
+  assert.match(header, /aria-label="TAPSO by Club Paradiso, 홈으로"/);
+  for (const source of [header, footer]) assert.match(source, /by <ClubParadisoLogo \/>/);
   for (const source of [header, footer]) {
     assert.match(source, /TAPS<span className="brand-word-o"/);
     assert.doesNotMatch(source, /<span>탑서<\/span>/);
