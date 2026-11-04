@@ -183,8 +183,12 @@ details[open] > summary > .disclosure-mark { transform: rotate(225deg); margin-b
 .site-footer .brand-by { color: var(--night-text-secondary); }
 .site-footer .club-paradiso { color: var(--mint); }
 
-/* Under the catchphrase, the lede, buttons and status line are centred in
-   the hero column. The catchphrase and its gloss keep their alignment. */
-.coast-v4 .coast-lede, .coast-v4 .coast-status-line { text-align: center; }
+/* The hero copy is one centred block: the catchphrase, gloss, lede, buttons
+   and status line share one centre line. On wider screens the column shrinks
+   to its widest line and stays on the left, clear of the rider in the film. */
+.coast-v4 .coast-copy { text-align: center; }
 .coast-v4 .coast-status-line { margin-inline: auto; }
 .coast-v4 .coast-actions { justify-content: center; }
+@media (min-width: 900px) {
+  .coast-v4 .coast-copy { width: fit-content; max-width: 650px; }
+}
