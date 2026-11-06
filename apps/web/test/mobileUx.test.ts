@@ -95,11 +95,12 @@ test("hero microcopy stays readable on phones", () => {
   assert.match(mobile, /\.coast-bottom\s*\{\s*bottom:\s*max\(16px, env\(safe-area-inset-bottom\)\)/);
 });
 
-test("bus view tabs stay on one line and scroll instead of wrapping", () => {
+test("bus view tabs fit on screen in two-line columns instead of scrolling out of sight", () => {
   const mobile = mediaSlice(sections, "@media (max-width: 719px)");
-  assert.match(mobile, /\.segmented\s*\{[^}]*flex-wrap:\s*nowrap/);
-  assert.match(mobile, /\.segmented\s*\{[^}]*overflow-x:\s*auto/);
-  assert.match(mobile, /\.segmented button\s*\{[^}]*white-space:\s*nowrap/);
+  assert.match(mobile, /\.segmented\s*\{[^}]*grid-auto-flow:\s*column/);
+  assert.match(mobile, /\.segmented-line\s*\{[^}]*display:\s*block/);
+  assert.doesNotMatch(mobile, /\.segmented\s*\{[^}]*overflow-x:\s*auto/);
+  assert.match(mobile, /\.segmented button\s*\{[^}]*text-wrap:\s*balance/);
 });
 
 test("waitlist validation moves focus to the first invalid field", () => {

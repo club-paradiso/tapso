@@ -6,7 +6,7 @@ export function Support({ onOpen }: { onOpen: () => void }) {
     <section className="section support" id="support" aria-labelledby="support-title">
       <div className="container">
         <SectionHead
-          title="개발자한테 커피 한 잔 보태고 싶다면"
+          title={"개발자한테 커피 한\u00a0잔 보태고 싶다면"}
           titleId="support-title"
         >
           <p>

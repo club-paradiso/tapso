@@ -199,7 +199,7 @@ export function BusScene() {
       <div className="segmented" role="group" aria-label="버스를 보는 방법">
         {BUS_VIEWS.map((v) => (
           <button key={v} type="button" className={v === view ? "is-active" : undefined} aria-pressed={v === view} onClick={() => setView(v)}>
-            {BUS_SCENES[v].tab}
+            <TabLabel text={BUS_SCENES[v].tab} />
           </button>
         ))}
       </div>
@@ -295,5 +295,18 @@ export function GlanceChart() {
         그림으로 나타낸 예시예요. 측정한 수치가 아니에요.
       </figcaption>
     </figure>
+  );
+}
+
+/** Splits "… 볼 때" / "… 있을 때" before its last two words, so on a phone
+    every tab wraps at the same place and the row stays even. */
+function TabLabel({ text }: { text: string }) {
+  const words = text.split(" ");
+  if (words.length < 3) return <>{text}</>;
+  return (
+    <>
+      <span className="segmented-line">{words.slice(0, -2).join(" ")}</span>{" "}
+      <span className="segmented-line">{words.slice(-2).join(" ")}</span>
+    </>
   );
 }
