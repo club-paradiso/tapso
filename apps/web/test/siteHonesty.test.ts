@@ -78,7 +78,8 @@ test("marketing branding consistently says TAPSO, keeping 제주어 quotes intac
   const email = readFileSync(join(src, "../api/_lib/email.ts"), "utf8");
   const html = readFileSync(join(src, "../index.html"), "utf8");
 
-  assert.match(support, /개발자한테 커피 한 잔 보태고 싶다면/);
+  // "한 잔" is joined by a no-break space so the heading never splits it.
+  assert.match(support, /개발자한테 커피 한\\u00a0잔 보태고 싶다면/);
   assert.match(waitlistLabels, /label: "제주도민"/);
   assert.match(email, /resident: "제주도민"/);
   assert.doesNotMatch(waitlistLabels, /제주 도민/);
