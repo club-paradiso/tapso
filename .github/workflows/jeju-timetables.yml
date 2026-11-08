@@ -37,7 +37,14 @@ jobs:
       - name: Complete bus.jeju.go.kr's certificate chain (verified against the system roots)
         run: |
           set -euo pipefail
-          openssl s_client -connect bus.jeju.go.kr:443 -servername bus.jeju.go.kr -showcerts </dev/null 2>/dev/null > chain.txt || true
+          # The site sometimes does not answer for minutes (2026-10-26 and 2026-11-02 runs
+          # failed here with an empty chain); try three times, a minute apart, before failing.
+          for attempt in 1 2 3; do
+            timeout 60 openssl s_client -connect bus.jeju.go.kr:443 -servername bus.jeju.go.kr -showcerts </dev/null 2>/dev/null > chain.txt || true
+            if grep -q 'BEGIN CERTIFICATE' chain.txt; then break; fi
+            echo "attempt $attempt: bus.jeju.go.kr sent no certificate"
+            if [ "$attempt" -lt 3 ]; then sleep 60; fi
+          done
           openssl x509 -in chain.txt -out leaf.pem
           uri=$(openssl x509 -in leaf.pem -noout -ext authorityInfoAccess | sed -n 's/.*CA Issuers - URI:\(.*\)/\1/p' | head -1)
           curl -fsS --max-time 20 "$uri" -o issuer.raw

@@ -24,9 +24,12 @@ final class OfficialTimetableTests: XCTestCase {
     }
 
     func testADatedRouteOnAWeekdayGivesTodaysFirstAndLastWithTheAsOfDate() throws {
-        let summary = TimetableSummary.make(try view("dated-weekday"))
+        let dated = try view("dated-weekday")
+        let summary = TimetableSummary.make(dated)
         XCTAssertEqual(summary.kind, .today)
-        XCTAssertEqual(summary.asOf, "2026-10-03")
+        // The bundle's own download date: it moves with every weekly import.
+        XCTAssertEqual(summary.asOf, dated.asOf)
+        XCTAssertNotNil(summary.asOf.range(of: #"^\d{4}-\d{2}-\d{2}$"#, options: .regularExpression))
         XCTAssertFalse(summary.isStale)
         XCTAssertEqual(summary.lines.map(\.dayLabel), ["평일", "평일"])
         XCTAssertEqual(summary.lines.first?.first, .init(time: "06:00", from: "한라대"))
@@ -62,10 +65,12 @@ final class OfficialTimetableTests: XCTestCase {
     }
 
     func testAStaleBundleIsADatedRecordNotToday() throws {
-        let summary = TimetableSummary.make(try view("stale"))
+        let stale = try view("stale")
+        let downloaded = try view("dated-weekday").asOf
+        let summary = TimetableSummary.make(stale)
         XCTAssertTrue(summary.isStale)
         XCTAssertNotEqual(summary.kind, .today)
-        XCTAssertEqual(summary.asOf, "2026-10-03")
+        XCTAssertEqual(summary.asOf, downloaded, "the same bundle, read 120 days later")
     }
 
     func testTimesAfterMidnightReadAsTheNextDay() {

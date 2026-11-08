@@ -2,7 +2,7 @@
  "schemaVersion": "tapso-timetable-views-v1",
  "label": "OFFICIAL_DATED",
  "generatedBy": "scripts/journey/timetable-views.ts",
- "bundleVersion": "e149eb7a24bd6723",
+ "bundleVersion": "0035ddc1ca65e1d8",
  "views": [
   {
    "name": "dated-weekday",
@@ -10,11 +10,11 @@
     "routeNo": "365",
     "status": "available",
     "label": "OFFICIAL_DATED",
-    "asOf": "2026-10-03",
+    "asOf": "2026-11-05",
     "freshness": "fresh",
-    "date": "2026-10-07",
+    "date": "2026-11-11",
     "serviceDay": {
-     "date": "2026-10-07",
+     "date": "2026-11-11",
      "weekday": "wed",
      "publicHoliday": null,
      "calendarCovered": true
@@ -3163,17 +3163,18 @@
       "name": "jeju-bis-xlsx",
       "version": "3"
      },
-     "bundleVersion": "e149eb7a24bd6723"
+     "bundleVersion": "0035ddc1ca65e1d8"
     }
    }
   },
   {
    "name": "dated-substitute-holiday",
+   "readAsOf": "2026-10-04",
    "item": {
     "routeNo": "365",
     "status": "available",
     "label": "OFFICIAL_DATED",
-    "asOf": "2026-10-03",
+    "asOf": "2026-10-04",
     "freshness": "fresh",
     "date": "2026-10-05",
     "serviceDay": {
@@ -6328,7 +6329,7 @@
       "name": "jeju-bis-xlsx",
       "version": "3"
      },
-     "bundleVersion": "e149eb7a24bd6723"
+     "bundleVersion": "0035ddc1ca65e1d8"
     }
    }
   },
@@ -6338,11 +6339,11 @@
     "routeNo": "201",
     "status": "available",
     "label": "OFFICIAL_DATED",
-    "asOf": "2026-10-03",
+    "asOf": "2026-11-05",
     "freshness": "fresh",
-    "date": "2026-10-07",
+    "date": "2026-11-11",
     "serviceDay": {
-     "date": "2026-10-07",
+     "date": "2026-11-11",
      "weekday": "wed",
      "publicHoliday": null,
      "calendarCovered": true
@@ -9542,7 +9543,7 @@
       "name": "jeju-bis-xlsx",
       "version": "3"
      },
-     "bundleVersion": "e149eb7a24bd6723"
+     "bundleVersion": "0035ddc1ca65e1d8"
     }
    }
   },
@@ -9552,11 +9553,11 @@
     "routeNo": "325",
     "status": "available",
     "label": "OFFICIAL_DATED",
-    "asOf": "2026-10-03",
+    "asOf": "2026-11-05",
     "freshness": "fresh",
-    "date": "2026-10-07",
+    "date": "2026-11-11",
     "serviceDay": {
-     "date": "2026-10-07",
+     "date": "2026-11-11",
      "weekday": "wed",
      "publicHoliday": null,
      "calendarCovered": true
@@ -9986,7 +9987,7 @@
       "name": "jeju-bis-xlsx",
       "version": "3"
      },
-     "bundleVersion": "e149eb7a24bd6723"
+     "bundleVersion": "0035ddc1ca65e1d8"
     }
    }
   },
@@ -9996,11 +9997,11 @@
     "routeNo": "182",
     "status": "source_conflict",
     "label": "OFFICIAL_DATED",
-    "asOf": "2026-10-03",
+    "asOf": "2026-11-05",
     "freshness": "fresh",
-    "date": "2026-10-07",
+    "date": "2026-11-11",
     "serviceDay": {
-     "date": "2026-10-07",
+     "date": "2026-11-11",
      "weekday": "wed",
      "publicHoliday": null,
      "calendarCovered": true
@@ -10048,21 +10049,21 @@
       "name": "jeju-bis-xlsx",
       "version": "3"
      },
-     "bundleVersion": "e149eb7a24bd6723"
+     "bundleVersion": "0035ddc1ca65e1d8"
     }
    }
   },
   {
    "name": "no-timetable",
    "item": {
-    "routeNo": "888",
+    "routeNo": "369",
     "status": "no_timetable",
     "label": "OFFICIAL_DATED",
-    "asOf": "2026-10-03",
+    "asOf": "2026-11-05",
     "freshness": "fresh",
-    "date": "2026-10-07",
+    "date": "2026-11-11",
     "serviceDay": {
-     "date": "2026-10-07",
+     "date": "2026-11-11",
      "weekday": "wed",
      "publicHoliday": null,
      "calendarCovered": true
@@ -10071,8 +10072,8 @@
     "services": [],
     "noTimetable": [
      {
-      "scheduleId": "406066",
-      "reason": "site_has_none"
+      "scheduleId": "405120",
+      "reason": "suspension_notice: every sheet is a suspension notice (369 (하교)월평-제주여고-연북로-한라병원-한라대)"
      }
     ],
     "source": {
@@ -10082,7 +10083,7 @@
       "name": "jeju-bis-xlsx",
       "version": "3"
      },
-     "bundleVersion": "e149eb7a24bd6723"
+     "bundleVersion": "0035ddc1ca65e1d8"
     }
    }
   },
@@ -10092,15 +10093,13 @@
     "routeNo": "365",
     "status": "available",
     "label": "OFFICIAL_DATED",
-    "asOf": "2026-10-03",
+    "asOf": "2026-11-05",
     "freshness": "stale",
-    "date": "2027-03-01",
+    "date": "2027-03-05",
     "serviceDay": {
-     "date": "2027-03-01",
-     "weekday": "mon",
-     "publicHoliday": {
-      "name": "삼일절"
-     },
+     "date": "2027-03-05",
+     "weekday": "fri",
+     "publicHoliday": null,
      "calendarCovered": true
     },
     "today": [],
@@ -10110,7 +10109,7 @@
       "direction": "한라대→공항→시청→제주대",
       "dayType": "weekday",
       "dayLabel": "평일",
-      "applicability": "does_not_apply",
+      "applicability": "applies",
       "effectiveFrom": "2026-06-24",
       "inEffect": true,
       "status": "ok",
@@ -11009,7 +11008,7 @@
       "direction": "제주대→시청→공항→한라대",
       "dayType": "weekday",
       "dayLabel": "평일",
-      "applicability": "does_not_apply",
+      "applicability": "applies",
       "effectiveFrom": "2026-06-24",
       "inEffect": true,
       "status": "ok",
@@ -11882,7 +11881,7 @@
       "direction": "한라대→공항→시청→제주대",
       "dayType": "saturday_sunday_holiday",
       "dayLabel": "토,공휴일",
-      "applicability": "applies",
+      "applicability": "does_not_apply",
       "effectiveFrom": "2024-08-01",
       "inEffect": true,
       "status": "ok",
@@ -12558,7 +12557,7 @@
       "direction": "제주대→시청→공항→한라대",
       "dayType": "saturday_sunday_holiday",
       "dayLabel": "토,공휴일",
-      "applicability": "applies",
+      "applicability": "does_not_apply",
       "effectiveFrom": "2024-08-01",
       "inEffect": true,
       "status": "ok",
@@ -13220,7 +13219,7 @@
       "name": "jeju-bis-xlsx",
       "version": "3"
      },
-     "bundleVersion": "e149eb7a24bd6723"
+     "bundleVersion": "0035ddc1ca65e1d8"
     }
    }
   }
