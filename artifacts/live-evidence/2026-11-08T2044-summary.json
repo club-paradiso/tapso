@@ -1,0 +1,87 @@
+{
+  "schemaVersion": "tapso-live-evidence-summary-v1",
+  "label": "OBSERVED",
+  "source": "https://tapso-api.vercel.app/v1/vehicles (TAGO via TAPSO's 20 s cache)",
+  "note": "Receipt times only; TAGO publishes no observation time. Vehicle numbers pseudonymised with a per-run salt that was not kept. Not ground truth.",
+  "startedAt": "2026-11-08T20:44:50.227Z",
+  "endedAt": "2026-11-08T21:59:23.577Z",
+  "intervalSeconds": 30,
+  "catalogVersion": "794f3bcb831d783e",
+  "timetableBundle": "e149eb7a24bd6723",
+  "requests": 2400,
+  "latencyMs": {
+    "p50": 647,
+    "p90": 1646,
+    "p99": 4956,
+    "max": 9671
+  },
+  "routes": [
+    {
+      "routeNo": "365",
+      "variants": 6,
+      "polls": 150,
+      "requests": 900,
+      "failedRequests": 270,
+      "pollsWithCleanVehicles": 81,
+      "vehicleRows": 492,
+      "suspectRows": 0,
+      "issues": {},
+      "distinctVehicles": 12,
+      "historyIssues": {},
+      "receiptsPerContentChange": 1.14,
+      "scheduleStatusByPoll": {
+        "before_first_departure": 33,
+        "scheduled_departures_remain": 117
+      },
+      "pollsWithCleanVehiclesWhileScheduleSaysLastDeparted": 0,
+      "pollsWithCleanVehiclesBeforeFirstDeparture": 2,
+      "pollsWithoutVehiclesWhileScheduleRemains": 38
+    },
+    {
+      "routeNo": "785",
+      "variants": 8,
+      "polls": 150,
+      "requests": 1200,
+      "failedRequests": 347,
+      "pollsWithCleanVehicles": 46,
+      "vehicleRows": 67,
+      "suspectRows": 7,
+      "issues": {
+        "far_from_reported_stop": 3,
+        "stop_id_mismatch": 4
+      },
+      "distinctVehicles": 2,
+      "historyIssues": {},
+      "receiptsPerContentChange": 1.03,
+      "scheduleStatusByPoll": {
+        "no_usable_schedule": 150
+      },
+      "pollsWithCleanVehiclesWhileScheduleSaysLastDeparted": 0,
+      "pollsWithCleanVehiclesBeforeFirstDeparture": 0,
+      "pollsWithoutVehiclesWhileScheduleRemains": 0
+    },
+    {
+      "routeNo": "791",
+      "variants": 2,
+      "polls": 150,
+      "requests": 300,
+      "failedRequests": 92,
+      "pollsWithCleanVehicles": 22,
+      "vehicleRows": 44,
+      "suspectRows": 22,
+      "issues": {
+        "stop_id_mismatch": 22,
+        "far_from_reported_stop": 18
+      },
+      "distinctVehicles": 2,
+      "historyIssues": {},
+      "receiptsPerContentChange": 1.05,
+      "scheduleStatusByPoll": {
+        "no_usable_schedule": 150
+      },
+      "pollsWithCleanVehiclesWhileScheduleSaysLastDeparted": 0,
+      "pollsWithCleanVehiclesBeforeFirstDeparture": 0,
+      "pollsWithoutVehiclesWhileScheduleRemains": 0
+    }
+  ]
+}
