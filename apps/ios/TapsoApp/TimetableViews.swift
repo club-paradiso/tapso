@@ -13,6 +13,9 @@ struct TimetableCard: View {
     let load: TimetableLoad?
     /// Tonight's reading of the same tables (`GET /v1/night-guard`); `nil` shows nothing extra.
     var nightGuard: TransitAPINightGuard? = nil
+    /// Re-reads tonight's answer; called while the card is visible, at `validUntil`
+    /// and at least once a minute, independently of the one-time timetable download.
+    var onNightGuardRefresh: (() async -> Void)? = nil
     let onLoad: () -> Void
     let onShowAll: (TransitAPITimetable) -> Void
 
@@ -53,7 +56,7 @@ struct TimetableCard: View {
         Label(title(summary), systemImage: "calendar")
             .font(.tapso(.subheadline, .semibold))
             .foregroundStyle(TapsoColor.textPrimary)
-        NightGuardSection(view: nightGuard)
+        NightGuardSection(view: nightGuard, refresh: onNightGuardRefresh)
         if summary.kind == .today, let holiday = summary.holidayName {
             Text(String(format: RideText.string("route.timetable.holiday"), holiday))
                 .font(.tapso(.footnote))
@@ -241,10 +244,11 @@ struct TimetableSheetContent: View {
 /// past its `validUntil` (the status may have changed) or when no table answers.
 struct NightGuardSection: View {
     let view: TransitAPINightGuard?
+    var refresh: (() async -> Void)? = nil
 
     var body: some View {
         TimelineView(.periodic(from: .now, by: 30)) { context in
-            if let view, isCurrent(view, at: context.date) {
+            if let view, view.isCurrent(at: context.date) {
                 let lines = NightGuardLine.lines(view)
                 if !lines.isEmpty {
                     VStack(alignment: .leading, spacing: TapsoSpace.xs) {
@@ -252,7 +256,7 @@ struct NightGuardSection: View {
                             .font(.tapso(.footnote, .semibold))
                             .foregroundStyle(TapsoColor.textPrimary)
                         ForEach(Array(lines.enumerated()), id: \.offset) { _, line in
-                            Text(verbatim: Self.text(line))
+                            Text(verbatim: Self.text(line, localDate: view.localDate))
                                 .font(.tapso(.footnote))
                                 .foregroundStyle(TapsoColor.textSecondary)
                                 .fixedSize(horizontal: false, vertical: true)
@@ -270,24 +274,36 @@ struct NightGuardSection: View {
                 }
             }
         }
+        // Its own refresh path: at the answer's validUntil (or a minute after the
+        // read, never sooner than 5 s), then at least a minute apart. A new answer
+        // restarts the loop.
+        .task(id: view?.evaluatedAt ?? "") {
+            guard let refresh else { return }
+            var next = view?.refreshDate(readAt: .now) ?? .now
+            while !Task.isCancelled {
+                let wait = max(0, next.timeIntervalSinceNow)
+                if wait > 0 { try? await Task.sleep(nanoseconds: UInt64(wait * 1_000_000_000)) }
+                guard !Task.isCancelled else { return }
+                await refresh()
+                next = Date.now.addingTimeInterval(TransitAPINightGuard.refreshFallbackSeconds)
+            }
+        }
     }
 
-    private func isCurrent(_ view: TransitAPINightGuard, at now: Date) -> Bool {
-        guard let until = view.validUntil else { return true }
-        let parser = ISO8601DateFormatter()
-        parser.formatOptions = [.withInternetDateTime, .withFractionalSeconds]
-        guard let date = parser.date(from: until) else { return false }
-        return now < date
-    }
-
-    static func text(_ line: NightGuardLine) -> String {
+    /// Times read against the answer's own local date (`ScheduledTime.displayClock`):
+    /// after midnight, yesterday's "24:10" is today's 00:10, not "next day".
+    static func text(_ line: NightGuardLine, localDate: String) -> String {
+        func clock(_ time: TransitAPINightGuard.ScheduledTime) -> String {
+            let shown = time.displayClock(relativeTo: localDate)
+            return shown.nextDay ? String(format: RideText.string("route.timetable.nextDay"), shown.text) : shown.text
+        }
         switch line.kind {
         case let .departuresRemain(time):
-            return String(format: RideText.string("nightGuard.remain"), line.direction, RideText.clock(time.table), time.at)
+            return String(format: RideText.string("nightGuard.remain"), line.direction, clock(time), time.at)
         case let .beforeFirst(time):
-            return String(format: RideText.string("nightGuard.beforeFirst"), line.direction, RideText.clock(time.table), time.at)
+            return String(format: RideText.string("nightGuard.beforeFirst"), line.direction, clock(time), time.at)
         case let .lastDeparted(time):
-            return String(format: RideText.string("nightGuard.lastDeparted"), line.direction, RideText.clock(time.table), time.at)
+            return String(format: RideText.string("nightGuard.lastDeparted"), line.direction, clock(time), time.at)
         case .uncertain:
             return String(format: RideText.string("nightGuard.uncertain"), line.direction)
         }

@@ -234,13 +234,13 @@ struct CatalogTripsContent: View {
         }
     }
 
+    // The freshness policy lives in transit-core (`TripPositionFreshness`); the view only draws it.
     private func age(at now: Date) -> Int? {
-        readAt.map { max(0, Int(now.timeIntervalSince($0))) }
+        TripPositionFreshness.ageSeconds(readAt: readAt, now: now)
     }
 
     private func isStale(at now: Date) -> Bool {
-        guard let readAt else { return false }
-        return now.timeIntervalSince(readAt) > TapsoAppModel.tripArrivalStaleSeconds
+        TripPositionFreshness.isStale(readAt: readAt, now: now)
     }
 
     @ViewBuilder

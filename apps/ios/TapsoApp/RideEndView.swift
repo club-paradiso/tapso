@@ -35,6 +35,7 @@ struct RideEndView: View {
                     routeNumber: outcome.routeNumber,
                     load: model.timetables[outcome.routeNumber],
                     nightGuard: model.nightGuards[outcome.routeNumber]?.view,
+                    onNightGuardRefresh: { await model.loadNightGuard(routeNumber: outcome.routeNumber) },
                     onLoad: { Task { await model.loadTimetable(routeNumber: outcome.routeNumber) } },
                     onShowAll: { timetableSheet = $0 }
                 ))

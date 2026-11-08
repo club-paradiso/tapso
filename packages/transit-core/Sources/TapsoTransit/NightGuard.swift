@@ -88,3 +88,80 @@ public struct NightGuardLine: Hashable, Sendable {
         }
     }
 }
+
+// MARK: - Freshness and display policy (kept out of SwiftUI; AGENTS.md)
+
+extension TransitAPINightGuard {
+    /// Seconds between reads when the answer gives no `validUntil`, or when a
+    /// read failed: the server caches an answer for at most a minute.
+    public static let refreshFallbackSeconds: TimeInterval = 60
+    /// Never read again sooner than this after a read, so an answer that arrives
+    /// already at (or past) its `validUntil`, for example from a shared cache at
+    /// the boundary, cannot make the app re-read in a tight loop.
+    public static let refreshFloorSeconds: TimeInterval = 5
+
+    /// The answer holds until `validUntil` (the next minute its status can
+    /// change). Past it, or when `validUntil` does not parse, it is not shown.
+    /// No `validUntil` at all: the server bounds the answer to a minute, so the
+    /// caller's own refresh decides.
+    public func isCurrent(at now: Date) -> Bool {
+        guard let validUntil else { return true }
+        guard let until = NightGuardInstant.parse(validUntil) else { return false }
+        return now < until
+    }
+
+    /// When to read again: at `validUntil`, never later than the fallback after
+    /// the read, and never sooner than the floor. A `validUntil` that does not
+    /// parse means as soon as the floor allows.
+    public func refreshDate(readAt: Date) -> Date {
+        let floor = readAt.addingTimeInterval(Self.refreshFloorSeconds)
+        let fallback = readAt.addingTimeInterval(Self.refreshFallbackSeconds)
+        guard let validUntil else { return fallback }
+        guard let until = NightGuardInstant.parse(validUntil) else { return floor }
+        return max(floor, min(until, fallback))
+    }
+}
+
+extension TransitAPINightGuard.ScheduledTime {
+    /// Calendar days from the evaluation's local date to the date this time
+    /// falls on: 0 the same day, 1 the next, -1 the day before. `nil` when
+    /// either date is not `YYYY-MM-DD`.
+    public func dayOffset(from localDate: String) -> Int? {
+        guard let from = NightGuardInstant.day(localDate), let to = NightGuardInstant.day(date) else { return nil }
+        return NightGuardInstant.calendar.dateComponents([.day], from: from, to: to).day
+    }
+
+    /// The wall clock to show, read against the evaluation date rather than the
+    /// table: after midnight yesterday's "24:10" is today's 00:10, not "next
+    /// day". Only a time on the following calendar day is marked as next day.
+    /// An earlier day (a last departure before midnight, read after it) shows
+    /// its plain clock: it is in the past either way. Without a usable date the
+    /// table's own reading is kept.
+    public func displayClock(relativeTo localDate: String) -> (text: String, nextDay: Bool) {
+        guard let offset = dayOffset(from: localDate) else { return TimetableClock.display(table) }
+        return (TimetableClock.display(clock).text, offset >= 1)
+    }
+}
+
+enum NightGuardInstant {
+    static var calendar: Calendar {
+        var calendar = Calendar(identifier: .gregorian)
+        calendar.timeZone = TimeZone(identifier: "UTC")!
+        return calendar
+    }
+
+    static func parse(_ text: String) -> Date? {
+        let fractional = ISO8601DateFormatter()
+        fractional.formatOptions = [.withInternetDateTime, .withFractionalSeconds]
+        if let date = fractional.date(from: text) { return date }
+        let plain = ISO8601DateFormatter()
+        plain.formatOptions = [.withInternetDateTime]
+        return plain.date(from: text)
+    }
+
+    static func day(_ text: String) -> Date? {
+        let parts = text.split(separator: "-")
+        guard parts.count == 3, let year = Int(parts[0]), let month = Int(parts[1]), let day = Int(parts[2]) else { return nil }
+        return calendar.date(from: DateComponents(year: year, month: month, day: day))
+    }
+}

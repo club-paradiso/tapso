@@ -345,8 +345,10 @@ final class TapsoAppModel {
     /// When the last trips-screen read finished (phone clock). Positions are only as
     /// current as this, plus the server's 20 s cache; the screen shows the age.
     private(set) var tripArrivalsReadAt: Date?
-    /// A trips-screen read is in flight; a refresh never overlaps one.
-    private var tripArrivalsLoading = false
+    /// The trip IDs of the trips-screen read in flight (a refresh of the same screen never
+    /// overlaps it), and a counter that tells a superseded read from the current one.
+    private var tripArrivalsInFlight: Set<String>?
+    private var tripArrivalsGeneration = 0
     /// Official timetables per route number (`GET /v1/timetables`), never live.
     private(set) var timetables: [String: TimetableLoad] = [:]
     /// Tonight's timetable reading per route number (`GET /v1/night-guard`), with when it was read.
@@ -962,18 +964,27 @@ final class TapsoAppModel {
     /// most `tripArrivalBudgetCeiling` requests, so a minute keeps one screen under
     /// half of the API's 120-a-minute allowance.
     static let tripArrivalRefreshSeconds: UInt64 = 60
-    /// Older than this, positions are drawn as stale (one refresh missed, plus the cache).
-    static let tripArrivalStaleSeconds: TimeInterval = 90
+    // When positions count as stale: `TripPositionFreshness` in transit-core.
 
     /// Where each trip's nearest bus is now. Reads `/v1/vehicles` per variant, one
     /// variant of every route number before a second of any, up to the budget; the
     /// rest are marked not checked rather than left loading.
+    ///
+    /// One read per screen at a time: a refresh of the same trips while a read is in
+    /// flight is dropped, but a read for a different screen supersedes the old one,
+    /// whose late answers are then discarded instead of blocking the new screen.
     func loadTripArrivals(_ trips: [TripOption]) async {
-        guard let index = catalogIndex, !tripArrivalsLoading else { return }
-        tripArrivalsLoading = true
+        guard let index = catalogIndex else { return }
+        let screen = Set(trips.map(\.id))
+        if tripArrivalsInFlight == screen { return }
+        tripArrivalsGeneration += 1
+        let generation = tripArrivalsGeneration
+        tripArrivalsInFlight = screen
         defer {
-            tripArrivalsLoading = false
-            tripArrivalsReadAt = Date()
+            if tripArrivalsGeneration == generation {
+                tripArrivalsInFlight = nil
+                tripArrivalsReadAt = Date()
+            }
         }
         let wanted = DestinationSearchIndex.arrivalCheckOrder(trips, budget: Self.tripArrivalBudget(for: trips))
         let wantedIDs = Set(wanted.map(\.id))
@@ -998,6 +1009,11 @@ final class TapsoAppModel {
                 start(next)
             }
             for await (id, arrival) in group {
+                guard tripArrivalsGeneration == generation else {
+                    // Superseded by another screen's read: stop, and write nothing more.
+                    group.cancelAll()
+                    break
+                }
                 tripArrivals[id] = arrival
                 if let next = pending.popFirst() { start(next) }
             }
@@ -1073,10 +1089,11 @@ final class TapsoAppModel {
         }
     }
 
-    /// NightGuard changes with the clock: re-read when the last answer is a minute old.
+    /// NightGuard changes with the clock: re-read when the held answer is past its
+    /// `validUntil` or a minute old (`TransitAPINightGuard.refreshDate`).
     /// A failure removes the old answer rather than leaving it on screen.
     func loadNightGuard(routeNumber: String) async {
-        if let held = nightGuards[routeNumber], Date().timeIntervalSince(held.readAt) < 60 { return }
+        if let held = nightGuards[routeNumber], Date() < held.view.refreshDate(readAt: held.readAt) { return }
         do {
             nightGuards[routeNumber] = (try await api.nightGuard(routeNumber: routeNumber), Date())
         } catch {

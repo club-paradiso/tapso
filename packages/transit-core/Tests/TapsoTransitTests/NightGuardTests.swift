@@ -43,4 +43,78 @@ final class NightGuardTests: XCTestCase {
         XCTAssertEqual(TimetableClock.display("24:10").text, "00:10")
         XCTAssertTrue(TimetableClock.display("24:10").nextDay)
     }
+
+    // MARK: Freshness (validUntil 2026-11-13T14:01:00Z in the payload)
+
+    private static func instant(_ text: String) -> Date {
+        let parser = ISO8601DateFormatter()
+        parser.formatOptions = [.withInternetDateTime]
+        return parser.date(from: text)!
+    }
+
+    func testAnAnswerIsCurrentOnlyBeforeItsValidUntil() throws {
+        let view = try view()
+        XCTAssertTrue(view.isCurrent(at: Self.instant("2026-11-13T14:00:59Z")))
+        XCTAssertFalse(view.isCurrent(at: Self.instant("2026-11-13T14:01:00Z")), "the status may have changed at validUntil")
+    }
+
+    func testAnUnparseableValidUntilIsNeverCurrent() throws {
+        let broken = Self.payload.replacingOccurrences(of: #""validUntil":"2026-11-13T14:01:00.000Z""#, with: #""validUntil":"soon""#)
+        let view = try JSONDecoder().decode(TransitAPINightGuardResponse.self, from: Data(broken.utf8)).item
+        XCTAssertFalse(view.isCurrent(at: Self.instant("2026-11-13T13:30:00Z")))
+        XCTAssertEqual(view.refreshDate(readAt: Self.instant("2026-11-13T13:30:00Z")), Self.instant("2026-11-13T13:30:05Z"), "read again as soon as the floor allows")
+    }
+
+    func testRefreshAtValidUntilButNeverLaterThanAMinute() throws {
+        let view = try view()
+        // Read at 14:00:30: validUntil (14:01:00) comes first.
+        XCTAssertEqual(view.refreshDate(readAt: Self.instant("2026-11-13T14:00:30Z")), Self.instant("2026-11-13T14:01:00Z"))
+        // Read at 13:30:00: validUntil is half an hour away, the minute fallback comes first.
+        XCTAssertEqual(view.refreshDate(readAt: Self.instant("2026-11-13T13:30:00Z")), Self.instant("2026-11-13T13:31:00Z"))
+        // Read at or after validUntil (a cached answer at the boundary): not sooner than 5 s, so no tight loop.
+        XCTAssertEqual(view.refreshDate(readAt: Self.instant("2026-11-13T14:01:00Z")), Self.instant("2026-11-13T14:01:05Z"))
+    }
+
+    // MARK: Display against the evaluation date
+
+    func testATimeOnTheFollowingDayIsMarkedNextDay() throws {
+        let view = try view()
+        let last = try XCTUnwrap(view.entries[0].last) // table 24:10, date 2026-11-14, read on 2026-11-13
+        XCTAssertEqual(last.dayOffset(from: view.localDate), 1)
+        XCTAssertEqual(last.displayClock(relativeTo: view.localDate).text, "00:10")
+        XCTAssertTrue(last.displayClock(relativeTo: view.localDate).nextDay)
+    }
+
+    func testAfterMidnightYesterdaysServiceTimeIsTodayNotNextDay() {
+        // Read at 00:05 on 2026-11-14: the previous service day's 24:10 trip leaves today at 00:10.
+        let soon = TransitAPINightGuard.ScheduledTime(table: "24:10", clock: "00:10", date: "2026-11-14", at: "합성A", minutesFromNow: 5)
+        XCTAssertEqual(soon.dayOffset(from: "2026-11-14"), 0)
+        XCTAssertEqual(soon.displayClock(relativeTo: "2026-11-14").text, "00:10")
+        XCTAssertFalse(soon.displayClock(relativeTo: "2026-11-14").nextDay, "five minutes away is not tomorrow")
+    }
+
+    func testAnEarlierDayShowsItsPlainClock() {
+        let gone = TransitAPINightGuard.ScheduledTime(table: "23:50", clock: "23:50", date: "2026-11-13", at: "합성A", minutesFromNow: -15)
+        XCTAssertEqual(gone.dayOffset(from: "2026-11-14"), -1)
+        XCTAssertEqual(gone.displayClock(relativeTo: "2026-11-14").text, "23:50")
+        XCTAssertFalse(gone.displayClock(relativeTo: "2026-11-14").nextDay)
+    }
+
+    func testWithoutAUsableDateTheTablesReadingIsKept() {
+        let odd = TransitAPINightGuard.ScheduledTime(table: "24:10", clock: "00:10", date: "?", at: "합성A", minutesFromNow: 5)
+        XCTAssertNil(odd.dayOffset(from: "2026-11-14"))
+        XCTAssertTrue(odd.displayClock(relativeTo: "2026-11-14").nextDay)
+    }
+
+    // MARK: Trips-screen position freshness
+
+    func testTripPositionsGoStaleAfterNinetySeconds() {
+        let read = Self.instant("2026-11-13T13:30:00Z")
+        XCTAssertFalse(TripPositionFreshness.isStale(readAt: nil, now: read), "no read yet is loading, not stale")
+        XCTAssertFalse(TripPositionFreshness.isStale(readAt: read, now: read.addingTimeInterval(90)))
+        XCTAssertTrue(TripPositionFreshness.isStale(readAt: read, now: read.addingTimeInterval(91)))
+        XCTAssertEqual(TripPositionFreshness.ageSeconds(readAt: read, now: read.addingTimeInterval(42.9)), 42)
+        XCTAssertNil(TripPositionFreshness.ageSeconds(readAt: nil, now: read))
+        XCTAssertEqual(TripPositionFreshness.ageSeconds(readAt: read, now: read.addingTimeInterval(-5)), 0, "a clock step back never shows a negative age")
+    }
 }
