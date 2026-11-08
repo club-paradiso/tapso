@@ -149,4 +149,13 @@ final class RideBoardingRegressionTests: XCTestCase {
         XCTAssertEqual(g.trust, .estimated, "a predicted bus position is never shown as live")
         XCTAssertEqual(g.copy.headline, "ride.waiting.headline")
     }
+
+    func testAnEstimatedPositionNeverHidesOfflineOrALostBus() {
+        let offline = RideSignal(phase: .active, remainingStops: 7, freshness: .fresh, isOffline: true, isEstimated: true)
+        XCTAssertEqual(RideGuidancePolicy.moment(for: offline), .offline, "offline outranks an estimate")
+        let lost = RideSignal(phase: .vehicleTemporarilyLost, remainingStops: 7, freshness: .fresh, isEstimated: true)
+        XCTAssertEqual(RideGuidancePolicy.moment(for: lost), .vehicleLost, "a lost bus outranks an estimate")
+        let staleEstimate = RideSignal(phase: .active, remainingStops: 7, freshness: .stale, isEstimated: true)
+        XCTAssertEqual(RideGuidancePolicy.moment(for: staleEstimate), .checking, "a stale estimate is never a riding count")
+    }
 }

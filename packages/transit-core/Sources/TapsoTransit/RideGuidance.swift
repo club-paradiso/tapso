@@ -222,14 +222,16 @@ public enum RideGuidancePolicy {
             return .ended
         }
         guard signal.remainingStops >= 0 else { return .checking }
-        if signal.isEstimated == true {
-            return signal.freshness == .fresh && signal.remainingStops > 2 ? .riding : .checking
-        }
+        // Offline and a lost bus outrank an estimate: an estimated position
+        // is never a reason to hide either warning (TAPSO_V4_UX_AUDIT P1-1).
         if signal.isOffline {
             return .offline
         }
         if signal.phase == .vehicleTemporarilyLost {
             return .vehicleLost
+        }
+        if signal.isEstimated == true {
+            return signal.freshness == .fresh && signal.remainingStops > 2 ? .riding : .checking
         }
         if signal.freshness == .stale || signal.phase == .dataStale {
             return .delayed
