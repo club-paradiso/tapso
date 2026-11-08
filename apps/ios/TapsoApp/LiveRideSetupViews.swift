@@ -274,6 +274,7 @@ struct LiveStopPickerView: View {
                     timetable: AnyView(TimetableCard(
                         routeNumber: stops.route.number,
                         load: model.timetables[stops.route.number],
+                        nightGuard: model.nightGuards[stops.route.number]?.view,
                         onLoad: { Task { await model.loadTimetable(routeNumber: stops.route.number) } },
                         onShowAll: { timetableSheet = $0 }
                     ))

@@ -666,6 +666,12 @@ enum RideText {
         return Bundle(path: path)
     }
 
+    /// A published `HH:MM` as a wall clock: "24:30" reads "다음날 00:30", never a 24th hour.
+    static func clock(_ time: String, language: String? = nil) -> String {
+        let shown = TimetableClock.display(time)
+        return shown.nextDay ? String(format: string("route.timetable.nextDay", language: language), shown.text) : shown.text
+    }
+
     /// The singular variant (`<key>.one`) for a count of one, so English never says "1 stops".
     static func countKey(_ key: String, _ count: Int) -> String {
         count == 1 ? key + ".one" : key
@@ -692,6 +698,20 @@ enum RideText {
         func string(_ key: String) -> String { Self.string(key, language: language) }
         let headline = string(guidance.copy.headline)
         let detail = Self.detail(guidance, exitStopName: exitStopName, language: language)
+        // An estimated count is read out as one ("예상 위치. …"), as every surface draws it.
+        let summary = summaryText(guidance: guidance, routeNumber: routeNumber, destination: destination, remainingStops: remainingStops, headline: headline, detail: detail, string: string)
+        return guidance.isEstimated ? string("ride.predicted.eyebrow") + ". " + summary : summary
+    }
+
+    private static func summaryText(
+        guidance: RideGuidance,
+        routeNumber: String,
+        destination: String,
+        remainingStops: Int,
+        headline: String,
+        detail: String,
+        string: (String) -> String
+    ) -> String {
         if let ahead = guidance.stopsBeforeBoarding, guidance.count != .hidden {
             // Waiting: the number is how far the bus is from the rider, never a ride count.
             return String(format: string(countKey("a11y.ride.waiting", ahead)), routeNumber, destination, ahead, headline, detail)

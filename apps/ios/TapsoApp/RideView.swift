@@ -426,7 +426,7 @@ struct RideHeroCard: View {
     /// "How is my ride going?" A big count, calm colour.
     private var riding: some View {
         VStack(alignment: .leading, spacing: TapsoSpace.sm) {
-            if guidance.copy.eyebrow == "ride.predicted.eyebrow" {
+            if guidance.isEstimated {
                 Text("ride.predicted.eyebrow")
                     .font(.tapso(.caption))
                     .foregroundStyle(TapsoColor.textSecondary)

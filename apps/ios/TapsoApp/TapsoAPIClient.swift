@@ -84,6 +84,13 @@ struct TapsoAPIClient: Sendable {
         return try await send(request, as: TransitAPITimetableResponse.self).item
     }
 
+    /// What the official timetable says about the rest of tonight (`GET /v1/night-guard`), read by
+    /// the server for this instant. Schedule only: never a claim that a bus is running.
+    func nightGuard(routeNumber: String) async throws -> TransitAPINightGuard {
+        let request = makeRequest(path: "/v1/night-guard", query: [("routeNo", routeNumber)])
+        return try await send(request, as: TransitAPINightGuardResponse.self).item
+    }
+
     // MARK: Places
 
     /// One place or address the server's Kakao Local lookup found, inside Jeju.

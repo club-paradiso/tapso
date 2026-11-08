@@ -85,6 +85,8 @@ test("the network client talks only to TAPSO's own API, through documented endpo
     "/v1/vehicles",
     "/v1/catalog",
     "/v1/timetables",
+    // Tonight's reading of the same tables, schedule only (PRODUCTION_TRANSIT_API.md, nightGuard.ts).
+    "/v1/night-guard",
     // Place and address search for riders who don't know a stop's name; the Kakao key stays server-side.
     "/v1/places",
     "/v1/sessions",

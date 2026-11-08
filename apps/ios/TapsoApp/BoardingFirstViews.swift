@@ -195,11 +195,21 @@ struct CatalogTripsView: View {
                 placeName: placeName,
                 trips: trips,
                 arrivals: model.tripArrivals,
+                readAt: model.tripArrivalsReadAt,
                 distinctions: model.tripDistinctions(trips),
                 onChoose: { trip in Task { await model.chooseTrip(trip, placeName: placeName) } }
             )
         }
         .refreshable { await model.loadTripArrivals(trips) }
+        // Positions age: re-read while this screen is visible, stop when it goes
+        // (the task is cancelled with the view). The first read was started on entry.
+        .task(id: boardingName + "→" + placeName) {
+            while !Task.isCancelled {
+                try? await Task.sleep(nanoseconds: TapsoAppModel.tripArrivalRefreshSeconds * 1_000_000_000)
+                guard !Task.isCancelled else { break }
+                await model.loadTripArrivals(model.trips(fromBoardingNamed: boardingName, toPlaceNamed: placeName))
+            }
+        }
         .background(TapsoColor.backgroundPrimary)
         .navigationTitle(Text("setup.step.route"))
         .navigationBarTitleDisplayMode(.inline)
@@ -211,20 +221,49 @@ struct CatalogTripsContent: View {
     let placeName: String
     let trips: [TripOption]
     let arrivals: [String: TripArrival]
+    /// When the positions were last read; `nil` before the first read finishes.
+    var readAt: Date? = nil
     /// Same number, same terminus, different stops: what tells each apart (by trip id).
     var distinctions: [String: TripDistinction] = [:]
     let onChoose: (TripOption) -> Void
 
     var body: some View {
+        // The age decides how positions are drawn; redrawn every 10 s so it never lies.
+        TimelineView(.periodic(from: .now, by: 10)) { context in
+            content(stale: isStale(at: context.date), age: age(at: context.date))
+        }
+    }
+
+    private func age(at now: Date) -> Int? {
+        readAt.map { max(0, Int(now.timeIntervalSince($0))) }
+    }
+
+    private func isStale(at now: Date) -> Bool {
+        guard let readAt else { return false }
+        return now.timeIntervalSince(readAt) > TapsoAppModel.tripArrivalStaleSeconds
+    }
+
+    @ViewBuilder
+    private func content(stale: Bool, age: Int?) -> some View {
         VStack(alignment: .leading, spacing: TapsoSpace.lg) {
             TapsoCard {
                 StopPair(boarding: boardingName, destination: placeName)
             }
             QuestionTitle("route.question")
+            if let age {
+                Label(
+                    String(format: RideText.string(stale ? "boardFirst.arrival.stale" : "boardFirst.arrival.age"), age),
+                    systemImage: stale ? "clock.badge.exclamationmark" : "clock"
+                )
+                .font(.tapso(.footnote, .semibold))
+                .foregroundStyle(stale ? TapsoColor.textPrimary : TapsoColor.textSecondary)
+                .accessibilityIdentifier("trips-age")
+            }
             VStack(spacing: TapsoSpace.sm) {
                 ForEach(Array(trips.enumerated()), id: \.element.id) { offset, trip in
                     Button { onChoose(trip) } label: {
-                        card(trip, soonest: offset == 0 && arrivals[trip.id]?.approach != nil)
+                        // A stale position never earns the "nearest now" highlight.
+                        card(trip, soonest: !stale && offset == 0 && arrivals[trip.id]?.approach != nil, stale: stale)
                     }
                     .buttonStyle(.plain)
                     .accessibilityIdentifier("trip-\(trip.id)")
@@ -240,7 +279,7 @@ struct CatalogTripsContent: View {
         .frame(maxWidth: .infinity, alignment: .leading)
     }
 
-    private func card(_ trip: TripOption, soonest: Bool) -> some View {
+    private func card(_ trip: TripOption, soonest: Bool, stale: Bool) -> some View {
         HStack(alignment: .center, spacing: TapsoSpace.sm) {
             VStack(alignment: .leading, spacing: TapsoSpace.xs) {
                 HStack(spacing: TapsoSpace.xs) {
@@ -264,7 +303,7 @@ struct CatalogTripsContent: View {
             }
             .multilineTextAlignment(.leading)
             Spacer(minLength: TapsoSpace.xs)
-            arrival(arrivals[trip.id])
+            arrival(arrivals[trip.id], stale: stale)
             Image(systemName: "chevron.forward")
                 .font(.tapso(.footnote, .bold))
                 .foregroundStyle(TapsoColor.textTertiary)
@@ -300,7 +339,7 @@ struct CatalogTripsContent: View {
     }
 
     @ViewBuilder
-    private func arrival(_ arrival: TripArrival?) -> some View {
+    private func arrival(_ arrival: TripArrival?, stale: Bool) -> some View {
         switch arrival {
         case .loading, .none:
             ProgressView()
@@ -319,7 +358,8 @@ struct CatalogTripsContent: View {
                         .font(.tapso(.caption2, .bold))
                 }
             }
-            .foregroundStyle(TapsoColor.mintDeep)
+            // Mint only while current; an old position is drawn neutral.
+            .foregroundStyle(stale ? TapsoColor.textTertiary : TapsoColor.mintDeep)
         case .noneNearby:
             Text("boardFirst.arrival.none")
                 .font(.tapso(.caption, .semibold))
