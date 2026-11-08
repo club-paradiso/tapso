@@ -22,7 +22,8 @@ const catalog = validateCatalog(read("../data/jeju-transit-catalog.json"));
 const timetables = validateTimetableBundle(read("../data/jeju-timetables.json")).bundle;
 const holidays = validateHolidayCalendar(read("../data/kr-public-holidays.json"));
 
-function handler(vehicles: (request: RouteRequest) => VehicleObservation[] | Promise<VehicleObservation[]>, now: Date) {
+function handler(vehicles: (request: RouteRequest) => VehicleObservation[] | Promise<VehicleObservation[]>, now: Date | (() => Date)) {
+  const clock = typeof now === "function" ? now : () => now;
   const calls: string[] = [];
   const h = createTransitApiHandler({
     config: readTransitApiConfig({}, { nodeVersion: "v22.0.0" }),
@@ -32,7 +33,7 @@ function handler(vehicles: (request: RouteRequest) => VehicleObservation[] | Pro
     }, { stopTtlMs: 1_000, vehicleTtlMs: 20_000 }),
     discovery: { async cities() { return []; }, async routes() { return []; } },
     log: () => {},
-    now: () => now,
+    now: clock,
     staticData: inMemoryStaticTransitData({ catalog, timetables, holidays }),
   });
   return { h, calls };
@@ -113,4 +114,16 @@ test("validation and missing data", async () => {
   assert.equal((await get(h, "/v1/operating-status?routeNo=abc")).status, 400);
   const unknown = await (await get(h, "/v1/operating-status?routeNo=9999")).json();
   assert.equal(unknown.item.assessment.claim, "unknown");
+});
+
+test("a vehicle fetched during the request is current: evaluation happens after the live reads complete", async () => {
+  // The provider stamps receivedAt when its network read finishes, after the request started.
+  let t = Date.parse("2026-11-09T12:00:00Z");
+  const { h } = handler((request) => {
+    t += 100;
+    return request.routeId === variants365[0] ? [vehicleAt(request.routeId, 3, "SYN-V1", new Date(t))] : [];
+  }, () => new Date(t));
+  const { item } = await (await get(h, "/v1/operating-status?routeNo=365")).json();
+  assert.equal(item.assessment.claim, "vehicle_reported");
+  assert.ok(Date.parse(item.evaluatedAt) >= Date.parse(item.assessment.evidence.find((record: { kind: string }) => record.kind === "live_vehicle_position").receivedAt));
 });

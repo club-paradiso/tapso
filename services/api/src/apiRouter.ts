@@ -464,14 +464,12 @@ async function dispatch(
     if (!timetables?.ok) throw apiError("TIMETABLES_UNAVAILABLE", timetables ? timetables.reason : "no timetable bundle is deployed");
     if (!holidays?.ok) throw apiError("TIMETABLES_UNAVAILABLE", holidays ? holidays.reason : "no holiday calendar is deployed");
     const routeNumber = requiredParam(url, "routeNo", TIMETABLE_ROUTE_PATTERN);
-    const at = support.now();
     const variants = catalog.value.routes.filter((route) => route.routeNo === routeNumber);
     const cityCode = catalog.value.source.cityCode;
-    const schedule = nightGuardView(timetables.value, holidays.value, routeNumber, at);
-    const aggregate = aggregateRouteSchedule(schedule.entries);
 
     let live: LiveVehicleEvidence;
     let quality: ReturnType<typeof assessSnapshot> | null = null;
+    let at = support.now();
     const liveScope = { variants: variants.length, read: 0, failed: 0 };
     if (variants.length === 0 || variants.length > OPERATING_STATUS_MAX_VARIANTS) {
       live = { status: "unavailable", vehicleCount: 0, receivedAt: null, observedAt: null, provenance: variants.length === 0 ? "no catalog variant for this route number" : `more than ${OPERATING_STATUS_MAX_VARIANTS} variants; not read` };
@@ -481,6 +479,8 @@ async function dispatch(
       liveScope.read = reads.filter((read) => read.status === "fulfilled").length;
       liveScope.failed = reads.length - liveScope.read;
       quality = assessSnapshot(rows, new Map(variants.map((variant) => [variant.routeId, routeStops(catalog.value, variant)])));
+      // Evaluate after the reads: a cache miss stamps receivedAt when its network read finishes.
+      at = support.now();
       // Receipt of an empty answer: a cached answer may be up to one TTL old, so assume the oldest.
       const anyCached = reads.some((read) => read.status === "fulfilled" && read.value.cache !== "miss");
       const emptyReceipt = new Date(at.getTime() - (anyCached ? config.cachePolicy.vehicleTtlMs : 0)).toISOString();
@@ -488,6 +488,9 @@ async function dispatch(
       const status: LiveVehicleEvidence["status"] = quality.clean > 0 ? "reported" : liveScope.failed > 0 ? "unavailable" : rows.length > 0 ? "reported" : "none_reported";
       live = { status, vehicleCount: rows.length, suspectCount: quality.suspect, receivedAt, observedAt: null, provenance: `TAGO getRouteAcctoBusLcList, ${liveScope.read}/${variants.length} variants read through TAPSO's ${Math.round(config.cachePolicy.vehicleTtlMs / 1_000)} s cache` };
     }
+    // Schedule and live are evaluated at the same instant, after the live reads.
+    const schedule = nightGuardView(timetables.value, holidays.value, routeNumber, at);
+    const aggregate = aggregateRouteSchedule(schedule.entries);
     const assessment = assessOperatingEvidence({ routeNo: routeNumber, schedule: aggregate, live, now: at, scheduleProvenance: `official timetable bundle ${schedule.provenance.bundleVersion} (OFFICIAL_DATED ${schedule.asOf})` });
     return {
       response: json({

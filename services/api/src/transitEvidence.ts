@@ -259,20 +259,25 @@ export function assessOperatingEvidence(input: AssessmentInput): OperatingAssess
 export function aggregateRouteSchedule(entries: NightGuardEntry[]): NightGuardEntry | null {
   const answered = entries.filter((entry) => entry.evidence === "OFFICIAL_DATED");
   if (answered.length === 0) return null;
+  // A direction whose table could not answer may still be running: it never lets
+  // the route be called finished, nor wholly before its first departure.
+  const unresolved = entries.length > answered.length;
   const pending = answered.filter((entry) => entry.status === "scheduled_departures_remain" || entry.status === "before_first_departure");
   const base = (entry: NightGuardEntry, status: NightGuardEntry["status"]): NightGuardEntry => ({
     ...entry,
-    direction: `${answered.length} direction(s) of the route number`,
+    direction: `${answered.length} of ${entries.length} direction(s) of the route number`,
     status,
-    reasons: [...new Set([...answered.flatMap((candidate) => candidate.reasons), "route_number_aggregate" as const])],
+    reasons: [...new Set([...answered.flatMap((candidate) => candidate.reasons), "route_number_aggregate" as const, ...(unresolved ? (["direction_unresolved"] as const) : [])])],
   });
   if (pending.length > 0) {
+    // A verified pending departure establishes that service remains.
     const earliest = pending.reduce((best, entry) => ((entry.next?.minutesFromNow ?? Infinity) < (best.next?.minutesFromNow ?? Infinity) ? entry : best));
-    const allBefore = answered.every((entry) => entry.status === "before_first_departure");
+    const allBefore = !unresolved && answered.every((entry) => entry.status === "before_first_departure");
     return base(earliest, allBefore ? "before_first_departure" : "scheduled_departures_remain");
   }
   const uncertain = answered.find((entry) => entry.status === "uncertain");
   if (uncertain) return base(uncertain, "uncertain");
+  if (unresolved) return base(answered[0]!, "uncertain");
   const latest = answered.reduce((best, entry) => ((entry.last?.minutesFromNow ?? -Infinity) > (best.last?.minutesFromNow ?? -Infinity) ? entry : best));
   return base(latest, "last_scheduled_departed");
 }

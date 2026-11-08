@@ -172,3 +172,24 @@ test("route-number aggregate: any direction with departures left wins; all passe
   assert.equal(aggregateRouteSchedule([unknown]), null);
   assert.equal(aggregateRouteSchedule([passed, schedule({ direction: "y", status: "uncertain", next: null })])?.status, "uncertain");
 });
+
+test("route-number aggregate: an unresolved direction keeps 'last departed' from being claimed for the whole route", () => {
+  const passed = schedule({ direction: "합성C→합성D", status: "last_scheduled_departed", next: null });
+  const conflicted = schedule({ direction: "합성D→합성C", status: "unknown", evidence: "CONFLICTED", next: null, last: null });
+  const unknown = schedule({ direction: "합성E", status: "unknown", evidence: "UNKNOWN", next: null, last: null });
+
+  const withConflict = aggregateRouteSchedule([passed, conflicted])!;
+  assert.equal(withConflict.status, "uncertain");
+  assert.ok(withConflict.reasons.includes("direction_unresolved"));
+  assert.equal(aggregateRouteSchedule([passed, unknown])!.status, "uncertain");
+  // and the evidence engine then does not say service has ended
+  assert.equal(assessOperatingEvidence({ routeNo: "999", schedule: withConflict, live: live({ status: "none_reported", vehicleCount: 0 }), now }).claim, "unknown");
+
+  // A verified pending departure still establishes that service remains...
+  const remain = schedule();
+  assert.equal(aggregateRouteSchedule([remain, conflicted])!.status, "scheduled_departures_remain");
+  // ...but not that the whole route is before its first departure, which the unresolved direction may not be.
+  const before = schedule({ status: "before_first_departure" });
+  assert.equal(aggregateRouteSchedule([before, conflicted])!.status, "scheduled_departures_remain");
+  assert.equal(aggregateRouteSchedule([before, { ...before, direction: "x" }])!.status, "before_first_departure");
+});
