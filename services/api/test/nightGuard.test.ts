@@ -2,7 +2,7 @@
  * NightGuard: the official timetable read for one instant, across midnight.
  * Every dataset built here is SYNTHETIC (invented places and times, a
  * repeated-letter checksum); the last tests read the committed real bundle
- * (downloaded 2026-10-03) and the real holiday calendar.
+ * (whatever download date it carries) and the real holiday calendar.
  */
 
 import assert from "node:assert/strict";
@@ -216,7 +216,7 @@ test("no entry ever claims a bus is operating", () => {
   }
 });
 
-// The committed real bundle (OFFICIAL_DATED 2026-10-03).
+// The committed real bundle (OFFICIAL_DATED; its own retrievedOn).
 
 test("real bundle: every late-night route (3001–3008, 5001–5006) has no day label, so NightGuard never says 'tonight'", () => {
   const night = ["3001", "3002", "3003", "3004", "3005", "3006", "3007", "3008", "5001", "5002", "5003", "5004", "5005", "5006"];
@@ -236,10 +236,21 @@ test("real bundle: 3001's self-contradicting table sends no times", () => {
   assert.ok(view.entries.every((entry) => entry.evidence === "CONFLICTED" && entry.last === null));
 });
 
-test("real bundle: Route 365 on a Monday evening reads its weekday table (aging, as of 2026-10-03)", () => {
-  const view = nightGuardView(realBundle, calendar, "365", kst("2026-11-09", "21:00"));
-  assert.equal(view.freshness, "aging");
-  assert.equal(view.asOf, "2026-10-03");
+/** `date` plus `days`, as a Korean calendar date. */
+const plusDays = (date: string, days: number): string => new Date(Date.parse(`${date}T00:00:00Z`) + days * 86_400_000).toISOString().slice(0, 10);
+
+/** The first Monday after the bundle's download that is not a public holiday. */
+function mondayAfterDownload(): string {
+  let date = plusDays(realBundle.retrievedOn, 1);
+  while (new Date(`${date}T00:00:00Z`).getUTCDay() !== 1 || calendar.holidays.some((entry) => entry.date === date)) date = plusDays(date, 1);
+  return date;
+}
+
+test("real bundle: Route 365 on a Monday evening reads its weekday table, as of the bundle's download date", () => {
+  // Dates follow the committed bundle, so a weekly re-import keeps this test meaningful.
+  const view = nightGuardView(realBundle, calendar, "365", kst(mondayAfterDownload(), "21:00"));
+  assert.equal(view.asOf, realBundle.retrievedOn);
+  assert.ok(view.freshness === "fresh" || view.freshness === "aging");
   const answered = view.entries.filter((entry) => entry.evidence === "OFFICIAL_DATED");
   assert.ok(answered.length > 0);
   for (const entry of answered) {
@@ -248,9 +259,9 @@ test("real bundle: Route 365 on a Monday evening reads its weekday table (aging,
   }
 });
 
-test("real bundle: on 2027-01-01 every table turns stale unless the import is refreshed (90-day bound from 2026-10-03)", () => {
-  assert.equal(nightGuardView(realBundle, calendar, "365", kst("2026-12-31", "21:00")).freshness, "aging");
-  const view = nightGuardView(realBundle, calendar, "365", kst("2027-01-02", "21:00"));
+test("real bundle: 90 days after its download every table is still usable; the day after, every answer is unknown", () => {
+  assert.equal(nightGuardView(realBundle, calendar, "365", kst(plusDays(realBundle.retrievedOn, 90), "21:00")).freshness, "aging");
+  const view = nightGuardView(realBundle, calendar, "365", kst(plusDays(realBundle.retrievedOn, 91), "21:00"));
   assert.equal(view.freshness, "stale");
   assert.ok(view.entries.every((entry) => entry.status === "unknown"));
 });
