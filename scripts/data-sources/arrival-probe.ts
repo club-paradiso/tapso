@@ -52,6 +52,9 @@ async function arrivals(stopId: string) {
   try {
     const response = await fetch(url, { signal: AbortSignal.timeout(15_000) });
     const text = await response.text();
+    // A refused call is diagnosed by its body (data.go.kr explains 403s there), with the key redacted.
+    const snippet = text.slice(0, 300).replace(/serviceKey=[^&\s"<]+/g, "serviceKey=…").replace(/\s+/g, " ");
+    if (!response.ok) return { http: response.status, parse: { ok: false as const, reason: `HTTP ${response.status} body: ${snippet} (content-type ${response.headers.get("content-type") ?? "none"})` } };
     let body: unknown;
     try { body = JSON.parse(text); } catch { return { http: response.status, parse: { ok: false as const, reason: `non-JSON body (${text.slice(0, 80).replace(/serviceKey=[^&\s]+/g, "serviceKey=…")})` } }; }
     return { http: response.status, parse: parseArrivalResponse(body) };
