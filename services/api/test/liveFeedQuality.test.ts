@@ -7,7 +7,7 @@ import assert from "node:assert/strict";
 import test from "node:test";
 
 import type { StopOnRoute, VehicleObservation } from "../src/domain.ts";
-import { FAR_FROM_REPORTED_STOP_METERS, UNCHANGED_RECEIPTS_FLAG, assessFeedHistory, assessSnapshot } from "../src/liveFeedQuality.ts";
+import { SEGMENT_SLACK_METERS, UNCHANGED_RECEIPTS_FLAG, assessFeedHistory, assessSnapshot } from "../src/liveFeedQuality.ts";
 
 const stops: StopOnRoute[] = [
   { stopId: "SYN-S1", name: "합성1", sequence: 1, latitude: 33.50, longitude: 126.50 },
@@ -51,7 +51,7 @@ test("each contradiction names itself and makes the row suspect, never repaired"
     assert.equal(result.vehicles[0]!.suspect, true);
     assert.equal(result.byIssue[issue as never], 1);
   }
-  assert.ok(FAR_FROM_REPORTED_STOP_METERS >= 1_000, "the bound only catches gross contradictions");
+  assert.ok(SEGMENT_SLACK_METERS >= 1_000, "the bound only catches gross contradictions");
 });
 
 test("one vehicle on two variants at once is suspect on both", () => {
@@ -78,4 +78,22 @@ test("history: identical receipts are counted as unchanged content, not as a sto
   assert.equal(result.longestUnchangedRun, UNCHANGED_RECEIPTS_FLAG);
   assert.deepEqual(result.issues, ["content_unchanged"]);
   assert.deepEqual(assessFeedHistory(same.slice(1)).issues, []);
+});
+
+test("regression (live, 2026-11-08): a bus near the NEXT stop on a long gap is clean, not far from its stop", () => {
+  // SYNTHETIC coordinates with the observed geometry: a 5.4 km gap, the bus
+  // 72 m before the next stop, so 5.3 km from the stop TAGO names (nodeord =
+  // the stop last passed). The first rule (">5 km from the reported stop") flagged it.
+  const longGap: StopOnRoute[] = [
+    { stopId: "SYN-L1", name: "합성장거리1", sequence: 1, latitude: 33.400, longitude: 126.600 },
+    { stopId: "SYN-L2", name: "합성장거리2", sequence: 2, latitude: 33.400, longitude: 126.658 },
+  ];
+  const nearNext = row({ routeId: "SYN-LONG", stopId: "SYN-L1", stopSequence: 1, latitude: 33.400, longitude: 126.6572 });
+  const result = assessSnapshot([nearNext], new Map([["SYN-LONG", longGap]]));
+  assert.ok((result.vehicles[0]?.distanceToReportedStopMeters ?? 0) > 5_000);
+  assert.deepEqual(result.vehicles[0]?.issues, []);
+
+  // Off the corridor entirely (8 km north of the segment): still flagged.
+  const offRoad = row({ routeId: "SYN-LONG", stopId: "SYN-L1", stopSequence: 1, latitude: 33.472, longitude: 126.629 });
+  assert.deepEqual(assessSnapshot([offRoad], new Map([["SYN-LONG", longGap]])).vehicles[0]?.issues, ["far_from_reported_stop"]);
 });

@@ -20,12 +20,22 @@ import { distanceMeters } from "./geo.ts";
 import { inJejuBox } from "./placeSearch.ts";
 
 /**
- * `ASSUMED`: a reported position this far from the stop the row names is not
- * explained by the bus being between that stop and the next. Jeju's longest
- * stop spacing on rural express sections is a few kilometres
- * (`ASSUMED`; no official geometry exists, `KNOWN_ISSUES.md`), so the bound is
- * generous and only catches gross contradictions.
+ * A TAGO row names the stop the bus last passed (`nodeord`), so a correct
+ * position lies on the road between that stop and the next one. A position is
+ * a gross contradiction only when it is outside an ellipse whose foci are the
+ * two stops: the sum of its distances to them exceeds the stop gap times
+ * `SEGMENT_DETOUR_FACTOR` plus `SEGMENT_SLACK_METERS` (both `ASSUMED`; no
+ * official road geometry exists, `KNOWN_ISSUES.md`).
+ *
+ * Found by live observation on 2026-11-08 (docs/validation/TAPSO_V4_LIVE_OBSERVATION_2026-11-08.md):
+ * a first rule, "more than 5 km from the reported stop", flagged two healthy
+ * buses on 5·16-ro and Bijarim-ro, 72 m and 322 m before the next stop on
+ * gaps of 5.4 km and 5.3 km. 377 of the catalog's 50,464 consecutive stop
+ * gaps exceed 5 km (longest 24.8 km).
  */
+export const SEGMENT_DETOUR_FACTOR = 1.5;
+export const SEGMENT_SLACK_METERS = 2_000;
+/** After the last stop there is no next one: a plain radius, `ASSUMED`. */
 export const FAR_FROM_REPORTED_STOP_METERS = 5_000;
 
 /** `ASSUMED`: this many consecutive identical receipts is reported as `content_unchanged`. */
@@ -84,11 +94,16 @@ export function assessSnapshot(observations: VehicleObservation[], stopsByRoute:
         else {
           if (observation.stopId !== undefined && observation.stopId !== stop.stopId) issues.push("stop_id_mismatch");
           if (hasPosition && stop.latitude !== undefined && stop.longitude !== undefined) {
-            distance = Math.round(distanceMeters(
-              { latitude: observation.latitude!, longitude: observation.longitude! },
-              { latitude: stop.latitude, longitude: stop.longitude },
-            ));
-            if (distance > FAR_FROM_REPORTED_STOP_METERS) issues.push("far_from_reported_stop");
+            const here = { latitude: observation.latitude!, longitude: observation.longitude! };
+            distance = Math.round(distanceMeters(here, { latitude: stop.latitude, longitude: stop.longitude }));
+            const next = stops.find((candidate) => candidate.sequence === observation.stopSequence! + 1);
+            if (next?.latitude !== undefined && next.longitude !== undefined) {
+              const gap = distanceMeters({ latitude: stop.latitude, longitude: stop.longitude }, { latitude: next.latitude, longitude: next.longitude });
+              const toNext = distanceMeters(here, { latitude: next.latitude, longitude: next.longitude });
+              if (distance + toNext > gap * SEGMENT_DETOUR_FACTOR + SEGMENT_SLACK_METERS) issues.push("far_from_reported_stop");
+            } else if (distance > FAR_FROM_REPORTED_STOP_METERS) {
+              issues.push("far_from_reported_stop");
+            }
           }
         }
       }

@@ -53,7 +53,13 @@ A client that needs only tonight's status downloads 94 % less. (No client uses i
 
 Static topology (catalog: `s-maxage=86400`, ETag), published timetables (dated bundle) and live positions (seconds) keep separate freshness policies. The new endpoint adds **zero** provider requests.
 
-## 6. Not measured; next steps
+## 6. Live read latency (`OBSERVED` 2026-11-08, `claude/v4-live-evidence`)
+
+552 `/v1/vehicles` calls to production from the agent container, through its egress proxy, Sunday 12:00–12:12 KST: p50 382 ms, p90 1,063 ms, p99 4,606 ms, max 7,840 ms, 0 failures. The proxy adds unmeasured overhead, so these are client-side upper bounds.
+
+`GET /v1/operating-status` costs one cached `/v1/vehicles` read per variant: 365 needs 6. Route numbers with more than 12 variants (201, 202, 231, 232, 346, 360, 510) are not read live. Its response is cached 20 s, the same as vehicles. It adds no TAGO request beyond what the 20 s vehicle cache already allows per variant.
+
+## 7. Not measured; next steps
 
 - Production p50/p95 per endpoint: needs Vercel runtime logs (`get_runtime_logs`) with access to `tapso-api`.
 - iOS startup, memory, SwiftUI recomputation (catalog scans in `body`, UX audit U-12): needs Instruments on macOS.

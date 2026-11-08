@@ -1,0 +1,144 @@
+{
+  "schemaVersion": "tapso-live-evidence-summary-v1",
+  "label": "OBSERVED",
+  "source": "https://tapso-api.vercel.app/v1/vehicles (TAGO via TAPSO's 20 s cache)",
+  "note": "Receipt times only; TAGO publishes no observation time. Vehicle numbers pseudonymised with a per-run salt that was not kept. Not ground truth.",
+  "startedAt": "2026-11-08T03:00:28.298Z",
+  "endedAt": "2026-11-08T03:12:02.762Z",
+  "intervalSeconds": 30,
+  "catalogVersion": "794f3bcb831d783e",
+  "timetableBundle": "e149eb7a24bd6723",
+  "requests": 552,
+  "latencyMs": {
+    "p50": 382,
+    "p90": 1063,
+    "p99": 4606,
+    "max": 7840
+  },
+  "routes": [
+    {
+      "routeNo": "365",
+      "variants": 6,
+      "polls": 24,
+      "requests": 144,
+      "failedRequests": 0,
+      "pollsWithCleanVehicles": 24,
+      "vehicleRows": 190,
+      "suspectRows": 0,
+      "issues": {},
+      "distinctVehicles": 8,
+      "historyIssues": {},
+      "receiptsPerContentChange": 1.14,
+      "scheduleStatusByPoll": {
+        "scheduled_departures_remain": 24
+      },
+      "pollsWithCleanVehiclesWhileScheduleSaysLastDeparted": 0,
+      "pollsWithCleanVehiclesBeforeFirstDeparture": 0,
+      "pollsWithoutVehiclesWhileScheduleRemains": 0
+    },
+    {
+      "routeNo": "281",
+      "variants": 4,
+      "polls": 24,
+      "requests": 96,
+      "failedRequests": 0,
+      "pollsWithCleanVehicles": 24,
+      "vehicleRows": 305,
+      "suspectRows": 1,
+      "issues": {
+        "far_from_reported_stop": 1
+      },
+      "distinctVehicles": 15,
+      "historyIssues": {},
+      "receiptsPerContentChange": 1.12,
+      "scheduleStatusByPoll": {
+        "no_usable_schedule": 24
+      },
+      "pollsWithCleanVehiclesWhileScheduleSaysLastDeparted": 0,
+      "pollsWithCleanVehiclesBeforeFirstDeparture": 0,
+      "pollsWithoutVehiclesWhileScheduleRemains": 0
+    },
+    {
+      "routeNo": "3002",
+      "variants": 4,
+      "polls": 24,
+      "requests": 96,
+      "failedRequests": 0,
+      "pollsWithCleanVehicles": 0,
+      "vehicleRows": 0,
+      "suspectRows": 0,
+      "issues": {},
+      "distinctVehicles": 0,
+      "historyIssues": {},
+      "receiptsPerContentChange": null,
+      "scheduleStatusByPoll": {
+        "no_usable_schedule": 24
+      },
+      "pollsWithCleanVehiclesWhileScheduleSaysLastDeparted": 0,
+      "pollsWithCleanVehiclesBeforeFirstDeparture": 0,
+      "pollsWithoutVehiclesWhileScheduleRemains": 0
+    },
+    {
+      "routeNo": "5001",
+      "variants": 1,
+      "polls": 24,
+      "requests": 24,
+      "failedRequests": 0,
+      "pollsWithCleanVehicles": 0,
+      "vehicleRows": 0,
+      "suspectRows": 0,
+      "issues": {},
+      "distinctVehicles": 0,
+      "historyIssues": {},
+      "receiptsPerContentChange": null,
+      "scheduleStatusByPoll": {
+        "no_usable_schedule": 24
+      },
+      "pollsWithCleanVehiclesWhileScheduleSaysLastDeparted": 0,
+      "pollsWithCleanVehiclesBeforeFirstDeparture": 0,
+      "pollsWithoutVehiclesWhileScheduleRemains": 0
+    },
+    {
+      "routeNo": "800-1",
+      "variants": 2,
+      "polls": 24,
+      "requests": 48,
+      "failedRequests": 0,
+      "pollsWithCleanVehicles": 0,
+      "vehicleRows": 0,
+      "suspectRows": 0,
+      "issues": {},
+      "distinctVehicles": 0,
+      "historyIssues": {},
+      "receiptsPerContentChange": null,
+      "scheduleStatusByPoll": {
+        "no_usable_schedule": 24
+      },
+      "pollsWithCleanVehiclesWhileScheduleSaysLastDeparted": 0,
+      "pollsWithCleanVehiclesBeforeFirstDeparture": 0,
+      "pollsWithoutVehiclesWhileScheduleRemains": 0
+    },
+    {
+      "routeNo": "132",
+      "variants": 6,
+      "polls": 24,
+      "requests": 144,
+      "failedRequests": 0,
+      "pollsWithCleanVehicles": 24,
+      "vehicleRows": 48,
+      "suspectRows": 1,
+      "issues": {
+        "far_from_reported_stop": 1
+      },
+      "distinctVehicles": 2,
+      "historyIssues": {},
+      "receiptsPerContentChange": 1.12,
+      "scheduleStatusByPoll": {
+        "no_usable_schedule": 24
+      },
+      "pollsWithCleanVehiclesWhileScheduleSaysLastDeparted": 0,
+      "pollsWithCleanVehiclesBeforeFirstDeparture": 0,
+      "pollsWithoutVehiclesWhileScheduleRemains": 0
+    }
+  ]
+}
