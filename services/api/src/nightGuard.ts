@@ -67,7 +67,9 @@ export type NightGuardReason =
   | "measured_from_trip_start"
   | "scheduled_not_observed"
   | "bus_may_run_late"
-  | "previous_service_day";
+  | "previous_service_day"
+  /** Set by `aggregateRouteSchedule`: one statement for every direction of a route number. */
+  | "route_number_aggregate";
 
 /** A departure as the table writes it, plus the wall clock it stands for. */
 export interface ScheduledTime {

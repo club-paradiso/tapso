@@ -11,6 +11,7 @@ import {
   LIVE_RECEIPT_MAX_AGE_SECONDS,
   OfficialNoticeError,
   activeNotices,
+  aggregateRouteSchedule,
   assessOperatingEvidence,
   validateOfficialNotice,
   type LiveVehicleEvidence,
@@ -141,4 +142,33 @@ test("notice records must expire, cite an https source and be reviewed", () => {
   assert.throws(() => validateOfficialNotice({ ...notice(), source: { ...notice().source, url: "http://insecure.invalid" } }), /https/);
   assert.throws(() => validateOfficialNotice({ ...notice(), reviewedBy: "" }), /reviewed/);
   assert.throws(() => validateOfficialNotice({ ...notice(), kind: "rumour" }), /not one TAPSO reads/);
+});
+
+test("suspect rows are reported but never counted: only suspects means unknown, not 'no bus'", () => {
+  const onlySuspect = assessOperatingEvidence({ routeNo: "999", schedule: schedule(), live: live({ vehicleCount: 2, suspectCount: 2 }), now });
+  assert.equal(onlySuspect.claim, "unknown");
+  assert.ok(onlySuspect.reasons.includes("all_reported_vehicles_suspect"));
+
+  const mixed = assessOperatingEvidence({ routeNo: "999", schedule: schedule(), live: live({ vehicleCount: 2, suspectCount: 1 }), now });
+  assert.equal(mixed.claim, "vehicle_reported");
+  assert.ok(mixed.reasons.includes("some_reported_vehicles_suspect"));
+});
+
+test("route-number aggregate: any direction with departures left wins; all passed means passed; none answering is null", () => {
+  const remain = schedule({ next: { table: "23:40", clock: "23:40", date: "2026-11-13", at: "합성A", minutesFromNow: 40 } });
+  const sooner = schedule({ direction: "합성B→합성A", next: { table: "23:10", clock: "23:10", date: "2026-11-13", at: "합성B", minutesFromNow: 10 } });
+  const passed = schedule({ direction: "합성C→합성D", status: "last_scheduled_departed", next: null });
+  const unknown = schedule({ direction: "합성E", status: "unknown", evidence: "UNKNOWN", next: null });
+
+  const mixed = aggregateRouteSchedule([remain, sooner, passed, unknown])!;
+  assert.equal(mixed.status, "scheduled_departures_remain");
+  assert.equal(mixed.next?.minutesFromNow, 10, "the earliest next departure");
+  assert.ok(mixed.reasons.includes("route_number_aggregate"));
+
+  const allPassed = aggregateRouteSchedule([passed, { ...passed, direction: "x", last: { ...passed.last!, minutesFromNow: -5 } }])!;
+  assert.equal(allPassed.status, "last_scheduled_departed");
+  assert.equal(allPassed.last?.minutesFromNow, 20, "the latest last departure is kept");
+
+  assert.equal(aggregateRouteSchedule([unknown]), null);
+  assert.equal(aggregateRouteSchedule([passed, schedule({ direction: "y", status: "uncertain", next: null })])?.status, "uncertain");
 });

@@ -62,6 +62,8 @@ export interface LiveVehicleEvidence {
   observedAt: string | null;
   provenance: string;
   routeVariant?: string;
+  /** Rows `liveFeedQuality.assessSnapshot` marked suspect; they are reported but never counted. */
+  suspectCount?: number;
 }
 
 export type OfficialNoticeKind = "suspension" | "detour" | "stop_closure" | "schedule_revision";
@@ -181,8 +183,13 @@ export function assessOperatingEvidence(input: AssessmentInput): OperatingAssess
     ...(input.live.routeVariant ? { routeVariant: input.live.routeVariant } : {}),
     reasons: liveReasons,
   });
-  const vehicles = liveCurrent && input.live.status === "reported" && input.live.vehicleCount > 0;
-  const noVehicles = liveCurrent && (input.live.status === "none_reported" || input.live.vehicleCount === 0);
+  const suspect = Math.max(0, Math.min(input.live.suspectCount ?? 0, input.live.vehicleCount));
+  const clean = input.live.vehicleCount - suspect;
+  if (suspect > 0) liveReasons.push(clean > 0 ? "some_reported_vehicles_suspect" : "all_reported_vehicles_suspect");
+  const vehicles = liveCurrent && input.live.status === "reported" && clean > 0;
+  // Only suspect rows: the feed answered, but with nothing TAPSO can count either way.
+  const onlySuspect = liveCurrent && input.live.status === "reported" && input.live.vehicleCount > 0 && clean === 0;
+  const noVehicles = liveCurrent && !onlySuspect && (input.live.status === "none_reported" || input.live.vehicleCount === 0);
 
   const active = activeNotices(input.notices ?? [], routeNo, now);
   for (const notice of active) {
@@ -219,6 +226,8 @@ export function assessOperatingEvidence(input: AssessmentInput): OperatingAssess
     return done("vehicle_reported", "OBSERVED", extra);
   }
 
+  if (onlySuspect) return done("unknown", "UNKNOWN", [...liveReasons]);
+
   if (!schedule || schedule.evidence !== "OFFICIAL_DATED") {
     return done("unknown", noVehicles ? "UNKNOWN" : "UNAVAILABLE", ["no_usable_schedule", ...liveReasons]);
   }
@@ -231,4 +240,39 @@ export function assessOperatingEvidence(input: AssessmentInput): OperatingAssess
     default:
       return done("unknown", "UNKNOWN", ["schedule_uncertain", ...liveReasons]);
   }
+}
+
+/**
+ * Every NightGuard entry of one route number, folded into one schedule
+ * statement for a route-number-level assessment. Used where TAPSO cannot tell
+ * which timetable direction a live variant is (no verified variant ↔
+ * timetable crosswalk exists: 0 of 389 served timetable services match a
+ * catalog variant's stop names exactly, docs/audits/TAPSO_V4_TRANSIT_DATA_AUDIT.md).
+ *
+ * - Any direction with a later plain departure: scheduled departures remain
+ *   (the earliest next departure is kept). All of them before their first
+ *   departure: before_first_departure.
+ * - Otherwise any uncertain direction: uncertain.
+ * - Otherwise every answering direction has passed its last plain departure.
+ * - No answering direction: `null` (the assessment says there is no usable schedule).
+ */
+export function aggregateRouteSchedule(entries: NightGuardEntry[]): NightGuardEntry | null {
+  const answered = entries.filter((entry) => entry.evidence === "OFFICIAL_DATED");
+  if (answered.length === 0) return null;
+  const pending = answered.filter((entry) => entry.status === "scheduled_departures_remain" || entry.status === "before_first_departure");
+  const base = (entry: NightGuardEntry, status: NightGuardEntry["status"]): NightGuardEntry => ({
+    ...entry,
+    direction: `${answered.length} direction(s) of the route number`,
+    status,
+    reasons: [...new Set([...answered.flatMap((candidate) => candidate.reasons), "route_number_aggregate" as const])],
+  });
+  if (pending.length > 0) {
+    const earliest = pending.reduce((best, entry) => ((entry.next?.minutesFromNow ?? Infinity) < (best.next?.minutesFromNow ?? Infinity) ? entry : best));
+    const allBefore = answered.every((entry) => entry.status === "before_first_departure");
+    return base(earliest, allBefore ? "before_first_departure" : "scheduled_departures_remain");
+  }
+  const uncertain = answered.find((entry) => entry.status === "uncertain");
+  if (uncertain) return base(uncertain, "uncertain");
+  const latest = answered.reduce((best, entry) => ((entry.last?.minutesFromNow ?? -Infinity) > (best.last?.minutesFromNow ?? -Infinity) ? entry : best));
+  return base(latest, "last_scheduled_departed");
 }

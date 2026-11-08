@@ -38,6 +38,12 @@ Requests use `serviceKey`, `_type=json`, and where applicable `cityCode`, `route
 
 [Jeju Bus Information System](https://bus.jeju.go.kr/) remains the official passenger-facing corroboration source for route existence, schedule, endpoint, and local classification. No undocumented Jeju BIS endpoint is treated as a supported TAPSO product API. (2026-10-06) The app may *open* the official passenger station page (`/mobile/station/detailStation/<id>?type=station&mode=ridebooking`) for the 교통약자 승차예약 handoff, only for a station id verified by the offline crosswalk audit (`validation/JEJU_BIS_TAGO_STOP_CROSSWALK.md`); opening a page in the browser is not an API dependency, and the site's own data requests (`reservationTrafficWeak`, `getNewStationInfoByStationId`, `getNewArriveScheduleByStationId`) are never called by TAPSO.
 
+## TAGO stop arrival predictions (15098530)
+
+Contract read 2026-11-08 (`OFFICIAL_DATED`; page modified 2023-07-12, 이용허락범위 제한 없음, free, "실시간"): one documented operation, `GET https://apis.data.go.kr/1613000/ArvlInfoInqireService/getSttnAcctoArvlPrearngeInfoList` (`serviceKey`, `cityCode`, `nodeId`); rows carry `nodeid`, `nodenm`, `routeid`, `routeno`, `routetp`, `arrprevstationcnt`, `vehicletp`, `arrtime` (seconds). The page lists two further operations (per-route arrivals, city codes) without their operation names, so TAPSO does not call them.
+
+The contract has **no vehicle number** and **no time the estimate was computed**: a prediction cannot be tied to the bus a rider confirmed, and its age cannot be bounded. Jeju coverage is `UNKNOWN` until `.github/workflows/arrival-probe.yml` runs with the repository key; it prints counts, route numbers and agreement with live positions only. Parser: `services/api/src/tagoArrival.ts` (label `PROVIDER_ESTIMATE`), not wired into any passenger path.
+
 ## Jeju timetables: the last bus
 
 TAGO's `getRouteInfoIem` carries no service day for Jeju. For all 58 variants of routes 102, 202, 282, 365 and 800 it sends no first or last departure, and a weekday headway `intervaltime` of `"0"` (`VERIFIED` 2026-10-01: `scripts/data-sources/route-info.ts`, data-source probe run 36911886895). Jeju's last buses therefore need Jeju's own timetables.
