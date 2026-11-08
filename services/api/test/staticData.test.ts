@@ -100,3 +100,22 @@ test("the committed data files load through the file loader, and health reports 
   const catalogLoaded = data.catalog();
   assert.equal(health.staticData.catalog.available, catalogLoaded.ok);
 });
+
+test("night guard: one route read for this instant, cached no longer than its next status change", async () => {
+  // 2026-10-07T01:00Z is 10:00 KST on a Wednesday.
+  const h = handler(inMemoryStaticTransitData({ timetables, holidays }));
+  const response = await get(h, "/v1/night-guard?routeNo=365");
+  assert.equal(response.status, 200);
+  const { item } = await response.json();
+  assert.equal(item.schemaVersion, "tapso-night-guard-v1");
+  assert.equal(item.label, "OFFICIAL_DATED");
+  assert.equal(item.localDate, "2026-10-07");
+  assert.equal(item.localTime, "10:00");
+  assert.ok(item.entries.length > 0);
+  assert.ok(item.entries.every((entry: { claimsOperating: boolean }) => entry.claimsOperating === false));
+  const maxAge = Number(/s-maxage=(\d+)/.exec(response.headers.get("cache-control") ?? "")?.[1]);
+  assert.ok(maxAge >= 0 && maxAge <= 60, `s-maxage ${maxAge}`);
+  assert.equal((await get(h, "/v1/night-guard")).status, 400, "routeNo is required");
+  assert.equal((await get(h, "/v1/night-guard?routeNo=365&timepoint=%3Cscript%3E")).status, 400);
+  assert.equal((await get(handler(), "/v1/night-guard?routeNo=365")).status, 503);
+});

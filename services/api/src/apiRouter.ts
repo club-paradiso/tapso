@@ -32,6 +32,7 @@ import type { LiveActivityPusher } from "./liveActivityPusher.ts";
 import type { ProviderHealth } from "./providerHealth.ts";
 import { TAGO_CADENCE_POLICY_V1 } from "./sourceFreshness.ts";
 import { routeTimetableView, timetableFreshness, timetableIndex } from "./officialTimetable.ts";
+import { nightGuardView } from "./nightGuard.ts";
 import { koreanDate } from "./serviceDay.ts";
 import type { StaticTransitData } from "./staticTransitData.ts";
 import { normalizePlaceQuery, PLACE_QUERY_MAX, PLACE_QUERY_MIN, PlaceSearchError, type KakaoPlaceSearch } from "./placeSearch.ts";
@@ -105,6 +106,8 @@ const ROUTE_ID_PATTERN = /^[A-Za-z0-9_-]{1,64}$/;
 const ROUTE_NUMBER_PATTERN = /^[A-Za-z0-9가-힣-]{1,16}$/;
 /** An official timetable route number: "365", "202-1". */
 const TIMETABLE_ROUTE_PATTERN = /^[0-9]{1,4}(?:-[0-9]{1,2})?$/;
+/** A timetable timepoint name as published: Hangul, Latin, digits, spaces and a few marks. */
+const TIMEPOINT_PATTERN = /^[0-9A-Za-z가-힣 ().·,-]{1,40}$/;
 const SESSION_ID_PATTERN = /^[A-Za-z0-9_-]{1,64}$/;
 
 export type LogLevel = "info" | "warn" | "error";
@@ -192,6 +195,7 @@ type Route =
   | "matches"
   | "catalog"
   | "timetables"
+  | "night_guard"
   | "places"
   | "session_create"
   | "session_read"
@@ -296,6 +300,7 @@ function resolvePath(path: string): Resolved | undefined {
   if (path === "/v1/matches") return { route: "matches", methods: ["POST"] };
   if (path === "/v1/catalog") return { route: "catalog", methods: ["GET"] };
   if (path === "/v1/timetables") return { route: "timetables", methods: ["GET"] };
+  if (path === "/v1/night-guard") return { route: "night_guard", methods: ["GET"] };
   if (path === "/v1/places") return { route: "places", methods: ["GET"] };
   if (path === "/v1/sessions") return { route: "session_create", methods: ["POST"] };
   if (path === "/v1/feedback") return { route: "feedback_submit", methods: ["POST"] };
@@ -421,6 +426,23 @@ async function dispatch(
     // Ten minutes: "today" turns over at midnight in Korea, and a view for a
     // stated date never changes until the bundle does.
     return { response: json({ item: view, meta }, 200, { "cache-control": "public, max-age=0, s-maxage=600, must-revalidate" }) };
+  }
+
+  if (resolved.route === "night_guard") {
+    // NightGuard (`nightGuard.ts`): the official timetable read for this
+    // instant, across midnight. Schedule only, never "operating".
+    const timetables = dependencies.staticData?.timetables();
+    const holidays = dependencies.staticData?.holidays();
+    if (!timetables?.ok) throw apiError("TIMETABLES_UNAVAILABLE", timetables ? timetables.reason : "no timetable bundle is deployed");
+    if (!holidays?.ok) throw apiError("TIMETABLES_UNAVAILABLE", holidays ? holidays.reason : "no holiday calendar is deployed");
+    const routeNumber = requiredParam(url, "routeNo", TIMETABLE_ROUTE_PATTERN);
+    const timepoint = optionalParam(url, "timepoint", TIMEPOINT_PATTERN);
+    const at = support.now();
+    const view = nightGuardView(timetables.value, holidays.value, routeNumber, at, timepoint === undefined ? {} : { timepoint });
+    // The answer changes at `validUntil` (a published minute, midnight or 06:00):
+    // a shared cache may hold it until then, and never longer than a minute.
+    const seconds = view.validUntil === null ? 60 : Math.max(0, Math.min(60, Math.floor((Date.parse(view.validUntil) - at.getTime()) / 1_000)));
+    return { response: json({ item: view }, 200, { "cache-control": `public, max-age=0, s-maxage=${seconds}, must-revalidate` }) };
   }
 
   if (resolved.route === "cities") {
