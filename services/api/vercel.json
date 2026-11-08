@@ -44,6 +44,10 @@
       "destination": "/api/v1/timetables"
     },
     {
+      "source": "/v1/night-guard",
+      "destination": "/api/v1/night-guard"
+    },
+    {
       "source": "/v1/catalog",
       "destination": "/api/v1/catalog"
     },
