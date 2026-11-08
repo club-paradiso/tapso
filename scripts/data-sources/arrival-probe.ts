@@ -74,6 +74,30 @@ async function vehicleSequences(routeId: string): Promise<number[] | null> {
   }
 }
 
+// Control: the same key on the location service TAPSO already uses in production
+// (BusLcInfoInqireService, dataset 15098533). If this answers and arrivals do not,
+// the key is fine and 15098530 is not (yet) active on it. Never prints the key.
+{
+  const looksEncoded = /%[0-9A-Fa-f]{2}/.test(key);
+  const control = new URL("https://apis.data.go.kr/1613000/BusLcInfoInqireService/getRouteAcctoBusLcList");
+  control.searchParams.set("serviceKey", key);
+  control.searchParams.set("cityCode", cityCode);
+  control.searchParams.set("routeId", "JEB405136521");
+  control.searchParams.set("numOfRows", "5");
+  control.searchParams.set("_type", "json");
+  let verdict = "network error";
+  try {
+    const response = await fetch(control, { signal: AbortSignal.timeout(15_000) });
+    const text = await response.text();
+    const code = /"resultCode"\s*:\s*"(\w+)"/.exec(text)?.[1] ?? /"returnReasonCode"\s*:\s*"(\w+)"/.exec(text)?.[1] ?? "none";
+    verdict = `HTTP ${response.status}, code ${code}`;
+  } catch (error) {
+    verdict = (error as Error).name;
+  }
+  console.log(`CONTROL location service (15098533) with the same key: ${verdict}`);
+  console.log(`KEY FORMAT: contains percent-escapes (looks like the Encoding key): ${looksEncoded ? "yes" : "no"}; length ${key.length}`);
+}
+
 const totals = { calls: 0, answered: 0, rows: 0, rejected: 0, consistent: 0, inconsistent: 0, noPositions: 0, otherVariant: 0 };
 for (let round = 1; round <= rounds; round += 1) {
   console.log(`\n## round ${round} at ${new Date().toISOString()}`);
