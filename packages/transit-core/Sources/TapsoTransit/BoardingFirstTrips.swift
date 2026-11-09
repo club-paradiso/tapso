@@ -134,3 +134,22 @@ extension DestinationSearchIndex {
         }
     }
 }
+
+/// How old the trips screen's bus positions are, and when they stop counting as
+/// current. Kept out of SwiftUI (AGENTS.md); the screen only draws the result.
+public enum TripPositionFreshness {
+    /// `ASSUMED`: one missed 60 s refresh plus the server's 20 s cache, rounded up.
+    public static let staleAfterSeconds: TimeInterval = 90
+
+    /// Whole seconds since the read; `nil` before the first read finishes.
+    public static func ageSeconds(readAt: Date?, now: Date) -> Int? {
+        readAt.map { max(0, Int(now.timeIntervalSince($0))) }
+    }
+
+    /// Stale once older than `staleAfterSeconds`. No read yet is not stale: the
+    /// rows are still loading, not old.
+    public static func isStale(readAt: Date?, now: Date) -> Bool {
+        guard let readAt else { return false }
+        return now.timeIntervalSince(readAt) > staleAfterSeconds
+    }
+}

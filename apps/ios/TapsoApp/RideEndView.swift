@@ -34,6 +34,8 @@ struct RideEndView: View {
                 timetable: outcome.cityCode == nil ? nil : AnyView(TimetableCard(
                     routeNumber: outcome.routeNumber,
                     load: model.timetables[outcome.routeNumber],
+                    nightGuard: model.nightGuards[outcome.routeNumber]?.view,
+                    onNightGuardRefresh: { await model.loadNightGuard(routeNumber: outcome.routeNumber) },
                     onLoad: { Task { await model.loadTimetable(routeNumber: outcome.routeNumber) } },
                     onShowAll: { timetableSheet = $0 }
                 ))
@@ -359,7 +361,7 @@ struct ReturnTripRow: View {
     private var detailText: String? {
         var parts: [String] = []
         if let last = advice.lastDeparture {
-            parts.append(String(format: RideText.string("returnTrip.last"), last))
+            parts.append(String(format: RideText.string("returnTrip.last"), RideText.clock(last)))
         }
         if let headway = advice.headwayMinutes {
             let key = switch advice.day {

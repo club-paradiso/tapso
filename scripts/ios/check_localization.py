@@ -16,7 +16,7 @@ CORE = ROOT / "packages/transit-core/Sources/TapsoTransit"
 PREFIXES = (
     "a11y", "brand", "home", "search", "setup", "route", "boarding", "recap", "mapImport",
     "check", "ride", "count", "trust", "favorite", "demo", "end", "handoff", "common",
-    "alert", "live_activity", "shortcut", "live", "share", "returnTrip", "rescue", "control", "autoStart", "stopNudge", "boardFirst", "feedback",
+    "alert", "live_activity", "shortcut", "live", "share", "returnTrip", "rescue", "control", "autoStart", "stopNudge", "boardFirst", "feedback", "nightGuard",
 )
 LITERAL = re.compile(r'"((?:%s)\.[A-Za-z0-9_.]+)"' % "|".join(PREFIXES))
 # `RideText.countKey("<key>", n)` also reads "<key>.one" for a count of one.
@@ -63,7 +63,10 @@ def load(table: pathlib.Path) -> dict[str, str]:
 
 def main() -> int:
     used = set()
-    for path in list(IOS.rglob("*.swift")):
+    # The core names copy keys as string literals too (`RideGuidance` builds
+    # "ride.predicted.*" and "ride.waiting.*"); reading only its enums reported
+    # those as unused, inviting a deletion that would put raw keys on screen.
+    for path in list(IOS.rglob("*.swift")) + list(CORE.rglob("*.swift")):
         if "/Tests/" in str(path):
             continue
         source = path.read_text()

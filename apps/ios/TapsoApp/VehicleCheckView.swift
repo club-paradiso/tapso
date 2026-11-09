@@ -11,7 +11,8 @@ struct VehicleCheckView: View {
         ScrollView {
             if let draft = model.draft, let route = draft.route {
                 if draft.isLive, let failure = model.liveFailure {
-                    LiveFailureNotice(failure: failure)
+                    // Not transient: polling has stopped and the old buses were cleared; retry reads again.
+                    LiveFailureNotice(failure: failure, retry: failure.isTransient ? nil : { model.retryLiveVehicleCheck() })
                         .padding(.horizontal, TapsoSpace.gutter)
                         .padding(.top, TapsoSpace.lg)
                 }

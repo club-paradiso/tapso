@@ -342,8 +342,18 @@ final class TapsoAppModel {
     private(set) var nearbyBoarding: NearbyBoarding = .idle
     /// Trip id → where its nearest bus is.
     private(set) var tripArrivals: [String: TripArrival] = [:]
+    /// When the last trips-screen read finished (phone clock). Positions are only as
+    /// current as this, plus the server's 20 s cache; the screen shows the age.
+    private(set) var tripArrivalsReadAt: Date?
+    /// The trip IDs of the trips-screen read in flight (a refresh of the same screen never
+    /// overlaps it), and a counter that tells a superseded read from the current one.
+    private var tripArrivalsInFlight: Set<String>?
+    private var tripArrivalsGeneration = 0
     /// Official timetables per route number (`GET /v1/timetables`), never live.
     private(set) var timetables: [String: TimetableLoad] = [:]
+    /// Tonight's timetable reading per route number (`GET /v1/night-guard`), with when it was read.
+    /// Absent when it failed: the timetable card then shows only the dated tables.
+    private(set) var nightGuards: [String: (view: TransitAPINightGuard, readAt: Date)] = [:]
     /// The way back pinned to the Lock Screen as a countdown, if one is running.
     private(set) var pinnedReturn: PinnedReturn?
     /// The countdown could not start: Live Activities are off for TAPSO.
@@ -873,6 +883,9 @@ final class TapsoAppModel {
         let trips = index.trips(from: boarding, to: destination)
         guard !trips.isEmpty else { return }
         path.append(.catalogTrips(placeName: destinationName, boardingName: boarding.name))
+        // Answers from an earlier trips screen are not about these buses now.
+        tripArrivals = [:]
+        tripArrivalsReadAt = nil
         Task { await loadTripArrivals(trips) }
     }
 
@@ -947,16 +960,37 @@ final class TapsoAppModel {
     }
     /// Reads in flight at once.
     static let tripArrivalConcurrency = 4
+    /// While the trips screen is visible it re-reads this often. A full read is at
+    /// most `tripArrivalBudgetCeiling` requests, so a minute keeps one screen under
+    /// half of the API's 120-a-minute allowance.
+    static let tripArrivalRefreshSeconds: UInt64 = 60
+    // When positions count as stale: `TripPositionFreshness` in transit-core.
 
     /// Where each trip's nearest bus is now. Reads `/v1/vehicles` per variant, one
     /// variant of every route number before a second of any, up to the budget; the
     /// rest are marked not checked rather than left loading.
+    ///
+    /// One read per screen at a time: a refresh of the same trips while a read is in
+    /// flight is dropped, but a read for a different screen supersedes the old one,
+    /// whose late answers are then discarded instead of blocking the new screen.
     func loadTripArrivals(_ trips: [TripOption]) async {
         guard let index = catalogIndex else { return }
+        let screen = Set(trips.map(\.id))
+        if tripArrivalsInFlight == screen { return }
+        tripArrivalsGeneration += 1
+        let generation = tripArrivalsGeneration
+        tripArrivalsInFlight = screen
+        defer {
+            if tripArrivalsGeneration == generation {
+                tripArrivalsInFlight = nil
+                tripArrivalsReadAt = Date()
+            }
+        }
         let wanted = DestinationSearchIndex.arrivalCheckOrder(trips, budget: Self.tripArrivalBudget(for: trips))
         let wantedIDs = Set(wanted.map(\.id))
         for trip in trips where !wantedIDs.contains(trip.id) { tripArrivals[trip.id] = .notChecked }
-        for trip in wanted { tripArrivals[trip.id] = .loading }
+        // A refresh keeps the last answer on screen (labelled by its age) instead of a spinner.
+        for trip in wanted where tripArrivals[trip.id] == nil || tripArrivals[trip.id] == .notChecked { tripArrivals[trip.id] = .loading }
         let api = self.api
         await withTaskGroup(of: (String, TripArrival).self) { group in
             var pending = wanted[...]
@@ -975,6 +1009,11 @@ final class TapsoAppModel {
                 start(next)
             }
             for await (id, arrival) in group {
+                guard tripArrivalsGeneration == generation else {
+                    // Superseded by another screen's read: stop, and write nothing more.
+                    group.cancelAll()
+                    break
+                }
                 tripArrivals[id] = arrival
                 if let next = pending.popFirst() { start(next) }
             }
@@ -1037,6 +1076,7 @@ final class TapsoAppModel {
     // MARK: Official timetables (`GET /v1/timetables`)
 
     func loadTimetable(routeNumber: String) async {
+        Task { await loadNightGuard(routeNumber: routeNumber) }
         if case .loaded = timetables[routeNumber] { return }
         if timetables[routeNumber] == .loading { return }
         timetables[routeNumber] = .loading
@@ -1046,6 +1086,18 @@ final class TapsoAppModel {
             timetables[routeNumber] = nil
         } catch {
             timetables[routeNumber] = .failed(Self.failure(error))
+        }
+    }
+
+    /// NightGuard changes with the clock: re-read when the held answer is past its
+    /// `validUntil` or a minute old (`TransitAPINightGuard.refreshDate`).
+    /// A failure removes the old answer rather than leaving it on screen.
+    func loadNightGuard(routeNumber: String) async {
+        if let held = nightGuards[routeNumber], Date() < held.view.refreshDate(readAt: held.readAt) { return }
+        do {
+            nightGuards[routeNumber] = (try await api.nightGuard(routeNumber: routeNumber), Date())
+        } catch {
+            nightGuards[routeNumber] = nil
         }
     }
 
@@ -1607,6 +1659,12 @@ final class TapsoAppModel {
         resumeLiveVehicleCheck()
     }
 
+    /// After polling stopped on a non-transient failure: read the same session again.
+    func retryLiveVehicleCheck() {
+        liveFailure = nil
+        resumeLiveVehicleCheck()
+    }
+
     /// Polls the setup session, creating it first if needed. The server ranks the
     /// buses; the rider confirms one. Nothing is selected here.
     private func resumeLiveVehicleCheck() {
@@ -1656,7 +1714,12 @@ final class TapsoAppModel {
                 case .sessionExpired, .sessionNotFound:
                     liveSetupSession = nil
                 default:
-                    if !failure.isTransient { return }
+                    if !failure.isTransient {
+                        // Polling stops here: the buses on screen would only get older, so
+                        // none stays tappable. The notice offers a retry (`retryLiveVehicleCheck`).
+                        vehicleCheck = VehicleCheck.evaluate(proposals: [], hasSearched: false)
+                        return
+                    }
                 }
             }
             try? await Task.sleep(for: Self.liveCheckInterval)

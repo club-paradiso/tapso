@@ -52,6 +52,15 @@ Figma write tools are available in this session, but no edit was made: the chang
 3. `05 Live Activity · Dynamic Island`: no NightGuard surface is proposed for the island; the return countdown (`213:59`, `213:79`) remains the only after-ride island state.
 4. `02 Components` › `TrustBadge / V2`: add variant `estimated` with the non-broadcast glyph (U-04).
 
+### 4a. Applied in Figma (2026-11-08)
+
+Written to the editable file through the Figma MCP, then checked with a screenshot. It reuses the file's own local variables (`color/text/*`, `color/background/secondary`, `brand/mint-deep`) and Noto Sans KR.
+- Page `09 Return / Rescue` › frame `193:2956` › new column `343:134` "V4 / NightGuard · stale positions":
+  - `NightGuardSection` card: one line per direction, the as-of footnote, never mint.
+  - `TripsAge / current` (mint) and `TripsAge / stale (> 90 s)` (neutral, no "가장 가까이 있어요" badge), mapped to `BoardingFirstViews.swift` › `CatalogTripsContent`.
+- All sample content is labelled SYNTHETIC.
+- **Not done:** the `ReturnTripRow / V3` `state=unknown` variant (§4 item 1) and the `TrustBadge / V2` `estimated` variant (item 4). Both change shared components and are left for review. `design/figma-sync-manifest.json` is unchanged.
+
 ## 5. Figma-to-SwiftUI map (relevant subset)
 
 | Figma | SwiftUI |

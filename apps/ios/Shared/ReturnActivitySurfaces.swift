@@ -32,8 +32,8 @@ enum ReturnText {
 
     static func detail(_ attributes: TapsoReturnAttributes, isLate: Bool) -> String {
         isLate
-            ? String(format: RideText.string("returnTrip.activity.late.body"), attributes.lastDeparture)
-            : String(format: RideText.string("returnTrip.last"), attributes.lastDeparture)
+            ? String(format: RideText.string("returnTrip.activity.late.body"), RideText.clock(attributes.lastDeparture))
+            : String(format: RideText.string("returnTrip.last"), RideText.clock(attributes.lastDeparture))
     }
 
     static func accessibility(_ attributes: TapsoReturnAttributes, isLate: Bool) -> String {

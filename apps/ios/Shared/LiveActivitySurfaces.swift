@@ -508,13 +508,16 @@ struct TrustQualifier: View {
 
     var body: some View {
         HStack(spacing: 4) {
-            Image(systemName: "dot.radiowaves.left.and.right")
-                .font(.system(size: 9, weight: .bold))
+            // Not the broadcast glyph and not the journey colour: those say "live",
+            // and an estimate is exactly what is not (TAPSO_V4_UX_AUDIT U-04).
+            Image(systemName: "location.magnifyingglass")
+                .font(.caption2.weight(.bold))
             Text("trust.qualifier.estimated")
                 .font(.caption2.weight(.medium))
                 .lineLimit(1)
+                .minimumScaleFactor(0.8)
         }
-        .foregroundStyle(TapsoColor.journey(guidance.colorRole).opacity(0.9))
+        .foregroundStyle(TapsoColor.textSecondary)
         .accessibilityHidden(true)
     }
 }

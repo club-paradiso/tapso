@@ -187,6 +187,9 @@ public struct RideGuidance: Hashable, Sendable {
     /// rider is waiting: every surface shows this number, never the bus-to-destination
     /// count, and no get-off milestone exists (`RideGuidancePolicy.guidance(for:rideLength:)`).
     public let stopsBeforeBoarding: Int?
+    /// The count comes from an estimated position, not a reported one. Every surface
+    /// and VoiceOver mark it; `trust` reads this flag, never a localisation key.
+    public var isEstimated: Bool = false
 
     /// The rider is still at the boarding stop and the bus is on its way.
     public var isWaiting: Bool { stopsBeforeBoarding != nil }
@@ -198,7 +201,7 @@ public struct RideGuidance: Hashable, Sendable {
     }
 
     /// The one reliability word this moment carries (`RideTrust`).
-    public var trust: RideTrust { RideGuidancePolicy.trust(for: moment, estimated: copy.eyebrow == "ride.predicted.eyebrow") }
+    public var trust: RideTrust { RideGuidancePolicy.trust(for: moment, estimated: isEstimated) }
 }
 
 /// Whether a remaining-stop count is current, a last-known value, or withheld.
@@ -278,7 +281,8 @@ public enum RideGuidancePolicy {
                 : copy(for: moment),
             relevanceScore: relevanceScore(for: moment),
             count: countPresentation(for: moment),
-            stopsBeforeBoarding: nil
+            stopsBeforeBoarding: nil,
+            isEstimated: signal.isEstimated == true && moment == .riding
         )
     }
 
@@ -320,7 +324,8 @@ public enum RideGuidancePolicy {
                 copy: base.copy,
                 relevanceScore: base.relevanceScore,
                 count: base.count,
-                stopsBeforeBoarding: ahead
+                stopsBeforeBoarding: ahead,
+                isEstimated: base.isEstimated
             )
         }
         return RideGuidance(
@@ -332,7 +337,7 @@ public enum RideGuidancePolicy {
             colorRole: colorRole(for: .riding),
             symbolName: "bus",
             recovery: recovery(for: .riding),
-            // An estimated position stays marked as one while waiting (`trust` reads the eyebrow).
+            // An estimated position stays marked as one while waiting (`isEstimated`).
             copy: RideCopy(
                 headline: "ride.waiting.headline",
                 detail: "ride.waiting.detail",
@@ -341,7 +346,8 @@ public enum RideGuidancePolicy {
             ),
             relevanceScore: relevanceScore(for: .riding),
             count: .live,
-            stopsBeforeBoarding: ahead
+            stopsBeforeBoarding: ahead,
+            isEstimated: signal.isEstimated == true
         )
     }
 
