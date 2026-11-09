@@ -77,10 +77,21 @@ jobs:
           git commit -m "timetable: import every bus.jeju.go.kr timetable ($(TZ=Asia/Seoul date +%F)) $counts" -m "Workflow run ${GITHUB_RUN_ID}."
           if [ "${GITHUB_REF_NAME}" = "main" ]; then
             git push --force origin HEAD:data/jeju-timetable-refresh
-            gh pr create --base main --head data/jeju-timetable-refresh --draft \
+            # Same silent failure as the catalog refresh (fixed in #204): with Actions not
+            # permitted to create pull requests, refreshes stayed on the branch and the run
+            # stayed green. An existing open PR is fine; any other failure turns the run red.
+            if ! gh pr create --base main --head data/jeju-timetable-refresh --draft \
               --title "data: refresh Jeju official timetables ($(TZ=Asia/Seoul date +%F))" \
-              --body-file artifacts/timetables/jeju-timetable-census.md \
-              || echo "a pull request already exists or Actions may not open one; data/jeju-timetable-refresh holds the refresh"
+              --body-file artifacts/timetables/jeju-timetable-census.md; then
+              open=$(gh pr list --head data/jeju-timetable-refresh --base main --state open --json number --jq length || echo 0)
+              if [ "${open}" -gt 0 ]; then
+                echo "a pull request for data/jeju-timetable-refresh is already open; the refresh is on it"
+              else
+                echo "::error title=Timetable refresh not proposed::The refreshed timetables are on data/jeju-timetable-refresh, but no pull request could be opened. Enable Settings > Actions > General > 'Allow GitHub Actions to create and approve pull requests', or open one from that branch by hand."
+                echo "The refreshed timetables are on \`data/jeju-timetable-refresh\` but no pull request could be opened." >> "$GITHUB_STEP_SUMMARY"
+                exit 1
+              fi
+            fi
           else
             git push origin "HEAD:${GITHUB_REF_NAME}"
           fi

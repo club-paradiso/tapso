@@ -31,12 +31,13 @@ Severity: **S0** wrong guidance that can strand or mislead a rider; **S1** wrong
 - Remediation: new `nightGuardView` reads both the current and the previous service day before 06:00 and labels each entry with its `serviceDate`; exposed as `GET /v1/night-guard`.
 - Verification: 19 NightGuard tests, including midnight, last-trip-started, drop-after-06:00, holiday, stale, conflict, unstated, not-in-effect, duplicate tables and timepoint columns.
 
-### F-02 (S1) Timetable bundle ages out on 2027-01-01 — OPEN (operations)
+### F-02 (S1) Timetable bundle ages out — MITIGATED (bundle refreshed; release gate warns)
 
 - Files: `services/api/data/jeju-timetables.json` (`retrievedOn: 2026-10-03`), `officialTimetable.ts` (`TIMETABLE_FRESH_DAYS = 30`, `TIMETABLE_USABLE_DAYS = 90`, both `ASSUMED`).
 - Evidence (`VERIFIED`, test "real bundle: on 2027-01-01 every table turns stale…"): today (36 days) the bundle is `aging`; from 2027-01-02 every route answers `unknown`. The weekly `jeju-timetables.yml` refresh opens a PR to its topic branch, but no refreshed bundle has reached `main` since 2026-10-03 (`OBSERVED` from the committed file).
 - Passenger impact: in 55 days every "today" first/last-bus answer disappears at once.
 - Remediation: owner merges a refreshed import PR (or dispatches `jeju-timetables.yml`) before 2026-12-31. Proposed (not implemented): a release-gate warning when the bundle is older than 60 days.
+- Update 2026-11-09: the 2026-11-05 bundle is on `main` (#202), so the stale date moved to after 2027-02-03. `scripts/release-gates/jeju-v1.ts` now records the bundle's fixed dates (aging, refresh warning, stale) in gate 1. It also prints the bundle's age against today: a CI warning annotation after 60 days, an error annotation once stale. It never fails CI, because a stale bundle degrades answers to `unknown` rather than breaking them (`timetableRefreshNotice`, tested). The refresh itself still depends on the owner merging import PRs, and Actions cannot open PRs in this repository until the setting is enabled.
 
 ### F-03 (S1) Most official timetables cannot answer "tonight" — OPEN (data limitation)
 

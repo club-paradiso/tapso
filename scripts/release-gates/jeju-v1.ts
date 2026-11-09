@@ -17,7 +17,7 @@
 import { existsSync, mkdirSync, readFileSync, readdirSync, writeFileSync } from "node:fs";
 import path from "node:path";
 
-import { validateTimetableBundle } from "../../services/api/src/officialTimetable.ts";
+import { timetableRefreshNotice, validateTimetableBundle } from "../../services/api/src/officialTimetable.ts";
 import type { LiveProbe, ReadinessReport } from "../../services/api/src/routeReadiness.ts";
 import { validateCatalog, type TransitCatalog } from "../../services/api/src/transitCatalog.ts";
 
@@ -66,6 +66,11 @@ const gates: Gate[] = [];
   const outcomes = new Set(["parsed", "source_conflict", "no_timetable", "parse_refused"]);
   const undecided = manifest.timetables.filter((entry) => !outcomes.has(entry.outcome));
   evidence.push(`timetable census: ${manifest.timetables.length} entries, ${JSON.stringify(manifest.counts)}`);
+  // Fixed dates only, so this record does not change with the day it is generated;
+  // the age against today is reported on the console (and as a CI annotation) below.
+  const { bundle } = validateTimetableBundle(json("services/api/data/jeju-timetables.json"));
+  const dated = timetableRefreshNotice(bundle.retrievedOn, bundle.retrievedOn);
+  evidence.push(`timetable bundle downloaded ${bundle.retrievedOn}: aging after ${dated.agingAfter}, refresh warning after ${dated.warnAfter}, stale after ${dated.staleAfter}`);
   if (undecided.length > 0) {
     status = "FAIL";
     evidence.push(`${undecided.length} census entries without a deterministic outcome`);
@@ -244,4 +249,14 @@ writeFileSync(file("artifacts/release-gates/jeju-v1.md"), [
   "",
 ].join("\n"));
 for (const gate of gates) console.log(`${gate.status.padEnd(16)} ${gate.id}`);
+
+// Timetable age against today (Korea). Reported, never written to the artifacts and
+// never a failure: a stale bundle degrades answers to "unknown", it does not break them.
+{
+  const { bundle } = validateTimetableBundle(json("services/api/data/jeju-timetables.json"));
+  const today = new Intl.DateTimeFormat("en-CA", { timeZone: "Asia/Seoul" }).format(new Date());
+  const notice = timetableRefreshNotice(bundle.retrievedOn, today);
+  const annotate = process.env.GITHUB_ACTIONS === "true" && notice.level !== "none";
+  console.log(annotate ? `::${notice.level} title=Timetable bundle age::${notice.message}` : `${notice.level === "none" ? "OK" : notice.level.toUpperCase()}: ${notice.message}`);
+}
 if (process.argv.includes("--check") && gates.some((gate) => ENFORCED.has(gate.id) && gate.status === "FAIL")) process.exit(1);

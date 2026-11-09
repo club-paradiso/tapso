@@ -239,6 +239,44 @@ export function timetableFreshness(dataset: Pick<OfficialTimetableDataset, "retr
   return "stale";
 }
 
+/** `ASSUMED`: past this many days the release gate warns that the bundle should be re-imported. */
+export const TIMETABLE_REFRESH_WARNING_DAYS = 60;
+
+export interface TimetableRefreshNotice {
+  level: "none" | "warning" | "error";
+  /** Days since the download; `null` when a date is unreadable. */
+  ageDays: number | null;
+  /** Fixed dates, so a committed record does not change with the day it is generated. */
+  warnAfter: string | null;
+  agingAfter: string | null;
+  staleAfter: string | null;
+  message: string;
+}
+
+/**
+ * Whether the timetable bundle should be refreshed, for the release gate:
+ * a warning after `TIMETABLE_REFRESH_WARNING_DAYS`, an error once the bundle
+ * is stale (past `TIMETABLE_USABLE_DAYS`, when NightGuard and the timetable
+ * card stop answering for today), and an error for an unreadable or future
+ * download date. Pure; `today` is a Korean `YYYY-MM-DD`.
+ */
+export function timetableRefreshNotice(retrievedOn: string, today: string): TimetableRefreshNotice {
+  if (!validDate(retrievedOn) || !validDate(today)) {
+    return { level: "error", ageDays: null, warnAfter: null, agingAfter: null, staleAfter: null, message: `timetable download date ${retrievedOn} or today ${today} is not a YYYY-MM-DD date` };
+  }
+  const plus = (count: number) => new Date(Date.parse(`${retrievedOn}T00:00:00Z`) + count * 86_400_000).toISOString().slice(0, 10);
+  const dates = { warnAfter: plus(TIMETABLE_REFRESH_WARNING_DAYS), agingAfter: plus(TIMETABLE_FRESH_DAYS), staleAfter: plus(TIMETABLE_USABLE_DAYS) };
+  const ageDays = days(retrievedOn, today);
+  if (ageDays < 0) return { level: "error", ageDays, ...dates, message: `timetable bundle downloaded ${retrievedOn}, after today ${today}` };
+  if (ageDays > TIMETABLE_USABLE_DAYS) {
+    return { level: "error", ageDays, ...dates, message: `timetable bundle from ${retrievedOn} is ${ageDays} days old and stale since ${dates.staleAfter}: every NightGuard answer is unknown until it is re-imported (.github/workflows/jeju-timetables.yml)` };
+  }
+  if (ageDays > TIMETABLE_REFRESH_WARNING_DAYS) {
+    return { level: "warning", ageDays, ...dates, message: `timetable bundle from ${retrievedOn} is ${ageDays} days old; it goes stale after ${dates.staleAfter}. Re-import it (.github/workflows/jeju-timetables.yml)` };
+  }
+  return { level: "none", ageDays, ...dates, message: `timetable bundle from ${retrievedOn} is ${ageDays} days old` };
+}
+
 export interface TripEnd {
   /** `HH:MM`; 24:00 and later is after midnight. */
   time: string;
