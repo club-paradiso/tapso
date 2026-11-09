@@ -1,7 +1,7 @@
 {
   "schemaVersion": "tapso-jeju-stop-crosswalk-audit-v1",
   "label": "OFFICIAL_DERIVED",
-  "catalogVersion": "794f3bcb831d783e",
+  "catalogVersion": "c9eacac26d848f6a",
   "evidence": {
     "collected": 4338,
     "source": "bus.jeju.go.kr passenger station pages (ko-KR), collected by scripts/crosswalk/collect-bis-station-evidence.ts",
@@ -16,21 +16,22 @@
     "CONFLICT": "different place name, opposite direction marker, or more than 100 m apart",
     "UNCHECKED": "no evidence collected (or the read failed)"
   },
-  "runtimeEntries": 4298,
+  "runtimeEntries": 4296,
   "summary": {
     "stops": 4338,
     "byStatus": {
-      "VERIFIED_EXACT": 4298,
+      "VERIFIED_EXACT": 4296,
       "VERIFIED_BY_NAME_COORDINATE": 0,
-      "AMBIGUOUS": 33,
+      "AMBIGUOUS": 35,
       "MISSING": 7,
       "CONFLICT": 0,
       "UNCHECKED": 0
     },
     "byReason": {
-      "exact_name_and_direction": 4298,
+      "exact_name_and_direction": 4296,
       "no_coordinates_to_compare": 33,
-      "no_official_station_page": 7
+      "no_official_station_page": 7,
+      "direction_mismatch": 2
     },
     "structure": {
       "validTagoIdForm": 4338,
@@ -168,13 +169,13 @@
     {
       "tagoStopId": "JEB405000028",
       "name": "외도초등학교[남]",
-      "routeCount": 54,
+      "routeCount": 53,
       "status": "VERIFIED_EXACT"
     },
     {
       "tagoStopId": "JEB405000029",
       "name": "외도초등학교[북]",
-      "routeCount": 53,
+      "routeCount": 54,
       "status": "VERIFIED_EXACT"
     },
     {
@@ -228,43 +229,43 @@
     {
       "tagoStopId": "JEB405000038",
       "name": "하귀초등학교[북]",
-      "routeCount": 52,
+      "routeCount": 54,
       "status": "VERIFIED_EXACT"
     },
     {
       "tagoStopId": "JEB405000039",
       "name": "하귀우체국[남]",
-      "routeCount": 43,
+      "routeCount": 44,
       "status": "VERIFIED_EXACT"
     },
     {
       "tagoStopId": "JEB405000040",
       "name": "하귀우체국[북]",
-      "routeCount": 41,
+      "routeCount": 42,
       "status": "VERIFIED_EXACT"
     },
     {
       "tagoStopId": "JEB405000041",
       "name": "안남동[서]",
-      "routeCount": 40,
+      "routeCount": 41,
       "status": "VERIFIED_EXACT"
     },
     {
       "tagoStopId": "JEB405000042",
       "name": "안남동[동]",
-      "routeCount": 41,
+      "routeCount": 42,
       "status": "VERIFIED_EXACT"
     },
     {
       "tagoStopId": "JEB405000043",
       "name": "남주동[남]",
-      "routeCount": 41,
+      "routeCount": 42,
       "status": "VERIFIED_EXACT"
     },
     {
       "tagoStopId": "JEB405000044",
       "name": "남주동[북]",
-      "routeCount": 40,
+      "routeCount": 41,
       "status": "VERIFIED_EXACT"
     },
     {
@@ -282,7 +283,7 @@
     {
       "tagoStopId": "JEB405000048",
       "name": "학원동[동]",
-      "routeCount": 18,
+      "routeCount": 19,
       "status": "VERIFIED_EXACT"
     }
   ]
