@@ -81,6 +81,7 @@ GET  /v1/vehicles?routeId=…&cityCode=…
 GET  /v1/catalog                       (the Jeju transit catalog file; ETag)
 GET  /v1/timetables[?routeNo=365&date=…] (official timetables, dated, never live)
 GET  /v1/night-guard?routeNo=365[&timepoint=…] (the timetable read for this instant, across midnight; never "operating")
+GET  /v1/operating-status?routeNo=365  (timetable × live positions × feed-quality checks, route-number scope; never "operating")
 POST /v1/matches
 POST /v1/sessions
 GET  /v1/sessions/:id

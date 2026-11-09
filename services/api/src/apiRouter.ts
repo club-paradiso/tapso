@@ -33,6 +33,9 @@ import type { ProviderHealth } from "./providerHealth.ts";
 import { TAGO_CADENCE_POLICY_V1 } from "./sourceFreshness.ts";
 import { routeTimetableView, timetableFreshness, timetableIndex } from "./officialTimetable.ts";
 import { nightGuardView } from "./nightGuard.ts";
+import { assessSnapshot } from "./liveFeedQuality.ts";
+import { aggregateRouteSchedule, assessOperatingEvidence, type LiveVehicleEvidence } from "./transitEvidence.ts";
+import { routeStops } from "./transitCatalog.ts";
 import { koreanDate } from "./serviceDay.ts";
 import type { StaticTransitData } from "./staticTransitData.ts";
 import { normalizePlaceQuery, PLACE_QUERY_MAX, PLACE_QUERY_MIN, PlaceSearchError, type KakaoPlaceSearch } from "./placeSearch.ts";
@@ -107,6 +110,8 @@ const ROUTE_NUMBER_PATTERN = /^[A-Za-z0-9가-힣-]{1,16}$/;
 /** An official timetable route number: "365", "202-1". */
 const TIMETABLE_ROUTE_PATTERN = /^[0-9]{1,4}(?:-[0-9]{1,2})?$/;
 /** A timetable timepoint name as published: Hangul, Latin, digits, spaces and a few marks. */
+/** Route numbers with more variants than this are not read live in one request (cost bound). */
+const OPERATING_STATUS_MAX_VARIANTS = 12;
 const TIMEPOINT_PATTERN = /^[0-9A-Za-z가-힣 ().·,-]{1,40}$/;
 const SESSION_ID_PATTERN = /^[A-Za-z0-9_-]{1,64}$/;
 
@@ -196,6 +201,7 @@ type Route =
   | "catalog"
   | "timetables"
   | "night_guard"
+  | "operating_status"
   | "places"
   | "session_create"
   | "session_read"
@@ -301,6 +307,7 @@ function resolvePath(path: string): Resolved | undefined {
   if (path === "/v1/catalog") return { route: "catalog", methods: ["GET"] };
   if (path === "/v1/timetables") return { route: "timetables", methods: ["GET"] };
   if (path === "/v1/night-guard") return { route: "night_guard", methods: ["GET"] };
+  if (path === "/v1/operating-status") return { route: "operating_status", methods: ["GET"] };
   if (path === "/v1/places") return { route: "places", methods: ["GET"] };
   if (path === "/v1/sessions") return { route: "session_create", methods: ["POST"] };
   if (path === "/v1/feedback") return { route: "feedback_submit", methods: ["POST"] };
@@ -443,6 +450,66 @@ async function dispatch(
     // a shared cache may hold it until then, and never longer than a minute.
     const seconds = view.validUntil === null ? 60 : Math.max(0, Math.min(60, Math.floor((Date.parse(view.validUntil) - at.getTime()) / 1_000)));
     return { response: json({ item: view }, 200, { "cache-control": `public, max-age=0, s-maxage=${seconds}, must-revalidate` }) };
+  }
+
+  if (resolved.route === "operating_status") {
+    // Route-number-level cross-check (`transitEvidence.ts`): NightGuard for
+    // every direction, live vehicles on every catalog variant (through the
+    // same 20 s cache as /v1/vehicles), feed-quality checks against each
+    // variant's stop list. Never "operating"; absence is never cancellation.
+    const catalog = dependencies.staticData?.catalog();
+    const timetables = dependencies.staticData?.timetables();
+    const holidays = dependencies.staticData?.holidays();
+    if (!catalog?.ok) throw apiError("CATALOG_UNAVAILABLE", catalog ? catalog.reason : "no catalog is deployed");
+    if (!timetables?.ok) throw apiError("TIMETABLES_UNAVAILABLE", timetables ? timetables.reason : "no timetable bundle is deployed");
+    if (!holidays?.ok) throw apiError("TIMETABLES_UNAVAILABLE", holidays ? holidays.reason : "no holiday calendar is deployed");
+    const routeNumber = requiredParam(url, "routeNo", TIMETABLE_ROUTE_PATTERN);
+    const variants = catalog.value.routes.filter((route) => route.routeNo === routeNumber);
+    const cityCode = catalog.value.source.cityCode;
+
+    let live: LiveVehicleEvidence;
+    let quality: ReturnType<typeof assessSnapshot> | null = null;
+    let at = support.now();
+    const liveScope = { variants: variants.length, read: 0, failed: 0 };
+    if (variants.length === 0 || variants.length > OPERATING_STATUS_MAX_VARIANTS) {
+      live = { status: "unavailable", vehicleCount: 0, receivedAt: null, observedAt: null, provenance: variants.length === 0 ? "no catalog variant for this route number" : `more than ${OPERATING_STATUS_MAX_VARIANTS} variants; not read` };
+    } else {
+      const reads = await Promise.allSettled(variants.map((variant) => provider.vehiclesResult({ routeId: variant.routeId, cityCode })));
+      const rows = reads.flatMap((read) => (read.status === "fulfilled" ? read.value.value : []));
+      liveScope.read = reads.filter((read) => read.status === "fulfilled").length;
+      liveScope.failed = reads.length - liveScope.read;
+      quality = assessSnapshot(rows, new Map(variants.map((variant) => [variant.routeId, routeStops(catalog.value, variant)])));
+      // Evaluate after the reads: a cache miss stamps receivedAt when its network read finishes.
+      at = support.now();
+      // Receipt of an empty answer: a cached answer may be up to one TTL old, so assume the oldest.
+      const anyCached = reads.some((read) => read.status === "fulfilled" && read.value.cache !== "miss");
+      const emptyReceipt = new Date(at.getTime() - (anyCached ? config.cachePolicy.vehicleTtlMs : 0)).toISOString();
+      const receivedAt = rows.length > 0 ? latestReceivedAt(rows) ?? null : liveScope.read > 0 ? emptyReceipt : null;
+      const status: LiveVehicleEvidence["status"] = quality.clean > 0 ? "reported" : liveScope.failed > 0 ? "unavailable" : rows.length > 0 ? "reported" : "none_reported";
+      live = { status, vehicleCount: rows.length, suspectCount: quality.suspect, receivedAt, observedAt: null, provenance: `TAGO getRouteAcctoBusLcList, ${liveScope.read}/${variants.length} variants read through TAPSO's ${Math.round(config.cachePolicy.vehicleTtlMs / 1_000)} s cache` };
+    }
+    // Schedule and live are evaluated at the same instant, after the live reads.
+    const schedule = nightGuardView(timetables.value, holidays.value, routeNumber, at);
+    const aggregate = aggregateRouteSchedule(schedule.entries);
+    const assessment = assessOperatingEvidence({ routeNo: routeNumber, schedule: aggregate, live, now: at, scheduleProvenance: `official timetable bundle ${schedule.provenance.bundleVersion} (OFFICIAL_DATED ${schedule.asOf})` });
+    return {
+      response: json({
+        item: {
+          schemaVersion: "tapso-operating-status-v1",
+          routeNo: routeNumber,
+          scope: "route_number",
+          evaluatedAt: at.toISOString(),
+          assessment,
+          schedule: { localDate: schedule.localDate, localTime: schedule.localTime, asOf: schedule.asOf, freshness: schedule.freshness, entries: schedule.entries },
+          live: { ...liveScope, feedQuality: quality ? { checked: quality.checked, suspect: quality.suspect, byIssue: quality.byIssue } : null },
+          limits: [
+            "route_number_scope: which timetable direction a live variant runs is not known (no verified crosswalk)",
+            "provider_observation_time_unavailable",
+            "a reported vehicle is not the rider's bus and not an arrival time",
+          ],
+        },
+      }, 200, sharedCacheControl(config.cachePolicy.vehicleTtlMs)),
+    };
   }
 
   if (resolved.route === "cities") {

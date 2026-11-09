@@ -9,7 +9,7 @@ Date: 2026-11-08 (Asia/Seoul). No live provider call was made in this audit (`UN
 | TAGO `BusRouteInfoInqireService` (routes, ordered stops) | data.go.kr 15098529 (schema inspected, `docs/DATA_SOURCES.md`) | Public Data Portal key, server-side only | Static-ish; no version field | City 39; 989 variants, 4,338 stops (catalog `794f3bcb831d783e`, `OBSERVED` 2026-10-03) | Unfiltered list HTTP 504; number search not exact; 3 variants with one-stop lists; 32 duplicated stop lists under two IDs | Quota `UNKNOWN` | Runtime + weekly catalog build |
 | TAGO `BusLcInfoInqireService` (vehicle positions) | data.go.kr 15098533 | same | **No provider observation timestamp** (`VERIFIED` 2026-09-11); TAPSO records receipt time only | Jeju verified on Route 365 and a two-probe all-route audit | Timeouts, 5xx, empty pages; cadence must be inferred from content change | Quota `UNKNOWN` | Runtime, sessions, passive collection |
 | TAGO `getRouteInfoIem` (first/last bus, headway) | same family | same | — | **Empty for Jeju**: no first/last departure for 58 variants of 102, 202, 282, 365, 800 (`VERIFIED` 2026-10-01) | — | — | Read, answers "unknown" |
-| TAGO `ArvlInfoInqireService` (stop arrival predictions) | data.go.kr 15098530 | Needs separate approval (`PRODUCT_V3_JEJU_NATIVE.md:154–157`) | `UNKNOWN` | Jeju coverage `UNKNOWN` | `UNKNOWN` | `UNKNOWN` | **Not used** |
+| TAGO `ArvlInfoInqireService` (stop arrival predictions) | data.go.kr 15098530, contract read 2026-11-08 (`OFFICIAL_DATED`, page modified 2023-07-12): one named operation `getSttnAcctoArvlPrearngeInfoList` | 이용허락범위 제한 없음, free; needs activation on the key | "실시간"; rows carry **no vehicle number and no computation time** (`arrtime` in seconds from an unstated instant) | Jeju coverage `UNKNOWN`: probe `BLOCKED` (no repository `TAGO_SERVICE_KEY`, run 42441078221) | `UNKNOWN` | `UNKNOWN` | Parser only (`tagoArrival.ts`), not in any passenger path |
 | Jeju BIS timetable files | data.go.kr 3043887; `bus.jeju.go.kr/publicTrafficInformation/generalBusSchedule` | 이용허락범위 제한 없음 (`REPORTED-OFFICIAL`) | Dated import; bundle `retrievedOn` 2026-10-03; per-sheet 시행일 | 235 census entries: 201 parsed, 30 source conflicts, 4 without a timetable | Self-contradictions; `;` typos; times running backwards; 85 % of services carry no day label | Free | `OFFICIAL_DATED`, served by `/v1/timetables` and `/v1/night-guard` |
 | Jeju BIS live arrival pages | site only | No documented API | — | — | — | — | **Not used** (undocumented endpoints are not dependencies) |
 | data.go.kr 15074254–15074262 (Jeju route/stop basics, ridership) | Portal descriptions only | Approval by review | — | No timetable field | No machine-readable contract published | Free | Not used |
@@ -58,9 +58,16 @@ TAGO route, location and route-info services are one provider family; they are n
 
 Not built. Preconditions from the spec are unmet: no authorised stop-arrival source, no observation timestamps, no independent ground truth. Required before any ETA work: authorise dataset 15098530, verify Jeju coverage and timestamp semantics, and collect ground truth under `docs/validation/TAPSO_V4_ACCURACY_PROTOCOL.md`. Metrics to report then: median and P90 absolute error, interval coverage, failure rate.
 
-## 6. Open data actions
+## 6. Implemented on `claude/v4-live-evidence`
+
+- **Variant ↔ timetable crosswalk: not buildable from names.** 0 of 389 served timetable services have their timepoints as an exact ordered subsequence of any same-number catalog variant's stop names (`OBSERVED` 2026-11-08). Timetables say "공항"; TAGO says "제주국제공항2(일주동로, 516도로)". Any match would be a guess, so cross-checks run at route-number scope (`GET /v1/operating-status`).
+- **Live feed quality** (`liveFeedQuality.ts`): per-row contradictions against the variant's own stop list, plus checks over receipts. A first distance rule produced false positives on long rural gaps; the live observation found them and the rule was replaced (`docs/validation/TAPSO_V4_LIVE_OBSERVATION_2026-11-08.md`).
+- **Route-number assessment**: NightGuard folded over directions (`aggregateRouteSchedule`) × live vehicles on every variant × feed quality. Suspect rows are never counted. A failed read is `UNAVAILABLE`, never "no bus".
+- **Arrival predictions**: contract verified, parser fail-closed, probe ready. Blocked on the key.
+
+## 7. Open data actions
 
 1. Merge a refreshed timetable import before 2026-12-31 (F-02).
-2. Owner: request data.go.kr approval for 15098530 and record its terms.
-3. Build a route variant ↔ timetable direction crosswalk (needed before live evidence and timetable entries can be joined per direction).
+2. Owner: activate 15098530 on the TAGO key on data.go.kr, and add the key as repository secret `TAGO_SERVICE_KEY`. Then run `.github/workflows/arrival-probe.yml`.
+3. A reviewed, hand-made variant ↔ timetable direction crosswalk (names cannot produce one). Until it exists, cross-checks stay at route-number scope.
 4. Identify an official, citable notice source; record notices by hand as reviewed `OfficialNotice` records until one exists.

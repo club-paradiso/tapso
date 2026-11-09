@@ -21,7 +21,9 @@ Non-goals: automatic vehicle identification (gate not met); ETA predictions (no 
 | PR | Scope | Completion criterion | Status |
 |---|---|---|---|
 | 1 + 2 (combined, this branch) | Evidence engine layer 1 (`transitEvidence.ts`), NightGuard (`nightGuard.ts`, `GET /v1/night-guard`), offline/lost outrank estimate (Swift core), six V4 documents | API suite green (1018/1018 locally), typecheck clean, CI green incl. `transit-core` and `ios` | Implemented; awaiting CI and review |
-| 3 | Matching: real-base replay for Issue #74 families; variant ↔ timetable-direction crosswalk; no policy change without counterfactual evidence | Gate re-run with committed result; crosswalk validated on 365 + one circular route | Not started |
+| 3a (`claude/v4-live-evidence`, base #199) | Route-number operating status, live feed quality, arrival contract + probe, live observation | API suite green; one bounded live observation committed | Implemented; awaiting CI and review |
+| 3b | Matching: real-base replay for Issue #74 families; reviewed variant ↔ timetable crosswalk; no policy change without counterfactual evidence | Gate re-run with committed result | Not started: the real-base replay needs the vault raw streams, and the crosswalk needs a human review (0/389 name matches) |
+| 4a (`claude/v4-ios-trust-ux`, base #199, PR #200) | U-02, U-03/04/05, U-06, U-08, U-11, NightGuard card | CI `ios` and `transit-core` green | Implemented; awaiting CI |
 | 4 | iOS trust UX: U-02, U-03, U-04, U-05, U-06, U-08, U-09, U-11; NightGuard card in the return screen | Snapshot evidence in ko/en at default and AX5; VoiceOver checklist | Not started; needs macOS CI snapshots |
 | 5 | Docs drift (system audit F-09); timetable-age release-gate warning; performance follow-ups | Docs match code; gate warns at > 60 days | Not started |
 
@@ -50,6 +52,10 @@ swift test --package-path packages/transit-core   # macOS / CI only
 ## 6. Progress log
 
 - 2026-11-08: baseline 988/988 API tests (37.7 s). Implemented NightGuard, evidence layer, endpoint, Swift fix; 1018/1018 (36.5 s). Figma read-only check: no NightGuard frame; return rows designed only in the populated state. PR opened as draft (link in the PR list of this branch).
+
+Merge order: #199, then #200 and the live-evidence PR in either order (they touch different files except `docs/`). Each is based on #199's branch and is retargeted to `main` when #199 merges.
+
+- 2026-11-08 (later): live observation (552 reads, 0 failures) found and fixed a false-positive feed-quality rule. The arrival probe is blocked by a missing repository secret. 0/389 timetable services match catalog names, so the crosswalk is not automatable.
 
 ## 7. Risks and next action
 

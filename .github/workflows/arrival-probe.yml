@@ -1,0 +1,34 @@
+name: Arrival probe
+
+# Does TAGO's stop arrival service (data.go.kr 15098530) answer for Jeju, and
+# do its predictions agree with live positions? Read-only; prints counts and
+# route numbers only. Uses the repository's TAGO key; prints BLOCKED without it.
+on:
+  workflow_dispatch:
+  push:
+    paths:
+      - .github/workflows/arrival-probe.yml
+      - scripts/data-sources/arrival-probe.ts
+
+permissions:
+  contents: read
+
+concurrency:
+  group: arrival-probe
+  cancel-in-progress: false
+
+jobs:
+  probe:
+    runs-on: ubuntu-latest
+    timeout-minutes: 10
+    steps:
+      - uses: actions/checkout@v4
+        with:
+          persist-credentials: false
+      - uses: actions/setup-node@v4
+        with:
+          node-version: 22
+      - name: Jeju stop arrival predictions vs live positions
+        env:
+          TAGO_SERVICE_KEY: ${{ secrets.TAGO_SERVICE_KEY }}
+        run: node --experimental-strip-types scripts/data-sources/arrival-probe.ts

@@ -48,6 +48,10 @@
       "destination": "/api/v1/night-guard"
     },
     {
+      "source": "/v1/operating-status",
+      "destination": "/api/v1/operating-status"
+    },
+    {
       "source": "/v1/catalog",
       "destination": "/api/v1/catalog"
     },

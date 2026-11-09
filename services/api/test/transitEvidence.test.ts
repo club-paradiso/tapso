@@ -11,6 +11,7 @@ import {
   LIVE_RECEIPT_MAX_AGE_SECONDS,
   OfficialNoticeError,
   activeNotices,
+  aggregateRouteSchedule,
   assessOperatingEvidence,
   validateOfficialNotice,
   type LiveVehicleEvidence,
@@ -141,4 +142,54 @@ test("notice records must expire, cite an https source and be reviewed", () => {
   assert.throws(() => validateOfficialNotice({ ...notice(), source: { ...notice().source, url: "http://insecure.invalid" } }), /https/);
   assert.throws(() => validateOfficialNotice({ ...notice(), reviewedBy: "" }), /reviewed/);
   assert.throws(() => validateOfficialNotice({ ...notice(), kind: "rumour" }), /not one TAPSO reads/);
+});
+
+test("suspect rows are reported but never counted: only suspects means unknown, not 'no bus'", () => {
+  const onlySuspect = assessOperatingEvidence({ routeNo: "999", schedule: schedule(), live: live({ vehicleCount: 2, suspectCount: 2 }), now });
+  assert.equal(onlySuspect.claim, "unknown");
+  assert.ok(onlySuspect.reasons.includes("all_reported_vehicles_suspect"));
+
+  const mixed = assessOperatingEvidence({ routeNo: "999", schedule: schedule(), live: live({ vehicleCount: 2, suspectCount: 1 }), now });
+  assert.equal(mixed.claim, "vehicle_reported");
+  assert.ok(mixed.reasons.includes("some_reported_vehicles_suspect"));
+});
+
+test("route-number aggregate: any direction with departures left wins; all passed means passed; none answering is null", () => {
+  const remain = schedule({ next: { table: "23:40", clock: "23:40", date: "2026-11-13", at: "합성A", minutesFromNow: 40 } });
+  const sooner = schedule({ direction: "합성B→합성A", next: { table: "23:10", clock: "23:10", date: "2026-11-13", at: "합성B", minutesFromNow: 10 } });
+  const passed = schedule({ direction: "합성C→합성D", status: "last_scheduled_departed", next: null });
+  const unknown = schedule({ direction: "합성E", status: "unknown", evidence: "UNKNOWN", next: null });
+
+  const mixed = aggregateRouteSchedule([remain, sooner, passed, unknown])!;
+  assert.equal(mixed.status, "scheduled_departures_remain");
+  assert.equal(mixed.next?.minutesFromNow, 10, "the earliest next departure");
+  assert.ok(mixed.reasons.includes("route_number_aggregate"));
+
+  const allPassed = aggregateRouteSchedule([passed, { ...passed, direction: "x", last: { ...passed.last!, minutesFromNow: -5 } }])!;
+  assert.equal(allPassed.status, "last_scheduled_departed");
+  assert.equal(allPassed.last?.minutesFromNow, 20, "the latest last departure is kept");
+
+  assert.equal(aggregateRouteSchedule([unknown]), null);
+  assert.equal(aggregateRouteSchedule([passed, schedule({ direction: "y", status: "uncertain", next: null })])?.status, "uncertain");
+});
+
+test("route-number aggregate: an unresolved direction keeps 'last departed' from being claimed for the whole route", () => {
+  const passed = schedule({ direction: "합성C→합성D", status: "last_scheduled_departed", next: null });
+  const conflicted = schedule({ direction: "합성D→합성C", status: "unknown", evidence: "CONFLICTED", next: null, last: null });
+  const unknown = schedule({ direction: "합성E", status: "unknown", evidence: "UNKNOWN", next: null, last: null });
+
+  const withConflict = aggregateRouteSchedule([passed, conflicted])!;
+  assert.equal(withConflict.status, "uncertain");
+  assert.ok(withConflict.reasons.includes("direction_unresolved"));
+  assert.equal(aggregateRouteSchedule([passed, unknown])!.status, "uncertain");
+  // and the evidence engine then does not say service has ended
+  assert.equal(assessOperatingEvidence({ routeNo: "999", schedule: withConflict, live: live({ status: "none_reported", vehicleCount: 0 }), now }).claim, "unknown");
+
+  // A verified pending departure still establishes that service remains...
+  const remain = schedule();
+  assert.equal(aggregateRouteSchedule([remain, conflicted])!.status, "scheduled_departures_remain");
+  // ...but not that the whole route is before its first departure, which the unresolved direction may not be.
+  const before = schedule({ status: "before_first_departure" });
+  assert.equal(aggregateRouteSchedule([before, conflicted])!.status, "scheduled_departures_remain");
+  assert.equal(aggregateRouteSchedule([before, { ...before, direction: "x" }])!.status, "before_first_departure");
 });
