@@ -105,6 +105,72 @@ export function predictionAgreesWithPositions(
   return vehicleSequences.some((sequence) => stopSequence - sequence === prediction.stopsAway) ? "consistent" : "inconsistent";
 }
 
+/** A catalog variant with the live stop sequences TAGO reports on it now. */
+export interface ArrivalProbeCandidate {
+  routeId: string;
+  routeNo: string;
+  stops: Array<{ stopId: string; name: string; sequence: number }>;
+  vehicleSequences: number[];
+}
+
+export interface ArrivalProbeTarget {
+  routeId: string;
+  routeNo: string;
+  stopId: string;
+  stopName: string;
+  stopSequence: number;
+  /** The reported bus the target is placed ahead of. */
+  vehicleSequence: number;
+}
+
+/**
+ * Stops to query for an arrival probe: a few stops ahead of a bus TAGO reports
+ * on the variant right now, so a prediction for that variant is expected and
+ * its `stopsAway` can be checked against the position. A variant with no
+ * reported bus is not probed (a fixed sample at an empty moment tests
+ * nothing: 2026-11-09 06:13, 213 rows, 0 comparable). The bus with the most
+ * stops ahead is used; targets never wrap past the last stop. One variant of
+ * every route number comes before a second of any; bounded per route number
+ * and overall. Pure.
+ */
+export function chooseArrivalProbeTargets(
+  candidates: ArrivalProbeCandidate[],
+  options: { offsets?: number[]; maxTargets?: number; maxVariantsPerRouteNo?: number } = {},
+): ArrivalProbeTarget[] {
+  const offsets = options.offsets ?? [2, 5];
+  const maxTargets = options.maxTargets ?? 6;
+  const maxVariantsPerRouteNo = options.maxVariantsPerRouteNo ?? 2;
+  const targets: ArrivalProbeTarget[] = [];
+  const variantsPerRouteNo = new Map<string, number>();
+  // One variant of every route number before a second of any: order running
+  // variants by their rank within their route number, keeping catalog order.
+  const rankSeen = new Map<string, number>();
+  const ranked = candidates.map((candidate, index) => {
+    const running = candidate.vehicleSequences.some((sequence) => Number.isInteger(sequence) && sequence >= 1);
+    const rank = running ? (rankSeen.get(candidate.routeNo) ?? 0) : Number.POSITIVE_INFINITY;
+    if (running) rankSeen.set(candidate.routeNo, rank + 1);
+    return { candidate, rank, index };
+  }).sort((left, right) => left.rank - right.rank || left.index - right.index);
+  for (const { candidate } of ranked) {
+    if (targets.length >= maxTargets) break;
+    if ((variantsPerRouteNo.get(candidate.routeNo) ?? 0) >= maxVariantsPerRouteNo) continue;
+    const last = Math.max(0, ...candidate.stops.map((stop) => stop.sequence));
+    const valid = candidate.vehicleSequences.filter((sequence) => Number.isInteger(sequence) && sequence >= 1 && sequence <= last);
+    if (valid.length === 0) continue;
+    const vehicleSequence = Math.min(...valid);
+    const chosen: ArrivalProbeTarget[] = [];
+    for (const offset of offsets) {
+      const stop = candidate.stops.find((candidateStop) => candidateStop.sequence === vehicleSequence + offset);
+      if (!stop || chosen.some((target) => target.stopId === stop.stopId)) continue;
+      chosen.push({ routeId: candidate.routeId, routeNo: candidate.routeNo, stopId: stop.stopId, stopName: stop.name, stopSequence: stop.sequence, vehicleSequence });
+    }
+    if (chosen.length === 0) continue;
+    variantsPerRouteNo.set(candidate.routeNo, (variantsPerRouteNo.get(candidate.routeNo) ?? 0) + 1);
+    targets.push(...chosen.slice(0, maxTargets - targets.length));
+  }
+  return targets;
+}
+
 function record(value: unknown): Record<string, unknown> | undefined {
   return typeof value === "object" && value !== null && !Array.isArray(value) ? (value as Record<string, unknown>) : undefined;
 }

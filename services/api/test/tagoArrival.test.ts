@@ -7,7 +7,7 @@
 import assert from "node:assert/strict";
 import test from "node:test";
 
-import { ARRIVAL_ENDPOINT, parseArrivalResponse, predictionAgreesWithPositions } from "../src/tagoArrival.ts";
+import { ARRIVAL_ENDPOINT, chooseArrivalProbeTargets, parseArrivalResponse, predictionAgreesWithPositions, type ArrivalProbeCandidate } from "../src/tagoArrival.ts";
 
 const envelope = (items: unknown, totalCount = 1, resultCode = "00") => ({
   response: { header: { resultCode, resultMsg: "OK" }, body: { items, numOfRows: 10, pageNo: 1, totalCount } },
@@ -52,4 +52,50 @@ test("cross-check with positions: agreement is consistency between two provider 
   assert.equal(predictionAgreesWithPositions({ stopsAway: 3 }, 20, [17, 9]), "consistent");
   assert.equal(predictionAgreesWithPositions({ stopsAway: 3 }, 20, [18]), "inconsistent");
   assert.equal(predictionAgreesWithPositions({ stopsAway: 3 }, 20, []), "no_positions");
+});
+
+// SYNTHETIC variants: invented route IDs and stop IDs.
+const variant = (routeId: string, routeNo: string, stopCount: number, vehicleSequences: number[]): ArrivalProbeCandidate => ({
+  routeId,
+  routeNo,
+  stops: Array.from({ length: stopCount }, (_, index) => ({ stopId: `${routeId}-S${index + 1}`, name: `합성정류장${index + 1}`, sequence: index + 1 })),
+  vehicleSequences,
+});
+
+test("probe targets sit just ahead of a reported bus, so a prediction for that variant is expected", () => {
+  const targets = chooseArrivalProbeTargets([variant("SYN-A", "999", 30, [10, 4])]);
+  // The bus with the most room ahead (sequence 4) is used: stops 2 and 5 ahead of it.
+  assert.deepEqual(targets.map((target) => [target.routeId, target.stopSequence, target.vehicleSequence]), [["SYN-A", 6, 4], ["SYN-A", 9, 4]]);
+  assert.equal(targets[0]!.stopId, "SYN-A-S6");
+});
+
+test("variants with no reported bus are not probed; none running gives no targets rather than empty probes", () => {
+  assert.deepEqual(chooseArrivalProbeTargets([variant("SYN-A", "999", 30, []), variant("SYN-B", "999", 30, [])]), []);
+  const targets = chooseArrivalProbeTargets([variant("SYN-A", "999", 30, []), variant("SYN-B", "998", 30, [3])]);
+  assert.deepEqual([...new Set(targets.map((target) => target.routeId))], ["SYN-B"]);
+});
+
+test("a target never wraps past the last stop, and bad sequences are ignored", () => {
+  const nearEnd = chooseArrivalProbeTargets([variant("SYN-A", "999", 12, [9])]);
+  assert.deepEqual(nearEnd.map((target) => target.stopSequence), [11], "seq 9 + 5 = 14 is past the end and dropped");
+  assert.deepEqual(chooseArrivalProbeTargets([variant("SYN-A", "999", 12, [0, -1, 1.5, 99, Number.NaN])]), []);
+});
+
+test("the sample is bounded: at most two variants per route number and six targets overall", () => {
+  const many = ["1", "2", "3", "4"].map((suffix) => variant(`SYN-${suffix}`, "999", 40, [1]));
+  const sameNumber = chooseArrivalProbeTargets(many);
+  assert.deepEqual([...new Set(sameNumber.map((target) => target.routeId))], ["SYN-1", "SYN-2"]);
+
+  const spread = chooseArrivalProbeTargets(["1", "2", "3", "4", "5"].map((suffix) => variant(`SYN-${suffix}`, `99${suffix}`, 40, [1])));
+  assert.equal(spread.length, 6);
+});
+
+test("the sample spreads across route numbers before taking a second variant of any", () => {
+  const targets = chooseArrivalProbeTargets([
+    variant("SYN-A1", "999", 40, [1]),
+    variant("SYN-A2", "999", 40, [1]),
+    variant("SYN-B1", "998", 40, [1]),
+    variant("SYN-C1", "997", 40, [1]),
+  ]);
+  assert.deepEqual([...new Set(targets.map((target) => target.routeId))], ["SYN-A1", "SYN-B1", "SYN-C1"]);
 });
