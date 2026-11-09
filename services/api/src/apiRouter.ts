@@ -1331,6 +1331,9 @@ const STATUS_BY_CODE: Record<string, number> = {
   PROVIDER_RESPONSE_INVALID: 502,
   // The upstream feed could not be reached or answered with an HTTP error.
   PROVIDER_UNAVAILABLE: 502,
+  // The upstream feed refused the request for its rate limit (TAGO HTTP 429):
+  // temporary, with Retry-After. Not "no bus", and not TAPSO's own RATE_LIMITED.
+  PROVIDER_RATE_LIMITED: 503,
   // The upstream feed did not answer within TAPSO's deadline. Distinct from
   // INTERNAL_ERROR (TAPSO broke) and from an empty vehicle list (no bus).
   PROVIDER_TIMEOUT: 504,

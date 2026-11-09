@@ -67,6 +67,7 @@ final class TapsoAPIClientTests: XCTestCase {
             (503, #"{"error":"SESSIONS_UNAVAILABLE","message":"x"}"#, .sessionsUnavailable),
             (504, #"{"error":"PROVIDER_TIMEOUT","message":"x"}"#, .providerTimeout),
             (502, #"{"error":"PROVIDER_UNAVAILABLE","message":"x"}"#, .providerUnavailable),
+            (503, #"{"error":"PROVIDER_RATE_LIMITED","message":"x"}"#, .providerUnavailable),
             (502, #"{"error":"PROVIDER_RESPONSE_INVALID","message":"x"}"#, .providerInvalid),
             (500, #"{"error":"INTERNAL_ERROR","message":"internal error"}"#, .server),
             (410, #"{"error":"SESSION_EXPIRED","message":"x"}"#, .sessionExpired),

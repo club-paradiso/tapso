@@ -249,6 +249,8 @@ final class LiveSessionInterpreterTests: XCTestCase {
         XCTAssertEqual(TransitAPIFailure.classify(status: 503, code: "BLOCKED_BY_CREDENTIALS"), .serviceUnavailable)
         XCTAssertEqual(TransitAPIFailure.classify(status: 504, code: "PROVIDER_TIMEOUT"), .providerTimeout)
         XCTAssertEqual(TransitAPIFailure.classify(status: 502, code: "PROVIDER_UNAVAILABLE"), .providerUnavailable)
+        XCTAssertEqual(TransitAPIFailure.classify(status: 503, code: "PROVIDER_RATE_LIMITED"), .providerUnavailable, "the feed is busy, not this rider rate-limited")
+        XCTAssertTrue(TransitAPIFailure.classify(status: 503, code: "PROVIDER_RATE_LIMITED").isTransient)
         XCTAssertEqual(TransitAPIFailure.classify(status: 502, code: "PROVIDER_RESPONSE_INVALID"), .providerInvalid)
         XCTAssertEqual(TransitAPIFailure.classify(status: 404, code: "SESSION_NOT_FOUND"), .sessionNotFound)
         XCTAssertEqual(TransitAPIFailure.classify(status: 410, code: "SESSION_EXPIRED"), .sessionExpired)
