@@ -109,3 +109,16 @@ test("the offset says by how many stops a prediction differs from the nearest co
   assert.equal(predictionOffsetStops({ stopsAway: 2 }, 12, [12, 14]), null);
   assert.equal(predictionOffsetStops({ stopsAway: 2 }, 12, []), null);
 });
+
+test("a variant whose bus gives no target does not use up its route number's first turn", () => {
+  // Codex review on #205: buses at the last stop of B1 and C1 give no targets; C must still be sampled.
+  const targets = chooseArrivalProbeTargets([
+    variant("SYN-A1", "999", 40, [1]),
+    variant("SYN-A2", "999", 40, [1]),
+    variant("SYN-B1", "998", 40, [40]),
+    variant("SYN-B2", "998", 40, [1]),
+    variant("SYN-C1", "997", 40, [40]),
+    variant("SYN-C2", "997", 40, [1]),
+  ]);
+  assert.deepEqual([...new Set(targets.map((target) => target.routeId))], ["SYN-A1", "SYN-B2", "SYN-C2"]);
+});
