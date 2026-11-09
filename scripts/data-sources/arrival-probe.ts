@@ -11,17 +11,26 @@
  *
  * Positions come from TAPSO's public `/v1/vehicles` at the same moment, so a
  * comparison is between two TAGO services, not against ground truth.
+ *
+ * The sample is chosen when the probe runs (`chooseArrivalProbeTargets`): for
+ * the candidate route numbers (ROUTES, default 365,281,132,785,791) every
+ * catalog variant's positions are read one request at a time (parallel bursts
+ * draw TAGO HTTP 429), and only variants with a bus reported now are probed,
+ * at stops 2 and 5 ahead of it. A fixed sample tested nothing at 06:13 on
+ * 2026-11-09 (213 rows, 0 comparable). With no bus on any candidate it prints
+ * NO_RUNNING_SAMPLE and makes no arrival call.
  */
 
 import { readFileSync } from "node:fs";
 
-import { ARRIVAL_ENDPOINT, parseArrivalResponse, predictionAgreesWithPositions } from "../../services/api/src/tagoArrival.ts";
+import { ARRIVAL_ENDPOINT, chooseArrivalProbeTargets, parseArrivalResponse, predictionAgreesWithPositions, predictionOffsetStops, type ArrivalProbeCandidate } from "../../services/api/src/tagoArrival.ts";
 import { routeStops, validateCatalog } from "../../services/api/src/transitCatalog.ts";
 
 const key = process.env.TAGO_SERVICE_KEY?.trim();
 const base = process.env.TAPSO_API_BASE ?? "https://tapso-api.vercel.app";
 const rounds = Number(process.env.ROUNDS ?? "3");
 const pauseMs = Number(process.env.PAUSE_MS ?? "45000");
+const routeNumbers = (process.env.ROUTES ?? "365,281,132,785,791").split(",").map((value) => value.trim()).filter(Boolean);
 
 if (!key) {
   console.log("BLOCKED: TAGO_SERVICE_KEY is not set; no call made.");
@@ -30,17 +39,6 @@ if (!key) {
 
 const catalog = validateCatalog(JSON.parse(readFileSync(new URL("../../services/api/data/jeju-transit-catalog.json", import.meta.url), "utf8")));
 const cityCode = catalog.source.cityCode;
-// Sample stops spread along two well-observed routes (catalog, not invented).
-const sample = [
-  ["JEB405136521", [5, 15, 25, 35]],
-  ["JEB405136522", [10, 30]],
-] as const;
-const probes = sample.flatMap(([routeId, sequences]) => {
-  const variant = catalog.routes.find((route) => route.routeId === routeId);
-  if (!variant) return [];
-  const stops = routeStops(catalog, variant);
-  return sequences.flatMap((sequence) => stops.filter((stop) => stop.sequence === sequence).map((stop) => ({ routeId, stop })));
-});
 
 async function arrivals(stopId: string) {
   const url = new URL(ARRIVAL_ENDPOINT);
@@ -98,7 +96,34 @@ async function vehicleSequences(routeId: string): Promise<number[] | null> {
   console.log(`KEY FORMAT: contains percent-escapes (looks like the Encoding key): ${looksEncoded ? "yes" : "no"}; length ${key.length}`);
 }
 
+// Choose the sample now: variants of the candidate route numbers with a bus reported at this moment.
+const candidates: ArrivalProbeCandidate[] = [];
+let positionReadsFailed = 0;
+for (const variant of catalog.routes.filter((route) => routeNumbers.includes(route.routeNo))) {
+  const positions = await vehicleSequences(variant.routeId); // one at a time
+  if (positions === null) positionReadsFailed += 1;
+  candidates.push({
+    routeId: variant.routeId,
+    routeNo: variant.routeNo,
+    stops: routeStops(catalog, variant).map((stop) => ({ stopId: stop.stopId, name: stop.name, sequence: stop.sequence })),
+    vehicleSequences: positions ?? [],
+  });
+}
+const targets = chooseArrivalProbeTargets(candidates);
+const running = candidates.filter((candidate) => candidate.vehicleSequences.length > 0).length;
+console.log(`SAMPLE at ${new Date().toISOString()}: route numbers ${routeNumbers.join(" ")}; ${candidates.length} variants read, ${positionReadsFailed} reads failed, ${running} with a bus reported; ${targets.length} target stops`);
+for (const target of targets) console.log(`  ${target.routeNo} ${target.routeId}: ${target.stopId} (${target.stopName}, seq ${target.stopSequence}), ${target.stopSequence - target.vehicleSequence} stops ahead of a bus at seq ${target.vehicleSequence}`);
+if (targets.length === 0) {
+  console.log(positionReadsFailed === candidates.length
+    ? "NO_RUNNING_SAMPLE: every position read failed; nothing can be compared, no arrival call made"
+    : "NO_RUNNING_SAMPLE: no bus reported on any candidate variant now; no arrival call made");
+  process.exit(0);
+}
+const probes = targets.map((target) => ({ routeId: target.routeId, stop: { stopId: target.stopId, name: target.stopName, sequence: target.stopSequence } }));
+
 const totals = { calls: 0, answered: 0, rows: 0, rejected: 0, consistent: 0, inconsistent: 0, noPositions: 0, otherVariant: 0 };
+/** Prediction minus position-implied stops, per compared row: how far apart the two services are, not only whether. */
+const offsets: Record<string, number> = {};
 for (let round = 1; round <= rounds; round += 1) {
   console.log(`\n## round ${round} at ${new Date().toISOString()}`);
   for (const { routeId, stop } of probes) {
@@ -115,14 +140,17 @@ for (let round = 1; round <= rounds; round += 1) {
     const mine = result.parse.rows.filter((row) => row.routeId === routeId);
     totals.otherVariant += result.parse.rows.length - mine.length;
     const verdicts = mine.map((row) => (positions === null ? "no_positions" : predictionAgreesWithPositions(row, stop.sequence, positions)));
+    const rowOffsets = positions === null ? [] : mine.map((row) => predictionOffsetStops(row, stop.sequence, positions));
+    for (const offset of rowOffsets) offsets[offset === null ? "none_behind" : String(offset)] = (offsets[String(offset ?? "none_behind")] ?? 0) + 1;
     for (const verdict of verdicts) {
       if (verdict === "consistent") totals.consistent += 1;
       else if (verdict === "inconsistent") totals.inconsistent += 1;
       else totals.noPositions += 1;
     }
-    console.log(`${stop.stopId} (${stop.name}, seq ${stop.sequence} of ${routeId}): HTTP ${result.http}, totalCount ${result.parse.totalCount}, rows ${result.parse.rows.length}, rejected ${result.parse.rejected.length}; route numbers ${routes.join(" ") || "none"}; this variant: ${mine.map((row) => `${row.stopsAway} stops/${row.providerEstimateSeconds}s`).join(", ") || "none"}; positions on this variant ${positions === null ? "unavailable" : positions.length}; agreement ${verdicts.join(", ") || "n/a"}`);
+    console.log(`${stop.stopId} (${stop.name}, seq ${stop.sequence} of ${routeId}): HTTP ${result.http}, totalCount ${result.parse.totalCount}, rows ${result.parse.rows.length}, rejected ${result.parse.rejected.length}; route numbers ${routes.join(" ") || "none"}; this variant: ${mine.map((row) => `${row.stopsAway} stops/${row.providerEstimateSeconds}s`).join(", ") || "none"}; positions on this variant ${positions === null ? "unavailable" : positions.length}; agreement ${verdicts.join(", ") || "n/a"}; offset ${rowOffsets.map((offset) => (offset === null ? "none_behind" : offset > 0 ? `+${offset}` : String(offset))).join(", ") || "n/a"}`);
   }
   if (round < rounds) await new Promise((resolve) => setTimeout(resolve, pauseMs));
 }
 console.log(`\nTOTALS ${JSON.stringify(totals)}`);
+console.log(`OFFSETS (prediction minus position-implied stops; + means the prediction counts more stops) ${JSON.stringify(offsets)}`);
 console.log(totals.answered === 0 ? "VERDICT: no call answered usable JSON; Jeju coverage not established" : totals.rows === 0 ? "VERDICT: answered, but no prediction rows for the sampled Jeju stops" : "VERDICT: Jeju predictions returned; see agreement counts (two provider services, not ground truth)");
