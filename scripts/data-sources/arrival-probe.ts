@@ -23,7 +23,7 @@
 
 import { readFileSync } from "node:fs";
 
-import { ARRIVAL_ENDPOINT, chooseArrivalProbeTargets, parseArrivalResponse, predictionAgreesWithPositions, type ArrivalProbeCandidate } from "../../services/api/src/tagoArrival.ts";
+import { ARRIVAL_ENDPOINT, chooseArrivalProbeTargets, parseArrivalResponse, predictionAgreesWithPositions, predictionOffsetStops, type ArrivalProbeCandidate } from "../../services/api/src/tagoArrival.ts";
 import { routeStops, validateCatalog } from "../../services/api/src/transitCatalog.ts";
 
 const key = process.env.TAGO_SERVICE_KEY?.trim();
@@ -122,6 +122,8 @@ if (targets.length === 0) {
 const probes = targets.map((target) => ({ routeId: target.routeId, stop: { stopId: target.stopId, name: target.stopName, sequence: target.stopSequence } }));
 
 const totals = { calls: 0, answered: 0, rows: 0, rejected: 0, consistent: 0, inconsistent: 0, noPositions: 0, otherVariant: 0 };
+/** Prediction minus position-implied stops, per compared row: how far apart the two services are, not only whether. */
+const offsets: Record<string, number> = {};
 for (let round = 1; round <= rounds; round += 1) {
   console.log(`\n## round ${round} at ${new Date().toISOString()}`);
   for (const { routeId, stop } of probes) {
@@ -138,14 +140,17 @@ for (let round = 1; round <= rounds; round += 1) {
     const mine = result.parse.rows.filter((row) => row.routeId === routeId);
     totals.otherVariant += result.parse.rows.length - mine.length;
     const verdicts = mine.map((row) => (positions === null ? "no_positions" : predictionAgreesWithPositions(row, stop.sequence, positions)));
+    const rowOffsets = positions === null ? [] : mine.map((row) => predictionOffsetStops(row, stop.sequence, positions));
+    for (const offset of rowOffsets) offsets[offset === null ? "none_behind" : String(offset)] = (offsets[String(offset ?? "none_behind")] ?? 0) + 1;
     for (const verdict of verdicts) {
       if (verdict === "consistent") totals.consistent += 1;
       else if (verdict === "inconsistent") totals.inconsistent += 1;
       else totals.noPositions += 1;
     }
-    console.log(`${stop.stopId} (${stop.name}, seq ${stop.sequence} of ${routeId}): HTTP ${result.http}, totalCount ${result.parse.totalCount}, rows ${result.parse.rows.length}, rejected ${result.parse.rejected.length}; route numbers ${routes.join(" ") || "none"}; this variant: ${mine.map((row) => `${row.stopsAway} stops/${row.providerEstimateSeconds}s`).join(", ") || "none"}; positions on this variant ${positions === null ? "unavailable" : positions.length}; agreement ${verdicts.join(", ") || "n/a"}`);
+    console.log(`${stop.stopId} (${stop.name}, seq ${stop.sequence} of ${routeId}): HTTP ${result.http}, totalCount ${result.parse.totalCount}, rows ${result.parse.rows.length}, rejected ${result.parse.rejected.length}; route numbers ${routes.join(" ") || "none"}; this variant: ${mine.map((row) => `${row.stopsAway} stops/${row.providerEstimateSeconds}s`).join(", ") || "none"}; positions on this variant ${positions === null ? "unavailable" : positions.length}; agreement ${verdicts.join(", ") || "n/a"}; offset ${rowOffsets.map((offset) => (offset === null ? "none_behind" : offset > 0 ? `+${offset}` : String(offset))).join(", ") || "n/a"}`);
   }
   if (round < rounds) await new Promise((resolve) => setTimeout(resolve, pauseMs));
 }
 console.log(`\nTOTALS ${JSON.stringify(totals)}`);
+console.log(`OFFSETS (prediction minus position-implied stops; + means the prediction counts more stops) ${JSON.stringify(offsets)}`);
 console.log(totals.answered === 0 ? "VERDICT: no call answered usable JSON; Jeju coverage not established" : totals.rows === 0 ? "VERDICT: answered, but no prediction rows for the sampled Jeju stops" : "VERDICT: Jeju predictions returned; see agreement counts (two provider services, not ground truth)");

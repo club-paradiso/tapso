@@ -105,6 +105,25 @@ export function predictionAgreesWithPositions(
   return vehicleSequences.some((sequence) => stopSequence - sequence === prediction.stopsAway) ? "consistent" : "inconsistent";
 }
 
+/**
+ * By how many stops a prediction differs from what the nearest reported bus
+ * behind the stop implies: `stopsAway - (stopSequence - vehicleSequence)`,
+ * for the bus that makes the difference smallest. Positive means the
+ * prediction counts more stops than the position does. `null` when no bus is
+ * behind the stop. Two TAGO services are compared, neither is ground truth.
+ */
+export function predictionOffsetStops(
+  prediction: Pick<ArrivalPrediction, "stopsAway">,
+  stopSequence: number,
+  vehicleSequences: number[],
+): number | null {
+  const behind = vehicleSequences.filter((sequence) => sequence < stopSequence);
+  if (behind.length === 0) return null;
+  return behind
+    .map((sequence) => prediction.stopsAway - (stopSequence - sequence))
+    .reduce((best, offset) => (Math.abs(offset) < Math.abs(best) ? offset : best));
+}
+
 /** A catalog variant with the live stop sequences TAGO reports on it now. */
 export interface ArrivalProbeCandidate {
   routeId: string;

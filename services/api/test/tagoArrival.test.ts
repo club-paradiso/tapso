@@ -7,7 +7,7 @@
 import assert from "node:assert/strict";
 import test from "node:test";
 
-import { ARRIVAL_ENDPOINT, chooseArrivalProbeTargets, parseArrivalResponse, predictionAgreesWithPositions, type ArrivalProbeCandidate } from "../src/tagoArrival.ts";
+import { ARRIVAL_ENDPOINT, chooseArrivalProbeTargets, parseArrivalResponse, predictionAgreesWithPositions, predictionOffsetStops, type ArrivalProbeCandidate } from "../src/tagoArrival.ts";
 
 const envelope = (items: unknown, totalCount = 1, resultCode = "00") => ({
   response: { header: { resultCode, resultMsg: "OK" }, body: { items, numOfRows: 10, pageNo: 1, totalCount } },
@@ -98,4 +98,14 @@ test("the sample spreads across route numbers before taking a second variant of 
     variant("SYN-C1", "997", 40, [1]),
   ]);
   assert.deepEqual([...new Set(targets.map((target) => target.routeId))], ["SYN-A1", "SYN-B1", "SYN-C1"]);
+});
+
+test("the offset says by how many stops a prediction differs from the nearest consistent bus behind the stop", () => {
+  // Stop at sequence 12; buses at 10 and 3. A prediction of 3 stops is one more than the bus at 10 implies.
+  assert.equal(predictionOffsetStops({ stopsAway: 3 }, 12, [10, 3]), 1);
+  assert.equal(predictionOffsetStops({ stopsAway: 2 }, 12, [10, 3]), 0);
+  assert.equal(predictionOffsetStops({ stopsAway: 1 }, 12, [10]), -1);
+  // A bus at or past the stop cannot be the predicted one; none behind it gives no offset.
+  assert.equal(predictionOffsetStops({ stopsAway: 2 }, 12, [12, 14]), null);
+  assert.equal(predictionOffsetStops({ stopsAway: 2 }, 12, []), null);
 });
