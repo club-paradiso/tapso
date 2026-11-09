@@ -31,7 +31,7 @@ struct CatalogBoardingView: View {
         .safeAreaInset(edge: .top) {
             HStack(spacing: TapsoSpace.sm) {
                 Image(systemName: "magnifyingglass")
-                    .foregroundStyle(TapsoColor.mintDeep)
+                    .foregroundStyle(TapsoColor.decorative)
                 TextField("boardFirst.search.placeholder", text: $query)
                     .font(.tapso(.body))
                     .submitLabel(.search)
@@ -171,7 +171,7 @@ struct CatalogBoardingContent: View {
                     name: place.name,
                     detail: String(format: RideText.string("boardFirst.routeCount"), place.routeCount),
                     systemImage: symbol,
-                    tint: TapsoColor.mintDeep
+                    tint: TapsoColor.decorative
                 ) { onChoose(place) }
                 .accessibilityIdentifier("boarding-\(place.name)")
                 Divider().overlay(TapsoColor.separator)

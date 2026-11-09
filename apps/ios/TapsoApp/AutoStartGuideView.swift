@@ -194,9 +194,9 @@ struct AutoStartGuideContent: View {
                     HStack(alignment: .firstTextBaseline, spacing: TapsoSpace.sm) {
                         Text(verbatim: String(index + 1))
                             .font(.tapso(.caption, .black))
-                            .foregroundStyle(TapsoColor.textOnAccent)
+                            .foregroundStyle(TapsoColor.decorative)
                             .frame(width: 20, height: 20)
-                            .background(TapsoColor.journeyActive, in: Circle())
+                            .background(TapsoColor.decorativeFill, in: Circle())
                             .alignmentGuide(.firstTextBaseline) { $0[VerticalAlignment.center] + 5 }
                         Text(step)
                             .font(.tapso(.subheadline))
@@ -220,9 +220,9 @@ struct AutoStartEntryRow: View {
             HStack(spacing: TapsoSpace.sm) {
                 Image(systemName: "wand.and.stars")
                     .font(.tapso(.title3))
-                    .foregroundStyle(TapsoColor.mintDeep)
+                    .foregroundStyle(TapsoColor.decorative)
                     .frame(width: 40, height: 40)
-                    .background(TapsoColor.journeyActive.opacity(0.14), in: RoundedRectangle(cornerRadius: TapsoRadius.sm, style: .continuous))
+                    .background(TapsoColor.decorativeFill, in: RoundedRectangle(cornerRadius: TapsoRadius.sm, style: .continuous))
                 VStack(alignment: .leading, spacing: 2) {
                     Text("autoStart.entry.title")
                         .font(.tapso(.body, .semibold))

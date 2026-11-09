@@ -288,7 +288,7 @@ struct RideContent: View {
                     systemImage: "arrow.clockwise.circle",
                     title: "ride.resumed.title",
                     message: "ride.resumed.body",
-                    tint: TapsoColor.journeyActive,
+                    tint: TapsoColor.decorative,
                     actionTitle: "common.ok",
                     action: onDismissResume
                 )

@@ -29,7 +29,7 @@ Non-goals: automatic vehicle identification (gate not met); ETA predictions (no 
 | #205, #207 | Arrival probe samples running buses; reports prediction-minus-position offsets | Live runs with the key | Merged 2026-11-09 |
 | #206 | `main-history-policy` waits for GitHub's merge-commit ↔ PR link | Passed on the next main push | Merged 2026-11-09 |
 | 3b | Matching: real-base replay for Issue #74 families; reviewed variant ↔ timetable crosswalk; no policy change without counterfactual evidence | Gate re-run with committed result | Not started: the real-base replay needs the vault raw streams, and the crosswalk needs a human review (0/389 name matches) |
-| 4 (rest) | U-09; NightGuard card in the return screen; snapshot evidence in ko/en at default and AX5; VoiceOver checklist | Snapshots committed from macOS CI | Not started |
+| 4 (rest) | U-09; NightGuard card in the return screen; snapshot evidence in ko/en at default and AX5; VoiceOver checklist | Snapshots committed from macOS CI | In progress: U-09 on `claude/eloquent-volta-oef0a6` (the four named surfaces and every other decorative icon neutral; the 25 remaining mint uses held to reasons by a CI guard); the rest not started |
 | 5 | Docs drift (system audit F-09); timetable-age release-gate warning; performance follow-ups | Docs match code; gate warns at > 60 days | In progress: age warning and this plan (this branch); docs drift and performance not started |
 
 PR 1 and PR 2 were combined: NightGuard is the first consumer of the evidence types, and splitting would have shipped an unused module.
@@ -62,6 +62,7 @@ swift test --package-path packages/transit-core   # macOS / CI only
 - 2026-11-09: #199–#207 merged; main CI green on every merge commit. Codex review found 7 real defects across #200, #201 and #205; all fixed with failing tests first.
 - 2026-11-09: arrival service vs position feed, two live runs (`OBSERVED`, 34 comparisons): 22 exact, 12 off by +1 stop, none by −1. The arrival service sometimes lags the position feed by a stop.
 - 2026-11-09: weekly catalog refreshes had silently failed to open PRs since 2026-10-11 (Actions may not create PRs); the run now fails instead.
+- 2026-11-09: U-09. The source guard was written first and failed with 9 errors on main (home 8 mint uses, live badge, live entry, resume notice, comfortable last bus). The test was a Python source check, not an XCTest: colour placement is a property of view source, and it runs without macOS. After the change it passes; Swift build verified only in CI.
 
 ## 7. Risks and next action
 
@@ -71,4 +72,5 @@ swift test --package-path packages/transit-core   # macOS / CI only
 - Risk: release gate 3 reads `PENDING_EVIDENCE` until 순환버스 (22:00–23:40 KST) is probed against catalog `c9eacac26d848f6a`. Scheduled for 2026-11-09 22:05 KST.
 - Risk: the 365 06:00 한라대 trip row may not run; NightGuard reads trip rows and says 06:00. Next action: repeat the first-bus check on two more weekdays before changing any rule.
 - Risk: two crosswalk poles (`JEB405002827`, `JEB406002166`) are withheld as `direction_mismatch` until BIS station evidence is collected again.
-- Exact next action: PR 4 (rest), starting with U-09, reproduced as a failing XCTest first.
+- Decision for the owner: the app-wide control tint (`TapsoRootView` `.tint(mintDeep)`, primary buttons) is still mint, so buttons read as "live" too. U-09 left it as is; 13 of the 25 remaining mint uses are controls on that tint; the other 12 mark observed data.
+- Exact next action: NightGuard card in the return screen, reproduced as a failing XCTest first.

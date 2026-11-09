@@ -105,7 +105,7 @@ struct HomeContent: View {
                             .font(.tapso(.subheadline, .semibold))
                             .frame(minHeight: TapsoSize.minimumTouch)
                     }
-                    .foregroundStyle(TapsoColor.mintDeep)
+                    .foregroundStyle(TapsoColor.decorative)
                     .accessibilityIdentifier("home-feedback")
                 }
             }
@@ -239,7 +239,7 @@ struct HomeIntroCard: View {
         }
         .padding(TapsoSpace.lg)
         .frame(maxWidth: .infinity, alignment: .leading)
-        .background(TapsoColor.journeyActive.opacity(0.10), in: RoundedRectangle(cornerRadius: TapsoRadius.hero, style: .continuous))
+        .background(TapsoColor.backgroundSecondary, in: RoundedRectangle(cornerRadius: TapsoRadius.hero, style: .continuous))
     }
 
     private static let stepKeys: [LocalizedStringKey] = ["home.intro.step1", "home.intro.step2", "home.intro.step3"]
@@ -256,9 +256,9 @@ struct HomeIntroCard: View {
             HStack(spacing: 6) {
                 Text(verbatim: String(index + 1))
                     .font(.tapso(.caption, .black))
-                    .foregroundStyle(TapsoColor.textOnAccent)
+                    .foregroundStyle(TapsoColor.decorative)
                     .frame(width: 20, height: 20)
-                    .background(TapsoColor.journeyActive, in: Circle())
+                    .background(TapsoColor.decorativeFill, in: Circle())
                 // In a row the steps keep their width so ViewThatFits can measure them;
                 // stacked, they wrap instead of running off a narrow or large-type screen.
                 if separated {
@@ -287,7 +287,7 @@ struct SearchFieldButton: View {
             HStack(spacing: TapsoSpace.sm) {
                 Image(systemName: "magnifyingglass")
                     .font(.tapso(.headline))
-                    .foregroundStyle(TapsoColor.mintDeep)
+                    .foregroundStyle(TapsoColor.decorative)
                 Text("home.search.placeholder")
                     .font(.tapso(.body))
                     .foregroundStyle(TapsoColor.textSecondary)
@@ -298,7 +298,7 @@ struct SearchFieldButton: View {
             .background(TapsoColor.backgroundSecondary, in: RoundedRectangle(cornerRadius: TapsoRadius.md, style: .continuous))
             .overlay {
                 RoundedRectangle(cornerRadius: TapsoRadius.md, style: .continuous)
-                    .stroke(TapsoColor.journeyActive.opacity(0.55), lineWidth: 1.5)
+                    .stroke(TapsoColor.separator, lineWidth: 1.5)
             }
             .contentShape(Rectangle())
         }
@@ -319,9 +319,9 @@ struct MapHandoffIntakeCard: View {
             HStack(spacing: TapsoSpace.sm) {
                 Image(systemName: "map")
                     .font(.tapso(.title3))
-                    .foregroundStyle(TapsoColor.mintDeep)
+                    .foregroundStyle(TapsoColor.decorative)
                     .frame(width: 40, height: 40)
-                    .background(TapsoColor.journeyActive.opacity(0.14), in: RoundedRectangle(cornerRadius: TapsoRadius.sm, style: .continuous))
+                    .background(TapsoColor.decorativeFill, in: RoundedRectangle(cornerRadius: TapsoRadius.sm, style: .continuous))
                 VStack(alignment: .leading, spacing: 2) {
                     Text("home.mapImport.title")
                         .font(.tapso(.body, .semibold))
@@ -329,7 +329,7 @@ struct MapHandoffIntakeCard: View {
                     if let pendingPlaceName {
                         Text(String(format: RideText.string("home.mapImport.pending"), pendingPlaceName))
                             .font(.tapso(.footnote, .semibold))
-                            .foregroundStyle(TapsoColor.mintDeep)
+                            .foregroundStyle(TapsoColor.decorative)
                     } else {
                         Text("home.mapImport.body")
                             .font(.tapso(.footnote))
