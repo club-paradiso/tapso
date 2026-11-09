@@ -72,14 +72,23 @@ jobs:
           GH_TOKEN: ${{ github.token }}
           COMMIT_SHA: ${{ github.sha }}
         run: |
-          merged_count="$(gh api \
-            -H 'Accept: application/vnd.github+json' \
-            "repos/${GITHUB_REPOSITORY}/commits/${COMMIT_SHA}/pulls" \
-            --jq '[.[] | select(.merged_at != null)] | length')"
-          if [ "${merged_count}" -lt 1 ]; then
-            echo "::error::main must be updated through a merged pull request. Direct pushes are policy violations."
-            exit 1
-          fi
+          # GitHub links a merge commit to its pull request a few seconds after the
+          # push: on 2026-11-09 this check ran 5 s after #200 was merged, found no
+          # pull request for 7831eb8 and failed, though the commit is #200's. Ask
+          # again for up to a minute before calling it a direct push.
+          for attempt in 1 2 3 4 5 6 7; do
+            merged_count="$(gh api \
+              -H 'Accept: application/vnd.github+json' \
+              "repos/${GITHUB_REPOSITORY}/commits/${COMMIT_SHA}/pulls" \
+              --jq '[.[] | select(.merged_at != null)] | length')"
+            if [ "${merged_count}" -ge 1 ]; then
+              echo "merged pull request found for ${COMMIT_SHA} (attempt ${attempt})"
+              exit 0
+            fi
+            if [ "${attempt}" -lt 7 ]; then sleep 10; fi
+          done
+          echo "::error::main must be updated through a merged pull request. Direct pushes are policy violations."
+          exit 1
 
   transit-core:
     needs: native-change-scope
