@@ -30,12 +30,18 @@ struct RideEndView: View {
                 onPinReturn: { row in Task { await model.pinReturnReminder(row) } },
                 onUnpinReturn: { Task { await model.unpinReturnReminder() } },
                 returnReminderUnavailable: model.returnReminderUnavailable,
+                // Tonight's official schedule, read and refreshed on its own: it does not wait
+                // for the timetable download below. Hides itself when no table answers.
+                tonight: outcome.cityCode == nil ? nil : AnyView(NightGuardSection(
+                    view: model.nightGuards[outcome.routeNumber]?.view,
+                    refresh: { await model.loadNightGuard(routeNumber: outcome.routeNumber) },
+                    surface: TapsoColor.backgroundSecondary
+                )),
                 // The route's official timetable for the way back: TAGO publishes no Jeju service day.
+                // Tonight's reading is the block above, so the card does not repeat it.
                 timetable: outcome.cityCode == nil ? nil : AnyView(TimetableCard(
                     routeNumber: outcome.routeNumber,
                     load: model.timetables[outcome.routeNumber],
-                    nightGuard: model.nightGuards[outcome.routeNumber]?.view,
-                    onNightGuardRefresh: { await model.loadNightGuard(routeNumber: outcome.routeNumber) },
                     onLoad: { Task { await model.loadTimetable(routeNumber: outcome.routeNumber) } },
                     onShowAll: { timetableSheet = $0 }
                 ))
@@ -69,6 +75,8 @@ struct RideEndContent: View {
     var onPinReturn: (ReturnServiceRow) -> Void = { _ in }
     var onUnpinReturn: () -> Void = {}
     var returnReminderUnavailable = false
+    /// Tonight's official schedule (`NightGuardSection`), after a live ride.
+    var tonight: AnyView? = nil
     /// The route's official timetable card, after a live ride.
     var timetable: AnyView? = nil
 
@@ -97,6 +105,19 @@ struct RideEndContent: View {
                     .fixedSize(horizontal: false, vertical: true)
             }
 
+            ForEach(ReturnScreenLayout.sections(timetableOffered: tonight != nil || timetable != nil), id: \.self) { section in
+                self.section(section)
+            }
+        }
+        .padding(.horizontal, TapsoSpace.gutter)
+        .padding(.vertical, TapsoSpace.xxl)
+        .frame(maxWidth: .infinity, alignment: .leading)
+    }
+
+    @ViewBuilder
+    private func section(_ section: ReturnScreenSection) -> some View {
+        switch section {
+        case .handoff:
             TapsoCard {
                 VStack(alignment: .leading, spacing: TapsoSpace.sm) {
                     if let placeName {
@@ -164,11 +185,9 @@ struct RideEndContent: View {
                     }
                 }
             }
-
-            if let timetable {
-                timetable
-            }
-
+        case .tonight:
+            if let tonight { tonight }
+        case .returnTrips:
             ReturnTripCard(
                 service: returnService,
                 onRetry: onRetryReturn,
@@ -177,14 +196,31 @@ struct RideEndContent: View {
                 onUnpin: onUnpinReturn,
                 unavailable: returnReminderUnavailable
             )
-
+        case .timetable:
+            if let timetable { timetable }
+        case .done:
             Button("end.done", action: onDone)
                 .buttonStyle(PrimaryButtonStyle())
                 .accessibilityIdentifier("end-done")
         }
-        .padding(.horizontal, TapsoSpace.gutter)
-        .padding(.vertical, TapsoSpace.xxl)
-        .frame(maxWidth: .infinity, alignment: .leading)
+    }
+}
+
+/// The blocks of the screen after a live ride, in order. TAGO's route info usually has no
+/// Jeju last bus (V4 system audit F-03), so the last-bus rows mostly read "막차 정보 없음":
+/// tonight's official schedule comes first, then those rows, then the full table as reference.
+enum ReturnScreenSection: Hashable {
+    case handoff
+    case tonight
+    case returnTrips
+    case timetable
+    case done
+}
+
+enum ReturnScreenLayout {
+    /// `timetableOffered`: the ride has a city code, so official tables can be read for it.
+    static func sections(timetableOffered: Bool) -> [ReturnScreenSection] {
+        timetableOffered ? [.handoff, .tonight, .returnTrips, .timetable, .done] : [.handoff, .returnTrips, .done]
     }
 }
 

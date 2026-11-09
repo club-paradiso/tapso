@@ -104,6 +104,7 @@
 		5B31E77CB28150EF18D52E80 /* BetaFeedback.swift in Sources */ = {isa = PBXBuildFile; fileRef = 62279B0E07ECDFCEBE189D89 /* BetaFeedback.swift */; };
 		49A1F49BD2C022642ACE249C /* JourneyLanguageCurrent.swift in Sources */ = {isa = PBXBuildFile; fileRef = 79C4C1E14730170FDC9798E5 /* JourneyLanguageCurrent.swift */; };
 		9A2AB73087432F4AA9B00C1A /* JourneyLanguageCurrent.swift in Sources */ = {isa = PBXBuildFile; fileRef = 79C4C1E14730170FDC9798E5 /* JourneyLanguageCurrent.swift */; };
+		DD8B76A8C23916333AAADCCE /* ReturnScreenLayoutTests.swift in Sources */ = {isa = PBXBuildFile; fileRef = DCADD513B15E5373F66662DA /* ReturnScreenLayoutTests.swift */; };
 /* End PBXBuildFile section */
 
 /* Begin PBXContainerItemProxy section */
@@ -232,6 +233,7 @@
 		9C07CCC94036A0238FBF00B0 /* zh-Hans */ = {isa = PBXFileReference; lastKnownFileType = text.plist.strings; name = "zh-Hans"; path = "zh-Hans.lproj/InfoPlist.strings"; sourceTree = "<group>"; };
 		62279B0E07ECDFCEBE189D89 /* BetaFeedback.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = BetaFeedback.swift; sourceTree = "<group>"; };
 		79C4C1E14730170FDC9798E5 /* JourneyLanguageCurrent.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = JourneyLanguageCurrent.swift; sourceTree = "<group>"; };
+		DCADD513B15E5373F66662DA /* ReturnScreenLayoutTests.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = ReturnScreenLayoutTests.swift; sourceTree = "<group>"; };
 /* End PBXFileReference section */
 
 /* Begin PBXFrameworksBuildPhase section */
@@ -278,6 +280,7 @@
 				BE2000063775934C20DB408B /* HomeLayoutTests.swift */,
 				12873EA81968F53A1B70B049 /* HybridRideReconcileTests.swift */,
 				0254DEF030E85E3CF7322DF3 /* MapHandoffFlowTests.swift */,
+				DCADD513B15E5373F66662DA /* ReturnScreenLayoutTests.swift */,
 				E3ECAC8A2E99BE066DF83D63 /* RideLocationSamplerTests.swift */,
 				4F3242CAC95098615B71E4AF /* RidePresentationTests.swift */,
 				19459AAF91BDF6A8B061D08F /* RideTraceTests.swift */,
@@ -711,6 +714,7 @@
 				18663C4A2F8795B643DDD18D /* HomeLayoutTests.swift in Sources */,
 				522C090B8191DE45D0C20C8D /* HybridRideReconcileTests.swift in Sources */,
 				6C7EC458E60617F296856254 /* MapHandoffFlowTests.swift in Sources */,
+				DD8B76A8C23916333AAADCCE /* ReturnScreenLayoutTests.swift in Sources */,
 				753B05637D7A255F05962663 /* RideLocationSamplerTests.swift in Sources */,
 				F0FCB5D5AF2DDFA92C6AD18C /* RidePresentationTests.swift in Sources */,
 				1E35209170DFE0C3B68B31CC /* RideTraceTests.swift in Sources */,

@@ -21,6 +21,10 @@ struct TimetableCard: View {
 
     var body: some View {
         VStack(alignment: .leading, spacing: TapsoSpace.xs) {
+            // Its own endpoint and refresh: shown whatever state the table download is in.
+            if nightGuard != nil || onNightGuardRefresh != nil {
+                NightGuardSection(view: nightGuard, refresh: onNightGuardRefresh)
+            }
             switch load {
             case .none, .loading?:
                 HStack(spacing: TapsoSpace.xs) {
@@ -56,7 +60,6 @@ struct TimetableCard: View {
         Label(title(summary), systemImage: "calendar")
             .font(.tapso(.subheadline, .semibold))
             .foregroundStyle(TapsoColor.textPrimary)
-        NightGuardSection(view: nightGuard, refresh: onNightGuardRefresh)
         if summary.kind == .today, let holiday = summary.holidayName {
             Text(String(format: RideText.string("route.timetable.holiday"), holiday))
                 .font(.tapso(.footnote))
@@ -245,11 +248,13 @@ struct TimetableSheetContent: View {
 struct NightGuardSection: View {
     let view: TransitAPINightGuard?
     var refresh: (() async -> Void)? = nil
+    /// The fill behind the block: the page colour inside a card, Shore on its own.
+    var surface: Color = TapsoColor.backgroundPrimary
 
     var body: some View {
         TimelineView(.periodic(from: .now, by: 30)) { context in
-            if let view, view.isCurrent(at: context.date) {
-                let lines = NightGuardLine.lines(view)
+            if let view {
+                let lines = NightGuardLine.lines(view, at: context.date)
                 if !lines.isEmpty {
                     VStack(alignment: .leading, spacing: TapsoSpace.xs) {
                         Label("nightGuard.title", systemImage: "moon.stars")
@@ -268,7 +273,7 @@ struct NightGuardSection: View {
                     }
                     .padding(TapsoSpace.sm)
                     .frame(maxWidth: .infinity, alignment: .leading)
-                    .background(TapsoColor.backgroundPrimary, in: RoundedRectangle(cornerRadius: TapsoRadius.md, style: .continuous))
+                    .background(surface, in: RoundedRectangle(cornerRadius: TapsoRadius.md, style: .continuous))
                     .accessibilityElement(children: .combine)
                     .accessibilityIdentifier("night-guard")
                 }

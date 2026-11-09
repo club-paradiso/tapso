@@ -123,7 +123,21 @@ final class SnapshotEvidenceTests: XCTestCase {
             ("41-stop-picker-fixed-destination", stopPickerWithFixedDestination()),
             ("42-timetable-today", AnyView(TimetableCard(routeNumber: "202", load: .loaded(timetable(Self.timetableToday)), onLoad: {}, onShowAll: { _ in }).padding())),
             ("43-timetable-unavailable", AnyView(TimetableCard(routeNumber: "999", load: .loaded(timetable(Self.timetableNone)), onLoad: {}, onShowAll: { _ in }).padding())),
-            ("44-timetable-sheet", AnyView(TimetableSheetContent(view: timetable(Self.timetableToday))))
+            ("44-timetable-sheet", AnyView(TimetableSheetContent(view: timetable(Self.timetableToday)))),
+            // NightGuard while the timetable download failed: it no longer waits for the table.
+            ("45-timetable-failed-night-guard", AnyView(TimetableCard(routeNumber: "999", load: .failed(.providerUnavailable), nightGuard: nightGuard, onLoad: {}, onShowAll: { _ in }).padding())),
+            // After a live ride: tonight's schedule above the last-bus rows TAGO cannot fill.
+            ("46-end-return-tonight", AnyView(RideEndContent(
+                outcome: RideOutcome(moment: .arrived, routeNumber: "999", destination: DemoCatalog.outbound.stops[8].stop),
+                naverAvailable: true,
+                kakaoAvailable: true,
+                handoffFailed: nil,
+                onMap: { _ in },
+                onDone: {},
+                returnService: .loaded(unknownReturnRows),
+                tonight: AnyView(NightGuardSection(view: nightGuard, surface: TapsoColor.backgroundSecondary)),
+                timetable: AnyView(TimetableCard(routeNumber: "999", load: .failed(.providerUnavailable), onLoad: {}, onShowAll: { _ in }))
+            )))
         ]
         for (name, view) in screens {
             for scheme in [ColorScheme.light, .dark] {
@@ -278,6 +292,17 @@ final class SnapshotEvidenceTests: XCTestCase {
             timetable: AnyView(TimetableCard(routeNumber: "202", load: .loaded(timetable(Self.timetableToday)), onLoad: {}, onShowAll: { _ in }))
         ))
     }
+
+    /// SYNTHETIC NightGuard answer (the transit-core test payload, invented places and
+    /// times) without a validUntil, so it is current whenever the snapshot is rendered.
+    private var nightGuard: TransitAPINightGuard {
+        let json = Self.nightGuardPayload.replacingOccurrences(of: #""validUntil":"2026-11-13T14:01:00.000Z""#, with: #""validUntil":null"#)
+        return try! JSONDecoder().decode(TransitAPINightGuardResponse.self, from: Data(json.utf8)).item
+    }
+
+    private static let nightGuardPayload = #"""
+{"item":{"schemaVersion":"tapso-night-guard-v1","routeNo":"999","label":"OFFICIAL_DATED","evaluatedAt":"2026-11-13T13:30:00.000Z","localDate":"2026-11-13","localTime":"22:30","asOf":"2026-11-01","freshness":"fresh","validUntil":"2026-11-13T14:01:00.000Z","entries":[{"direction":"합성A→합성B","scheduleId":"SYN","serviceDate":"2026-11-13","dayType":"weekday","dayLabel":"평일","applicability":"applies","measuredAt":{"kind":"trip_start"},"claimsOperating":false,"status":"before_first_departure","evidence":"OFFICIAL_DATED","next":{"table":"23:00","clock":"23:00","date":"2026-11-13","at":"합성A","minutesFromNow":30},"last":{"table":"24:10","clock":"00:10","date":"2026-11-14","at":"합성A","minutesFromNow":100},"laterConditional":[],"reasons":["measured_from_trip_start","scheduled_not_observed"]},{"direction":"합성B→합성A","scheduleId":"SYN","serviceDate":"2026-11-13","dayType":"weekday","dayLabel":"평일","applicability":"applies","measuredAt":{"kind":"trip_start"},"claimsOperating":false,"status":"last_scheduled_departed","evidence":"OFFICIAL_DATED","next":null,"last":{"table":"22:00","clock":"22:00","date":"2026-11-13","at":"합성A","minutesFromNow":-30},"laterConditional":[],"reasons":["measured_from_trip_start","bus_may_run_late"]}],"reasons":[]}}
+"""#
 
     private func timetable(_ json: String) -> TransitAPITimetable {
         try! JSONDecoder().decode(TransitAPITimetable.self, from: Data(json.utf8))
@@ -448,6 +473,17 @@ final class SnapshotEvidenceTests: XCTestCase {
                 advice: LastBus.advice(for: TransitAPIRouteServiceHours(routeId: back.routeId, firstDeparture: "06:10", lastDeparture: "21:50", headwayMinutes: .init(weekday: 30)), now: evening),
                 ridden: false
             ),
+        ]
+    }
+
+    /// SYNTHETIC: the common Jeju case, route info without a last bus (system audit F-03).
+    private var unknownReturnRows: [ReturnServiceRow] {
+        let way = TransitAPIRoute(routeId: "SYN-999-W", routeNumber: "999", startStopName: "합성A", endStopName: "합성B")
+        let back = TransitAPIRoute(routeId: "SYN-999-E", routeNumber: "999", startStopName: "합성B", endStopName: "합성A")
+        let evening = Date(timeIntervalSince1970: 1_794_576_600) // 2026-11-13 22:30 KST
+        return [
+            ReturnServiceRow(route: way, advice: LastBus.advice(for: nil, now: evening), ridden: true),
+            ReturnServiceRow(route: back, advice: LastBus.advice(for: nil, now: evening), ridden: false),
         ]
     }
 

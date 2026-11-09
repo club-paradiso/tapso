@@ -87,6 +87,12 @@ public struct NightGuardLine: Hashable, Sendable {
             }
         }
     }
+
+    /// The lines to show at `now`: none once the answer is past its `validUntil`,
+    /// when the status may have changed.
+    public static func lines(_ view: TransitAPINightGuard, at now: Date) -> [NightGuardLine] {
+        view.isCurrent(at: now) ? lines(view) : []
+    }
 }
 
 // MARK: - Freshness and display policy (kept out of SwiftUI; AGENTS.md)
