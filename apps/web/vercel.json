@@ -7,5 +7,14 @@
     "api/**/*.ts": {
       "includeFiles": "api/_lib/**"
     }
+  },
+  "git": {
+    "deploymentEnabled": {
+      "**": false,
+      "main": true,
+      "preview/**": true,
+      "release/**": true,
+      "staging": true
+    }
   }
 }
