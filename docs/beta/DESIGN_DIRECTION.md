@@ -19,7 +19,8 @@ reassurance for a traveller in an unfamiliar place. No screen composition, asset
 | Shore | `#F3F5F4` / `#172124` | rows, fields, the ride card | basalt ink 16.6:1 |
 | Stone | `#56636A` / `#A9B6BA` | secondary text | 6.2:1 / 8.7:1 |
 | Tangerine | `#F7972F` | destination and arrival only; never body text (2.2:1 on white) | basalt on tangerine 8.1:1 |
-| Mint | `#2FC7AA`; text `#097666` / `#2FC7AA` | normal journey | text 5.1:1 on Shore |
+| Mint | `#2FC7AA`; text `#097666` / `#2FC7AA` | observed data only: a confirmed bus, a current position, a ride under way (V4 U-09) | text 5.1:1 on Shore |
+| Decorative | basalt ink on Stone line `#E1E6E4` / `#2A373B` | icons, tiles, feature labels, notices that claim nothing about data | 14.4:1 / 10.9:1 |
 
 The safety colours are unchanged in meaning:
 
@@ -31,6 +32,8 @@ The safety colours are unchanged in meaning:
 | Slate | | data degraded | |
 
 No state is carried by colour alone: every state has its own words and a symbol.
+
+Mint is a claim, not a brand fill: `scripts/ios/check_colour_semantics.py` (CI `ios` job) fails on a mint use that no reason in its list covers. The app-wide control tint is still mint; changing it is an open owner decision.
 
 Source: `apps/ios/Shared/TapsoTokens.swift` (ratios computed with the WCAG 2.x formula).
 

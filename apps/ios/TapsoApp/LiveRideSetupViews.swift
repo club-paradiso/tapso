@@ -16,9 +16,9 @@ struct LiveRideEntryCard: View {
             HStack(spacing: TapsoSpace.sm) {
                 Image(systemName: "bus.fill")
                     .font(.tapso(.title3))
-                    .foregroundStyle(TapsoColor.mintDeep)
+                    .foregroundStyle(TapsoColor.decorative)
                     .frame(width: 40, height: 40)
-                    .background(TapsoColor.journeyActive.opacity(0.14), in: RoundedRectangle(cornerRadius: TapsoRadius.sm, style: .continuous))
+                    .background(TapsoColor.decorativeFill, in: RoundedRectangle(cornerRadius: TapsoRadius.sm, style: .continuous))
                 VStack(alignment: .leading, spacing: 2) {
                     // On a narrow phone the badge drops below the title instead of breaking it.
                     ViewThatFits(in: .horizontal) {
@@ -58,15 +58,16 @@ struct LiveRideEntryCard: View {
     }
 }
 
-/// "실시간 · 베타": live data, and an honest stage label. Figma: no Figma component yet; drawn inside the screens.
+/// "실시간 · 베타": names the feature and its honest stage. It is not a live reading, so it is
+/// neutral, never mint (U-09). Figma: no Figma component yet; drawn inside the screens.
 struct LiveBadge: View {
     var body: some View {
         Text("live.badge")
             .font(.tapso(.caption2, .bold))
-            .foregroundStyle(TapsoColor.textOnAccent)
+            .foregroundStyle(TapsoColor.decorative)
             .padding(.horizontal, 6)
             .padding(.vertical, 2)
-            .background(TapsoColor.journeyActive, in: Capsule())
+            .background(TapsoColor.decorativeFill, in: Capsule())
     }
 }
 
@@ -398,7 +399,7 @@ struct LiveStopPickerContent: View {
                         name: routeStop.stop.name,
                         detail: detail(for: routeStop),
                         systemImage: boarding == nil ? "figure.stand" : "mappin.circle.fill",
-                        tint: boarding == nil ? TapsoColor.mintDeep : TapsoColor.tangerine
+                        tint: boarding == nil ? TapsoColor.decorative : TapsoColor.tangerine
                     ) {
                         choose(routeStop)
                     }

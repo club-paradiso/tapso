@@ -57,6 +57,16 @@ enum TapsoColor {
     /// Mint for text and glyphs on light surfaces: 5.1:1 on Shore (the V2 #0B7F6D was 4.49:1).
     static let mintDeep = dynamic(light: 0x097666, dark: 0x2FC7AA)
 
+    // MARK: Decoration
+    // Mint means observed data: a confirmed bus, a current position, a ride under way
+    // (V4 UX audit U-09). Icons, tiles, feature labels and notices that claim nothing
+    // about data use these neutrals instead. `scripts/ios/check_colour_semantics.py`
+    // holds every remaining mint use to a reason.
+    /// Glyphs and labels: basalt ink (16.6:1 on Shore, 14.5:1 dark on its dark counterpart).
+    static let decorative = textPrimary
+    /// Icon tiles and step markers on Shore rows; `decorative` on it is 14.4:1 light, 10.9:1 dark.
+    static let decorativeFill = separator
+
     static func journey(_ role: RideColorRole) -> Color {
         switch role {
         case .journeyActive: journeyActive

@@ -226,7 +226,7 @@ struct PlaceLookupSection: View {
             HStack(spacing: TapsoSpace.sm) {
                 Image(systemName: "building.2.crop.circle")
                     .font(.tapso(.title3))
-                    .foregroundStyle(TapsoColor.mintDeep)
+                    .foregroundStyle(TapsoColor.decorative)
                     .frame(width: 28)
                 VStack(alignment: .leading, spacing: 2) {
                     Text(verbatim: place.name)
@@ -336,7 +336,7 @@ struct DemoPlaceLookupSection: View {
             HStack(spacing: TapsoSpace.sm) {
                 Image(systemName: "building.2.crop.circle")
                     .font(.tapso(.title3))
-                    .foregroundStyle(TapsoColor.mintDeep)
+                    .foregroundStyle(TapsoColor.decorative)
                     .frame(width: 28)
                 VStack(alignment: .leading, spacing: 2) {
                     Text(verbatim: place.name)

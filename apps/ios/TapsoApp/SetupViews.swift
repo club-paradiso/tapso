@@ -43,7 +43,7 @@ struct DestinationSearchView: View {
         .safeAreaInset(edge: .top) {
             HStack(spacing: TapsoSpace.sm) {
                 Image(systemName: "magnifyingglass")
-                    .foregroundStyle(TapsoColor.mintDeep)
+                    .foregroundStyle(TapsoColor.decorative)
                 TextField("home.search.placeholder", text: $query)
                     .font(.tapso(.body))
                     .focused($focused)
@@ -234,7 +234,7 @@ struct BoardingStopContent: View {
                         name: routeStop.stop.name,
                         detail: String(format: RideText.string(RideText.countKey("boarding.stopsToDestination", destination.sequence - routeStop.sequence)), destination.sequence - routeStop.sequence),
                         systemImage: "figure.stand",
-                        tint: TapsoColor.mintDeep
+                        tint: TapsoColor.decorative
                     ) { onChoose(routeStop.stop) }
                     Divider().overlay(TapsoColor.separator)
                 }

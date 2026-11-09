@@ -273,7 +273,7 @@ struct ReturnTripRow: View {
             HStack(spacing: TapsoSpace.xs) {
                 Label("returnTrip.pinned", systemImage: "lock.fill")
                     .font(.tapso(.footnote, .semibold))
-                    .foregroundStyle(TapsoColor.mintDeep)
+                    .foregroundStyle(TapsoColor.decorative)
                 Spacer(minLength: 0)
                 Button("returnTrip.unpin", action: onUnpin)
                     .font(.tapso(.footnote, .semibold))
@@ -351,7 +351,8 @@ struct ReturnTripRow: View {
 
     private var levelColor: Color {
         switch advice.level {
-        case .comfortable: TapsoColor.mintDeep
+        // From a timetable, never observed: neutral, not mint (U-09). The glyph carries the level.
+        case .comfortable: TapsoColor.decorative
         case .leaveBy: TapsoColor.journeyArrival
         case .tight, .notRecommended: TapsoColor.journeyNext
         case .unknown: TapsoColor.textSecondary
