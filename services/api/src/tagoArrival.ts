@@ -159,35 +159,44 @@ export function chooseArrivalProbeTargets(
   const offsets = options.offsets ?? [2, 5];
   const maxTargets = options.maxTargets ?? 6;
   const maxVariantsPerRouteNo = options.maxVariantsPerRouteNo ?? 2;
+  // Targets per variant first: only a variant that yields targets takes a
+  // route number's turn (a bus at the last stop yields none and must not
+  // crowd out another route number; Codex review on #205).
+  const usable = candidates.flatMap((candidate) => {
+    const chosen = targetsFor(candidate, offsets);
+    return chosen.length > 0 ? [{ candidate, chosen }] : [];
+  });
+  // One variant of every route number before a second of any, keeping catalog order.
+  const rankSeen = new Map<string, number>();
+  const ranked = usable.map((entry, index) => {
+    const rank = rankSeen.get(entry.candidate.routeNo) ?? 0;
+    rankSeen.set(entry.candidate.routeNo, rank + 1);
+    return { ...entry, rank, index };
+  }).sort((left, right) => left.rank - right.rank || left.index - right.index);
   const targets: ArrivalProbeTarget[] = [];
   const variantsPerRouteNo = new Map<string, number>();
-  // One variant of every route number before a second of any: order running
-  // variants by their rank within their route number, keeping catalog order.
-  const rankSeen = new Map<string, number>();
-  const ranked = candidates.map((candidate, index) => {
-    const running = candidate.vehicleSequences.some((sequence) => Number.isInteger(sequence) && sequence >= 1);
-    const rank = running ? (rankSeen.get(candidate.routeNo) ?? 0) : Number.POSITIVE_INFINITY;
-    if (running) rankSeen.set(candidate.routeNo, rank + 1);
-    return { candidate, rank, index };
-  }).sort((left, right) => left.rank - right.rank || left.index - right.index);
-  for (const { candidate } of ranked) {
+  for (const { candidate, chosen } of ranked) {
     if (targets.length >= maxTargets) break;
     if ((variantsPerRouteNo.get(candidate.routeNo) ?? 0) >= maxVariantsPerRouteNo) continue;
-    const last = Math.max(0, ...candidate.stops.map((stop) => stop.sequence));
-    const valid = candidate.vehicleSequences.filter((sequence) => Number.isInteger(sequence) && sequence >= 1 && sequence <= last);
-    if (valid.length === 0) continue;
-    const vehicleSequence = Math.min(...valid);
-    const chosen: ArrivalProbeTarget[] = [];
-    for (const offset of offsets) {
-      const stop = candidate.stops.find((candidateStop) => candidateStop.sequence === vehicleSequence + offset);
-      if (!stop || chosen.some((target) => target.stopId === stop.stopId)) continue;
-      chosen.push({ routeId: candidate.routeId, routeNo: candidate.routeNo, stopId: stop.stopId, stopName: stop.name, stopSequence: stop.sequence, vehicleSequence });
-    }
-    if (chosen.length === 0) continue;
     variantsPerRouteNo.set(candidate.routeNo, (variantsPerRouteNo.get(candidate.routeNo) ?? 0) + 1);
     targets.push(...chosen.slice(0, maxTargets - targets.length));
   }
   return targets;
+}
+
+/** Stops `offsets` ahead of the bus with the most stops ahead on one variant; never past its last stop. */
+function targetsFor(candidate: ArrivalProbeCandidate, offsets: number[]): ArrivalProbeTarget[] {
+  const last = Math.max(0, ...candidate.stops.map((stop) => stop.sequence));
+  const valid = candidate.vehicleSequences.filter((sequence) => Number.isInteger(sequence) && sequence >= 1 && sequence <= last);
+  if (valid.length === 0) return [];
+  const vehicleSequence = Math.min(...valid);
+  const chosen: ArrivalProbeTarget[] = [];
+  for (const offset of offsets) {
+    const stop = candidate.stops.find((candidateStop) => candidateStop.sequence === vehicleSequence + offset);
+    if (!stop || chosen.some((target) => target.stopId === stop.stopId)) continue;
+    chosen.push({ routeId: candidate.routeId, routeNo: candidate.routeNo, stopId: stop.stopId, stopName: stop.name, stopSequence: stop.sequence, vehicleSequence });
+  }
+  return chosen;
 }
 
 function record(value: unknown): Record<string, unknown> | undefined {
