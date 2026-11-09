@@ -58,6 +58,12 @@ final class NightGuardTests: XCTestCase {
         XCTAssertFalse(view.isCurrent(at: Self.instant("2026-11-13T14:01:00Z")), "the status may have changed at validUntil")
     }
 
+    func testLinesAreShownOnlyWhileTheAnswerIsCurrent() throws {
+        let view = try view()
+        XCTAssertEqual(NightGuardLine.lines(view, at: Self.instant("2026-11-13T14:00:59Z")), NightGuardLine.lines(view))
+        XCTAssertEqual(NightGuardLine.lines(view, at: Self.instant("2026-11-13T14:01:00Z")), [], "past validUntil the status may have changed: no line")
+    }
+
     func testAnUnparseableValidUntilIsNeverCurrent() throws {
         let broken = Self.payload.replacingOccurrences(of: #""validUntil":"2026-11-13T14:01:00.000Z""#, with: #""validUntil":"soon""#)
         let view = try JSONDecoder().decode(TransitAPINightGuardResponse.self, from: Data(broken.utf8)).item
