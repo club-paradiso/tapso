@@ -107,10 +107,22 @@ jobs:
           git commit -m "data: Jeju transit catalog ${version} ($(TZ=Asia/Seoul date +%F))" -m "Workflow run ${GITHUB_RUN_ID}."
           if [ "${GITHUB_REF_NAME}" = "main" ]; then
             git push --force origin "HEAD:${TARGET}"
-            gh pr create --base main --head "${TARGET}" --draft \
+            # A refresh nobody is asked to review never reaches main: from 2026-10-11 to
+            # 2026-11-09 every weekly run stayed green while `gh pr create` failed with
+            # "GitHub Actions is not permitted to create or approve pull requests".
+            # An existing open PR is fine; any other failure turns the run red.
+            if ! gh pr create --base main --head "${TARGET}" --draft \
               --title "data: refresh the Jeju transit catalog (${version})" \
-              --body "Weekly catalog refresh from workflow run ${GITHUB_RUN_ID}. Review artifacts/route-coverage/jeju-production-readiness.md for added, removed and changed variants before merging." \
-              || echo "a pull request already exists or Actions may not open one; the branch ${TARGET} holds the refresh"
+              --body "Weekly catalog refresh from workflow run ${GITHUB_RUN_ID}. Review artifacts/route-coverage/jeju-production-readiness.md for added, removed and changed variants before merging."; then
+              open=$(gh pr list --head "${TARGET}" --base main --state open --json number --jq length || echo 0)
+              if [ "${open}" -gt 0 ]; then
+                echo "a pull request for ${TARGET} is already open; the refresh is on it"
+              else
+                echo "::error title=Catalog refresh not proposed::The refreshed catalog is on ${TARGET}, but no pull request could be opened. Enable Settings > Actions > General > 'Allow GitHub Actions to create and approve pull requests', or open one from ${TARGET} by hand."
+                echo "The refreshed catalog (${version}) is on \`${TARGET}\` but no pull request could be opened." >> "$GITHUB_STEP_SUMMARY"
+                exit 1
+              fi
+            fi
           else
             for attempt in 1 2 3; do
               git pull --rebase origin "${TARGET}" && git push origin "HEAD:${TARGET}" && exit 0

@@ -1,30 +1,30 @@
 {
-  "generatedAt": "2026-10-03T08:56:42.191Z",
+  "generatedAt": "2026-11-08T23:04:02.467Z",
   "base": "https://tapso-api.vercel.app",
-  "catalogVersion": "794f3bcb831d783e",
+  "catalogVersion": "c9eacac26d848f6a",
   "discovery": [
     {
       "method": "all_routes",
       "query": "",
-      "routeIds": 0,
-      "status": 504
+      "routeIds": 994,
+      "status": 200
     },
     {
       "method": "number_search",
       "query": "1",
-      "routeIds": 441,
+      "routeIds": 442,
       "status": 200
     },
     {
       "method": "number_search",
       "query": "2",
-      "routeIds": 454,
+      "routeIds": 455,
       "status": 200
     },
     {
       "method": "number_search",
       "query": "3",
-      "routeIds": 418,
+      "routeIds": 417,
       "status": 200
     },
     {
@@ -42,25 +42,25 @@
     {
       "method": "number_search",
       "query": "6",
-      "routeIds": 202,
+      "routeIds": 201,
       "status": 200
     },
     {
       "method": "number_search",
       "query": "7",
-      "routeIds": 209,
+      "routeIds": 211,
       "status": 200
     },
     {
       "method": "number_search",
       "query": "8",
-      "routeIds": 98,
+      "routeIds": 99,
       "status": 200
     },
     {
       "method": "number_search",
       "query": "9",
-      "routeIds": 78,
+      "routeIds": 80,
       "status": 200
     },
     {
@@ -318,7 +318,7 @@
     {
       "method": "timetable_census_number",
       "query": "282",
-      "routeIds": 12,
+      "routeIds": 11,
       "status": 200
     },
     {
@@ -600,7 +600,7 @@
     {
       "method": "timetable_census_number",
       "query": "360",
-      "routeIds": 13,
+      "routeIds": 12,
       "status": 200
     },
     {
@@ -1458,13 +1458,13 @@
     {
       "method": "timetable_census_number",
       "query": "792-1",
-      "routeIds": 1,
+      "routeIds": 2,
       "status": 200
     },
     {
       "method": "timetable_census_number",
       "query": "792-2",
-      "routeIds": 1,
+      "routeIds": 2,
       "status": 200
     },
     {
@@ -1554,7 +1554,7 @@
     {
       "method": "timetable_census_number",
       "query": "888",
-      "routeIds": 1,
+      "routeIds": 3,
       "status": 200
     },
     {
@@ -1600,8 +1600,8 @@
       "status": 200
     }
   ],
-  "routeIds": 992,
-  "routes": 989,
+  "routeIds": 994,
+  "routes": 991,
   "stops": 4338,
   "unavailable": [
     {
