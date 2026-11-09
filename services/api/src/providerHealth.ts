@@ -13,7 +13,7 @@
  * to any rider-facing decision.
  */
 
-export type ProviderOutcome = "ok" | "PROVIDER_TIMEOUT" | "PROVIDER_UNAVAILABLE" | "PROVIDER_RESPONSE_INVALID" | "BLOCKED_BY_CREDENTIALS";
+export type ProviderOutcome = "ok" | "PROVIDER_TIMEOUT" | "PROVIDER_UNAVAILABLE" | "PROVIDER_RATE_LIMITED" | "PROVIDER_RESPONSE_INVALID" | "BLOCKED_BY_CREDENTIALS";
 
 export interface ProviderRequestRecord {
   provider: string;

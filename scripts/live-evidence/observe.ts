@@ -10,6 +10,9 @@
  * and cross-checks the presence of clean vehicles against NightGuard read
  * from the committed timetable bundle at the same instant.
  *
+ * Reads are sequential (one request in flight): parallel bursts draw TAGO HTTP
+ * 429, which would make the observer a cause of the failures it reports.
+ *
  * Privacy: vehicle numbers are replaced by a salted SHA-256 prefix whose salt
  * is random per run and never written, so pseudonyms cannot be joined across
  * runs. The raw per-poll record (with pseudonyms only) goes to ignored
@@ -85,7 +88,10 @@ const startedAt = new Date().toISOString();
 while (Date.now() < deadline) {
   const tick = Date.now();
   for (const [routeNo, variants] of variantsByNumber) {
-    const results = await Promise.all(variants.map((variant) => fetchVariant(variant.routeId)));
+    // One read at a time: parallel bursts drew TAGO HTTP 429 on 2026-11-09, so the
+    // observer itself must not be a source of the failures it measures.
+    const results: Awaited<ReturnType<typeof fetchVariant>>[] = [];
+    for (const variant of variants) results.push(await fetchVariant(variant.routeId));
     const rows = results.flatMap((result) => (result.ok ? result.rows : []));
     const failures: Record<string, number> = {};
     for (const result of results) if (!result.ok) failures[result.reason] = (failures[result.reason] ?? 0) + 1;

@@ -32,7 +32,22 @@ export class ProviderUnavailableError extends ProviderResponseError {
   override readonly code = "PROVIDER_UNAVAILABLE";
 }
 
-export type ProviderFailureCode = "PROVIDER_RESPONSE_INVALID" | "PROVIDER_TIMEOUT" | "PROVIDER_UNAVAILABLE";
+/**
+ * The provider refused the request for its rate limit (HTTP 429). Not
+ * retried: another request only adds to the load it just refused. Carries how
+ * long a client should wait, which the API passes on as `Retry-After`.
+ */
+export class ProviderRateLimitedError extends ProviderResponseError {
+  override readonly code = "PROVIDER_RATE_LIMITED";
+  readonly retryAfterSeconds: number;
+
+  constructor(message: string, retryAfterSeconds: number) {
+    super(message);
+    this.retryAfterSeconds = retryAfterSeconds;
+  }
+}
+
+export type ProviderFailureCode = "PROVIDER_RESPONSE_INVALID" | "PROVIDER_TIMEOUT" | "PROVIDER_UNAVAILABLE" | "PROVIDER_RATE_LIMITED";
 
 /**
  * Classifies a rejected `fetch`. `AbortSignal.timeout` rejects with a

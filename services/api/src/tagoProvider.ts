@@ -1,6 +1,7 @@
 import type { RouteRequest, StopOnRoute, VehicleObservation } from "./domain.ts";
 import {
   ProviderConfigurationError,
+  ProviderRateLimitedError,
   ProviderResponseError,
   ProviderTimeoutError,
   ProviderUnavailableError,
@@ -27,6 +28,18 @@ export const TAGO_REQUEST_DEADLINE_MS = 9_000;
 export const TAGO_ATTEMPT_TIMEOUT_MS = 6_000;
 /** A retry is only worth starting with at least this much of the deadline left. */
 export const TAGO_MINIMUM_RETRY_BUDGET_MS = 2_000;
+/**
+ * `ASSUMED`: TAGO requests one instance has in flight at once. On 2026-11-09
+ * a burst of 16 parallel reads drew HTTP 429 while one request every 5 s was
+ * answered 12/12 (`docs/validation/TAPSO_V4_FIRST_BUS_CHECK_2026-11-09.md`).
+ * TAGO publishes no burst limit, so this is a conservative cap, not its value.
+ * Fan-out endpoints (`/v1/operating-status`) queue behind it inside the
+ * request's own deadline.
+ */
+export const TAGO_MAX_CONCURRENT_REQUESTS = 4;
+/** `ASSUMED`: the wait passed on as `Retry-After` when TAGO's 429 names none. */
+export const TAGO_RATE_LIMIT_RETRY_AFTER_SECONDS = 15;
+const TAGO_RETRY_AFTER_MAX_SECONDS = 60;
 
 export interface TagoTransitProviderOptions {
   serviceKey?: string;
@@ -38,6 +51,7 @@ export interface TagoTransitProviderOptions {
   deadlineMs?: number;
   attemptTimeoutMs?: number;
   minimumRetryBudgetMs?: number;
+  maxConcurrentRequests?: number;
   /** Monotonic milliseconds for the deadline. Defaults to `performance.now`. */
   clock?: () => number;
   sleep?: (milliseconds: number) => Promise<void>;
@@ -108,6 +122,7 @@ export class TagoTransitProvider implements TransitProvider {
   private readonly sleep: (milliseconds: number) => Promise<void>;
   private readonly random: () => number;
   private readonly onRequest: (record: ProviderRequestRecord) => void;
+  private readonly gate: ConcurrencyGate;
 
   constructor(options: TagoTransitProviderOptions = {}) {
     // Resolved through the shared helper so the provider and the health payload
@@ -126,6 +141,7 @@ export class TagoTransitProvider implements TransitProvider {
     this.sleep = options.sleep ?? delay;
     this.random = options.random ?? Math.random;
     this.onRequest = options.onRequest ?? logProviderRequest;
+    this.gate = new ConcurrencyGate(options.maxConcurrentRequests ?? TAGO_MAX_CONCURRENT_REQUESTS);
   }
 
   async cities(): Promise<TagoCity[]> {
@@ -362,6 +378,42 @@ export class TagoTransitProvider implements TransitProvider {
         return true;
       };
 
+      // One slot per attempt, held until the body is read and released before
+      // any retry pause. Waiting for it counts against the deadline.
+      const outcome = await this.attempt(url, trace);
+      if (outcome.kind === "transport") {
+        if (await retry(outcome.error)) continue;
+        throw lastError!;
+      }
+      if (outcome.kind === "http") {
+        if (outcome.status === 429) throw new ProviderRateLimitedError(`TAGO provider returned HTTP 429`, retryAfterSeconds(outcome.retryAfter));
+        const error = new ProviderUnavailableError(`TAGO provider returned HTTP ${outcome.status}`);
+        if (outcome.status >= 500 && await retry(error)) continue;
+        throw error;
+      }
+      if (outcome.kind === "body") {
+        if (await retry(outcome.error)) continue;
+        throw lastError!;
+      }
+      const payload = outcome.payload;
+
+      try {
+        return extractEnvelope(payload);
+      } catch (error) {
+        if (!(error instanceof ProviderResponseError)) throw error;
+        if (await retry(error)) continue;
+        throw lastError!;
+      }
+    }
+    throw lastError ?? new ProviderUnavailableError("TAGO request failed");
+  }
+
+  /** One fetch and body read inside a concurrency slot. Never retries or sleeps. */
+  private async attempt(url: URL, trace: RequestTrace): Promise<AttemptOutcome> {
+    const release = await this.gate.acquire(trace.deadlineAt - this.clock());
+    try {
+      const remaining = trace.deadlineAt - this.clock();
+      if (remaining <= 0) throw new ProviderTimeoutError("TAGO request deadline exceeded");
       let response: Response;
       try {
         response = await this.fetchImplementation(url, {
@@ -374,36 +426,80 @@ export class TagoTransitProvider implements TransitProvider {
           redirect: "error",
         });
       } catch (error) {
-        if (await retry(providerTransportError(error, "TAGO"))) continue;
-        throw lastError!;
+        return { kind: "transport", error: providerTransportError(error, "TAGO") };
       }
-
       trace.httpStatus = response.status;
-      if (!response.ok) {
-        const error = new ProviderUnavailableError(`TAGO provider returned HTTP ${response.status}`);
-        if (response.status >= 500 && await retry(error)) continue;
-        throw error;
-      }
-
-      let payload: unknown;
+      if (!response.ok) return { kind: "http", status: response.status, retryAfter: response.headers.get("retry-after") };
       try {
-        payload = await response.json();
+        return { kind: "payload", payload: await response.json() };
       } catch (error) {
         // A body cut off by the attempt's timeout is a timeout, not nonsense.
-        const failure = isTimeout(error) ? providerTransportError(error, "TAGO") : new ProviderResponseError("TAGO returned a non-JSON response");
-        if (await retry(failure)) continue;
-        throw lastError!;
+        return { kind: "body", error: isTimeout(error) ? providerTransportError(error, "TAGO") : new ProviderResponseError("TAGO returned a non-JSON response") };
       }
-
-      try {
-        return extractEnvelope(payload);
-      } catch (error) {
-        if (!(error instanceof ProviderResponseError)) throw error;
-        if (await retry(error)) continue;
-        throw lastError!;
-      }
+    } finally {
+      release();
     }
-    throw lastError ?? new ProviderUnavailableError("TAGO request failed");
+  }
+}
+
+type AttemptOutcome =
+  | { kind: "transport"; error: ProviderResponseError }
+  | { kind: "http"; status: number; retryAfter: string | null }
+  | { kind: "body"; error: ProviderResponseError }
+  | { kind: "payload"; payload: unknown };
+
+/** TAGO's own Retry-After in whole seconds when it gives one, bounded; otherwise the assumed default. */
+function retryAfterSeconds(header: string | null): number {
+  const seconds = header === null || !/^\d+$/.test(header.trim()) ? Number.NaN : Number(header.trim());
+  if (!Number.isFinite(seconds)) return TAGO_RATE_LIMIT_RETRY_AFTER_SECONDS;
+  return Math.min(TAGO_RETRY_AFTER_MAX_SECONDS, Math.max(1, seconds));
+}
+
+/**
+ * At most `limit` holders at once; the rest wait in order. A waiter whose
+ * budget runs out leaves the queue and fails as a timeout, so a slot is never
+ * handed to a request that has already given up.
+ */
+class ConcurrencyGate {
+  private active = 0;
+  private readonly waiting: Array<{ grant: () => void }> = [];
+  private readonly limit: number;
+
+  constructor(limit: number) {
+    this.limit = Math.max(1, Math.floor(limit));
+  }
+
+  acquire(budgetMs: number): Promise<() => void> {
+    if (this.active < this.limit) {
+      this.active += 1;
+      return Promise.resolve(this.releaser());
+    }
+    if (budgetMs <= 0) return Promise.reject(new ProviderTimeoutError("TAGO request deadline exceeded"));
+    return new Promise((resolve, reject) => {
+      const waiter = {
+        grant: () => {
+          clearTimeout(timer);
+          resolve(this.releaser());
+        },
+      };
+      const timer = setTimeout(() => {
+        const index = this.waiting.indexOf(waiter);
+        if (index >= 0) this.waiting.splice(index, 1);
+        reject(new ProviderTimeoutError("TAGO request deadline exceeded"));
+      }, budgetMs);
+      this.waiting.push(waiter);
+    });
+  }
+
+  private releaser(): () => void {
+    let released = false;
+    return () => {
+      if (released) return;
+      released = true;
+      const next = this.waiting.shift();
+      if (next) next.grant(); // the slot passes straight to the next waiter
+      else this.active -= 1;
+    };
   }
 }
 
@@ -424,6 +520,7 @@ function failureOutcome(error: unknown): ProviderOutcome {
   switch (code) {
     case "PROVIDER_TIMEOUT":
     case "PROVIDER_UNAVAILABLE":
+    case "PROVIDER_RATE_LIMITED":
     case "BLOCKED_BY_CREDENTIALS":
       return code;
     default:

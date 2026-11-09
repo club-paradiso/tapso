@@ -265,7 +265,9 @@ public enum TransitAPIFailure: Error, Hashable, Sendable {
     public static func classify(status: Int, code: String?) -> TransitAPIFailure {
         switch code {
         case "PROVIDER_TIMEOUT": return .providerTimeout
-        case "PROVIDER_UNAVAILABLE": return .providerUnavailable
+        // TAGO refused for its rate limit (503 with Retry-After): the feed is busy, try again shortly.
+        // Not `.rateLimited`, which is TAPSO limiting this rider.
+        case "PROVIDER_UNAVAILABLE", "PROVIDER_RATE_LIMITED": return .providerUnavailable
         case "PROVIDER_RESPONSE_INVALID": return .providerInvalid
         case "SESSIONS_UNAVAILABLE", "SESSION_STORE_UNAVAILABLE": return .sessionsUnavailable
         case "BLOCKED_BY_CREDENTIALS": return .serviceUnavailable
