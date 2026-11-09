@@ -9,7 +9,8 @@
     "catalog c9eacac26d848f6a: 991 variants, 4338 stops, 3 without a stop list, built 2026-11-08T23:04:02.467Z",
     "discovery: 266 queries",
     "every discovery query answered HTTP 200",
-    "timetable census: 238 entries, {\"parsed\":203,\"source_conflict\":29,\"no_timetable\":6}"
+    "timetable census: 238 entries, {\"parsed\":203,\"source_conflict\":29,\"no_timetable\":6}",
+    "timetable bundle downloaded 2026-11-05: aging after 2026-12-05, refresh warning after 2027-01-04, stale after 2027-02-03"
    ]
   },
   {

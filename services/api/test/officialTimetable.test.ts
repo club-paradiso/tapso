@@ -18,6 +18,7 @@ import {
   routeTimetableView,
   timetableFreshness,
   timetableIndex,
+  timetableRefreshNotice,
   validateTimetableBundle,
   validateTimetableDataset,
   type OfficialTimetableDataset,
@@ -257,3 +258,22 @@ test("the Korean date turns over at 15:00 UTC", () => {
 function addDays(date: string, count: number): string {
   return new Date(Date.parse(`${date}T00:00:00Z`) + count * 86_400_000).toISOString().slice(0, 10);
 }
+
+test("refresh notice: dated thresholds for the committed record, and a warning past 60 days, an error once stale", () => {
+  const dates = timetableRefreshNotice("2026-11-05", "2026-11-09");
+  assert.equal(dates.ageDays, 4);
+  assert.equal(dates.level, "none");
+  assert.equal(dates.warnAfter, "2027-01-04", "warn after 60 days");
+  assert.equal(dates.agingAfter, "2026-12-05", `aging after ${TIMETABLE_FRESH_DAYS} days`);
+  assert.equal(dates.staleAfter, "2027-02-03", `stale after ${TIMETABLE_USABLE_DAYS} days`);
+
+  assert.equal(timetableRefreshNotice("2026-11-05", "2027-01-04").level, "none", "day 60 is not yet a warning");
+  assert.equal(timetableRefreshNotice("2026-11-05", "2027-01-05").level, "warning");
+  assert.equal(timetableRefreshNotice("2026-11-05", "2027-02-03").level, "warning", "day 90 is still usable");
+  const stale = timetableRefreshNotice("2026-11-05", "2027-02-04");
+  assert.equal(stale.level, "error");
+  assert.match(stale.message, /stale/);
+  // An unreadable date or a download date in the future is an error, never silence.
+  assert.equal(timetableRefreshNotice("soon", "2026-11-09").level, "error");
+  assert.equal(timetableRefreshNotice("2026-11-10", "2026-11-09").level, "error");
+});
