@@ -30,7 +30,8 @@ const catalog = buildCatalog({
     { routeId: "SYN-C", routeNumber: "9999" },
     { routeId: "SYN-D", routeNumber: "201" },
     { routeId: "SYN-E", routeNumber: "325" },
-    { routeId: "SYN-F", routeNumber: "888" },
+    // 369: every sheet is a suspension notice (census 2026-10-03 and 2026-11-05); 888 gained a timetable on 2026-11-05.
+    { routeId: "SYN-F", routeNumber: "369" },
   ],
   stopsByRoute: new Map<string, StopOnRoute[] | { error: string }>([
     ["SYN-A", stops("a", 5)],

@@ -126,7 +126,7 @@ test("the production smoke test passes end to end against the current API contra
   assert.equal(code, 0, output);
   assert.match(output, /20 passed, 0 warned, 0 blocked by credentials, 0 failed/);
   assert.match(output, /PASS +feedback store +reports are kept; the write-free probe was rejected by input validation, nothing stored/);
-  assert.match(output, /PASS +official timetables +route 365: available, as of 2026-10-03/);
+  assert.ok(output.includes(`route 365: available, as of ${committed.timetables().ok ? (committed.timetables() as { value: { retrievedOn: string } }).value.retrievedOn : "?"}`), output);
   assert.match(output, /PASS +transit catalog +catalog [0-9a-f]{16}: 1 variants, 2 stops/);
   assert.match(output, /PASS +session store +memory store; sessions disabled because a serverless deployment would lose rides on scale-out/);
   assert.match(output, /PASS +matching posture +shadow; matcher directed-route-progress-v1; demonstrated readiness READY_FOR_SHADOW/);

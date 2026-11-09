@@ -106,12 +106,17 @@ test("the hand-downloaded Route 365 file and the census copy say the same thing"
 });
 
 test("Route 365 on a substitute holiday uses its 토,공휴일 table, from the real calendar", () => {
-  const view = routeTimetableView(realBundle.bundle, calendar, "365", "2026-10-05");
+  // The real tables and calendar, read as if downloaded the day before: the
+  // committed bundle's own date moves with every import, and freshness is
+  // tested on its own above. 365's tables are unchanged between the
+  // 2026-10-03 and 2026-11-05 imports.
+  const asOfOct4 = { ...realBundle.bundle, retrievedOn: "2026-10-04" };
+  const view = routeTimetableView(asOfOct4, calendar, "365", "2026-10-05");
   assert.equal(view.serviceDay.publicHoliday?.name, "개천절 대체 휴일");
   assert.equal(view.status, "available");
   assert.equal(view.freshness, "fresh");
   assert.deepEqual(view.today.map((entry) => entry.dayLabel), ["토,공휴일", "토,공휴일"]);
-  const weekday = routeTimetableView(realBundle.bundle, calendar, "365", "2026-10-07");
+  const weekday = routeTimetableView(asOfOct4, calendar, "365", "2026-10-07");
   assert.deepEqual(weekday.today.map((entry) => entry.dayLabel), ["평일", "평일"]);
   assert.deepEqual(weekday.today[0]!.first, { time: "06:00", from: "한라대" });
 });
@@ -135,11 +140,12 @@ test("a conflicting table is withheld: no trips, no first or last bus", () => {
 });
 
 test("status for routes the census has no timetable for, or never listed", () => {
-  assert.equal(routeTimetableView(realBundle.bundle, calendar, "888", "2026-10-07").status, "no_timetable");
+  // 369: every sheet is a suspension notice in each census so far (888 gained a timetable on 2026-11-05).
+  assert.equal(routeTimetableView(realBundle.bundle, calendar, "369", "2026-10-07").status, "no_timetable");
   assert.equal(routeTimetableView(realBundle.bundle, calendar, "9999", "2026-10-07").status, "not_published");
   const index = timetableIndex(realBundle.bundle);
   assert.equal(index.find((entry) => entry.routeNo === "365")?.status, "available");
-  assert.equal(index.find((entry) => entry.routeNo === "888")?.status, "no_timetable");
+  assert.equal(index.find((entry) => entry.routeNo === "369")?.status, "no_timetable");
 });
 
 test("first and last ignore conditional trips, which are reported after the last", () => {

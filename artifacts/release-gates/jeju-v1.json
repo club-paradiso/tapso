@@ -9,7 +9,7 @@
     "catalog 794f3bcb831d783e: 989 variants, 4338 stops, 3 without a stop list, built 2026-10-03T08:56:42.191Z",
     "discovery: 266 queries",
     "1 discovery queries failed (all_routes HTTP 504); the catalog's route IDs come from the queries that answered, so a route reachable only through a failed query would be missing",
-    "timetable census: 235 entries, {\"parsed\":201,\"source_conflict\":30,\"no_timetable\":4}"
+    "timetable census: 238 entries, {\"parsed\":203,\"source_conflict\":29,\"no_timetable\":6}"
    ]
   },
   {
@@ -57,7 +57,7 @@
    "requirement": "Parser failures resolved or explicitly classified; no unknown layout silently accepted",
    "status": "PASS",
    "evidence": [
-    "0 refused (each with a family), 30 source conflicts (each with reasons)",
+    "0 refused (each with a family), 29 source conflicts (each with reasons)",
     "fail-closed grammar tests in scripts/timetables/test_jeju_xlsx.py (unknown labels, near-time typos, values outside the table)"
    ]
   },

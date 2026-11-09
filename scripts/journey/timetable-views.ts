@@ -23,14 +23,30 @@ const read = (relative: string): unknown => JSON.parse(readFileSync(path.join(ro
 const { bundle } = validateTimetableBundle(read("services/api/data/jeju-timetables.json"));
 const calendar = validateHolidayCalendar(read("services/api/data/kr-public-holidays.json"));
 
+// Dates follow the bundle's own download date, so a weekly re-import never
+// silently turns "today" into "unknown" (a view read for a day before the
+// download is `unknown` by rule). The first Wednesday after the download that
+// is not a public holiday stands for an ordinary weekday.
+const addDays = (date: string, days: number): string => new Date(Date.parse(`${date}T00:00:00Z`) + days * 86_400_000).toISOString().slice(0, 10);
+const isHoliday = (date: string): boolean => calendar.holidays.some((entry) => entry.date === date);
+let weekday = addDays(bundle.retrievedOn, 1);
+while (new Date(`${weekday}T00:00:00Z`).getUTCDay() !== 3 || isHoliday(weekday)) weekday = addDays(weekday, 1);
+
+// The substitute-holiday case needs a 대체 휴일 inside the bundle's usable window,
+// which most imports do not have: it reads the same real tables as if downloaded
+// the day before 2026-10-05 (개천절 대체 휴일) and says so in `readAsOf`.
+const substituteHoliday = "2026-10-05";
+const asIfBefore = { ...bundle, retrievedOn: addDays(substituteHoliday, -1) };
+
 const cases = [
-  { name: "dated-weekday", routeNo: "365", date: "2026-10-07" },
-  { name: "dated-substitute-holiday", routeNo: "365", date: "2026-10-05" },
-  { name: "undated", routeNo: "201", date: "2026-10-07" },
-  { name: "partly-withheld", routeNo: "325", date: "2026-10-07" },
-  { name: "withheld", routeNo: "182", date: "2026-10-07" },
-  { name: "no-timetable", routeNo: "888", date: "2026-10-07" },
-  { name: "stale", routeNo: "365", date: "2027-03-01" },
+  { name: "dated-weekday", routeNo: "365", date: weekday },
+  { name: "dated-substitute-holiday", routeNo: "365", date: substituteHoliday, readAsOf: asIfBefore.retrievedOn },
+  { name: "undated", routeNo: "201", date: weekday },
+  { name: "partly-withheld", routeNo: "325", date: weekday },
+  { name: "withheld", routeNo: "182", date: weekday },
+  // 369: every sheet is a suspension notice in each census so far (888 gained a timetable on 2026-11-05).
+  { name: "no-timetable", routeNo: "369", date: weekday },
+  { name: "stale", routeNo: "365", date: addDays(bundle.retrievedOn, 120) },
 ];
 
 const output = {
@@ -38,7 +54,11 @@ const output = {
   label: "OFFICIAL_DATED",
   generatedBy: "scripts/journey/timetable-views.ts",
   bundleVersion: bundle.bundleVersion,
-  views: cases.map(({ name, routeNo, date }) => ({ name, item: routeTimetableView(bundle, calendar, routeNo, date) })),
+  views: cases.map(({ name, routeNo, date, readAsOf }) => ({
+    name,
+    ...(readAsOf ? { readAsOf } : {}),
+    item: routeTimetableView(readAsOf ? asIfBefore : bundle, calendar, routeNo, date),
+  })),
 };
 const text = `${JSON.stringify(output, null, 1)}\n`;
 const target = path.join(root, "fixtures/journey/timetable-views-v1.json");

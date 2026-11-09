@@ -65,20 +65,33 @@ test("without a deployed catalog the endpoint says so, and nothing else breaks",
   assert.equal((await get(handler(), "/v1/timetables")).status, 503, "no data source at all");
 });
 
+/** The first Wednesday after the bundle's download date that is not a holiday: an ordinary weekday it may still answer for. */
+function weekdayAfterDownload(): string {
+  let date = timetables.retrievedOn;
+  do date = new Date(Date.parse(`${date}T00:00:00Z`) + 86_400_000).toISOString().slice(0, 10);
+  while (new Date(`${date}T00:00:00Z`).getUTCDay() !== 3 || holidays.holidays.some((entry) => entry.date === date));
+  return date;
+}
+
 test("timetables: the index, one route for today in Korea, and a stated date", async () => {
-  const h = handler(inMemoryStaticTransitData({ timetables, holidays }));
+  // Dates follow the committed bundle's download date: a re-import must not break this test.
+  const wednesday = weekdayAfterDownload();
+  const h = handler(inMemoryStaticTransitData({ timetables, holidays }), new Date(`${wednesday}T10:00:00+09:00`));
   const index = await (await get(h, "/v1/timetables")).json();
   assert.equal(index.meta.label, "OFFICIAL_DATED");
-  assert.equal(index.meta.asOf, "2026-10-03");
+  assert.equal(index.meta.asOf, timetables.retrievedOn);
   assert.ok(index.items.some((item: { routeNo: string; status: string }) => item.routeNo === "365" && item.status === "available"));
 
   const today = await get(h, "/v1/timetables?routeNo=365");
   assert.equal(today.status, 200);
   assert.match(today.headers.get("cache-control") ?? "", /s-maxage=600/);
   const body = await today.json();
-  assert.equal(body.item.date, "2026-10-07", "10:00 KST on a Wednesday");
+  assert.equal(body.item.date, wednesday, "10:00 KST on a Wednesday");
   assert.deepEqual(body.item.today.map((entry: { dayLabel: string }) => entry.dayLabel), ["평일", "평일"]);
-  const holiday = await (await get(h, "/v1/timetables?routeNo=365&date=2026-10-09")).json();
+  // The first weekday public holiday after the download, inside the 90-day window.
+  const weekdayHoliday = holidays.holidays.find((entry) => entry.date > timetables.retrievedOn && ![0, 6].includes(new Date(`${entry.date}T00:00:00Z`).getUTCDay()));
+  assert.ok(weekdayHoliday, "the holiday calendar covers a weekday holiday after the download");
+  const holiday = await (await get(h, `/v1/timetables?routeNo=365&date=${weekdayHoliday.date}`)).json();
   assert.deepEqual(holiday.item.today.map((entry: { dayLabel: string }) => entry.dayLabel), ["토,공휴일", "토,공휴일"]);
 });
 
