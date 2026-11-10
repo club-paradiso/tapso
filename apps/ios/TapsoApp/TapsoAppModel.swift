@@ -71,7 +71,7 @@ struct RideDraft: Codable, Hashable {
     /// Whether stop coordinates are real (TAGO) rather than synthetic.
     let coordinatesAreSurveyed: Bool?
     /// The place the rider shared from a map app, when the ride was set up from one:
-    /// the last mile after the bus (`HandoffJourney`) and the end-of-ride walk go there.
+    /// the end-of-ride walk goes there (`MapHandoff.walkingRequest`).
     var finalPlace: SharedPlace?
 
     init(routeID: RouteID, boardingStopID: StopID, destinationStopID: StopID) {
@@ -134,16 +134,6 @@ struct RideDraft: Codable, Hashable {
             let to = destinationRouteStop?.sequence
         else { return 1 }
         return max(1, to - from)
-    }
-
-    /// The journey in the Journey Contract's vocabulary: the ride, then the walk to a shared place.
-    var journeySegments: [JourneySegmentSpec] {
-        HandoffJourney.segments(
-            routeNumber: route?.number ?? "",
-            boardSequence: boardingRouteStop?.sequence ?? 0,
-            alightSequence: destinationRouteStop?.sequence ?? 0,
-            place: finalPlace
-        )
     }
 }
 

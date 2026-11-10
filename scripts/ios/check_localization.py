@@ -81,6 +81,9 @@ def main() -> int:
             used.add(f"ride.{moment}.compact")
     for stage in enum_cases(CORE / "VehicleCheck.swift", "VehicleCheckStage"):
         used.update({f"check.{stage}.headline", f"check.{stage}.detail"})
+    # Kept only as the marketing site's copy source: apps/web/src/demo/rideCopy.ts quotes
+    # them (its preview still draws a trust badge) and a web test requires each quoted key
+    # to exist here. The app itself no longer shows them (TrustBadge removed 2026-11-10).
     for status in enum_cases(CORE / "RideGuidance.swift", "VehicleIdentityStatus"):
         used.add(f"trust.vehicle.{status}")
     for status in enum_cases(CORE / "RideGuidance.swift", "DataLinkStatus"):

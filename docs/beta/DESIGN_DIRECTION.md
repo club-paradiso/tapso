@@ -1,6 +1,6 @@
 # Design direction: basalt and the stop rail (V3)
 
-Approved 2026-10-20. It supersedes the colour and type sections of `docs/product/DESIGN_SYSTEM_V2.md`; everything
+Approved 2026-10-20. It supersedes the colour and type sections of `docs/archive/product/DESIGN_SYSTEM_V2.md`; everything
 else in V2 (spacing, radii, 돌이's expressions, the moment model) still applies.
 
 ## Thesis

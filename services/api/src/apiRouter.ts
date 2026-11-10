@@ -313,7 +313,7 @@ function resolvePath(path: string): Resolved | undefined {
   if (path === "/v1/feedback") return { route: "feedback_submit", methods: ["POST"] };
 
   // Operator-only ride capture. Authenticated, uncached, and never linked from
-  // anything public; see `docs/RIDE_CAPTURE_CONTROLLER.md`.
+  // anything public; see `docs/archive/RIDE_CAPTURE_CONTROLLER.md`.
   if (path === "/operator/snapshot") return { route: "operator_snapshot", methods: ["GET"] };
   if (path === "/operator/analyze") return { route: "operator_analyze", methods: ["POST"] };
   // Beta tester feedback, newest first (`feedbackStore.ts`).

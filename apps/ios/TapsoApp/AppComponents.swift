@@ -318,27 +318,3 @@ struct NoticeCard: View {
         .accessibilityElement(children: .contain)
     }
 }
-
-struct TrailingIconLabelStyle: LabelStyle {
-    func makeBody(configuration: Configuration) -> some View {
-        HStack(spacing: TapsoSpace.xs) {
-            configuration.title
-            configuration.icon
-        }
-    }
-}
-
-/// Reflows a horizontal pair vertically at accessibility text sizes.
-struct AdaptiveStack<Content: View>: View {
-    @Environment(\.dynamicTypeSize) private var dynamicTypeSize
-    var spacing: CGFloat = TapsoSpace.sm
-    @ViewBuilder var content: Content
-
-    var body: some View {
-        if dynamicTypeSize.isAccessibilitySize {
-            VStack(alignment: .leading, spacing: spacing) { content }
-        } else {
-            HStack(spacing: spacing) { content }
-        }
-    }
-}

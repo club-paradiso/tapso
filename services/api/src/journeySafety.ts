@@ -10,8 +10,9 @@
  * evidence allows, never a single guessed instant. The language-neutral
  * specifications are `fixtures/journey/safe-return-v1.json`,
  * `transfer-guardian-v1.json` and `rescue-v1.json`; the Swift core implements
- * the same rules (`packages/transit-core/Sources/TapsoTransit/JourneySafety.swift`)
- * and runs the same cases. Product notes: `docs/product/JEJU_SAFETY_LAYER_V3.md`.
+ * Safe Return and Rescue (`packages/transit-core/Sources/TapsoTransit/JourneySafety.swift`)
+ * and runs the same cases. Transfer Guardian exists only here: no endpoint and no
+ * iOS screen uses it. Product notes: `docs/product/JEJU_SAFETY_LAYER_V3.md`.
  *
  * The policy constants are `ASSUMED` product values, not measurements. They are
  * named, exported and recorded in each specification so a change is visible in

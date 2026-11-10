@@ -2,7 +2,7 @@
 
 One model, every surface. `RideGuidancePolicy` (`packages/transit-core/Sources/TapsoTransit/RideGuidance.swift`) turns a `RideSignal` — journey phase, remaining stops, freshness, whether the destination was passed, whether the phone is offline — into a `RideGuidance`: the moment, both trust signals, milestone, haptic, colour role, symbol, recovery action, copy keys, relevance and how the count may be shown. The app hero, Lock Screen, every Dynamic Island region, alerts, haptics and VoiceOver all read that one value. The app's `ActiveRide.signal` and the Live Activity's `ContentState.signal` build the same `RideSignal`, so the surfaces cannot disagree (`RidePresentationTests.testContentStateCarriesTheSameGuidanceAsTheApp`).
 
-It changes no journey semantics: `JourneyStateMachine`, `RideSession` and `DestinationProgressEngine` are untouched, and the matcher is not involved. Pre-ride stages come from `SetupStep` (app) and `VehicleCheckStage` (core).
+It changes no journey semantics: `RideSession` and `DestinationProgressEngine` are untouched, and the matcher is not involved. Pre-ride stages come from `SetupStep` (app) and `VehicleCheckStage` (core).
 
 ## Mapping to the requested states
 

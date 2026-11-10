@@ -4,11 +4,11 @@
 > built here drives only the deterministic demo and is not authoritative
 > (`services/api/test/crossLanguageAuthority.test.ts`); real journey sessions
 > are matched on the server by `directed-route-progress-v1`
-> ([`../VEHICLE_MATCHING.md`](../VEHICLE_MATCHING.md)). Human rides are no
+> ([`../VEHICLE_MATCHING.md`](../../VEHICLE_MATCHING.md)). Human rides are no
 > longer a release requirement: release gate `matcher-passive-safety-v4`
 > decides matcher readiness from machine-produced evidence
-> ([`../validation/MATCHER_SAFETY_EVIDENCE_V4.md`](../validation/MATCHER_SAFETY_EVIDENCE_V4.md),
-> [`HUMAN_LABOR_ELIMINATION.md`](HUMAN_LABOR_ELIMINATION.md)), and the
+> ([`../validation/MATCHER_SAFETY_EVIDENCE_V4.md`](../../validation/MATCHER_SAFETY_EVIDENCE_V4.md),
+> [`HUMAN_LABOR_ELIMINATION.md`](../../exec-plans/HUMAN_LABOR_ELIMINATION.md)), and the
 > physical-device Live Activity check is a device check, not a ride, needed
 > only for `READY_FOR_BOUNDED_AUTOMATION`. What remains in use: the Swift
 > package, whose tests CI job `transit-core` runs, and the app with its Live

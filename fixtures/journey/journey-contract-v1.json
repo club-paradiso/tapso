@@ -1,5 +1,5 @@
 {
-  "//": "SPECIFICATION, not data. The TAPSO Journey Contract v1: the one vocabulary the server (services/api/src/journeyContract.ts), the Swift core (packages/transit-core/Sources/TapsoTransit/JourneyContract.swift) and the marketing site use for a journey and for what every surface shows. Expectations are written by hand from docs/product/JOURNEY_CONTRACT_V3.md, not recorded from an implementation. Both implementations run every case below.",
+  "//": "SPECIFICATION, not data. The TAPSO Journey Contract v1: a vocabulary for a journey and for what every surface shows. Expectations are written by hand from docs/product/JOURNEY_CONTRACT_V3.md, not recorded from an implementation. services/api/src/journeyContract.ts runs every case below; no endpoint and no iOS screen uses it (the Swift copy was removed 2026-11-10).",
   "schemaVersion": "tapso-journey-contract-v1",
   "vocabulary": {
     "segmentKinds": ["walk", "ride", "transfer"],

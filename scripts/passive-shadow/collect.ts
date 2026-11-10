@@ -44,7 +44,7 @@ const maxRoutes = integer("max-routes", 3, 1, 8);
 const intervalMs = integer("interval-ms", providerPath === "tago-direct" ? 5_000 : 10_000, 3_000, 60_000);
 const minutes = integer("minutes", 30, 1, 90);
 // The one documented TAGO budget: a 90-minute 5 s ride is ≤ 1 080 location
-// calls (docs/exec-plans/RIDE_CAPTURE.md). A direct run may not exceed it.
+// calls (docs/archive/exec-plans/RIDE_CAPTURE.md). A direct run may not exceed it.
 // Through the public API every read is a TAPSO request; TAGO itself is reached
 // at most once per 20 s cache window per route.
 const maxCalls = integer("max-calls", providerPath === "tago-direct" ? 1_080 : 2_400, 1, providerPath === "tago-direct" ? 1_080 : 5_000);

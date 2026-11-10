@@ -34,7 +34,7 @@
 - [x] Establish canonical machine-checkable token manifest in `design/tokens/tokens.json`.
 - [x] Preserve light/dark semantics, contrast ratios (AA compliance), Pretendard registration, SF Pro Rounded extension fallback.
 - [x] Implement automated drift validation script `scripts/design/validate_tokens.py`.
-- [x] Mark superseded V2 documentation in `docs/product/DESIGN_SYSTEM_V2.md` and `docs/product/FIGMA_IMPLEMENTATION_MAP_V2.md`.
+- [x] Mark superseded V2 documentation in `docs/archive/product/DESIGN_SYSTEM_V2.md` and `docs/product/FIGMA_IMPLEMENTATION_MAP_V2.md`.
 
 ### Phase 3 — iOS Parity
 - [x] Audit and reconcile iOS SwiftUI components with V3 contract (`JourneyRail`, `DolBuddy`, `DolRailMarker` smile from PR #149, waiting states, degraded states).

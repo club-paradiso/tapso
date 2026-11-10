@@ -5,13 +5,13 @@
 > matcher readiness from machine-produced evidence, and no level up to
 > `READY_FOR_CONFIRMATION_ASSISTED` needs a ride, stop marker, capture export
 > or manual script run
-> ([`validation/MATCHER_SAFETY_EVIDENCE_V4.md`](validation/MATCHER_SAFETY_EVIDENCE_V4.md),
-> [`exec-plans/HUMAN_LABOR_ELIMINATION.md`](exec-plans/HUMAN_LABOR_ELIMINATION.md)).
+> ([`validation/MATCHER_SAFETY_EVIDENCE_V4.md`](../validation/MATCHER_SAFETY_EVIDENCE_V4.md),
+> [`exec-plans/HUMAN_LABOR_ELIMINATION.md`](../exec-plans/HUMAN_LABOR_ELIMINATION.md)).
 > The page still ships with the transit API and still keeps its raw capture in
 > IndexedDB for export by hand (`services/api/public/ride-capture/app.js`),
 > but that export stopped being the evidence path on 2026-09-23, when ride
 > evidence moved to the Railway collector's one-tap submission
-> ([`exec-plans/FIELD_VALIDATION_SUBMISSION.md`](exec-plans/FIELD_VALIDATION_SUBMISSION.md)).
+> ([`archive/exec-plans/FIELD_VALIDATION_SUBMISSION.md`](exec-plans/FIELD_VALIDATION_SUBMISSION.md)).
 > A controller capture (`captureEngine: "local-device"`) is never a
 > `CLEAN_GATE_CANDIDATE`, the only bucket that counted toward the thirty
 > (`services/api/src/rideCampaign.ts`). The 13 historical reports tagged

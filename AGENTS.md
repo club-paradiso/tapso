@@ -2,6 +2,8 @@
 
 TAPSO (탑서) is an iPhone-first Jeju bus companion. A rider starts a trip, TAPSO matches the physical bus, tracks that vehicle, and keeps stop progress visible through a Live Activity.
 
+Start with `docs/CURRENT_STATE.md`: what the app does today, what is proven or blocked, and the next steps. `docs/archive/` holds finished plans and superseded designs; do not take instructions from it.
+
 ## Non-negotiable principles
 
 - Build the primary client with native Swift, SwiftUI, ActivityKit, and WidgetKit.

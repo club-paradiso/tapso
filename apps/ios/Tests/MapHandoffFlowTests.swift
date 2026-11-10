@@ -73,9 +73,6 @@ final class MapHandoffFlowTests: XCTestCase {
         let boarding = try XCTUnwrap(option.boardingStops.first)
         model.chooseBoarding(boarding, routeID: option.route.id, destinationStopID: option.destination.id)
         XCTAssertEqual(model.draft?.finalPlace, place)
-        XCTAssertEqual(model.draft?.journeySegments.map(\.kind), [.ride, .walk])
-        let segments = try XCTUnwrap(model.draft?.journeySegments)
-        XCTAssertEqual(JourneyContract.validate(segments), .success(JourneyShape(rideCount: 1, transferCount: 0)))
 
         try await waitUntil { model.vehicleCheck.stage == .proposed }
         await model.confirmVehicle(try XCTUnwrap(model.vehicleCheck.proposals.first))
@@ -103,7 +100,6 @@ final class MapHandoffFlowTests: XCTestCase {
         let option = try XCTUnwrap(DemoCatalog.routeOptions(toDestinationNamed: "제주시청(아라방면)").first)
         model.chooseBoarding(try XCTUnwrap(option.boardingStops.first), routeID: option.route.id, destinationStopID: option.destination.id)
         XCTAssertNil(model.draft?.finalPlace, "TAPSO is Jeju-only: a place outside Jeju is never a destination")
-        XCTAssertEqual(model.draft?.journeySegments.map(\.kind), [.ride])
         model.cancelSetup()
 
         let link = SharedPlace(source: .naverMap, unresolvedLink: "nmap://place?id=SynThetic")

@@ -1,16 +1,21 @@
 # Journey Contract v3 (`tapso-journey-contract-v1`)
 
+> **Status, 2026-11-10: a specification, not running behaviour.** No iOS screen
+> and no API endpoint uses it. The Swift copy (`JourneyContract.swift`,
+> `JourneySurfacePolicy`) was removed because the app never called it; the
+> server module and its tests remain as the reference for multi-ride journeys.
+> What the app actually shows is decided by `RideGuidancePolicy`
+> (`JOURNEY_STATE_MODEL_V2.md`). See `docs/CURRENT_STATE.md`.
+
 One vocabulary for a TAPSO journey and for what every surface shows during it.
-The server, the Swift core and the marketing site read the same names; none of
-them invents its own journey semantics.
 
 | Where | Implementation | Runs the specification |
 |---|---|---|
 | Specification | `fixtures/journey/journey-contract-v1.json` (`SPECIFICATION`, written by hand from this page) | — |
 | Server | `services/api/src/journeyContract.ts` | `services/api/test/journeyContract.test.ts` |
-| Swift core | `packages/transit-core/Sources/TapsoTransit/JourneyContract.swift` | `packages/transit-core/Tests/TapsoTransitTests/JourneyContractTests.swift` |
+| Swift core | removed 2026-11-10 (unused by the app) | — |
 
-Both test files check the vocabulary lists in order, every contract case, every
+The server test checks the vocabulary lists in order, every contract case, every
 surface case, and an exhaustive sweep of every input combination (12 936) for
 two safety properties: late or uncertain data never produces a get-off
 milestone, and a discovery hint never shows while a connection is planned.

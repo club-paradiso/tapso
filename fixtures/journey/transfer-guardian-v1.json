@@ -1,5 +1,5 @@
 {
-  "//": "SPECIFICATION, SYNTHETIC times. Transfer Guardian v1 cases, written by hand from docs/product/JEJU_SAFETY_LAYER_V3.md (Transfer Guardian). Times are minutes after the case's 'now'; a range is what the evidence allows, never a single guessed instant. Both services/api (src/journeySafety.ts) and the Swift core (JourneySafety.swift) run every case.",
+  "//": "SPECIFICATION, SYNTHETIC times. Transfer Guardian v1 cases, written by hand from docs/product/JEJU_SAFETY_LAYER_V3.md (Transfer Guardian). Times are minutes after the case's 'now'; a range is what the evidence allows, never a single guessed instant. services/api (src/journeySafety.ts) runs every case; no endpoint and no iOS screen uses Transfer Guardian (the Swift copy was removed 2026-11-10).",
   "policy": { "safeMarginMinutes": 4, "longWaitMinutes": 30 },
   "cases": [
     { "id": "T1", "why": "four or more minutes even in the worst case is safe",

@@ -40,7 +40,7 @@ Keep this file current when either side changes. Code Connect for Swift is not s
 | CitrusDot / V2 (`153:2`) | `CitrusDot(size:)` | `identity/tangerine` | Destination | — | Hidden |
 | Icon / V2 (`152:86`) | SF Symbols from `RideGuidance.symbolName` | inherits | per moment | — | Paired with text; decorative alone |
 | Button / V2 (`153:137`) `kind` | `PrimaryButtonStyle`, `SecondaryButtonStyle` — `TapsoApp/AppComponents.swift` | `journey/active`, `background/secondary`, `size/button-primary`, `radius/md` | — | `home.rideAgain`, `check.confirm`, `check.reject`, `ride.gotOff`, `end.done` | ≥ 48 pt; label is the action |
-| TrustBadge / V2 (`153:173`) `signal` | `TrustBadge(kind:onDark:)` | `vehicle/*`, `data/*`, `journey/degraded`, `journey/checking` | `RideGuidance.vehicle`, `.data` | `trust.vehicle.*`, `trust.data.*` | Icon + words; combined with plate |
+| TrustBadge / V2 (`153:173`) `signal` | none: `TrustBadge` was never placed on a screen and was removed 2026-11-10 (U-13); the Figma component remains | `vehicle/*`, `data/*`, `journey/degraded`, `journey/checking` | `RideGuidance.vehicle`, `.data` | `trust.vehicle.*`, `trust.data.*` | Icon + words; combined with plate |
 | SearchField / V2 (`154:62`) | `SearchFieldButton` — `HomeView.swift` | `background/secondary`, `journey/active` 55 % outline, `identity/mint-ink` | SETUP | `home.search.placeholder`, `home.search.hint` | Button, id `destination-search` |
 | StopPair / V2 (`154:73`) | `StopPair` | `text/secondary`, `text/primary`, `line/separator` | — | `a11y.stopPair` | One sentence |
 | StopRow / V2 (`154:83`) | `StopRow` | `text/*`, tint per use | SETUP, boarding, map intake | `boarding.stopsToDestination` | ≥ 44 pt row |

@@ -103,7 +103,7 @@ The current implementation in Swift (`TapsoTokens.swift`, `RideSurfaceComponents
 - **Source Paths:**
   - `apps/ios/Shared/TapsoTokens.swift` (L115-185)
   - `docs/beta/DESIGN_DIRECTION.md` (L37-51)
-  - `docs/product/DESIGN_SYSTEM_V2.md` (L84-90)
+  - `docs/archive/product/DESIGN_SYSTEM_V2.md` (L84-90)
 - **Figma Reference:** `01 Foundations`, `00 Cover / Index`
 - **Current Truth:**
   - Pretendard 1.3.9 (SIL OFL 1.1) is bundled strictly in the main app target.
@@ -186,7 +186,7 @@ The current implementation in Swift (`TapsoTokens.swift`, `RideSurfaceComponents
 - **Severity:** P2
 - **Domain:** Documentation Hygiene
 - **Source Paths:**
-  - `docs/product/DESIGN_SYSTEM_V2.md`
+  - `docs/archive/product/DESIGN_SYSTEM_V2.md`
   - `docs/product/FIGMA_IMPLEMENTATION_MAP_V2.md`
 - **Figma Reference:** `13 Archive`, `00 Cover / Index`
 - **Current Truth:**

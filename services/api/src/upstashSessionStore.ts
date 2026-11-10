@@ -8,7 +8,7 @@
  * supply-chain surface on nothing.
  *
  * Verified against the live service on 2026-09-23, in two halves recorded in
- * `docs/exec-plans/DURABLE_JOURNEY_SESSIONS.md`: this store alone against the
+ * `docs/archive/exec-plans/DURABLE_JOURNEY_SESSIONS.md`: this store alone against the
  * real Upstash database (15/15), and a preview deployment of the whole API
  * against the same database (12/12). The stub-`fetch` tests remain the
  * regression net; the live scripts in `scripts/upstash/` are how to re-check.

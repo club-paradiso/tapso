@@ -109,7 +109,7 @@ swift test --package-path packages/transit-core   # macOS / CI
   (`main@665a431` + PR B: services/api 782/782, typecheck clean, no Swift
   type collisions).
 - PR D (`claude/v22-map-handoff`, on PR C): `SharedPlaceParser`, `HandoffInbox`,
-  `HandoffStopSuggester`, `HandoffJourney` in the core; the `TapsoShare`
+  `HandoffStopSuggester`, `HandoffJourney` (removed 2026-11-10, unused) in the core; the `TapsoShare`
   extension with the App Group; paste and share-sheet intake, nearest-stop
   suggestions in live setup, the walk to the shared place through NAVER Map,
   KakaoMap and Apple Maps. Found on the way: the V2 end screen never showed its

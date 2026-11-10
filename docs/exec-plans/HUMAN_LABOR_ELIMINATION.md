@@ -469,25 +469,25 @@ The procedures the repository asked people to perform before this work (the stat
 | Id | Kind | Procedure | Where |
 |---|---|---|---|
 | H01 | BUS_RIDE | v1 operator field-validation ride on /ride-capture/background.html. | docs/DATA_VALIDATION.md:192,241-243,298-304 |
-| H02 | STOP_MARKER | Tap each stop where the bus physically halts and the doors open (CLI p <seq>; | docs/HANDOFF.md:107-121 |
-| H03 | BUS_RIDE | Invited friends ride with /ride-capture/beta.html: enter the bus number and plate last 4, pick the boarding stop, tap 탑승 시작 and 하차 완료. | docs/exec-plans/BETA_FIELD_TESTER.md:5-10,151-176 |
-| H04 | BUS_RIDE | Legacy Task B controlled ride with the CLI (scripts/ride-capture/capture.ts on a laptop with .env.local, stdin commands b/p/n/a/q), the phone controller /ride-capture/ (local-device), or quick-local.h… | docs/HANDOFF.md:26-129 |
-| H05 | BUS_RIDE | Repeat the controlled capture on a second and further routes after the first. | docs/HANDOFF.md:127-129 |
-| H06 | BUS_RIDE | Collect ride evidence that separates provider lag from collector lag, then re-derive the PROVISIONAL cadence thresholds, the 75 s missing-vehicle grace, the 90 s freshness window and the 120 m near-st… | docs/exec-plans/TASK_C_SOURCE_FRESHNESS.md:106-112 |
-| H07 | DEVICE_TEST | Acceptance rides: (a) one practice ride to confirm the submission receipt on a real phone; | docs/exec-plans/FIELD_VALIDATION_SUBMISSION.md:154-155 |
+| H02 | STOP_MARKER | Tap each stop where the bus physically halts and the doors open (CLI p <seq>; | docs/archive/HANDOFF.md:107-121 |
+| H03 | BUS_RIDE | Invited friends ride with /ride-capture/beta.html: enter the bus number and plate last 4, pick the boarding stop, tap 탑승 시작 and 하차 완료. | docs/archive/exec-plans/BETA_FIELD_TESTER.md:5-10,151-176 |
+| H04 | BUS_RIDE | Legacy Task B controlled ride with the CLI (scripts/ride-capture/capture.ts on a laptop with .env.local, stdin commands b/p/n/a/q), the phone controller /ride-capture/ (local-device), or quick-local.h… | docs/archive/HANDOFF.md:26-129 |
+| H05 | BUS_RIDE | Repeat the controlled capture on a second and further routes after the first. | docs/archive/HANDOFF.md:127-129 |
+| H06 | BUS_RIDE | Collect ride evidence that separates provider lag from collector lag, then re-derive the PROVISIONAL cadence thresholds, the 75 s missing-vehicle grace, the 90 s freshness window and the 120 m near-st… | docs/archive/exec-plans/TASK_C_SOURCE_FRESHNESS.md:106-112 |
+| H07 | DEVICE_TEST | Acceptance rides: (a) one practice ride to confirm the submission receipt on a real phone; | docs/archive/exec-plans/FIELD_VALIDATION_SUBMISSION.md:154-155 |
 | H08 | DEVICE_TEST | Physical-device matrix: Dynamic Island and non-Island iPhones on the minimum and current iOS; | docs/DEVICE_TEST_PLAN.md:3-29 |
 | H09 | MANUAL_INFRA_CHECK | On a Mac, run xcodegen and xcodebuild build test for the app, the widget extension and the 8 iOS tests; | AGENTS.md (verification block) |
 | H10 | DEVICE_TEST | Run the Safari ride-capture controller on a real iPhone to verify wake lock, IndexedDB eviction, the lifecycle listeners and the export sheet. | docs/KNOWN_ISSUES.md:8 |
 | H11 | DEVICE_TEST | On an iPhone, start a background_acceptance capture on a live bus and leave Safari for at least 60 s while the collector gathers at least 20 snapshots; | services/api/public/ride-capture/acceptance.js:136-338 |
-| H12 | OTHER | Keep the phone screen on and the capture page in front for the whole of a browser-owned capture. | docs/HANDOFF.md:72-73 |
+| H12 | OTHER | Keep the phone screen on and the capture page in front for the whole of a browser-owned capture. | docs/archive/HANDOFF.md:72-73 |
 | H13 | MANUAL_EXPORT | After every operator ride, tap 검증 데이터 제출 within 2 hours, and 다시 제출 if it fails. | docs/DATA_VALIDATION.md:267-282 |
 | H14 | MANUAL_EXPORT | Backup path when submission fails or storage is unconfigured (503): save ① RAW then ② REPORT under one stem to the Files app before the 2-hour deadline, move the files off the phone by hand, and run b… | docs/DATA_VALIDATION.md:249-265,280-281 |
-| H15 | MANUAL_EXPORT | Legacy instruction: send back only the sanitized .report.json, never the raw capture; | docs/HANDOFF.md:122-125 |
-| H16 | MANUAL_ANALYSIS | Run scripts/ride-capture/analyze.ts on a raw capture by hand when the server analyze step is skipped (captures above about 3.5 MB), fails, or after the analyzer changes. | docs/HANDOFF.md:96-100 |
+| H15 | MANUAL_EXPORT | Legacy instruction: send back only the sanitized .report.json, never the raw capture; | docs/archive/HANDOFF.md:122-125 |
+| H16 | MANUAL_ANALYSIS | Run scripts/ride-capture/analyze.ts on a raw capture by hand when the server analyze step is skipped (captures above about 3.5 MB), fails, or after the analyzer changes. | docs/archive/HANDOFF.md:96-100 |
 | H17 | MANUAL_ANALYSIS | To replay the campaign under a newer matcher: run pull-campaign.ts --yes with Upstash credentials, then batch-analyze.ts (v1 rules only), then re-classify beta rides under v2 by hand. | docs/DATA_VALIDATION.md:279-282 |
 | H18 | MANUAL_ANALYSIS | A person reviews campaign alerts (replay drift, sameRideAs, GATE_FAILURE, FAIL_CLOSED_BUG, beta records missing their v2 block) before trusting the count. | services/api/src/fieldValidation.ts:123-124,154-161 |
 | H19 | MANUAL_ANALYSIS | A person judges 'clear candidate margin', 'multiple routes', 'a source-freshness rule exists' and calibration, reviews the v2 criteria, then edits the literal fieldValidationGate.status in apiConfig.t… | docs/DATA_VALIDATION.md:284-285 |
-| H20 | MANUAL_ANALYSIS | Define and test a TAGO source-freshness rule (Task C) from freshnessEvidence and tracked.markerComparisons. | docs/HANDOFF.md:131-140 |
+| H20 | MANUAL_ANALYSIS | Define and test a TAGO source-freshness rule (Task C) from freshnessEvidence and tracked.markerComparisons. | docs/archive/HANDOFF.md:131-140 |
 | H21 | MANUAL_ANALYSIS | Decide the written-down policy on whether local-device, cli or engine-less captures can ever count (currently UNRESOLVED). | services/api/src/rideCampaign.ts:336-340,369-375 |
 | H22 | MANUAL_ANALYSIS | Tune matcher thresholds and decide which provider fields to trust using real Jeju history, including observing at stops whether nodeord means last-passed or next stop and whether it updates on arrival… | docs/VEHICLE_MATCHING.md:23 |
 | H23 | BUS_RIDE | Measure from real riders how often they board the first arriving bus. | services/api/src/passiveShadowSummary.ts:679 |
@@ -496,9 +496,9 @@ The procedures the repository asked people to perform before this work (the stat
 | H26 | ACCOUNT_OR_CREDENTIAL | In the Vercel dashboard: set TAGO_SERVICE_KEY as Sensitive (Production, and Preview only when needed; | docs/PRODUCTION_TRANSIT_API.md:197-202,331-346 |
 | H27 | ACCOUNT_OR_CREDENTIAL | Set by hand in the Railway dashboard: TAGO_SERVICE_KEY, RIDE_CAPTURE_OPERATOR_TOKEN, UPSTASH_REDIS_REST_URL and TOKEN, BETA_TESTERS_ENABLED, WEB_PUSH_VAPID_*, TRANSIT_ALLOWED_ORIGINS (must include the… | services/api/Dockerfile.collector:1-10 |
 | H28 | ACCOUNT_OR_CREDENTIAL | Enter the operator token on the phone in each Safari session (sessionStorage), and again after any 401. | services/api/public/ride-capture/app.js:181-203,375-388 |
-| H29 | ACCOUNT_OR_CREDENTIAL | Create, send, revoke and reissue beta invites (at most 30 days and 50 rides each); | docs/exec-plans/BETA_FIELD_TESTER.md:226-236,332-333 |
+| H29 | ACCOUNT_OR_CREDENTIAL | Create, send, revoke and reissue beta invites (at most 30 days and 50 rides each); | docs/archive/exec-plans/BETA_FIELD_TESTER.md:226-236,332-333 |
 | H30 | ACCOUNT_OR_CREDENTIAL | The owner decides whether to add a TAGO_SERVICE_KEY repository secret, so passive collection uses tago-direct at 5 s instead of the 20 s-cached public API. | docs/KNOWN_ISSUES.md:30 |
-| H31 | ACCOUNT_OR_CREDENTIAL | Obtain a paid Apple Developer Program membership or an upload-capable organisation role (legal agreement, 2FA, purchase); | docs/HANDOFF.md:5,147 |
+| H31 | ACCOUNT_OR_CREDENTIAL | Obtain a paid Apple Developer Program membership or an upload-capable organisation role (legal agreement, 2FA, purchase); | docs/archive/HANDOFF.md:5,147 |
 | H32 | ACCOUNT_OR_CREDENTIAL | Provision Supabase, a verified Resend domain and a Toss merchant account; | README.md:26-27,88-91 |
 | H33 | ACCOUNT_OR_CREDENTIAL | An administrator enables branch protection on main. | AGENTS.md |
 | H34 | MANUAL_INFRA_CHECK | After deploys or env changes, read /health, run services/api/scripts/smoke.ts by hand and review Vercel runtime logs. | README.md:20,76 |
@@ -507,16 +507,16 @@ The procedures the repository asked people to perform before this work (the stat
 | H37 | MANUAL_INFRA_CHECK | Run the three live verifiers by hand, with Upstash credentials in .env.local, a preview deployment on the redis store, VERCEL_AUTOMATION_BYPASS_SECRET, a bus in service and a quiet database. | scripts/upstash/verify-session-store.ts:5-8,30-72,307-313 |
 | H38 | OTHER | Decide whether to move production to TRANSIT_SESSION_STORE=redis with TRANSIT_SESSION_KEY_PREFIX=tapso:prod:journey-session:, then re-run the checks. | docs/KNOWN_ISSUES.md:21 |
 | H39 | MANUAL_INFRA_CHECK | Roll back by hand: Vercel Instant Rollback, a revert on main, fixing env vars and redeploying, or pausing the project. | docs/PRODUCTION_TRANSIT_API.md:370-381 |
-| H40 | MANUAL_INFRA_CHECK | Before boarding, run four production curls (cities, routes, stops, vehicles) and check by eye that stops are contiguous, the chosen sequences are in order and vehicles are present. | docs/HANDOFF.md:78-89 |
+| H40 | MANUAL_INFRA_CHECK | Before boarding, run four production curls (cities, routes, stops, vehicles) and check by eye that stops are contiguous, the chosen sequences are in order and vehicles are present. | docs/archive/HANDOFF.md:78-89 |
 | H41 | MANUAL_INFRA_CHECK | Re-run credentialed TAGO probes by hand (scripts/tago/probe.py, the bounded cadence probe, the local server). | README.md:52-54 |
 | H42 | OTHER | Trigger each passive collection or re-evaluation by editing ops/passive-shadow-v3/collection-request.json on a claude/**passive-shadow** branch, or by dispatching the workflow, at the wall-clock time … | .github/workflows/passive-shadow-v3.yml:9-13,38-44 |
 | H43 | MANUAL_EXPORT | Copy artifact 10849693394 (run 36098610702's raw streams, 14-day retention) to non-expiring private storage before about 2026-10-09. | .github/workflows/passive-shadow-v3.yml:140-151 |
 | H44 | MANUAL_EXPORT | Reassemble the summary and ledger byte-for-byte from base64 chunks in the CI log, check their hashes by hand, and commit them to artifacts/. | docs/validation/PASSIVE_SHADOW_VALIDATION_V3_RESULTS.md:32 |
 | H45 | MANUAL_ANALYSIS | Hand-write the per-case wrong-commit analysis of all 268 records, and re-run evaluate.ts per collection. | docs/validation/PASSIVE_SHADOW_VALIDATION_V3_WRONG_COMMITS.md:3-18 |
-| H46 | MANUAL_INFRA_CHECK | TestFlight pipeline: increment the build number, archive, validate and upload in Xcode Organizer, inspect the archive's signing, answer export compliance, assign a group, confirm processing; | docs/HANDOFF.md:149,153 |
+| H46 | MANUAL_INFRA_CHECK | TestFlight pipeline: increment the build number, archive, validate and upload in Xcode Organizer, inspect the archive's signing, answer export compliance, assign a group, confirm processing; | docs/archive/HANDOFF.md:149,153 |
 | H47 | MANUAL_ANALYSIS | Corroborate route existence and classification against the Jeju BIS website by hand, and record request parameters, times, provider and schema for every live validation. | docs/DATA_SOURCES.md:35,39,51-55 |
 | H48 | OTHER | An operator sets TRANSIT_AUTOMATIC_MATCHING_ENABLED=true in a deployment's environment. | services/api/src/apiConfig.ts:91-97,165-168 |
 | H49 | OTHER | In the default shadow mode, the rider must explicitly confirm the bus before any tracking or progress. | services/api/src/journeySession.ts:282-302,395-411 |
 | H50 | OTHER | Governance decisions: threat model, privacy review (including ride-capture retention), brand and trademark clearance with counsel, the support-payment retention decision, and hosting choices. | docs/ROADMAP.md:10 |
-| H51 | MANUAL_INFRA_CHECK | Run local replacement checks whenever the GitHub Actions budget blocks CI. | docs/exec-plans/MARKETING_SITE.md:74,80 |
+| H51 | MANUAL_INFRA_CHECK | Run local replacement checks whenever the GitHub Actions budget blocks CI. | docs/archive/exec-plans/MARKETING_SITE.md:74,80 |
 | H52 | OTHER | Working-tree proposed gate: supply the humanOnlyMitigations booleans (BA-3, the rider can see and undo an automatic pick; | services/api/src/matcherSafetyGate.ts:150-161,217-224,295-309 (untracked) |
