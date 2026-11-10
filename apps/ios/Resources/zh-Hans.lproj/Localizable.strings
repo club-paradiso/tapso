@@ -153,6 +153,13 @@
 "count.lastKnown" = "最后确认";
 "count.lastKnown.long" = "剩余站数 · 最后确认";
 "count.lastKnown.long.one" = "剩余站数 · 最后确认";
+"trust.vehicle.confirmed" = "已确认车辆";
+"trust.vehicle.rechecking" = "正在确认车辆";
+"trust.vehicle.lost" = "正在查找公交车";
+"trust.data.live" = "实时";
+"trust.data.delayed" = "延迟";
+"trust.data.offline" = "离线";
+"trust.data.checking" = "连接中";
 "end.title" = "您已下车";
 "end.body" = "下次可在首页一键重新开始此行程。";
 "end.passed.title" = "您已经过了下车站";

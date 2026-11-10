@@ -68,7 +68,7 @@ The Swift copies of the first two, an unused `JourneyStateMachine`, and the neve
 1. **The app-wide control tint is still mint** (`TapsoRootView` `.tint(mintDeep)`, primary buttons), so controls read as "live" too. Keep, or move controls to a neutral or brand colour.
 2. **GitHub Actions may not open pull requests** in this repository, so the weekly catalog and timetable refreshes fail until Settings → Actions → General → "Allow GitHub Actions to create and approve pull requests" is enabled.
 3. **Figma drift:** the `TrustBadge / V2` component, the NightGuard placement on `09 Return / Rescue`, the mint home tiles and the live badge still show the old design.
-4. **The website** (`apps/web`) still draws a `TrustBadge` in its mock app screens, a badge the app does not have.
+4. **The website** (`apps/web`) still draws a `TrustBadge` in its mock app screens, a badge the app does not have. Its 7 strings (`trust.vehicle.*`, `trust.data.*`) are kept in the iOS tables only because the website quotes them; drop both together.
 
 ## 6. Next steps, in order
 

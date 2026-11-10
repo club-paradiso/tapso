@@ -152,6 +152,13 @@
 "count.lastKnown" = "last seen";
 "count.lastKnown.long" = "stops · last seen";
 "count.lastKnown.long.one" = "stop · last seen";
+"trust.vehicle.confirmed" = "Bus confirmed";
+"trust.vehicle.rechecking" = "Checking bus";
+"trust.vehicle.lost" = "Finding bus";
+"trust.data.live" = "Live";
+"trust.data.delayed" = "Delayed";
+"trust.data.offline" = "Offline";
+"trust.data.checking" = "Connecting";
 "end.title" = "You're off the bus";
 "end.body" = "Next time, start this ride again from Home in one tap.";
 "end.passed.title" = "You passed your stop";
