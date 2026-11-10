@@ -9,6 +9,8 @@ name: Jeju transit catalog
 #   commits the result to that branch. With "probeOnly": true it skips the build and
 #   probes the committed catalog; "firstType" probes that provider route type first
 #   (순환버스 are late-night routes, 22:00-23:40 KST, shorter than a full probe).
+#   "onlyRoutes": "900,910" with "passes" (1-12) and "passEverySeconds" (60-900) probes only
+#   those route numbers, repeatedly, for routes TAGO gives no type and that run a few trips a day.
 # - Weekly on main, it refreshes onto the branch data/jeju-catalog-refresh and
 #   opens a pull request when the catalog changed. It never commits to main.
 on:
@@ -54,7 +56,11 @@ jobs:
             // A scheduled or manual run on main always rebuilds; probeOnly applies to a request on a topic branch.
             const probeOnly = process.env.GITHUB_EVENT_NAME === "push" && r.probeOnly === true;
             const firstType = typeof r.firstType === "string" && /^[가-힣A-Za-z]{1,10}$/.test(r.firstType) ? r.firstType : "";
-            out.write(`probe_only=${probeOnly}\nlive=${probeOnly || r.live === true}\nfirst_type=${firstType}\n`);
+            // A targeted probe: route numbers only, a bounded number of passes (see build-jeju-catalog.ts).
+            const onlyRoutes = probeOnly && typeof r.onlyRoutes === "string" && /^[0-9]{1,4}(,[0-9]{1,4}){0,9}$/.test(r.onlyRoutes) ? r.onlyRoutes : "";
+            const passes = Number.isInteger(r.passes) && r.passes >= 1 && r.passes <= 12 ? r.passes : 1;
+            const every = Number.isInteger(r.passEverySeconds) && r.passEverySeconds >= 60 && r.passEverySeconds <= 900 ? r.passEverySeconds : 300;
+            out.write(`probe_only=${probeOnly}\nlive=${probeOnly || r.live === true}\nfirst_type=${firstType}\nonly_routes=${onlyRoutes}\npasses=${passes}\npass_every=${every}\n`);
           '
       - name: Build the catalog (paced, read-only)
         if: steps.request.outputs.probe_only != 'true'
@@ -82,8 +88,13 @@ jobs:
         if: steps.request.outputs.live == 'true'
         env:
           FIRST_TYPE: ${{ steps.request.outputs.first_type }}
+          ONLY_ROUTES: ${{ steps.request.outputs.only_routes }}
+          PASSES: ${{ steps.request.outputs.passes }}
+          PASS_EVERY: ${{ steps.request.outputs.pass_every }}
         run: |
-          if [ -n "${FIRST_TYPE}" ]; then
+          if [ -n "${ONLY_ROUTES}" ]; then
+            node --experimental-strip-types scripts/catalog/build-jeju-catalog.ts --probe-only --only-routes "${ONLY_ROUTES}" --passes "${PASSES}" --pass-every-s "${PASS_EVERY}"
+          elif [ -n "${FIRST_TYPE}" ]; then
             node --experimental-strip-types scripts/catalog/build-jeju-catalog.ts --probe-only --first-type "${FIRST_TYPE}"
           else
             node --experimental-strip-types scripts/catalog/build-jeju-catalog.ts --probe-only

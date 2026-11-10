@@ -50,6 +50,13 @@ const PROBE_ONLY = args.includes("--probe-only");
 // Probe variants of this provider route type first, e.g. 순환버스 (Jeju's late-night school routes,
 // 22:00-23:40 KST): a full probe takes about 40 minutes, longer than their service window.
 const FIRST_TYPE = option("--first-type");
+// Probe only these route numbers, several times. For routes TAGO gives no type (e.g. the
+// 900/910 village buses, a few trips a day), so --first-type cannot select them and one
+// look can fall between trips. Each pass is one moment, written to probe-history only:
+// jeju-live-probe.json stays the last full probe, which the readiness report reads.
+const ONLY_ROUTES = (option("--only-routes") ?? "").split(",").map((n) => n.trim()).filter(Boolean);
+const PASSES = Math.min(12, Math.max(1, Number(option("--passes") ?? 1)));
+const PASS_EVERY_S = Math.min(900, Math.max(60, Number(option("--pass-every-s") ?? 300)));
 const ROOT = path.resolve(import.meta.dirname, "..", "..");
 
 const pause = (ms: number) => new Promise((resolve) => setTimeout(resolve, ms));
@@ -110,7 +117,8 @@ async function censusRouteNumbers(): Promise<string[]> {
 
 if (PROBE_ONLY) {
   const catalog = JSON.parse(await readFile(path.join(ROOT, "services/api/data/jeju-transit-catalog.json"), "utf8"));
-  await probe(validateCatalog(catalog));
+  if (ONLY_ROUTES.length > 0) await probeRoutes(validateCatalog(catalog));
+  else await probe(validateCatalog(catalog));
   console.log(`CALLS ${calls}`);
   process.exit(0);
 }
@@ -178,6 +186,30 @@ console.log(`CATALOG ${catalog.catalogVersion} routes ${catalog.routes.length} s
 
 if (LIVE) await probe(catalog);
 console.log(`CALLS ${calls}`);
+
+async function probeRoutes(catalog: TransitCatalog): Promise<void> {
+  const routes = catalog.routes.filter((route) => ONLY_ROUTES.includes(route.routeNo));
+  if (routes.length === 0) throw new Error(`no catalog variant for route numbers ${ONLY_ROUTES.join(",")}`);
+  await mkdir(path.join(ROOT, "artifacts/route-coverage/probe-history"), { recursive: true });
+  for (let pass = 1; pass <= PASSES; pass += 1) {
+    const startedAt = new Date().toISOString();
+    const probes: Record<string, { status: number; vehicles: number; withStopSequence: number; sequenceInRange: number }> = {};
+    for (const route of routes) {
+      const { status, body } = await getJson(`/v1/vehicles?routeId=${encodeURIComponent(route.routeId)}&cityCode=${CITY}`);
+      const items: { stopSequence?: unknown }[] = status === 200 && Array.isArray(body?.items) ? body.items : [];
+      const maxSequence = route.sequences?.at(-1) ?? route.stops.length;
+      const withStopSequence = items.filter((item) => typeof item.stopSequence === "number").length;
+      const sequenceInRange = items.filter((item) => typeof item.stopSequence === "number" && item.stopSequence >= 1 && item.stopSequence <= maxSequence).length;
+      probes[route.routeId] = { status, vehicles: items.length, withStopSequence, sequenceInRange };
+    }
+    const probedAt = new Date().toISOString();
+    const record = `${JSON.stringify({ probedAt, startedAt, onlyRoutes: ONLY_ROUTES, pass, passes: PASSES, base: BASE, catalogVersion: catalog.catalogVersion, note: "Targeted probe of the listed route numbers only. Vehicle counts only; no vehicle number is recorded. A count of zero means no bus reported at that moment, not that the route is unsupported.", probes }, null, 2)}\n`;
+    await writeFile(path.join(ROOT, `artifacts/route-coverage/probe-history/${probedAt.slice(0, 19).replaceAll(":", "-")}Z.json`), record);
+    const seen = Object.values(probes).reduce((sum, row) => sum + row.vehicles, 0);
+    console.log(`LIVE_PROBE pass ${pass}/${PASSES}: ${routes.length} variants of ${ONLY_ROUTES.join(",")}, ${seen} bus(es) reported`);
+    if (pass < PASSES) await pause(PASS_EVERY_S * 1_000);
+  }
+}
 
 async function probe(catalog: TransitCatalog): Promise<void> {
   const probes: Record<string, { status: number; vehicles: number; withStopSequence: number; sequenceInRange: number }> = {};
