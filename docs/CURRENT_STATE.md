@@ -47,8 +47,9 @@ API routes (`services/api/src/apiRouter.ts`): `/health`, `/v1/cities`, `/v1/rout
 | Swift core, iOS build and tests | `VERIFIED` in CI on every push (jobs `transit-core`, `ios`; macOS only, no local Swift toolchain in the agent container) |
 | API | `VERIFIED` by Node tests (1,052 on 2026-11-10) and live in production |
 | Live data | TAGO positions have no observation time; TAPSO uses receipt time. TAGO refuses bursts (HTTP 429; at most 4 concurrent reads per instance is `ASSUMED`) |
+| Route 900 (동복리마을버스) | `UNKNOWN` whether TAGO reports its buses at all: 12 targeted passes on 2026-11-10, 16:08–17:13 KST, across the 16:34 and 17:08 departures of the official table, saw 0 buses on all 12 variants (every read HTTP 200). A rider on 900 would see no bus to confirm. Route 910 reported a bus in all 12 passes |
 | Timetables | `OFFICIAL_DATED` 2026-11-05; first-bus check 2026-11-09: 12 of 13 first departures matched (`docs/validation/TAPSO_V4_FIRST_BUS_CHECK_2026-11-09.md`). Goes stale after 2027-02-03; the release gate warns after 2027-01-04 |
-| Release gates (`artifacts/release-gates/jeju-v1.md`) | 1 data, 2 search, 6 data quality: PASS. 3 live: PENDING, only routes 900 and 910 (village buses, daytime) never seen with a bus. 4 tracking: BLOCKED by a physical device. 5 background push: BLOCKED by a paid Apple account. 7 release: decided by CI |
+| Release gates (`artifacts/release-gates/jeju-v1.md`) | 1 data, 2 search, 3 live, 6 data quality: PASS. 4 tracking: BLOCKED by a physical device. 5 background push: BLOCKED by a paid Apple account. 7 release: decided by CI. Gate 3 passes per route family: every family has a variant seen with a bus in some probe |
 | On a real iPhone | `UNVERIFIED`: no signed device build yet |
 | APNs push, TestFlight | `BLOCKED_BY_APPLE_ACCOUNT`: needs the paid Apple Developer Program |
 | Automatic matching | off; readiness `READY_FOR_SHADOW` (`docs/validation/MATCHER_SAFETY_EVIDENCE_V4.md`) |
@@ -72,10 +73,10 @@ The Swift copies of the first two, an unused `JourneyStateMachine`, and the neve
 
 ## 6. Next steps, in order
 
-1. Probe routes 900 and 910 on a weekday morning (gate 3). The probe orders by route type, and these two have none, so this needs a route-number option in `scripts/catalog/build-jeju-catalog.ts`.
-2. Snapshot evidence of the return screen and NightGuard in Korean and English, at default size and AX5, then a VoiceOver checklist (V4 PR 4).
-3. Repeat the first-bus check on two more weekdays before changing the 365 06:00 한라대 row (`CONFLICTED` in the official file).
-4. A signed build on the owner's iPhone (free Personal Team, 7-day install) to start device evidence.
+1. Snapshot evidence of the return screen and NightGuard in Korean and English, at default size and AX5, then a VoiceOver checklist (V4 PR 4).
+2. Repeat the first-bus check on two more weekdays before changing the 365 06:00 한라대 row (`CONFLICTED` in the official file).
+3. A signed build on the owner's iPhone (free Personal Team, 7-day install) to start device evidence.
+4. Route 900: probe again on another weekday (`ops/jeju-catalog/request.json` with `onlyRoutes`); if it still never reports, ask the operator whether its buses send positions to BIS/TAGO, and decide what TAPSO tells a rider on it.
 
 The detailed plan and progress log: `docs/exec-plans/TAPSO_V4_IMPLEMENTATION.md`. Audits: `docs/audits/`.
 
