@@ -251,7 +251,7 @@ try {
 
 console.log(`\n${checks - failures}/${checks} checks passed`);
 if (failures > 0) {
-  console.error("\nThe preview deployment does NOT store sessions correctly. Record the failure in docs/exec-plans/DURABLE_JOURNEY_SESSIONS.md.");
+  console.error("\nThe preview deployment does NOT store sessions correctly. Record the failure in docs/archive/exec-plans/DURABLE_JOURNEY_SESSIONS.md.");
   process.exit(1);
 }
-console.log("\nThe preview deployment stores sessions correctly. Record this output in docs/exec-plans/DURABLE_JOURNEY_SESSIONS.md.");
+console.log("\nThe preview deployment stores sessions correctly. Record this output in docs/archive/exec-plans/DURABLE_JOURNEY_SESSIONS.md.");

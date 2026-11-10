@@ -5,8 +5,8 @@
 > `matcher-passive-safety-v4` decides matcher readiness from machine-produced
 > evidence and reads no ride count, and no level up to
 > `READY_FOR_CONFIRMATION_ASSISTED` needs a ride
-> ([`../validation/MATCHER_SAFETY_EVIDENCE_V4.md`](../validation/MATCHER_SAFETY_EVIDENCE_V4.md),
-> [`HUMAN_LABOR_ELIMINATION.md`](HUMAN_LABOR_ELIMINATION.md)). The beta flow
+> ([`../validation/MATCHER_SAFETY_EVIDENCE_V4.md`](../../validation/MATCHER_SAFETY_EVIDENCE_V4.md),
+> [`HUMAN_LABOR_ELIMINATION.md`](../../exec-plans/HUMAN_LABOR_ELIMINATION.md)). The beta flow
 > remains in the Railway collector behind `BETA_TESTERS_ENABLED` and may keep
 > running; a beta ride counts only toward the historical
 > `beta-matcher-30-boardings-v2` campaign, which stays as defined, with zero

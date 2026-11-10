@@ -141,7 +141,7 @@ Two further paths exist for controlled ride evidence only, a legacy flow that
 no release gate has required since 2026-09-29. They require
 `Authorization: Bearer <RIDE_CAPTURE_OPERATOR_TOKEN>`, answer `no-store`, and
 stay disabled unless that token is configured. They are documented in full in
-[RIDE_CAPTURE_CONTROLLER.md](RIDE_CAPTURE_CONTROLLER.md).
+[archive/RIDE_CAPTURE_CONTROLLER.md](archive/RIDE_CAPTURE_CONTROLLER.md).
 
 | Method | Path | Purpose |
 |---|---|---|
@@ -368,7 +368,7 @@ per route per window keeps it off the vehicle budget.
 | What is done about it? | The endpoints fail closed. `TRANSIT_SESSIONS_ENABLED` defaults to `false` whenever `VERCEL` is set and the store is `memory`, and the session routes answer `503 SESSIONS_UNAVAILABLE` with the reason. `/health` reports `sessions.store`, `sessions.enabled` and `sessions.durableStoreConfigured` honestly. |
 | Can production and a preview share the Upstash database? | Only by namespace, so the namespace is enforced (`src/sessionKeyPrefix.ts`, 2026-10-01). A deployment with `VERCEL_ENV=production` serves sessions only from `tapso:prod:journey-session:`; nothing else (preview, development, a local process) may use that namespace; the `verify` namespace is never served. A violation does not stop the deployment booting: sessions are disabled, the session routes answer `503 SESSIONS_UNAVAILABLE` naming the namespace rule, and `/health` reports `sessions.namespace` (the category: `production`, `preview`, `default`, `verification` or `custom`, never the prefix) and `sessions.problem`. |
 | How does a ride end? | `DELETE /v1/sessions/:id` deletes the row instead of leaving it to its 4-hour TTL: a finished ride stops costing provider reads, and its stop history stops existing. A refresh racing the delete loses its compare-and-set and answers `410`. |
-| Is the Upstash store verified? | Against the live service on 2026-09-23 (`VERIFIED_LIVE_INFRASTRUCTURE`): store 15/15 and a preview deployment 12/12 (`exec-plans/DURABLE_JOURNEY_SESSIONS.md`). Production was left on the memory store: the operator's record of 2026-09-23 (`HISTORICAL_REPORT_ONLY`), not an observation; `/health` `sessions.store` is the authority. Moving production is a separate decision that needs `TRANSIT_SESSION_KEY_PREFIX=tapso:prod:journey-session:` (`KNOWN_ISSUES.md`). |
+| Is the Upstash store verified? | Against the live service on 2026-09-23 (`VERIFIED_LIVE_INFRASTRUCTURE`): store 15/15 and a preview deployment 12/12 (`archive/exec-plans/DURABLE_JOURNEY_SESSIONS.md`). Production was left on the memory store: the operator's record of 2026-09-23 (`HISTORICAL_REPORT_ONLY`), not an observation; `/health` `sessions.store` is the authority. Moving production is a separate decision that needs `TRANSIT_SESSION_KEY_PREFIX=tapso:prod:journey-session:` (`KNOWN_ISSUES.md`). |
 | Does a durable store enable automatic matching? | **No.** Sessions and automatic selection are separate flags. Automatic selection is withheld by release gate `matcher-passive-safety-v4`, not by the store, and the configuration refuses `TRANSIT_AUTOMATIC_MATCHING_ENABLED` below `READY_FOR_BOUNDED_AUTOMATION`. |
 | Does validation need sessions? | **No.** Matcher evidence comes from rider-free passive collection, which reads the stateless read endpoints or TAGO directly, and from offline replay; neither calls the session API (`.github/workflows/matcher-evidence.yml`). |
 
@@ -642,7 +642,7 @@ source-freshness rule.
 - `SIMULATED`: local end-to-end behaviour, including the credentialed,
   uncredentialed, and serverless-shaped configurations, run through the real
   Node adapter over a synthetic TAGO upstream
-  (`exec-plans/PRODUCTION_TRANSIT_BACKEND.md` §5).
+  (`archive/exec-plans/PRODUCTION_TRANSIT_BACKEND.md` §5).
 - Rate limiting is per warm instance, not global.
 - Ride sessions are off by default on serverless while the store is `memory`,
   which is production's store as last recorded (2026-09-23). The Upstash store
@@ -663,4 +663,4 @@ source-freshness rule.
 Task B is a controlled real Route 365 ride capture. It does not depend on this
 deployment: `scripts/ride-capture/capture.ts` constructs `TagoTransitProvider`
 directly and needs only the local key. The production API matters to Task D,
-when iOS connects. See `docs/HANDOFF.md` for the exact Task B commands.
+when iOS connects. See `docs/archive/HANDOFF.md` for the exact Task B commands.

@@ -1,5 +1,5 @@
 # Passive Shadow Validation v3 — one bounded, rider-free live collection and
-# its blind evaluation. See docs/exec-plans/PASSIVE_SHADOW_VALIDATION_V3.md.
+# its blind evaluation. See docs/archive/exec-plans/PASSIVE_SHADOW_VALIDATION_V3.md.
 #
 # Read-only provider access. No journey session, no Upstash write, no
 # production configuration. This repository is public: raw streams (raw vehicle

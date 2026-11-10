@@ -1,5 +1,11 @@
 # Jeju safety layer V3: Safe Return, Transfer Guardian, Rescue
 
+> **Status, 2026-11-10.** Safe Return (through `LastBus`) and Rescue (through
+> `PassedStopRescue`) run in the app. **Transfer Guardian is not built into the
+> app**: TAPSO follows one ride, and its Swift copy was removed because nothing
+> called it. The server function and `transfer-guardian-v1.json` remain as the
+> specification. See `docs/CURRENT_STATE.md`.
+
 Three decisions that make TAPSO useful exactly where a Jeju bus trip goes
 wrong: the way back, the connection, and the mistake. All three are pure,
 deterministic functions over facts another system established; none of them
@@ -8,7 +14,7 @@ invents a timetable, an arrival time or a walking distance.
 | | Server | Swift core | Specification |
 |---|---|---|---|
 | Safe Return | `evaluateSafeReturn` | `SafeReturn.evaluate` | `fixtures/journey/safe-return-v1.json` (14 cases) |
-| Transfer Guardian | `assessTransfer` | `TransferGuardian.assess` | `fixtures/journey/transfer-guardian-v1.json` (12 cases) |
+| Transfer Guardian | `assessTransfer` | — (removed 2026-11-10; not in the app) | `fixtures/journey/transfer-guardian-v1.json` (12 cases) |
 | Rescue | `planRescue` | `Rescue.plan` | `fixtures/journey/rescue-v1.json` (12 cases) |
 
 Implementations: `services/api/src/journeySafety.ts`,

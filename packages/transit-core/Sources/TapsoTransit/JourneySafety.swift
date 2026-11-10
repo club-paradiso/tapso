@@ -1,21 +1,35 @@
 import Foundation
 
-// Jeju safety layer: Safe Return, Transfer Guardian and Rescue.
+// Jeju safety layer: Safe Return and Rescue.
 //
-// Three deterministic decisions over facts another system already established.
+// Two deterministic decisions over facts another system already established.
 // None of them invents a timetable, an arrival time or a distance: an input
 // TAPSO does not have stays `nil`, and the answer becomes `unknown` (or, for
 // Rescue, a hand-off to a map app) instead of a confident guess.
 //
 // Times are minutes on one clock where the caller's "now" is 0; ranges are what
 // the evidence allows, never one guessed instant. The language-neutral
-// specifications are `fixtures/journey/safe-return-v1.json`,
-// `transfer-guardian-v1.json` and `rescue-v1.json`; the server implements the
-// same rules (`services/api/src/journeySafety.ts`) and runs the same cases.
+// specifications are `fixtures/journey/safe-return-v1.json` and
+// `rescue-v1.json`; the server implements the same rules
+// (`services/api/src/journeySafety.ts`) and runs the same cases.
 // Product notes: `docs/product/JEJU_SAFETY_LAYER_V3.md`. Policy values are
 // ASSUMED product choices, recorded in each specification.
 
 // MARK: - Safe Return
+
+/// How comfortably the rider can get back. See `SafeReturnStatus`.
+public enum SafeReturnLevel: String, Codable, Hashable, Sendable, CaseIterable {
+    /// "오늘 다녀오기 좋아요": return options stay open well past a useful visit.
+    case comfortable
+    /// "17:40 전에는 돌아오는 게 좋아요": fine, with a leave-by time.
+    case leaveBy
+    /// Possible, with a short visit or a long wait.
+    case tight
+    /// "지금은 다른 곳이 나아요": no practical way back after a useful visit.
+    case notRecommended
+    /// Not enough data to say. Never presented as safe.
+    case unknown
+}
 
 public struct SafeReturnPolicy: Codable, Hashable, Sendable {
     /// Be at the stop this long before the last practical bus.
@@ -167,121 +181,6 @@ public enum SafeReturn {
 
     private static func undetermined(_ reason: SafeReturnReason) -> SafeReturnStatus {
         SafeReturnStatus(level: .unknown, leaveBy: nil, lastDeparture: nil, longestWait: nil, reasons: [reason])
-    }
-}
-
-// MARK: - Transfer Guardian
-
-public struct TransferGuardianPolicy: Codable, Hashable, Sendable {
-    /// A worst-case margin at least this large is `safe`.
-    public var safeMarginMinutes: Double
-    /// A wait for the following connection at least this long is worth saying out loud.
-    public var longWaitMinutes: Double
-
-    public static let standard = TransferGuardianPolicy(safeMarginMinutes: 4, longWaitMinutes: 30)
-}
-
-/// What the evidence allows for one instant, in minutes. Never a single guess.
-public struct MinuteRange: Codable, Hashable, Sendable {
-    public let min: Double
-    public let max: Double
-
-    public init(min: Double, max: Double) {
-        self.min = min
-        self.max = max
-    }
-
-    var isValid: Bool { min.isFinite && max.isFinite && min <= max }
-}
-
-public struct TransferInput: Codable, Hashable, Sendable {
-    /// When the bus the rider is on reaches the transfer stop.
-    public var feederArrival: MinuteRange?
-    /// Between the two stops; 0 when it is the same stop.
-    public var walk: Double?
-    /// When the planned connecting bus leaves the transfer stop.
-    public var connection: MinuteRange?
-    /// When the connecting bus after it leaves, if known.
-    public var nextConnection: Double?
-    /// A Rescue plan replaced this connection.
-    public var recovering: Bool?
-
-    public init(
-        feederArrival: MinuteRange?,
-        walk: Double? = nil,
-        connection: MinuteRange?,
-        nextConnection: Double? = nil,
-        recovering: Bool? = nil
-    ) {
-        self.feederArrival = feederArrival
-        self.walk = walk
-        self.connection = connection
-        self.nextConnection = nextConnection
-        self.recovering = recovering
-    }
-}
-
-public enum TransferReason: String, Codable, Hashable, Sendable {
-    case feederUnknown
-    case connectionUnknown
-    case invalidInput
-    case longWaitIfMissed
-}
-
-public struct TransferAssessment: Codable, Hashable, Sendable {
-    public let risk: TransferRisk
-    /// Connection departure minus the rider's readiness, in the worst case.
-    public let worstMargin: Double?
-    /// The same, in the best case.
-    public let bestMargin: Double?
-    /// The longest wait for the following connection if this one is missed.
-    public let waitIfMissed: Double?
-    public let reasons: [TransferReason]
-
-    public init(risk: TransferRisk, worstMargin: Double?, bestMargin: Double?, waitIfMissed: Double?, reasons: [TransferReason]) {
-        self.risk = risk
-        self.worstMargin = worstMargin
-        self.bestMargin = bestMargin
-        self.waitIfMissed = waitIfMissed
-        self.reasons = reasons
-    }
-}
-
-/// "Is this transfer still realistically achievable?" — not "8 minutes until transfer".
-public enum TransferGuardian {
-    public static func assess(_ input: TransferInput, policy: TransferGuardianPolicy = .standard) -> TransferAssessment {
-        if input.recovering == true {
-            return TransferAssessment(risk: .recovering, worstMargin: nil, bestMargin: nil, waitIfMissed: nil, reasons: [])
-        }
-        guard let feeder = input.feederArrival else { return undetermined(.feederUnknown) }
-        guard let connection = input.connection else { return undetermined(.connectionUnknown) }
-        let walk = input.walk ?? 0
-        guard feeder.isValid, connection.isValid, walk.isFinite, walk >= 0 else { return undetermined(.invalidInput) }
-
-        let readyEarliest = feeder.min + walk
-        let readyLatest = feeder.max + walk
-        let worstMargin = connection.min - readyLatest
-        let bestMargin = connection.max - readyEarliest
-        let risk: TransferRisk
-        if bestMargin < 0 {
-            risk = .missed
-        } else if worstMargin >= policy.safeMarginMinutes {
-            risk = .safe
-        } else if worstMargin >= 0 {
-            risk = .tight
-        } else {
-            risk = .atRisk
-        }
-        var waitIfMissed: Double?
-        if let next = input.nextConnection, next >= readyEarliest {
-            waitIfMissed = next - readyEarliest
-        }
-        let reasons: [TransferReason] = (waitIfMissed ?? 0) >= policy.longWaitMinutes ? [.longWaitIfMissed] : []
-        return TransferAssessment(risk: risk, worstMargin: worstMargin, bestMargin: bestMargin, waitIfMissed: waitIfMissed, reasons: reasons)
-    }
-
-    private static func undetermined(_ reason: TransferReason) -> TransferAssessment {
-        TransferAssessment(risk: .unknown, worstMargin: nil, bestMargin: nil, waitIfMissed: nil, reasons: [reason])
     }
 }
 

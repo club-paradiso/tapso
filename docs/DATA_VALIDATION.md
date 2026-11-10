@@ -192,7 +192,7 @@ The API-data and HTTP integration gates are complete for the full-length Route 3
 
 1. Run the API locally with the private service key and resolve `cityCode` through `/v1/cities`. A deployed API is not required; the capture tool drives `TagoTransitProvider` directly.
 2. Choose one exact `routeId`, one direction, and explicit boarding and destination stop sequences from that direction's topology. The capture tool is route-generic; Route 365's `JEB405136521` and `JEB405136522` are the recommended baseline because their topology and live vehicles are already verified, but any Jeju TAGO route may be used once its cityCode, official variants, ordered topology, chosen sequences, and live vehicles endpoint have all been confirmed against live data. Record identity as the `routeId`, never as the route number, and do not take a first ride on a route whose direction or topology is unclear. Repeating the capture on a second route afterwards is what shows the evidence is not fitted to Route 365.
-3. During the ride, run `scripts/ride-capture/capture.ts` (see `exec-plans/RIDE_CAPTURE.md`). It prints the stop list for the chosen segment before its first poll, stores bounded TAGO snapshots only under ignored `work/rides/`, records the boarded vehicle from the `b` command after cross-checking what was typed against the vehicles the route is currently reporting, and accepts `p <stop-seq>` markers for physically passed stops. Aim for eight to ten `p` markers placed only where the bus certainly stopped.
+3. During the ride, run `scripts/ride-capture/capture.ts` (see `archive/exec-plans/RIDE_CAPTURE.md`). It prints the stop list for the chosen segment before its first poll, stores bounded TAGO snapshots only under ignored `work/rides/`, records the boarded vehicle from the `b` command after cross-checking what was typed against the vehicles the route is currently reporting, and accepts `p <stop-seq>` markers for physically passed stops. Aim for eight to ten `p` markers placed only where the bus certainly stopped.
 4. Run `scripts/ride-capture/analyze.ts` on the capture. The sanitized report compares the tracked vehicle's `nodeord` progression, content-change cadence, coordinate movement, gaps, marker lag, and arrival against the rider markers, using per-run pseudonyms instead of vehicle numbers, and reports `INSUFFICIENT_EVIDENCE` rather than publishing a distribution it does not have the samples for.
 5. Define and test a TAGO freshness rule from `freshnessEvidence` and `tracked.markerComparisons` before enabling journey-session matching or progress. That decision belongs to Task C: the ride produces observed distributions, not a threshold.
 
@@ -313,7 +313,7 @@ recomputed from the stored records, so a duplicate or a retry cannot inflate
 it. `scripts/field-validation/pull-campaign.ts` pulls every stored raw back
 into `work/` for a replay under a later matcher. Manual RAW/REPORT download and
 `batch-analyze.ts` over a folder remain for backup and debugging only. Details
-are in `exec-plans/FIELD_VALIDATION_SUBMISSION.md`.
+are in `archive/exec-plans/FIELD_VALIDATION_SUBMISSION.md`.
 
 `remainingToThirty` counts `CLEAN_GATE_CANDIDATE` rides only. Reaching 30 does
 not close the gate on its own: every criterion above must also hold.
@@ -343,7 +343,7 @@ never read `evidenceCompleteness`. Beta rides have no markers, so they say
 nothing about provider lag. Thirty clean beta rides fill the matcher field sample
 and nothing else: provider/cadence calibration remains a separate requirement,
 `gateClosed` stays `false`, and automatic matching stays off. Details:
-`exec-plans/BETA_FIELD_TESTER.md`.
+`archive/exec-plans/BETA_FIELD_TESTER.md`.
 
 ### A third, passive evidence stream (2026-09-25)
 
@@ -359,7 +359,7 @@ offline at the PR head): **268 wrong commits** in 5 461 evaluable waiting-rider
 cases (142 of 739 boarding events; 15 of 29 trajectories). Every one is a bus
 that had already left the rider's stop (finding F1). In all 268 it was the only eligible candidate. On non-trivial cases, precision is 0.62–0.76; the 1.0 on trivial one-candidate cases is not counted as validation. Status: `NOT_READY`.
 Details: `validation/PASSIVE_SHADOW_VALIDATION_V3_RESULTS.md`; method:
-`exec-plans/PASSIVE_SHADOW_VALIDATION_V3.md`.
+`archive/exec-plans/PASSIVE_SHADOW_VALIDATION_V3.md`.
 
 Note, 2026-09-29: that result was measured with the legacy matcher
 `symmetric-stop-distance-v0`. The serving matcher is now

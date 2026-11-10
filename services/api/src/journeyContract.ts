@@ -2,11 +2,13 @@
  * TAPSO Journey Contract v1: one vocabulary for a journey and for what every
  * surface shows during it.
  *
- * The server, the Swift core (`packages/transit-core/.../JourneyContract.swift`)
- * and the marketing site must not each invent their own journey semantics. The
- * language-neutral specification is `fixtures/journey/journey-contract-v1.json`;
- * both implementations run every case in it. The product description is
+ * The language-neutral specification is `fixtures/journey/journey-contract-v1.json`;
+ * this module runs every case in it. The product description is
  * `docs/product/JOURNEY_CONTRACT_V3.md`.
+ *
+ * Not wired to any endpoint, and the iOS app does not implement it: the Swift
+ * copy was removed on 2026-11-10 because no screen used it (docs/CURRENT_STATE.md).
+ * Treat it as a specification for multi-ride journeys, not as running behaviour.
  *
  * Nothing here decides which bus a rider is on. Vehicle selection stays with
  * the directed matcher and the rider's confirmation; this module only names the

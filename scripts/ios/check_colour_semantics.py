@@ -41,7 +41,7 @@ NEUTRAL_SURFACES: list[tuple[str, str, str, str]] = [
 # Mint uses that remain, per file, and why. Counts are exact.
 ALLOWED: dict[str, tuple[int, str]] = {
     # Observed data.
-    "apps/ios/Shared/RideSurfaceComponents.swift": (4, "active ride role, awake 돌이 on a live ride, confirmed vehicle, live-data trust"),
+    "apps/ios/Shared/RideSurfaceComponents.swift": (2, "active ride role, awake 돌이 on a live ride"),
     "apps/ios/TapsoApp/VehicleCheckView.swift": (2, "the rider-confirmed vehicle"),
     "apps/ios/TapsoApp/BoardingFirstViews.swift": (3, "a current bus position (grey once stale) and 'nearest now', shown only with a current position"),
     "apps/ios/TapsoApp/RideView.swift": (3, "route badge of the ride under way; the confirmed bus on its way; the keep-awake toggle (control tint)"),

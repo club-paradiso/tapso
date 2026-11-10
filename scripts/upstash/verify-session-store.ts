@@ -4,7 +4,7 @@
  * Every path of `services/api/src/upstashSessionStore.ts` is covered by tests
  * driving a stub `fetch`, which proves that client's behaviour and not
  * Upstash's. This script runs the same store against a real database. It was
- * the store half of milestone 6 in `docs/exec-plans/DURABLE_JOURNEY_SESSIONS.md`
+ * the store half of milestone 6 in `docs/archive/exec-plans/DURABLE_JOURNEY_SESSIONS.md`
  * (passed 15/15 on 2026-09-23). Re-run it after any change to the store.
  *
  * It deliberately checks only what a stub cannot settle:
@@ -309,7 +309,7 @@ if (failures > 0) {
     "",
     "The store does NOT behave correctly against this database. Do not set",
     "TRANSIT_SESSION_STORE=redis anywhere until this passes, and record the",
-    "failure in docs/exec-plans/DURABLE_JOURNEY_SESSIONS.md.",
+    "failure in docs/archive/exec-plans/DURABLE_JOURNEY_SESSIONS.md.",
   ].join("\n"));
   process.exit(1);
 }

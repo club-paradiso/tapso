@@ -6,7 +6,7 @@ Copy everything from `BEGIN PROMPT` through `END PROMPT` into a new Claude Deskt
 
 ## BEGIN PROMPT
 
-> **Note, 2026-09-29.** Some facts below are superseded; where this prompt and the repository disagree, the repository wins. The GitHub repository is `club-paradiso/tapso` (`git remote -v`); the bundle identifiers below are unchanged. The test counts under *Verified build and test state* are historical; CI is the authority on what passes now. Transit and matcher validation state lives in `docs/HANDOFF.md` and `docs/exec-plans/HUMAN_LABOR_ELIMINATION.md`, not here; no readiness level up to `READY_FOR_CONFIRMATION_ASSISTED` needs a bus ride.
+> **Note, 2026-09-29.** Some facts below are superseded; where this prompt and the repository disagree, the repository wins. The GitHub repository is `club-paradiso/tapso` (`git remote -v`); the bundle identifiers below are unchanged. The test counts under *Verified build and test state* are historical; CI is the authority on what passes now. Transit and matcher validation state lives in `docs/archive/HANDOFF.md` and `docs/exec-plans/HUMAN_LABOR_ELIMINATION.md`, not here; no readiness level up to `READY_FOR_CONFIRMATION_ASSISTED` needs a bus ride.
 
 You are taking over a real, partially completed production-oriented iOS repository named **TAPSO (탑서)**. Work directly in the existing repository; do not start over, create a replacement app, or merely describe next steps.
 
@@ -32,11 +32,11 @@ Read these files before modifying code or release settings:
 
 1. `AGENTS.md`
 2. `.agent/PLANS.md`
-3. `docs/HANDOFF.md`
+3. `docs/archive/HANDOFF.md`
 4. `docs/TESTFLIGHT.md`
 5. `docs/KNOWN_ISSUES.md`
 6. `docs/DEVICE_TEST_PLAN.md`
-7. `docs/exec-plans/INITIAL_BUILD.md`
+7. `docs/archive/exec-plans/INITIAL_BUILD.md`
 8. `apps/ios/project.yml`
 
 Treat the active ExecPlan as a living document. Keep documentation truthful and aligned with verified behavior.

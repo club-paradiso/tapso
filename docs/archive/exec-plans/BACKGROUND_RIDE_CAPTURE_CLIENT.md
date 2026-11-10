@@ -5,8 +5,8 @@
 > `matcher-passive-safety-v4` decides matcher readiness from machine-produced
 > evidence, and no level up to `READY_FOR_CONFIRMATION_ASSISTED` needs a ride,
 > stop marker or capture export
-> ([`../validation/MATCHER_SAFETY_EVIDENCE_V4.md`](../validation/MATCHER_SAFETY_EVIDENCE_V4.md),
-> [`HUMAN_LABOR_ELIMINATION.md`](HUMAN_LABOR_ELIMINATION.md)). The Railway
+> ([`../validation/MATCHER_SAFETY_EVIDENCE_V4.md`](../../validation/MATCHER_SAFETY_EVIDENCE_V4.md),
+> [`HUMAN_LABOR_ELIMINATION.md`](../../exec-plans/HUMAN_LABOR_ELIMINATION.md)). The Railway
 > collector and these pages remain, and serve only the legacy flows: an
 > operator ride can count only toward `broad-real-mode-30-boardings-v1` and a
 > beta ride only toward `beta-matcher-30-boardings-v2`, both historical, with

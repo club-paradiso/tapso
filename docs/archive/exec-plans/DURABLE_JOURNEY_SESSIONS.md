@@ -5,8 +5,8 @@
 > *Results*), and verification did not switch production. Where this plan says
 > automatic matching is withheld by the field-validation gate (thirty
 > boardings), read release gate `matcher-passive-safety-v4` instead
-> ([`../validation/MATCHER_SAFETY_EVIDENCE_V4.md`](../validation/MATCHER_SAFETY_EVIDENCE_V4.md),
-> [`HUMAN_LABOR_ELIMINATION.md`](HUMAN_LABOR_ELIMINATION.md)): the thirty-boarding
+> ([`../validation/MATCHER_SAFETY_EVIDENCE_V4.md`](../../validation/MATCHER_SAFETY_EVIDENCE_V4.md),
+> [`HUMAN_LABOR_ELIMINATION.md`](../../exec-plans/HUMAN_LABOR_ELIMINATION.md)): the thirty-boarding
 > gate was superseded without ever being met (zero observed boardings), human
 > rides are no longer a release requirement, and automatic matching stays off
 > because the demonstrated readiness is below `READY_FOR_BOUNDED_AUTOMATION`.

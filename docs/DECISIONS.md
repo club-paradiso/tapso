@@ -183,7 +183,7 @@ necessary for the shipped behaviour.
 
 **Decision:** `RideGuidancePolicy` in the Swift core maps a `RideSignal` (phase, remaining stops, freshness, destination passed, offline) to one `RideGuidance`: moment, vehicle identity and data freshness as separate signals, milestone, haptic, colour role, symbol, recovery action, copy keys and relevance. The app, the Lock Screen and every Dynamic Island region read it; none decides on its own.
 
-The V1 app and Live Activity each had their own switch over the phase, and they already disagreed: a passed destination was presented and alerted as an arrival (`product/UX_AUDIT_V2.md` P0-1). The policy keeps every V1 fail-closed rule and its tests, and adds `passedDestination`, `vehicleLost` and `offline` as distinct quiet moments. Journey state machine, session and progress semantics are unchanged; the matcher is not involved.
+The V1 app and Live Activity each had their own switch over the phase, and they already disagreed: a passed destination was presented and alerted as an arrival (`archive/product/UX_AUDIT_V2.md` P0-1). The policy keeps every V1 fail-closed rule and its tests, and adds `passedDestination`, `vehicleLost` and `offline` as distinct quiet moments. Journey state machine, session and progress semantics are unchanged; the matcher is not involved.
 
 ## Destination-first setup, rider-confirmed bus (2026-09-30)
 
@@ -205,7 +205,7 @@ The V1 app and Live Activity each had their own switch over the phase, and they 
 
 **Decision:** the API decides at boot whether a deployment may serve journey sessions from its Redis namespace. A deployment with `VERCEL_ENV=production` serves them only from `tapso:prod:journey-session:`; no other deployment or process may use that namespace; the `verify` namespace is never served. A violation disables sessions with the reason in `/health` and in the `503`, rather than failing the boot, because the read endpoints have nothing to do with it.
 
-Production and preview share one Upstash database (`exec-plans/DURABLE_JOURNEY_SESSIONS.md`), so a namespace typo is the one mistake that would mix test rides into real ones or the reverse. `/health` now reports the namespace's category (`sessions.namespace`), never the prefix, so the rule can be checked from outside: the scheduled and post-deploy smokes fail a production deployment that reports any other category.
+Production and preview share one Upstash database (`archive/exec-plans/DURABLE_JOURNEY_SESSIONS.md`), so a namespace typo is the one mistake that would mix test rides into real ones or the reverse. `/health` now reports the namespace's category (`sessions.namespace`), never the prefix, so the rule can be checked from outside: the scheduled and post-deploy smokes fail a production deployment that reports any other category.
 
 ## Ending a ride deletes its session (2026-10-01)
 

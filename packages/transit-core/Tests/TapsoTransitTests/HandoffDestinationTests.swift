@@ -63,19 +63,6 @@ final class HandoffDestinationTests: XCTestCase {
         XCTAssertNil(MapHandoff.walkingRequest(to: seoul, in: .kakaoMap))
     }
 
-    func testTheHandoffCreatesAValidJourneyWithAnUnmeasuredLastMile() {
-        let segments = HandoffJourney.segments(routeNumber: "202", boardSequence: 3, alightSequence: 9, place: nearSecond)
-        XCTAssertEqual(segments.map(\.kind), [.ride, .walk])
-        XCTAssertNil(segments.last?.meters, "a straight line is not a walking distance")
-        XCTAssertEqual(JourneyContract.validate(segments), .success(JourneyShape(rideCount: 1, transferCount: 0)))
-
-        XCTAssertEqual(HandoffJourney.segments(routeNumber: "202", boardSequence: 3, alightSequence: 9, place: nil).map(\.kind), [.ride])
-        XCTAssertEqual(
-            JourneyContract.validate(HandoffJourney.segments(routeNumber: "202", boardSequence: 9, alightSequence: 9, place: nearSecond)),
-            .failure(.invalidRideOrder)
-        )
-    }
-
     func testTheWalkGoesToTheSharedPlaceThroughDocumentedSchemes() throws {
         let place = SharedPlace(source: .kakaoMap, name: "협재해수욕장", coordinate: Coordinate(latitude: 33.394, longitude: 126.2397))
         let naver = try XCTUnwrap(URLComponents(string: try XCTUnwrap(MapHandoff.walkingRequest(to: place, in: .naverMap)).urlString))

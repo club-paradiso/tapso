@@ -27,7 +27,7 @@ Principle under test: *one number when the rider needs to look; nothing unnecess
 | U-10 | P3 | Dynamic Type | Fixed `.system(size:)` on Live Activity surfaces (`LiveActivitySurfaces.swift:187, 242, 263, 353, 359, 379, 512`), RouteBadge `size: compact ? 9 : 12` + `.fixedSize()` | Large-text users get small or clipped text | Scaled metrics within ActivityKit limits | Planned PR 4; needs simulator snapshots |
 | U-11 | P3 | Timetable | Conditional trips marked only by " *" (VoiceOver reads "asterisk", `TimetableViews.swift:194–196`); footnote buttons likely < 44 pt (`:34`, `:91`, `ASSUMED`) | Screen-reader confusion; small targets | Accessibility label; `minHeight: 44` | Planned PR 4 |
 | U-12 | P3 | Performance in `body` | Catalog scans in `body` (`BoardingFirstViews.swift:17, 191`); list re-sorts as arrivals change | List reorders under the rider's finger | Stable order; badges update in place | Planned PR 4 |
-| U-13 | P3 | Dead component | `TrustBadge` with "실시간" label unused in code (`RideSurfaceComponents.swift:588`) but used in Figma (`195:3035`) | Design–code drift | Wire it to `RideTrust` or delete in both | Planned PR 4 |
+| U-13 | P3 | Dead component | `TrustBadge` with "실시간" label unused in code (`RideSurfaceComponents.swift:588`) but used in Figma (`195:3035`) | Design–code drift | Wire it to `RideTrust` or delete in both | **Code deleted 2026-11-10**; Figma `TrustBadge / V2` still to be removed or reworked by the owner |
 
 ## 3. NightGuard in the product (new)
 
@@ -68,7 +68,7 @@ Written to the editable file through the Figma MCP, then checked with a screensh
 | `ReturnTripRow / V3` | `RideEndView.swift` return rows (`:352–362`) |
 | `ReturnCountdown / Lock Screen V3`, `/ Island V3` | `ReturnActivitySurfaces.swift` |
 | `RescueOption / V3` | Rescue list in `RideView.swift` (passed-destination moment) |
-| `TrustBadge / V2` | `RideSurfaceComponents.swift:588` (unused) |
+| `TrustBadge / V2` | none (code deleted 2026-11-10) |
 | `RideHero / passed · rescue` | `RideView.swift` hero for `.passedDestination` |
 
 ## 6. Accessibility test results

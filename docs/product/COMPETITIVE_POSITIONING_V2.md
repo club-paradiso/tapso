@@ -36,7 +36,7 @@ Sources: `jihaseom.app`, App Store `id6792708146` (both REPORTED-OFFICIAL).
 A subway line has one train per platform direction and fixed stops; identity is easy and drift is the risk. A Jeju bus route has several vehicles, variants and directions sharing streets, and TAGO gives no observation timestamp (`docs/KNOWN_ISSUES.md` › `NO_SOURCE_TIMESTAMP`). So TAPSO cannot copy "departure → arrival" and trust the count. It differentiates by:
 
 - **Physical vehicle identity, confirmed by the rider.** A plate ending (`••0001`) the rider can see on the bus, never a guessed match (`VehicleCheck`).
-- **Two separate trust signals.** Vehicle identity and data freshness are shown side by side (`TrustBadge`), so "the right bus, late data" is expressible.
+- **Two separate trust signals.** Vehicle identity and data freshness are separate inputs to `RideGuidancePolicy`, so "the right bus, late data" is expressible. (The planned side-by-side `TrustBadge` was never placed on a screen and was removed 2026-11-10.)
 - **Fail-closed escalation.** A get-off alert needs an exact phase/count agreement on fresh, online data; otherwise the surface goes calm and says why (`RideGuidancePolicy`).
 - **Destination-first + boarding context**, because a bus rider needs *where to get off, which bus, where it is boarded* — not the trip's origin.
 - **Designed recovery**: late data, lost bus, offline, relaunch, passed destination each have their own copy and action.

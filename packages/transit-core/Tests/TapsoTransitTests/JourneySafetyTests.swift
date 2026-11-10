@@ -47,19 +47,6 @@ final class JourneySafetyTests: XCTestCase {
         }
     }
 
-    func testTransferGuardianSpecification() throws {
-        let spec = try load("transfer-guardian-v1.json", as: Spec<TransferInput, TransferAssessment>.self)
-        let policy = TransferGuardianPolicy.standard
-        XCTAssertEqual(spec.policy, [
-            "safeMarginMinutes": policy.safeMarginMinutes,
-            "longWaitMinutes": policy.longWaitMinutes,
-        ])
-        XCTAssertGreaterThanOrEqual(spec.cases.count, 12)
-        for specCase in spec.cases {
-            XCTAssertEqual(TransferGuardian.assess(specCase.input), specCase.expect, "\(specCase.id): \(specCase.why)")
-        }
-    }
-
     func testRescueSpecification() throws {
         let spec = try load("rescue-v1.json", as: Spec<RescueInput, RescuePlan>.self)
         let policy = RescuePolicy.standard

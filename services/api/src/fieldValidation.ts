@@ -466,7 +466,7 @@ export class MemoryFieldValidationStore implements FieldValidationStore {
  *   campaign:<campaignId>       set of submission ids      (SADD, idempotent)
  *
  * No TTL: this is evidence. The database must not evict keys; see
- * docs/exec-plans/FIELD_VALIDATION_SUBMISSION.md for the one-time setup.
+ * docs/archive/exec-plans/FIELD_VALIDATION_SUBMISSION.md for the one-time setup.
  */
 export class UpstashFieldValidationStore implements FieldValidationStore {
   private readonly connection: UpstashConnection;

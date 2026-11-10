@@ -77,8 +77,7 @@ Suggestions only; the rider chooses.
 
 ## The journey it creates
 
-`HandoffJourney.segments` gives the Journey Contract (`JOURNEY_CONTRACT_V3.md`)
-shape: one `ride`, then a last-mile `walk` whose distance stays unmeasured.
+The journey is one ride, then a last-mile walk whose distance stays unmeasured.
 `RideDraft.finalPlace` carries the place with the ride (on the device, with the
 active ride only — not in the saved-journey history), and `RideOutcome.place`
 hands it to the end screen.

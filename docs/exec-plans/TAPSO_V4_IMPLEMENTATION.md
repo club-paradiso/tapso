@@ -65,6 +65,8 @@ swift test --package-path packages/transit-core   # macOS / CI only
 - 2026-11-09: NightGuard on the return screen. Found while reading: NightGuard was drawn only inside the timetable card's loaded branch, so a slow or failed timetable download hid tonight's answer on both the return and the route screens; and on the return screen it sat above "돌아갈 때 막차" rows that TAGO usually cannot fill. Tests written first (`ReturnScreenLayoutTests`, `NightGuardTests.testLinesAreShownOnlyWhileTheAnswerIsCurrent`); Swift is checked only in CI.
 - 2026-11-09: U-09. The source guard was written first and failed with 9 errors on main (home 8 mint uses, live badge, live entry, resume notice, comfortable last bus). The test was a Python source check, not an XCTest: colour placement is a property of view source, and it runs without macOS. After the change it passes; Swift build verified only in CI.
 
+- 2026-11-10: cleanup. Removed Swift code the app never used: `JourneyStateMachine` (its transition tests moved onto `RideSession`, the path the app uses), the Swift Journey Contract and Transfer Guardian (server specification kept, no endpoint uses either), `TrustBadge` (U-13) with its 7 strings, `TransitSnapshot`, `AdaptiveStack`, `TrailingIconLabelStyle`, and unused `RideSession` members. 18 finished or superseded docs moved to `docs/archive/`; `docs/CURRENT_STATE.md` is the new entry point.
+
 ## 7. Risks and next action
 
 - Risk: the timetable bundle (2026-11-05) goes stale after 2027-02-03 → every NightGuard entry `unknown`. The release gate now warns after 2027-01-04 and errors once stale. Next action: dispatch `jeju-timetables.yml` before then.

@@ -153,13 +153,6 @@
 "count.lastKnown" = "最終確認";
 "count.lastKnown.long" = "残り停留所数 · 最終確認";
 "count.lastKnown.long.one" = "残り停留所数 · 最終確認";
-"trust.vehicle.confirmed" = "バス確認済み";
-"trust.vehicle.rechecking" = "バス確認中";
-"trust.vehicle.lost" = "バスを探し中";
-"trust.data.live" = "リアルタイム";
-"trust.data.delayed" = "遅延";
-"trust.data.offline" = "オフライン";
-"trust.data.checking" = "接続中";
 "end.title" = "バスを降りました";
 "end.body" = "次回はホームからワンタップでこの乗車を再開できます。";
 "end.passed.title" = "降りる停留所を過ぎました";

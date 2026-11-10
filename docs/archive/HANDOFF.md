@@ -1,10 +1,10 @@
-> TAGO migration: complete and merged. Current provider setup and evidence are in `DATA_SOURCES.md`, `DATA_VALIDATION.md`, and `exec-plans/TAGO_MIGRATION.md`. Earlier B551982 instructions are historical.
+> TAGO migration: complete and merged. Current provider setup and evidence are in `DATA_SOURCES.md`, `DATA_VALIDATION.md`, and `archive/exec-plans/TAGO_MIGRATION.md`. Earlier B551982 instructions are historical.
 
 > **2026-09-29.** The next step is no longer a human ride. It is the rider-free path under *Next step: rider-free matcher evidence* below. Task B's ride procedures are kept as history and are not required.
 
 # Handoff
 
-For the release-focused Claude Desktop/Claude Code continuation, use `docs/CLAUDE_DESKTOP_HANDOFF.md`. The Apple team identity is now resolved: the only team available to the build host is a free Personal Team, so TestFlight distribution is gated on obtaining a paid Apple Developer Program membership. See `KNOWN_ISSUES.md` and the Team prerequisite in `TESTFLIGHT.md`.
+For the release-focused Claude Desktop/Claude Code continuation, use `docs/archive/CLAUDE_DESKTOP_HANDOFF.md`. The Apple team identity is now resolved: the only team available to the build host is a free Personal Team, so TestFlight distribution is gated on obtaining a paid Apple Developer Program membership. See `KNOWN_ISSUES.md` and the Team prerequisite in `TESTFLIGHT.md`.
 
 ## State on 2026-10-02 (production ride vertical slice, PR #94)
 
@@ -151,7 +151,7 @@ Open `https://tapso-api.vercel.app/ride-capture/` in Safari, enter the operator
 token when asked, and follow the screens: preflight, ready, tap the bus you
 boarded, tap the stops where it actually halted, `하차`, `캡처 종료`, then export
 the sanitized report. The whole procedure and its limits are in
-`RIDE_CAPTURE_CONTROLLER.md`. This needs `RIDE_CAPTURE_OPERATOR_TOKEN` set on the
+`archive/RIDE_CAPTURE_CONTROLLER.md`. This needs `RIDE_CAPTURE_OPERATOR_TOKEN` set on the
 `tapso-api` Vercel project; without it the operator endpoints stay disabled.
 
 Keep the screen on and the page in front. iOS suspends a backgrounded tab, which
@@ -216,7 +216,7 @@ is how the tooling and any freshness rule are shown not to be fitted to Route
 Then define and test a TAGO freshness rule from `freshnessEvidence` and
 `tracked.markerComparisons` before anything enables journey-session matching or
 progress. That is Task C. See `DATA_VALIDATION.md`,
-`exec-plans/TASK_C_SOURCE_FRESHNESS.md` and `exec-plans/RIDE_CAPTURE.md`.
+`archive/exec-plans/TASK_C_SOURCE_FRESHNESS.md` and `archive/exec-plans/RIDE_CAPTURE.md`.
 
 Task C has shipped the mechanism — a server-observed cadence surrogate, a
 shadow-mode rollout gate, and tests — but not the evidence. Its thresholds are

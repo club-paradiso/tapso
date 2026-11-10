@@ -5,8 +5,8 @@
 > readiness from machine-produced evidence, and no level up to
 > `READY_FOR_CONFIRMATION_ASSISTED` needs a ride, stop marker, capture export or
 > manual script run
-> ([`../validation/MATCHER_SAFETY_EVIDENCE_V4.md`](../validation/MATCHER_SAFETY_EVIDENCE_V4.md),
-> [`HUMAN_LABOR_ELIMINATION.md`](HUMAN_LABOR_ELIMINATION.md)). What this plan
+> ([`../validation/MATCHER_SAFETY_EVIDENCE_V4.md`](../../validation/MATCHER_SAFETY_EVIDENCE_V4.md),
+> [`HUMAN_LABOR_ELIMINATION.md`](../../exec-plans/HUMAN_LABOR_ELIMINATION.md)). What this plan
 > built is still in force: `server_observed_cadence_v1` still decides which TAGO
 > rows are fresh, and `TRANSIT_AUTOMATIC_MATCHING_ENABLED` still defaults to
 > `false`; the configuration now also refuses it below
@@ -17,7 +17,7 @@
 > them changes coverage, not safety; provider lag against the physical stop is
 > designed out of the matcher's safety path, and criterion BA-4 blocks
 > automation until alert timing no longer depends on it
-> ([`../validation/EVIDENCE_SUBSTITUTION_MATRIX.md`](../validation/EVIDENCE_SUBSTITUTION_MATRIX.md)).
+> ([`../validation/EVIDENCE_SUBSTITUTION_MATRIX.md`](../../validation/EVIDENCE_SUBSTITUTION_MATRIX.md)).
 
 ## The problem this exists to solve
 

@@ -93,27 +93,3 @@ public enum HandoffStopSuggester {
         return result
     }
 }
-
-/// The journey a map hand-off creates, in the Journey Contract's vocabulary
-/// (`docs/product/JOURNEY_CONTRACT_V3.md`): one ride, then the last-mile walk
-/// to the shared place. The walk's distance stays unmeasured: TAPSO knows a
-/// straight line, not a walking route.
-public enum HandoffJourney {
-    public static func segments(
-        routeNumber: String,
-        boardSequence: Int,
-        alightSequence: Int,
-        place: SharedPlace?
-    ) -> [JourneySegmentSpec] {
-        var segments = [JourneySegmentSpec(
-            kind: .ride,
-            routeNumber: routeNumber,
-            boardSequence: boardSequence,
-            alightSequence: alightSequence
-        )]
-        if place != nil {
-            segments.append(JourneySegmentSpec(kind: .walk))
-        }
-        return segments
-    }
-}

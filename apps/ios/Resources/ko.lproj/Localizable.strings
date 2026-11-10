@@ -152,13 +152,6 @@
 "count.lastKnown" = "마지막 확인";
 "count.lastKnown.long" = "정거장 · 마지막 확인";
 "count.lastKnown.long.one" = "정거장 · 마지막 확인";
-"trust.vehicle.confirmed" = "확인한 버스";
-"trust.vehicle.rechecking" = "버스 다시 확인 중";
-"trust.vehicle.lost" = "버스 찾는 중";
-"trust.data.live" = "실시간";
-"trust.data.delayed" = "위치가 늦어요";
-"trust.data.offline" = "연결 끊김";
-"trust.data.checking" = "연결 확인 중";
 "end.title" = "잘 내리셨어요";
 "end.body" = "같은 여정은 다음에 홈에서 한 번에 다시 탈 수 있어요.";
 "end.passed.title" = "목적지를 지나쳤어요";

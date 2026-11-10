@@ -242,15 +242,3 @@ public struct FreshnessPolicy: Codable, Hashable, Sendable {
         return .stale
     }
 }
-
-public struct TransitSnapshot: Codable, Hashable, Sendable {
-    public let capturedAt: Date
-    public let routes: [TransitRoute]
-    public let candidates: [VehicleCandidate]
-
-    public init(capturedAt: Date, routes: [TransitRoute], candidates: [VehicleCandidate]) {
-        self.capturedAt = capturedAt
-        self.routes = routes
-        self.candidates = candidates
-    }
-}

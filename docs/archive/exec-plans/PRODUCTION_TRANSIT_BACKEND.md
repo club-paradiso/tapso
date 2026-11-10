@@ -6,8 +6,8 @@
 > `matcher-passive-safety-v4`, which has demonstrated `READY_FOR_SHADOW`, and the
 > configuration refuses `TRANSIT_AUTOMATIC_MATCHING_ENABLED=true` below
 > `READY_FOR_BOUNDED_AUTOMATION`
-> ([`../validation/MATCHER_SAFETY_EVIDENCE_V4.md`](../validation/MATCHER_SAFETY_EVIDENCE_V4.md),
-> [`HUMAN_LABOR_ELIMINATION.md`](HUMAN_LABOR_ELIMINATION.md)). What this plan
+> ([`../validation/MATCHER_SAFETY_EVIDENCE_V4.md`](../../validation/MATCHER_SAFETY_EVIDENCE_V4.md),
+> [`HUMAN_LABOR_ELIMINATION.md`](../../exec-plans/HUMAN_LABOR_ELIMINATION.md)). What this plan
 > built is still the transit API: the `tapso-api` Vercel project, verified in
 > production on 2026-09-12; once merged, the scheduled production smoke in
 > `.github/workflows/matcher-evidence.yml` re-checks it. Test counts below are
@@ -51,7 +51,7 @@ activation, Supabase/Resend setup, framework migration, unrelated refactoring.
   authoring session could observe; it was never a property of the deployment.
   Production was verified externally on 2026-09-12 — see
   `../PRODUCTION_TRANSIT_API.md` → *Production verification*.
-- `VERIFIED` (`docs/exec-plans/WAITLIST_SUPPORT_2026_08_26.md`): the marketing
+- `VERIFIED` (`docs/archive/exec-plans/WAITLIST_SUPPORT_2026_08_26.md`): the marketing
   Vercel project's Root Directory is `apps/web`, framework `vite`, output `dist`,
   with Vercel Functions in `apps/web/api` using the Web Handler signature.
 - `VERIFIED` (Vercel documentation): `vercel.json` supports `ignoreCommand`

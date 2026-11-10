@@ -30,7 +30,7 @@ enum RideSurfacePalette {
 
     /// Dimmed only where the dimmed text still reads at 4.5:1 or more (basalt 9.3:1, tangerine 4.8:1).
     /// On coral, 70 % white reads 3.2:1 on the light coral and 70 % ink 4.3:1 on the dark one, so the
-    /// secondary line is drawn at full strength there (5.0:1 and 7.0:1, `DESIGN_SYSTEM_V2.md`).
+    /// secondary line is drawn at full strength there (5.0:1 and 7.0:1, `docs/archive/product/DESIGN_SYSTEM_V2.md`).
     static func secondaryOpacity(for moment: RideMoment) -> Double {
         switch moment {
         case .nextStop, .passedDestination: 1

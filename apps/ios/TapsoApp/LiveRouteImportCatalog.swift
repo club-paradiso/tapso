@@ -47,9 +47,4 @@ actor LiveRouteImportCatalog: RouteImportCandidateSource {
     func liveStops(for routeID: String) -> LiveRouteStops? {
         loaded[routeID]
     }
-
-    /// Seeds a variant without a request (tests).
-    func remember(_ stops: LiveRouteStops) {
-        loaded[stops.apiRoute.routeId] = stops
-    }
 }

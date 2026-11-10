@@ -6,8 +6,8 @@
 > evidence and reads no ride count, and no level up to
 > `READY_FOR_CONFIRMATION_ASSISTED` needs a ride, capture export or manual
 > script run
-> ([`../validation/MATCHER_SAFETY_EVIDENCE_V4.md`](../validation/MATCHER_SAFETY_EVIDENCE_V4.md),
-> [`HUMAN_LABOR_ELIMINATION.md`](HUMAN_LABOR_ELIMINATION.md)). The submit route
+> ([`../validation/MATCHER_SAFETY_EVIDENCE_V4.md`](../../validation/MATCHER_SAFETY_EVIDENCE_V4.md),
+> [`HUMAN_LABOR_ELIMINATION.md`](../../exec-plans/HUMAN_LABOR_ELIMINATION.md)). The submit route
 > remains in the Railway collector (`backgroundHttp.ts`); an operator ride
 > submitted through it counts only toward the historical
 > `broad-real-mode-30-boardings-v1` campaign, which stays as defined, with zero

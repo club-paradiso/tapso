@@ -5,8 +5,8 @@
 > readiness from machine-produced evidence, and no level up to
 > `READY_FOR_CONFIRMATION_ASSISTED` needs a ride, stop marker, capture export or
 > manual script run
-> ([`../validation/MATCHER_SAFETY_EVIDENCE_V4.md`](../validation/MATCHER_SAFETY_EVIDENCE_V4.md),
-> [`HUMAN_LABOR_ELIMINATION.md`](HUMAN_LABOR_ELIMINATION.md)). Every ride
+> ([`../validation/MATCHER_SAFETY_EVIDENCE_V4.md`](../../validation/MATCHER_SAFETY_EVIDENCE_V4.md),
+> [`HUMAN_LABOR_ELIMINATION.md`](../../exec-plans/HUMAN_LABOR_ELIMINATION.md)). Every ride
 > procedure and next action below is historical and not required. What remains
 > in use: the analyzer (`analyzeRideCapture`, with the matcher replay of
 > milestone 9) runs on the Railway collector whenever an operator or beta ride
@@ -146,7 +146,7 @@ keep the capture under `work/rides/`, and paste only the sanitized
 `.report.json` summary (counts, seconds, pseudonyms) into
 `docs/DATA_VALIDATION.md`. Then define the TAGO freshness rule from
 `freshnessEvidence` and `tracked.markerComparisons` — in Task C, not here. The
-exact commands are in `docs/HANDOFF.md`; a deployed API is not required, because
+exact commands are in `docs/archive/HANDOFF.md`; a deployed API is not required, because
 the capture tool drives `TagoTransitProvider` directly.
 
 Marker density for that ride: the analyzer needs at least three physical markers

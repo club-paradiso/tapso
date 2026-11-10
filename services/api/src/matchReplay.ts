@@ -155,7 +155,7 @@ export interface ReplayOptions {
   /**
    * The answer, used only to *score* decisions after the blind replay has made
    * all of them. It never reaches `replayBlind`; see F3 in
-   * `docs/exec-plans/PASSIVE_SHADOW_VALIDATION_V3.md`.
+   * `docs/archive/exec-plans/PASSIVE_SHADOW_VALIDATION_V3.md`.
    */
   boardedVehicleId?: string;
   /** Opt in to `MatchGateEvidence.decisions`. Changes no other output. */

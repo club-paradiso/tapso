@@ -40,7 +40,7 @@ const CITY_CODE = /^[0-9]{1,6}$/;
  * `BetaService.authenticate` on the `/beta/*` tester routes only, which act on
  * the tester's own rides; it holds none of these capabilities, so it can never
  * read a raw capture, a campaign, or administer invites. See
- * docs/exec-plans/BETA_FIELD_TESTER.md.
+ * docs/archive/exec-plans/BETA_FIELD_TESTER.md.
  */
 export type CollectorCapability =
   | "capture:start"
