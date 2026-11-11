@@ -66,13 +66,14 @@ swift test --package-path packages/transit-core   # macOS / CI only
 - 2026-11-09: U-09. The source guard was written first and failed with 9 errors on main (home 8 mint uses, live badge, live entry, resume notice, comfortable last bus). The test was a Python source check, not an XCTest: colour placement is a property of view source, and it runs without macOS. After the change it passes; Swift build verified only in CI.
 
 - 2026-11-10: cleanup. Removed Swift code the app never used: `JourneyStateMachine` (its transition tests moved onto `RideSession`, the path the app uses), the Swift Journey Contract and Transfer Guardian (server specification kept, no endpoint uses either), `TrustBadge` (U-13; its 7 strings stay only as the website preview's copy source), `TransitSnapshot`, `AdaptiveStack`, `TrailingIconLabelStyle`, and unused `RideSession` members. 18 finished or superseded docs moved to `docs/archive/`; `docs/CURRENT_STATE.md` is the new entry point.
+- 2026-11-10: targeted probe of routes 900/910 by route number (12 passes, 16:08–17:13 KST, run 42773224635). 910 reported a bus in every pass; 900 in none across its 16:34 and 17:08 departures (all reads HTTP 200). Release gate 3: PASS (per family; `unstated` satisfied by 910). Route 900's live coverage is `UNKNOWN`.
 
 ## 7. Risks and next action
 
 - Risk: the timetable bundle (2026-11-05) goes stale after 2027-02-03 → every NightGuard entry `unknown`. The release gate now warns after 2027-01-04 and errors once stale. Next action: dispatch `jeju-timetables.yml` before then.
 - Risk: the weekly catalog refresh fails red until the owner enables "Allow GitHub Actions to create and approve pull requests" (Settings → Actions → General).
 - Risk: TAGO's burst limit is unknown; 4 concurrent requests per instance is `ASSUMED`. Next action: read production function logs (blocked from the agent environment: Vercel connector 403).
-- Risk: release gate 3 reads `PENDING_EVIDENCE` until 순환버스 (22:00–23:40 KST) is probed against catalog `c9eacac26d848f6a`. Scheduled for 2026-11-09 22:05 KST.
+- Risk: route 900 (동복리마을버스) never reported a bus to TAGO in 13 probes, including 12 passes across two scheduled trips on 2026-11-10 (`UNKNOWN` whether it is in the feed). Gate 3 passes per family regardless. Next action: one more weekday probe, then ask the operator.
 - Risk: the 365 06:00 한라대 trip row may not run; NightGuard reads trip rows and says 06:00. Next action: repeat the first-bus check on two more weekdays before changing any rule.
 - Risk: two crosswalk poles (`JEB405002827`, `JEB406002166`) are withheld as `direction_mismatch` until BIS station evidence is collected again.
 - Decision for the owner: the app-wide control tint (`TapsoRootView` `.tint(mintDeep)`, primary buttons) is still mint, so buttons read as "live" too. U-09 left it as is; 13 of the 25 remaining mint uses are controls on that tint; the other 12 mark observed data.

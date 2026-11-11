@@ -1,0 +1,99 @@
+{
+  "probedAt": "2026-11-10T08:01:20.756Z",
+  "startedAt": "2026-11-10T08:01:00.276Z",
+  "onlyRoutes": [
+    "900",
+    "910"
+  ],
+  "pass": 10,
+  "passes": 12,
+  "base": "https://tapso-api.vercel.app",
+  "catalogVersion": "c9eacac26d848f6a",
+  "note": "Targeted probe of the listed route numbers only. Vehicle counts only; no vehicle number is recorded. A count of zero means no bus reported at that moment, not that the route is unsupported.",
+  "probes": {
+    "JEB405090001": {
+      "status": 200,
+      "vehicles": 0,
+      "withStopSequence": 0,
+      "sequenceInRange": 0
+    },
+    "JEB405090002": {
+      "status": 200,
+      "vehicles": 0,
+      "withStopSequence": 0,
+      "sequenceInRange": 0
+    },
+    "JEB405090003": {
+      "status": 200,
+      "vehicles": 0,
+      "withStopSequence": 0,
+      "sequenceInRange": 0
+    },
+    "JEB405090004": {
+      "status": 200,
+      "vehicles": 0,
+      "withStopSequence": 0,
+      "sequenceInRange": 0
+    },
+    "JEB405090005": {
+      "status": 200,
+      "vehicles": 0,
+      "withStopSequence": 0,
+      "sequenceInRange": 0
+    },
+    "JEB405090006": {
+      "status": 200,
+      "vehicles": 0,
+      "withStopSequence": 0,
+      "sequenceInRange": 0
+    },
+    "JEB405090007": {
+      "status": 200,
+      "vehicles": 0,
+      "withStopSequence": 0,
+      "sequenceInRange": 0
+    },
+    "JEB405090008": {
+      "status": 200,
+      "vehicles": 0,
+      "withStopSequence": 0,
+      "sequenceInRange": 0
+    },
+    "JEB405090009": {
+      "status": 200,
+      "vehicles": 0,
+      "withStopSequence": 0,
+      "sequenceInRange": 0
+    },
+    "JEB405090010": {
+      "status": 200,
+      "vehicles": 0,
+      "withStopSequence": 0,
+      "sequenceInRange": 0
+    },
+    "JEB405090011": {
+      "status": 200,
+      "vehicles": 0,
+      "withStopSequence": 0,
+      "sequenceInRange": 0
+    },
+    "JEB405090012": {
+      "status": 200,
+      "vehicles": 0,
+      "withStopSequence": 0,
+      "sequenceInRange": 0
+    },
+    "JEB405091001": {
+      "status": 200,
+      "vehicles": 1,
+      "withStopSequence": 1,
+      "sequenceInRange": 1
+    },
+    "JEB405091002": {
+      "status": 200,
+      "vehicles": 0,
+      "withStopSequence": 0,
+      "sequenceInRange": 0
+    }
+  }
+}
