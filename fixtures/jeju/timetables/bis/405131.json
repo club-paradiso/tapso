@@ -6,11 +6,11 @@
     "dataset": "data.go.kr 3043887",
     "page": "https://bus.jeju.go.kr/publicTrafficInformation/generalBusSchedule",
     "file": "405131.xlsx",
-    "sha256": "f410785fcdb3b71ac0c0a7b87586defbfcc6544530e952a5eaff42820c881aa6",
+    "sha256": "69a9e2eb0943e0fe17f795849dae6f710e536ef0a46295bf033112c88a3e9310",
     "scheduleId": "405131",
     "listedName": "800-1(새벽심야)"
   },
-  "retrievedOn": "2026-11-05",
+  "retrievedOn": "2026-11-16",
   "parser": {
     "name": "jeju-bis-xlsx",
     "version": "3"
