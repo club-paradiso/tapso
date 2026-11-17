@@ -382,6 +382,8 @@ final class TapsoAppModel {
     @ObservationIgnored private var lastMoment: RideMoment?
     /// The live session being set up, before a bus is confirmed.
     @ObservationIgnored private var liveSetupSession: JourneySessionSnapshot?
+    /// The live setup's route number has never been seen with a bus (`LiveSessionInterpreter.liveNeverObserved`).
+    private(set) var liveRouteNeverObserved = false
     /// The language `liveSetupSession` was created in; the ride keeps it (`ActiveRide.language`).
     @ObservationIgnored private var liveSetupLanguage: JourneyLanguage = .current
     /// The development opt-in; no debug surfaces in release builds.
@@ -1693,6 +1695,7 @@ final class TapsoAppModel {
                     return
                 }
                 liveSetupSession = snapshot
+                liveRouteNeverObserved = LiveSessionInterpreter.liveNeverObserved(snapshot)
                 liveFailure = nil
                 vehicleCheck = LiveSessionInterpreter.vehicleCheck(for: snapshot, excluding: rejectedVehicles)
             } catch is CancellationError {
@@ -1703,6 +1706,7 @@ final class TapsoAppModel {
                 switch failure {
                 case .sessionExpired, .sessionNotFound:
                     liveSetupSession = nil
+                    liveRouteNeverObserved = false
                 default:
                     if !failure.isTransient {
                         // Polling stops here: the buses on screen would only get older, so
@@ -1739,6 +1743,7 @@ final class TapsoAppModel {
         }
         // The setup session is now the ride's session; it must not be ended as setup.
         liveSetupSession = nil
+        liveRouteNeverObserved = false
         vehicleCheck = VehicleCheck.evaluate(proposals: vehicleCheck.proposals, hasSearched: true, confirmed: proposal.vehicleID)
 
         // The hybrid rollout switch is read once, here, and travels with the ride.
@@ -2195,6 +2200,7 @@ final class TapsoAppModel {
     private func endLiveSetupSession() {
         if let id = liveSetupSession?.id { endSessionInBackground(id) }
         liveSetupSession = nil
+        liveRouteNeverObserved = false
     }
 
     private func endLiveRideSession(_ ride: ActiveRide) {

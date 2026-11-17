@@ -63,6 +63,8 @@
 "check.choose.detail" = "点按车牌一致的那辆";
 "check.notFoundYet.headline" = "暂时还没看到公交车";
 "check.notFoundYet.detail" = "%@路公交车一出现就会显示";
+"check.liveUnobserved.title" = "尚未确认此线路的实时位置";
+"check.liveUnobserved.body" = "TAPSO 连续几天查看了这条线路，但一次也没有收到公交车的位置。车来了也可能不会显示在这里，请在车站留意。";
 "check.confirmed.headline" = "已确认公交车";
 "check.confirmed.detail" = "TAPSO 现在跟踪这辆公交车";
 "check.confirm" = "确认这辆车";

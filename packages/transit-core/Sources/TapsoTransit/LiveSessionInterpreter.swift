@@ -8,6 +8,12 @@ import Foundation
 /// on that poll), never from a timestamp re-read on the phone: TAGO publishes
 /// no observation time, and `evidenceAt` is TAPSO's receipt time.
 public enum LiveSessionInterpreter {
+    /// The route number has never been seen with a bus across enough probes: its buses may
+    /// not show up here at all. Only the exact status the server defines counts.
+    public static func liveNeverObserved(_ snapshot: JourneySessionSnapshot) -> Bool {
+        snapshot.liveCoverage?.status == "never_observed"
+    }
+
     /// Whether the server lets the matcher's list be presented as a suggestion.
     ///
     /// Only at `READY_FOR_CONFIRMATION_ASSISTED` or above (issue #80). A server

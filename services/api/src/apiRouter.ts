@@ -37,6 +37,7 @@ import { assessSnapshot } from "./liveFeedQuality.ts";
 import { aggregateRouteSchedule, assessOperatingEvidence, type LiveVehicleEvidence } from "./transitEvidence.ts";
 import { routeStops } from "./transitCatalog.ts";
 import { koreanDate } from "./serviceDay.ts";
+import { liveCoverageForRoute } from "./liveCoverage.ts";
 import type { StaticTransitData } from "./staticTransitData.ts";
 import { normalizePlaceQuery, PLACE_QUERY_MAX, PLACE_QUERY_MIN, PlaceSearchError, type KakaoPlaceSearch } from "./placeSearch.ts";
 
@@ -775,7 +776,7 @@ async function dispatch(
       state: session.state,
       selectedVehicleId: session.selectedVehicleId,
     });
-    return { response: json(session, 201, { "cache-control": "no-store" }) };
+    return { response: json(withLiveCoverage(session, dependencies.staticData), 201, { "cache-control": "no-store" }) };
   }
 
   const sessionId = sessionIdentifier(resolved, url);
@@ -800,7 +801,7 @@ async function dispatch(
       vehicle: session.reliability?.vehicle,
       matcherCadence: session.reliability?.matcherCadence,
     });
-    return { response: json(session, 200, { "cache-control": "no-store" }) };
+    return { response: json(withLiveCoverage(session, dependencies.staticData), 200, { "cache-control": "no-store" }) };
   }
 
   if (resolved.route === "session_end") {
@@ -838,7 +839,20 @@ async function dispatch(
     routeId: session.routeId,
     selectedVehicleId: session.selectedVehicleId,
   });
-  return { response: json(session, 200, { "cache-control": "no-store" }) };
+  return { response: json(withLiveCoverage(session, dependencies.staticData), 200, { "cache-control": "no-store" }) };
+}
+
+/**
+ * A session on a route number TAGO has never been seen to report a bus for carries
+ * `liveCoverage` (`liveCoverage.ts`), so the app can say the bus may not show up.
+ * Missing or mismatched data adds nothing: the session is answered as before.
+ */
+function withLiveCoverage<T extends { routeId: string }>(session: T, staticData: StaticTransitData | undefined): T & { liveCoverage?: unknown } {
+  const coverage = staticData?.liveCoverage();
+  const catalog = staticData?.catalog();
+  if (!coverage?.ok || !catalog?.ok) return session;
+  const view = liveCoverageForRoute(coverage.value, catalog.value, session.routeId);
+  return view ? { ...session, liveCoverage: view } : session;
 }
 
 /* ------------------------------------------------- live activity scheduler */

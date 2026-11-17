@@ -63,6 +63,8 @@
 "check.choose.detail" = "ナンバーが一致するバスをタップしてください";
 "check.notFoundYet.headline" = "まだバスが見つかりません";
 "check.notFoundYet.detail" = "%@番のバスが現れたらすぐ表示します";
+"check.liveUnobserved.title" = "この路線のリアルタイム位置は確認できていません";
+"check.liveUnobserved.body" = "TAPSOが数日にわたって確認しましたが、この路線のバスの位置は一度も届いていません。バスが来てもここに表示されないことがあるので、停留所で直接確認してください。";
 "check.confirmed.headline" = "バスを確認しました";
 "check.confirmed.detail" = "TAPSOがこのバスを追跡します";
 "check.confirm" = "このバスを確認";

@@ -67,6 +67,7 @@ swift test --package-path packages/transit-core   # macOS / CI only
 
 - 2026-11-10: cleanup. Removed Swift code the app never used: `JourneyStateMachine` (its transition tests moved onto `RideSession`, the path the app uses), the Swift Journey Contract and Transfer Guardian (server specification kept, no endpoint uses either), `TrustBadge` (U-13; its 7 strings stay only as the website preview's copy source), `TransitSnapshot`, `AdaptiveStack`, `TrailingIconLabelStyle`, and unused `RideSession` members. 18 finished or superseded docs moved to `docs/archive/`; `docs/CURRENT_STATE.md` is the new entry point.
 - 2026-11-10: targeted probe of routes 900/910 by route number (12 passes, 16:08–17:13 KST, run 42773224635). 910 reported a bus in every pass; 900 in none across its 16:34 and 17:08 departures (all reads HTTP 200). Release gate 3: PASS (per family; `unstated` satisfied by 910). Route 900's live coverage is `UNKNOWN`.
+- 2026-11-17: live coverage. `services/api/src/liveCoverage.ts` lists route numbers never seen with a bus across ≥ 10 probes on ≥ 2 Korean days (`ASSUMED`), computed from the probe history into `services/api/data/jeju-live-coverage.json` (today: 900 only; the other 57 never-seen numbers had 2 probes each, too few). Journey-session answers carry `liveCoverage`; the vehicle check then says the bus may not show up. Tests first (API 1059/1059; Swift `testANeverObservedRouteIsReadFromTheSession`, CI only). Another 12-pass probe of 900 ran on the same day.
 
 ## 7. Risks and next action
 

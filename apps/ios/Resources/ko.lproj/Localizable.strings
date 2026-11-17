@@ -62,6 +62,8 @@
 "check.choose.detail" = "번호판 끝자리가 같은 버스를 눌러 주세요";
 "check.notFoundYet.headline" = "아직 오는 버스가 안 보여요";
 "check.notFoundYet.detail" = "%@번 버스가 보이면 바로 알려 드릴게요";
+"check.liveUnobserved.title" = "이 노선은 실시간 위치가 확인되지 않았어요";
+"check.liveUnobserved.body" = "탑서가 여러 날 살펴봤지만 이 노선 버스의 위치가 한 번도 들어오지 않았어요. 버스가 와도 여기 안 보일 수 있으니 정류장에서 직접 확인해 주세요.";
 "check.confirmed.headline" = "버스를 확인했어요";
 "check.confirmed.detail" = "이 버스로 따라갈게요";
 "check.confirm" = "이 버스 확인하기";
