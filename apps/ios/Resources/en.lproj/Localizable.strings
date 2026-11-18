@@ -62,6 +62,8 @@
 "check.choose.detail" = "Tap the one whose plate matches";
 "check.notFoundYet.headline" = "No bus in sight yet";
 "check.notFoundYet.detail" = "We'll show route %@ as soon as one appears";
+"check.liveUnobserved.title" = "No live position for this route yet";
+"check.liveUnobserved.body" = "TAPSO has watched this route on several days and never received a bus position. The bus may come without showing here, so look out for it at the stop.";
 "check.confirmed.headline" = "Bus confirmed";
 "check.confirmed.detail" = "TAPSO follows this bus now";
 "check.confirm" = "Confirm this bus";

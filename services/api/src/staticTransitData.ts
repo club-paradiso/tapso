@@ -1,7 +1,7 @@
 /**
  * The reviewed, committed data the API serves as files rather than fetching:
- * the canonical transit catalog, the official timetable bundle and the
- * public-holiday calendar, all under `services/api/data/` (bundled into every
+ * the canonical transit catalog, the official timetable bundle, the
+ * public-holiday calendar and the live coverage, all under `services/api/data/` (bundled into every
  * Vercel function by `vercel.json` → `includeFiles`).
  *
  * Each is read and validated once per process. A file that is missing or fails
@@ -11,6 +11,7 @@
 
 import { readFileSync } from "node:fs";
 
+import { validateLiveCoverage, type LiveCoverage } from "./liveCoverage.ts";
 import { validateTimetableBundle, type TimetableBundle } from "./officialTimetable.ts";
 import { validateHolidayCalendar, type HolidayCalendar } from "./serviceDay.ts";
 import { validateCatalog, type TransitCatalog } from "./transitCatalog.ts";
@@ -21,6 +22,8 @@ export interface StaticTransitData {
   catalog(): Loaded<TransitCatalog>;
   timetables(): Loaded<TimetableBundle>;
   holidays(): Loaded<HolidayCalendar>;
+  /** Route numbers never seen with a bus (`liveCoverage.ts`). */
+  liveCoverage(): Loaded<LiveCoverage>;
 }
 
 const DATA = new URL("../data/", import.meta.url);
@@ -45,16 +48,18 @@ export function fileStaticTransitData(base: URL = DATA): StaticTransitData {
     catalog: () => load("jeju-transit-catalog.json", validateCatalog),
     timetables: () => load("jeju-timetables.json", (raw) => validateTimetableBundle(raw).bundle),
     holidays: () => load("kr-public-holidays.json", validateHolidayCalendar),
+    liveCoverage: () => load("jeju-live-coverage.json", validateLiveCoverage),
   };
 }
 
 /** For tests and local runs: data given directly. */
-export function inMemoryStaticTransitData(values: { catalog?: TransitCatalog; timetables?: TimetableBundle; holidays?: HolidayCalendar }): StaticTransitData {
+export function inMemoryStaticTransitData(values: { catalog?: TransitCatalog; timetables?: TimetableBundle; holidays?: HolidayCalendar; liveCoverage?: LiveCoverage }): StaticTransitData {
   const wrap = <T>(value: T | undefined, name: string): Loaded<T> =>
     value === undefined ? { ok: false, reason: `${name} is not deployed` } : { ok: true, value, bytes: JSON.stringify(value) };
   return {
     catalog: () => wrap(values.catalog, "jeju-transit-catalog.json"),
     timetables: () => wrap(values.timetables, "jeju-timetables.json"),
     holidays: () => wrap(values.holidays, "kr-public-holidays.json"),
+    liveCoverage: () => wrap(values.liveCoverage, "jeju-live-coverage.json"),
   };
 }

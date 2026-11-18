@@ -117,6 +117,25 @@ final class LiveSessionInterpreterTests: XCTestCase {
         XCTAssertEqual(LiveSessionInterpreter.vehicleCheck(for: future).stage, .notFoundYet)
     }
 
+    /// A route TAGO has never been seen to report a bus for (`services/api/src/liveCoverage.ts`):
+    /// the session says so, and only then. SYNTHETIC payload.
+    func testANeverObservedRouteIsReadFromTheSession() throws {
+        let json = #"""
+        {"id":"syn","routeId":"SYN","cityCode":"39","boardingStop":{"stopId":"S4","name":"넷","sequence":4},"destinationStop":{"stopId":"S9","name":"아홉","sequence":9},"state":"confirmation_required","candidates":[]}
+        """#
+        let plain = try JSONDecoder().decode(JourneySessionSnapshot.self, from: Data(json.utf8))
+        XCTAssertNil(plain.liveCoverage, "an older server, or any other route, says nothing")
+        XCTAssertFalse(LiveSessionInterpreter.liveNeverObserved(plain))
+
+        let flagged = json.replacingOccurrences(of: #""candidates":[]"#, with: #""candidates":[],"liveCoverage":{"status":"never_observed","probes":14,"days":2,"since":"2026-11-08T23:28:16.956Z"}"#)
+        let snapshot = try JSONDecoder().decode(JourneySessionSnapshot.self, from: Data(flagged.utf8))
+        XCTAssertEqual(snapshot.liveCoverage?.probes, 14)
+        XCTAssertTrue(LiveSessionInterpreter.liveNeverObserved(snapshot))
+
+        let other = flagged.replacingOccurrences(of: "never_observed", with: "something_new")
+        XCTAssertFalse(LiveSessionInterpreter.liveNeverObserved(try JSONDecoder().decode(JourneySessionSnapshot.self, from: Data(other.utf8))), "an unknown status claims nothing")
+    }
+
     func testAConfirmedSessionIsConfirmed() throws {
         let check = LiveSessionInterpreter.vehicleCheck(for: try XCTUnwrap(scenarios()["confirmed-tracking"]))
         XCTAssertEqual(check.stage, .confirmed)

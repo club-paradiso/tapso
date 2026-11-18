@@ -22,6 +22,7 @@ struct VehicleCheckView: View {
                     boardingName: draft.boarding?.name ?? "",
                     destinationName: draft.destination?.name ?? "",
                     isLive: draft.isLive,
+                    liveNeverObserved: model.liveRouteNeverObserved,
                     onConfirm: { proposal in Task { await model.confirmVehicle(proposal) } },
                     onReject: { model.rejectProposal($0) }
                 )
@@ -55,6 +56,8 @@ struct VehicleCheckContent: View {
     let destinationName: String
     /// Live: the buses come from TAPSO's server. Demo: synthetic.
     var isLive = false
+    /// The route number has never been seen with a bus: say the bus may not show up here.
+    var liveNeverObserved = false
     let onConfirm: (VehicleProposal) -> Void
     let onReject: (VehicleProposal) -> Void
 
@@ -88,6 +91,16 @@ struct VehicleCheckContent: View {
             switch check.stage {
             case .searching, .notFoundYet:
                 SearchingIndicator(reduceMotion: reduceMotion)
+                if liveNeverObserved {
+                    // An observation about the feed, never "this bus does not run".
+                    NoticeCard(
+                        systemImage: "antenna.radiowaves.left.and.right.slash",
+                        title: "check.liveUnobserved.title",
+                        message: "check.liveUnobserved.body",
+                        tint: TapsoColor.decorative
+                    )
+                    .accessibilityIdentifier("check-live-unobserved")
+                }
             case .proposed, .confirmed:
                 if let proposal = check.proposals.first {
                     ConfirmationCard(proposal: proposal, routeNumber: routeNumber, confirmed: check.stage == .confirmed)

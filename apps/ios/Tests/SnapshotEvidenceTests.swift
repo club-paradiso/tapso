@@ -49,6 +49,8 @@ final class SnapshotEvidenceTests: XCTestCase {
             ("10-check-proposed", check(.evaluate(proposals: DemoCatalog.proposals(for: .smooth, route: DemoCatalog.outbound), hasSearched: true))),
             ("11-check-similar-buses", check(.evaluate(proposals: DemoCatalog.proposals(for: .similarBuses, route: DemoCatalog.outbound), hasSearched: true))),
             ("12-check-not-found", check(.evaluate(proposals: [], hasSearched: true))),
+            // A route number never seen with a bus (route 900 on 2026-11-10): the bus may not show up here.
+            ("12b-check-not-found-live-unobserved", check(.evaluate(proposals: [], hasSearched: true), liveNeverObserved: true)),
             ("13-ride-riding", ride(.active, 6)),
             ("13b-ride-live-keep-alive-off", ride(.active, 6, background: .liveForegroundOnly)),
             ("13c-ride-live-keep-alive-on", ride(.active, 6, background: .liveKeepAlive)),
@@ -382,12 +384,14 @@ final class SnapshotEvidenceTests: XCTestCase {
         return library
     }
 
-    private func check(_ check: VehicleCheck) -> AnyView {
+    private func check(_ check: VehicleCheck, liveNeverObserved: Bool = false) -> AnyView {
         AnyView(VehicleCheckContent(
             check: check,
             routeNumber: "365",
             boardingName: "제주버스터미널",
             destinationName: "제주시청(아라방면)",
+            isLive: liveNeverObserved,
+            liveNeverObserved: liveNeverObserved,
             onConfirm: { _ in },
             onReject: { _ in }
         ))

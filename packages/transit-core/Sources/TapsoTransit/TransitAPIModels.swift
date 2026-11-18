@@ -144,8 +144,21 @@ public struct JourneySessionSnapshot: Codable, Hashable, Sendable {
     /// The ride's reliability by dimension (`RideReliabilityView`), present once a bus is
     /// selected. Absent from a server from before it existed: the state alone is read then.
     public let reliability: Reliability?
+    /// Present only when the route number has never been seen with a bus across enough
+    /// probes (`services/api/src/liveCoverage.ts`). Absent for every other route and from
+    /// a server from before it existed.
+    public let liveCoverage: LiveCoverage?
     public let updatedAt: String?
     public let expiresAt: String?
+
+    public struct LiveCoverage: Codable, Hashable, Sendable {
+        /// `never_observed`: an observation about the feed, not a claim that the route does not run.
+        public let status: String
+        public let probes: Int
+        /// Distinct Korean calendar days among those probes.
+        public let days: Int
+        public let since: String
+    }
 
     public struct Progress: Codable, Hashable, Sendable {
         public let currentStopSequence: Int

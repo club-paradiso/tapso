@@ -1,0 +1,10 @@
+{
+  "schemaVersion": "tapso-live-coverage-v1",
+  "catalogVersion": "c9eacac26d848f6a",
+  "criterion": {
+    "minimumProbes": 10,
+    "minimumDays": 2
+  },
+  "probeFiles": 26,
+  "neverObserved": {}
+}

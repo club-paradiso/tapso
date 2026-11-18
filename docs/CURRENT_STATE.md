@@ -1,4 +1,4 @@
-# TAPSO: current state (2026-11-10)
+# TAPSO: current state (2026-11-17)
 
 Start here. This page describes what the app does on `main` today, where each part lives, what is proven and what is blocked, and where to pick up. When this page and an older document disagree, this page and the code win. Finished plans and superseded designs are in `docs/archive/`.
 
@@ -14,7 +14,7 @@ TAPSO (탑서) is an iPhone app for Jeju buses. The rider says where they get of
 | Destination first | `CatalogSearchViews`, `SetupViews`, `BoardingFirstViews` | the Jeju catalog, searched on the phone |
 | Route number first ("버스 번호로 타기") | `LiveRideSetupViews` | `/v1/routes`, `/v1/stops` |
 | From a map app (share sheet, paste, screenshot, place search) | `ShareExtension`, `ScreenshotImportViews`, `PlaceLookupViews` | parsed on the phone; place search through `/v1/places` and Apple MapKit (`MKLocalSearch`) |
-| Find and confirm the bus | `VehicleCheckView` | `/v1/vehicles`, journey session (`/v1/sessions`) |
+| Find and confirm the bus | `VehicleCheckView`; on a route number never seen with a bus it adds "이 노선은 실시간 위치가 확인되지 않았어요" | `/v1/vehicles`, journey session (`/v1/sessions`, whose answer carries `liveCoverage` from `services/api/data/jeju-live-coverage.json`) |
 | The ride | `RideView`; Lock Screen and Dynamic Island in `Shared/LiveActivitySurfaces.swift` | server session progress |
 | After the ride | `RideEndView`: walk hand-off, tonight's timetable (NightGuard), 막차 rows, full timetable | `/v1/night-guard`, `/v1/route-info`, `/v1/timetables` |
 | "돌아갈 시간" countdown | `Shared/ReturnActivitySurfaces.swift` | computed on the phone |
@@ -47,7 +47,7 @@ API routes (`services/api/src/apiRouter.ts`): `/health`, `/v1/cities`, `/v1/rout
 | Swift core, iOS build and tests | `VERIFIED` in CI on every push (jobs `transit-core`, `ios`; macOS only, no local Swift toolchain in the agent container) |
 | API | `VERIFIED` by Node tests (1,052 on 2026-11-10) and live in production |
 | Live data | TAGO positions have no observation time; TAPSO uses receipt time. TAGO refuses bursts (HTTP 429; at most 4 concurrent reads per instance is `ASSUMED`) |
-| Route 900 (동복리마을버스) | `UNKNOWN` whether TAGO reports its buses at all: 12 targeted passes on 2026-11-10, 16:08–17:13 KST, across the 16:34 and 17:08 departures of the official table, saw 0 buses on all 12 variants (every read HTTP 200). A rider on 900 would see no bus to confirm. Route 910 reported a bus in all 12 passes |
+| Route 900 (동복리마을버스) | `OBSERVED` in the TAGO feed since 2026-11-17: a weekday probe (12 passes, 11:40–13:33 KST, all reads HTTP 200) saw one bus in 5 passes, on 3 of its 12 variants (`JEB405090002`–`004`). The earlier 14 probes on 2026-11-09 and 11-10 had seen none, so the gaps are `UNKNOWN` (between trips, or buses not always reporting). With that, no route number is on the never-observed list; the app notice (see §1) stays for any number that lands there later |
 | Timetables | `OFFICIAL_DATED` 2026-11-05; first-bus check 2026-11-09: 12 of 13 first departures matched (`docs/validation/TAPSO_V4_FIRST_BUS_CHECK_2026-11-09.md`). Goes stale after 2027-02-03; the release gate warns after 2027-01-04 |
 | Release gates (`artifacts/release-gates/jeju-v1.md`) | 1 data, 2 search, 3 live, 6 data quality: PASS. 4 tracking: BLOCKED by a physical device. 5 background push: BLOCKED by a paid Apple account. 7 release: decided by CI. Gate 3 passes per route family: every family has a variant seen with a bus in some probe |
 | On a real iPhone | `UNVERIFIED`: no signed device build yet |
@@ -76,7 +76,7 @@ The Swift copies of the first two, an unused `JourneyStateMachine`, and the neve
 1. Snapshot evidence of the return screen and NightGuard in Korean and English, at default size and AX5, then a VoiceOver checklist (V4 PR 4).
 2. Repeat the first-bus check on two more weekdays before changing the 365 06:00 한라대 row (`CONFLICTED` in the official file).
 3. A signed build on the owner's iPhone (free Personal Team, 7-day install) to start device evidence.
-4. Route 900: probe again on another weekday (`ops/jeju-catalog/request.json` with `onlyRoutes`); if it still never reports, ask the operator whether its buses send positions to BIS/TAGO, and decide what TAPSO tells a rider on it.
+4. Live coverage: the never-observed list is empty since route 900 reported on 2026-11-17. It is recomputed from every probe by `scripts/route-coverage/live-coverage.ts` (criterion: at least 10 probes on at least 2 Korean days, `ASSUMED`); most route numbers still have only 2 probes, so more probes are what would put a silent route on it.
 
 The detailed plan and progress log: `docs/exec-plans/TAPSO_V4_IMPLEMENTATION.md`. Audits: `docs/audits/`.
 

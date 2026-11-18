@@ -104,6 +104,10 @@ jobs:
           if [ -f scripts/route-coverage/production-readiness.ts ]; then
             node --experimental-strip-types scripts/route-coverage/production-readiness.ts
           fi
+          # Route numbers never seen with a bus, from every probe of this catalog (served with sessions).
+          if [ -f scripts/route-coverage/live-coverage.ts ]; then
+            node --experimental-strip-types scripts/route-coverage/live-coverage.ts
+          fi
       - name: Commit the result
         env:
           GH_TOKEN: ${{ github.token }}
@@ -113,6 +117,7 @@ jobs:
           git config user.name "github-actions[bot]"
           git config user.email "41898282+github-actions[bot]@users.noreply.github.com"
           git add services/api/data/jeju-transit-catalog.json artifacts/route-coverage
+          if [ -f services/api/data/jeju-live-coverage.json ]; then git add services/api/data/jeju-live-coverage.json; fi
           if git diff --cached --quiet; then echo "nothing changed"; exit 0; fi
           version=$(node -e 'console.log(JSON.parse(require("fs").readFileSync("services/api/data/jeju-transit-catalog.json","utf8")).catalogVersion)')
           git commit -m "data: Jeju transit catalog ${version} ($(TZ=Asia/Seoul date +%F))" -m "Workflow run ${GITHUB_RUN_ID}."
