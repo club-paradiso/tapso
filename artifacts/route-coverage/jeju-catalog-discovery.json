@@ -1,36 +1,36 @@
 {
-  "generatedAt": "2026-11-08T23:04:02.467Z",
+  "generatedAt": "2026-11-23T00:37:31.268Z",
   "base": "https://tapso-api.vercel.app",
-  "catalogVersion": "c9eacac26d848f6a",
+  "catalogVersion": "1718050db9568039",
   "discovery": [
     {
       "method": "all_routes",
       "query": "",
-      "routeIds": 994,
+      "routeIds": 986,
       "status": 200
     },
     {
       "method": "number_search",
       "query": "1",
-      "routeIds": 442,
+      "routeIds": 438,
       "status": 200
     },
     {
       "method": "number_search",
       "query": "2",
-      "routeIds": 455,
+      "routeIds": 445,
       "status": 200
     },
     {
       "method": "number_search",
       "query": "3",
-      "routeIds": 417,
+      "routeIds": 405,
       "status": 200
     },
     {
       "method": "number_search",
       "query": "4",
-      "routeIds": 253,
+      "routeIds": 254,
       "status": 200
     },
     {
@@ -60,19 +60,19 @@
     {
       "method": "number_search",
       "query": "9",
-      "routeIds": 80,
+      "routeIds": 81,
       "status": 200
     },
     {
       "method": "timetable_census_number",
       "query": "101",
-      "routeIds": 7,
+      "routeIds": 8,
       "status": 200
     },
     {
       "method": "timetable_census_number",
       "query": "102",
-      "routeIds": 13,
+      "routeIds": 14,
       "status": 200
     },
     {
@@ -126,7 +126,7 @@
     {
       "method": "timetable_census_number",
       "query": "121",
-      "routeIds": 7,
+      "routeIds": 8,
       "status": 200
     },
     {
@@ -246,13 +246,13 @@
     {
       "method": "timetable_census_number",
       "query": "231",
-      "routeIds": 14,
+      "routeIds": 7,
       "status": 200
     },
     {
       "method": "timetable_census_number",
       "query": "232",
-      "routeIds": 21,
+      "routeIds": 14,
       "status": 200
     },
     {
@@ -462,7 +462,7 @@
     {
       "method": "timetable_census_number",
       "query": "320",
-      "routeIds": 9,
+      "routeIds": 11,
       "status": 200
     },
     {
@@ -906,7 +906,7 @@
     {
       "method": "timetable_census_number",
       "query": "490",
-      "routeIds": 1,
+      "routeIds": 2,
       "status": 200
     },
     {
@@ -1600,23 +1600,23 @@
       "status": 200
     }
   ],
-  "routeIds": 994,
-  "routes": 991,
+  "routeIds": 986,
+  "routes": 983,
   "stops": 4338,
   "unavailable": [
     {
-      "routeId": "JEB405077707",
-      "routeNo": "777",
+      "routeId": "JEB405077777",
+      "routeNo": "777-7",
       "reason": "provider_stop_list_has_1_stops"
     },
     {
-      "routeId": "JEB405088808",
+      "routeId": "JEB406088808",
       "routeNo": "888-8",
       "reason": "provider_stop_list_has_1_stops"
     },
     {
-      "routeId": "JEB406099909",
-      "routeNo": "999",
+      "routeId": "JEB406099999",
+      "routeNo": "999-9",
       "reason": "provider_stop_list_has_1_stops"
     }
   ]
