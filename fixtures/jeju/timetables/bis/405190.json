@@ -1,0 +1,101 @@
+{
+  "schemaVersion": "tapso-jeju-timetable-v3",
+  "label": "OFFICIAL_DATED",
+  "source": {
+    "publisher": "제주특별자치도 (bus.jeju.go.kr)",
+    "dataset": "data.go.kr 3043887",
+    "page": "https://bus.jeju.go.kr/publicTrafficInformation/generalBusSchedule",
+    "file": "405190.xlsx",
+    "sha256": "6cc286b1fd7b74ddac539bd5d0946e9b2f03e5cf7e4c4b46001f97efbef00cc1",
+    "scheduleId": "405190",
+    "listedName": "320-3"
+  },
+  "retrievedOn": "2026-11-23",
+  "parser": {
+    "name": "jeju-bis-xlsx",
+    "version": "3"
+  },
+  "routeNumbers": [
+    "320-3"
+  ],
+  "serviceLabels": [
+    "임시수요맞춤"
+  ],
+  "status": "parsed",
+  "services": [
+    {
+      "sheets": [
+        "320-3 (임시운행) 신성여고-제주여고-외도-하귀초"
+      ],
+      "routeNumbers": [
+        "320-3"
+      ],
+      "dayType": "unstated",
+      "serviceLabels": [
+        "임시수요맞춤"
+      ],
+      "direction": "신성여중고→연북로→한라초→백록초→도평→외도부영→하귀초",
+      "effectiveFrom": "2026-11-16",
+      "summary": "제주시 공영버스(064-728-3211)",
+      "timepoints": [
+        "신성여중고",
+        "제주여중고",
+        "한라초",
+        "백록초",
+        "외도부영아파트",
+        "하귀휴먼시아아파트",
+        "하귀초"
+      ],
+      "trips": [
+        {
+          "routeNumber": "320-3",
+          "times": [
+            "17:05",
+            "17:13",
+            "17:37",
+            "17:55",
+            "18:11",
+            "18:21",
+            "18:27"
+          ],
+          "firstTime": "17:05"
+        }
+      ],
+      "status": "ok"
+    },
+    {
+      "sheets": [
+        "320-3 (임시운행) 한라수목원-제주여중고-금천마을"
+      ],
+      "routeNumbers": [
+        "320-3"
+      ],
+      "dayType": "unstated",
+      "serviceLabels": [
+        "임시수요맞춤"
+      ],
+      "direction": "한라수목원→한라초→연북로 →제주여중고→신성여중고",
+      "effectiveFrom": "2026-11-16",
+      "summary": "제주시 공영버스(064-728-3211)",
+      "timepoints": [
+        "한라수목원",
+        "한라중",
+        "제주여중고",
+        "금천마을"
+      ],
+      "trips": [
+        {
+          "routeNumber": "320-3",
+          "times": [
+            "16:28",
+            "16:32",
+            "16:51",
+            "16:57"
+          ],
+          "firstTime": "16:28"
+        }
+      ],
+      "status": "ok"
+    }
+  ]
+}

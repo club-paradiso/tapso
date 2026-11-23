@@ -2,8 +2,8 @@
   "label": "OFFICIAL_DATED",
   "source": "https://bus.jeju.go.kr/publicTrafficInformation/generalBusSchedule",
   "dataset": "data.go.kr 3043887",
-  "retrievedOn": "2026-11-05",
-  "retrievedAt": "2026-11-05T12:05:28+09:00",
+  "retrievedOn": "2026-11-23",
+  "retrievedAt": "2026-11-23T09:18:47+09:00",
   "parser": {
     "name": "jeju-bis-xlsx",
     "version": "3"
@@ -25,9 +25,10 @@
     "16"
   ],
   "counts": {
-    "parsed": 203,
+    "parsed": 182,
     "source_conflict": 29,
-    "no_timetable": 6
+    "parse_refused": 2,
+    "no_timetable": 8
   },
   "timetables": [
     {
@@ -37,8 +38,8 @@
         "4"
       ],
       "file": "raw/405001.xlsx",
-      "bytes": 8898,
-      "sha256": "639be5b66d901429a5ee2678c738c9c9014bc8c605c4f80ad5313b0fd8abcbdc",
+      "bytes": 8897,
+      "sha256": "121786b83a0171050577b5a3d623d980da0f3cb99ef2600fbbd613c15e73cffc",
       "outcome": "parsed",
       "routeNumbers": [
         "101"
@@ -52,8 +53,8 @@
         "4"
       ],
       "file": "raw/405002.xlsx",
-      "bytes": 9583,
-      "sha256": "b79c2f6bcd3004642c235bb49f3509f6112544b299ecc9457d173c88a70858ed",
+      "bytes": 9579,
+      "sha256": "ea318759db3fc3eed8c3af5e7df455308db6eef5e86772a98e3deefdf530324f",
       "outcome": "source_conflict",
       "routeNumbers": [
         "102"
@@ -70,8 +71,8 @@
         "4"
       ],
       "file": "raw/405003.xlsx",
-      "bytes": 7870,
-      "sha256": "b7b895e89a640b75e115d444df6c4266ef49d8258d8285eda339807ba486d689",
+      "bytes": 7871,
+      "sha256": "3977a13342b8c2f0fc9fe79b907d6a15dcb4802c047b86e31b966f64ed4a9035",
       "outcome": "parsed",
       "routeNumbers": [
         "111"
@@ -85,8 +86,8 @@
         "4"
       ],
       "file": "raw/405004.xlsx",
-      "bytes": 11427,
-      "sha256": "0ed36ea34a248645584abc794673e4cf9f8fc909b0503adc84b8e8381a10206c",
+      "bytes": 11409,
+      "sha256": "dbb68b212ecbbaf40ad2d73368764e6e429db7ab90d97125aa2d85d01d893416",
       "outcome": "parsed",
       "routeNumbers": [
         "121",
@@ -102,7 +103,7 @@
       ],
       "file": "raw/405005.xlsx",
       "bytes": 11993,
-      "sha256": "e70fb127961e76519baa76bdf9d47ff7a9d783c926ee3179b2edc42ea9939da6",
+      "sha256": "90410d998c38f6ab69c50337e21556954fa8851e906412c91870fafee79890d6",
       "outcome": "parsed",
       "routeNumbers": [
         "131",
@@ -118,7 +119,7 @@
       ],
       "file": "raw/405006.xlsx",
       "bytes": 9592,
-      "sha256": "119117db18e17f4f5329d86ed19647c4cd7aed5417f5ca419f79c2d8be64f6d3",
+      "sha256": "acacecd6784c1f68bcd11f7c6659bd2a54206b9e711b560cae4508d0496e066e",
       "outcome": "parsed",
       "routeNumbers": [
         "151"
@@ -133,7 +134,7 @@
       ],
       "file": "raw/405007.xlsx",
       "bytes": 7449,
-      "sha256": "b31fb559756015b2f7d86480eaf564828f91abd166ff6bed5229a2b39c46b412",
+      "sha256": "e7d69eb6826415acc2fec205282f91fd291a25d728d64bb19e3928f6236011ae",
       "outcome": "parsed",
       "routeNumbers": [
         "181"
@@ -148,7 +149,7 @@
       ],
       "file": "raw/405008.xlsx",
       "bytes": 7172,
-      "sha256": "80a96ae545c641f4b4fc20d07c2a6df718c02c824a7d811a2f87203ff26da574",
+      "sha256": "11f73268ee2482b9a3706aabd6037e20d269c5fbe940fe04701755cc06616926",
       "outcome": "source_conflict",
       "routeNumbers": [
         "182"
@@ -165,8 +166,8 @@
         "3"
       ],
       "file": "raw/405009.xlsx",
-      "bytes": 18059,
-      "sha256": "099052c0a74126be25f03cbe551c6dca3ea54f69775c803da3e96d0e7a6e2b53",
+      "bytes": 18060,
+      "sha256": "3691b9e704787b964aa427ca8e4b2120c664c600533abe415f9325872cfcd0f2",
       "outcome": "parsed",
       "routeNumbers": [
         "201"
@@ -181,7 +182,7 @@
       ],
       "file": "raw/405010.xlsx",
       "bytes": 17963,
-      "sha256": "a4ac09c88b9c8b53d907338387c98068e43a11180edff9263d9c42e05d58b5ab",
+      "sha256": "e793d38506059b588cff4058ec28d040805e17cdec5b14d8c9056ea3249d7c92",
       "outcome": "source_conflict",
       "routeNumbers": [
         "202"
@@ -200,7 +201,7 @@
       ],
       "file": "raw/405011.xlsx",
       "bytes": 16125,
-      "sha256": "22d0191d6ad5c1c1aff27dc7258e51d6f4a56a824d072cc228a1533ab95bb140",
+      "sha256": "c4abe7f45e8400f5bbfc711e3f89cd43a4451f7390a440f435f495f47f74468e",
       "outcome": "parsed",
       "routeNumbers": [
         "211",
@@ -215,8 +216,8 @@
         "3"
       ],
       "file": "raw/405012.xlsx",
-      "bytes": 16037,
-      "sha256": "c7b51a2d2a94424f2d95d5d0a435a4b692c99c66b553e99464ca6c47370e5be7",
+      "bytes": 16036,
+      "sha256": "4308783081d265ca56a8b6f200f62464996bb24a123474d362b2ed195b06bccd",
       "outcome": "parsed",
       "routeNumbers": [
         "221",
@@ -232,7 +233,7 @@
       ],
       "file": "raw/405013.xlsx",
       "bytes": 15455,
-      "sha256": "93f42daa33f5f522abdfa8a9edfe15ae1b01784643cd833f2fa2ec859923aa0f",
+      "sha256": "a1a63e909bb6c867f432d99e58b6fb86f5b75ca6c51f1c151c0b7b441ff6edb9",
       "outcome": "parsed",
       "routeNumbers": [
         "231",
@@ -247,8 +248,8 @@
         "3"
       ],
       "file": "raw/405014.xlsx",
-      "bytes": 7377,
-      "sha256": "e2c465d39a42777522ae666a0caf3bc797e8a4952e560ee9da708ca2436f803c",
+      "bytes": 7376,
+      "sha256": "fcdce47bf01efbefa2de92d27d3aeb46e716998128794d9bea8862a7c5a98e0d",
       "outcome": "parsed",
       "routeNumbers": [
         "240"
@@ -262,8 +263,8 @@
         "3"
       ],
       "file": "raw/405015.xlsx",
-      "bytes": 71493,
-      "sha256": "54b283795a281e31251bb08d8d1119922e46eb67326c8362865066aa8556ac9a",
+      "bytes": 71502,
+      "sha256": "d285a3280d2087cd2adf5e0866762e7c10dfe1d8e847bcb1730a64b9363489cf",
       "outcome": "source_conflict",
       "routeNumbers": [
         "251",
@@ -289,8 +290,8 @@
         "3"
       ],
       "file": "raw/405016.xlsx",
-      "bytes": 8683,
-      "sha256": "99fb5f35a065737688ddf1f90b10fdc7d7f5d877b7ed5d48959f251ad7b87967",
+      "bytes": 8682,
+      "sha256": "91ef2c55d6751b50b2275f111d20d90ae5f60d2b23ceb6b23134d0d55dd18a9a",
       "outcome": "parsed",
       "routeNumbers": [
         "255"
@@ -305,7 +306,7 @@
       ],
       "file": "raw/405017.xlsx",
       "bytes": 8221,
-      "sha256": "efc35fc8d478c78290b79ad9e59c9c269e5e0b36a7b9526e96d1ac9fa69c6dbf",
+      "sha256": "ada11a0ff238964803e82734074165738221e34f926be0fdbe5986f19931a14e",
       "outcome": "parsed",
       "routeNumbers": [
         "260"
@@ -320,7 +321,7 @@
       ],
       "file": "raw/405018.xlsx",
       "bytes": 9993,
-      "sha256": "2c1309eda69244582f1fa89ef9403227d21c50ca4a7a512865309448f964ea34",
+      "sha256": "9a66105c0f4ef109e39ef71b5305ad9ba4bdfad49e46cdf740a1181d9b8d0598",
       "outcome": "parsed",
       "routeNumbers": [
         "270"
@@ -335,7 +336,7 @@
       ],
       "file": "raw/405019.xlsx",
       "bytes": 14565,
-      "sha256": "f494ea3382107d1c5abcb60c61d538ed54677a68ed3a8d35c1aa44294a099a00",
+      "sha256": "2a220228ad1c93e16d4390efa6fcbef04298fc2c24c47878b96c818aa55306c4",
       "outcome": "parsed",
       "routeNumbers": [
         "281"
@@ -349,8 +350,8 @@
         "3"
       ],
       "file": "raw/405020.xlsx",
-      "bytes": 16783,
-      "sha256": "b7d996d36cba12ffe666fe3dd538531eef6f16d315b104900db34bbefc2efd84",
+      "bytes": 16782,
+      "sha256": "4e14e222b26e86cdd5add7fb6a69975c254a5f0e93fe713abf78205d9e109cea",
       "outcome": "source_conflict",
       "routeNumbers": [
         "282"
@@ -368,8 +369,8 @@
         "3"
       ],
       "file": "raw/405021.xlsx",
-      "bytes": 32586,
-      "sha256": "22a92d99960e93f2ad5090ed54e7d42e7aba5b3440fd4fdce5d3e2b93c639362",
+      "bytes": 32701,
+      "sha256": "a6333808bbe86639e4e080ae5608b27af2e04fe5839924482cf9edc17335e4ed",
       "outcome": "source_conflict",
       "routeNumbers": [
         "291",
@@ -383,18 +384,20 @@
     },
     {
       "id": "405022",
-      "name": "434",
+      "name": "300, 301",
       "groups": [
-        "2"
+        "1",
+        "11"
       ],
       "file": "raw/405022.xlsx",
-      "bytes": 6254,
-      "sha256": "b99d5671d7affb4aa52ba0fc0c562a4002b580a410685262d83cf2389c7f8046",
+      "bytes": 19384,
+      "sha256": "38e395366b2d0205d2c367ec97cc363eeef57a3b2a7f69cad2cea2dd37ac212c",
       "outcome": "parsed",
       "routeNumbers": [
-        "434"
+        "300",
+        "301"
       ],
-      "services": 1
+      "services": 2
     },
     {
       "id": "405023",
@@ -403,8 +406,8 @@
         "1"
       ],
       "file": "raw/405023.xlsx",
-      "bytes": 9988,
-      "sha256": "3f22150ff9df9736638f42f218460b453a3452f622d32bc2d0e8c642716a3f56",
+      "bytes": 10081,
+      "sha256": "635f43e4d94f2f77f35495f030744a5ce9d0539ae6b5dc2f2003bd04be08582a",
       "outcome": "source_conflict",
       "routeNumbers": [
         "311"
@@ -422,7 +425,7 @@
       ],
       "file": "raw/405024.xlsx",
       "bytes": 9736,
-      "sha256": "4d3ad0719d95664cafe8bedd767c589d4171547df9f413c5e96de6f7fbb7ed22",
+      "sha256": "89aef7dd191aed202a1ffc2e3e60a31b09bd7be4945b124d3b118da1745dbb57",
       "outcome": "parsed",
       "routeNumbers": [
         "315"
@@ -436,8 +439,8 @@
         "1"
       ],
       "file": "raw/405025.xlsx",
-      "bytes": 8701,
-      "sha256": "a67e37fa0395f5152121f42c0bce613693f5249d3a23d756cb98ae2e3016550c",
+      "bytes": 8699,
+      "sha256": "1395ab1b0b0a8a561576d3e4880e2393d78427dde7d811551c9f9a0062e13e2d",
       "outcome": "parsed",
       "routeNumbers": [
         "316"
@@ -451,8 +454,8 @@
         "1"
       ],
       "file": "raw/405026.xlsx",
-      "bytes": 15292,
-      "sha256": "67cbb9f78210279f543be7051373049aaa4de6dd6c92e7233f588bcb095bf117",
+      "bytes": 15291,
+      "sha256": "33517dda5c7d1acce295b4999ce387adf849c56e0f8de4c0e5c5c65abcd55f74",
       "outcome": "parsed",
       "routeNumbers": [
         "320"
@@ -468,7 +471,7 @@
       ],
       "file": "raw/405027.xlsx",
       "bytes": 9456,
-      "sha256": "ef56c42032738a1d8a6efe3fb4b7f644dcc509eb2f9e30365d897f107a14fc46",
+      "sha256": "cdded07c289f41488f15714832c242fb34c1a9cbafae28949bc13a8ab11ba78f",
       "outcome": "source_conflict",
       "routeNumbers": [
         "325"
@@ -480,18 +483,25 @@
     },
     {
       "id": "405028",
-      "name": "367",
+      "name": "331, 332",
       "groups": [
         "1"
       ],
       "file": "raw/405028.xlsx",
-      "bytes": 4767,
-      "sha256": "dd09ef71ff9131203acca3a80c4f10490e6a4dd59cdfb76e5b64e5db9f3b2bf4",
-      "outcome": "parsed",
+      "bytes": 12808,
+      "sha256": "2b45ac44d561728f1dc28886195ae5ed2915be3a0b9d6d9323a0e2ff366e787a",
+      "outcome": "source_conflict",
       "routeNumbers": [
-        "367"
+        "331",
+        "332"
       ],
-      "services": 1
+      "services": 4,
+      "conflicts": [
+        "331 수목원-오일시장-공항-시청-동광초-삼양1(3)동: another sheet for '한라수목원→삼양1동(3동)' (unstated) has a different table",
+        "331 삼양1(3)동-동광초-시청-공항-오일시장-수목원: another sheet for '삼양1동(3동)→한라수목원' (unstated) has a different table",
+        "332 삼양1(3)동-인제-중앙로-공항-제원APT-수목원: another sheet for '삼양1동(3동)→한라수목원' (unstated) has a different table",
+        "332 수목원-제원APT-공항-중앙로-인제-삼양1(3)동: another sheet for '한라수목원→삼양1동(3동)' (unstated) has a different table"
+      ]
     },
     {
       "id": "405029",
@@ -501,7 +511,7 @@
       ],
       "file": "raw/405029.xlsx",
       "bytes": 18690,
-      "sha256": "a88c5b314238d846e8fc141cee85e18160b4c0b0dac9fe21aa8d63e7ef17d985",
+      "sha256": "5a415f2af0ffe68a999b2c3a70ea63474c468c608c616f3df943b8bc9e70b169",
       "outcome": "source_conflict",
       "routeNumbers": [
         "335",
@@ -527,7 +537,7 @@
       ],
       "file": "raw/405030.xlsx",
       "bytes": 18504,
-      "sha256": "b09f0de28a5b29c930e83b667a537a349cda4c0da81f7e40c37aac59e43e0120",
+      "sha256": "9d93e1db39496b806319143c9b71fdb506a7eafba4291d880fc1cd4e99820eed",
       "outcome": "parsed",
       "routeNumbers": [
         "341",
@@ -542,8 +552,8 @@
         "1"
       ],
       "file": "raw/405031.xlsx",
-      "bytes": 24152,
-      "sha256": "3f876860d3a83c28a4c0390b883eb8ebe3dd81536502a8becafaa771a67786e4",
+      "bytes": 24253,
+      "sha256": "72e991eddff3e16f8efe9ad33ffba8202d9a8eba226f667bbb9beea52bd4562a",
       "outcome": "parsed",
       "routeNumbers": [
         "43-1",
@@ -560,7 +570,7 @@
       ],
       "file": "raw/405032.xlsx",
       "bytes": 7565,
-      "sha256": "2d78cb3c74b862c1cbd07d5549969e9d0b866bf3143f34bba020e3488e81c04b",
+      "sha256": "5babd8b0ad1d4ab496ce6c879316a68f0d6f673aa14b4837623b56816fee196c",
       "outcome": "parsed",
       "routeNumbers": [
         "345"
@@ -575,7 +585,7 @@
       ],
       "file": "raw/405033.xlsx",
       "bytes": 9447,
-      "sha256": "a0a7ea9a691156b0e72704463790c5d4c700e5d1d5ef6ab1cf571ed016abbe5d",
+      "sha256": "fbfe9d8bd8bec7fd8a3a630bb92e2bc38ef25e00f9e5b08b1536b26c13c67212",
       "outcome": "parsed",
       "routeNumbers": [
         "346"
@@ -589,8 +599,8 @@
         "1"
       ],
       "file": "raw/405034.xlsx",
-      "bytes": 7448,
-      "sha256": "c338beb03c19785b2867b5071788ac3f6008347f2606621b5fdbbfb9d6109e2f",
+      "bytes": 7447,
+      "sha256": "66a05fe6f78a4e5de3e8b1f7d4b0cfda5e1dae9fb733bb9ef81c526a105cec1e",
       "outcome": "parsed",
       "routeNumbers": [
         "347"
@@ -605,7 +615,7 @@
       ],
       "file": "raw/405035.xlsx",
       "bytes": 9909,
-      "sha256": "c467758b93ad7e50ef5e9e941bbe30c8108c27e930deb43e208643e53446f889",
+      "sha256": "da8e3cb5bc78852ad9b7af69b48aae522247195c28888171decd056af4f3c107",
       "outcome": "parsed",
       "routeNumbers": [
         "351"
@@ -619,8 +629,8 @@
         "1"
       ],
       "file": "raw/405036.xlsx",
-      "bytes": 22378,
-      "sha256": "1e888977ac1e72bb662f6d463c108dad143c903c4b3cfda03d314ee40cfe9843",
+      "bytes": 22373,
+      "sha256": "bc844219ad2df71b805f69102e7c8d77145c3ed3eee111e9652f5f46c8dc41a4",
       "outcome": "parsed",
       "routeNumbers": [
         "355",
@@ -635,29 +645,13 @@
         "1"
       ],
       "file": "raw/405037.xlsx",
-      "bytes": 21575,
-      "sha256": "e010ef1d782c6c866e8dc0740aa3db00125cc7fcbf5affee27413bbfb27a6a50",
+      "bytes": 21686,
+      "sha256": "aa3378e27c180bdd6d4b0e4698ae3bd0029c46f0d83072dd534f767e791af437",
       "outcome": "parsed",
       "routeNumbers": [
         "360"
       ],
       "services": 4
-    },
-    {
-      "id": "405038",
-      "name": "436, 437",
-      "groups": [
-        "2"
-      ],
-      "file": "raw/405038.xlsx",
-      "bytes": 8430,
-      "sha256": "0ff1563477a838539bac2cfa2e19830e69fa137021af1a988fedb9d08baf1d3e",
-      "outcome": "parsed",
-      "routeNumbers": [
-        "436",
-        "437"
-      ],
-      "services": 2
     },
     {
       "id": "405039",
@@ -666,8 +660,8 @@
         "1"
       ],
       "file": "raw/405039.xlsx",
-      "bytes": 7085,
-      "sha256": "6f113055acaa7d681238d48bd4d507f989666f1e36d115f1327f5d5365f0d0a3",
+      "bytes": 7084,
+      "sha256": "5b4ee1ca7330111e0ad4281d76bd6c25e20450868658f8cea8638a204b7b79d0",
       "outcome": "parsed",
       "routeNumbers": [
         "370"
@@ -682,7 +676,7 @@
       ],
       "file": "raw/405040.xlsx",
       "bytes": 7619,
-      "sha256": "d851c1644eadcd6363c92b1e1997de7d42344db70af1530677c073f45c1ede52",
+      "sha256": "264cb92974f9cc4c981cab2a5e2a22de7f3e2bdcb12f83dd2e120d1ba3581e21",
       "outcome": "source_conflict",
       "routeNumbers": [
         "380"
@@ -694,16 +688,17 @@
     },
     {
       "id": "405041",
-      "name": "331",
+      "name": "411, 412",
       "groups": [
-        "1"
+        "2"
       ],
       "file": "raw/405041.xlsx",
-      "bytes": 8320,
-      "sha256": "918bc0ad234309ff229fe4118797fe11d459606893239a524032fb2dae7db52b",
+      "bytes": 10982,
+      "sha256": "3a99354da5c420db7ce020b85da2bb27df53fe75500960080379b787c5aa540a",
       "outcome": "parsed",
       "routeNumbers": [
-        "331"
+        "411",
+        "412"
       ],
       "services": 2
     },
@@ -715,7 +710,7 @@
       ],
       "file": "raw/405042.xlsx",
       "bytes": 15642,
-      "sha256": "5349d01f9b5938e47b4c4937056a56466179b2e2c64432abb80f97ff58ecf654",
+      "sha256": "f37b0c6fa6c9d63da4dcd37af643239efa5d75c29a4670059b172f39bf243d90",
       "outcome": "source_conflict",
       "routeNumbers": [
         "415"
@@ -734,73 +729,29 @@
     },
     {
       "id": "405043",
-      "name": "356-1",
-      "groups": [
-        "1"
-      ],
-      "file": "raw/405043.xlsx",
-      "bytes": 4712,
-      "sha256": "13ed72c6761b73cf8470088aa99712fb4f8382d99968999aa67bb7bcca034d94",
-      "outcome": "parsed",
-      "routeNumbers": [
-        "356-1"
-      ],
-      "services": 1
-    },
-    {
-      "id": "405044",
-      "name": "462",
+      "name": "421, 422",
       "groups": [
         "2"
       ],
-      "file": "raw/405044.xlsx",
-      "bytes": 5789,
-      "sha256": "c1df8f85ac738ffcd34b05b6160d45cd864e20724598b0f6b1142b5d09c839d1",
+      "file": "raw/405043.xlsx",
+      "bytes": 7728,
+      "sha256": "5ce5157191dc97b93fee214d4b0824b6cec653fba5bbb8f73f61986ed0ef1c01",
       "outcome": "parsed",
       "routeNumbers": [
-        "462"
+        "421",
+        "422"
       ],
-      "services": 1
+      "services": 2
     },
     {
-      "id": "405045",
-      "name": "368",
-      "groups": [
-        "1"
-      ],
-      "file": "raw/405045.xlsx",
-      "bytes": 4666,
-      "sha256": "b62bc71097b6d041e505670c1be77b42f97d8461a9e23ac3144c876c3cee2e74",
-      "outcome": "parsed",
-      "routeNumbers": [
-        "368"
-      ],
-      "services": 1
-    },
-    {
-      "id": "405046",
-      "name": "366",
-      "groups": [
-        "1"
-      ],
-      "file": "raw/405046.xlsx",
-      "bytes": 4700,
-      "sha256": "9c72429532c95541615c7f320cb71ada1d66775eab97ab7e61051fc466f74754",
-      "outcome": "parsed",
-      "routeNumbers": [
-        "366"
-      ],
-      "services": 1
-    },
-    {
-      "id": "405047",
+      "id": "405044",
       "name": "423",
       "groups": [
         "2"
       ],
-      "file": "raw/405047.xlsx",
-      "bytes": 5161,
-      "sha256": "5c3b74ae21c6cbcc1f542e43c6a4fe7cd9ba5c9dcc9c6ab25869d1e762edf7d9",
+      "file": "raw/405044.xlsx",
+      "bytes": 5160,
+      "sha256": "0c163a8329fb0806eb38d1ca5c2d1b2722223a915994c3fd20924e6188ba3f57",
       "outcome": "parsed",
       "routeNumbers": [
         "423"
@@ -808,19 +759,50 @@
       "services": 1
     },
     {
-      "id": "405048",
-      "name": "300,301",
+      "id": "405046",
+      "name": "431, 432",
       "groups": [
-        "1",
-        "11"
+        "2"
       ],
-      "file": "raw/405048.xlsx",
-      "bytes": 19384,
-      "sha256": "c3a3427173ec039af891dd0af6e8e84c6e6771433dd8a9be034e73e48996cd63",
+      "file": "raw/405046.xlsx",
+      "bytes": 8807,
+      "sha256": "8f8ca6aa85397407e5c7a67d573df98364ca5c350d4f92e8ed8394bade368006",
       "outcome": "parsed",
       "routeNumbers": [
-        "300",
-        "301"
+        "431",
+        "432"
+      ],
+      "services": 2
+    },
+    {
+      "id": "405047",
+      "name": "434, 435",
+      "groups": [
+        "2"
+      ],
+      "file": "raw/405047.xlsx",
+      "bytes": 8745,
+      "sha256": "348bc52aa35c3dda34cb2927ecde924f4bff5458667cca9b69ec1460c1d5a8ee",
+      "outcome": "parsed",
+      "routeNumbers": [
+        "434",
+        "435"
+      ],
+      "services": 2
+    },
+    {
+      "id": "405048",
+      "name": "436, 437",
+      "groups": [
+        "2"
+      ],
+      "file": "raw/405048.xlsx",
+      "bytes": 8429,
+      "sha256": "0493b0a75adb7e3a61efb6013a1533c8bfd0096dbdc9f4efa9bbc499b269f10c",
+      "outcome": "parsed",
+      "routeNumbers": [
+        "436",
+        "437"
       ],
       "services": 2
     },
@@ -832,7 +814,7 @@
       ],
       "file": "raw/405049.xlsx",
       "bytes": 8001,
-      "sha256": "0d9873ecd5231ba82e62b3f49e777ea1eb2830cda7bc9552e31501c2726f1b5e",
+      "sha256": "e09e2d69ca028e19d00a6536351bb9b5fb1b5bd835b354b1d94a6bfdef720234",
       "outcome": "parsed",
       "routeNumbers": [
         "440"
@@ -841,38 +823,35 @@
     },
     {
       "id": "405050",
-      "name": "300,301",
+      "name": "441, 442",
       "groups": [
-        "1",
-        "11"
+        "2"
       ],
       "file": "raw/405050.xlsx",
-      "bytes": 19384,
-      "sha256": "b98f93b16c13dafd112924c078f38aec56b10065f3fbf168e964a708ab2bc1b5",
+      "bytes": 8601,
+      "sha256": "11e40733953c4f1547d9d33594ec967afdd1b6a49f69969cf10c1dda43a93e0d",
       "outcome": "parsed",
       "routeNumbers": [
-        "300",
-        "301"
+        "441",
+        "442"
       ],
       "services": 2
     },
     {
       "id": "405051",
-      "name": "425",
+      "name": "444, 445",
       "groups": [
         "2"
       ],
       "file": "raw/405051.xlsx",
-      "bytes": 7781,
-      "sha256": "01d47b60bba3eac92010dda058fe01931368483fe3a1646bf6170ba2d481e26d",
-      "outcome": "source_conflict",
+      "bytes": 7941,
+      "sha256": "fba47bcfdcba629152c27147a8683e47c711fd6e453aaf4d92f98a1f46807970",
+      "outcome": "parsed",
       "routeNumbers": [
-        "425"
+        "444",
+        "445"
       ],
-      "services": 2,
-      "conflicts": [
-        "425 국제대-영평-한마음병원-인화동-이화A-부두: summary 막차 21:57 disagrees with the trips (21:27)"
-      ]
+      "services": 2
     },
     {
       "id": "405052",
@@ -881,8 +860,8 @@
         "2"
       ],
       "file": "raw/405052.xlsx",
-      "bytes": 7233,
-      "sha256": "0a37224a15412933ec78f844873aa41e2b7666e1c4dade0aa79de8f4915d2d92",
+      "bytes": 7225,
+      "sha256": "002770c48de08d30961802ddbbf37381080b32c542be4df44a4c5d4c68f42c0c",
       "outcome": "parsed",
       "routeNumbers": [
         "446"
@@ -897,7 +876,7 @@
       ],
       "file": "raw/405053.xlsx",
       "bytes": 7175,
-      "sha256": "8dcdcdb46c2f7e10b9a7414a4f6c2393ae82fdebd9a0abca7340a22515375ba9",
+      "sha256": "0c8fc32e68b0cfb236aad25b39de6c97297a498a6fbc625dcb315415fe1d8af5",
       "outcome": "parsed",
       "routeNumbers": [
         "447"
@@ -912,7 +891,7 @@
       ],
       "file": "raw/405054.xlsx",
       "bytes": 6967,
-      "sha256": "9dbe2e2503b3263bbb408593368122febf6cc0e23fdc843f4842d4d4c2ad818f",
+      "sha256": "be2c4f5e1a27165fac9a961927f888142603e2e63695591657329890c0ff7444",
       "outcome": "parsed",
       "routeNumbers": [
         "451",
@@ -927,8 +906,8 @@
         "2"
       ],
       "file": "raw/405055.xlsx",
-      "bytes": 7032,
-      "sha256": "e8b17138658ef58d1880ecf1b4e6a20852ebfa2d61be655e387949dffd9ef5c5",
+      "bytes": 7033,
+      "sha256": "9f2b52ed404098783503b59b842d919d4f81d100933c6ed192012905bb35c248",
       "outcome": "parsed",
       "routeNumbers": [
         "452",
@@ -944,7 +923,7 @@
       ],
       "file": "raw/405056.xlsx",
       "bytes": 5515,
-      "sha256": "811b154be94510976890e3dff558bf5f81b82da721ba30ed1463ef701f86527d",
+      "sha256": "637270f29038d37b83c8b6b16756097473784a89a14b80d4ec5fbfd4561f68b8",
       "outcome": "parsed",
       "routeNumbers": [
         "453"
@@ -959,7 +938,7 @@
       ],
       "file": "raw/405057.xlsx",
       "bytes": 5577,
-      "sha256": "aad3590b897cfce3385c1742dea6a9523b49b2606aa2e8cffbfa6a8a82a80adf",
+      "sha256": "81d659b9b683237d7eefbbb841281f55eaf9045fef430e194e5b31110952f1f3",
       "outcome": "parsed",
       "routeNumbers": [
         "454"
@@ -973,8 +952,8 @@
         "2"
       ],
       "file": "raw/405058.xlsx",
-      "bytes": 10076,
-      "sha256": "8cada572b68e652dea9993fd68cb044e2ee44b77a308be104cd74833942c1caa",
+      "bytes": 10077,
+      "sha256": "c34d9887cfdc186b8d4d6967c7fdab4e239725af0f925ff3c3f911d7bbf60c30",
       "outcome": "parsed",
       "routeNumbers": [
         "455"
@@ -983,18 +962,39 @@
     },
     {
       "id": "405059",
-      "name": "365",
+      "name": "461, 462",
       "groups": [
-        "1"
+        "2"
       ],
       "file": "raw/405059.xlsx",
-      "bytes": 19254,
-      "sha256": "f414e56a474dec49d63c62f94909cadd26f531792fe8e9a8f92cd80ae1945d63",
+      "bytes": 8111,
+      "sha256": "68905f520f009db79d5f69853e91bd5111160fb54a014679f5073f183f979a5e",
       "outcome": "parsed",
       "routeNumbers": [
-        "365"
+        "461",
+        "462"
       ],
-      "services": 4
+      "services": 2
+    },
+    {
+      "id": "405060",
+      "name": "465, 466",
+      "groups": [
+        "2"
+      ],
+      "file": "raw/405060.xlsx",
+      "bytes": 10240,
+      "sha256": "f3496f9f23153f7197b301b864c5cbaa07e9ebcd740c429e1863e6ab1ed7ada3",
+      "outcome": "source_conflict",
+      "routeNumbers": [
+        "465",
+        "466"
+      ],
+      "services": 2,
+      "conflicts": [
+        "465 순환(신비마을-공항-인제-터미널-공항-신비마을): another sheet for '신비마을→신비마을(순환)' (unstated) has a different table",
+        "466 순환(신비마을-공항-터미널-동문R-공항-신비마을): another sheet for '신비마을→신비마을(순환)' (unstated) has a different table"
+      ]
     },
     {
       "id": "405061",
@@ -1003,8 +1003,8 @@
         "2"
       ],
       "file": "raw/405061.xlsx",
-      "bytes": 7438,
-      "sha256": "703392dc8516a10bcf7f00c330853538d0cbf9e83bdcaa36c917984f3b82cb39",
+      "bytes": 7439,
+      "sha256": "5aadbc90f7cc300fa79ce6336da9811b1d12bed37b18ef290952a3edbbb954ab",
       "outcome": "parsed",
       "routeNumbers": [
         "471"
@@ -1018,8 +1018,8 @@
         "2"
       ],
       "file": "raw/405062.xlsx",
-      "bytes": 7270,
-      "sha256": "d77cdf3199c991a11150b814a99050f290de6a89a52ed510c45deba8bd7dd55c",
+      "bytes": 7259,
+      "sha256": "dacb34a3174c2d967225090b8fd75663d71b923550f78ec6f4e6dc738ac70147",
       "outcome": "parsed",
       "routeNumbers": [
         "472"
@@ -1033,8 +1033,8 @@
         "2"
       ],
       "file": "raw/405063.xlsx",
-      "bytes": 6896,
-      "sha256": "9bc0c0168d4cb9636e6fb3ac31f5fdc9633e7319b51231b2f541c9628b43719b",
+      "bytes": 6895,
+      "sha256": "3f3f8e28b837b334e2c5451b9a18f1bd1c6dd2b3ba843cf012674827743bfb1c",
       "outcome": "parsed",
       "routeNumbers": [
         "473"
@@ -1049,7 +1049,7 @@
       ],
       "file": "raw/405064.xlsx",
       "bytes": 5760,
-      "sha256": "4ff589fcf59bd92fb2f37195d80b32139c499f86147ff9209168362b1ef22f9c",
+      "sha256": "fd75734e1516145fffa8e3e491949aff6e64d0e00d1d18be4270a389e982d0ec",
       "outcome": "parsed",
       "routeNumbers": [
         "475"
@@ -1063,8 +1063,8 @@
         "2"
       ],
       "file": "raw/405065.xlsx",
-      "bytes": 6565,
-      "sha256": "f7783c382c415127fba29fc022a15292e8d04ecaeaeaf1e0a292cd56e04af17e",
+      "bytes": 6566,
+      "sha256": "04f43a034028a087f0f92b6ae875074079f7f1b8c91e81710e5f6ffac3996d32",
       "outcome": "parsed",
       "routeNumbers": [
         "477"
@@ -1078,8 +1078,8 @@
         "2"
       ],
       "file": "raw/405066.xlsx",
-      "bytes": 6857,
-      "sha256": "8da98a12491b8e607631d0645723f87a7f3becbcf597bed544c2a62ee6389ddf",
+      "bytes": 7106,
+      "sha256": "96411c3b1726df363331d862a3e032d9a4779c0f7fb436588476fb5b8a36bc35",
       "outcome": "parsed",
       "routeNumbers": [
         "490"
@@ -1093,8 +1093,8 @@
         "6"
       ],
       "file": "raw/405067.xlsx",
-      "bytes": 16734,
-      "sha256": "7d2a31968f65a768bc2ccdbf830d86954e6e5ac6467a808c8dc1e912c4362b67",
+      "bytes": 16824,
+      "sha256": "42b0d25c686cae9cd127dc0a3c985270195771601ca17b5056788d3490246523",
       "outcome": "parsed",
       "routeNumbers": [
         "600",
@@ -1110,7 +1110,7 @@
       ],
       "file": "raw/405068.xlsx",
       "bytes": 5597,
-      "sha256": "a18d83f112e2f54f0835f089c83428c1484dd5a6143b0825937bc7cf478446ff",
+      "sha256": "bf5bd9b666b0f41096a7c3705b08e03d4023c2217df903b8c4f387ec4405b51a",
       "outcome": "parsed",
       "routeNumbers": [
         "701-1"
@@ -1125,26 +1125,10 @@
       ],
       "file": "raw/405069.xlsx",
       "bytes": 5562,
-      "sha256": "b3b8d68b7f8f624b4e30bf5cb59026b851f5270c60d72e752cd1d5a8f04d13ff",
+      "sha256": "6548d62cc33830e04ed90ca619642caeb3e69e84b596bee679a582bfb4267428",
       "outcome": "parsed",
       "routeNumbers": [
         "701-2"
-      ],
-      "services": 1
-    },
-    {
-      "id": "405070",
-      "name": "431",
-      "groups": [
-        "2",
-        "11"
-      ],
-      "file": "raw/405070.xlsx",
-      "bytes": 5944,
-      "sha256": "47bef7abd58cb5c6f397987667de4ad770211c4eee73828345b09218b9c19c23",
-      "outcome": "parsed",
-      "routeNumbers": [
-        "431"
       ],
       "services": 1
     },
@@ -1156,7 +1140,7 @@
       ],
       "file": "raw/405071.xlsx",
       "bytes": 5645,
-      "sha256": "610f649d403ccb894e7ccccf10d7c7ab0637ec7502fc9937d9686fbb7bf4458c",
+      "sha256": "db52ba2c01e32ed7f5568432f6281c204518f993c6f57e5c0cbe57009b5be722",
       "outcome": "parsed",
       "routeNumbers": [
         "702-1"
@@ -1170,8 +1154,8 @@
         "5"
       ],
       "file": "raw/405072.xlsx",
-      "bytes": 5626,
-      "sha256": "db00b484689b0e7d525a9104215af29b27f3bb2d3ba83e37a185c801d6dc917e",
+      "bytes": 5627,
+      "sha256": "bb2e4e54e1173ccd2b2b9c679fa9244e76203e89c2a6886c2021e80abf0e97ac",
       "outcome": "parsed",
       "routeNumbers": [
         "702-2"
@@ -1186,7 +1170,7 @@
       ],
       "file": "raw/405073.xlsx",
       "bytes": 5244,
-      "sha256": "8597d2596a190ff17044d8d84d85306b69a8b2a76201e9c49c99630409ac6471",
+      "sha256": "d08af27fce926f6fb32b66747796b5b59d10f03ca1b94e6d7f73e9b85212221d",
       "outcome": "parsed",
       "routeNumbers": [
         "703-1"
@@ -1201,7 +1185,7 @@
       ],
       "file": "raw/405074.xlsx",
       "bytes": 5253,
-      "sha256": "b90f609490b86eef7e98e4cf9c0e862822bbe1a7efcff674ff1239aeda9f7954",
+      "sha256": "97430c45aaa0ac2c110a9e2f37c34938f25a2de055c523213aeefbc10b6b1406",
       "outcome": "parsed",
       "routeNumbers": [
         "703-2"
@@ -1215,8 +1199,8 @@
         "5"
       ],
       "file": "raw/405075.xlsx",
-      "bytes": 6663,
-      "sha256": "309f7b80a3400fbf8e56c37086e98553e24272e88354da1a4373750d016cc68f",
+      "bytes": 6664,
+      "sha256": "402b981555db925fc8fd2ddc1389ad300be72c58ae006027b897c707f515ced9",
       "outcome": "parsed",
       "routeNumbers": [
         "704-1",
@@ -1231,8 +1215,8 @@
         "5"
       ],
       "file": "raw/405076.xlsx",
-      "bytes": 6673,
-      "sha256": "3cc61690f3d6b6012e47a11fdbaf5a822eb686aae28bb75b6364fb8103e16840",
+      "bytes": 6674,
+      "sha256": "5fe2768c59213df017f9c43cf174c6e87a8ff784c4d9dcf1ee1a3f6dbeca9a7d",
       "outcome": "parsed",
       "routeNumbers": [
         "704-2",
@@ -1248,7 +1232,7 @@
       ],
       "file": "raw/405077.xlsx",
       "bytes": 6128,
-      "sha256": "52d47d6f18ea2a0d4a7ca0f696f03b0b0ba67d2867c4540b0569d74695b4eade",
+      "sha256": "23fe93ec4fa00bd0fb4571e82390d060009aca3f9f7f531c2817647d266a5c90",
       "outcome": "parsed",
       "routeNumbers": [
         "704-4"
@@ -1262,8 +1246,8 @@
         "5"
       ],
       "file": "raw/405078.xlsx",
-      "bytes": 6790,
-      "sha256": "32fc1b419a7316e4ec8e20e5e36a555db26d8be6b093ad2ccda2de23f8599cd4",
+      "bytes": 6779,
+      "sha256": "fd1453607ecfca281bb2cff767ea1a14b55d276ec56845f4fcf77202af60b74d",
       "outcome": "parsed",
       "routeNumbers": [
         "711-1"
@@ -1277,8 +1261,8 @@
         "5"
       ],
       "file": "raw/405079.xlsx",
-      "bytes": 6836,
-      "sha256": "67aa763fab63a86859b1d5541c55a647edaa40a7e96c19b15e3f7bd1586b91fb",
+      "bytes": 6837,
+      "sha256": "429b687e67ace2920ec26591e49fc5070f4504beabdb751a9a73bbc05c3a19cf",
       "outcome": "parsed",
       "routeNumbers": [
         "711-2"
@@ -1293,7 +1277,7 @@
       ],
       "file": "raw/405080.xlsx",
       "bytes": 6667,
-      "sha256": "93e267524db57fb02032642d2318ef036bd3ab7629348f799c40cc1c73cf1014",
+      "sha256": "ffab16223356ac770fe59b8d04c2e232bc59a6174e6d023ab71840afe25f71e9",
       "outcome": "parsed",
       "routeNumbers": [
         "771-1"
@@ -1308,7 +1292,7 @@
       ],
       "file": "raw/405081.xlsx",
       "bytes": 6675,
-      "sha256": "dc263f5294cdbd17f5353e00ab13623b4cc277c09005ccbcd0d85d3cc0f04cd0",
+      "sha256": "fdba45453f6e32c8a07b4bb4c7d25cb186047acf2512bdd64fa29c08ef475d64",
       "outcome": "parsed",
       "routeNumbers": [
         "771-2"
@@ -1322,8 +1306,8 @@
         "5"
       ],
       "file": "raw/405082.xlsx",
-      "bytes": 6876,
-      "sha256": "61a095702a2c3c4f9650672666e5a3fad6daaf27aefcc4d00e56c9694b496c87",
+      "bytes": 6877,
+      "sha256": "57d6486dd7f523ddac870f6d21dccc62fe089fddc62714529012eff1472c6d3a",
       "outcome": "parsed",
       "routeNumbers": [
         "772-1"
@@ -1338,7 +1322,7 @@
       ],
       "file": "raw/405083.xlsx",
       "bytes": 5493,
-      "sha256": "51dedb9c8a473fa3f12b2272fae9a2f9c96f463e835cf397c98596157feb4d75",
+      "sha256": "b33dbb228c144a92ae238fe1300eaa602e425d2ed498c140eb2080762f74a9ea",
       "outcome": "parsed",
       "routeNumbers": [
         "781-1"
@@ -1353,7 +1337,7 @@
       ],
       "file": "raw/405084.xlsx",
       "bytes": 5477,
-      "sha256": "abda665e28891aaed373e80b07e4d8ab74e09f6293970b43be64248051b42482",
+      "sha256": "9ba2c1778f5eafa629df69ab8bf94d9f5c739efb94131d6dfb0a82220f311efc",
       "outcome": "parsed",
       "routeNumbers": [
         "782-1"
@@ -1368,7 +1352,7 @@
       ],
       "file": "raw/405085.xlsx",
       "bytes": 6602,
-      "sha256": "1333dd89e10abd0b5f096fa6f57b58d2df5fe0fc2fd149ba78812a9b9a957f46",
+      "sha256": "a3062476eca84d27a6c05328fd134aa7f40059309202d633349223bfcb90b0f5",
       "outcome": "parsed",
       "routeNumbers": [
         "783-1"
@@ -1383,7 +1367,7 @@
       ],
       "file": "raw/405086.xlsx",
       "bytes": 6948,
-      "sha256": "b4732cb35f81709ed61434aba51a524e49715532cf67f27bf5565fa7d3a410fc",
+      "sha256": "263e24d6838a409e7119a5559217ac25ec36a6b8331d9711015db024f4d1892a",
       "outcome": "source_conflict",
       "routeNumbers": [
         "783-2"
@@ -1401,7 +1385,7 @@
       ],
       "file": "raw/405087.xlsx",
       "bytes": 7630,
-      "sha256": "cc07abf9059d624754e3d081f4d7d12c6eaf6271b1737fa5e9a66be1f48133a4",
+      "sha256": "b987d173cbafe1f0ba86ea05867333b04c5d98260c9bc67b66137c6e3e3635b8",
       "outcome": "parsed",
       "routeNumbers": [
         "784-1"
@@ -1415,8 +1399,8 @@
         "5"
       ],
       "file": "raw/405088.xlsx",
-      "bytes": 7754,
-      "sha256": "cda3c687ce7469cab679ebc67d38991111ffc3e4ec8ed8426190c03dd029280c",
+      "bytes": 7750,
+      "sha256": "051d629e61b0f3d9034c077d24420aa1905fc36be10bd5fa7db10f3c970986c1",
       "outcome": "parsed",
       "routeNumbers": [
         "784-2"
@@ -1430,16 +1414,13 @@
         "5"
       ],
       "file": "raw/405089.xlsx",
-      "bytes": 13228,
-      "sha256": "32f2d2faa7f20b62a3a889e32736e43814ddb1ba267e22a6f40402c4e0f80447",
-      "outcome": "source_conflict",
+      "bytes": 13479,
+      "sha256": "4dc2585279b50e022592ac09749ed708c259a64f9329f36dfbbf687faaa1be12",
+      "outcome": "parsed",
       "routeNumbers": [
         "785"
       ],
-      "services": 4,
-      "conflicts": [
-        "785 (휴일)한림체육관-금악-저지-한경면사무소: summary 첫차 06:40 disagrees with the trips (08:00)"
-      ]
+      "services": 4
     },
     {
       "id": "405090",
@@ -1449,7 +1430,7 @@
       ],
       "file": "raw/405090.xlsx",
       "bytes": 6048,
-      "sha256": "0e9078654028ccddbd4cc67282a38f04587a6fd64191fa538e69197be6e9ac98",
+      "sha256": "76192ef392ad1dd62a736ca146075e17d64ed632ab2058cfb8b62474a61d324e",
       "outcome": "parsed",
       "routeNumbers": [
         "791"
@@ -1464,7 +1445,7 @@
       ],
       "file": "raw/405091.xlsx",
       "bytes": 6432,
-      "sha256": "32d74bd70816eb82f6e4ea864e743b6f5c246a4401d6365fa5509c04957672ec",
+      "sha256": "c3c93b4216b412014705a3026cfb7b429cc64fe44aeacc957174bbece791b931",
       "outcome": "parsed",
       "routeNumbers": [
         "792-1"
@@ -1478,8 +1459,8 @@
         "5"
       ],
       "file": "raw/405092.xlsx",
-      "bytes": 7092,
-      "sha256": "edc5a7dce57bc33bed28fdee46df439a149d92d3dd86cb2dfb2de3deadb60144",
+      "bytes": 7093,
+      "sha256": "76203b581451e4c3074bf6019847212e5f6b09481b276fadc50e8b5395eaac99",
       "outcome": "parsed",
       "routeNumbers": [
         "793-1"
@@ -1493,8 +1474,8 @@
         "5"
       ],
       "file": "raw/405093.xlsx",
-      "bytes": 6155,
-      "sha256": "e077df89c98a1ed05af616eb6fed727953a4b2a7870973e26fbc2a3cbd47c0cc",
+      "bytes": 6156,
+      "sha256": "982d8a0bfd50cadb892fa20bc8f65c261180db0a81c78313bedabe55b03ab1e5",
       "outcome": "parsed",
       "routeNumbers": [
         "793-2"
@@ -1508,8 +1489,8 @@
         "5"
       ],
       "file": "raw/405094.xlsx",
-      "bytes": 6501,
-      "sha256": "148d6ad4c10c50c2befb9bd9f879f7e64edd243597024c624ff2495848c4a960",
+      "bytes": 6502,
+      "sha256": "aeec7981c11320b3aa48abb449917c5e824306d995e1db49efacd6f5cdf0689d",
       "outcome": "parsed",
       "routeNumbers": [
         "794-1"
@@ -1524,7 +1505,7 @@
       ],
       "file": "raw/405095.xlsx",
       "bytes": 5605,
-      "sha256": "762350bed7bbac7a991ab3d8997fd4b35c31ca1b3e9d3430beb0e17ef7928d60",
+      "sha256": "f7ace7fe85803f7b109c7934f5803af5f12f15320440df568d8dc7d75f519608",
       "outcome": "parsed",
       "routeNumbers": [
         "794-2"
@@ -1538,8 +1519,8 @@
         "5"
       ],
       "file": "raw/405096.xlsx",
-      "bytes": 6750,
-      "sha256": "d1a953f340a3ae917e6a61d4f8fedac6647397267454659743d654251508fef6",
+      "bytes": 6751,
+      "sha256": "39d8a83d0a15ec4d187c26d885f010f36cbe8080876b79897a9c4db5daeb49a2",
       "outcome": "parsed",
       "routeNumbers": [
         "795"
@@ -1554,7 +1535,7 @@
       ],
       "file": "raw/405097.xlsx",
       "bytes": 15294,
-      "sha256": "e77f26599e29c557c9cdc71f2856902b5085f2203a87c10b4158e3b5506437c2",
+      "sha256": "7ab71f765c60b3249fc53d4e8fbed58eeee9fdba54569ba807ccb836ab1c90c0",
       "outcome": "parsed",
       "routeNumbers": [
         "800",
@@ -1564,18 +1545,29 @@
     },
     {
       "id": "405098",
-      "name": "643",
+      "name": "810",
       "groups": [
-        "2"
+        "8"
       ],
       "file": "raw/405098.xlsx",
-      "bytes": 6240,
-      "sha256": "371525830aa2010b8fba522b4f1dd87c4d896af4dd8e1a3fdc58ee4c12800958",
-      "outcome": "parsed",
-      "routeNumbers": [
-        "643"
+      "bytes": 9604,
+      "sha256": "d151929e64ee86bcf5b26aa5480ba92e8e17f3a519328d1d7ee1ec5a2466af85",
+      "outcome": "parse_refused",
+      "reason": "the titles name routes ['810-1', '810-2'] but the site lists '810'",
+      "family": "route_mapping"
+    },
+    {
+      "id": "405099",
+      "name": "820",
+      "groups": [
+        "8"
       ],
-      "services": 1
+      "file": "raw/405099.xlsx",
+      "bytes": 13292,
+      "sha256": "2f6c346f9e12ce13c68fd6d5f97827107a3e779b2915c45efd70d7d36a997060",
+      "outcome": "parse_refused",
+      "reason": "the titles name routes ['820-1', '820-2', '820-3'] but the site lists '820'",
+      "family": "route_mapping"
     },
     {
       "id": "405100",
@@ -1585,27 +1577,12 @@
       ],
       "file": "raw/405100.xlsx",
       "bytes": 7236,
-      "sha256": "a4145c6649bb2c1a8709ac007cfa7259cb22ca0f5b1b7ce79f3fb8f8175b46ec",
+      "sha256": "3c888c74ec3955aa42b5846216956ebb82e05cfb03e8c8fc6f6e427728307404",
       "outcome": "parsed",
       "routeNumbers": [
         "900"
       ],
       "services": 2
-    },
-    {
-      "id": "405101",
-      "name": "910",
-      "groups": [
-        "0"
-      ],
-      "file": "raw/405101.xlsx",
-      "bytes": 5984,
-      "sha256": "28b36af1c6de537c11e9d7fc1240dc60fb3cd707b541c603bbca4b0095cb8dc3",
-      "outcome": "parsed",
-      "routeNumbers": [
-        "910"
-      ],
-      "services": 1
     },
     {
       "id": "405102",
@@ -1615,7 +1592,7 @@
       ],
       "file": "raw/405102.xlsx",
       "bytes": 7307,
-      "sha256": "b272cd8f4ec3d669043278c961fb463fd769a5dca96d19dc09762206c3cb9bac",
+      "sha256": "02aefa55c7a1ec553e8dd55072b364c0260eb52c0d78d480b81287b74a312da5",
       "outcome": "parsed",
       "routeNumbers": [
         "921"
@@ -1630,7 +1607,7 @@
       ],
       "file": "raw/405103.xlsx",
       "bytes": 6599,
-      "sha256": "9eefee17597d31a5e4d17da30c6b6deb37afbb53786df3aeeeaee0efb19861bf",
+      "sha256": "5a191c2d7f7a3e80d32a3c8fce82ef23bb8b8ef8589d23335d41b0ab314c4a6b",
       "outcome": "source_conflict",
       "routeNumbers": [
         "922"
@@ -1648,7 +1625,7 @@
       ],
       "file": "raw/405104.xlsx",
       "bytes": 7632,
-      "sha256": "13d193e4a28dc97845984be3a64c5ea475d7d752cee554205f263cc34f09d071",
+      "sha256": "ca3a8d45a79ba0d994cfc62bec5c406752e675abd4b1ae0caa22754825763041",
       "outcome": "parsed",
       "routeNumbers": [
         "924"
@@ -1663,7 +1640,7 @@
       ],
       "file": "raw/405105.xlsx",
       "bytes": 7131,
-      "sha256": "c04aaf375d8fa565549fdb005cf43e892eebccf5c0b1f9943702c917fecc4d74",
+      "sha256": "e90a0e06d0fa350c990e0e708590affe4e7fcd3d6ba43566e07df5be7a7a5b7d",
       "outcome": "parsed",
       "routeNumbers": [
         "1111"
@@ -1678,7 +1655,7 @@
       ],
       "file": "raw/405106.xlsx",
       "bytes": 6621,
-      "sha256": "d438043ff49abf355589569a51b8103958d9516f3a4fce4175fd1fd26b2c3956",
+      "sha256": "5dca07d42d9b9e5ff66986060e63862269a41be9013a1c4c3c756fc7e90aa258",
       "outcome": "source_conflict",
       "routeNumbers": [
         "3001"
@@ -1698,8 +1675,8 @@
         "9"
       ],
       "file": "raw/405107.xlsx",
-      "bytes": 5946,
-      "sha256": "5d0e2ccf8e2847ff87d24fda510bc64b1338c80bc1abf7ecb2eeb13dfa5186bc",
+      "bytes": 5947,
+      "sha256": "331336ba036378ca32383cd034498d653729fffe8acacf085d84a0a652f9f389",
       "outcome": "parsed",
       "routeNumbers": [
         "3002"
@@ -1714,7 +1691,7 @@
       ],
       "file": "raw/405108.xlsx",
       "bytes": 6128,
-      "sha256": "fec186d30c3bb26e36811b2c9c75095800ae2b2ed57288d7024f198623d15445",
+      "sha256": "75af9f89441741316d6a9b316f15d40d671202cbf1b869ac0dc0de2469761c5d",
       "outcome": "parsed",
       "routeNumbers": [
         "3003"
@@ -1728,8 +1705,8 @@
         "9"
       ],
       "file": "raw/405109.xlsx",
-      "bytes": 7042,
-      "sha256": "6ebd5f7a30169436e84d3f39d527bcdff9a76e266e47c0157790dbe2526da9b2",
+      "bytes": 7037,
+      "sha256": "9b53e00f5f5907235b31a2fdfa9c4fa7c1e7d6e2b703225fc207a52d84d98fd6",
       "outcome": "parsed",
       "routeNumbers": [
         "3004"
@@ -1743,8 +1720,8 @@
         "9"
       ],
       "file": "raw/405110.xlsx",
-      "bytes": 6099,
-      "sha256": "9f03f85571e34ecb2166ea2072019fce6176494f49dbe1cb8ca5ec9e2858dbe9",
+      "bytes": 6100,
+      "sha256": "175271815dbe7b197bfe1dec5f3ac03103078909ea23f8cb26daa6ac50a3ab5a",
       "outcome": "source_conflict",
       "routeNumbers": [
         "3005"
@@ -1763,7 +1740,7 @@
       ],
       "file": "raw/405111.xlsx",
       "bytes": 5894,
-      "sha256": "dfd47c66bd03aadfad7fe6ad0c9d66582eac7c287074260bfabbbcfa6f97996a",
+      "sha256": "ab40202adfa51b861e3cb5bdc6d02eeeca08ad795ea6df8a25dc5b8149121532",
       "outcome": "parsed",
       "routeNumbers": [
         "3006"
@@ -1777,8 +1754,8 @@
         "9"
       ],
       "file": "raw/405112.xlsx",
-      "bytes": 4766,
-      "sha256": "e91df404dc4cbf9aff984d097d22d968af7006d45974460b99efab7cca620dfa",
+      "bytes": 4767,
+      "sha256": "3c06b61cade0324f89b40721a994af729bb27e172c4e17ac63f2f736e19be224",
       "outcome": "parsed",
       "routeNumbers": [
         "3007"
@@ -1793,7 +1770,7 @@
       ],
       "file": "raw/405113.xlsx",
       "bytes": 5821,
-      "sha256": "7e1467292f9e32afceabe6a67bdb3b9b7c82bbd6c24760ff55477b0f78e52389",
+      "sha256": "605d3755deea4b2d61982e56643ea84dc4c5063ee63267715b102c462454b229",
       "outcome": "parsed",
       "routeNumbers": [
         "3008"
@@ -1808,7 +1785,7 @@
       ],
       "file": "raw/405114.xlsx",
       "bytes": 5921,
-      "sha256": "c0d7f04cd325799be22a9134c57b297c6ed56c110a66753fd89743786090961d",
+      "sha256": "589d7f4081b095bb2088f1eed54cd3eaef33db2bb0cb0264654c224ffa5c0ea2",
       "outcome": "parsed",
       "routeNumbers": [
         "202-1"
@@ -1822,8 +1799,8 @@
         "3"
       ],
       "file": "raw/405115.xlsx",
-      "bytes": 5936,
-      "sha256": "eddcc699090897df3a8fc36b1e26f0f8ad9af439ec92d0420311ac18825445ac",
+      "bytes": 5937,
+      "sha256": "e72434d325c6aedad30f407e4275fa0c9c7bc086a0344761ae19b179958ad328",
       "outcome": "parsed",
       "routeNumbers": [
         "202-2"
@@ -1837,8 +1814,8 @@
         "5"
       ],
       "file": "raw/405116.xlsx",
-      "bytes": 6424,
-      "sha256": "ef1b5150447fc2a7306f3aa1a00e0a941d95e745c5301a005265f48b250853a0",
+      "bytes": 6425,
+      "sha256": "ef089c9531a71e75a37e1e865b93e7ea4ba3eac824f7d453bcfb7b3f53306a9d",
       "outcome": "parsed",
       "routeNumbers": [
         "792-2"
@@ -1852,8 +1829,8 @@
         "5"
       ],
       "file": "raw/405117.xlsx",
-      "bytes": 6907,
-      "sha256": "80f8a3d7281d850d1ed14ccd47d0f909d172f7f0168bd08708b15dd99bec47f7",
+      "bytes": 6906,
+      "sha256": "02d91b0af9cadd9a0e4ea0b039bb1393ac4649a577c8908df075277ffa03fb26",
       "outcome": "parsed",
       "routeNumbers": [
         "772-2"
@@ -1868,67 +1845,10 @@
       ],
       "file": "raw/405118.xlsx",
       "bytes": 5009,
-      "sha256": "deb2ee5e4a94b4caf2054d0ab8320f294da69ebf55da7e5cca3b7d21ab53bb4e",
+      "sha256": "1588de1e417cf9332907287baf9e9fab80d654c65914c7706111d3d89375326c",
       "outcome": "parsed",
       "routeNumbers": [
         "491"
-      ],
-      "services": 1
-    },
-    {
-      "id": "405119",
-      "name": "437",
-      "groups": [
-        "2"
-      ],
-      "file": "raw/405119.xlsx",
-      "bytes": 6095,
-      "sha256": "bcffd1e14e11d99f951b764a5a429a05b3034bfc4a4deeaa2894e36713020595",
-      "outcome": "parsed",
-      "routeNumbers": [
-        "437"
-      ],
-      "services": 1
-    },
-    {
-      "id": "405120",
-      "name": "369",
-      "groups": [
-        "1"
-      ],
-      "file": "raw/405120.xlsx",
-      "bytes": 4672,
-      "sha256": "aa531181db602b383abbf2c02e4bd6ffb8c09bfc183a167d364371aa80ab3cbe",
-      "outcome": "no_timetable",
-      "reason": "suspension_notice: every sheet is a suspension notice (369 (하교)월평-제주여고-연북로-한라병원-한라대)"
-    },
-    {
-      "id": "405121",
-      "name": "426",
-      "groups": [
-        "2"
-      ],
-      "file": "raw/405121.xlsx",
-      "bytes": 8335,
-      "sha256": "73d13d083815648d432c9bf79ccb2d7411b8160a66354b90a20d463d3fb3ef70",
-      "outcome": "parsed",
-      "routeNumbers": [
-        "426"
-      ],
-      "services": 2
-    },
-    {
-      "id": "405122",
-      "name": "461",
-      "groups": [
-        "2"
-      ],
-      "file": "raw/405122.xlsx",
-      "bytes": 5897,
-      "sha256": "f3751834516781130e7dd8570e4fa9d4b04c1f1427346a71a26a44c0a26e6d8b",
-      "outcome": "parsed",
-      "routeNumbers": [
-        "461"
       ],
       "services": 1
     },
@@ -1939,8 +1859,8 @@
         "8"
       ],
       "file": "raw/405123.xlsx",
-      "bytes": 4862,
-      "sha256": "beb3a68ee0e0ad7b4e966bed663fdeda6b3ccbb03e4be165f7ca8ee82b37a394",
+      "bytes": 4861,
+      "sha256": "b222f1a12b00f8a3232a45cd7149b1fa7d77fc0b6e94f6f8d7d57e1c4fab3f9e",
       "outcome": "no_timetable",
       "reason": "suspension_notice: every sheet is a suspension notice (1112 제주시티투어(도심코스))"
     },
@@ -1951,8 +1871,8 @@
         "5"
       ],
       "file": "raw/405124.xlsx",
-      "bytes": 5494,
-      "sha256": "07371d65cc4ef6e842a71f2a435189e08ed2eea37c9d0fbc47efe2c4602ea0d2",
+      "bytes": 5493,
+      "sha256": "92ee2991e194d399aba597e36c847fa4165e48f366f13f7b9d987cccc4cb13ca",
       "outcome": "parsed",
       "routeNumbers": [
         "781-2"
@@ -1967,7 +1887,7 @@
       ],
       "file": "raw/405125.xlsx",
       "bytes": 5423,
-      "sha256": "5566410fb1ec238f155f3e507c8c9ca4b8fbd52b36ca5433db5102ea9f45f83f",
+      "sha256": "008544486f2a921c85b51edb2036ae717ba93b599960b850d3107487e165c31d",
       "outcome": "parsed",
       "routeNumbers": [
         "782-2"
@@ -1983,7 +1903,7 @@
       ],
       "file": "raw/405126.xlsx",
       "bytes": 15349,
-      "sha256": "3e04f596b81493c42f2770ed745cb7ee462b81b1f8c8126e02811067b2b2f98f",
+      "sha256": "154e00e482efc3dd829f9e1aa8c53401d4c22a2eee31845bb9db07180cd13ab2",
       "outcome": "source_conflict",
       "routeNumbers": [
         "302"
@@ -1997,18 +1917,11 @@
     },
     {
       "id": "405127",
-      "name": "820-3",
+      "name": "202-3",
       "groups": [
-        "8"
+        "3"
       ],
-      "file": "raw/405127.xlsx",
-      "bytes": 5871,
-      "sha256": "32c239113a25a8a5c0bea0d036550dc6bfd18be2b32df7b823710336ade1fdcc",
-      "outcome": "parsed",
-      "routeNumbers": [
-        "820-3"
-      ],
-      "services": 2
+      "outcome": "no_timetable"
     },
     {
       "id": "405128",
@@ -2018,7 +1931,7 @@
       ],
       "file": "raw/405128.xlsx",
       "bytes": 9321,
-      "sha256": "f2bbb4cda308a461da5f78d038add2d016bbddfd16fc2ee6346452f484605588",
+      "sha256": "46be11f73db33ef05499bbaa44b1d609dd6bdca4c2be23844a2a5ce94799c7d0",
       "outcome": "parsed",
       "routeNumbers": [
         "312"
@@ -2033,24 +1946,9 @@
       ],
       "file": "raw/405129.xlsx",
       "bytes": 4398,
-      "sha256": "840fdf1cb80275fe5c4e5010e1595a98e71532b490ca1b07e24c482dcc9d0f22",
+      "sha256": "4163809c14b971ee9dd8f86aba5db1b42d79b856e4eca69abf4903eccda42b4a",
       "outcome": "no_timetable",
       "reason": "suspension_notice: every sheet is a suspension notice (1113 제주시티투어(야간코스))"
-    },
-    {
-      "id": "405130",
-      "name": "421",
-      "groups": [
-        "2"
-      ],
-      "file": "raw/405130.xlsx",
-      "bytes": 5715,
-      "sha256": "ee025dcc6b93e8775fcca3180cc87c7caaccf887d2a05bad065748baf197c456",
-      "outcome": "parsed",
-      "routeNumbers": [
-        "421"
-      ],
-      "services": 1
     },
     {
       "id": "405131",
@@ -2059,26 +1957,11 @@
         "6"
       ],
       "file": "raw/405131.xlsx",
-      "bytes": 5878,
-      "sha256": "f410785fcdb3b71ac0c0a7b87586defbfcc6544530e952a5eaff42820c881aa6",
+      "bytes": 5877,
+      "sha256": "81d7a173b32fe9a0c5be887bf0b6f0fe37576a188be63ca35eb8121054ae2c16",
       "outcome": "parsed",
       "routeNumbers": [
         "800-1"
-      ],
-      "services": 2
-    },
-    {
-      "id": "405133",
-      "name": "901",
-      "groups": [
-        "7"
-      ],
-      "file": "raw/405133.xlsx",
-      "bytes": 5879,
-      "sha256": "844b18254541ed8bfb459db34fa8bba1ab2eece6c2c50707f5ccf437955b8cf4",
-      "outcome": "parsed",
-      "routeNumbers": [
-        "901"
       ],
       "services": 2
     },
@@ -2089,8 +1972,8 @@
         "5"
       ],
       "file": "raw/405134.xlsx",
-      "bytes": 13496,
-      "sha256": "216d4335fac06137703b476b05da6123e9d852672595c5fd2a4b7a4ad4b9dea4",
+      "bytes": 13494,
+      "sha256": "8ca78138d095bbb6a471b1e6f1a55dfb2accb37a495b66c5dee20455f4702e76",
       "outcome": "parsed",
       "routeNumbers": [
         "705"
@@ -2104,8 +1987,8 @@
         "4"
       ],
       "file": "raw/405135.xlsx",
-      "bytes": 6134,
-      "sha256": "79cac9fd70e242ef0a3fea5b5ae78729b3674e9d3c7cf380875da4587819ba13",
+      "bytes": 6143,
+      "sha256": "fc842bb3e27e6d5c87d07543ab99b4fa2751e6f2c4b93f6a49072de46eec24e6",
       "outcome": "parsed",
       "routeNumbers": [
         "111-1"
@@ -2120,25 +2003,10 @@
       ],
       "file": "raw/405136.xlsx",
       "bytes": 4983,
-      "sha256": "b853c6ff13d68fe42dcfd5c9329248d1fc1f0e51bbde374d87f1d546e92b6728",
+      "sha256": "d0f9ece3b67f57212d7a19f6ab8ebe2e5021d00134776e4957808a29bc763bd4",
       "outcome": "parsed",
       "routeNumbers": [
         "182-1"
-      ],
-      "services": 1
-    },
-    {
-      "id": "405138",
-      "name": "465",
-      "groups": [
-        "2"
-      ],
-      "file": "raw/405138.xlsx",
-      "bytes": 6978,
-      "sha256": "1ca42708351b7cd2684e0fc0fc5c76ed2b48bbd62e0e81ed13d52216b3d034d4",
-      "outcome": "parsed",
-      "routeNumbers": [
-        "465"
       ],
       "services": 1
     },
@@ -2150,7 +2018,7 @@
       ],
       "file": "raw/405139.xlsx",
       "bytes": 4767,
-      "sha256": "4db14b3386363346e58dd910ce8bec902d7ecd96799c7b274f5036e1c7de253f",
+      "sha256": "e362da91727a1a0962dbf64eddcb9dcf7a65aa019dfca83b73d0d48e0af11984",
       "outcome": "parsed",
       "routeNumbers": [
         "222-1"
@@ -2165,7 +2033,7 @@
       ],
       "file": "raw/405141.xlsx",
       "bytes": 4853,
-      "sha256": "73f6fe41c2e4962cab00c3cdec0cbe7f74e799f0d25a9fb41c47a996e125a4dd",
+      "sha256": "cd119fd8834841ac79753d4a8b1771e003b32529f8e860197641b80df5f8469f",
       "outcome": "parsed",
       "routeNumbers": [
         "311-1"
@@ -2179,8 +2047,8 @@
         "1"
       ],
       "file": "raw/405142.xlsx",
-      "bytes": 4819,
-      "sha256": "3b7b95543e03fefcdf065c08def5077ba054ae8e5f60bb7b45931d81f081406b",
+      "bytes": 4820,
+      "sha256": "c3680e732d32b840174d9cf7338966c9b895236d463f93c325df58cba8b8bc4e",
       "outcome": "parsed",
       "routeNumbers": [
         "312-1"
@@ -2195,7 +2063,7 @@
       ],
       "file": "raw/405143.xlsx",
       "bytes": 4917,
-      "sha256": "e36f90d13d3e0159f8d2df1cf2c392e10f88cec36d3c4cc009e435d9487722f0",
+      "sha256": "ddac1717342ffd4921e118667d826d0ea146e03b6398accbe1781ade5d8ea8d5",
       "outcome": "parsed",
       "routeNumbers": [
         "326-1"
@@ -2209,8 +2077,8 @@
         "1"
       ],
       "file": "raw/405144.xlsx",
-      "bytes": 7977,
-      "sha256": "f0ba0cb3ee206ff67c9849b63a3f7c668d0c01d608c81d34f34eb549ccb23fb4",
+      "bytes": 7978,
+      "sha256": "e63561f3201cdd08449d835a9a60c23570cb602efe8ca4ccbadd7307d7adf11d",
       "outcome": "parsed",
       "routeNumbers": [
         "348-1",
@@ -2225,8 +2093,8 @@
         "1"
       ],
       "file": "raw/405145.xlsx",
-      "bytes": 8667,
-      "sha256": "d0231dfc8978e8e31526f8d58f52ce9aae3bc31b4707c80f95ffd339eb265b63",
+      "bytes": 8668,
+      "sha256": "c4a15e8c1680d47f0aabf5e9c06d780b437986cef8ae19cf0786c0139c8ec050",
       "outcome": "parsed",
       "routeNumbers": [
         "357-1",
@@ -2235,49 +2103,12 @@
       "services": 2
     },
     {
-      "id": "405146",
-      "name": "902",
-      "groups": [
-        "7"
-      ],
-      "file": "raw/405146.xlsx",
-      "bytes": 4577,
-      "sha256": "7d4708e85c48d4715076026190a3aaf32f0d430c79b590cc556da14f939fa911",
-      "outcome": "parsed",
-      "routeNumbers": [
-        "902"
-      ],
-      "services": 1
-    },
-    {
-      "id": "405147",
-      "name": "151-1(수요맞춤형)",
-      "groups": [
-        "4"
-      ],
-      "file": "raw/405147.xlsx",
-      "bytes": 6296,
-      "sha256": "eef9260cb12c9357c99f89edd0332a0c673c8c7e64fa2c3418bb3aa744094e74",
-      "outcome": "parsed",
-      "routeNumbers": [
-        "151-1"
-      ],
-      "services": 2
-    },
-    {
       "id": "405148",
-      "name": "441",
+      "name": "232-1(수요맞춤형)",
       "groups": [
-        "2"
+        "3"
       ],
-      "file": "raw/405148.xlsx",
-      "bytes": 6315,
-      "sha256": "81ec17278da201ff6cd6e9e559bad330c681778b25bee7b1204bfeaf97b9cbf5",
-      "outcome": "parsed",
-      "routeNumbers": [
-        "441"
-      ],
-      "services": 1
+      "outcome": "no_timetable"
     },
     {
       "id": "405149",
@@ -2287,7 +2118,7 @@
       ],
       "file": "raw/405149.xlsx",
       "bytes": 4898,
-      "sha256": "fab59c93434d72a6779eba8200770b716f2d4ce516bd31a39229031cbc43e4a0",
+      "sha256": "264421f0ece6885fd5d7bc3c7ad38dcf177a109904ea469c4fa3c8387b1b810b",
       "outcome": "parsed",
       "routeNumbers": [
         "434-1"
@@ -2302,7 +2133,7 @@
       ],
       "file": "raw/405150.xlsx",
       "bytes": 4877,
-      "sha256": "80fe806422f6c8919b2363d3e5ebabb977e1025edd09f636f1f7938262dba6e7",
+      "sha256": "72199d6165a788bbe5e5e9e6081df0457786169b76cc0146c8c827f5868a7433",
       "outcome": "parsed",
       "routeNumbers": [
         "435-1"
@@ -2311,32 +2142,18 @@
     },
     {
       "id": "405151",
-      "name": "445",
+      "name": "300, 301",
       "groups": [
-        "2"
+        "1",
+        "11"
       ],
       "file": "raw/405151.xlsx",
-      "bytes": 5885,
-      "sha256": "e4b40a2d5f1877566fe2cca6035eb4ed16e00b81d0686f607c9a0a276439970e",
+      "bytes": 19384,
+      "sha256": "0775860cadf00249c8d2d5ce784ae04aa8ea1ce6715841e0e6e592fe6f4492c9",
       "outcome": "parsed",
       "routeNumbers": [
-        "445"
-      ],
-      "services": 1
-    },
-    {
-      "id": "405152",
-      "name": "231, 232",
-      "groups": [
-        "3"
-      ],
-      "file": "raw/405152.xlsx",
-      "bytes": 15455,
-      "sha256": "e60975fe2a4d0ebfcf8ba58fb94c2d8470732eff7571560cc5fab5f293d4c8e7",
-      "outcome": "parsed",
-      "routeNumbers": [
-        "231",
-        "232"
+        "300",
+        "301"
       ],
       "services": 2
     },
@@ -2348,12 +2165,27 @@
       ],
       "file": "raw/405153.xlsx",
       "bytes": 6205,
-      "sha256": "a62a3c7a83106e4304129e59b16da2b8fe2396b607562ef3d34bc754a39b5021",
+      "sha256": "a88b1bc8cb5a96bed7568df5c5e50b6b2170db900a1f7afaf77583cf7188762d",
       "outcome": "parsed",
       "routeNumbers": [
         "1950"
       ],
       "services": 2
+    },
+    {
+      "id": "405154",
+      "name": "910",
+      "groups": [
+        "0"
+      ],
+      "file": "raw/405154.xlsx",
+      "bytes": 5984,
+      "sha256": "a9a7389b3b37bce6536736372ff0b5c9eed661e0b84c6f4cdd19286967e5f0d7",
+      "outcome": "parsed",
+      "routeNumbers": [
+        "910"
+      ],
+      "services": 1
     },
     {
       "id": "405155",
@@ -2363,7 +2195,7 @@
       ],
       "file": "raw/405155.xlsx",
       "bytes": 10220,
-      "sha256": "27b744a057eda73fd1a6c808009faaa222023ea7b601f1ade863ef61a60b00f6",
+      "sha256": "1130ca3f3cb2cd41783bd8c5f36e963743b1eae6a18045d671251785897910d5",
       "outcome": "parsed",
       "routeNumbers": [
         "1100"
@@ -2378,7 +2210,7 @@
       ],
       "file": "raw/405156.xlsx",
       "bytes": 5399,
-      "sha256": "6415d3b8343b3a8063de6346cd816f5b04619ab4e4d869829874f16a28ab12be",
+      "sha256": "078c6a71ad714b38753f73d7eca884e6af73a100a5d4903c02c306559f16d62d",
       "outcome": "parsed",
       "routeNumbers": [
         "1100-1"
@@ -2393,7 +2225,7 @@
       ],
       "file": "raw/405157.xlsx",
       "bytes": 5747,
-      "sha256": "07cc0a56c0548e8eb4584631984f6796fda59c7933040dc2de274fe979e1ed7f",
+      "sha256": "1d7b77207ddca52483016668c14b676bfa48e543076aa1fdd440fa396a486e68",
       "outcome": "parsed",
       "routeNumbers": [
         "202-4"
@@ -2401,288 +2233,49 @@
       "services": 2
     },
     {
-      "id": "405161",
-      "name": "810-1",
+      "id": "405158",
+      "name": "901",
       "groups": [
-        "8"
+        "7"
       ],
-      "file": "raw/405161.xlsx",
-      "bytes": 7199,
-      "sha256": "131696b45411892c2cf1c0388a550da9be84ab7f30f0c4477470aaf032133d3f",
+      "file": "raw/405158.xlsx",
+      "bytes": 5879,
+      "sha256": "8a38ba11717385ebaa4e3ab6856b3e8431c623bbef73d3a2b841fe86f5c80d4e",
       "outcome": "parsed",
       "routeNumbers": [
-        "810-1"
-      ],
-      "services": 1
-    },
-    {
-      "id": "405162",
-      "name": "422",
-      "groups": [
-        "2"
-      ],
-      "file": "raw/405162.xlsx",
-      "bytes": 5691,
-      "sha256": "0f80e7a9df718b83e4224f3a2c330f0a76919757ece672d830e4bb41d069c189",
-      "outcome": "parsed",
-      "routeNumbers": [
-        "422"
-      ],
-      "services": 1
-    },
-    {
-      "id": "405163",
-      "name": "820-2",
-      "groups": [
-        "8"
-      ],
-      "file": "raw/405163.xlsx",
-      "bytes": 7536,
-      "sha256": "259171c54b7e1f8f5ea1722fd8e8f70867574e3b5b44236ecef451ad5814e119",
-      "outcome": "parsed",
-      "routeNumbers": [
-        "820-2"
-      ],
-      "services": 1
-    },
-    {
-      "id": "405164",
-      "name": "432",
-      "groups": [
-        "2",
-        "11"
-      ],
-      "file": "raw/405164.xlsx",
-      "bytes": 6610,
-      "sha256": "759e14fab6451dca1766788ae671d2260daca08396d8cf5ba07ad4ecce27f3b6",
-      "outcome": "parsed",
-      "routeNumbers": [
-        "432"
-      ],
-      "services": 1
-    },
-    {
-      "id": "405165",
-      "name": "641",
-      "groups": [
-        "2"
-      ],
-      "file": "raw/405165.xlsx",
-      "bytes": 5848,
-      "sha256": "9d9985bc20b3d7b74a0dffae1ba4e34410e3baa43569e8043800ee502bbac0bd",
-      "outcome": "source_conflict",
-      "routeNumbers": [
-        "641"
-      ],
-      "services": 1,
-      "conflicts": [
-        "641 천지연-중앙R-고근산-신시가지-법환-천지연: summary 첫차 06:10 disagrees with the trips (06:20)"
-      ]
-    },
-    {
-      "id": "405166",
-      "name": "412",
-      "groups": [
-        "2"
-      ],
-      "file": "raw/405166.xlsx",
-      "bytes": 6943,
-      "sha256": "e658c26cc86107c292cf1d20e5308e0d5dadae207b4c6980aaa59c68e400dc7e",
-      "outcome": "parsed",
-      "routeNumbers": [
-        "412"
-      ],
-      "services": 1
-    },
-    {
-      "id": "405167",
-      "name": "820-1",
-      "groups": [
-        "8"
-      ],
-      "file": "raw/405167.xlsx",
-      "bytes": 7417,
-      "sha256": "256be05ce7def74a1674e405ccc9803aefe9146e6709539dc24960caa81629f9",
-      "outcome": "parsed",
-      "routeNumbers": [
-        "820-1"
-      ],
-      "services": 1
-    },
-    {
-      "id": "405168",
-      "name": "43-1,43-2,43-3",
-      "groups": [
-        "1",
-        "11"
-      ],
-      "file": "raw/405168.xlsx",
-      "bytes": 24151,
-      "sha256": "71a6bea1f16bc99e700e864a15baad659fd2a0b774e50cd5e06b8ca91a692e12",
-      "outcome": "parsed",
-      "routeNumbers": [
-        "43-1",
-        "43-2",
-        "43-3"
+        "901"
       ],
       "services": 2
     },
     {
-      "id": "405169",
-      "name": "320-1",
+      "id": "405159",
+      "name": "902",
       "groups": [
-        "1"
+        "7"
       ],
-      "file": "raw/405169.xlsx",
-      "bytes": 4711,
-      "sha256": "5464a3cca5b9d06d4be2da836938cf34566336ab8c5ebaad72b060ddfc3390ae",
+      "file": "raw/405159.xlsx",
+      "bytes": 4577,
+      "sha256": "9937200be4812dbf339a31cc776805a16aeed69dff8f44ff7d0d829e57e51d63",
       "outcome": "parsed",
       "routeNumbers": [
-        "320-1"
+        "902"
       ],
       "services": 1
     },
     {
-      "id": "405170",
-      "name": "332",
+      "id": "405160",
+      "name": "151-1(수요맞춤형)",
       "groups": [
-        "1"
+        "4"
       ],
-      "file": "raw/405170.xlsx",
-      "bytes": 8259,
-      "sha256": "78dcab4ccbaa1f2237c502db6e65292eb6d23eacd8a5823a015d5596491cd5b0",
+      "file": "raw/405160.xlsx",
+      "bytes": 6296,
+      "sha256": "f2193970552e4cf653feeaabc941b33af618285f99d8a04c976b72df1c0d2f10",
       "outcome": "parsed",
       "routeNumbers": [
-        "332"
+        "151-1"
       ],
       "services": 2
-    },
-    {
-      "id": "405171",
-      "name": "642",
-      "groups": [
-        "2"
-      ],
-      "file": "raw/405171.xlsx",
-      "bytes": 5897,
-      "sha256": "0b84da1379e14da8b5f0f6ddd5d9510f04057fa6a94edebc8449f02febaffc0b",
-      "outcome": "source_conflict",
-      "routeNumbers": [
-        "642"
-      ],
-      "services": 1,
-      "conflicts": [
-        "642 천지연-법환-신시가지-고근산-중앙R-천지연: summary 첫차 06:10 disagrees with the trips (06:05)",
-        "642 천지연-법환-신시가지-고근산-중앙R-천지연: summary 막차 21:30 disagrees with the trips (21:40)"
-      ]
-    },
-    {
-      "id": "405172",
-      "name": "444",
-      "groups": [
-        "2"
-      ],
-      "file": "raw/405172.xlsx",
-      "bytes": 5877,
-      "sha256": "7b4cd44662318472fe44b14cbc99864b28a24220e55c6c5e1cba8417ab0b3db2",
-      "outcome": "parsed",
-      "routeNumbers": [
-        "444"
-      ],
-      "services": 1
-    },
-    {
-      "id": "405173",
-      "name": "466",
-      "groups": [
-        "2"
-      ],
-      "file": "raw/405173.xlsx",
-      "bytes": 7166,
-      "sha256": "e4ad41860558a08a0f8f9f6eec7a1365678a672a487f659268638a1141b7a7b8",
-      "outcome": "parsed",
-      "routeNumbers": [
-        "466"
-      ],
-      "services": 1
-    },
-    {
-      "id": "405174",
-      "name": "644",
-      "groups": [
-        "2"
-      ],
-      "file": "raw/405174.xlsx",
-      "bytes": 6227,
-      "sha256": "db42240a249dda3e19c5fc30ef2cd30f8f32f3c72fe6eecc301c7e075f2cd007",
-      "outcome": "source_conflict",
-      "routeNumbers": [
-        "644"
-      ],
-      "services": 1,
-      "conflicts": [
-        "644 강창학경기장-강정-중앙R-신시가지-강창학경기장: summary 막차 21:40 disagrees with the trips (21:30)"
-      ]
-    },
-    {
-      "id": "405175",
-      "name": "411",
-      "groups": [
-        "2"
-      ],
-      "file": "raw/405175.xlsx",
-      "bytes": 7751,
-      "sha256": "6ce9f835c77fe8b881c416a4ce6f27e7b1dde2636309a87295c0bb74872b0713",
-      "outcome": "parsed",
-      "routeNumbers": [
-        "411"
-      ],
-      "services": 1
-    },
-    {
-      "id": "405176",
-      "name": "435",
-      "groups": [
-        "2"
-      ],
-      "file": "raw/405176.xlsx",
-      "bytes": 6250,
-      "sha256": "3e25a34562a5099b65ade90e19d40b184ed90794eba074ccd82d3fde784809cb",
-      "outcome": "parsed",
-      "routeNumbers": [
-        "435"
-      ],
-      "services": 1
-    },
-    {
-      "id": "405177",
-      "name": "442",
-      "groups": [
-        "2"
-      ],
-      "file": "raw/405177.xlsx",
-      "bytes": 6278,
-      "sha256": "638c8af07a22f5bef613a55f1fb900eb8795f10df5f1a53af2bf3c81ae512d3d",
-      "outcome": "parsed",
-      "routeNumbers": [
-        "442"
-      ],
-      "services": 1
-    },
-    {
-      "id": "405178",
-      "name": "810-2",
-      "groups": [
-        "8"
-      ],
-      "file": "raw/405178.xlsx",
-      "bytes": 6288,
-      "sha256": "f3204acd3a8a460183b9bf840078214e64aa696e9bc6ea253e433bb4231bf20b",
-      "outcome": "parsed",
-      "routeNumbers": [
-        "810-2"
-      ],
-      "services": 1
     },
     {
       "id": "405179",
@@ -2692,7 +2285,7 @@
       ],
       "file": "raw/405179.xlsx",
       "bytes": 5705,
-      "sha256": "94aa3c81bf084a5f469c45a52e91642934a7b85d5cef162d76419e587117a529",
+      "sha256": "375cec472a4aa7bafce8d98b0533390843ea2565b47e91e20882877224481f03",
       "outcome": "parsed",
       "routeNumbers": [
         "102-1"
@@ -2707,7 +2300,7 @@
       ],
       "file": "raw/405180.xlsx",
       "bytes": 5221,
-      "sha256": "c7ccce785e404484237dad424eec68f045250be1faa55e7f974ae47886988d8b",
+      "sha256": "ea09d8105aeb051934f61e733cdaabacd349676b379cfa33f18acd40ffd50320",
       "outcome": "parsed",
       "routeNumbers": [
         "451-1"
@@ -2722,7 +2315,7 @@
       ],
       "file": "raw/405181.xlsx",
       "bytes": 5223,
-      "sha256": "37ab688cc345d1b9c6ba91b428e3fd8f33ffd91bbe5862c2c90a171631593d03",
+      "sha256": "a6fb9fe020c4532ff01680b8ef03d04d1bb524d6bff75afb609bea5adfbc5364",
       "outcome": "parsed",
       "routeNumbers": [
         "452-1"
@@ -2737,10 +2330,25 @@
       ],
       "file": "raw/405182.xlsx",
       "bytes": 5149,
-      "sha256": "ba615f220ff7b5e748814bebb09cd6cb983e42ac7328545c076914aa7584a502",
+      "sha256": "f020a547aab9d8196ec07b82b53d03d2524d8c42a76ec8b39d170c8c119e9d00",
       "outcome": "parsed",
       "routeNumbers": [
         "424"
+      ],
+      "services": 1
+    },
+    {
+      "id": "405183",
+      "name": "320-1",
+      "groups": [
+        "1"
+      ],
+      "file": "raw/405183.xlsx",
+      "bytes": 4711,
+      "sha256": "80a1da1aa7005eed556b7a9cd6aff33c15a3344e8062109ab058f26b34de46b1",
+      "outcome": "parsed",
+      "routeNumbers": [
+        "320-1"
       ],
       "services": 1
     },
@@ -2751,8 +2359,8 @@
         "1"
       ],
       "file": "raw/405184.xlsx",
-      "bytes": 4778,
-      "sha256": "844e0baa3d628344ed5ef4e4d3c322758e9f2d81d5117d7b8f13117dfe0a7297",
+      "bytes": 4779,
+      "sha256": "a92a906c4cde451685c2a8f6c9fb72001db295f8207b4a62458655a216d7be07",
       "outcome": "parsed",
       "routeNumbers": [
         "320-2"
@@ -2766,8 +2374,8 @@
         "1"
       ],
       "file": "raw/405185.xlsx",
-      "bytes": 9916,
-      "sha256": "b4793be602949db7bc9d0778f7f99457dda1c3095ddd8457fc230b30350a888f",
+      "bytes": 9947,
+      "sha256": "31e74dc2a77edcac5acc0fd4d4ae28a583a8167e0dab33c1b01cebc356cf8a9b",
       "outcome": "parsed",
       "routeNumbers": [
         "303"
@@ -2782,7 +2390,7 @@
       ],
       "file": "raw/405186.xlsx",
       "bytes": 6819,
-      "sha256": "e1160d258c2a26a5c28ab1c0c80f7782880c3e5fff768be1f93ad2706d3b4d6f",
+      "sha256": "f1c62e0215d301de1d8e1a428ce39fe1968431009635cd328eebd3bce247ea0a",
       "outcome": "source_conflict",
       "routeNumbers": [
         "337"
@@ -2817,6 +2425,86 @@
       "outcome": "no_timetable"
     },
     {
+      "id": "405190",
+      "name": "320-3",
+      "groups": [
+        "1"
+      ],
+      "file": "raw/405190.xlsx",
+      "bytes": 5610,
+      "sha256": "6cc286b1fd7b74ddac539bd5d0946e9b2f03e5cf7e4c4b46001f97efbef00cc1",
+      "outcome": "parsed",
+      "routeNumbers": [
+        "320-3"
+      ],
+      "services": 2
+    },
+    {
+      "id": "405191",
+      "name": "365",
+      "groups": [
+        "1"
+      ],
+      "file": "raw/405191.xlsx",
+      "bytes": 19218,
+      "sha256": "5892778d94a8c010c631f61f56e843c445cd45a89f924e1fd2c861f290e68c91",
+      "outcome": "parsed",
+      "routeNumbers": [
+        "365"
+      ],
+      "services": 4
+    },
+    {
+      "id": "405192",
+      "name": "366, 367, 368",
+      "groups": [
+        "1"
+      ],
+      "file": "raw/405192.xlsx",
+      "bytes": 6870,
+      "sha256": "f1eacd9505b01cc1cadb96abe31ad8bbbdbda4eb3add5d1904766bd55ceb9c27",
+      "outcome": "parsed",
+      "routeNumbers": [
+        "366",
+        "367",
+        "368"
+      ],
+      "services": 3
+    },
+    {
+      "id": "405193",
+      "name": "425",
+      "groups": [
+        "2"
+      ],
+      "file": "raw/405193.xlsx",
+      "bytes": 7788,
+      "sha256": "23791a010e54b8d138e1b32006c80851a53c3a5562d64ea6ba124c5e64e9d01a",
+      "outcome": "source_conflict",
+      "routeNumbers": [
+        "425"
+      ],
+      "services": 2,
+      "conflicts": [
+        "425 국제대-영평-한마음병원-인화동-이화A-부두: summary 막차 21:57 disagrees with the trips (21:27)"
+      ]
+    },
+    {
+      "id": "405194",
+      "name": "426",
+      "groups": [
+        "2"
+      ],
+      "file": "raw/405194.xlsx",
+      "bytes": 8347,
+      "sha256": "5a2e6141be67ca09a2904f246ab7e6fb60b9a4c4ba5c5b106a53cd2c4c87c58f",
+      "outcome": "parsed",
+      "routeNumbers": [
+        "426"
+      ],
+      "services": 2
+    },
+    {
       "id": "406001",
       "name": "295",
       "groups": [
@@ -2824,7 +2512,7 @@
       ],
       "file": "raw/406001.xlsx",
       "bytes": 7822,
-      "sha256": "673117bc9dfc616856d970b6b9c064791cc577a400a850bf3273f8b3909833fe",
+      "sha256": "ee6435e6fd2de23c91cdc588f0bc7918c2ddeb27c4fec1eccfdd548c39aaf2f1",
       "outcome": "parsed",
       "routeNumbers": [
         "295"
@@ -2840,7 +2528,7 @@
       ],
       "file": "raw/406002.xlsx",
       "bytes": 13041,
-      "sha256": "d7d0c1b3fc332c3471b80ff295f6b0881ec351e82671db38973e6a2ea435d619",
+      "sha256": "6ae18e67f4dbd72ea1838a6b346c42a342a5dbf5224c131de08c240252e559f1",
       "outcome": "source_conflict",
       "routeNumbers": [
         "510"
@@ -2858,7 +2546,7 @@
       ],
       "file": "raw/406003.xlsx",
       "bytes": 9741,
-      "sha256": "b85f35e43824ae9ae0146c5e60b2a54ba99b426ae4d3f17f54bbcfc4e2283bd8",
+      "sha256": "66a545700b697d9f5ae22aba4777fb0c07d52ac359842c077ebfa4a02269af93",
       "outcome": "parsed",
       "routeNumbers": [
         "520"
@@ -2873,7 +2561,7 @@
       ],
       "file": "raw/406005.xlsx",
       "bytes": 8135,
-      "sha256": "61476ae964aa08a7791c711b1e62d0cdeff2bacc1b1e08df5dd2281dc4d60264",
+      "sha256": "04ea078dd1b7e18ac62846af27a812ad2a0ebe51d171db3ecd4902931ced9030",
       "outcome": "parsed",
       "routeNumbers": [
         "531"
@@ -2888,7 +2576,7 @@
       ],
       "file": "raw/406006.xlsx",
       "bytes": 7349,
-      "sha256": "aa89cbf19b7dfb28bc0483ae6e5127bbf713de9715895740ea2684b044605baf",
+      "sha256": "b6977a514000b853391edf50f1607d82996a7fd6285c446ffc0c02bb4327ba38",
       "outcome": "parsed",
       "routeNumbers": [
         "532"
@@ -2902,8 +2590,8 @@
         "2"
       ],
       "file": "raw/406007.xlsx",
-      "bytes": 14076,
-      "sha256": "a7d27da798e8ced9c4b9f0011ca297c045b260f20a14e548cceed2ae6a49c176",
+      "bytes": 14071,
+      "sha256": "d533605972a6a106a0396b7aaa7a0107a46ab63c1df213b514b0338d47f17e71",
       "outcome": "parsed",
       "routeNumbers": [
         "611",
@@ -2919,7 +2607,7 @@
       ],
       "file": "raw/406008.xlsx",
       "bytes": 9221,
-      "sha256": "92333c66357f9594109eaf053248d8dd1a9565d8ac997ae706b2d330bb640d7d",
+      "sha256": "16b078f8ed2c2a6e2389059abbf489e301d6c10d4e9c6b06ad2398df75b4cbae",
       "outcome": "parsed",
       "routeNumbers": [
         "615"
@@ -2935,7 +2623,7 @@
       ],
       "file": "raw/406009.xlsx",
       "bytes": 5717,
-      "sha256": "1a245ca0df7a44b534fcae9b6580b9d6f9df333cd2167ab6eb8796119251438d",
+      "sha256": "1b7ac68d4c07189938b775417df3184cb42cd1249e6cb93410a3ecb85eeea582",
       "outcome": "source_conflict",
       "routeNumbers": [
         "621"
@@ -2953,7 +2641,7 @@
       ],
       "file": "raw/406010.xlsx",
       "bytes": 6859,
-      "sha256": "92c7a6b82fb8f015f3f0380d249bc05af0044999dd1719404f1315230c6abbc1",
+      "sha256": "115da4953115deae6e07ba29b8802c8d771e9bda1a586577e00f5ea2f8c88f3f",
       "outcome": "parsed",
       "routeNumbers": [
         "622"
@@ -2969,7 +2657,7 @@
       ],
       "file": "raw/406011.xlsx",
       "bytes": 5374,
-      "sha256": "8fc92b740408ff763a993b851bdcd708aa4a0f6abd1dcb25704bd18b87bb8d8b",
+      "sha256": "1ab168a71c6aad8d76a855395d60ecff3f83f16c95fc5814d49eca5a53750386",
       "outcome": "parsed",
       "routeNumbers": [
         "623"
@@ -2985,7 +2673,7 @@
       ],
       "file": "raw/406012.xlsx",
       "bytes": 5501,
-      "sha256": "a64d0d2067eccec54888e3419f61c7fb865bf15112eb75aa56675aaf9bc0b28a",
+      "sha256": "a447bc1506fb313b4d06ae9d9cb95a42b9dae0142ac8de98796c029d2a529e5d",
       "outcome": "parsed",
       "routeNumbers": [
         "624"
@@ -3001,7 +2689,7 @@
       ],
       "file": "raw/406013.xlsx",
       "bytes": 8432,
-      "sha256": "eaf23d174db0e55b20c40585d1562cde5d6d33b9efabf351f4e9f6a4c3d338f8",
+      "sha256": "4252d211714c970b975603a30d1d80109f3c8ddacfe7f6dbf2b7fa54c967736e",
       "outcome": "parsed",
       "routeNumbers": [
         "625"
@@ -3016,7 +2704,7 @@
       ],
       "file": "raw/406014.xlsx",
       "bytes": 6600,
-      "sha256": "84b4fbeed1c8270b3f38ee7d3c543e6e4327076c77274c4c6e7e9bccf8ac0ca6",
+      "sha256": "c7d990ed369acb6422663d340775f489141c0fb1d4a0b4fda1a691113dcaae0a",
       "outcome": "parsed",
       "routeNumbers": [
         "627"
@@ -3031,8 +2719,8 @@
         "11"
       ],
       "file": "raw/406015.xlsx",
-      "bytes": 8256,
-      "sha256": "3218a94251a5e21f8da6ae5042fa7df55a3e950f503023bbf9ea770bcb5f6ed5",
+      "bytes": 8229,
+      "sha256": "44c36038b61b8ed1be4ec78d9264bcb6a37058f48a6718be9d4bd2d7d02fc9f5",
       "outcome": "parsed",
       "routeNumbers": [
         "630"
@@ -3047,7 +2735,7 @@
       ],
       "file": "raw/406016.xlsx",
       "bytes": 7127,
-      "sha256": "d4a457a082578b5ee473f866fb52813a903b9d69594ca900bfa0e88427acd92f",
+      "sha256": "4a241a476e687ce4240c38a11887aed247a0ea53c108172b01ea56f18b18678b",
       "outcome": "parsed",
       "routeNumbers": [
         "633"
@@ -3063,12 +2751,56 @@
       ],
       "file": "raw/406017.xlsx",
       "bytes": 7217,
-      "sha256": "71a0687826f32ebf13a9cc01109ce9ab76f9e83ed38fcb7949005e11c42f9fe4",
+      "sha256": "83d8a5459b930c5876613991499645033de42e146401c4324d20b8550cc3c8d1",
       "outcome": "parsed",
       "routeNumbers": [
         "635"
       ],
       "services": 2
+    },
+    {
+      "id": "406018",
+      "name": "641, 642",
+      "groups": [
+        "2"
+      ],
+      "file": "raw/406018.xlsx",
+      "bytes": 8029,
+      "sha256": "2b668426da079a40dac02311d862a109778e3af6af377c5393af2b7fca0ef3cb",
+      "outcome": "source_conflict",
+      "routeNumbers": [
+        "641",
+        "642"
+      ],
+      "services": 2,
+      "conflicts": [
+        "641 천지연-중앙R-고근산-신시가지-법환-천지연: summary 첫차 06:10 disagrees with the trips (06:20)",
+        "641 천지연-중앙R-고근산-신시가지-법환-천지연: another sheet for '천지연폭포 → 천지연폭포 (순환)' (unstated) has a different table",
+        "642 천지연-법환-신시가지-고근산-중앙R-천지연: summary 첫차 06:10 disagrees with the trips (06:05)",
+        "642 천지연-법환-신시가지-고근산-중앙R-천지연: summary 막차 21:30 disagrees with the trips (21:40)",
+        "642 천지연-법환-신시가지-고근산-중앙R-천지연: another sheet for '천지연폭포 → 천지연폭포 (순환)' (unstated) has a different table"
+      ]
+    },
+    {
+      "id": "406019",
+      "name": "643, 644",
+      "groups": [
+        "2"
+      ],
+      "file": "raw/406019.xlsx",
+      "bytes": 8727,
+      "sha256": "719e4b098820d5f93f49c7fe78cd0d219def59e058de6552bbc0ca105bc94ea4",
+      "outcome": "source_conflict",
+      "routeNumbers": [
+        "643",
+        "644"
+      ],
+      "services": 2,
+      "conflicts": [
+        "643 강창학경기장-신시가지-중앙R-강정-강창학경기장: another sheet for '강창학경기장 → 강창학경기장(순환)' (unstated) has a different table",
+        "644 강창학경기장-강정-중앙R-신시가지-강창학경기장: summary 막차 21:40 disagrees with the trips (21:30)",
+        "644 강창학경기장-강정-중앙R-신시가지-강창학경기장: another sheet for '강창학경기장 → 강창학경기장(순환)' (unstated) has a different table"
+      ]
     },
     {
       "id": "406020",
@@ -3079,7 +2811,7 @@
       ],
       "file": "raw/406020.xlsx",
       "bytes": 10132,
-      "sha256": "1ef8895138f24133462c3f5afba03673ba376fe79ee8eb4007a9ce8d17b8ba56",
+      "sha256": "4e8a59bfa11a613a445f5dbebfef6c8b175cb9a4629b59165b0e6a282311a63a",
       "outcome": "source_conflict",
       "routeNumbers": [
         "645"
@@ -3097,7 +2829,7 @@
       ],
       "file": "raw/406021.xlsx",
       "bytes": 14649,
-      "sha256": "8ffed4b47f3a483c3f8731cb6010de0952a25e36e7906329e51b41755368b05e",
+      "sha256": "4955a650e5b46882ab9891320738f5164b297a8764a2fd56aaacbf7120f1e377",
       "outcome": "parsed",
       "routeNumbers": [
         "651",
@@ -3113,7 +2845,7 @@
       ],
       "file": "raw/406022.xlsx",
       "bytes": 8503,
-      "sha256": "8bfb95c696b30512fe21cce9ff6232c704b263a6830155ec6dcf09194ac662f6",
+      "sha256": "5370d8262e91d8a31e4964894c9ff4bc06e4975a14fd910c8d1f9019a24b6b5f",
       "outcome": "parsed",
       "routeNumbers": [
         "655"
@@ -3128,7 +2860,7 @@
       ],
       "file": "raw/406023.xlsx",
       "bytes": 7986,
-      "sha256": "5c91762cd2513cafb14f3148818a435ab9b0f0e216c8a6ab6254d57879104473",
+      "sha256": "9f8229e695851495baa622a57176ab0fa241ad0c273a03f2bc6f9976e6384be6",
       "outcome": "parsed",
       "routeNumbers": [
         "690"
@@ -3143,7 +2875,7 @@
       ],
       "file": "raw/406024.xlsx",
       "bytes": 6498,
-      "sha256": "fe6b3c2ac0073fc60fc52a4468e6ff218e54a764c0df4b34e4d133d9f1fecca1",
+      "sha256": "9f36b7d582ccf67b481fb677cbe69fe0db528e9abbb979185cce1513de339562",
       "outcome": "parsed",
       "routeNumbers": [
         "721-2"
@@ -3157,8 +2889,8 @@
         "5"
       ],
       "file": "raw/406025.xlsx",
-      "bytes": 6497,
-      "sha256": "e245746a8f2552f45ca69baa5f2b7436eb99ca0d332c2508f5a429dce7dfd3d4",
+      "bytes": 6496,
+      "sha256": "73a17c22a8c01625e0f0385ff2404d26b0dfc247cd78a90e193bd9fd0bc5102e",
       "outcome": "parsed",
       "routeNumbers": [
         "721-3"
@@ -3172,8 +2904,8 @@
         "5"
       ],
       "file": "raw/406026.xlsx",
-      "bytes": 9115,
-      "sha256": "dc4727affce48bf257849e28f1140f04116256e3f04a90f7ace910874fda6948",
+      "bytes": 9057,
+      "sha256": "8ca268faa55e39db0ee685399bce7dfbe2dc9b10e4eb49fdb96b7dbfc80fee8b",
       "outcome": "parsed",
       "routeNumbers": [
         "722-1"
@@ -3188,7 +2920,7 @@
       ],
       "file": "raw/406027.xlsx",
       "bytes": 7140,
-      "sha256": "8d26f6e98c0d4139c2ccd7569e611431642418c94829d2c0790b892dbdc166c7",
+      "sha256": "b1f6752ab55d4cbe95d5042429b587a222dcdbbb53abb1ddab09f1aa914e42d9",
       "outcome": "parsed",
       "routeNumbers": [
         "722-2"
@@ -3203,7 +2935,7 @@
       ],
       "file": "raw/406028.xlsx",
       "bytes": 6171,
-      "sha256": "7a49b4aa88207801149c0f267574c01de93c3c1c83142dd8aa3dde919b8550dd",
+      "sha256": "b0f3b0a481397392db2708de8edd83c1c513aa206fcf04bb545c1fc4f2f2c77d",
       "outcome": "parsed",
       "routeNumbers": [
         "731-1"
@@ -3217,8 +2949,8 @@
         "5"
       ],
       "file": "raw/406029.xlsx",
-      "bytes": 6273,
-      "sha256": "b5ee9d741ee7cb9c09162a1900221a3383fd856d3c6af65ac83078167822594c",
+      "bytes": 6279,
+      "sha256": "a11a7ef84ae649d34f5c5b133ba1368d075a55f394c01610b85bdd547176c257",
       "outcome": "parsed",
       "routeNumbers": [
         "731-2"
@@ -3232,8 +2964,8 @@
         "5"
       ],
       "file": "raw/406030.xlsx",
-      "bytes": 6238,
-      "sha256": "aa9bed70c7ee3dc2ef77a34b4ebbf184a95cb53a06704b2b937f721c8f4cb08b",
+      "bytes": 6240,
+      "sha256": "556b0dc32d51ed8bfdcf0ffc4e05c2a8f6d37aa00b9e75e7cd1975d4b4175a42",
       "outcome": "parsed",
       "routeNumbers": [
         "732-1"
@@ -3248,7 +2980,7 @@
       ],
       "file": "raw/406031.xlsx",
       "bytes": 5535,
-      "sha256": "2bd946b022b09e8ad86fe7e6590a42704b0b625b8b7e394af2aaba79054421e6",
+      "sha256": "93d92bf778f21f4251ff46a3d7d66b6b05bc606e6eb30609ff2410c2db89eb83",
       "outcome": "parsed",
       "routeNumbers": [
         "732-2"
@@ -3263,7 +2995,7 @@
       ],
       "file": "raw/406032.xlsx",
       "bytes": 6473,
-      "sha256": "b9c7c9d07adc61cc4eb030a0a49460a8f54460eaefd60238ebd846a9ce88d2ea",
+      "sha256": "f8671fefeb25dcd434d5d870b5fa0f3ceef3be3bd0bc788f946354de6ce0e946",
       "outcome": "parsed",
       "routeNumbers": [
         "732-3"
@@ -3277,8 +3009,8 @@
         "5"
       ],
       "file": "raw/406033.xlsx",
-      "bytes": 8809,
-      "sha256": "555a3f2af026f1cd6c5251ebc0736c69bf6a346f4c1bd14ee9721f6c7a9c62e7",
+      "bytes": 8808,
+      "sha256": "90fed8b907d66319f3529e806de468c2ba26e1edd381874244a007043893adeb",
       "outcome": "source_conflict",
       "routeNumbers": [
         "741-1"
@@ -3297,7 +3029,7 @@
       ],
       "file": "raw/406034.xlsx",
       "bytes": 8761,
-      "sha256": "92ff75e1fa758dd24fdbe90e1a7c215bfe1b47a8b850dab504381ca477d62ed0",
+      "sha256": "09b2d48765fe02b3503d421e5d95bfd4f02006b92597eaf6b6a5aef9cbefa328",
       "outcome": "source_conflict",
       "routeNumbers": [
         "741-2"
@@ -3316,7 +3048,7 @@
       ],
       "file": "raw/406035.xlsx",
       "bytes": 5959,
-      "sha256": "86f7304d7e86c4cfa1fc03a609e9bcebfa7fd2b425fd40c137e08545164cfd99",
+      "sha256": "5a0935a22a2cbde3da60914c853d2c2843489c3b07773ac768139dd4b3a71885",
       "outcome": "parsed",
       "routeNumbers": [
         "742-1"
@@ -3330,8 +3062,8 @@
         "5"
       ],
       "file": "raw/406036.xlsx",
-      "bytes": 8077,
-      "sha256": "ea6705e164b9bdbe3702a9fef899e8c0d2c4a881f54fc46161677a86b8ccbaa8",
+      "bytes": 8076,
+      "sha256": "883b2bc6e4d610f3016f7e5d56572eaed8fd5446a877e1b1da28da5f8292c1ce",
       "outcome": "parsed",
       "routeNumbers": [
         "742-2"
@@ -3346,7 +3078,7 @@
       ],
       "file": "raw/406037.xlsx",
       "bytes": 5979,
-      "sha256": "c109f5708fab456174b24422ac745c2328efe3a6c99b137b080a0183fda1ec9a",
+      "sha256": "2d79d5ed31cb719ef6dcd629d818ca787be5e3da348483dea92c0d77161304e8",
       "outcome": "parsed",
       "routeNumbers": [
         "743"
@@ -3361,7 +3093,7 @@
       ],
       "file": "raw/406038.xlsx",
       "bytes": 5940,
-      "sha256": "5ca9264ccdadb59dc2a4a0b282d1a25074c09ae719082d4c69df17efd8fb5ecd",
+      "sha256": "102ea582db76ff6850fd9994aac047cbf253b78caf7fd6f9adeea1915192ce59",
       "outcome": "parsed",
       "routeNumbers": [
         "744"
@@ -3375,8 +3107,8 @@
         "5"
       ],
       "file": "raw/406039.xlsx",
-      "bytes": 9230,
-      "sha256": "1fb83e98d3fc0aa36ad6f396bdfd77ed6e4f934819d9f6d9d1564c1a2af12a90",
+      "bytes": 9229,
+      "sha256": "80f876f7a712ff275025452ed9a148ea4f2cb8a891fe8f8e2569fbb0f5ab64a4",
       "outcome": "parsed",
       "routeNumbers": [
         "751-1"
@@ -3390,8 +3122,8 @@
         "5"
       ],
       "file": "raw/406040.xlsx",
-      "bytes": 9120,
-      "sha256": "1a9634dafd1f5a18974091378a4987a123344f199cde86cf693610177ee1815f",
+      "bytes": 9125,
+      "sha256": "cc56e450ae0ed37a90578224fd4ee21f2d97cdb6a7762f71cc80e96c82db6fcb",
       "outcome": "source_conflict",
       "routeNumbers": [
         "751-2"
@@ -3410,7 +3142,7 @@
       ],
       "file": "raw/406041.xlsx",
       "bytes": 5787,
-      "sha256": "055d8f39ead22d2bdd3cf5890e96d113492ea2f681f292e051e517fff8df42cf",
+      "sha256": "cac6c2f6ae93e72d50c6108211424ad5e2db8ea53df8ba840d045875862e9c30",
       "outcome": "parsed",
       "routeNumbers": [
         "752-1"
@@ -3425,7 +3157,7 @@
       ],
       "file": "raw/406042.xlsx",
       "bytes": 5840,
-      "sha256": "655eef53810d6a0df0a66ed5e43c0687de5b357b9c1ade7a54cbcf9f9ca6042f",
+      "sha256": "7cb457311a58ae11fabb162aace32eeaf21aac6d97004de981065444eed86345",
       "outcome": "parsed",
       "routeNumbers": [
         "752-2"
@@ -3439,8 +3171,8 @@
         "5"
       ],
       "file": "raw/406043.xlsx",
-      "bytes": 6299,
-      "sha256": "29507e273fe25899b8aaaa081001899c243db1fcab7302ce42026bdb0596f5b3",
+      "bytes": 6298,
+      "sha256": "8fe83a5b1d3481a5f331434c13a6b934a507483a8c2a30b8a6d8e303a72be3de",
       "outcome": "parsed",
       "routeNumbers": [
         "761-1"
@@ -3455,7 +3187,7 @@
       ],
       "file": "raw/406044.xlsx",
       "bytes": 8990,
-      "sha256": "426744e69cdbfb381502a1d1da791726ec2e38eb6c295c973af24724e6193a96",
+      "sha256": "ce61542818df61f2e8c54597ca6306fc2912c297fe3372a918103c01a5324b1b",
       "outcome": "parsed",
       "routeNumbers": [
         "761-2"
@@ -3470,7 +3202,7 @@
       ],
       "file": "raw/406045.xlsx",
       "bytes": 6031,
-      "sha256": "55cd11c1ba76976bceebce3f355f47c0b3e3bbdceac5713de9899077139b5916",
+      "sha256": "4f130bba23fbd1c14177fcbce594da38879adef2d5fb8b2569c18714acfae6b1",
       "outcome": "parsed",
       "routeNumbers": [
         "761-3"
@@ -3484,8 +3216,8 @@
         "8"
       ],
       "file": "raw/406046.xlsx",
-      "bytes": 6060,
-      "sha256": "9a85b0cd0cd0476b83295dcba0fed7c034b81be9fd0284954474f47ddf05d452",
+      "bytes": 6059,
+      "sha256": "cc65bec81983c4c70182d7f20bd272a2c86563996516a9c2e91c3db765552646",
       "outcome": "parsed",
       "routeNumbers": [
         "880"
@@ -3499,8 +3231,8 @@
         "9"
       ],
       "file": "raw/406047.xlsx",
-      "bytes": 4624,
-      "sha256": "5384cf0f7648d458cf5401bd7c75e954ca064219855d1427b0573cc8aa18346b",
+      "bytes": 4625,
+      "sha256": "54eb5360857cd56f66e188163b2ad17d05b7b9a2c0a9ebbe048f50614ef77a6f",
       "outcome": "parsed",
       "routeNumbers": [
         "5001"
@@ -3515,7 +3247,7 @@
       ],
       "file": "raw/406048.xlsx",
       "bytes": 4630,
-      "sha256": "24cfebbded8a393bc996ed5a4ac5f046ab4eb4020ca1f05b613a7e1452fb8ac7",
+      "sha256": "d755f6907b2d7320db5891dea939f37f713bb62f997db16b95a3b54fba7b38f2",
       "outcome": "parsed",
       "routeNumbers": [
         "5002"
@@ -3530,7 +3262,7 @@
       ],
       "file": "raw/406049.xlsx",
       "bytes": 4658,
-      "sha256": "5658db63567a9fc35ac503f488cd86a9af16f8a9c0e69f8ae5a1623a721af854",
+      "sha256": "677430927ed5735b582e32a5332f09c054f1827a36c563b31ab3ccf9708780bc",
       "outcome": "parsed",
       "routeNumbers": [
         "5003"
@@ -3544,8 +3276,8 @@
         "9"
       ],
       "file": "raw/406050.xlsx",
-      "bytes": 4863,
-      "sha256": "b1ff583d8613908e2a620ca0820ad8978253ff706033497f8fd7c3cc8f727088",
+      "bytes": 4864,
+      "sha256": "14419463c6c5f26adc3953e89684cf4982a5f6e468a9e04bdba09e70e75e4bee",
       "outcome": "parsed",
       "routeNumbers": [
         "5004"
@@ -3560,7 +3292,7 @@
       ],
       "file": "raw/406051.xlsx",
       "bytes": 4880,
-      "sha256": "272dd14e73cd4250f82023062871a3040ec542d443bcd3f2fb8dc03ed94e09cd",
+      "sha256": "a6eecfca4cf44e7d91eb80f5c92bf6c13a9d2ff2ee3e6daf6a7f0dbf0300cca4",
       "outcome": "parsed",
       "routeNumbers": [
         "5005"
@@ -3575,7 +3307,7 @@
       ],
       "file": "raw/406052.xlsx",
       "bytes": 4745,
-      "sha256": "d859eaac8e51a21f84f7beea5d59f0e96d85b7cace1c99e439c554ae217e44ec",
+      "sha256": "9512d7fbdb079c9d508bfb487dc9dd3f6cbf01fa6c2bb253a7914efdbcde79f8",
       "outcome": "parsed",
       "routeNumbers": [
         "5006"
@@ -3590,7 +3322,7 @@
       ],
       "file": "raw/406053.xlsx",
       "bytes": 5127,
-      "sha256": "606c946ec0d08346b174376ec3865eec1a2f9ee747b81aaaf7463433355844e3",
+      "sha256": "ee7ce29c6de9ceb8dfe3a0e7a50905018b30dfea0cb63a9d40fdae8702696386",
       "outcome": "parsed",
       "routeNumbers": [
         "691"
@@ -3605,7 +3337,7 @@
       ],
       "file": "raw/406054.xlsx",
       "bytes": 4908,
-      "sha256": "e089aab71d1158357c3d42adf76c3526bedd8724c309dc25dd601ebab87944fa",
+      "sha256": "39717e455c0f1cc5ac0a0692c3441b2658c599ed2bfe7816f5042d3a7d674f77",
       "outcome": "parsed",
       "routeNumbers": [
         "692"
@@ -3619,8 +3351,8 @@
         "1"
       ],
       "file": "raw/406056.xlsx",
-      "bytes": 7867,
-      "sha256": "adc0c844b6b2601cbbe8473a4c95159898e0ac939b1cd2344ec2b6315d6d7283",
+      "bytes": 7866,
+      "sha256": "5196df82a9a35e507a03a3d6deed39278273c04fe7974e498a454be51475f550",
       "outcome": "source_conflict",
       "routeNumbers": [
         "500"
@@ -3637,8 +3369,8 @@
         "1"
       ],
       "file": "raw/406057.xlsx",
-      "bytes": 7268,
-      "sha256": "c50317eae2e4104a465ed1ed2a5a03ad57d66f67b8289ac1462778a092fa6878",
+      "bytes": 7252,
+      "sha256": "b12165c97a5dbecdfe1086459b033ffa14d76a57820a0b40b9b43c58080d8666",
       "outcome": "parsed",
       "routeNumbers": [
         "590"
@@ -3653,27 +3385,12 @@
       ],
       "file": "raw/406058.xlsx",
       "bytes": 4775,
-      "sha256": "b8cf3b681586a08af52497e92d4480d04e63acbb22aebece804a130420276e9e",
+      "sha256": "d4c72cbbd3c7bd05fea34b661d9b6199c4a1c06ef29e0bdeac4d0a0a43027376",
       "outcome": "parsed",
       "routeNumbers": [
         "295-1"
       ],
       "services": 1
-    },
-    {
-      "id": "406059",
-      "name": "501",
-      "groups": [
-        "1"
-      ],
-      "file": "raw/406059.xlsx",
-      "bytes": 7309,
-      "sha256": "99b6f6cc94e09ab13489df2912b79ce629f6502988db359ddc5d4f4e42a3b34e",
-      "outcome": "parsed",
-      "routeNumbers": [
-        "501"
-      ],
-      "services": 2
     },
     {
       "id": "406060",
@@ -3682,26 +3399,11 @@
         "5"
       ],
       "file": "raw/406060.xlsx",
-      "bytes": 5522,
-      "sha256": "baa427e8566e56cb5ab15840f4d69eb5d88866ed0c55d18efee6e72e1a116bbd",
+      "bytes": 5521,
+      "sha256": "7f3948c40eefeaa7e237c750dbadd187124a368608ad100d28528f606d59fd85",
       "outcome": "parsed",
       "routeNumbers": [
         "753"
-      ],
-      "services": 1
-    },
-    {
-      "id": "406061",
-      "name": "500-2",
-      "groups": [
-        "1"
-      ],
-      "file": "raw/406061.xlsx",
-      "bytes": 4769,
-      "sha256": "8f03409238b695289ba35241765593fbb36ac30215bce75c8c418f40e73174b4",
-      "outcome": "parsed",
-      "routeNumbers": [
-        "500-2"
       ],
       "services": 1
     },
@@ -3713,12 +3415,42 @@
       ],
       "file": "raw/406062.xlsx",
       "bytes": 5782,
-      "sha256": "7de4587d813e4ae082bb9138b877286cced16c394038940635a4db4817f2be4b",
+      "sha256": "a55b653f8bb1b9e1bf29b59e7fea9dc13921308cfb7fde229d895290bb0bbfd5",
       "outcome": "parsed",
       "routeNumbers": [
         "680"
       ],
       "services": 1
+    },
+    {
+      "id": "406064",
+      "name": "500-2",
+      "groups": [
+        "1"
+      ],
+      "file": "raw/406064.xlsx",
+      "bytes": 4768,
+      "sha256": "ac2bdbe24d897804ee3a973232e0219bd6f26d5fb05798e755f778c9f35917bc",
+      "outcome": "parsed",
+      "routeNumbers": [
+        "500-2"
+      ],
+      "services": 1
+    },
+    {
+      "id": "406065",
+      "name": "501",
+      "groups": [
+        "1"
+      ],
+      "file": "raw/406065.xlsx",
+      "bytes": 7305,
+      "sha256": "ccf62e02df4da0baeb0ce8931ca0054f4f5693c76618a5399f60f0609d61922d",
+      "outcome": "parsed",
+      "routeNumbers": [
+        "501"
+      ],
+      "services": 2
     },
     {
       "id": "406066",
@@ -3728,12 +3460,20 @@
       ],
       "file": "raw/406066.xlsx",
       "bytes": 5662,
-      "sha256": "c021921118240e9c9c01da2a8bf044d51ded3f53c983358118a4452ceff26292",
+      "sha256": "834c99bcf28dc267312e02aec65f6bcaaf3855d09ae5171ebe8355be5b1db0cf",
       "outcome": "parsed",
       "routeNumbers": [
         "888"
       ],
       "services": 1
+    },
+    {
+      "id": "406067",
+      "name": "888-8(가상노선)",
+      "groups": [
+        "0"
+      ],
+      "outcome": "no_timetable"
     }
   ]
 }

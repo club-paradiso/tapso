@@ -6,11 +6,11 @@
     "dataset": "data.go.kr 3043887",
     "page": "https://bus.jeju.go.kr/publicTrafficInformation/generalBusSchedule",
     "file": "406040.xlsx",
-    "sha256": "1a9634dafd1f5a18974091378a4987a123344f199cde86cf693610177ee1815f",
+    "sha256": "cc56e450ae0ed37a90578224fd4ee21f2d97cdb6a7762f71cc80e96c82db6fcb",
     "scheduleId": "406040",
     "listedName": "751-2"
   },
-  "retrievedOn": "2026-11-05",
+  "retrievedOn": "2026-11-23",
   "parser": {
     "name": "jeju-bis-xlsx",
     "version": "3"
@@ -278,6 +278,70 @@
     },
     {
       "sheets": [
+        "751-2 운진항-신평-안덕농협-대평(휴일)"
+      ],
+      "routeNumbers": [
+        "751-2"
+      ],
+      "dayType": "saturday_sunday_holiday",
+      "dayLabel": "토.공휴일",
+      "direction": "대정(운진항) → 대평리",
+      "effectiveFrom": "2026-02-25",
+      "summary": "서귀포공영버스(064-760-3111~3)",
+      "timepoints": [
+        "모슬포남항 (운진항)",
+        "인성리",
+        "서광서리",
+        "안덕농협",
+        "대평리"
+      ],
+      "trips": [
+        {
+          "routeNumber": "751-2",
+          "times": [
+            "08:30",
+            "08:43",
+            "09:02",
+            "09:19",
+            "09:34"
+          ],
+          "firstTime": "08:30"
+        },
+        {
+          "routeNumber": "751-2",
+          "times": [
+            "11:45",
+            "11:58",
+            "12:17",
+            "12:34",
+            "12:49"
+          ],
+          "firstTime": "11:45"
+        },
+        {
+          "routeNumber": "751-2",
+          "times": [
+            null,
+            null,
+            null,
+            null,
+            null
+          ],
+          "window": {
+            "from": "14:00",
+            "to": "21:30",
+            "label": "실시간 호출형"
+          },
+          "firstTime": null,
+          "conditions": [
+            "demand_responsive"
+          ]
+        }
+      ],
+      "status": "ok"
+    },
+    {
+      "sheets": [
         "751-2 대평리-대정(운진항)(휴일))"
       ],
       "routeNumbers": [
@@ -329,70 +393,6 @@
           "times": [
             null,
             null,
-            null,
-            null,
-            null,
-            null,
-            null
-          ],
-          "window": {
-            "from": "14:00",
-            "to": "21:30",
-            "label": "실시간 호출형"
-          },
-          "firstTime": null,
-          "conditions": [
-            "demand_responsive"
-          ]
-        }
-      ],
-      "status": "ok"
-    },
-    {
-      "sheets": [
-        "751-2 운진항-신평-안덕농협-대평(휴일)"
-      ],
-      "routeNumbers": [
-        "751-2"
-      ],
-      "dayType": "saturday_sunday_holiday",
-      "dayLabel": "토.공휴일",
-      "direction": "대정(운진항) → 대평리",
-      "effectiveFrom": "2026-02-25",
-      "summary": "서귀포공영버스(064-760-3111~3)",
-      "timepoints": [
-        "모슬포남항 (운진항)",
-        "인성리",
-        "서광서리",
-        "안덕농협",
-        "대평리"
-      ],
-      "trips": [
-        {
-          "routeNumber": "751-2",
-          "times": [
-            "08:30",
-            "08:43",
-            "09:02",
-            "09:19",
-            "09:34"
-          ],
-          "firstTime": "08:30"
-        },
-        {
-          "routeNumber": "751-2",
-          "times": [
-            "11:45",
-            "11:58",
-            "12:17",
-            "12:34",
-            "12:49"
-          ],
-          "firstTime": "11:45"
-        },
-        {
-          "routeNumber": "751-2",
-          "times": [
             null,
             null,
             null,

@@ -6,11 +6,11 @@
     "dataset": "data.go.kr 3043887",
     "page": "https://bus.jeju.go.kr/publicTrafficInformation/generalBusSchedule",
     "file": "406032.xlsx",
-    "sha256": "b9c7c9d07adc61cc4eb030a0a49460a8f54460eaefd60238ebd846a9ce88d2ea",
+    "sha256": "f8671fefeb25dcd434d5d870b5fa0f3ceef3be3bd0bc788f946354de6ce0e946",
     "scheduleId": "406032",
     "listedName": "732-3"
   },
-  "retrievedOn": "2026-11-05",
+  "retrievedOn": "2026-11-23",
   "parser": {
     "name": "jeju-bis-xlsx",
     "version": "3"
@@ -23,99 +23,6 @@
   ],
   "status": "parsed",
   "services": [
-    {
-      "sheets": [
-        "732-3 제주민속촌-세화1리-세화3리-토산1리"
-      ],
-      "routeNumbers": [
-        "732-3"
-      ],
-      "dayType": "unstated",
-      "serviceLabels": [
-        "옵서버스"
-      ],
-      "direction": "표선(제주민속촌) → 토산1리",
-      "effectiveFrom": "2025-06-20",
-      "summary": "서귀포공영버스(064-760-3111~3)",
-      "timepoints": [
-        "표선제주민속촌",
-        "표선면사무소",
-        "관통사",
-        "농기구수리센타",
-        "세화1리취락구조",
-        "세화3리삼거리",
-        "산열이통입구",
-        "토산리보건소동쪽"
-      ],
-      "trips": [
-        {
-          "routeNumber": "732-3",
-          "times": [
-            "08:00",
-            "08:03",
-            null,
-            "08:07",
-            "08:12",
-            "08:16",
-            "08:20",
-            "08:26"
-          ],
-          "firstTime": "08:00"
-        },
-        {
-          "routeNumber": "732-3",
-          "times": [
-            "10:00",
-            "10:03",
-            null,
-            "10:07",
-            "10:12",
-            "10:16",
-            "10:20",
-            "10:26"
-          ],
-          "firstTime": "10:00"
-        },
-        {
-          "routeNumber": "732-3",
-          "times": [
-            "11:30",
-            "11:33",
-            null,
-            "11:37",
-            "11:42",
-            "11:46",
-            "11:50",
-            "11:56"
-          ],
-          "firstTime": "11:30"
-        },
-        {
-          "routeNumber": "732-3",
-          "times": [
-            null,
-            null,
-            null,
-            null,
-            null,
-            null,
-            null,
-            null
-          ],
-          "window": {
-            "from": "14:00",
-            "to": "21:30",
-            "label": "실시간 호출형"
-          },
-          "note": "행",
-          "firstTime": null,
-          "conditions": [
-            "demand_responsive"
-          ]
-        }
-      ],
-      "status": "ok"
-    },
     {
       "sheets": [
         "732-3 토산1리-세화3리-세화1리-제주민속촌"
@@ -196,6 +103,99 @@
             "12:27"
           ],
           "firstTime": "11:56"
+        },
+        {
+          "routeNumber": "732-3",
+          "times": [
+            null,
+            null,
+            null,
+            null,
+            null,
+            null,
+            null,
+            null
+          ],
+          "window": {
+            "from": "14:00",
+            "to": "21:30",
+            "label": "실시간 호출형"
+          },
+          "note": "행",
+          "firstTime": null,
+          "conditions": [
+            "demand_responsive"
+          ]
+        }
+      ],
+      "status": "ok"
+    },
+    {
+      "sheets": [
+        "732-3 제주민속촌-세화1리-세화3리-토산1리"
+      ],
+      "routeNumbers": [
+        "732-3"
+      ],
+      "dayType": "unstated",
+      "serviceLabels": [
+        "옵서버스"
+      ],
+      "direction": "표선(제주민속촌) → 토산1리",
+      "effectiveFrom": "2025-06-20",
+      "summary": "서귀포공영버스(064-760-3111~3)",
+      "timepoints": [
+        "표선제주민속촌",
+        "표선면사무소",
+        "관통사",
+        "농기구수리센타",
+        "세화1리취락구조",
+        "세화3리삼거리",
+        "산열이통입구",
+        "토산리보건소동쪽"
+      ],
+      "trips": [
+        {
+          "routeNumber": "732-3",
+          "times": [
+            "08:00",
+            "08:03",
+            null,
+            "08:07",
+            "08:12",
+            "08:16",
+            "08:20",
+            "08:26"
+          ],
+          "firstTime": "08:00"
+        },
+        {
+          "routeNumber": "732-3",
+          "times": [
+            "10:00",
+            "10:03",
+            null,
+            "10:07",
+            "10:12",
+            "10:16",
+            "10:20",
+            "10:26"
+          ],
+          "firstTime": "10:00"
+        },
+        {
+          "routeNumber": "732-3",
+          "times": [
+            "11:30",
+            "11:33",
+            null,
+            "11:37",
+            "11:42",
+            "11:46",
+            "11:50",
+            "11:56"
+          ],
+          "firstTime": "11:30"
         },
         {
           "routeNumber": "732-3",
